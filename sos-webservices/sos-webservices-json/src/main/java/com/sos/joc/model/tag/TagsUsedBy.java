@@ -3,8 +3,13 @@ package com.sos.joc.model.tag;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -12,9 +17,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -40,7 +42,7 @@ public class TagsUsedBy {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     @JsonIgnore
-    private Map<String, List<String>> additionalProperties = new HashMap<String, List<String>>();
+    private Map<String, Set<String>> additionalProperties = new HashMap<String, Set<String>>();
 
     /**
      * timestamp
@@ -67,17 +69,17 @@ public class TagsUsedBy {
     }
 
     @JsonAnyGetter
-    public Map<String, List<String>> getAdditionalProperties() {
+    public Map<String, Set<String>> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, List<String> value) {
+    public void setAdditionalProperty(String name, Set<String> value) {
         this.additionalProperties.put(name, value);
     }
     
     @JsonIgnore
-    public void setAdditionalProperties(Map<String, List<String>> properties) {
+    public void setAdditionalProperties(Map<String, Set<String>> properties) {
         this.additionalProperties = properties;
     }
 

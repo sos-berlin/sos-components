@@ -57,12 +57,14 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.tag.JobTags;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
@@ -904,6 +906,16 @@ public class JocInventory {
             }
         }
     }
+    
+    private static void handleJobTags(SOSHibernateSession session, DBItemInventoryConfiguration item, IConfigurationObject config)
+            throws JsonMappingException, JsonProcessingException, SOSHibernateException {
+        if (ConfigurationType.WORKFLOW.intValue().equals(item.getType())) {
+            if (config == null && !SOSString.isEmpty(item.getContent())) {
+                config = Globals.objectMapper.readValue(item.getContent(), Workflow.class);
+            }
+            new JobTags().update(((Workflow) config).getJobs(), item, new InventoryJobTagDBLayer(session));
+        }
+    }
 
     public static void handleWorkflowSearch(InventoryDBLayer dbLayer, Workflow workflow, Long inventoryId) throws JsonProcessingException,
             SOSHibernateException {
@@ -1000,6 +1012,7 @@ public class JocInventory {
 
         handleWorkflowSearch(dbLayer, item, config);
         handleReleasedJobTemplate(dbLayer, item, config);
+        handleJobTags(dbLayer.getSession(), item, config);
         DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 
@@ -1012,6 +1025,7 @@ public class JocInventory {
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         dbLayer.getSession().save(item);
         handleWorkflowSearch(dbLayer, item, config);
+        handleJobTags(dbLayer.getSession(), item, config);
         DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 

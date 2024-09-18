@@ -51,6 +51,8 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.DBItemInventoryFavorite;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventoryJobTag;
+import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedSchedule2Calendar;
@@ -254,6 +256,14 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_ADD_ORDER_TAGS = DBItemInventoryAddOrderTag.class.getSimpleName();
     public static final String TABLE_INV_ADD_ORDER_TAGS = "INV_ADD_ORDER_TAGS";
+    
+    public static final String DBITEM_INV_JOB_TAGS = DBItemInventoryJobTag.class.getSimpleName();
+    public static final String TABLE_INV_JOB_TAGS = "INV_JOB_TAGS";
+    public static final String TABLE_INV_JOB_TAGS_SEQUENCE = "SEQ_INV_JT";
+
+    public static final String DBITEM_INV_JOB_TAGGINGS = DBItemInventoryJobTagging.class.getSimpleName();
+    public static final String TABLE_INV_JOB_TAGGINGS = "INV_JOB_TAGGINGS";
+    public static final String TABLE_INV_JOB_TAGGINGS_SEQUENCE = "SEQ_INV_JTG";
 
     public static final String DBITEM_INV_SCHEDULE2WORKFLOWS = DBItemInventorySchedule2Workflow.class.getSimpleName();
     public static final String VIEW_INV_SCHEDULE2WORKFLOWS = "INV_SCHEDULE2WORKFLOWS";
@@ -529,6 +539,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryFavorite.class);
         cl.add(DBItemInventoryTag.class);
         cl.add(DBItemInventoryTagging.class);
+        cl.add(DBItemInventoryJobTag.class);
+        cl.add(DBItemInventoryJobTagging.class);
         cl.add(DBItemInventoryAddOrderTag.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);

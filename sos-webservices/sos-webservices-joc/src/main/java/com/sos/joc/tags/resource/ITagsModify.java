@@ -1,4 +1,3 @@
-
 package com.sos.joc.tags.resource;
 
 import jakarta.ws.rs.HeaderParam;

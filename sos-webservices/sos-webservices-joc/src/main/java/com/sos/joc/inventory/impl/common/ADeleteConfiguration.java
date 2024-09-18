@@ -40,6 +40,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
@@ -243,6 +244,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+            InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
             session.beginTransaction();
             
             Predicate<RequestFilter> isFolder = r -> 
@@ -254,7 +256,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, r, folderPermissions);
-                deleteTaggings(config.getName(), config.getTypeAsEnum(), dbLayer, dbTagLayer);
+                deleteTaggings(config.getName(), config.getTypeAsEnum(), dbLayer, dbTagLayer, dbJobTagLayer);
                 session.delete(config);
                 foldersForEvent.add(config.getFolder());
                 auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session,
@@ -289,6 +291,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+            InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
             session.beginTransaction();
             DBItemInventoryConfigurationTrash config = null;
             if(forDescriptors) {
@@ -296,7 +299,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             } else {
                 config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
             }
-            deleteTaggingsOfFolder(config, dbLayer, dbTagLayer);
+            deleteTaggingsOfFolder(config, dbLayer, dbTagLayer, dbJobTagLayer);
             dbLayer.deleteTrashFolder(config.getPath());
             Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());
@@ -310,21 +313,28 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         }
     }
 
-    private int deleteTaggings(String name, ConfigurationType type, InventoryDBLayer dbLayer, InventoryTagDBLayer dbTagLayer) {
-        if (ConfigurationType.WORKFLOW.equals(type) && dbTagLayer.hasTaggings(name, type.intValue()) && dbLayer.getConfigurationByName(name, type
-                .intValue()).isEmpty()) {
-            return dbTagLayer.delete(name, type.intValue());
+    private int deleteTaggings(String name, ConfigurationType type, InventoryDBLayer dbLayer, InventoryTagDBLayer dbTagLayer,
+            InventoryJobTagDBLayer dbJobTagLayer) {
+        int i = 0;
+        if (ConfigurationType.WORKFLOW.equals(type) && dbLayer.getConfigurationByName(name, type.intValue()).isEmpty()) {
+            if (dbTagLayer.hasTaggings(name, type.intValue())) {
+                i = i + dbTagLayer.delete(name, type.intValue());
+            }
+            if (dbJobTagLayer.hasTaggings(name)) {
+                i = i + dbJobTagLayer.delete(name);
+            }
         }
-        return 0;
+        
+        return i;
     }
     
-    private int deleteTaggingsOfFolder(DBItemInventoryConfigurationTrash config, InventoryDBLayer dbLayer, InventoryTagDBLayer dbTagLayer)
-            throws SOSHibernateException {
+    private int deleteTaggingsOfFolder(DBItemInventoryConfigurationTrash config, InventoryDBLayer dbLayer, InventoryTagDBLayer dbTagLayer,
+            InventoryJobTagDBLayer dbJobTagLayer) throws SOSHibernateException {
         int i = 0;
         List<DBItemInventoryConfigurationTrash> workflows = dbLayer.getTrashFolderContent(config.getPath(), true, Collections.singleton(
                 ConfigurationType.WORKFLOW.intValue()), false);
         for (DBItemInventoryConfigurationTrash conf : workflows) {
-            i += deleteTaggings(conf.getName(), conf.getTypeAsEnum(), dbLayer, dbTagLayer);
+            i += deleteTaggings(conf.getName(), conf.getTypeAsEnum(), dbLayer, dbTagLayer, dbJobTagLayer);
         }
         return i;
     }

@@ -1,18 +1,18 @@
-package com.sos.joc.tags.impl;
+package com.sos.joc.tags.job.impl;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.tag.ATagsModifyImpl;
-import com.sos.joc.db.inventory.DBItemInventoryTag;
-import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryJobTag;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.tags.resource.ITagsModify;
 
 import jakarta.ws.rs.Path;
 
-@Path("tags")
-public class TagsModifyImpl extends ATagsModifyImpl<DBItemInventoryTag> implements ITagsModify {
+@Path("job/tags")
+public class TagsModifyImpl extends ATagsModifyImpl<DBItemInventoryJobTag> implements ITagsModify {
     
-    private static final String API_CALL = "./tags";
-    private InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(null);
+    private static final String API_CALL = "./job/tags";
+    private InventoryJobTagDBLayer dbLayer = new InventoryJobTagDBLayer(null);
 
     @Override
     public JOCDefaultResponse postTagsAdd(String accessToken, byte[] filterBytes) {

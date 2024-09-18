@@ -18,15 +18,15 @@ import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
 @Entity
-@Table(name = DBLayer.TABLE_INV_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
+@Table(name = DBLayer.TABLE_INV_JOB_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
 @Proxy(lazy = false)
-public class DBItemInventoryTag extends DBItem implements IDBItemTag {
+public class DBItemInventoryJobTag extends DBItem implements IDBItemTag {
 
     private static final long serialVersionUID = 1L;
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_TAGS_SEQUENCE)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_JOB_TAGS_SEQUENCE)
     private Long id;
 
     @Column(name = "[NAME]", nullable = false)

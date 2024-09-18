@@ -12,46 +12,65 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
-import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.db.inventory.IDBItemTag;
+import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestTag;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
 import com.sos.joc.model.inventory.common.ResponseTag;
+import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import js7.data_for_java.controller.JControllerState;
 
 public abstract class AReadTag extends JOCResourceImpl {
+    
+    public JOCDefaultResponse readTag(final String action, boolean forTrash, ATagDBLayer<? extends IDBItemTag> dbLayer, final String accessToken,
+            final byte[] inBytes) {
+        try {
+            initLogging(action, inBytes, accessToken);
+            JsonValidator.validateFailFast(inBytes, RequestTag.class);
+            RequestTag in = Globals.objectMapper.readValue(inBytes, RequestTag.class);
 
-    private static final String INVENTORY_IMPL_PATH = JocInventory.getResourceImplPath("read/tag");
-    private static final String INVENTORY_TRASH_IMPL_PATH = JocInventory.getResourceImplPath("trash/read/tag");
-    //private static final String DESCRIPTOR_TRASH_IMPL_PATH = "./descriptor/trash/read/tag";
+            boolean permission = getJocPermissions(accessToken).getInventory().getView();
+            JOCDefaultResponse response = initPermissions(null, permission);
+            if (response == null) {
+                ResponseTag tag = readTag(in, action, forTrash, dbLayer);
+                response = JOCDefaultResponse.responseStatus200(tag);
+            }
+            return response;
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
 
-    public ResponseTag readTag(RequestTag in, String action) throws Exception {
+    private ResponseTag readTag(RequestTag in, String action, boolean forTrash, ATagDBLayer<? extends IDBItemTag> dbLayer) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(action);
-            InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
-            
-            boolean forTrash = INVENTORY_TRASH_IMPL_PATH.equals(action);
+            dbLayer.setSession(session);
             
             Set<Integer> types = Collections.singleton(ConfigurationType.WORKFLOW.intValue());
-            List<InventoryTreeFolderItem> items = dbTagLayer.getConfigurationsByTag(in.getTag(), types, in.getOnlyValidObjects(), forTrash);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByTag(in.getTag(), types, in.getOnlyValidObjects(), forTrash);
             
             ResponseTag tag = new ResponseTag();
             tag.setDeliveryDate(Date.from(Instant.now()));
             tag.setTag(in.getTag());
 
-            boolean withSync = action.equals(INVENTORY_IMPL_PATH) && in.getControllerId() != null && !in.getControllerId().isEmpty();
+            boolean withSync = !forTrash && in.getControllerId() != null && !in.getControllerId().isEmpty();
             JControllerState currentstate = null;
             Map<Integer, Map<Long, String>> deloyedNames = Collections.emptyMap();
             if (withSync && items != null && !items.isEmpty()) {
@@ -61,7 +80,6 @@ public abstract class AReadTag extends JOCResourceImpl {
                     deployedFilter.setControllerId(in.getControllerId());
                     deployedFilter.setObjectTypes(types);
                     deployedFilter.setTags(Collections.singleton(in.getTag()));
-                    //deployedFilter.setNames(items.stream().map(InventoryTreeFolderItem::getName).filter(Objects::nonNull).collect(Collectors.toSet()));
                     currentstate = Proxy.of(in.getControllerId()).currentState();
                     deloyedNames = deployedDbLayer.getDeployedNames(deployedFilter);
                 } catch (Exception e) {
@@ -80,6 +98,7 @@ public abstract class AReadTag extends JOCResourceImpl {
                     if (!canAdd(config.getPath(), permittedFolders)) {
                         continue;
                     }
+                    config.setWorkflowNames(null);
                     ConfigurationType type = config.getObjectType();
                     if (withSync) {
                         config.setSyncState(SyncStateHelper.getState(currentstate, config.getId(), type, deloyedNames.get(type.intValue())));
