@@ -39,22 +39,37 @@ import js7.data_for_java.subagent.JSubagentItemState;
 import scala.jdk.javaapi.OptionConverters;
 
 @Path("joc")
-public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsResource{
+public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsResource {
 
-    private static final String API_CALL = "./joc/versions";
+    private static final String API_CALL_VERSION = "./joc/version";
+    private static final String API_CALL_VERSIONS = "./joc/versions";
+    
+    @Override
+    public JOCDefaultResponse postGetVersion(String xAccessToken) {
+        try {
+            initLogging(API_CALL_VERSION, null, xAccessToken);
+            return JOCDefaultResponse.responseStatus200(Globals.curVersion);
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
     @Override
     public JOCDefaultResponse postGetVersions(String xAccessToken, byte[] versionsFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, versionsFilter, xAccessToken);
+            initLogging(API_CALL_VERSIONS, versionsFilter, xAccessToken);
             JsonValidator.validateFailFast(versionsFilter, VersionsFilter.class);
             VersionsFilter filter = Globals.objectMapper.readValue(versionsFilter, VersionsFilter.class);
             Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
                     .filter(availableController -> getControllerPermissions(availableController, xAccessToken).getView())
                     .collect(Collectors.toSet());
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_VERSIONS);
             // only for debugging, as curVersion is not set in dev environment (grizzly)
-            final String jocVersion = !Globals.curVersion.isEmpty() ? Globals.curVersion : "2.5.1-SNAPSHOT_hardcoded";
+            final String jocVersion = Globals.curVersion.getVersion();
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
             InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(hibernateSession);
             Set<String> filteredControllerIds = Collections.emptySet();
@@ -113,7 +128,7 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
         controllerVersion.setControllerId(controllerDbItem.getControllerId());
         controllerVersion.setUri(controllerDbItem.getUri());
         controllerVersion.setVersion(controllerDbItem.getVersion());
-        if (controllerDbItem.getVersion() != null) {
+        if (controllerDbItem.getVersion() != null && jocVersion != null && !jocVersion.isEmpty()) {
             controllerVersion.setCompatibility(CheckVersion.checkControllerVersionMatches2Joc(controllerVersion.getVersion(), jocVersion));
         }
         return controllerVersion;
@@ -171,5 +186,5 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
         return controllerVersions.stream()
                 .filter(controllerVersion -> controllerId.equals(controllerVersion.getControllerId())).findAny().map(item -> item.getVersion());
     }
-    
+
 }

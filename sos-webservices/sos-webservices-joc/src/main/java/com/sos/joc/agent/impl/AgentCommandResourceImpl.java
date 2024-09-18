@@ -209,10 +209,10 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             if (agentState != null) {
                 ClusterState clusterState = Globals.objectMapper.readValue(agentState.clusterState().toJson(), ClusterState.class);
                 if (clusterState == null || ClusterType.EMPTY.equals(clusterState.getTYPE())) {
-                    throw new JocBadRequestException("There is no Agent director cluster with the Id: " + agentId);
+                    throw new JocBadRequestException("There is no Director Agent cluster with the Id: " + agentId);
                 }
                 NodeId nodeId = AgentClusterWatch.getLostNodeId(controllerId, agentPath, agentState).orElseThrow(() -> new JocBadRequestException(
-                        "The Agent cluster '" + agentId + "' doesn't lost a director node"));
+                        "The Agent cluster '" + agentId + "' does not indicate loss of a Director Agent node"));
                 String user = null;
                 try {
                     user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();

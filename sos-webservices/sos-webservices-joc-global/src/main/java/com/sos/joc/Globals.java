@@ -36,6 +36,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.model.Version;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 import jakarta.ws.rs.core.UriInfo;
@@ -58,7 +59,7 @@ public class Globals {
     public static String servletContextContextPath = null; // /joc
     public static String apiVersion = "";
     public static String inventoryVersion = "";
-    public static String curVersion = "";
+    public static Version curVersion = new Version();
     public static boolean isApiServer = false;
     public static Boolean prevWasApiServer = null;
 
@@ -192,25 +193,27 @@ public class Globals {
     private static void readJocCockpitVersion() {
         InputStream stream = null;
         String versionFile = "/version.json";
-        String version = "";
+        Version version = new Version();
         LOGGER.info("Java version = " + System.getProperty("java.version"));
         try {
             // search in WEB-INF/classes of the web app
             stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
-                version = Json.createReader(stream).readObject().getString("version", "unknown");
-                LOGGER.info("JOC Cockpit version = " + version);
+                //version = Json.createReader(stream).readObject().getString("version", "unknown");
+                version = objectMapper.readValue(stream, Version.class);
+                LOGGER.info("JOC Cockpit version = " + version.getVersion());
             } else {
                 // fallback: search in root folder of the web app
                 stream = Globals.class.getResourceAsStream(versionFile);
                 if (stream != null) {
-                    version = Json.createReader(stream).readObject().getString("version", "unknown");
-                    LOGGER.info("JOC Cockpit version = " + version);
+                    //version = Json.createReader(stream).readObject().getString("version", "unknown");
+                    version = objectMapper.readValue(stream, Version.class);
+                    LOGGER.info("JOC Cockpit version = " + version.getVersion());
                 } else {
                     LOGGER.warn(String.format("Couldn't find the version file '%1$s' in the classpath", versionFile));
                 }
             }
-            if (!"unknown".equals(version)) {
+            if (version.getVersion() != null && !version.getVersion().isEmpty()) {
                 curVersion = version;
             }
         } catch (Exception e) {
@@ -504,7 +507,7 @@ public class Globals {
     // is younger
     public static int curVersionCompareWith(String version) {
         try {
-            String currentVersion = curVersion;
+            String currentVersion = curVersion.getVersion();
             if (currentVersion == null || currentVersion.isEmpty()) {
                 currentVersion = "1.0.0-SNAPSHOT";
             }

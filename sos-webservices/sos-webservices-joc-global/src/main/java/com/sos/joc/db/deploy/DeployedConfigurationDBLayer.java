@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.checkerframework.checker.units.qual.t;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernate;

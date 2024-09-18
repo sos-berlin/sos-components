@@ -14,4 +14,9 @@ public interface IGetVersionsResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public JOCDefaultResponse postGetVersions(@HeaderParam("X-Access-Token") String xAccessToken, byte[] versionsFilter);
+    
+    @Path("version")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public JOCDefaultResponse postGetVersion(@HeaderParam("X-Access-Token") String xAccessToken);
 }
