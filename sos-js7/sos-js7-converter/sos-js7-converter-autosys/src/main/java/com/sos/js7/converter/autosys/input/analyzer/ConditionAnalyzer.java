@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -557,6 +558,63 @@ public class ConditionAnalyzer {
             l.add(j);
         }
         return l;
+    }
+
+    // TODO reports and mai
+    public List<Condition> handleStandaloneJobConditions(ACommonJob job) {
+        List<Condition> mainConditions = job.conditionsAsList();
+
+        // Remove from BOX mainCondition conditions related to a "children" Box Job Box
+        if (mainConditions != null && mainConditions.size() > 0) {
+            Map<String, Condition> toRemoveConditionsRefersToItself = new HashMap<>();
+            Map<String, Condition> toRemoveConditionsDuplicates = new HashMap<>();
+            Set<String> all = new HashSet<>();
+            for (Condition c : mainConditions) {
+                if (c.getJobName() != null) {
+                    if (c.getJobName().equals(job.getName())) {
+                        toRemoveConditionsRefersToItself.put(c.getKey(), c);
+                    }
+                }
+                if (all.contains(c.getKey())) {
+                    toRemoveConditionsDuplicates.put(c.getKey(), c);
+                } else {
+                    all.add(c.getKey());
+                }
+            }
+
+            Report.writePerStandaloneJobConditionRefersReports(reportDir, job, toRemoveConditionsRefersToItself);
+
+            if (toRemoveConditionsRefersToItself.size() > 0) {
+
+                OutConditionHolder h = getJobOUTConditions(job);
+                if (h != null) {
+                    Iterator<Map.Entry<String, Map<String, Condition>>> iter = h.getJobConditions().entrySet().iterator();
+                    while (iter.hasNext()) {
+                        Map.Entry<String, Map<String, Condition>> entry = iter.next();
+                        if (job.getName().equalsIgnoreCase(entry.getKey())) {
+                            iter.remove();
+                        }
+                    }
+                    if (h.getJobConditions().size() == 0) {
+                        allOUTConditions.remove(job.getName());
+                    }
+                }
+
+                List<Object> boxJobConditions = job.getCondition().getCondition().getValue();
+                toRemoveConditionsRefersToItself.entrySet().stream().forEach(e -> {
+                    Conditions.remove(boxJobConditions, e.getValue());
+                });
+                mainConditions = job.conditionsAsList();
+            }
+            if (toRemoveConditionsDuplicates.size() > 0) {
+                List<Object> boxJobConditions = job.getCondition().getCondition().getValue();
+                toRemoveConditionsDuplicates.entrySet().stream().forEach(e -> {
+                    Conditions.remove(boxJobConditions, e.getValue());
+                });
+                mainConditions = job.conditionsAsList();
+            }
+        }
+        return mainConditions;
     }
 
     /** For a given current job(childrenJob), check if a condition(conditionToCheck) is used in the "previous" job<br/>

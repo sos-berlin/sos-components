@@ -23,6 +23,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
@@ -647,6 +648,34 @@ public class Autosys2JS7Converter {
         ExecutableScript es = new ExecutableScript();
         es.setScript(script.toString());
         es.setV1Compatible(CONFIG.getJobConfig().getForcedV1Compatible());
+        // TODO Check
+        if (jilJob.getFailCodes().getValue() != null) {
+            JobReturnCode rc = new JobReturnCode();
+            rc.setFailure(JS7ConverterHelper.integerListValue(jilJob.getFailCodes().getValue(), ","));
+            es.setReturnCodeMeaning(rc);
+        } else {
+            if (jilJob.getSuccessCodes().getValue() != null) {
+                if (!jilJob.getSuccessCodes().getValue().equals("0")) {
+                    JobReturnCode rc = new JobReturnCode();
+                    rc.setSuccess(JS7ConverterHelper.integerListValue(jilJob.getFailCodes().getValue(), ","));
+                    es.setReturnCodeMeaning(rc);
+                }
+            } else if (jilJob.getMaxExitSuccess().getValue() != null) {
+                try {
+                    List<Integer> l = new ArrayList<>();
+                    for (int i = 0; i <= jilJob.getMaxExitSuccess().getValue().intValue(); i++) {
+                        l.add(Integer.valueOf(i));
+                    }
+                    if (l.size() > 0) {
+                        JobReturnCode rc = new JobReturnCode();
+                        rc.setSuccess(l);
+                        es.setReturnCodeMeaning(rc);
+                    }
+                } catch (Throwable e) {
+                    LOGGER.error("[" + jilJob + "][getMaxExitSuccess]" + e, e);
+                }
+            }
+        }
         j.setExecutable(es);
         return j;
     }

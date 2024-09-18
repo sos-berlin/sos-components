@@ -63,6 +63,8 @@ public class Report {
     private static final String FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF = "Report-BOX[Condition]refers_to_box_itself.txt";
     private static final String FILE_NAME_BOX_CONDITIONS_SUCCESS_FAILURE = "Report-BOX[Conditions]box_success,box_failure.txt";
 
+    private static final String FILE_NAME_STANDALONE_CONDITION_REFERS_TO_ITSELF = "Report-Standalone[Condition]refers_to_itself.txt";
+
     // - Conditions
     private static final String FILE_NAME_CONDITIONS_BY_TYPE = "Report-Conditions[By-Type].txt";
     private static final String FILE_NAME_CONDITIONS_BY_TYPE_NOTRUNNING = "Report-Conditions[By-Type]notrunning.txt";
@@ -385,6 +387,36 @@ public class Report {
             }
         } catch (Throwable e) {
             LOGGER.error("[writeBOXConditionRefersReports]" + e, e);
+        }
+    }
+
+    public static void writePerStandaloneJobConditionRefersReports(Path reportDir, ACommonJob job,
+            Map<String, Condition> toRemoveConditionsRefersToItself) {
+        if (reportDir == null) {
+            return;
+        }
+
+        try {
+            if (toRemoveConditionsRefersToItself.size() > 0) {
+                Path report = reportDir.resolve(Report.FILE_NAME_STANDALONE_CONDITION_REFERS_TO_ITSELF);
+
+                String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(job), job.getName());
+                SOSPath.appendLine(report, msg);
+                msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "condition", ":", job.getCondition().getOriginalCondition());
+                SOSPath.appendLine(report, msg);
+
+                toRemoveConditionsRefersToItself.entrySet().stream().forEach(e -> {
+                    String msg2 = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "job itself part", ":", e.getValue()
+                            .getOriginalValue());
+                    try {
+                        SOSPath.appendLine(report, msg2);
+                    } catch (Throwable ex) {
+                    }
+                });
+                SOSPath.appendLine(report, Report.LINE_DELIMETER);
+            }
+        } catch (Throwable e) {
+            LOGGER.error("[writePerStandaloneJobConditionRefersReports]" + e, e);
         }
     }
 

@@ -272,6 +272,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 if (in.getCriticalities() != null && !in.getCriticalities().isEmpty()) {
                     dbFilter.setCriticalities(in.getCriticalities());
                 }
+                
+                if (in.getOrderId() != null && !in.getOrderId().isEmpty()) {
+                    dbFilter.setOrderId(in.getOrderId());
+                }
 
                 if (in.getJobs() != null && !in.getJobs().isEmpty()) {
                     dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).filter(job -> canAdd(WorkflowPaths.getPath(job.getWorkflowPath()),
@@ -297,9 +301,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     dbFilter.setJobName(in.getJobName());
                     dbFilter.setWorkflowPath(in.getWorkflowPath());
                     dbFilter.setWorkflowName(in.getWorkflowName());
-                    if (in.getOrderId() != null && !in.getOrderId().isEmpty()) {
-                        dbFilter.setOrderId(in.getOrderId());
-                    }
+
                     if (in.getWorkflowTags() != null && !in.getWorkflowTags().isEmpty()) {
                         if (session == null) {
                             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

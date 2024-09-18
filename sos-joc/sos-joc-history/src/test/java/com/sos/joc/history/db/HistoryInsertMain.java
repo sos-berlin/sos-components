@@ -128,8 +128,10 @@ public class HistoryInsertMain {
             for (int i = 0; i < orders; i++) {
                 DBItemHistoryOrder order = newOrder(controllerId, stepsPerOrder, i, orderEventIdCounter, orderEvenIdLastTimeMillis);
                 session.save(order);
-                order.setMainParentId(order.getId());
-                session.update(order);
+
+                // Not set MainParentId - because cleanup will delete all entries before this insert (delete <= max MainParentId ....)
+                // order.setMainParentId(order.getId());
+                // session.update(order);
                 insertedOrders++;
 
                 if (orderLogTemplate != null) {
@@ -240,7 +242,7 @@ public class HistoryInsertMain {
         item.setWorkflowPosition("0");
         item.setWorkflowTitle(null);
 
-        item.setMainParentId(Long.valueOf(0));
+        item.setMainParentId(Long.valueOf(1));
         item.setParentId(Long.valueOf(0));
         item.setParentOrderId(null);
         item.setHasChildren(false);

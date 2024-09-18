@@ -663,6 +663,7 @@ public abstract class ACommonJob {
     }
 
     // see com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder
+    // TODO not works for PNG -> arcp.test_conn.ksh ...
     public Path getJobFullPathFromJILDefinition() {
         if (jobFullPathFromJILDefinition != null) {
             return jobFullPathFromJILDefinition;
@@ -693,7 +694,6 @@ public abstract class ACommonJob {
                     }
                 }
             }
-
             List<String> addedParts = new ArrayList<>();
             if (!SOSString.isEmpty(jobParent)) {
                 String[] parts = jobParent.split("\\.");
@@ -713,7 +713,9 @@ public abstract class ACommonJob {
                         path = path.resolve(part);
                     }
                 }
+            } else {
             }
+
             path = path.resolve(getBaseName());
         } else {
             String[] parts = insertJob.getValue().split("\\.");
