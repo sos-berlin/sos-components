@@ -1,11 +1,15 @@
 package com.sos.joc.inventory.changes.util;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.inventory.DBItemInventoryChange;
 import com.sos.joc.db.inventory.changes.DBLayerChanges;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.changes.common.Change;
+import com.sos.joc.model.inventory.changes.common.ChangeItem;
 import com.sos.joc.model.inventory.changes.common.ChangeState;
 
 public class ChangeUtil {
@@ -30,7 +34,7 @@ public class ChangeUtil {
             if(session != null) {
                 DBLayerChanges dbLayer = new DBLayerChanges(session);
                 try {
-                    change.setConfigurations(dbLayer.getChangeItems(dbItem.getId()));
+                    change.setConfigurations(new HashSet<ChangeItem>(dbLayer.getChangeItems(dbItem.getId())));
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }

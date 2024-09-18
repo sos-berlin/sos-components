@@ -1,13 +1,14 @@
 
 package com.sos.joc.model.inventory.changes.common;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,9 +22,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name",
-    "title",
-    "state",
     "created",
     "modified",
     "closed",
@@ -31,33 +29,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "lastPublishedBy",
     "configurations"
 })
-public class Change {
+public class Change
+    extends ChangeIdentifier
+{
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    private String name;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    private String title;
-    /**
-     * state of a change
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    private ChangeState state = ChangeState.fromValue(0);
     /**
      * timestamp
      * <p>
@@ -102,75 +77,8 @@ public class Change {
     @JsonProperty("lastPublishedBy")
     private String lastPublishedBy;
     @JsonProperty("configurations")
-    private List<ChangeItem> configurations = new ArrayList<ChangeItem>();
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    /**
-     * state of a change
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    public ChangeState getState() {
-        return state;
-    }
-
-    /**
-     * state of a change
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    public void setState(ChangeState state) {
-        this.state = state;
-    }
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<ChangeItem> configurations = new LinkedHashSet<ChangeItem>();
 
     /**
      * timestamp
@@ -283,23 +191,23 @@ public class Change {
     }
 
     @JsonProperty("configurations")
-    public List<ChangeItem> getConfigurations() {
+    public Set<ChangeItem> getConfigurations() {
         return configurations;
     }
 
     @JsonProperty("configurations")
-    public void setConfigurations(List<ChangeItem> configurations) {
+    public void setConfigurations(Set<ChangeItem> configurations) {
         this.configurations = configurations;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("title", title).append("state", state).append("created", created).append("modified", modified).append("closed", closed).append("owner", owner).append("lastPublishedBy", lastPublishedBy).append("configurations", configurations).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("created", created).append("modified", modified).append("closed", closed).append("owner", owner).append("lastPublishedBy", lastPublishedBy).append("configurations", configurations).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(owner).append(created).append(configurations).append(name).append(modified).append(closed).append(state).append(title).append(lastPublishedBy).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(owner).append(created).append(configurations).append(modified).append(closed).append(lastPublishedBy).toHashCode();
     }
 
     @Override
@@ -311,7 +219,7 @@ public class Change {
             return false;
         }
         Change rhs = ((Change) other);
-        return new EqualsBuilder().append(owner, rhs.owner).append(created, rhs.created).append(configurations, rhs.configurations).append(name, rhs.name).append(modified, rhs.modified).append(closed, rhs.closed).append(state, rhs.state).append(title, rhs.title).append(lastPublishedBy, rhs.lastPublishedBy).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(owner, rhs.owner).append(created, rhs.created).append(configurations, rhs.configurations).append(modified, rhs.modified).append(closed, rhs.closed).append(lastPublishedBy, rhs.lastPublishedBy).isEquals();
     }
 
 }

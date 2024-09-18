@@ -1,11 +1,12 @@
 
 package com.sos.joc.model.inventory.changes;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.inventory.changes.common.ChangeState;
 import com.sos.joc.model.inventory.changes.common.Timespan;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -33,9 +34,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class ShowChangesFilter {
 
     @JsonProperty("names")
-    private List<String> names = new ArrayList<String>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> names = new LinkedHashSet<String>();
     @JsonProperty("states")
-    private List<ChangeState> states = new ArrayList<ChangeState>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<ChangeState> states = new LinkedHashSet<ChangeState>();
     /**
      * string without < and >
      * <p>
@@ -80,22 +83,22 @@ public class ShowChangesFilter {
     private Boolean details = false;
 
     @JsonProperty("names")
-    public List<String> getNames() {
+    public Set<String> getNames() {
         return names;
     }
 
     @JsonProperty("names")
-    public void setNames(List<String> names) {
+    public void setNames(Set<String> names) {
         this.names = names;
     }
 
     @JsonProperty("states")
-    public List<ChangeState> getStates() {
+    public Set<ChangeState> getStates() {
         return states;
     }
 
     @JsonProperty("states")
-    public void setStates(List<ChangeState> states) {
+    public void setStates(Set<ChangeState> states) {
         this.states = states;
     }
 

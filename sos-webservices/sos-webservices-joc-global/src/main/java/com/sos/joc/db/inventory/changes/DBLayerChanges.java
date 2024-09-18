@@ -38,7 +38,7 @@ public class DBLayerChanges extends DBLayer {
     private static final Set<ChangeState> ALL_CHANGE_STATES = Collections.unmodifiableSet(new HashSet<>(
             Arrays.asList(ChangeState.OPEN, ChangeState.PUBLISHED, ChangeState.CLOSED)));
     private static final Set<Integer> ALL_CHANGE_STATE_INT_VALUES = Collections.unmodifiableSet(new HashSet<>(
-            Arrays.asList(ChangeState.OPEN.value(), ChangeState.PUBLISHED.value(), ChangeState.CLOSED.value())));
+            Arrays.asList(ChangeState.OPEN.intValue(), ChangeState.PUBLISHED.intValue(), ChangeState.CLOSED.intValue())));
 
     public DBLayerChanges(SOSHibernateSession session) {
         this.session = session;
@@ -128,14 +128,14 @@ public class DBLayerChanges extends DBLayer {
         Query<DBItemInventoryChange> query = getSession().createQuery(hql.toString());
         if(!filter.getNames().isEmpty()) {
             if(filter.getNames().size() == 1) {
-                query.setParameter("name", filter.getNames().get(0));
+                query.setParameter("name", filter.getNames().iterator().next());
             } else {
                 query.setParameterList("names", filter.getNames());
             }
         }
         if(filter.getStates() != null) {
             if(!filter.getStates().isEmpty()) {
-                query.setParameterList("states", filter.getStates().stream().map(item -> item.value()).collect(Collectors.toList()));
+                query.setParameterList("states", filter.getStates().stream().map(item -> item.intValue()).collect(Collectors.toList()));
             } else {
                 // if not set use all ChangeStates
                 query.setParameterList("states", ALL_CHANGE_STATE_INT_VALUES);

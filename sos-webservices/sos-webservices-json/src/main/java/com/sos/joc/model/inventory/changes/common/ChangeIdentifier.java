@@ -47,7 +47,7 @@ public class ChangeIdentifier {
      * 
      */
     @JsonProperty("state")
-    private ChangeState state = ChangeState.fromValue(0);
+    private ChangeState state;
 
     /**
      * string without < and >
