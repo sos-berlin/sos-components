@@ -458,6 +458,14 @@ public class JobHistoryDBLayer {
             if (filter.getCriticalities() != null && !filter.getCriticalities().isEmpty()) {
                 clauses.add(alias + "criticality in (:criticalities)");
             }
+            if (filter.getOrderId() != null && !filter.getOrderId().isEmpty() && (filter.getOrders() == null || filter.getOrders().isEmpty())) {
+                if (filter.getOrderId().contains("*") || filter.getOrderId().contains("?")) {
+                    clauses.add(alias + "orderId like :orderId");
+                } else {
+                    clauses.add(alias + "orderId = :orderId");
+                }
+            }
+
 
             if (filter.getJobs() != null && !filter.getJobs().isEmpty()) {
                 List<String> l = new ArrayList<String>();
@@ -548,13 +556,6 @@ public class JobHistoryDBLayer {
                         clause = "(" + clause + ")";
                     }
                     clauses.add(clause);
-                }
-                if (filter.getOrderId() != null && !filter.getOrderId().isEmpty()) {
-                    if (filter.getOrderId().contains("*") || filter.getOrderId().contains("?")) {
-                        clauses.add(alias + "orderId like :orderId");
-                    } else {
-                        clauses.add(alias + "orderId = :orderId");
-                    }
                 }
                 if (filter.getWorkflowPath() != null && !filter.getWorkflowPath().isEmpty()) {
                     if (filter.getWorkflowPath().contains("*") || filter.getWorkflowPath().contains("?")) {
@@ -676,7 +677,7 @@ public class JobHistoryDBLayer {
         if (filter.getExcludedWorkflows() != null && !filter.getExcludedWorkflows().isEmpty()) {
             query.setParameterList("excludedWorkflows", filter.getExcludedWorkflows());
         }
-        if (filter.getOrderId() != null && !filter.getOrderId().isEmpty()) {
+        if (filter.getOrderId() != null && !filter.getOrderId().isEmpty() && (filter.getOrders() == null || filter.getOrders().isEmpty())) {
             if (filter.getOrderId().contains("*") || filter.getOrderId().contains("?")) {
                 query.setParameter("orderId", filter.getOrderId().replace('*', '%').replace('?', '_'));
             } else {
