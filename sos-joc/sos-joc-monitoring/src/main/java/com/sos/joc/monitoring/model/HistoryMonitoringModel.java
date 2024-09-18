@@ -172,7 +172,7 @@ public class HistoryMonitoringModel implements Serializable {
             String msg = "[called from " + caller + "][startPause]maximum for " + pauseDurationInSeconds + "s...";
 
             // 1) write to e.g. cleanup log file
-            LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][service]" + msg);
+            LOGGER.info("[" + MonitorService.MAIN_SERVICE_IDENTIFIER + "][service][" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "]" + msg);
 
             // 2) write to history log file
             JocClusterServiceLogger.setLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
@@ -190,7 +190,7 @@ public class HistoryMonitoringModel implements Serializable {
             String msg = "[called from " + caller + "][stopPause]...";
 
             // 1) write to e.g. cleanup log file
-            LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][service]" + msg);
+            LOGGER.info("[" + MonitorService.MAIN_SERVICE_IDENTIFIER + "][service][" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "]" + msg);
 
             // 2) write to history log file
             JocClusterServiceLogger.setLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);

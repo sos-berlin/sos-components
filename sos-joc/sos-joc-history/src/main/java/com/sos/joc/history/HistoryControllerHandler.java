@@ -124,6 +124,7 @@ public class HistoryControllerHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryControllerHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String TORN_PROBLEM_CODE_REGEXP = "UnknownEventId|SnapshotForUnknownEventId";
+    private static final String REACTOR_MSG_COULD_NOT_EMIT_BUFFER = "Could not emit buffer due to lack of requests";
     private static final int MAX_IN_PROCESS_IN_SECONDS = 60; // 1 minute
 
     private static int MAX_PAUSE_IN_SECONDS = -1;
@@ -221,7 +222,13 @@ public class HistoryControllerHandler {
                             LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
                         }
                     } else if (isReactorException(ex)) {
-                        LOGGER.info(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
+                        String err = ex.toString();
+                        String msg = String.format("%s%s[counter=%s]%s", method, getLogMsgIfPause(), errorCounter, err);
+                        if (err.contains(REACTOR_MSG_COULD_NOT_EMIT_BUFFER)) {
+                            LOGGER.info(msg);
+                        } else {
+                            LOGGER.info(msg, ex);
+                        }
                     } else if (isHistoryProcessingException(ex)) {
                         if (ex instanceof HistoryProcessingDatabaseConnectException) {
                             waitForDatabaseConnection = true;
@@ -806,23 +813,27 @@ public class HistoryControllerHandler {
 
     private void fluxDoOnCancel() {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.debug(String.format("[%s][%s][fluxDoOnCancel]", serviceIdentifier, controllerId));
+        LOGGER.debug(String.format("[%s][%s]%s[fluxDoOnCancel]", serviceIdentifier, controllerId, getLogMsgIfPause()));
     }
 
     private Throwable fluxDoOnError(Throwable t) {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][%s][fluxDoOnError]%s", serviceIdentifier, controllerId, t.toString()));
+        LOGGER.info(String.format("[%s][%s]%s[fluxDoOnError]%s", serviceIdentifier, controllerId, getLogMsgIfPause(), t.toString()));
         return t;
     }
 
     private void fluxDoOnComplete() {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][%s][fluxDoOnComplete]", serviceIdentifier, controllerId));
+        LOGGER.info(String.format("[%s][%s]%s[fluxDoOnComplete]", serviceIdentifier, controllerId, getLogMsgIfPause()));
     }
 
     private void fluxDoFinally(SignalType type) {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][%s][fluxDoFinally]SignalType=%s", serviceIdentifier, controllerId, type));
+        LOGGER.info(String.format("[%s][%s]%s[fluxDoFinally]SignalType=%s", serviceIdentifier, controllerId, getLogMsgIfPause(), type));
+    }
+
+    private String getLogMsgIfPause() {
+        return pause.get() ? "[pause=true]" : "";
     }
 
     private boolean isProblemException(Throwable t) {

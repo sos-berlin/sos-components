@@ -124,12 +124,22 @@ public class CleanupServiceSchedule {
         uncompleted = null;
         ZonedDateTime now = service.getNow();
         start = now.plusSeconds(5);
-        if (service.getConfig().getForceCleanup().force()) {
-            // TODO read timeout from settings
-            end = now.plusSeconds(DEFAULT_RUN_SERVICE_NOW_TIMEOUT);
-        } else {
-            end = now.plusSeconds(DEFAULT_RUN_SERVICE_NOW_TIMEOUT);
+
+        long diff = DEFAULT_RUN_SERVICE_NOW_TIMEOUT;
+        try {
+            int pb = service.getConfig().getPeriod().getBegin().asSeconds();
+            int pe = service.getConfig().getPeriod().getEnd().asSeconds();
+            diff = Math.abs(pe - pb);
+        } catch (Throwable e) {
+            LOGGER.info(logPrefix + "[computeRunNowDelay]" + e.toString(), e);
         }
+        if (service.getConfig().getForceCleanup().force()) {
+            if (service.getConfig().getForceCleanup().getHistoryPauseDurationAge().getSeconds() > diff) {
+                diff = service.getConfig().getForceCleanup().getHistoryPauseDurationAge().getSeconds() + 5;
+            }
+        }
+
+        end = now.plusSeconds(diff);
         firstStart = start;
         return now.until(start, ChronoUnit.NANOS);
     }

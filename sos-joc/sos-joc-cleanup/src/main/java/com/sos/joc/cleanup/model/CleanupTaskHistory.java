@@ -402,14 +402,6 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             return false;
         }
 
-        r = deleteOrderSteps(maxMainParentId);
-        totalOrderSteps += r.getDeletedTotal();
-        log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDER_STEPS, r.getDeletedTotal(), totalOrderSteps));
-
-        if (isStopped()) {
-            LOGGER.info(log.toString());
-            return false;
-        }
         if (deleteLogs) {
             r = deleteLogs(maxMainParentId);
             totalOrderLogs += r.getDeletedTotal();
@@ -419,6 +411,15 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 LOGGER.info(log.toString());
                 return false;
             }
+        }
+
+        r = deleteOrderSteps(maxMainParentId);
+        totalOrderSteps += r.getDeletedTotal();
+        log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDER_STEPS, r.getDeletedTotal(), totalOrderSteps));
+
+        if (isStopped()) {
+            LOGGER.info(log.toString());
+            return false;
         }
 
         if (Range.ALL.equals(range)) {

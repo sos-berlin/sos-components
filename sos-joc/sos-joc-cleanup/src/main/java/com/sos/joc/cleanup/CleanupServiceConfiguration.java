@@ -475,7 +475,6 @@ public class CleanupServiceConfiguration {
                 this.seconds = Integer.parseInt(s[2]);
                 break;
             }
-
         }
 
         public String getConfigured() {
@@ -492,6 +491,10 @@ public class CleanupServiceConfiguration {
 
         public int getSeconds() {
             return seconds;
+        }
+
+        public int asSeconds() {
+            return hours * 60 * 60 + minutes * 60 + seconds;
         }
 
         @Override
