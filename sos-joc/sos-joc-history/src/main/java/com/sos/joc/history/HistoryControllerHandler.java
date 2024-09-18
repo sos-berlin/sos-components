@@ -907,25 +907,8 @@ public class HistoryControllerHandler {
             counter++;
             if (MAX_PAUSE_IN_SECONDS > 0 && counter >= MAX_PAUSE_IN_SECONDS) {
                 pause.set(false);
-                LOGGER.info("[" + serviceIdentifier + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS=" + MAX_PAUSE_IN_SECONDS + " reached");
+                LOGGER.info("[" + identifier + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS=" + MAX_PAUSE_IN_SECONDS + " reached");
             }
-        }
-    }
-
-    // from another thread
-    public void startPause(String caller, int pauseDurationInSeconds) {
-        if (!closed.get()) {
-            MAX_PAUSE_IN_SECONDS = pauseDurationInSeconds + 10;
-            pause.set(true);
-            // 1) write to e.g. cleanup log file
-            String msg = "[" + serviceIdentifier + "][called from " + caller + "][startPause]maximum for " + pauseDurationInSeconds + "s...";
-            LOGGER.info(msg);
-            // 2) write to history log file
-            JocClusterServiceLogger.setLogger(serviceIdentifier);
-            LOGGER.info(msg);
-            JocClusterServiceLogger.removeLogger(serviceIdentifier);
-
-            waitForNotInProcess();
         }
     }
 
@@ -938,10 +921,28 @@ public class HistoryControllerHandler {
             if (counter >= MAX_IN_PROCESS_IN_SECONDS) {
                 inProcess.set(false);
                 JocClusterServiceLogger.setLogger(serviceIdentifier);
-                LOGGER.info("[" + serviceIdentifier + "][waitForNotInProcess][stopped]MAX_IN_PROCESS_IN_SECONDS=" + MAX_IN_PROCESS_IN_SECONDS
-                        + " reached");
+                LOGGER.info("[" + identifier + "][waitForNotInProcess][stopped]MAX_IN_PROCESS_IN_SECONDS=" + MAX_IN_PROCESS_IN_SECONDS + " reached");
                 JocClusterServiceLogger.removeLogger(serviceIdentifier);
             }
+        }
+    }
+
+    // from another thread
+    public void startPause(String caller, int pauseDurationInSeconds) {
+        if (!closed.get()) {
+            MAX_PAUSE_IN_SECONDS = pauseDurationInSeconds + 10;
+            pause.set(true);
+            String msg = "[" + identifier + "][called from " + caller + "][startPause]maximum for " + pauseDurationInSeconds + "s...";
+
+            // 1) write to e.g. cleanup log file
+            LOGGER.info("[" + serviceIdentifier + "][service]" + msg);
+
+            // 2) write to history log file
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
+            LOGGER.info(msg);
+            JocClusterServiceLogger.removeLogger(serviceIdentifier);
+
+            waitForNotInProcess();
         }
     }
 
@@ -949,9 +950,10 @@ public class HistoryControllerHandler {
     public void stopPause(String caller) {
         if (pause.get()) {
             pause.set(false);
+            String msg = "[" + identifier + "][called from " + caller + "][stopPause]...";
+
             // 1) write to e.g. cleanup log file
-            String msg = "[" + serviceIdentifier + "][called from " + caller + "][stopPause]...";
-            LOGGER.info(msg);
+            LOGGER.info("[" + serviceIdentifier + "][service]" + msg);
 
             // 2) write to history log file
             JocClusterServiceLogger.setLogger(serviceIdentifier);

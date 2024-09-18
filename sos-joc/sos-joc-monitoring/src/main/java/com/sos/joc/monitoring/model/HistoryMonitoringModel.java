@@ -169,13 +169,14 @@ public class HistoryMonitoringModel implements Serializable {
         if (!closed.get()) {
             MAX_PAUSE_IN_SECONDS = pauseDurationInSeconds + 10;
             pause.set(true);
+            String msg = "[called from " + caller + "][startPause]maximum for " + pauseDurationInSeconds + "s...";
+
             // 1) write to e.g. cleanup log file
-            String msg = "[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][called from " + caller + "][startPause]maximum for "
-                    + pauseDurationInSeconds + "s...";
-            LOGGER.info(msg);
+            LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][service]" + msg);
+
             // 2) write to history log file
             JocClusterServiceLogger.setLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
-            LOGGER.info(msg);
+            LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "]" + msg);
             JocClusterServiceLogger.removeLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
 
             waitForNotInProcess();
@@ -186,13 +187,14 @@ public class HistoryMonitoringModel implements Serializable {
     public void stopPause(String caller) {
         if (pause.get()) {
             pause.set(false);
+            String msg = "[called from " + caller + "][stopPause]...";
+
             // 1) write to e.g. cleanup log file
-            String msg = "[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][called from " + caller + "][stopPause]...";
-            LOGGER.info(msg);
+            LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][service]" + msg);
 
             // 2) write to history log file
             JocClusterServiceLogger.setLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
-            LOGGER.info(msg);
+            LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "]" + msg);
             JocClusterServiceLogger.removeLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
         }
     }
@@ -258,7 +260,7 @@ public class HistoryMonitoringModel implements Serializable {
                             pauseCounter.set(pauseCounter.get() + 1);
                             if (MAX_PAUSE_IN_SECONDS > 0 && pauseCounter.get() >= MAX_PAUSE_IN_SECONDS) {
                                 pause.set(false);
-                                LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS="
+                                LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][oause][stopped]MAX_PAUSE_IN_SECONDS="
                                         + MAX_PAUSE_IN_SECONDS + " reached");
                             }
                         } else {
@@ -272,11 +274,11 @@ public class HistoryMonitoringModel implements Serializable {
                             }
                         }
                     }
-
                 } catch (Throwable e) {
-                    inProcess.set(false);
                     MonitorService.setLogger();
                     LOGGER.error(e.toString(), e);
+                } finally {
+                    inProcess.set(false);
                 }
             }
         }, 0 /* start delay */, SCHEDULE_DELAY /* delay */, TimeUnit.SECONDS);

@@ -22,6 +22,7 @@ public class CleanupPauseHandler {
     private PauseConfig pauseConfig;
     private ScheduledExecutorService scheduler;
     private AtomicBoolean cleanupRunning;
+    private String logPrefix = null;
 
     public CleanupPauseHandler() {
         this.isPaused = new AtomicBoolean(false);
@@ -43,7 +44,7 @@ public class CleanupPauseHandler {
             CleanupService.setServiceLogger();
         }
         if (scheduler != null) {
-            JocCluster.shutdownThreadPool("[" + task.getIdentifier() + "][pauseHandler]", scheduler, 1);
+            JocCluster.shutdownThreadPool(getLogPrefix(), scheduler, 1);
         }
     }
 
@@ -64,10 +65,11 @@ public class CleanupPauseHandler {
                         run = false;
                         break x;
                     }
+
                     // 1) Stop service for duration
                     task.getService().startPause(CleanupService.IDENTIFIER, pauseConfig.duration);
                     CleanupService.setServiceLogger();
-                    LOGGER.info("[" + task.getIdentifier() + "][pauseHandler]start cleanup...");
+                    LOGGER.info(getLogPrefix() + "start cleanup...");
                     isPaused.set(false);
                     try {
                         TimeUnit.SECONDS.sleep(pauseConfig.getDuration());
@@ -83,7 +85,7 @@ public class CleanupPauseHandler {
                     }
 
                     // 2) Unstop service for delay
-                    LOGGER.info("[" + task.getIdentifier() + "][pauseHandler]pause cleanup...");
+                    LOGGER.info(getLogPrefix() + "pause cleanup...");
                     isPaused.set(true);
                     waitWhenCleanupRunning();
                     task.getService().stopPause(CleanupService.IDENTIFIER);
@@ -108,7 +110,7 @@ public class CleanupPauseHandler {
             while (isPaused.get() && !task.isStopped()) {
                 try {
                     if (counter % 30 == 0) {
-                        LOGGER.info("[" + task.getIdentifier() + "][pauseHandler][cleanup]wait because is paused");
+                        LOGGER.info(getLogPrefix() + "wait because is paused");
                     }
                     TimeUnit.SECONDS.sleep(1);
                     counter++;
@@ -125,7 +127,7 @@ public class CleanupPauseHandler {
             while (cleanupRunning.get() && !task.isStopped()) {
                 try {
                     if (counter % 30 == 0) {
-                        LOGGER.info("[" + task.getIdentifier() + "][pauseHandler][service stopPause]wait because the cleanup is running");
+                        LOGGER.info(getLogPrefix() + "[service stopPause]wait because the cleanup is running");
                     }
                     TimeUnit.SECONDS.sleep(1);
                     counter++;
@@ -140,6 +142,13 @@ public class CleanupPauseHandler {
         if (cleanupRunning != null) {
             cleanupRunning.set(val);
         }
+    }
+
+    private String getLogPrefix() {
+        if (logPrefix == null) {
+            logPrefix = "[" + task.getIdentifier() + "][" + CleanupService.IDENTIFIER + "][pauseHandler]";
+        }
+        return logPrefix;
     }
 
     private PauseConfig createPauseConfig() {
