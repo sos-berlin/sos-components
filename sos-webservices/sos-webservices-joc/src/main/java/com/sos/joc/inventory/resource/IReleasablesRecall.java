@@ -14,4 +14,9 @@ public interface IReleasablesRecall {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("releasables/recall")
     public JOCDefaultResponse postRecall(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter);
+    
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("releasables/recall/folder")
+    public JOCDefaultResponse postRecallByFolder(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter);
 }

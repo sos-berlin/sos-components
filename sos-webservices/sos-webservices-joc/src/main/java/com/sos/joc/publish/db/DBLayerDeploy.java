@@ -2404,25 +2404,29 @@ public class DBLayerDeploy {
         }
     }
     
-    public void recallReleasedConfiguration (DBItemInventoryReleasedConfiguration released) {
+    public boolean recallReleasedConfiguration (DBItemInventoryReleasedConfiguration released, Long AuditLogId) {
         try {
             if (released != null) {
                 getSession().delete(released);
             }
-            StringBuilder hqlUnreleased = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hqlUnreleased.append(" where type = :type");
-            hqlUnreleased.append(" and name = :name");
-            Query<DBItemInventoryConfiguration> queryUnreleased = getSession().createQuery(hqlUnreleased.toString());
-            queryUnreleased.setParameter("type", released.getType());
-            queryUnreleased.setParameter("name", released.getName());
-            DBItemInventoryConfiguration unreleased = getSession().getSingleResult(queryUnreleased);
+            DBItemInventoryConfiguration unreleased = getSession().get(DBItemInventoryConfiguration.class, released.getCid());
+//            StringBuilder hqlUnreleased = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+//            hqlUnreleased.append(" where type = :type");
+//            hqlUnreleased.append(" and name = :name");
+//            Query<DBItemInventoryConfiguration> queryUnreleased = getSession().createQuery(hqlUnreleased.toString());
+//            queryUnreleased.setParameter("type", released.getType());
+//            queryUnreleased.setParameter("name", released.getName());
+//            DBItemInventoryConfiguration unreleased = getSession().getSingleResult(queryUnreleased);
             if (unreleased != null) {
                 unreleased.setReleased(false);
+                unreleased.setAuditLogId(AuditLogId);
                 getSession().update(unreleased);
+                return true;
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
+        return false;
     }
     
 }

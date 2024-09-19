@@ -21,6 +21,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -284,14 +285,18 @@ public class JocInventory {
     }
 
     public static Set<Integer> getReleasableTypes(Collection<ConfigurationType> objectTypes) {
-        if (objectTypes == null || objectTypes.isEmpty()) {
-            return getReleasableTypes();
-        }
-        Set<Integer> releasables = objectTypes.stream().filter(type -> isReleasable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+        Set<Integer> releasables = getReleasableTypesStream(objectTypes).map(ConfigurationType::intValue).collect(Collectors.toSet());
         if (releasables.isEmpty()) {
             return getReleasableTypes();
         }
         return releasables;
+    }
+    
+    public static Stream<ConfigurationType> getReleasableTypesStream(Collection<ConfigurationType> objectTypes) {
+        if (objectTypes == null || objectTypes.isEmpty()) {
+            return Stream.empty();
+        }
+        return objectTypes.stream().filter(type -> isReleasable(type));
     }
 
     public static Set<Integer> getReleasableTypesWithFolder(Collection<ConfigurationType> objectTypes) {
