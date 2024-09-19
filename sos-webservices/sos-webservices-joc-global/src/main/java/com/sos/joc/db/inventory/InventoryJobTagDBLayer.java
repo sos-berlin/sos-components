@@ -3,6 +3,8 @@ package com.sos.joc.db.inventory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
@@ -32,7 +34,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
         return DBLayer.DBITEM_INV_JOB_TAGGINGS;
     }
     
-    public List<DBItemInventoryJobTagging> getTaggings(Long cid) {
+    public Set<DBItemInventoryJobTagging> getTaggings(Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(getTaggingTable());
@@ -43,10 +45,10 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
 
             List<DBItemInventoryJobTagging> result = getSession().getResultList(query);
             if (result == null) {
-                return Collections.emptyList();
+                return Collections.emptySet();
             }
 
-            return result;
+            return result.stream().collect(Collectors.toSet());
 
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

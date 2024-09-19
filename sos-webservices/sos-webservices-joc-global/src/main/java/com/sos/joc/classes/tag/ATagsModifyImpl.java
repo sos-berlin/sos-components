@@ -157,18 +157,20 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         List<T> dbTags = dbLayer.getTags(tags);
         Set<String> alreadyExistingTags = dbTags.stream().map(T::getName).collect(Collectors.toSet());
         tags.removeAll(alreadyExistingTags);
-        int maxOrdering = dbLayer.getMaxOrdering();
         Set<T> result = new HashSet<>();
-        Class<T> typedDbItemClazz = createTypedDBItemClass();
-        for (String name : tags) {
-            SOSCheckJavaVariableName.test("tag name: ", name);
-            T item = createTypedDBItem(typedDbItemClazz);
-            item.setId(null);
-            item.setModified(date);
-            item.setName(name);
-            item.setOrdering(++maxOrdering);
-            dbLayer.getSession().save(item);
-            result.add((T) item);
+        if (!tags.isEmpty()) {
+            int maxOrdering = dbLayer.getMaxOrdering();
+            Class<T> typedDbItemClazz = createTypedDBItemClass();
+            for (String name : tags) {
+                SOSCheckJavaVariableName.test("tag name: ", name);
+                T item = createTypedDBItem(typedDbItemClazz);
+                item.setId(null);
+                item.setModified(date);
+                item.setName(name);
+                item.setOrdering(++maxOrdering);
+                dbLayer.getSession().save(item);
+                result.add((T) item);
+            }
         }
         return result;
     }
