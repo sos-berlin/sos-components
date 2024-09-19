@@ -1,7 +1,6 @@
 package com.sos.joc.inventory.changes.util;
 
 import java.util.HashSet;
-import java.util.Set;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;

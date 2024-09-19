@@ -713,8 +713,10 @@ public class DependencyResolver {
                 InventoryDBLayer dblayer = new InventoryDBLayer(session);
                 try {
                     DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(reference.getReferencedItem().getId());
-                    dependency.setDepDependencyId(latestDeployed.getId());
-                    dependency.setControllerId(latestDeployed.getControllerId());
+                    if(latestDeployed != null) {
+                        dependency.setDepDependencyId(latestDeployed.getId());
+                        dependency.setControllerId(latestDeployed.getControllerId());
+                    }
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
