@@ -15,7 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * delete/post notice
+ * delete/post notices
  * <p>
  * 
  * 
@@ -23,8 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "noticeBoardPath",
-    "noticeIds",
+    "notices",
     "endOfLife",
     "timeZone",
     "auditLog"
@@ -41,22 +40,13 @@ public class ModifyNotices {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("noticeBoardPath")
-    private String noticeBoardPath;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("noticeIds")
+    @JsonProperty("notices")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> noticeIds = new LinkedHashSet<String>();
+    private Set<NoticeIdsPerBoard> notices = new LinkedHashSet<NoticeIdsPerBoard>();
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -109,27 +99,13 @@ public class ModifyNotices {
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("noticeBoardPath")
-    public String getNoticeBoardPath() {
-        return noticeBoardPath;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("noticeBoardPath")
-    public void setNoticeBoardPath(String noticeBoardPath) {
-        this.noticeBoardPath = noticeBoardPath;
+    @JsonProperty("notices")
+    public Set<NoticeIdsPerBoard> getNotices() {
+        return notices;
     }
 
     /**
@@ -137,19 +113,9 @@ public class ModifyNotices {
      * (Required)
      * 
      */
-    @JsonProperty("noticeIds")
-    public Set<String> getNoticeIds() {
-        return noticeIds;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("noticeIds")
-    public void setNoticeIds(Set<String> noticeIds) {
-        this.noticeIds = noticeIds;
+    @JsonProperty("notices")
+    public void setNotices(Set<NoticeIdsPerBoard> notices) {
+        this.notices = notices;
     }
 
     /**
@@ -220,12 +186,12 @@ public class ModifyNotices {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPath", noticeBoardPath).append("noticeIds", noticeIds).append("endOfLife", endOfLife).append("timeZone", timeZone).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("notices", notices).append("endOfLife", endOfLife).append("timeZone", timeZone).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(noticeBoardPath).append(timeZone).append(noticeIds).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(notices).append(timeZone).append(controllerId).append(auditLog).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -237,7 +203,7 @@ public class ModifyNotices {
             return false;
         }
         ModifyNotices rhs = ((ModifyNotices) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(noticeBoardPath, rhs.noticeBoardPath).append(timeZone, rhs.timeZone).append(noticeIds, rhs.noticeIds).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(notices, rhs.notices).append(timeZone, rhs.timeZone).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }

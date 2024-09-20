@@ -20,7 +20,9 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.board.DeleteNotices;
 import com.sos.joc.model.board.ModifyNotices;
+import com.sos.joc.model.board.NoticeIdsPerBoard;
 import com.sos.joc.model.board.PostNotices;
 import com.sos.schema.JsonValidator;
 
@@ -34,37 +36,44 @@ import js7.proxy.javaapi.JControllerProxy;
 @Path("notices")
 public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify {
 
-    private static final String API_CALL_DELETE = "./notices/delete";
-    private static final String API_CALL_POST = "./notices/post";
+    private static final String API_CALL = "./notices/";
+    
+    private enum Action {
+        POST, DELETE
+    }
 
     @Override
     public JOCDefaultResponse deleteNotices(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_DELETE, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ModifyNotices.class);
-            ModifyNotices filter = Globals.objectMapper.readValue(filterBytes, ModifyNotices.class);
-            String controllerId = filter.getControllerId();
+            initLogging(API_CALL + Action.DELETE.name().toLowerCase(), filterBytes, accessToken);
+            JsonValidator.validate(filterBytes, DeleteNotices.class, true);
+            DeleteNotices in = Globals.objectMapper.readValue(filterBytes, DeleteNotices.class);
+            String controllerId = in.getControllerId();
             JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getNoticeBoards()
                     .getDelete());
             if (response != null) {
                 return response;
             }
 
-            storeAuditLog(filter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-
+            storeAuditLog(in.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            
             JControllerProxy proxy = Proxy.of(controllerId);
-            final BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));
-            if (proxy.currentState().pathToBoard().get(board) == null) {
-                throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Board '" + board.string() + "'");
+            
+            if (in.getNotices() != null) {
+
+                getBatchCommand(proxy.currentState().pathToBoard().keySet(), in, Action.DELETE).ifPresent(command -> proxy.api().executeCommand(
+                        command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId)));
+
+            } else { //deprecated
+                
+                final BoardPath board = BoardPath.of(JocInventory.pathToName(in.getNoticeBoardPath()));
+                if (proxy.currentState().pathToBoard().get(board) == null) {
+                    throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Board '" + board.string() + "'");
+                }
+                proxy.api().executeCommand(JControllerCommand.batch(in.getNoticeIds().stream().map(NoticeId::of).map(
+                        n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply).collect(Collectors.toList()))).thenAccept(
+                                e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
-            // TODO Batch command
-//            filter.getNoticeIds().stream().map(NoticeId::of).map(n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply)
-//                    .forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
-//                            getJocError(), controllerId)));
-//            
-            proxy.api().executeCommand(JControllerCommand.batch(filter.getNoticeIds().stream().map(NoticeId::of).map(
-                    n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply).collect(Collectors.toList()))).thenAccept(
-                            e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -78,8 +87,8 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
     @Override
     public JOCDefaultResponse postNotices(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_POST, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, PostNotices.class);
+            initLogging(API_CALL + Action.POST.name().toLowerCase(), filterBytes, accessToken);
+            JsonValidator.validate(filterBytes, PostNotices.class, true);
             PostNotices in = Globals.objectMapper.readValue(filterBytes, PostNotices.class);
             String controllerId = in.getControllerId();
             JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getNoticeBoards()
@@ -92,23 +101,35 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
 
             JControllerProxy proxy = Proxy.of(controllerId);
             Set<BoardPath> boardPaths = proxy.currentState().pathToBoard().keySet();
-            
-            Map<Boolean, List<BoardPath>> map = in.getNoticeBoardPaths().stream().map(JocInventory::pathToName).map(BoardPath::of).collect(Collectors
-                    .groupingBy(b -> boardPaths.contains(b)));
-            map.putIfAbsent(Boolean.FALSE, Collections.emptyList());
-            
-            if (!map.get(Boolean.FALSE).isEmpty()) {
-                throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Boards " + map.get(
-                        Boolean.FALSE).stream().map(BoardPath::string).collect(Collectors.joining("', '", "['", "']")));
-            }
-            
             Instant now = Instant.now();
-            Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
-            NoticeId notice = NoticeId.of(in.getNoticeId());
+            
+            if (in.getNotices() != null) {
+                
+                Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
+                getBatchCommand(boardPaths, in, endOfLife, Action.POST).ifPresent(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper
+                        .postProblemEventIfExist(e, accessToken, getJocError(), controllerId)));
 
-            proxy.api().executeCommand(JControllerCommand.batch(map.getOrDefault(Boolean.TRUE, Collections.emptyList()).stream().map(
-                    b -> JControllerCommand.postNotice(b, notice, endOfLife)).collect(Collectors.toList()))).thenAccept(e -> ProblemHelper
-                            .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+            } else { //deprecated
+
+                Map<Boolean, List<BoardPath>> map = in.getNoticeBoardPaths().stream().map(JocInventory::pathToName).map(BoardPath::of).collect(
+                        Collectors.groupingBy(b -> boardPaths.contains(b)));
+                map.putIfAbsent(Boolean.FALSE, Collections.emptyList());
+                map.putIfAbsent(Boolean.TRUE, Collections.emptyList());
+
+                if (!map.get(Boolean.FALSE).isEmpty()) {
+                    throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Boards " + map.get(
+                            Boolean.FALSE).stream().map(BoardPath::string).collect(Collectors.joining("', '", "['", "']")));
+                }
+                
+                if (!map.get(Boolean.TRUE).isEmpty()) {
+                    Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
+                    NoticeId notice = NoticeId.of(in.getNoticeId());
+
+                    proxy.api().executeCommand(JControllerCommand.batch(map.getOrDefault(Boolean.TRUE, Collections.emptyList()).stream().map(
+                            b -> JControllerCommand.postNotice(b, notice, endOfLife)).collect(Collectors.toList()))).thenAccept(e -> ProblemHelper
+                                    .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+                }
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
         } catch (JocException e) {
@@ -128,6 +149,43 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             }
         }
         return endOfLifeOpt;
+    }
+    
+    private Optional<JControllerCommand> getBatchCommand(Set<BoardPath> boardPaths, ModifyNotices in, Action action) {
+        return getBatchCommand(boardPaths, in, Optional.empty(), action);
+    }
+    
+    private Optional<JControllerCommand> getBatchCommand(Set<BoardPath> boardPaths, ModifyNotices in, Optional<Instant> endOfLife, Action action) {
+        Map<Boolean, List<BoardPath>> map = in.getNotices().stream()
+                .map(NoticeIdsPerBoard::getNoticeBoardPath)
+                .map(JocInventory::pathToName)
+                .map(BoardPath::of)
+                .collect(Collectors.groupingBy(b -> boardPaths.contains(b)));
+        map.putIfAbsent(Boolean.FALSE, Collections.emptyList());
+        map.putIfAbsent(Boolean.TRUE, Collections.emptyList());
+
+        if (!map.get(Boolean.FALSE).isEmpty()) {
+            throw new ControllerObjectNotExistException("Controller '" + in.getControllerId() + "' couldn't find the Notice Boards " + map.get(
+                    Boolean.FALSE).stream().map(BoardPath::string).collect(Collectors.joining("', '", "['", "']")));
+        }
+        if (!map.get(Boolean.TRUE).isEmpty()) {
+            return Optional.of(JControllerCommand.batch(in.getNotices().stream()
+                    .peek(notice -> notice.setNoticeBoardPath(JocInventory.pathToName(notice.getNoticeBoardPath())))
+                    .filter(notice -> boardPaths.contains(BoardPath.of(notice.getNoticeBoardPath())))
+                    .flatMap(notice -> notice.getNoticeIds().stream()
+                            .map(n -> getActionCommand(notice.getNoticeBoardPath(), n, endOfLife, action)))
+                    .collect(Collectors.toList())));
+        }
+        return Optional.empty();
+    }
+    
+    private JControllerCommand getActionCommand(String boardName, String noticeId, Optional<Instant> endOfLife, Action action) {
+        switch (action) {
+        case DELETE:
+            return JControllerCommand.apply(new ControllerCommand.DeleteNotice(BoardPath.of(boardName), NoticeId.of(noticeId)));
+        default: //case POST:
+            return JControllerCommand.postNotice(BoardPath.of(boardName), NoticeId.of(noticeId), endOfLife);
+        }
     }
 
 }
