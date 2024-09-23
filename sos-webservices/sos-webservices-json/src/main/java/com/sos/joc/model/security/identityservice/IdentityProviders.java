@@ -3,7 +3,12 @@ package com.sos.joc.model.security.identityservice;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -25,7 +30,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "oidcServiceItems",
     "fido2ndFactorServiceItems",
     "fidoServiceItems",
-    "needAccountPasswordItems"
+    "needAccountPassword"
 })
 public class IdentityProviders {
 
@@ -44,8 +49,15 @@ public class IdentityProviders {
     private List<FidoIdentityProvider> fido2ndFactorServiceItems = new ArrayList<FidoIdentityProvider>();
     @JsonProperty("fidoServiceItems")
     private List<FidoIdentityProvider> fidoServiceItems = new ArrayList<FidoIdentityProvider>();
-    @JsonProperty("needAccountPasswordItems")
-    private List<IdentityServiceTypes> needAccountPasswordItems = new ArrayList<IdentityServiceTypes>();
+    /**
+     * if true then at least one identity service needs account/password
+     * 
+     */
+    @JsonProperty("needAccountPassword")
+    @JsonPropertyDescription("if true then at least one identity service needs account/password")
+    private Boolean needAccountPassword = false;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -58,17 +70,17 @@ public class IdentityProviders {
      * 
      * @param oidcServiceItems
      * @param fidoServiceItems
+     * @param needAccountPassword
      * @param deliveryDate
      * @param fido2ndFactorServiceItems
-     * @param needAccountPasswordItems
      */
-    public IdentityProviders(Date deliveryDate, List<OidcIdentityProvider> oidcServiceItems, List<FidoIdentityProvider> fido2ndFactorServiceItems, List<FidoIdentityProvider> fidoServiceItems, List<IdentityServiceTypes> needAccountPasswordItems) {
+    public IdentityProviders(Date deliveryDate, List<OidcIdentityProvider> oidcServiceItems, List<FidoIdentityProvider> fido2ndFactorServiceItems, List<FidoIdentityProvider> fidoServiceItems, Boolean needAccountPassword) {
         super();
         this.deliveryDate = deliveryDate;
         this.oidcServiceItems = oidcServiceItems;
         this.fido2ndFactorServiceItems = fido2ndFactorServiceItems;
         this.fidoServiceItems = fidoServiceItems;
-        this.needAccountPasswordItems = needAccountPasswordItems;
+        this.needAccountPassword = needAccountPassword;
     }
 
     /**
@@ -123,24 +135,42 @@ public class IdentityProviders {
         this.fidoServiceItems = fidoServiceItems;
     }
 
-    @JsonProperty("needAccountPasswordItems")
-    public List<IdentityServiceTypes> getNeedAccountPasswordItems() {
-        return needAccountPasswordItems;
+    /**
+     * if true then at least one identity service needs account/password
+     * 
+     */
+    @JsonProperty("needAccountPassword")
+    public Boolean getNeedAccountPassword() {
+        return needAccountPassword;
     }
 
-    @JsonProperty("needAccountPasswordItems")
-    public void setNeedAccountPasswordItems(List<IdentityServiceTypes> needAccountPasswordItems) {
-        this.needAccountPasswordItems = needAccountPasswordItems;
+    /**
+     * if true then at least one identity service needs account/password
+     * 
+     */
+    @JsonProperty("needAccountPassword")
+    public void setNeedAccountPassword(Boolean needAccountPassword) {
+        this.needAccountPassword = needAccountPassword;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("oidcServiceItems", oidcServiceItems).append("fido2ndFactorServiceItems", fido2ndFactorServiceItems).append("fidoServiceItems", fidoServiceItems).append("needAccountPasswordItems", needAccountPasswordItems).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("oidcServiceItems", oidcServiceItems).append("fido2ndFactorServiceItems", fido2ndFactorServiceItems).append("fidoServiceItems", fidoServiceItems).append("needAccountPassword", needAccountPassword).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(oidcServiceItems).append(fidoServiceItems).append(deliveryDate).append(fido2ndFactorServiceItems).append(needAccountPasswordItems).toHashCode();
+        return new HashCodeBuilder().append(oidcServiceItems).append(fidoServiceItems).append(needAccountPassword).append(additionalProperties).append(deliveryDate).append(fido2ndFactorServiceItems).toHashCode();
     }
 
     @Override
@@ -152,7 +182,7 @@ public class IdentityProviders {
             return false;
         }
         IdentityProviders rhs = ((IdentityProviders) other);
-        return new EqualsBuilder().append(oidcServiceItems, rhs.oidcServiceItems).append(fidoServiceItems, rhs.fidoServiceItems).append(deliveryDate, rhs.deliveryDate).append(fido2ndFactorServiceItems, rhs.fido2ndFactorServiceItems).append(needAccountPasswordItems, rhs.needAccountPasswordItems).isEquals();
+        return new EqualsBuilder().append(oidcServiceItems, rhs.oidcServiceItems).append(fidoServiceItems, rhs.fidoServiceItems).append(needAccountPassword, rhs.needAccountPassword).append(additionalProperties, rhs.additionalProperties).append(deliveryDate, rhs.deliveryDate).append(fido2ndFactorServiceItems, rhs.fido2ndFactorServiceItems).isEquals();
     }
 
 }
