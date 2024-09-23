@@ -42,6 +42,10 @@ public class ExpectingOrder {
         return boardPath.string();
     }
     
+    public BoardPath getBoard() {
+        return boardPath;
+    }
+    
     public String getNoticeId() {
         return noticeId.string();
     }

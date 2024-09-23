@@ -163,7 +163,7 @@ public class BoardHelper {
     }
     
     public static ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
-            Collection<String> boardPaths, Set<Folder> permittedFolders) {
+            Set<String> boardPaths, Set<Folder> permittedFolders) {
         return getExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
     }
     
@@ -174,7 +174,7 @@ public class BoardHelper {
     }
 
     public static ConcurrentMap<String, ConcurrentMap<String, Integer>> getNumOfExpectingOrders(JControllerState controllerState,
-            Collection<String> boardPaths, Set<Folder> permittedFolders) {
+            Set<String> boardPaths, Set<Folder> permittedFolders) {
         return getNumOfExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
     }
     
@@ -193,7 +193,7 @@ public class BoardHelper {
         return currentstate;
     }
     
-    public static Stream<ExpectingOrder> getExpectingOrdersStream(JControllerState controllerState, Collection<String> boardPaths,
+    public static Stream<ExpectingOrder> getExpectingOrdersStream(JControllerState controllerState, Set<String> boardPaths,
             Set<Folder> permittedFolders) {
         if (controllerState == null || boardPaths == null || boardPaths.isEmpty()) {
             return Stream.empty();

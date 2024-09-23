@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,20 +22,31 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "noticeBoardPaths",
-    "noticeId",
+    "controllerId",
+    "expectedNotices",
     "endOfLife",
-    "timeZone"
+    "timeZone",
+    "auditLog"
 })
-public class PostNotices
-    extends ModifyNotices
-{
+public class PostExpectedNotices {
 
-    @JsonProperty("noticeBoardPaths")
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("expectedNotices")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> noticeBoardPaths = new LinkedHashSet<String>();
-    @JsonProperty("noticeId")
-    private String noticeId;
+    private Set<ExpectedNoticesPerBoard> expectedNotices = new LinkedHashSet<ExpectedNoticesPerBoard>();
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -53,25 +65,57 @@ public class PostNotices
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
-    @JsonProperty("noticeBoardPaths")
-    public Set<String> getNoticeBoardPaths() {
-        return noticeBoardPaths;
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("noticeBoardPaths")
-    public void setNoticeBoardPaths(Set<String> noticeBoardPaths) {
-        this.noticeBoardPaths = noticeBoardPaths;
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
-    @JsonProperty("noticeId")
-    public String getNoticeId() {
-        return noticeId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("expectedNotices")
+    public Set<ExpectedNoticesPerBoard> getExpectedNotices() {
+        return expectedNotices;
     }
 
-    @JsonProperty("noticeId")
-    public void setNoticeId(String noticeId) {
-        this.noticeId = noticeId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("expectedNotices")
+    public void setExpectedNotices(Set<ExpectedNoticesPerBoard> expectedNotices) {
+        this.expectedNotices = expectedNotices;
     }
 
     /**
@@ -118,14 +162,36 @@ public class PostNotices
         this.timeZone = timeZone;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("noticeBoardPaths", noticeBoardPaths).append("noticeId", noticeId).append("endOfLife", endOfLife).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("expectedNotices", expectedNotices).append("endOfLife", endOfLife).append("timeZone", timeZone).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(noticeBoardPaths).append(timeZone).append(noticeId).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(expectedNotices).append(timeZone).append(controllerId).append(auditLog).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -133,11 +199,11 @@ public class PostNotices
         if (other == this) {
             return true;
         }
-        if ((other instanceof PostNotices) == false) {
+        if ((other instanceof PostExpectedNotices) == false) {
             return false;
         }
-        PostNotices rhs = ((PostNotices) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(noticeBoardPaths, rhs.noticeBoardPaths).append(timeZone, rhs.timeZone).append(noticeId, rhs.noticeId).append(endOfLife, rhs.endOfLife).isEquals();
+        PostExpectedNotices rhs = ((PostExpectedNotices) other);
+        return new EqualsBuilder().append(expectedNotices, rhs.expectedNotices).append(timeZone, rhs.timeZone).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }

@@ -7,9 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.joc.Globals;
+import com.sos.joc.board.common.BoardHelper;
+import com.sos.joc.board.common.ExpectingOrder;
 import com.sos.joc.board.resource.INoticesModify;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -21,8 +25,10 @@ import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.DeleteNotices;
+import com.sos.joc.model.board.ExpectedNoticesPerBoard;
 import com.sos.joc.model.board.ModifyNotices;
 import com.sos.joc.model.board.NoticeIdsPerBoard;
+import com.sos.joc.model.board.PostExpectedNotices;
 import com.sos.joc.model.board.PostNotices;
 import com.sos.schema.JsonValidator;
 
@@ -131,6 +137,51 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                 }
             }
 
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse postExpectedNotices(String accessToken, byte[] filterBytes) {
+        try {
+            initLogging(API_CALL + Action.POST.name().toLowerCase() + "/expected", filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, PostExpectedNotices.class);
+            PostExpectedNotices in = Globals.objectMapper.readValue(filterBytes, PostExpectedNotices.class);
+            String controllerId = in.getControllerId();
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getNoticeBoards()
+                    .getPost());
+            if (response != null) {
+                return response;
+            }
+            
+            storeAuditLog(in.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+
+            JControllerProxy proxy = Proxy.of(controllerId);
+            Set<BoardPath> boardPaths = proxy.currentState().pathToBoard().keySet();
+            Instant now = Instant.now();
+            Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
+            
+            Map<String, Set<String>> expectedNotices = in.getExpectedNotices().stream().collect(Collectors.toMap(
+                    ExpectedNoticesPerBoard::getNoticeBoardPath, ExpectedNoticesPerBoard::getWorkflowPaths, (k, v) -> k));
+            expectedNotices.keySet().removeIf(key -> !boardPaths.contains(BoardPath.of(key)));
+            
+            if (!expectedNotices.isEmpty()) {
+                Stream<ExpectingOrder> expectingOrdersStream = BoardHelper.getExpectingOrdersStream(proxy.currentState(), expectedNotices.keySet(),
+                        folderPermissions.getListOfFolders());
+                Predicate<ExpectingOrder> filterWorkflow = o -> {
+                    Set<String> workflows = expectedNotices.getOrDefault(o.getBoardPath(), Collections.emptySet());
+                    return workflows.isEmpty() || workflows.contains(o.getJOrder().workflowId().path().string());
+                };
+                proxy.api().executeCommand(JControllerCommand.batch(expectingOrdersStream.filter(filterWorkflow).map(o -> JControllerCommand
+                        .postNotice(o.getBoard(), NoticeId.of(o.getNoticeId()), endOfLife)).distinct().collect(Collectors.toList()))).thenAccept(
+                                e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+            }
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
