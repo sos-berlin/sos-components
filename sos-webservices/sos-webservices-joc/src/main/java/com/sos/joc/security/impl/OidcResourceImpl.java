@@ -83,6 +83,15 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 			JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
 			JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
 			jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+			
+            identityProviders.getNeedAccountPasswordItems().add(IdentityServiceTypes.JOC);
+            identityProviders.getNeedAccountPasswordItems().add(IdentityServiceTypes.LDAP);
+            identityProviders.getNeedAccountPasswordItems().add(IdentityServiceTypes.LDAP_JOC);
+            identityProviders.getNeedAccountPasswordItems().add(IdentityServiceTypes.KEYCLOAK);
+            identityProviders.getNeedAccountPasswordItems().add(IdentityServiceTypes.KEYCLOAK_JOC);
+
+
+            
 
 			for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServicesOIdc) {
 				OidcIdentityProvider oidcIdentityProvider = new OidcIdentityProvider();

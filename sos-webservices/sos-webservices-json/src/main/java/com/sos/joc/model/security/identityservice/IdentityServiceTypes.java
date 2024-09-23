@@ -9,9 +9,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum IdentityServiceTypes {
 
     UNKNOWN("UNKNOWN"),
-    VAULT("VAULT"),
-    VAULT_JOC("VAULT-JOC"),
-    VAULT_JOC_ACTIVE("VAULT-JOC-ACTIVE"),
     KEYCLOAK("KEYCLOAK"),
     KEYCLOAK_JOC("KEYCLOAK-JOC"),
     LDAP("LDAP"),

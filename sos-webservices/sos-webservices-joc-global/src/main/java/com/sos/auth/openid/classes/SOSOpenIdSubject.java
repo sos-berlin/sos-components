@@ -118,16 +118,7 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
 
     @Override
     public Boolean isForcePasswordChange() {
-        if (identityService.getIdentyServiceType() == IdentityServiceTypes.VAULT_JOC_ACTIVE) {
-            try {
-                return SOSAuthHelper.getForcePasswordChange(currentAccount.getAccountname(), identityService);
-            } catch (SOSHibernateException e) {
-                LOGGER.error("", e);
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return false;
     }
 
     @Override

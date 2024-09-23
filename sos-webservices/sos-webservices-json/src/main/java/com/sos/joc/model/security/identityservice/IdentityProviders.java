@@ -24,7 +24,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "deliveryDate",
     "oidcServiceItems",
     "fido2ndFactorServiceItems",
-    "fidoServiceItems"
+    "fidoServiceItems",
+    "needAccountPasswordItems"
 })
 public class IdentityProviders {
 
@@ -43,6 +44,8 @@ public class IdentityProviders {
     private List<FidoIdentityProvider> fido2ndFactorServiceItems = new ArrayList<FidoIdentityProvider>();
     @JsonProperty("fidoServiceItems")
     private List<FidoIdentityProvider> fidoServiceItems = new ArrayList<FidoIdentityProvider>();
+    @JsonProperty("needAccountPasswordItems")
+    private List<IdentityServiceTypes> needAccountPasswordItems = new ArrayList<IdentityServiceTypes>();
 
     /**
      * No args constructor for use in serialization
@@ -57,13 +60,15 @@ public class IdentityProviders {
      * @param fidoServiceItems
      * @param deliveryDate
      * @param fido2ndFactorServiceItems
+     * @param needAccountPasswordItems
      */
-    public IdentityProviders(Date deliveryDate, List<OidcIdentityProvider> oidcServiceItems, List<FidoIdentityProvider> fido2ndFactorServiceItems, List<FidoIdentityProvider> fidoServiceItems) {
+    public IdentityProviders(Date deliveryDate, List<OidcIdentityProvider> oidcServiceItems, List<FidoIdentityProvider> fido2ndFactorServiceItems, List<FidoIdentityProvider> fidoServiceItems, List<IdentityServiceTypes> needAccountPasswordItems) {
         super();
         this.deliveryDate = deliveryDate;
         this.oidcServiceItems = oidcServiceItems;
         this.fido2ndFactorServiceItems = fido2ndFactorServiceItems;
         this.fidoServiceItems = fidoServiceItems;
+        this.needAccountPasswordItems = needAccountPasswordItems;
     }
 
     /**
@@ -118,14 +123,24 @@ public class IdentityProviders {
         this.fidoServiceItems = fidoServiceItems;
     }
 
+    @JsonProperty("needAccountPasswordItems")
+    public List<IdentityServiceTypes> getNeedAccountPasswordItems() {
+        return needAccountPasswordItems;
+    }
+
+    @JsonProperty("needAccountPasswordItems")
+    public void setNeedAccountPasswordItems(List<IdentityServiceTypes> needAccountPasswordItems) {
+        this.needAccountPasswordItems = needAccountPasswordItems;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("oidcServiceItems", oidcServiceItems).append("fido2ndFactorServiceItems", fido2ndFactorServiceItems).append("fidoServiceItems", fidoServiceItems).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("oidcServiceItems", oidcServiceItems).append("fido2ndFactorServiceItems", fido2ndFactorServiceItems).append("fidoServiceItems", fidoServiceItems).append("needAccountPasswordItems", needAccountPasswordItems).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(oidcServiceItems).append(fidoServiceItems).append(deliveryDate).append(fido2ndFactorServiceItems).toHashCode();
+        return new HashCodeBuilder().append(oidcServiceItems).append(fidoServiceItems).append(deliveryDate).append(fido2ndFactorServiceItems).append(needAccountPasswordItems).toHashCode();
     }
 
     @Override
@@ -137,7 +152,7 @@ public class IdentityProviders {
             return false;
         }
         IdentityProviders rhs = ((IdentityProviders) other);
-        return new EqualsBuilder().append(oidcServiceItems, rhs.oidcServiceItems).append(fidoServiceItems, rhs.fidoServiceItems).append(deliveryDate, rhs.deliveryDate).append(fido2ndFactorServiceItems, rhs.fido2ndFactorServiceItems).isEquals();
+        return new EqualsBuilder().append(oidcServiceItems, rhs.oidcServiceItems).append(fidoServiceItems, rhs.fidoServiceItems).append(deliveryDate, rhs.deliveryDate).append(fido2ndFactorServiceItems, rhs.fido2ndFactorServiceItems).append(needAccountPasswordItems, rhs.needAccountPasswordItems).isEquals();
     }
 
 }
