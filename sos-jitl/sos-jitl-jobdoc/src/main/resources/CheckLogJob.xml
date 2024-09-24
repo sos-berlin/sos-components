@@ -56,7 +56,7 @@
 <li>js7CheckLogGroupsMatchesCount: 0</li>
 </ul>
 
-<b>Exampe 2: get event ids with event###</b>						
+<b>Example 2: get event ids with event###</b>						
 <ul>
 <li>pattern = "event:\\d{3}";</li>
 <li>log = "The first line with event:1234" + "\r\n" + "Line without event" + "\r\n"
@@ -72,7 +72,7 @@
 <li>js7CheckLogGroupsMatchesCount:0</li>
 </ul>
 
-<b>Exampe 3: Get all dates</b>						
+<b>Example 3: Get all dates</b>						
 <ul>
 <li>pattern = "\\d{1,2}.\\d{1,2}.\\d{4}";</li>
 <li>log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";</li>
