@@ -82,7 +82,7 @@ encrypted symmetric key, initialization vector and the encrypted value.
 
 -The encrypted symmetric key is decrypted with the private key
 -The encrypted file is decrypted using the decrypted symmetric key and the initialisation vector.
--The path to the file may be relevant in subsequent processing.       
+-The encrypted value relevant in subsequent processing.       
 
 
 </p>
