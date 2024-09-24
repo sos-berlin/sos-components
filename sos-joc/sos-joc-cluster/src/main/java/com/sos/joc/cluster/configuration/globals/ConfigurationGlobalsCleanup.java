@@ -48,7 +48,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
         forceCleanup.setOrdering(++index);
         forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DURATION, "60s", GlobalSettingsSectionValueType.DURATION));
-        forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DELAY, "60s", GlobalSettingsSectionValueType.DURATION));
+        forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DELAY, "30s", GlobalSettingsSectionValueType.DURATION));
 
         batchSize.setOrdering(++index);
         maxPoolSize.setOrdering(++index);
