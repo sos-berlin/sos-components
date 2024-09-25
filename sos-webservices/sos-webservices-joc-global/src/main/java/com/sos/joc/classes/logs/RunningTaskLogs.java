@@ -75,7 +75,7 @@ public class RunningTaskLogs {
                     }
                 }
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.info("[RunningTaskLogs][cleanup][after]events=" + events.size() + ",completeLogs=" + completeLogs.size());
+                    LOGGER.debug("[RunningTaskLogs][cleanup][after]events=" + events.size() + ",completeLogs=" + completeLogs.size());
                 }
             }
 
@@ -99,6 +99,10 @@ public class RunningTaskLogs {
             r.setTaskId(evt.getHistoryOrderStepId());
             r.setComplete(EventType.OrderProcessed.value().equals(evt.getKey()));
 
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[createHistoryTaskEvent][" + r.getTaskId() + "][" + evt.getKey() + "]complete=" + r.getComplete());
+            }
+
             addEvent(evt.getSessionIdentifier(), r);
             if (r.getComplete()) {
                 addCompleteness(evt.getSessionIdentifier(), r.getTaskId());
@@ -111,7 +115,7 @@ public class RunningTaskLogs {
         String id = getSessionIdentifier(sessionIdentifier);
         registeredTaskIds.computeIfAbsent(id, k -> new HashSet<>()).add(taskId);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("taskId '" + taskId + "' is observed for log events of this session");
+            LOGGER.debug("[subscribe][" + taskId + "]observed for log events of this session");
         }
     }
 
@@ -125,7 +129,7 @@ public class RunningTaskLogs {
             return l.isEmpty() ? null : l;
         });
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("taskId '" + taskId + "' is no longer observed for log events of this session");
+            LOGGER.debug("[unsubscribe][" + taskId + "]no longer observed for log events of this session");
         }
     }
 
@@ -157,6 +161,11 @@ public class RunningTaskLogs {
                 if (e.getComplete()) {
                     r.setComplete(true);
                 }
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[getRunningTaskLog][" + r.getTaskId() + "]complete=" + r.getComplete());
+                }
+
                 log.append(e.getLog());
                 evtIds.add(e.getEventId());
             }
@@ -180,7 +189,7 @@ public class RunningTaskLogs {
         if (events.get(eventKey).add(event)) {
             EventBus.getInstance().post(new HistoryOrderTaskLogArrived(event.getTaskId(), event.getComplete(), sessionIdentifier));
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("log event for taskId '" + event.getTaskId() + "' published");
+                LOGGER.debug("[addEvent][" + event.getTaskId() + "]event posted");
             }
         }
     }

@@ -68,7 +68,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             RunningTaskLogs r = RunningTaskLogs.getInstance();
             RunningTaskLogs.Mode mode = r.hasEvents(accessToken, taskLog.getEventId(), taskId);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("taskId '" + taskId + "' has tasklogs: " + mode.name());
+                LOGGER.debug("[postRollingTaskLog][" + taskId + "]mode=" + mode.name());
             }
 
             switch (mode) {
@@ -85,7 +85,8 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 condition = lock.newCondition();
                 waitingForEvents(TimeUnit.MINUTES.toMillis(1));
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("taskId '" + taskId + "' end of waiting events: event received? " + eventArrived.get() + ", complete? " + complete
+                    LOGGER.debug(
+                            "[postRollingTaskLog][" + taskId + "][mode="+mode.name()+"]arrived=" + eventArrived.get() + ", complete=" + complete
                             .get());
                 }
                 if (eventArrived.get()) {
