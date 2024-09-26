@@ -368,7 +368,7 @@ public class DependencyResolver {
                 }
             } else {
                 List<String> wfJobResourceNames = new ArrayList<String>(); 
-                getValuesRecursively("", workflow, INSTRUCTION_ADDORDERS_SEARCH, wfJobResourceNames);
+                getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
                 if(!wfJobResourceNames.isEmpty()) {
                     for (String jobResource : wfJobResourceNames) {
                         results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
