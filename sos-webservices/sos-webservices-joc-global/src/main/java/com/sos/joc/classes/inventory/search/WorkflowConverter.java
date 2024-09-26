@@ -54,7 +54,7 @@ public class WorkflowConverter {
         searcher = new WorkflowSearcher(w);
         if (w != null) {
             orderPreparation.process(w.getOrderPreparation());
-            jobs.process(w.getJobs());
+            jobs.process(w.getJobs(), w.getJobResourceNames());
             instructions.process(w.getInstructions());
             toJson();
         }
@@ -167,8 +167,8 @@ public class WorkflowConverter {
             envValues = new ArrayList<String>();
         }
 
-        public void process(com.sos.inventory.model.workflow.Jobs jobs) {
-            handleJobs(jobs);
+        public void process(com.sos.inventory.model.workflow.Jobs jobs, List<String> jobResourceNames) {
+            handleJobs(jobs, jobResourceNames);
             removeDuplicates();
             toJson();
         }
@@ -253,11 +253,14 @@ public class WorkflowConverter {
             return argValues;
         }
 
-        private void handleJobs(com.sos.inventory.model.workflow.Jobs jobs) {
+        private void handleJobs(com.sos.inventory.model.workflow.Jobs jobs, List<String> jobResourceNames) {
             if (jobs == null || jobs.getAdditionalProperties() == null) {
-                return;
+                jobs = new com.sos.inventory.model.workflow.Jobs();
             }
-
+            if (jobResourceNames != null && !jobResourceNames.isEmpty()) {
+                jobResources.addAll(jobResourceNames);
+            }
+            
             jobs.getAdditionalProperties().forEach((jobName, job) -> {
                 names.add(jobName);
                 if (!SOSString.isEmpty(job.getTitle())) {
