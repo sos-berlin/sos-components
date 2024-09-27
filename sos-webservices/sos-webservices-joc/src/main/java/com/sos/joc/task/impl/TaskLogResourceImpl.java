@@ -1,6 +1,7 @@
 package com.sos.joc.task.impl;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -61,47 +62,64 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 return jocDefaultResponse;
             }
 
+            Long started = Instant.now().toEpochMilli();
+
             taskId = taskLog.getTaskId();
             taskLog.setComplete(false);
             taskLog.setLog(null);
 
             RunningTaskLogs r = RunningTaskLogs.getInstance();
-            RunningTaskLogs.Mode mode = r.hasEvents(accessToken, taskLog.getEventId(), taskId);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[postRollingTaskLog][" + taskId + "]mode=" + mode.name());
-            }
-
-            switch (mode) {
-            case TRUE:
-                try {
-                    TimeUnit.MILLISECONDS.sleep(500);
-                } catch (InterruptedException e1) {
-                }
-            case COMPLETE:
-                taskLog = r.getRunningTaskLog(accessToken, taskLog);
-                break;
-            case FALSE:
-                EventBus.getInstance().register(this);
-                condition = lock.newCondition();
-                waitingForEvents(TimeUnit.MINUTES.toMillis(1));
+            if (r.isBeforeLastLogAPICall(accessToken, taskId, taskLog.getEventId(), started, "start")) {
+                disable(taskLog);
+            } else {
+                RunningTaskLogs.Mode mode = r.hasEvents(accessToken, taskLog.getEventId(), taskId);
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(
-                            "[postRollingTaskLog][" + taskId + "][mode="+mode.name()+"]arrived=" + eventArrived.get() + ", complete=" + complete
-                            .get());
+                    LOGGER.debug("[postRollingTaskLog][taskId=" + taskId + "][eventId=" + taskLog.getEventId() + "]mode=" + mode.name());
                 }
-                if (eventArrived.get()) {
-                    if (!complete.get()) {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(500);
-                        } catch (InterruptedException e1) {
+
+                switch (mode) {
+                case TRUE:
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(500);
+                    } catch (InterruptedException e1) {
+                    }
+                case COMPLETE:
+                    taskLog = r.getRunningTaskLog(accessToken, taskLog);
+                    if (r.isBeforeLastLogAPICall(accessToken, taskId, taskLog.getEventId(), started, "mode=complete")) {
+                        disable(taskLog);
+                    } else {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("  [after]eventId=" + taskLog.getEventId() + ",complete=" + taskLog.getComplete());
                         }
                     }
-                    taskLog = r.getRunningTaskLog(accessToken, taskLog);
+                    break;
+                case FALSE:
+                    EventBus.getInstance().register(this);
+                    condition = lock.newCondition();
+                    waitingForEvents(TimeUnit.MINUTES.toMillis(1));
+
+                    if (eventArrived.get()) {
+                        if (!complete.get()) {
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(500);
+                            } catch (InterruptedException e1) {
+                            }
+                        }
+                        taskLog = r.getRunningTaskLog(accessToken, taskLog);
+                        // additional check due to waiting time and possibly changed taskLog.getEventId()
+                        if (r.isBeforeLastLogAPICall(accessToken, taskId, taskLog.getEventId(), started, "mode=false")) {
+                            disable(taskLog);
+                        } else {
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.debug("  [after]eventId=" + taskLog.getEventId() + ",complete=" + taskLog.getComplete());
+                            }
+                        }
+                    }
+                    break;
+                case BROKEN:
+                    taskLog.setComplete(true); // to avoid endless calls
+                    break;
                 }
-                break;
-            case BROKEN:
-                taskLog.setComplete(true); // to avoid endless calls
-                break;
             }
             return JOCDefaultResponse.responseStatus200(taskLog);
         } catch (JocException e) {
@@ -121,47 +139,6 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();
-        }
-    }
-
-    private void waitingForEvents(long maxDelay) {
-        try {
-            if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
-                try {
-                    // LOGGER.debug("waitingForEvents: await " + condition.hashCode());
-                    condition.await(maxDelay, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e1) {
-                } finally {
-                    try {
-                        lock.unlock();
-                    } catch (IllegalMonitorStateException e) {
-                        LOGGER.info("IllegalMonitorStateException at unlock lock after await");
-                    }
-                }
-            }
-        } catch (InterruptedException e) {
-        }
-    }
-
-    private synchronized void signalEvent() {
-        try {
-            // LOGGER.debug("signalEvent: " + (condition != null));
-            if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
-                try {
-                    // LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
-                    condition.signalAll();
-                } finally {
-                    try {
-                        lock.unlock();
-                    } catch (IllegalMonitorStateException e) {
-                        LOGGER.info("IllegalMonitorStateException at unlock lock after signal");
-                    }
-                }
-            } else {
-                LOGGER.info("signalEvent failed");
-            }
-        } catch (InterruptedException e) {
-            LOGGER.info("signalEvent: " + e.toString());
         }
     }
 
@@ -201,6 +178,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             LogTaskContent logTaskContent = new LogTaskContent(taskFilter, folderPermissions, accessToken);
             switch (apiCall) {
             case API_CALL_LOG:
+                RunningTaskLogs.getInstance().registerLastLogAPICall(accessToken, taskFilter.getTaskId());
                 return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(false), logTaskContent.getHeaders());
             default:  // API_CALL_DOWNLOAD:
                 return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(true), logTaskContent
@@ -212,5 +190,51 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+
+    private synchronized void signalEvent() {
+        try {
+            // LOGGER.debug("signalEvent: " + (condition != null));
+            if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
+                try {
+                    // LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
+                    condition.signalAll();
+                } finally {
+                    try {
+                        lock.unlock();
+                    } catch (IllegalMonitorStateException e) {
+                        LOGGER.info("IllegalMonitorStateException at unlock lock after signal");
+                    }
+                }
+            } else {
+                LOGGER.info("signalEvent failed");
+            }
+        } catch (InterruptedException e) {
+            LOGGER.info("signalEvent: " + e.toString());
+        }
+    }
+
+    private void waitingForEvents(long maxDelay) {
+        try {
+            if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
+                try {
+                    // LOGGER.debug("waitingForEvents: await " + condition.hashCode());
+                    condition.await(maxDelay, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e1) {
+                } finally {
+                    try {
+                        lock.unlock();
+                    } catch (IllegalMonitorStateException e) {
+                        LOGGER.info("IllegalMonitorStateException at unlock lock after await");
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+        }
+    }
+
+    private void disable(RunningTaskLog taskLog) {
+        taskLog.setComplete(true);
+        taskLog.setLog(null);
     }
 }

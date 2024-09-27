@@ -35,12 +35,22 @@ public class RunningTaskLogs {
 
     private static RunningTaskLogs runningTaskLogs;
 
+    // key-><taskId>_<sessionIdentifir>
     private volatile Map<String, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Map<String, Set<Long>> completeLogs = new ConcurrentHashMap<>();
     private volatile Map<String, Set<Long>> registeredTaskIds = new ConcurrentHashMap<>();
+    // key-><taskId>_<sessionIdentifir>, value=eventId(current millis)
+    private volatile Map<String, Long> lastLogAPICalls = new ConcurrentHashMap<>();
 
     public enum Mode {
         COMPLETE, TRUE, FALSE, BROKEN;
+    }
+
+    public static synchronized RunningTaskLogs getInstance() {
+        if (runningTaskLogs == null) {
+            runningTaskLogs = new RunningTaskLogs();
+        }
+        return runningTaskLogs;
     }
 
     // TODO: Remove/optimize timer functionality? - it is only required for the time after running logs, not for the entire lifetime of the JOC Cockpit
@@ -63,7 +73,10 @@ public class RunningTaskLogs {
                         logs.removeIf(e -> e.getEventId() < eventId);
                     }
                 });
-                toDelete.forEach(taskIdAndSessionIdentifier -> events.remove(taskIdAndSessionIdentifier));
+                toDelete.forEach(taskIdAndSessionIdentifier -> {
+                    events.remove(taskIdAndSessionIdentifier);
+                    lastLogAPICalls.remove(taskIdAndSessionIdentifier);
+                });
 
                 // remove while iteration
                 Iterator<Map.Entry<String, Set<Long>>> iter = completeLogs.entrySet().iterator();
@@ -75,18 +88,12 @@ public class RunningTaskLogs {
                     }
                 }
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("[RunningTaskLogs][cleanup][after]events=" + events.size() + ",completeLogs=" + completeLogs.size());
+                    LOGGER.debug("[RunningTaskLogs][cleanup][after]events=" + events.size() + ",completeLogs=" + completeLogs.size()
+                            + ",lastLogAPICalls=" + lastLogAPICalls.size());
                 }
             }
 
         }, CLEANUP_PERIOD, CLEANUP_PERIOD);
-    }
-
-    public static synchronized RunningTaskLogs getInstance() {
-        if (runningTaskLogs == null) {
-            runningTaskLogs = new RunningTaskLogs();
-        }
-        return runningTaskLogs;
     }
 
     @Subscribe({ HistoryOrderTaskLog.class })
@@ -148,6 +155,47 @@ public class RunningTaskLogs {
                 return Mode.BROKEN;
             }
             return Mode.FALSE;
+        }
+    }
+
+    public synchronized void registerLastLogAPICall(String sessionIdentifier, Long taskId) {
+        // unsubscribe
+        unsubscribe(sessionIdentifier, taskId);
+
+        String eventKey = getEventKey(sessionIdentifier, taskId);
+        int oldEvents = 0;
+        // cleanup
+        CopyOnWriteArraySet<RunningTaskLog> e = events.get(eventKey);
+        if (e != null) {
+            oldEvents = e.size();
+            events.remove(eventKey);
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[registerLastLogAPICall][taskId=" + taskId + "]oldEvents removed=" + oldEvents);
+        }
+        // register
+        lastLogAPICalls.put(eventKey, Instant.now().toEpochMilli());
+    }
+
+    public synchronized boolean isBeforeLastLogAPICall(String sessionIdentifier, Long taskId, Long eventId, Long started, String range) {
+        String key = getEventKey(sessionIdentifier, taskId);
+        Long l = lastLogAPICalls.get(key);
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (l == null) {
+            if (isDebugEnabled) {
+                LOGGER.debug("[isBeforeLastLogAPICall][taskId=" + taskId + "][lastLogAPICall=null][eventId=" + eventId + "][" + range + "]false");
+            }
+            return false;
+        } else {
+            boolean r = l.longValue() > eventId.longValue();
+            if (!r) {
+                r = l.longValue() > started.longValue();
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug("[isBeforeLastLogAPICall][taskId=" + taskId + "][lastLogAPICall=" + l + "][eventId=" + eventId + "][started=" + started
+                        + "][" + range + "]" + r);
+            }
+            return r;
         }
     }
 
@@ -232,4 +280,5 @@ public class RunningTaskLogs {
     public Map<String, CopyOnWriteArraySet<RunningTaskLog>> getEvents() {
         return events;
     }
+
 }

@@ -194,11 +194,6 @@ public class RunningTaskLogHandler {
             }
             long position = startPosition;
             try (AsynchronousFileChannel fileChannel = AsynchronousFileChannel.open(taskLogFile, StandardOpenOption.READ)) {
-
-                // RunningTaskLogs.getInstance().unsubscribe(content.getSessionIdentifier(), content.getHistoryId());
-                // content.setComplete(false);
-                // RunningTaskLogs.getInstance().subscribe(content.getSessionIdentifier(), content.getHistoryId());
-
                 ByteBuffer buffer = ByteBuffer.allocate(RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE);
                 int currentIteration = 0;
                 r: while (!content.isComplete()) {
