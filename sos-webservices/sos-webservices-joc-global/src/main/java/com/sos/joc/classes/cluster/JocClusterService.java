@@ -143,7 +143,7 @@ public class JocClusterService {
         return answer;
     }
 
-    public JocClusterAnswer stop(StartupMode mode, boolean deleteActiveCurrentMember) {
+    public JocClusterAnswer stop(StartupMode mode, boolean deleteActiveCurrentMember, boolean resetCurrentInstanceHeartBeat) {
         JocClusterServiceLogger.setLogger();
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterState.STOPPED);
         if (cluster == null) {
@@ -151,7 +151,7 @@ public class JocClusterService {
         } else {
             ThreadGroup tg = cluster.getConfig().getThreadGroup();
             stopSettingsChangedTimer();
-            closeCluster(mode, deleteActiveCurrentMember);
+            closeCluster(mode, deleteActiveCurrentMember, resetCurrentInstanceHeartBeat);
             closeFactory();
             JocCluster.shutdownThreadPool("[" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
 
@@ -163,7 +163,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer restart(StartupMode mode) {
-        stop(mode, false);
+        stop(mode, false, false);
         JocClusterAnswer answer = start(mode, false);
         if (answer.getState().equals(JocClusterState.STARTED)) {
             answer.setState(JocClusterState.RESTARTED);
@@ -308,9 +308,9 @@ public class JocClusterService {
         }
     }
 
-    private void closeCluster(StartupMode mode, boolean deleteActiveCurrentMember) {
+    private void closeCluster(StartupMode mode, boolean deleteActiveCurrentMember, boolean resetCurrentInstanceHeartBeat) {
         if (cluster != null) {
-            cluster.close(mode, Globals.configurationGlobals, deleteActiveCurrentMember);
+            cluster.close(mode, Globals.configurationGlobals, deleteActiveCurrentMember, resetCurrentInstanceHeartBeat);
             cluster = null;
         }
     }

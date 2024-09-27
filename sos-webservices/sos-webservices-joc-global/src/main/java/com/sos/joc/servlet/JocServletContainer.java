@@ -59,7 +59,7 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> init on starting JOC");
         super.init();
         cleanupOldLogFiles(0);
-        
+
         Globals.setSystemProperties();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -112,13 +112,13 @@ public class JocServletContainer extends ServletContainer {
     public void destroy() {
         LOGGER.debug("----> destroy on close JOC");
         super.destroy();
-        
+
         NotificationAppender.doNotify = false;
         QuickSearchStore.close();
         AgentClusterWatch.close();
 
-        // 1 - stop cluster
-        JocClusterService.getInstance().stop(StartupMode.automatic, true);
+        // 1 - stop cluster: boolean deleteActiveCurrentMember, boolean resetCurrentInstanceHeartBeat
+        JocClusterService.getInstance().stop(StartupMode.automatic, true, true);
         JocClusterServiceLogger.clearAllLoggers();
         // 2 - close proxies
         Proxies.closeAll();

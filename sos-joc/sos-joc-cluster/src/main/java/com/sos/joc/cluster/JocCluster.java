@@ -872,7 +872,8 @@ public class JocCluster {
         }
     }
 
-    public void close(StartupMode mode, ConfigurationGlobals configurations, boolean deleteActiveCurrentMember) {
+    public void close(StartupMode mode, ConfigurationGlobals configurations, boolean deleteActiveCurrentMember,
+            boolean resetCurrentInstanceHeartBeat) {
         LOGGER.info("[" + mode + "][cluster][close]start...----------------------------------------------");
         closed = true;
         synchronized (lock) {
@@ -885,6 +886,9 @@ public class JocCluster {
         closeActiveMemberServices(mode, configurations);
         if (deleteActiveCurrentMember) {
             tryDeleteActiveCurrentMember();
+        }
+        if (resetCurrentInstanceHeartBeat) {
+            tryResetCurrentInstanceHeartBeat();
         }
         LOGGER.info("[" + mode + "][cluster][close]end----------------------------------------------");
     }
@@ -941,6 +945,38 @@ public class JocCluster {
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
 
+            if (dbLayer != null) {
+                dbLayer.rollback();
+            }
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
+        }
+        return result;
+    }
+
+    public int tryResetCurrentInstanceHeartBeat() {
+        if (!instanceProcessed) {
+            return 0;
+        }
+        DBLayerJocCluster dbLayer = null;
+        int result = 0;
+        try {
+            Date resetDate = new Date(0);
+
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
+            dbLayer.beginTransaction();
+            result = dbLayer.updateInstanceHeartBeat(currentMemberId, resetDate);
+            dbLayer.commit();
+
+            if (Math.abs(result) > 0) {
+                LOGGER.info(String.format("[current instance][%s]heartbeat is set to %s", currentMemberId, SOSDate.getDateTimeAsString(resetDate)));
+            }
+            dbLayer.close();
+            dbLayer = null;
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
