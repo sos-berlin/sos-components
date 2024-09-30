@@ -312,7 +312,7 @@ public class HistoryModel {
                 }
 
                 if (isDebugEnabled) {
-                    LOGGER.debug("--- " + entry.getType() + " ------------------------------------------");
+                    LOGGER.debug("---[" + entry.getEventId() + "] " + entry.getType() + " ------------------------------------------");
                     if (isTraceEnabled) {
                         LOGGER.trace(String.format("[%s][%s][%s]%s", identifier, method, entry.getType(), SOSString.toString(entry)));
                     }

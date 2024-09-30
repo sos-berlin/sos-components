@@ -10,8 +10,8 @@ public abstract class AJocEmbeddedService implements IJocEmbeddedService {
 
     private ThreadGroup threadGroup;
 
-    public AJocEmbeddedService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
-        jocConfig = jocConf;
+    public AJocEmbeddedService(final JocConfiguration jocConfiguration, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
+        jocConfig = jocConfiguration;
         parentThreadGroup = clusterThreadGroup;
         threadGroup = new ThreadGroup(parentThreadGroup, serviceIdentifier);
         identifier = serviceIdentifier;

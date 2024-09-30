@@ -39,14 +39,14 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection globalSettings) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         try {
             lastActivityStart = Instant.now();
 
             JocClusterServiceLogger.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
-            DailyPlanSettings settings = getSettings(mode, controllers, globalSettings);
+            DailyPlanSettings settings = getSettings(mode, controllers, serviceSettingsSection);
 
             String startTime = DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(), settings.getDailyPlanStartTime(), settings
                     .getPeriodBegin());
@@ -83,13 +83,13 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         lastActivityStart = Instant.now();
 
         JocClusterServiceLogger.setLogger(IDENTIFIER);
         try {
             LOGGER.info(String.format("[%s][%s][runNow]...", getIdentifier(), mode));
-            DailyPlanSettings settings = getSettings(mode, controllers, configuration);
+            DailyPlanSettings settings = getSettings(mode, controllers, serviceSettingsSection);
             settings.setRunNow(true);
             schedule(settings);
         } catch (Throwable e) {
@@ -126,7 +126,12 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
+    public void update(StartupMode mode, AConfigurationSection settingsSection) {
+
+    }
+
+    @Override
+    public void update(StartupMode mode, JocConfiguration jocConfiguration) {
 
     }
 
@@ -140,9 +145,9 @@ public class DailyPlanService extends AJocActiveMemberService {
         timer.schedule(runner, 0, 60 * 1000);
     }
 
-    private DailyPlanSettings getSettings(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection globalSettings)
+    private DailyPlanSettings getSettings(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection)
             throws Exception {
-        DailyPlanSettings dailyPlanGlobalSettings = new GlobalSettingsReader().getSettings(globalSettings);
+        DailyPlanSettings dailyPlanGlobalSettings = new GlobalSettingsReader().getSettings(serviceSettingsSection);
 
         DailyPlanSettings settings = new DailyPlanSettings();
         settings.setStartMode(mode);

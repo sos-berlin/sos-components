@@ -94,9 +94,11 @@ public abstract class AConfiguration {
 
                 if (hasNotifications || systemNotification != null) {
                     List<String> names = handleMailResources(dbLayer);
-                    LOGGER.info(String.format("[%s][configuration][SystemNotification=%s][Notifications type %s=%s,%s=%s,%s=%s][JobResources=%s]",
+                    LOGGER.info(String.format(
+                            "[%s][configuration][SystemNotification=%s][Notifications type %s=%s,%s=%s,%s=%s][JobResources=%s][JOC_URI=%s][JOC_REVERSE_PROXY_URI=%s]",
                             caller, getSystemNotificationInfo(), NotificationType.ERROR.name(), onError.size(), NotificationType.WARNING.name(),
-                            onWarning.size(), NotificationType.SUCCESS.name(), onSuccess.size(), String.join(",", getJobResources4Log(names))));
+                            onWarning.size(), NotificationType.SUCCESS.name(), onSuccess.size(), String.join(",", getJobResources4Log(names)),
+                            JOC_URI, JOC_REVERSE_PROXY_URI));
                 } else {
                     LOGGER.info(String.format("[%s][configuration]exists=false", caller));
                 }
@@ -239,6 +241,10 @@ public abstract class AConfiguration {
             JOC_URI = getJocBaseUri();
         }
         return JOC_URI;
+    }
+
+    public void setJocUri(String val) {
+        JOC_URI = normalizeUri(val);
     }
 
     public void setJocReverseProxyUri(String val) {

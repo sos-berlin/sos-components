@@ -46,19 +46,19 @@ public class CleanupService extends AJocActiveMemberService {
     private AtomicLong lastActivityEnd = new AtomicLong();
     private final Object lock = new Object();
 
-    public CleanupService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
-        super(jocConf, clusterThreadGroup, IDENTIFIER);
+    public CleanupService(JocConfiguration jocConfiguration, ThreadGroup clusterThreadGroup) {
+        super(jocConfiguration, clusterThreadGroup, IDENTIFIER);
         setServiceLogger();
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         try {
             closed.set(false);
             lastActivityStart.set(new Date().getTime());
             setServiceLogger();
 
-            setConfig((ConfigurationGlobalsCleanup) configuration);
+            setConfig((ConfigurationGlobalsCleanup) serviceSettingsSection);
 
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             // LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
@@ -139,7 +139,7 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         setServiceLogger();
         if (schedule == null) {
             LOGGER.info(String.format("[%s][%s][runNow][skip]schedule=null", getIdentifier(), mode));
@@ -147,8 +147,8 @@ public class CleanupService extends AJocActiveMemberService {
         }
         lastActivityStart.set(new Date().getTime());
         runServiceNow.set(true);
-        if (configuration instanceof ConfigurationGlobalsCleanup) {
-            setConfig((ConfigurationGlobalsCleanup) configuration);
+        if (serviceSettingsSection instanceof ConfigurationGlobalsCleanup) {
+            setConfig((ConfigurationGlobalsCleanup) serviceSettingsSection);
         }
         try {
             schedule.runNow(mode);
@@ -179,7 +179,12 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
+    public void update(StartupMode mode, AConfigurationSection settingsSection) {
+
+    }
+
+    @Override
+    public void update(StartupMode mode, JocConfiguration jocConfiguration) {
 
     }
 

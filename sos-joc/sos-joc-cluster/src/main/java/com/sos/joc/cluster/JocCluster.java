@@ -1147,6 +1147,10 @@ public class JocCluster {
         return activeMemberHandler;
     }
 
+    public JocClusterEmbeddedServicesHandler getEmbeddedServicesHandler() {
+        return embeddedServicesHandler;
+    }
+
     public List<ControllerConfiguration> getControllers() {
         return controllers;
     }

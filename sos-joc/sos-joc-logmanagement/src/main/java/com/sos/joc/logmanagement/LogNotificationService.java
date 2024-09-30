@@ -22,16 +22,16 @@ public class LogNotificationService extends AJocActiveMemberService {
     private AtomicBoolean closed = new AtomicBoolean(false);
     private UDPServer udpServer;
 
-    public LogNotificationService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
-        super(jocConf, clusterThreadGroup, IDENTIFIER);
+    public LogNotificationService(JocConfiguration jocConfiguration, ThreadGroup clusterThreadGroup) {
+        super(jocConfiguration, clusterThreadGroup, IDENTIFIER);
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         try {
             closed.set(false);
-            if (configuration != null && configuration instanceof ConfigurationGlobalsLogNotification) {
-                udpServer = new UDPServer((ConfigurationGlobalsLogNotification) configuration);
+            if (serviceSettingsSection != null && serviceSettingsSection instanceof ConfigurationGlobalsLogNotification) {
+                udpServer = new UDPServer((ConfigurationGlobalsLogNotification) serviceSettingsSection);
             } else {
                 udpServer = new UDPServer();
             }
@@ -50,7 +50,7 @@ public class LogNotificationService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
 
     }
 
@@ -73,12 +73,11 @@ public class LogNotificationService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
+    public void update(StartupMode mode, AConfigurationSection settingsSection) {
         // port is changed ->
         if (!closed.get()) {
-            if (configuration != null && configuration instanceof ConfigurationGlobalsLogNotification) {
-
-                ConfigurationGlobalsLogNotification settings = (ConfigurationGlobalsLogNotification) configuration;
+            if (settingsSection != null && settingsSection instanceof ConfigurationGlobalsLogNotification) {
+                ConfigurationGlobalsLogNotification settings = (ConfigurationGlobalsLogNotification) settingsSection;
                 Integer newPort = settings.getPort();
                 if (udpServer.getPort() != newPort) {
                     udpServer.stop();
@@ -87,6 +86,11 @@ public class LogNotificationService extends AJocActiveMemberService {
                 }
             }
         }
+    }
+
+    @Override
+    public void update(StartupMode mode, JocConfiguration jocConfiguration) {
+
     }
 
 }

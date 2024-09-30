@@ -10,8 +10,8 @@ public abstract class AJocActiveMemberService implements IJocActiveMemberService
 
     private ThreadGroup threadGroup;
 
-    public AJocActiveMemberService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
-        jocConfig = jocConf;
+    public AJocActiveMemberService(final JocConfiguration jocConfiguration, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
+        jocConfig = jocConfiguration;
         parentThreadGroup = clusterThreadGroup;
         threadGroup = new ThreadGroup(parentThreadGroup, serviceIdentifier);
         identifier = serviceIdentifier;

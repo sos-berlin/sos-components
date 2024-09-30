@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
@@ -18,12 +17,10 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
-import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel;
 
 public class HistoryMonitorService extends AJocActiveMemberService {
@@ -39,7 +36,7 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         try {
             closed.set(false);
             MonitorService.setLogger();
@@ -71,7 +68,7 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
 
     }
 
@@ -105,23 +102,13 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
-        if (!closed.get()) {
-            if (history != null && configuration != null) {
-                if (configuration instanceof ConfigurationGlobalsJoc) {
-                    MonitorService.setLogger();
+    public void update(StartupMode mode, AConfigurationSection settingsSection) {
 
-                    ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) configuration;
-                    String oldValue = Configuration.INSTANCE.getJocReverseProxyUri();
-                    String newValue = joc.getJocReverseProxyUrl().getValue();
-                    if (!SOSString.equals(oldValue, newValue)) {
-                        Configuration.INSTANCE.setJocReverseProxyUri(newValue);
-                        LOGGER.info(String.format("[%s][%s][%s][old=%s][new=%s]", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY,
-                                StartupMode.settings_changed.name(), joc.getJocReverseProxyUrl().getName(), oldValue, newValue));
-                    }
-                }
-            }
-        }
+    }
+
+    @Override
+    public void update(StartupMode mode, JocConfiguration jocConfiguration) {
+
     }
 
     private void close(StartupMode mode) {

@@ -26,7 +26,7 @@ public class ProxyService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         MDC.put("clusterService", IDENTIFIER);
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -44,7 +44,7 @@ public class ProxyService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
 
     }
 
@@ -67,7 +67,12 @@ public class ProxyService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
+    public void update(StartupMode mode, AConfigurationSection settingsSection) {
+    }
+
+    @Override
+    public void update(StartupMode mode, JocConfiguration jocConfiguration) {
+
     }
 
 }

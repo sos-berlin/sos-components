@@ -69,8 +69,8 @@ public class HistoryService extends AJocActiveMemberService {
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
     private static CopyOnWriteArrayList<HistoryControllerHandler> activeHandlers = new CopyOnWriteArrayList<>();
 
-    public HistoryService(final JocConfiguration jocConf, ThreadGroup parentThreadGroup) {
-        super(jocConf, parentThreadGroup, IDENTIFIER);
+    public HistoryService(final JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
+        super(jocConfiguration, parentThreadGroup, IDENTIFIER);
         setConfig();
     }
 
@@ -89,7 +89,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
         try {
             setLogger();
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
@@ -103,7 +103,7 @@ public class HistoryService extends AJocActiveMemberService {
             ThreadGroup tg = getThreadGroup();
             threadPool = Executors.newFixedThreadPool((controllers.size() + 1), new JocClusterThreadFactory(tg, IDENTIFIER));
             // JocClusterServiceLogger.clearAllLoggers();
-
+            LOGGER.info(String.format("[%s][%s]start %s history handler(s)...", getIdentifier(), mode, controllers.size()));
             for (ControllerConfiguration controllerConfig : controllers) {
                 HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, IDENTIFIER);
                 activeHandlers.add(controllerHandler);
@@ -157,7 +157,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
 
     }
 
@@ -242,9 +242,14 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
+    public void update(StartupMode mode, AConfigurationSection settingsSection) {
         setLogger();
         updateHistoryConfiguration();
+    }
+
+    @Override
+    public void update(StartupMode mode, JocConfiguration jocConfiguration) {
+
     }
 
     private void setConfig() {

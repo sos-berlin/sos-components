@@ -35,6 +35,8 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.cluster.service.active.IJocActiveMemberService;
+import com.sos.joc.cluster.service.embedded.IJocEmbeddedService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
@@ -116,10 +118,10 @@ public class JocClusterService {
                         createFactory(config.getHibernateConfiguration());
 
                         cluster = new JocCluster(factory, clusterConfig, config, startTime);
+                        Globals.configurationGlobals = cluster.getConfigurationGlobals(mode);
                         cluster.startEmbeddedServices(mode);
 
-                        Globals.configurationGlobals = cluster.getConfigurationGlobals(mode);
-                        if (cluster != null) {// null when closed during cluster.getConfigurationGlobals (empty database or db errors)
+                        if (Globals.configurationGlobals != null) {// null when closed during cluster.getConfigurationGlobals (empty database or db errors)
                             if (onJocStart) {
                                 cluster.tryDeleteActiveCurrentMember();
                             }
@@ -385,6 +387,27 @@ public class JocClusterService {
         }
         JocClusterServiceLogger.removeLogger();
         return answer;
+    }
+
+    public synchronized void updateJocUri(StartupMode mode, String uri) {
+        if (cluster == null) {
+            return;
+        }
+        config.setUri(uri);
+        updateServicesJocConfiguration(mode);
+    }
+
+    private void updateServicesJocConfiguration(StartupMode mode) {
+        if (cluster.getEmbeddedServicesHandler() != null) {
+            for (IJocEmbeddedService s : cluster.getEmbeddedServicesHandler().getServices()) {
+                s.update(mode, config);
+            }
+        }
+        if (cluster.getActiveMemberHandler() != null && cluster.getActiveMemberHandler().isActive()) {
+            for (IJocActiveMemberService s : cluster.getActiveMemberHandler().getServices()) {
+                s.update(mode, config);
+            }
+        }
     }
 
     public JocClusterAnswer switchMember(StartupMode mode, String memberId) {
