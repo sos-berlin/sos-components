@@ -19,22 +19,19 @@ import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
 @Entity
-@Table(name = DBLayer.TABLE_INV_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
+@Table(name = DBLayer.TABLE_INV_TAG_GROUPS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
 @Proxy(lazy = false)
-public class DBItemInventoryTag extends DBItem implements IDBItemTag {
+public class DBItemInventoryTagGroup extends DBItem implements IDBItemTag {
 
     private static final long serialVersionUID = 1L;
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_TAGS_SEQUENCE)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_TAG_GROUPS_SEQUENCE)
     private Long id;
 
     @Column(name = "[NAME]", nullable = false)
     private String name;
-
-    @Column(name = "[GROUP_ID]", nullable = false)
-    private Long groupId;
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
@@ -59,12 +56,14 @@ public class DBItemInventoryTag extends DBItem implements IDBItemTag {
         name = val;
     }
     
+    @Transient
     public Long getGroupId() {
-        return groupId;
+        return id;
     }
 
+    @Transient
     public void setGroupId(Long val) {
-        groupId = val;
+        id = val;
     }
 
     public Integer getOrdering() {

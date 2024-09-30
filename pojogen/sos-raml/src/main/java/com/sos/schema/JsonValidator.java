@@ -198,11 +198,17 @@ public class JsonValidator {
 
             put("com.sos.joc.model.tag.common.RequestFilters", "tag/common/request-filters-schema.json");
             put("com.sos.joc.model.tag.common.RequestFolder", "tag/common/request-folder-schema.json");
+            put("com.sos.joc.model.tag.common.RequestWorkflowJobFilter", "tag/common/request-workflow-jobs-schema.json");
+            put("com.sos.joc.model.tag.group.RequestFilter", "tag/group/request-filter-schema.json");
+            put("com.sos.joc.model.tag.group.RequestFilters", "tag/group/request-filters-schema.json");
+            put("com.sos.joc.model.tag.rename.RequestJobFilter", "tag/rename/request-filter-job-schema.json");
+            put("com.sos.joc.model.tag.tagging.RequestJobFilter", "tag/tagging/request-filter-jobs-schema.json");
+            put("com.sos.joc.model.tag.common.JobTags", "tag/common/jobTags-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestFilter", "tag/tagging/request-filter-schema.json");
             put("com.sos.joc.model.tag.rename.RequestFilter", "tag/rename/request-filter-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestModifyFilter", "tag/tagging/request-modify-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestTag", "inventory/common/request-tag-schema.json");
-
+            
             put("com.sos.joc.model.descriptor.common.RequestFilter", "descriptor/common/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.common.RequestFolder", "descriptor/common/request-folder-schema.json");
             put("com.sos.joc.model.descriptor.common.ResponseFolder", "descriptor/common/response-folder-schema.json");

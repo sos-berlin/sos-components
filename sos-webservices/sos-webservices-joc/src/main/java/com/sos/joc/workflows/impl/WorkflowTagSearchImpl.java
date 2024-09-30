@@ -4,6 +4,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.ITagSearchResource;
 import com.sos.joc.model.common.DeployedObjectQuickSearchFilter;
@@ -32,6 +33,7 @@ public class WorkflowTagSearchImpl extends JOCResourceImpl implements ITagSearch
                 return response;
             }
             
+            in.setSearch(new GroupedTag(in.getSearch()).getTag());
             ResponseQuickSearch answer = QuickSearchStore.getTagsAnswer(in, ConfigurationType.WORKFLOW, accessToken, folderPermissions);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {

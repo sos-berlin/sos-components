@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -19,17 +20,11 @@ import java.util.stream.Stream;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
-import com.sos.inventory.model.job.Job;
-import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.inventory.WorkflowConverter;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.IDBItemTag;
-import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.event.EventBus;
@@ -37,6 +32,7 @@ import com.sos.joc.event.bean.JOCEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagDeleteEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -44,6 +40,8 @@ import com.sos.joc.model.tag.Tags;
 import com.sos.joc.model.tag.TagsUsedBy;
 import com.sos.joc.model.tag.common.RequestFilters;
 import com.sos.joc.model.tag.common.RequestFolder;
+import com.sos.joc.model.tag.group.Groups;
+import com.sos.joc.model.tag.rename.RequestFilter;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -51,6 +49,10 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
 
     protected enum Action {
         ADD, DELETE, ORDERING
+    }
+    
+    protected enum ResponseObject {
+        TAGS, GROUPS
     }
 
     private Stream<JOCEvent> postTagsModify(String apiCall, Action action, RequestFilters modifyTags, ATagDBLayer<T> dbLayer) throws Exception {
@@ -74,49 +76,22 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     }
 
     private Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags, ATagDBLayer<T> dbLayer) throws Exception {
-        Set<String> tags = modifyTags.getTags() == null ? Collections.emptySet() : modifyTags.getTags();
+        Set<GroupedTag> groupedTags = modifyTags.getTags() == null ? Collections.emptySet() : modifyTags.getTags().stream().map(GroupedTag::new)
+                .collect(Collectors.toSet());
+        Set<String> tags = groupedTags.stream().map(GroupedTag::getTag).collect(Collectors.toSet());
         Stream<JOCEvent> events = Stream.empty();
         
         switch (action) {
         case ADD:
-            Set<T> result = add(tags, Date.from(Instant.now()), dbLayer);
+            Set<T> result = insert(groupedTags, dbLayer.getTags(tags), Date.from(Instant.now()), dbLayer);
             events = result.stream().map(T::getName).map(InventoryTagAddEvent::new);
             break;
 
         case DELETE:
-            if (dbLayer instanceof InventoryJobTagDBLayer) {
-                //change jobtags in workflow json
-                List<Long> workflowIds = ((InventoryJobTagDBLayer) dbLayer).getWorkflowIdsHavingTags(tags.stream().collect(Collectors.toList()));
-                InventoryDBLayer dbInvLayer = new InventoryDBLayer(dbLayer.getSession());
-                for (Long workflowId : workflowIds) {
-                    DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbInvLayer, workflowId, null, null, folderPermissions);
-                    Workflow worfklow = WorkflowConverter.convertInventoryWorkflow(conf.getContent());
-                    boolean tagsFound = false;
-                    if (worfklow.getJobs() != null && worfklow.getJobs().getAdditionalProperties() != null) {
-                        for(Job job : worfklow.getJobs().getAdditionalProperties().values()) {
-                            if (job.getJobTags() != null) {
-                                if (job.getJobTags().removeAll(tags)) {
-                                    tagsFound = true;
-                                    if (job.getJobTags().isEmpty()) {
-                                        job.setJobTags(null);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (tagsFound) {
-                        conf.setContent(JocInventory.toString(worfklow));
-                        dbLayer.getSession().update(conf);
-                    }
-                }
-            }
-            
             List<T> dbTags = dbLayer.getTags(tags);
-            Set<String> alreadyExistingTags = dbTags.stream().map(T::getName).collect(Collectors.toSet());
-            tags.retainAll(alreadyExistingTags);
             // IMPORTANT! first taggings, then tags
-            dbLayer.deleteTaggings(tags); // TODO events for Workflows
-            dbLayer.deleteTags(tags);
+            dbLayer.deleteTaggingsByTagIds(dbTags.stream().map(T::getId).collect(Collectors.toList())); // TODO events for Workflows
+            dbLayer.deleteTags(dbTags);
 
             events = tags.stream().map(InventoryTagDeleteEvent::new);
             break;
@@ -149,25 +124,52 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         }
         return events;
     }
-
-    public Set<T> add(Set<String> tags, Date date, ATagDBLayer<T> dbLayer) throws SOSHibernateException {
-        if (tags == null || tags.isEmpty()) {
+    
+    public Set<T> insert(Collection<GroupedTag> groupedTags, List<T> oldDBTags, Date date, ATagDBLayer<T> dbLayer) throws SOSHibernateException {
+        if (groupedTags == null || groupedTags.isEmpty()) {
             return new HashSet<>();
         }
-        List<T> dbTags = dbLayer.getTags(tags);
-        Set<String> alreadyExistingTags = dbTags.stream().map(T::getName).collect(Collectors.toSet());
-        tags.removeAll(alreadyExistingTags);
+
+        Set<GroupedTag> alreadyExistingTagsInDB = oldDBTags.stream().map(T::getName).map(GroupedTag::new).collect(Collectors.toSet());
+        Set<GroupedTag> groupedTagsCopy = new HashSet<>(groupedTags);
+        groupedTagsCopy.removeAll(alreadyExistingTagsInDB); // contains only new tags with their groups
         Set<T> result = new HashSet<>();
-        if (!tags.isEmpty()) {
+        if (!groupedTagsCopy.isEmpty()) {
+            // select groups, getGroups from DB of these groups and insert to DB if necessary
+            Set<String> groups = groupedTagsCopy.stream().map(GroupedTag::getGroup).filter(Optional::isPresent).map(Optional::get).collect(Collectors
+                    .toSet());
+            List<DBItemInventoryTagGroup> dbGroups = groups.isEmpty() ? Collections.emptyList() : dbLayer.getGroups(groups);
+            Map<String, Long> dbGroupsMap = dbGroups.stream().collect(Collectors.toMap(DBItemInventoryTagGroup::getName,
+                    DBItemInventoryTagGroup::getId));
+            groups.removeAll(dbGroupsMap.keySet()); // groups contains only new groups
+
+            if (!groups.isEmpty()) {
+                int maxGroupsOrdering = dbLayer.getMaxGroupsOrdering();
+                for (String group : groups) {
+                    DBItemInventoryTagGroup item = new DBItemInventoryTagGroup();
+                    item.setName(group);
+                    item.setModified(date);
+                    item.setOrdering(++maxGroupsOrdering);
+                    dbLayer.getSession().save(item);
+                    dbGroupsMap.put(group, item.getId());
+                    // TODO events
+                }
+            }
+
             int maxOrdering = dbLayer.getMaxOrdering();
             Class<T> typedDbItemClazz = createTypedDBItemClass();
-            for (String name : tags) {
-                SOSCheckJavaVariableName.test("tag name: ", name);
+            for (GroupedTag groupedTag : groupedTagsCopy) {
+                groupedTag.checkJavaNameRules();
                 T item = createTypedDBItem(typedDbItemClazz);
                 item.setId(null);
                 item.setModified(date);
-                item.setName(name);
+                item.setName(groupedTag.getTag());
                 item.setOrdering(++maxOrdering);
+                if (groupedTag.getGroup().isPresent()) {
+                    item.setGroupId(dbGroupsMap.getOrDefault(groupedTag.getGroup().get(), 0L));
+                } else {
+                    item.setGroupId(0L);
+                }
                 dbLayer.getSession().save(item);
                 result.add((T) item);
             }
@@ -180,26 +182,52 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         try {
             session = Globals.createSosHibernateStatelessConnection(apiCall);
             dbLayer.setSession(session);
-
-            Tags entity = new Tags();
-            entity.setTags(dbLayer.getAllTagNames());
-            entity.setDeliveryDate(Date.from(Instant.now()));
-
-            return entity;
+            Tags tags = new Tags();
+            tags.setTags(dbLayer.getAllTagNames());
+            tags.setDeliveryDate(Date.from(Instant.now()));
+            return tags;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    private Groups postGroups(String apiCall, ATagDBLayer<T> dbLayer) {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(apiCall);
+            dbLayer.setSession(session);
+            Groups groups = new Groups();
+            groups.setGroups(dbLayer.getAllGroupNames());
+            groups.setDeliveryDate(Date.from(Instant.now()));
+            return groups;
         } finally {
             Globals.disconnect(session);
         }
     }
 
     protected JOCDefaultResponse postTags(String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
+        return postTagsOrGroups(ResponseObject.TAGS, apiCall, accessToken, dbLayer);
+    }
+    
+    protected JOCDefaultResponse postGroups(String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
+        return postTagsOrGroups(ResponseObject.GROUPS, apiCall, accessToken, dbLayer);
+    }
+    
+    protected JOCDefaultResponse postTagsOrGroups(ResponseObject responseObject, String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
         try {
             initLogging(apiCall, null, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            Tags entity = postTags(apiCall, dbLayer);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            switch (responseObject) {
+            case TAGS:
+                Tags tags = postTags(apiCall, dbLayer);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(tags));
+            default: //case GROUPS:
+                Groups groups = postGroups(apiCall, dbLayer);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(groups));
+            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -236,7 +264,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             Globals.disconnect(session);
         }
     }
-
+    
     protected JOCDefaultResponse postTagsModify(String apiCall, Action action, String accessToken, byte[] filterBytes, ATagDBLayer<T> dbLayer) {
         try {
             RequestFilters modifyTags = initModifyRequest(apiCall, action, accessToken, filterBytes);
@@ -255,6 +283,67 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    protected JOCDefaultResponse postTagRename(String apiCall, String accessToken, byte[] filterBytes, ATagDBLayer<T> dbLayer) {
+        return postTagRename(ResponseObject.TAGS, apiCall, accessToken, filterBytes, dbLayer);
+    }
+    
+    private JOCDefaultResponse postTagRename(ResponseObject responseObject, String apiCall, String accessToken, byte[] filterBytes,
+            ATagDBLayer<T> dbLayer) {
+        SOSHibernateSession session = null;
+        try {
+            initLogging(apiCall, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
+            RequestFilter modifyTag = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            String objectName = ResponseObject.TAGS.equals(responseObject) ? "tag" : "group";
+            
+            storeAuditLog(modifyTag.getAuditLog(), CategoryType.INVENTORY);
+            
+            session = Globals.createSosHibernateStatelessConnection(apiCall);
+            session.setAutoCommit(false);
+            session.beginTransaction();
+            
+            dbLayer.setSession(session);
+            T tag = dbLayer.getTag(modifyTag.getName());
+            if (tag == null) {
+               throw new DBMissingDataException("Couldn't find " + objectName + " with name '" + modifyTag.getName() + "'");
+            }
+            SOSCheckJavaVariableName.test(objectName + " name: ", modifyTag.getNewName());
+            tag.setName(modifyTag.getNewName());
+            Date now = Date.from(Instant.now());
+            tag.setModified(now);
+            dbLayer.getSession().update(tag);
+            Globals.commit(session);
+            
+            switch (responseObject) {
+            case TAGS:
+                EventBus.getInstance().post(new InventoryTagAddEvent(modifyTag.getNewName()));
+                EventBus.getInstance().post(new InventoryTagDeleteEvent(modifyTag.getName()));
+                break;
+            default: //case GROUPS
+                //TODO events
+                break;
+            }
+            
+            
+            return JOCDefaultResponse.responseStatusJSOk(now);
+        } catch (JocException e) {
+            Globals.rollback(session);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(session);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
         }
     }
 

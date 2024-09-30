@@ -15,11 +15,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -74,6 +76,7 @@ import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.reporting.RunReport;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -188,6 +191,7 @@ public class Validator {
                     validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(),
                             new HashMap<String, String>(), invalidAgentRefs, boardNames, false, dbLayer);
                     //validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
+                    //validateJobTags(jobs);
                     validateLockRefs(json, dbLayer);
                     //validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
@@ -276,6 +280,7 @@ public class Validator {
                 hasLicense = AgentHelper.hasClusterLicense();
                 validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(), new HashMap<String, String>(),
                         invalidAgentRefs, invObjNames.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()), false, workflowJsonsByName);
+                //validateJobTags(jobs);
                 validateLockRefs(json, invObjNames.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()));
                 validateJobResourceRefs(jobResources, invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()));
             } else if (ConfigurationType.SCHEDULE.equals(type)) {
@@ -402,9 +407,7 @@ public class Validator {
                 throw new JocConfigurationException("$.pattern: " + e.getMessage());
             }
         }
-        if (fileOrderSource.getTags() != null) {
-            fileOrderSource.getTags().forEach(tag -> testJavaNameRules("$.tags", "tags", tag));
-        }
+        testJavaNameRulesAtTags("$.tags", fileOrderSource.getTags());
     }
 
     private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
@@ -921,9 +924,7 @@ public class Validator {
                             checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
                     }
-                    if (ao.getTags() != null) {
-                        ao.getTags().forEach(tag -> testJavaNameRules("$." + instPosition, "tags", tag));
-                    }
+                    testJavaNameRulesAtTags("$." + instPosition + "tags", ao.getTags());
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
@@ -1200,9 +1201,7 @@ public class Validator {
                             checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
                     }
-                    if (ao.getTags() != null) {
-                        ao.getTags().forEach(tag -> testJavaNameRules("$." + instPosition, "tags", tag));
-                    }
+                    testJavaNameRulesAtTags("$." + instPosition + "tags", ao.getTags());
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
@@ -1542,8 +1541,9 @@ public class Validator {
                 variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).filter(hasPositionSetting).forEach(
                         p -> checkAddOrderPositions(p, availableBlockPositions, workflowName, labelMap, position + ".positions."));
             }
-            variableSets.stream().map(OrderParameterisation::getTags).filter(Objects::nonNull).flatMap(Set::stream).forEach(tag -> testJavaNameRules(
-                    position + ": ", "tags", tag));
+            variableSets.stream().map(OrderParameterisation::getTags).filter(Objects::nonNull).forEach(tags -> {
+                testJavaNameRulesAtTags(position, tags);
+            });
         } else {
             try {
                 OrdersHelper.checkArguments(new Variables(), orderPreparation, allowEmptyArguments);
@@ -1559,6 +1559,13 @@ public class Validator {
 //                // validateArguments(value.getDefaultArguments(), orderPreparation, "$.jobs['" + key + "'].defaultArguments");
 //                // validateArgumentKeys(value.getDefaultArguments(), "$.jobs['" + key + "'].defaultArguments");
 //            });
+//        }
+//    }
+    
+//    private static void validateJobTags(Jobs jobs) {
+//        if (jobs != null && jobs.getAdditionalProperties() != null) {
+//            jobs.getAdditionalProperties().entrySet().stream().filter(e -> e.getValue().getJobTags() != null).forEach(e -> testJavaNameRulesAtTags(
+//                    "$.jobs[" + e.getKey() + "].jobTags", e.getValue().getJobTags()));
 //        }
 //    }
 
@@ -1618,6 +1625,27 @@ public class Validator {
         if (errorMessage != null) {
             throw new JocConfigurationException(prefix + key + ": " + String.format(errorMessage, key, value));
         }
+    }
+    
+    private static void testJavaNameRulesAtTags(String prefix, Collection<String> tags) {
+        if (tags != null) {
+            testJavaNameRulesAtTags(prefix, tags.stream());
+        }
+    }
+    
+    private static void testJavaNameRulesAtTags(String prefix, Stream<String> tags) {
+            Optional<String> duplicateTagname = tags.map(tag -> testJavaNameRulesAtTag(prefix, tag)).collect(Collectors.groupingBy(Function
+                    .identity(), Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 1L).findAny().map(Map.Entry::getKey);
+            if (duplicateTagname.isPresent()) {
+                throw new JocConfigurationException(prefix + ": duplicate tag name '" + duplicateTagname.get() + "' with different groups");
+            }
+    }
+    
+    private static String testJavaNameRulesAtTag(String prefix, String value) throws JocConfigurationException {
+        GroupedTag gt = new GroupedTag(value);
+        testJavaNameRules(prefix, "tag", gt.getTag());
+        gt.getGroup().ifPresent(g -> testJavaNameRules(prefix, "group", g));
+        return gt.getTag();
     }
     
     public static boolean orderPreparationHasRequiredParameters(Requirements orderPrep) {

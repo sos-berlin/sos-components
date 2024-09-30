@@ -14,6 +14,7 @@ import jakarta.ws.rs.Path;
 
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -23,6 +24,7 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Folder;
@@ -213,6 +215,14 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             }
 
             return evt;
+        } catch(JocConfigurationException e) {
+            // could be occur when JOC is shutting down while ./events API is called
+            if (e.getCause() != null && e.getCause() instanceof SOSHibernateConfigurationException) {
+                return evt;
+            } else {
+                throw e;
+            }
+            
         } finally {
             Globals.disconnect(connection);
         }

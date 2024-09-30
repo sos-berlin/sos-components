@@ -15,7 +15,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -32,7 +32,7 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
 
     private static final String API_CALL = "./workflow/order_templates";
     private static final Predicate<String> hasOrderParameterisationPattern = Pattern.compile("\"orderParameterisations\"\\s*:").asPredicate();
-    private static final Predicate<DBItemInventoryConfiguration> hasOrderParameterisation = s -> hasOrderParameterisationPattern.test(s
+    private static final Predicate<DBItemInventoryReleasedConfiguration> hasOrderParameterisation = s -> hasOrderParameterisationPattern.test(s
             .getContent());
 
     @Override
@@ -54,7 +54,7 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
             String workflowName = JocInventory.pathToName(workflowFilter.getWorkflowPath());
-            List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(workflowName);
+            List<DBItemInventoryReleasedConfiguration> schedules = dbLayer.getUsedReleasedSchedulesByWorkflowName(workflowName);
             
             entity.setSchedules(schedules.stream().filter(hasOrderParameterisation).map(item -> {
                 try {

@@ -10,6 +10,9 @@ public interface IDBItemTag {
     public String getName();
     public void setName(String var);
     
+    public Long getGroupId();
+    public void setGroupId(Long var);
+    
     public Integer getOrdering();
     public void setOrdering(Integer val);
     

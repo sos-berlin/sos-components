@@ -84,7 +84,7 @@ public class JocServletContainer extends ServletContainer {
 
         // 1 - stop cluster
         if (withClusterService) {
-            JocClusterService.getInstance().stop(StartupMode.automatic, true);
+            JocClusterService.getInstance().stop(StartupMode.automatic, true, true);
             JocClusterServiceLogger.clearAllLoggers();
         }
         // 2 - close proxies

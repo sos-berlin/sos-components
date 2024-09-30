@@ -23,7 +23,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "path",
     "name",
     "objectType",
-    "ordering"
+    "ordering",
+    "group"
 })
 public class ResponseBaseSearchItem {
 
@@ -57,6 +58,8 @@ public class ResponseBaseSearchItem {
     private ConfigurationType objectType;
     @JsonProperty("ordering")
     private Integer ordering;
+    @JsonProperty("group")
+    private String group;
 
     /**
      * path
@@ -144,6 +147,16 @@ public class ResponseBaseSearchItem {
     @JsonProperty("ordering")
     public void setOrdering(Integer ordering) {
         this.ordering = ordering;
+    }
+    
+    @JsonProperty("group")
+    public String getGroup() {
+        return group;
+    }
+    
+    @JsonProperty("group")
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     @Override

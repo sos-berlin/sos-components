@@ -34,6 +34,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.history.HistoryFilter;
@@ -332,8 +333,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             if (withWorkflowTags) {
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(connection);
-                List<String> taggedWorkflowNames = tagDbLayer.getWorkflowNamesHavingTags(ordersFilter.getWorkflowTags().stream().collect(Collectors
-                        .toList()));
+                List<String> taggedWorkflowNames = tagDbLayer.getWorkflowNamesHavingTags(ordersFilter.getWorkflowTags().stream().map(GroupedTag::new)
+                        .map(GroupedTag::getTag).collect(Collectors.toList()));
 
                 groupedByWorkflowIds.keySet().removeIf(wId -> !taggedWorkflowNames.contains(wId.path().string()));
             }

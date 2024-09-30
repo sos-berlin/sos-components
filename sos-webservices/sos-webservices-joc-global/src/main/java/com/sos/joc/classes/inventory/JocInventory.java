@@ -918,7 +918,7 @@ public class JocInventory {
             if (config == null && !SOSString.isEmpty(item.getContent())) {
                 config = Globals.objectMapper.readValue(item.getContent(), Workflow.class);
             }
-            new JobTags().update(((Workflow) config).getJobs(), item, new InventoryJobTagDBLayer(session));
+            JobTags.update(((Workflow) config).getJobs(), item, new InventoryJobTagDBLayer(session));
         }
     }
 

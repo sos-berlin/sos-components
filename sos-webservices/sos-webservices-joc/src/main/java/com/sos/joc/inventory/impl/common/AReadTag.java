@@ -17,6 +17,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.inventory.IDBItemTag;
@@ -64,11 +65,12 @@ public abstract class AReadTag extends JOCResourceImpl {
             dbLayer.setSession(session);
             
             Set<Integer> types = Collections.singleton(ConfigurationType.WORKFLOW.intValue());
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByTag(in.getTag(), types, in.getOnlyValidObjects(), forTrash);
+            GroupedTag groupedTag = new GroupedTag(in.getTag());
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByTag(groupedTag.getTag(), types, in.getOnlyValidObjects(), forTrash);
             
             ResponseTag tag = new ResponseTag();
             tag.setDeliveryDate(Date.from(Instant.now()));
-            tag.setTag(in.getTag());
+            tag.setTag(groupedTag.toString());
 
             boolean withSync = !forTrash && in.getControllerId() != null && !in.getControllerId().isEmpty();
             JControllerState currentstate = null;

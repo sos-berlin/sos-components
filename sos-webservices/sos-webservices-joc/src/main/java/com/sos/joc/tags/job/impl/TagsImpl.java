@@ -8,11 +8,11 @@ import com.sos.joc.tags.resource.ITags;
 
 import jakarta.ws.rs.Path;
 
-@Path("job/tags")
+@Path("tags/job")
 public class TagsImpl extends ATagsModifyImpl<DBItemInventoryJobTag> implements ITags {
 
-    private static final String API_CALL = "./job/tags";
-    private static final String API_USEDBY_CALL = "./job/tags/used";
+    private static final String API_CALL = "./tags/job";
+    private static final String API_USEDBY_CALL = "./tags/job/used";
     private InventoryJobTagDBLayer dbLayer = new InventoryJobTagDBLayer(null);
 
     @Override

@@ -23,6 +23,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
@@ -189,8 +190,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
                         session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
-                JocInventory.updateConfiguration(dbLayer, config);
-                JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
                 
                 //rename TAGGINGS
                 boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
@@ -203,7 +202,11 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                         tagging.setModified(now);
                         dbTagLayer.getSession().update(tagging);
                     }
+                    new InventoryJobTagDBLayer(session).renameWorkflow(config.getId(), newName, now);
                 }
+                
+                JocInventory.updateConfiguration(dbLayer, config);
+                JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
                 
                 if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                         || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {

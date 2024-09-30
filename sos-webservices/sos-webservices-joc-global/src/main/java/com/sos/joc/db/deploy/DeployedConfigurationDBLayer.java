@@ -30,6 +30,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.common.FolderPath;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.deploy.items.AddOrderTags;
@@ -188,7 +189,7 @@ public class DeployedConfigurationDBLayer {
 
         Query<String> query = session.createQuery(hql.toString());
         query.setParameter("type", DeployType.WORKFLOW.intValue());
-        query.setParameterList("tags", tags);
+        query.setParameterList("tags", tags.stream().map(GroupedTag::new).map(GroupedTag::getTag).collect(Collectors.toSet()));
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);
         }

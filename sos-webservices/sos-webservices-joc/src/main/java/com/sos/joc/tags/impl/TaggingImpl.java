@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -18,6 +19,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
@@ -66,45 +68,47 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             List<InventoryTagEvent> tagEvents = new ArrayList<>();
             
             Set<String> tags = in.getTags() == null ? Collections.emptySet() : in.getTags();
-            List<DBItemInventoryTag> dbTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(tags);
+            Map<String, GroupedTag> groupedTags = tags.stream().map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function
+                    .identity()));
+            List<DBItemInventoryTag> dbTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
             Date date = Date.from(Instant.now());
-            Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().add(tags, date, dbTagLayer);
+            Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
             tagEvents.addAll(newDbTagItems.stream().map(name -> new InventoryTagAddEvent(name.getName())).collect(Collectors.toList()));
-            
+
             newDbTagItems.addAll(dbTags);
-            Set<Long> newTagIds = newDbTagItems.stream().map(DBItemInventoryTag::getId).collect(Collectors.toSet());
+            
+            Map<String, Long> tagNameToIdMap = newDbTagItems.stream().collect(Collectors.toMap(DBItemInventoryTag::getName,
+                    DBItemInventoryTag::getId));
+            
+            Set<DBItemInventoryTagging> requestedTaggings = groupedTags.keySet().stream().map(tagName -> {
+                DBItemInventoryTagging taggingItem = new DBItemInventoryTagging();
+                taggingItem.setCid(config.getId());
+                taggingItem.setName(config.getName());
+                taggingItem.setType(config.getType());
+                taggingItem.setTagId(tagNameToIdMap.get(tagName));
+                taggingItem.setId(null);
+                taggingItem.setModified(date);
+                return taggingItem;
+            }).collect(Collectors.toSet());
             
             List<DBItemInventoryTagging> dbTaggings = dbTagLayer.getTaggings(config.getId());
-            Set<Long> tagIdsInTaggings = dbTaggings.stream().map(DBItemInventoryTagging::getTagId).collect(Collectors.toSet());
             
-            //delete taggings that not inside request
-            dbTaggings.stream().filter(i -> !newTagIds.contains(i.getTagId())).forEach(i -> {
-                try {
-                    dbTagLayer.getSession().delete(i);
-                    tagEvents.add(new InventoryTagEvent(i.getName()));
-                } catch (SOSHibernateException e) {
-                    throw new DBInvalidDataException(e);
+            boolean taggingIsChanged = false;
+            for (DBItemInventoryTagging requestedTagging : requestedTaggings) {
+                if (dbTaggings.contains(requestedTagging)) {
+                    dbTaggings.remove(requestedTagging);
+                } else {
+                    dbTagLayer.getSession().save(requestedTagging);
+                    taggingIsChanged = true;
                 }
-            });
-            
-            //add new taggings
-            newDbTagItems.stream().filter(i -> !tagIdsInTaggings.contains(i.getId())).map(i -> {
-                DBItemInventoryTagging item = new DBItemInventoryTagging();
-                item.setCid(config.getId());
-                item.setId(null);
-                item.setModified(date);
-                item.setName(config.getName());
-                item.setTagId(i.getId());
-                item.setType(config.getType());
-                return item;
-            }).forEach(i -> {
-                try {
-                    dbTagLayer.getSession().save(i);
-                    tagEvents.add(new InventoryTagEvent(i.getName()));
-                } catch (SOSHibernateException e) {
-                    throw new DBInvalidDataException(e);
-                }
-            });
+            }
+            for (DBItemInventoryTagging dbTagging : dbTaggings) {
+                dbTagLayer.getSession().delete(dbTagging);
+                taggingIsChanged = true;
+            }
+            if (taggingIsChanged) {
+                tagEvents.add(new InventoryTagEvent(config.getName())); //TODO workflowname?
+            }
             
             Globals.commit(session);
             
@@ -146,9 +150,12 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             
             
             Set<String> addTags = in.getAddTags() == null ? Collections.emptySet() : in.getAddTags();
-            List<DBItemInventoryTag> dbTags = addTags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(addTags);
+            Map<String, GroupedTag> groupedTags = addTags.stream().map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag,
+                    Function.identity()));
+
+            List<DBItemInventoryTag> dbTags = addTags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
             final Date date = Date.from(Instant.now());
-            Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().add(addTags, date, dbTagLayer);
+            Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
             tagEvents.addAll(newDbTagItems.stream().map(name -> new InventoryTagAddEvent(name.getName())).collect(Collectors.toList()));
             
             newDbTagItems.addAll(dbTags);
@@ -227,7 +234,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
             
             Tags entity = new Tags();
-            entity.setTags(new InventoryTagDBLayer(session).getTags(config.getId()));
+            entity.setTags(new InventoryTagDBLayer(session).getTagsWithGroups(config.getId()));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));

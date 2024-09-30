@@ -102,9 +102,7 @@ public class EventServiceFactory {
     
     public static void closeEventServices() {
         LOGGER.info("closing all event services");
-        EventServiceFactory.getInstance().eventServices.values().parallelStream().forEach(service -> {
-            service.close();
-        });
+        EventServiceFactory.getInstance().eventServices.values().parallelStream().forEach(EventService::close);
         EventServiceFactory.isClosed.set(true);
     }
     

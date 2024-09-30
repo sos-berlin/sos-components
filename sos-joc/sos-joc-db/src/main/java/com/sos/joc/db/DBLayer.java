@@ -63,6 +63,7 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
+import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
@@ -264,6 +265,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_JOB_TAGGINGS = DBItemInventoryJobTagging.class.getSimpleName();
     public static final String TABLE_INV_JOB_TAGGINGS = "INV_JOB_TAGGINGS";
     public static final String TABLE_INV_JOB_TAGGINGS_SEQUENCE = "SEQ_INV_JTG";
+
+    public static final String DBITEM_INV_TAG_GROUPS = DBItemInventoryTagGroup.class.getSimpleName();
+    public static final String TABLE_INV_TAG_GROUPS = "INV_TAG_GROUPS";
+    public static final String TABLE_INV_TAG_GROUPS_SEQUENCE = "SEQ_INV_TGS";
 
     public static final String DBITEM_INV_SCHEDULE2WORKFLOWS = DBItemInventorySchedule2Workflow.class.getSimpleName();
     public static final String VIEW_INV_SCHEDULE2WORKFLOWS = "INV_SCHEDULE2WORKFLOWS";
@@ -541,6 +546,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryTagging.class);
         cl.add(DBItemInventoryJobTag.class);
         cl.add(DBItemInventoryJobTagging.class);
+        cl.add(DBItemInventoryTagGroup.class);
         cl.add(DBItemInventoryAddOrderTag.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);

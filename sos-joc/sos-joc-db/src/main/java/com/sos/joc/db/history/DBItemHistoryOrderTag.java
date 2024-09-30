@@ -40,6 +40,8 @@ public class DBItemHistoryOrderTag extends DBItem {
 
     @Column(name = "[TAG_NAME]", nullable = false)
     private String tagName;
+    
+    //@Column(name = "[GROUP_ID]", nullable = false)
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
@@ -104,6 +106,16 @@ public class DBItemHistoryOrderTag extends DBItem {
     public void setTagName(String val) {
         tagName = val;
     }
+    
+//    @Transient
+//    public String getGroup() {
+//        return group;
+//    }
+//
+//    @Transient
+//    public void setGroup(String val) {
+//        group = val;
+//    }
     
     public Integer getOrdering() {
         return ordering;

@@ -16,6 +16,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTagItem;
@@ -317,26 +318,26 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-
-    public List<String> getTags(String name, Integer type) {
+    
+    public List<String> getTagsWithGroups(Long cid) {
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("select t.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(DBLayer.DBITEM_INV_TAGS).append(
-                    " t on t.id = tg.tagId");
+            StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName());
+            sql.append("(g.name, t.name) from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg left join ")
+                .append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId left join ")
+                .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId");
 
-            sql.append(" where tg.name=:name and tg.type=:type");
+            sql.append(" where tg.cid=:cid");
             sql.append(" order by t.ordering");
 
-            Query<String> query = getSession().createQuery(sql.toString());
-            query.setParameter("name", name);
-            query.setParameter("type", type);
+            Query<GroupedTag> query = getSession().createQuery(sql.toString());
+            query.setParameter("cid", cid);
 
-            List<String> result = getSession().getResultList(query);
+            List<GroupedTag> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
 
-            return result;
+            return result.stream().map(GroupedTag::toString).collect(Collectors.toList());
 
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -344,6 +345,33 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
             throw new DBInvalidDataException(ex);
         }
     }
+
+//    public List<String> getTags(String name, Integer type) {
+//        try {
+//            StringBuilder sql = new StringBuilder();
+//            sql.append("select t.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(DBLayer.DBITEM_INV_TAGS).append(
+//                    " t on t.id = tg.tagId");
+//
+//            sql.append(" where tg.name=:name and tg.type=:type");
+//            sql.append(" order by t.ordering");
+//
+//            Query<String> query = getSession().createQuery(sql.toString());
+//            query.setParameter("name", name);
+//            query.setParameter("type", type);
+//
+//            List<String> result = getSession().getResultList(query);
+//            if (result == null) {
+//                return Collections.emptyList();
+//            }
+//
+//            return result;
+//
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
     public List<DBItemInventoryTag> getTagDBItems(String name, Integer type) {
         try {
@@ -410,7 +438,8 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
     public Map<String, LinkedHashSet<String>> getWorkflowTags(Stream<String> workflowNames) {
         List<ResponseBaseSearchItem> result = getWorkflowTags(workflowNames.distinct().collect(Collectors.toList()));
         return result.stream().sorted(Comparator.comparingInt(ResponseBaseSearchItem::getOrdering)).collect(Collectors.groupingBy(
-                ResponseBaseSearchItem::getPath, Collectors.mapping(ResponseBaseSearchItem::getName, Collectors.toCollection(LinkedHashSet::new))));
+                ResponseBaseSearchItem::getPath, Collectors.mapping(i -> new GroupedTag(i.getGroup(), i.getName()).toString(), Collectors
+                        .toCollection(LinkedHashSet::new))));
     }
     
     private List<ResponseBaseSearchItem> getWorkflowTags(List<String> workflowNames) {
@@ -426,9 +455,10 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
         } else {
             try {
                 StringBuilder sql = new StringBuilder();
-                sql.append("select ic.name as path, t.name as name, t.ordering as ordering from ");
+                sql.append("select g.name as group, ic.name as path, t.name as name, t.ordering as ordering from ");
                 sql.append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg left join ");
                 sql.append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId left join ");
+                sql.append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId left join ");
                 sql.append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic on tg.cid = ic.id");
 
                 sql.append(" where ic.name in (:workflowNames)");
@@ -476,7 +506,7 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
         if (workflowNames == null || workflowNames.isEmpty()) {
             return Collections.emptySet();
         }
-        List<String> wNames = getWorkflowNamesHavingTags(tags.stream().collect(Collectors.toList()));
+        List<String> wNames = getWorkflowNamesHavingTags(tags.stream().map(GroupedTag::new).map(GroupedTag::getTag).collect(Collectors.toList()));
         wNames.retainAll(workflowNames);
         return wNames.stream().collect(Collectors.toSet());
     }

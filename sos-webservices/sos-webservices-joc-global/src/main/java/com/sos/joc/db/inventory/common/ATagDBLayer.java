@@ -13,7 +13,9 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.IDBItemTag;
 import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -36,6 +38,26 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
     
     public List<String> getAllTagNames() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
+            StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName());
+            sql.append("(g.name, t.name) from ").append(getTagTable()).append(" t left join ")
+                .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on t.groupId = g.id");
+            sql.append(" order by t.ordering");
+            Query<GroupedTag> query = getSession().createQuery(sql.toString());
+            List<GroupedTag> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result.stream().map(GroupedTag::toString).collect(Collectors.toList());
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<String> getAllGroupNames() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
             StringBuilder sql = new StringBuilder();
             sql.append("select name from ").append(getTagTable());
             sql.append(" order by ordering");
@@ -52,16 +74,30 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<T> getAllGroups() throws DBConnectionRefusedException, DBInvalidDataException {
+        return getTags((Set<String>) null);
+    }
 
     public List<T> getAllTags() throws DBConnectionRefusedException, DBInvalidDataException {
         return getTags((Set<String>) null);
     }
-
+    
+//    public List<T> getTagsByGroupedTags(Collection<GroupedTag> tagNamesWithOptionalGroups) throws DBConnectionRefusedException, DBInvalidDataException {
+//        if (tagNamesWithOptionalGroups == null) {
+//            return getAllTags();
+//        }
+//        return getTags(tagNamesWithOptionalGroups.stream().map(GroupedTag::getTag).collect(Collectors.toSet()));
+//    }
+    
     public List<T> getTags(Set<String> tagNames) throws DBConnectionRefusedException, DBInvalidDataException {
+        if (tagNames != null && tagNames.isEmpty()) {
+            return Collections.emptyList();
+        }
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(getTagTable());
-            if (tagNames != null && !tagNames.isEmpty()) {
+            if (tagNames != null) {
                 if (tagNames.size() == 1) {
                     sql.append(" where name = :name");
                 } else {
@@ -70,7 +106,7 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
             }
             sql.append(" order by ordering");
             Query<T> query = getSession().createQuery(sql.toString());
-            if (tagNames != null && !tagNames.isEmpty()) {
+            if (tagNames != null) {
                 if (tagNames.size() == 1) {
                     query.setParameter("name", tagNames.iterator().next());
                 } else {
@@ -99,7 +135,6 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(getTagTable());
             sql.append(" where name = :name");
-            sql.append(" order by ordering");
             Query<T> query = getSession().createQuery(sql.toString());
             query.setParameter("name", tagName);
 
@@ -128,35 +163,51 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-
-    public Integer deleteTags(Set<String> tagNames) throws SOSHibernateException {
-        if (tagNames == null || tagNames.isEmpty()) {
-            return 0;
+    
+    public void deleteGroups(Collection<T> dbGroups) throws SOSHibernateException {
+        delete(dbGroups);
+    }
+    
+    public void deleteTags(Collection<T> dbTags) throws SOSHibernateException {
+        delete(dbTags);
+    }
+    
+    private void delete(Collection<T> dbItems) throws SOSHibernateException {
+        if (dbItems != null) {
+            for (T dbItem : dbItems) {
+                getSession().delete(dbItem); 
+            }
         }
-        StringBuilder sql = new StringBuilder();
-        sql.append("delete from ").append(getTagTable());
-        if (tagNames.size() == 1) {
-            sql.append(" where name = :name");
-        } else {
-            sql.append(" where name in (:names)");
-        }
-        Query<Integer> query = getSession().createQuery(sql.toString());
-        if (tagNames.size() == 1) {
-            query.setParameter("name", tagNames.iterator().next());
-        } else {
-            query.setParameterList("names", tagNames);
-        }
-        return getSession().executeUpdate(query);
     }
 
-    public Integer deleteTaggings(Set<String> tagNames) throws SOSHibernateException {
-        if (tagNames == null || tagNames.isEmpty()) {
-            return 0;
-        }
-        return deleteTaggingsByTagIds(getTags(tagNames).stream().map(T::getId).collect(Collectors.toList()));
-    }
+//    public Integer deleteTags(Set<String> tagNames) throws SOSHibernateException {
+//        if (tagNames == null || tagNames.isEmpty()) {
+//            return 0;
+//        }
+//        StringBuilder sql = new StringBuilder();
+//        sql.append("delete from ").append(getTagTable());
+//        if (tagNames.size() == 1) {
+//            sql.append(" where name = :name");
+//        } else {
+//            sql.append(" where name in (:names)");
+//        }
+//        Query<Integer> query = getSession().createQuery(sql.toString());
+//        if (tagNames.size() == 1) {
+//            query.setParameter("name", tagNames.iterator().next());
+//        } else {
+//            query.setParameterList("names", tagNames);
+//        }
+//        return getSession().executeUpdate(query);
+//    }
 
-    private Integer deleteTaggingsByTagIds(List<Long> tagIds) throws SOSHibernateException {
+//    public Integer deleteTaggings(Set<String> tagNames) throws SOSHibernateException {
+//        if (tagNames == null || tagNames.isEmpty()) {
+//            return 0;
+//        }
+//        return deleteTaggingsByTagIds(getTags(tagNames).stream().map(T::getId).collect(Collectors.toList()));
+//    }
+
+    public Integer deleteTaggingsByTagIds(List<Long> tagIds) throws SOSHibernateException {
         if (tagIds == null || tagIds.isEmpty()) {
             return 0;
         }
@@ -324,5 +375,60 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
             }
         }
         return getSession().getResultList(query);
+    }
+    
+    public List<DBItemInventoryTagGroup> getGroups(Set<String> groupNames) throws DBConnectionRefusedException, DBInvalidDataException {
+        if (groupNames != null && groupNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
+            if (groupNames != null) {
+                if (groupNames.size() == 1) {
+                    sql.append(" where name = :name");
+                } else {
+                    sql.append(" where name in (:names)");
+                }
+            }
+            sql.append(" order by ordering");
+            Query<DBItemInventoryTagGroup> query = getSession().createQuery(sql.toString());
+            if (groupNames != null) {
+                if (groupNames.size() == 1) {
+                    query.setParameter("name", groupNames.iterator().next());
+                } else {
+                    query.setParameterList("names", groupNames);
+                }
+            }
+
+            List<DBItemInventoryTagGroup> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Integer getMaxGroupsOrdering() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select max(ordering) from ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
+            Query<Integer> query = getSession().createQuery(sql.toString());
+            Integer result = getSession().getSingleResult(query);
+            if (result == null) {
+                return 0;
+            }
+            return result;
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 }

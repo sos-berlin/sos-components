@@ -1,0 +1,218 @@
+package com.sos.joc.tags.job.impl;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.tag.GroupedTag;
+import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryJobTag;
+import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
+import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagEvent;
+import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.tag.JobsTags;
+import com.sos.joc.model.tag.common.JobTags;
+import com.sos.joc.model.tag.common.RequestWorkflowJobFilter;
+import com.sos.joc.model.tag.tagging.RequestJobFilter;
+import com.sos.joc.tags.job.resource.ITagging;
+import com.sos.schema.JsonValidator;
+import com.sos.schema.exception.SOSJsonSchemaException;
+
+import jakarta.ws.rs.Path;
+
+@Path("inventory")
+public class TaggingImpl extends JOCResourceImpl implements ITagging {
+
+
+    @Override
+    public JOCDefaultResponse postTagging(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession session = null;
+        try {
+            RequestJobFilter in = initRequest(IMPL_PATH_TAGGING, RequestJobFilter.class, accessToken, filterBytes);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            storeAuditLog(in.getAuditLog(), CategoryType.INVENTORY);
+            
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TAGGING);
+            session.setAutoCommit(false);
+            session.beginTransaction();
+            InventoryJobTagDBLayer dbTagLayer = new InventoryJobTagDBLayer(session);
+            
+            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
+            List<InventoryTagEvent> tagEvents = new ArrayList<>(); // TODO Set is better
+            
+            Set<JobTags> jobTags = in.getJobs() == null ? Collections.emptySet() : in.getJobs();
+            Date date = Date.from(Instant.now());
+            Set<DBItemInventoryJobTagging> dbTaggings = dbTagLayer.getTaggings(config.getId());
+            boolean taggingIsChanged = false;
+            
+            for (JobTags jobTag : jobTags) {
+                Set<String> tags = jobTag.getJobTags() == null ? Collections.emptySet() : jobTag.getJobTags();
+                Map<String, GroupedTag> groupedTags = tags.stream().map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag,
+                        Function.identity()));
+                List<DBItemInventoryJobTag> dbTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
+                Set<DBItemInventoryJobTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
+                
+               //TODO event for job tags?
+                tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryJobTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toList()));
+                newDbTagItems.addAll(dbTags);
+                
+                Map<String, Long> tagNameToIdMap = newDbTagItems.stream().collect(Collectors.toMap(DBItemInventoryJobTag::getName,
+                        DBItemInventoryJobTag::getId));
+                
+                Set<DBItemInventoryJobTagging> requestedTaggings = groupedTags.keySet().stream().map(tagName -> {
+                    DBItemInventoryJobTagging taggingItem = new DBItemInventoryJobTagging();
+                    taggingItem.setCid(config.getId());
+                    taggingItem.setJobName(jobTag.getJobName());
+                    taggingItem.setTagId(tagNameToIdMap.get(tagName));
+                    taggingItem.setWorkflowName(config.getName());
+                    taggingItem.setId(null);
+                    taggingItem.setModified(date);
+                    return taggingItem;
+                }).collect(Collectors.toSet());
+                
+                for (DBItemInventoryJobTagging requestedTagging : requestedTaggings) {
+                    if (dbTaggings.contains(requestedTagging)) {
+                        dbTaggings.remove(requestedTagging);
+                    } else {
+                        dbTagLayer.getSession().save(requestedTagging);
+                        taggingIsChanged = true;
+                    }
+                }
+                for (DBItemInventoryJobTagging dbTagging : dbTaggings) {
+                    if (dbTagging.getJobName().equals(jobTag.getJobName())) {
+                        dbTagLayer.getSession().delete(dbTagging);
+                        taggingIsChanged = true;
+                    }
+                }
+                if (!dbTaggings.isEmpty()) {
+                    dbTaggings.removeIf(i -> i.getJobName().equals(jobTag.getJobName()));
+                }
+            }
+            
+            if (taggingIsChanged) {
+                tagEvents.add(new InventoryTagEvent(config.getName())); //TODO event for job tags? workflowname?
+            }
+            
+            Globals.commit(session);
+            
+            tagEvents.forEach(evt -> EventBus.getInstance().post(evt));
+            
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            Globals.rollback(session);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(session);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse postRenameTagging(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession session = null;
+        try {
+            com.sos.joc.model.tag.rename.RequestJobFilter in = initRequest(IMPL_RENAME_TAGGING, com.sos.joc.model.tag.rename.RequestJobFilter.class,
+                    accessToken, filterBytes);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            String workflowName = JocInventory.pathToName(in.getPath());
+            String workflowPath = WorkflowPaths.getPath(workflowName);
+            
+            checkFolderPermissions(workflowPath);
+            
+            session = Globals.createSosHibernateStatelessConnection(IMPL_RENAME_TAGGING);
+            session.setAutoCommit(false);
+            session.beginTransaction();
+            new InventoryJobTagDBLayer(session).renameJob(workflowName, in.getJobName(), in.getNewJobName());
+            Globals.commit(session);
+            
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            Globals.rollback(session);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(session);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse postUsed(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession session = null;
+        try {
+            RequestWorkflowJobFilter in = initRequest(IMPL_PATH_TAGS, RequestWorkflowJobFilter.class, accessToken, filterBytes);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TAGS);
+            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
+            
+            InventoryJobTagDBLayer dbLayer = new InventoryJobTagDBLayer(session);
+            JobsTags entity = new JobsTags();
+            entity.setJobs(dbLayer.getTagsWithGroups(config.getId(), in.getJobNames()).entrySet().stream().map(e -> {
+                JobTags jt = new JobTags();
+                jt.setJobName(e.getKey());
+                jt.setJobTags(e.getValue());
+                return jt;
+            }).collect(Collectors.toSet()));
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    private <T> T initRequest(String apiCall, Class<T> clazz, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
+        initLogging(apiCall, filterBytes, accessToken);
+        JsonValidator.validateFailFast(filterBytes, clazz);
+        return Globals.objectMapper.readValue(filterBytes, clazz);
+    }
+    
+    private DBItemInventoryConfiguration getConfiguration(String path, InventoryDBLayer dbLayer) throws Exception {
+        com.sos.joc.model.inventory.common.RequestFilter filter = new com.sos.joc.model.inventory.common.RequestFilter();
+        filter.setObjectType(ConfigurationType.WORKFLOW);
+        filter.setPath(path);
+        return JocInventory.getConfiguration(dbLayer, filter, folderPermissions);
+    }
+    
+}
