@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -389,12 +390,14 @@ public class JocClusterService {
         return answer;
     }
 
-    public synchronized void updateJocUri(StartupMode mode, String uri) {
+    public synchronized void updateJocUri(StartupMode mode, String memberId, String uri) {
         if (cluster == null) {
             return;
         }
-        config.setUri(uri);
-        updateServicesJocConfiguration(mode);
+        if (SOSString.equals(config.getMemberId(), memberId)) {
+            config.setUri(uri);
+            updateServicesJocConfiguration(mode);
+        }
     }
 
     private void updateServicesJocConfiguration(StartupMode mode) {

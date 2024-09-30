@@ -66,7 +66,7 @@ public class UriImpl extends JOCResourceImpl implements IUriResource {
                 connection.update(dbInstance);
 
                 EventBus.getInstance().post(new ActiveClusterChangedEvent());
-                JocClusterService.getInstance().updateJocUri(StartupMode.settings_changed, dbInstance.getUri());
+                JocClusterService.getInstance().updateJocUri(StartupMode.settings_changed, dbInstance.getMemberId(), dbInstance.getUri());
             }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
