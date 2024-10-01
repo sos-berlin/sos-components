@@ -69,20 +69,35 @@ This variable is normally provided via a job resource that is managed with the c
                     <p>
  
 When infile is specified
-encrypted symmetric key, initialization vector and path to encrypted file separated by space. 
+
+<ul>
+	<li>encrypted symmetric key</li>
+	<li>initialization vector</li> 
+	<li>path to encrypted file separated by space.</li>
+</ul> 
 
 They are needed for decoding:
 
--The encrypted symmetric key is decrypted with the private key
--The encrypted file is decrypted using the decrypted symmetric key and the initialisation vector.
--The path to the file may be relevant in subsequent processing.       
+<ul>
+<li>The encrypted symmetric key is decrypted with the private key</li>
+<li>The encrypted file is decrypted using the decrypted symmetric key and the initialisation vector.</li>
+<li>The path to the file may be relevant in subsequent processing.       </li>
+</ul>
 
 When infile is not specified.
-encrypted symmetric key, initialization vector and the encrypted value.
 
--The encrypted symmetric key is decrypted with the private key
--The encrypted file is decrypted using the decrypted symmetric key and the initialisation vector.
--The encrypted value relevant in subsequent processing.       
+<ul>
+<li>encrypted symmetric key</li> 
+<li>initialization vector</li>
+<li>the encrypted value.</li>
+</ul>
+
+
+<ul>
+<li>The encrypted symmetric key is decrypted with the private key</li>
+<li>The encrypted file is decrypted using the decrypted symmetric key and the initialisation vector.</li>
+<li>The encrypted value relevant in subsequent processing.</li>
+</ul>       
 
 
 </p>
