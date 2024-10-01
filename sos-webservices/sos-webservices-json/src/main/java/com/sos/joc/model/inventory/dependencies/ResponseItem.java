@@ -113,12 +113,4 @@ public class ResponseItem {
         this.dependency = item;
     }
 
-//    public ResponseItem(ConfigurationObject item, Set<ConfigurationObject> referencedBy) {
-//        this.dependency = item;
-//        if(referencedBy != null) {
-//            for(ConfigurationObject dependency : referencedBy) {
-//                this.referencedBy.add(new ResponseItem(dependency));
-//            }
-//        }
-//    }
 }
