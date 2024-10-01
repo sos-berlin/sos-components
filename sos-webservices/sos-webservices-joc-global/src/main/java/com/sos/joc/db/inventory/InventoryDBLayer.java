@@ -679,6 +679,34 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
+    public List<DBItemInventoryConfiguration> getConfigurations(List<Long> invIds) throws SOSHibernateException {
+        if (invIds == null) {
+            invIds = Collections.emptyList();
+        }
+        if (invIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < invIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getConfigurations(SOSHibernate.getInClausePartition(i, invIds)));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (!invIds.isEmpty()) {
+                hql.append(" where id in (:invIds)");
+            }
+
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            if (!invIds.isEmpty()) {
+                query.setParameterList("invIds", invIds);
+            }
+            List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        }
+    }
+
     public List<String> getBoardNames() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where type=:type");
@@ -2124,6 +2152,17 @@ public class InventoryDBLayer extends DBLayer {
         } else {
             String releaseName = getSession().getSingleResult(query);
             return releaseName != null && !releaseName.equals(name);
+        }
+    }
+    
+    public List<DBItemInventoryDependency> getAllDependencies () throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+        List<DBItemInventoryDependency> results = query.getResultList();
+        if(results != null) {
+            return results;
+        } else {
+            return Collections.emptyList();
         }
     }
     

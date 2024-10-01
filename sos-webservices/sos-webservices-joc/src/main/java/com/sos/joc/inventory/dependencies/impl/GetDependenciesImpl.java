@@ -3,23 +3,33 @@ package com.sos.joc.inventory.dependencies.impl;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.dependencies.DependencyResolver;
-import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
+import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
@@ -43,17 +53,10 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             JsonValidator.validate(dependencyFilter, GetDependenciesRequest.class);
             GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
-            InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
-            List<ReferencedDbItem> items = new ArrayList<ReferencedDbItem>();
-            for(RequestItem item : filter.getConfigurations()) {
-                DBItemInventoryConfiguration inventoryDbItem = dblayer.getConfigurationByName(item.getName(), ConfigurationType.fromValue(item.getType()).intValue()).get(0);
-                ReferencedDbItem reference = DependencyResolver.convert(hibernateSession, inventoryDbItem,
-                        DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem));
-                if(reference != null) {
-                    items.add(reference);
-                }
-            }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(getResponse(items, hibernateSession)));
+            // TODO: resolve complete DependencyTree 
+            List<ResponseItem> dependencies = process(filter, hibernateSession);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(
+                    getResponse(dependencies)));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -64,79 +67,82 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         }
     }
     
-    private GetDependenciesResponse getResponse(List<ReferencedDbItem> items, SOSHibernateSession session) {
+    private List<ResponseItem> process(GetDependenciesRequest filter, SOSHibernateSession session) throws SOSHibernateException,
+            JsonMappingException, JsonProcessingException {
+        InventoryDBLayer dblayer = new InventoryDBLayer(session);
+        List<ResponseItem> items = new ArrayList<ResponseItem>();
+        // read all dependency items from DB
+        List<DBItemInventoryDependency> allDependencies = dblayer.getAllDependencies();
         
+        // get all inventory Ids for all items and their dependencies
+        List<Long> invIds = allDependencies.stream().map(dep -> Arrays.asList(dep.getInvId(), dep.getInvDependencyId()))
+                .flatMap(List::stream).distinct().collect(Collectors.toList());
+        // get all inventory objects from db
+        Map<Long, DBItemInventoryConfiguration> cfgs = dblayer.getConfigurations(invIds).stream()
+                .collect(Collectors.toMap(DBItemInventoryConfiguration::getId, Function.identity()));
+
+        Map<Long, ConfigurationObject> cfgObjs = dblayer.getConfigurations(invIds).stream()
+                .map(item -> DependencyResolver.convert(item)).collect(Collectors.toMap(ConfigurationObject::getId, Function.identity()));
+        // group dependencies: <inventoryid of object, List of its dependencies inventoryIds>
+        Map<Long, List<Long>> groupedDependencyIds = allDependencies.stream()
+                .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
+                        Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
+        // map 
+        Map<ConfigurationObject, ResponseItem> dependencyToIdMap = Stream.concat(
+                groupedDependencyIds.keySet().stream(), 
+                groupedDependencyIds.values().stream().flatMap(List::stream))
+                .distinct().map(id -> cfgObjs.get(id)).filter(Objects::nonNull).map(ResponseItem::new)
+                .collect(Collectors.toMap(ResponseItem::getDependency, Function.identity()));
+        
+        
+        Map<ConfigurationObject, ResponseItem> configurationMap = 
+                new HashMap<ConfigurationObject, ResponseItem>();
+        for(Map.Entry<Long, List<Long>> entry : groupedDependencyIds.entrySet()) {
+            ResponseItem dep = dependencyToIdMap.get(cfgObjs.get(entry.getKey()));
+            Set<ResponseItem> referencedBy = dep.getReferencedBy();
+            entry.getValue().stream().map(id -> dependencyToIdMap.get(cfgObjs.get(id))).forEach(depCfg -> referencedBy.add(depCfg));
+            configurationMap.put(cfgObjs.get(entry.getKey()), dep);
+        }
+        resolveReferences(session, configurationMap);
+        
+        for(RequestItem item : filter.getConfigurations()) {
+            Optional<DBItemInventoryConfiguration> inventoryDbItemOptional = cfgs.values().stream()
+                    .filter(cfg -> cfg.getName().equals(item.getName()) 
+                            && cfg.getTypeAsEnum().equals(ConfigurationType.fromValue(item.getType()))).findFirst();
+            if(inventoryDbItemOptional.isPresent()) {
+                DBItemInventoryConfiguration inventoryDbItem = inventoryDbItemOptional.get();
+                ResponseItem depCfg = configurationMap.get(cfgObjs.get(inventoryDbItem.getId()));
+                if(depCfg != null) {
+                    items.add(depCfg);
+                }
+            }
+        }
+        return items;
+    }
+ 
+    public static List<ResponseItem> resolveReferences(SOSHibernateSession session, 
+            Map<ConfigurationObject, ResponseItem> dependencyConfigurationMap) throws SOSHibernateException,
+                JsonMappingException, JsonProcessingException {
+        // this method is in use
+        List<ResponseItem> resolvedDependencies = new ArrayList<ResponseItem>();
+        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        for(Map.Entry<ConfigurationObject, ResponseItem> entry : dependencyConfigurationMap.entrySet()) {
+            ResponseItem newInventoryDependency = new ResponseItem(entry.getKey());
+            newInventoryDependency.getReferencedBy().add(entry.getValue());
+            DependencyResolver.resolveReferences(newInventoryDependency, session);
+            resolvedDependencies.add(newInventoryDependency);
+        }
+        return resolvedDependencies;
+    }
+
+    private GetDependenciesResponse getResponse(List<ResponseItem> items)
+            throws JsonParseException, JsonMappingException, SOSHibernateException, IOException {
         GetDependenciesResponse dependenciesResponse = new GetDependenciesResponse();
         dependenciesResponse.setDeliveryDate(Date.from(Instant.now()));
-        for(ReferencedDbItem referencedDbItem : items) {
-            ResponseItem response = new ResponseItem();
-            response.setName(referencedDbItem.getName());
-            response.setType(referencedDbItem.getType().value());
-            response.setReferencedBy(referencedDbItem.getReferencedBy().stream()
-                    .map(item -> {
-                        try {
-                            return JocInventory.convert(item, session);
-                        } catch (SOSHibernateException e) {
-                            throw new JocSosHibernateException(e);
-                        } catch (IOException e) {
-                            throw new JocException(e);
-                        }
-                    }).collect(Collectors.toList()));
-            response.setReferences(referencedDbItem.getReferences().stream().map(item -> {
-                        try {
-                            return JocInventory.convert(item, session);
-                        } catch (SOSHibernateException e) {
-                            throw new JocSosHibernateException(e);
-                        } catch (IOException e) {
-                            throw new JocException(e);
-                        }
-                    }).collect(Collectors.toList()));
-            dependenciesResponse.getDependencies().add(response);
+        for(ResponseItem item : items) {
+            dependenciesResponse.getDependencies().add(item);
         }
         return dependenciesResponse;
     }
 
-//    private ResponseItems getResponseItems (ReferencedDbItem referencedDbItem, SOSHibernateSession session) throws SOSHibernateException {
-//        ResponseItems dependencyItems = new ResponseItems();
-//        referencedDbItem.getReferencedBy().stream().forEach(item -> {
-//            try {
-//                switch(item.getTypeAsEnum()) {
-//                case WORKFLOW:
-//                    dependencyItems.getWorkflows().add(WorkflowConverter.convertInventoryWorkflow(item.getContent(), Workflow.class));
-//                    break;
-//                case FILEORDERSOURCE:
-//                    dependencyItems.getFileOrderSources().add(JocInventory.convertFileOrderSource(item.getContent(), FileOrderSource.class));
-//                    break;
-//                case JOBTEMPLATE:
-//                    dependencyItems.getJobTemplates().add(JocInventory.convertJobTemplate(item.getContent(), JobTemplate.class));
-//                    break;
-//                case JOBRESOURCE:
-//                    dependencyItems.getJobResources().add(JocInventory.convertDefault(item.getContent(), JobResource.class));
-//                    break;
-//                case NOTICEBOARD:
-//                    dependencyItems.getBoards().add(JocInventory.convertDefault(item.getContent(), Board.class));
-//                    break;
-//                case LOCK:
-//                    dependencyItems.getLocks().add(JocInventory.convertDefault(item.getContent(), Lock.class));
-//                    break;
-//                case SCHEDULE:
-//                    dependencyItems.getSchedules().add(JocInventory.convertSchedule(item.getContent(), Schedule.class));
-//                    break;
-//                case WORKINGDAYSCALENDAR:
-//                case NONWORKINGDAYSCALENDAR:
-//                    dependencyItems.getCalendars().add(JocInventory.convertDefault(item.getContent(), Calendar.class));
-//                    break;
-//                default:
-//                    break;
-//                }
-//            } catch (IOException e) {
-//                throw new JocConfigurationException(e);
-//            }
-//        });
-//        InventoryDBLayer dblayer = new InventoryDBLayer(session);
-//        dependencyItems.setIsRenamed(dblayer.isRenamed(referencedDbItem.getName(), referencedDbItem.getType()));
-//        dependencyItems.setDeliveryDate(Date.from(Instant.now()));
-//        return dependencyItems;
-//    }
-    
 }
