@@ -179,16 +179,20 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
             for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                 switch (IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType())) {
+                case CERTIFICATE:
+                    identityProviders.setNeedLoginButton(true);
+                    break;
                 case JOC:
                 case LDAP:
                 case LDAP_JOC:
                 case KEYCLOAK:
                 case KEYCLOAK_JOC:
                     identityProviders.setNeedAccountPassword(true);
+                    identityProviders.setNeedLoginButton(true);
                     break;
                 default:
                 }
-                if (identityProviders.getNeedAccountPassword()) {
+                if (identityProviders.getNeedAccountPassword() && identityProviders.getNeedLoginButton()) {
                     break;
                 }
             }
