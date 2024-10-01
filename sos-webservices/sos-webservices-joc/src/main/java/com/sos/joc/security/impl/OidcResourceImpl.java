@@ -175,6 +175,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             }
 
             filter.setIamIdentityServiceType(null);
+            filter.setSecondFactor(false);
             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
             for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
