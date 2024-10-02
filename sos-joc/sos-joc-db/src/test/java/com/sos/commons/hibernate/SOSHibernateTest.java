@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -45,6 +46,72 @@ public class SOSHibernateTest {
             List<DBItemHistoryOrder> result = session.getResultList(query);
             for (DBItemHistoryOrder item : result) {
                 LOGGER.info(SOSHibernate.toString(item));
+            }
+
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testGetResultListAsHibernateMap() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+
+            // must have aliases
+            StringBuilder hql = new StringBuilder("select new map(id as id,name as name,schemaLocation as schemaLocation) from "
+                    + DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS + " order by created");
+            Query<Map<String, Object>> query = session.createQuery(hql.toString());
+
+            query.setMaxResults(10); // only for this test
+            List<Map<String, Object>> result = session.getResultList(query);
+            for (Map<String, Object> item : result) {
+                LOGGER.info(SOSHibernate.toString(item));
+                LOGGER.info("    id=" + item.get("id"));
+                LOGGER.info("    name=" + item.get("name"));
+                LOGGER.info("    schemaLocation=" + item.get("schemaLocation"));
+            }
+
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testGetResultListAsHibernateList() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+
+            // must have aliases
+            StringBuilder hql = new StringBuilder("select new list(id as id,name as name,schemaLocation as schemaLocation) from "
+                    + DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS + " order by created");
+            Query<List<Object>> query = session.createQuery(hql.toString());
+
+            query.setMaxResults(10); // only for this test
+            List<List<Object>> result = session.getResultList(query);
+            for (List<Object> item : result) {
+                LOGGER.info(SOSHibernate.toString(item));
+                LOGGER.info("    id=" + item.get(0));
+                LOGGER.info("    name=" + item.get(1));
+                LOGGER.info("    schemaLocation=" + item.get(2));
             }
 
         } catch (Exception e) {

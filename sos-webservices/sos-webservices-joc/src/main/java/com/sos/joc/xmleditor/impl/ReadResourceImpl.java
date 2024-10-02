@@ -84,15 +84,16 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
 
         if (in.getId() == null || in.getId() <= 0) {
             ArrayList<String> schemas = new ArrayList<String>();
-            List<Map<String, Object>> items = getConfigurationProperties(in, "id,name,schemaLocation", "order by created");
+            List<Map<String, Object>> items = getConfigurationProperties(in, "id as id,name as name,schemaLocation as schemaLocation",
+                    "order by created");
             if (items != null && items.size() > 0) {
                 ArrayList<AnswerConfiguration> configurations = new ArrayList<AnswerConfiguration>();
                 for (int i = 0; i < items.size(); i++) {
                     Map<String, Object> item = items.get(i);
                     AnswerConfiguration configuration = new AnswerConfiguration();
-                    configuration.setId(Long.parseLong(item.get("0").toString()));
-                    configuration.setName(item.get("1").toString());
-                    configuration.setSchemaIdentifier(item.get("2").toString());// fileName or http(s) location
+                    configuration.setId(Long.parseLong(item.get("id").toString()));
+                    configuration.setName(item.get("name").toString());
+                    configuration.setSchemaIdentifier(item.get("schemaLocation").toString());// fileName or http(s) location
 
                     // only http(s), files will be checked later - maybe no longer exists (were removed from the resources directory)
                     if (JocXmlEditor.isHttp(configuration.getSchemaIdentifier()) && !schemas.contains(configuration.getSchemaIdentifier())) {
