@@ -24,8 +24,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +88,6 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
-
 import scala.Function1;
 import scala.collection.JavaConverters;
 
@@ -739,11 +736,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (modifyOrders.getDeep() == Boolean.TRUE) {
                 oIdsStream = Stream.concat(oIdsStream, getChildren(currentState, jOrders));
             }
-            if (modifyOrders.getKill() == Boolean.TRUE) {
-                return ControllerApi.of(controllerId).suspendOrders(oIdsStream.collect(Collectors.toSet()), JSuspensionMode.kill());
-            } else {
-                return ControllerApi.of(controllerId).suspendOrders(oIdsStream.collect(Collectors.toSet()));
-            }
+            JSuspensionMode suspendMode = JSuspensionMode.of(modifyOrders.getReset(), modifyOrders.getKill(), false, Optional.empty());
+            return ControllerApi.of(controllerId).suspendOrders(oIdsStream.collect(Collectors.toSet()), suspendMode);
+//            if (modifyOrders.getKill() == Boolean.TRUE) {
+//                return ControllerApi.of(controllerId).suspendOrders(oIdsStream.collect(Collectors.toSet()), JSuspensionMode.kill());
+//            } else {
+//                return ControllerApi.of(controllerId).suspendOrders(oIdsStream.collect(Collectors.toSet()));
+//            }
 
         case ANSWER_PROMPT:
             // TODO batch command -  No bulk operation in API

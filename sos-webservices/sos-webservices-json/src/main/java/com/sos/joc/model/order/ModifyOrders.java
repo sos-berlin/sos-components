@@ -39,6 +39,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "orderType",
     "kill",
     "deep",
+    "reset",
     "position",
     "variables",
     "cycleEndTime",
@@ -106,10 +107,27 @@ public class ModifyOrders {
     @JsonProperty("orderType")
     @JsonPropertyDescription("relevant for cancel or suspend order")
     private OrderModeType orderType = OrderModeType.fromValue("FreshOrStarted");
+    /**
+     * only relevant for 'suspend' and 'cancel'
+     * 
+     */
     @JsonProperty("kill")
+    @JsonPropertyDescription("only relevant for 'suspend' and 'cancel'")
     private Boolean kill = false;
+    /**
+     * only relevant for 'suspend' and 'cancel'
+     * 
+     */
     @JsonProperty("deep")
+    @JsonPropertyDescription("only relevant for 'suspend' and 'cancel'")
     private Boolean deep = false;
+    /**
+     * only relevant for 'suspend'
+     * 
+     */
+    @JsonProperty("reset")
+    @JsonPropertyDescription("only relevant for 'suspend'")
+    private Boolean reset = false;
     @JsonProperty("position")
     private Object position;
     /**
@@ -302,24 +320,58 @@ public class ModifyOrders {
         this.orderType = orderType;
     }
 
+    /**
+     * only relevant for 'suspend' and 'cancel'
+     * 
+     */
     @JsonProperty("kill")
     public Boolean getKill() {
         return kill;
     }
 
+    /**
+     * only relevant for 'suspend' and 'cancel'
+     * 
+     */
     @JsonProperty("kill")
     public void setKill(Boolean kill) {
         this.kill = kill;
     }
 
+    /**
+     * only relevant for 'suspend' and 'cancel'
+     * 
+     */
     @JsonProperty("deep")
     public Boolean getDeep() {
         return deep;
     }
 
+    /**
+     * only relevant for 'suspend' and 'cancel'
+     * 
+     */
     @JsonProperty("deep")
     public void setDeep(Boolean deep) {
         this.deep = deep;
+    }
+
+    /**
+     * only relevant for 'suspend'
+     * 
+     */
+    @JsonProperty("reset")
+    public Boolean getReset() {
+        return reset;
+    }
+
+    /**
+     * only relevant for 'suspend'
+     * 
+     */
+    @JsonProperty("reset")
+    public void setReset(Boolean reset) {
+        this.reset = reset;
     }
 
     @JsonProperty("position")
@@ -375,7 +427,6 @@ public class ModifyOrders {
      * <p>
      * 
      * 
-     * 
      */
     @JsonProperty("cycleEndTime")
     public void setCycleEndTime(Long cycleEndTime) {
@@ -406,12 +457,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("position", position).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("reset", reset).append("position", position).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(deep).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(dateFrom).append(kill).append(states).append(cycleEndTime).append(dateTo).append(orderIds).append(position).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(deep).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(dateFrom).append(kill).append(states).append(cycleEndTime).append(dateTo).append(reset).append(orderIds).append(position).toHashCode();
     }
 
     @Override
@@ -423,7 +474,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(deep, rhs.deep).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(kill, rhs.kill).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(deep, rhs.deep).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(kill, rhs.kill).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(reset, rhs.reset).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
     }
 
 }
