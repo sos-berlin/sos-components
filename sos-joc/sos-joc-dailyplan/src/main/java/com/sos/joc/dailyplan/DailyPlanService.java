@@ -39,7 +39,8 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+    public synchronized JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers,
+            AConfigurationSection serviceSettingsSection) {
         try {
             lastActivityStart = Instant.now();
 
@@ -62,7 +63,7 @@ public class DailyPlanService extends AJocActiveMemberService {
 
             lastActivityEnd = Instant.now();
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
             return JocCluster.getErrorAnswer(e);
         } finally {
@@ -71,22 +72,25 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer stop(StartupMode mode) {
+    public synchronized JocClusterAnswer stop(StartupMode mode) {
         JocClusterServiceLogger.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s][%s] stop", getIdentifier(), mode));
-        if (timer != null) {
-            timer.cancel();
-            timer.purge();
-        }
+        resetTimer();
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+    public synchronized JocClusterAnswer runNow(StartupMode mode, List<ControllerConfiguration> controllers,
+            AConfigurationSection serviceSettingsSection) {
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
+
+        if (getActivity().isBusy()) {
+            LOGGER.info(String.format("[%s][%s][runNow][skip]isBusy=true", getIdentifier(), mode));
+            return new JocClusterAnswer(JocClusterState.ALREADY_RUNNING);
+        }
         lastActivityStart = Instant.now();
 
-        JocClusterServiceLogger.setLogger(IDENTIFIER);
         try {
             LOGGER.info(String.format("[%s][%s][runNow]...", getIdentifier(), mode));
             DailyPlanSettings settings = getSettings(mode, controllers, serviceSettingsSection);
@@ -95,6 +99,7 @@ public class DailyPlanService extends AJocActiveMemberService {
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
         }
+        return new JocClusterAnswer(JocClusterState.RUNNING);
     }
 
     @Override
@@ -136,13 +141,18 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     private void schedule(DailyPlanSettings settings) {
-        if (timer != null) {
-            timer.cancel();
-            timer.purge();
-        }
+        resetTimer();
         timer = new Timer();
         runner = new DailyPlanRunner(settings);
         timer.schedule(runner, 0, 60 * 1000);
+    }
+
+    private void resetTimer() {
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+            timer = null;
+        }
     }
 
     private DailyPlanSettings getSettings(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection)

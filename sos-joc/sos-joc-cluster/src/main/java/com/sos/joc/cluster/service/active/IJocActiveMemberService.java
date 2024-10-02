@@ -22,7 +22,7 @@ public interface IJocActiveMemberService {
     public JocClusterAnswer stop(StartupMode mode);
 
     // run service implementation immediately - when the service starts at a specific time (e.g. cleanup service)
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection);
+    public JocClusterAnswer runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection);
 
     // signal to pause work and wait for the stopPause signal
     public void startPause(String caller, int pauseDurationInSeconds);

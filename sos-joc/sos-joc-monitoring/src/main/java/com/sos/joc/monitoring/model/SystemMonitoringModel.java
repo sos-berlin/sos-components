@@ -122,7 +122,7 @@ public class SystemMonitoringModel {
             Configuration.INSTANCE.loadIfNotExists(service.getIdentifier(), service.getJocConfig().getTitle(), service.getJocConfig().getUri());
             schedule(service.getThreadGroup());
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return JocCluster.getErrorAnswer(e);
         }
     }

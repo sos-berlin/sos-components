@@ -42,8 +42,6 @@ public class CleanupService extends AJocActiveMemberService {
     private CleanupServiceConfiguration config = null;
     private AtomicBoolean closed = new AtomicBoolean(false);
     private AtomicBoolean runServiceNow = new AtomicBoolean(false);
-    private AtomicLong lastActivityStart = new AtomicLong();
-    private AtomicLong lastActivityEnd = new AtomicLong();
     private final Object lock = new Object();
 
     public CleanupService(JocConfiguration jocConfiguration, ThreadGroup clusterThreadGroup) {
@@ -52,17 +50,19 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+    public synchronized JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers,
+            AConfigurationSection serviceSettingsSection) {
         try {
-            closed.set(false);
-            lastActivityStart.set(new Date().getTime());
             setServiceLogger();
+            stopOnStart(mode);
+
+            setRunServiceNow("start", false);
+            closed.set(false);
 
             setConfig((ConfigurationGlobalsCleanup) serviceSettingsSection);
 
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             // LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
-            lastActivityEnd.set(new Date().getTime());
             if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
                 LOGGER.info(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
                         ConfigurationGlobalsCleanup.ENTRY_NAME_PERIOD));
@@ -82,17 +82,15 @@ public class CleanupService extends AJocActiveMemberService {
                             try {
                                 schedule.start(startupMode, runNow);
                                 if (runNow) { // 2) - after next iteration
-                                    runServiceNow.set(false);
                                     runNow = false;
                                 }
                                 if (runServiceNow.get()) { // runServiceNow was set by another thread
                                     runNow = true; // 1) set runNow for the next while iteration
                                     startupMode = StartupMode.manual;
                                 }
-
                                 if (!runNow) {
                                     startupMode = StartupMode.automatic;
-                                    waitFor(30);
+                                    // waitFor(30);
                                 }
                             } catch (CleanupComputeException e) {
                                 closed.set(true);
@@ -121,13 +119,13 @@ public class CleanupService extends AJocActiveMemberService {
                 threadPool.submit(thread);
                 return JocCluster.getOKAnswer(JocClusterState.STARTED);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return JocCluster.getErrorAnswer(e);
         }
     }
 
     @Override
-    public JocClusterAnswer stop(StartupMode mode) {
+    public synchronized JocClusterAnswer stop(StartupMode mode) {
         setServiceLogger();
         LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
 
@@ -139,22 +137,29 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+    public synchronized JocClusterAnswer runNow(StartupMode mode, List<ControllerConfiguration> controllers,
+            AConfigurationSection serviceSettingsSection) {
         setServiceLogger();
+
         if (schedule == null) {
             LOGGER.info(String.format("[%s][%s][runNow][skip]schedule=null", getIdentifier(), mode));
-            return;
+            return new JocClusterAnswer(JocClusterState.MISSING_CONFIGURATION, "schedule=null");
         }
-        lastActivityStart.set(new Date().getTime());
-        runServiceNow.set(true);
+        if (schedule.isBusy()) {
+            LOGGER.info(String.format("[%s][%s][runNow][skip]isBusy=true", getIdentifier(), mode));
+            return new JocClusterAnswer(JocClusterState.ALREADY_RUNNING);
+        }
+
         if (serviceSettingsSection instanceof ConfigurationGlobalsCleanup) {
             setConfig((ConfigurationGlobalsCleanup) serviceSettingsSection);
         }
         try {
             schedule.runNow(mode);
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
+            LOGGER.info(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
+            return JocCluster.getErrorAnswer(e);
         }
+        return new JocClusterAnswer(JocClusterState.RUNNING);
     }
 
     @Override
@@ -167,10 +172,10 @@ public class CleanupService extends AJocActiveMemberService {
 
     @Override
     public JocClusterServiceActivity getActivity() {
-        if (runServiceNow.get()) {
-            lastActivityStart.set(new Date().getTime());
+        if (schedule == null) {
+            return JocClusterServiceActivity.Relax();
         }
-        return new JocClusterServiceActivity(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
+        return schedule.isBusy() ? JocClusterServiceActivity.Busy() : JocClusterServiceActivity.Relax();
     }
 
     @Override
@@ -202,18 +207,26 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     private void close(StartupMode mode) {
-        synchronized (lock) {
-            lock.notifyAll();
-        }
+        cancelWaitFor();
         setServiceLogger();
         if (schedule != null) {
             schedule.stop(mode);
+            schedule = null;
         }
         if (threadPool != null) {
             JocCluster.shutdownThreadPool("[" + getIdentifier() + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
         }
         removeServiceLogger();
+    }
+
+    private void stopOnStart(StartupMode mode) {
+        if (schedule != null || threadPool != null) {
+            LOGGER.info(String.format("[%s][%s][stopOnStart]stop...", getIdentifier(), mode));
+
+            closed.set(true);
+            close(mode);
+        }
     }
 
     public static Date toDate(ZonedDateTime dateTime) {
@@ -229,6 +242,12 @@ public class CleanupService extends AJocActiveMemberService {
             return SOSDate.getDateTimeAsString(date);
         } catch (Exception e) {
             return date == null ? "null" : date.toString();
+        }
+    }
+
+    private void cancelWaitFor() {
+        synchronized (lock) {
+            lock.notifyAll();
         }
     }
 
@@ -253,12 +272,14 @@ public class CleanupService extends AJocActiveMemberService {
         }
     }
 
-    protected void setLastActivityStart(Long val) {
-        lastActivityStart.set(val);
-    }
-
-    protected void setLastActivityEnd(Long val) {
-        lastActivityEnd.set(val);
+    protected void setRunServiceNow(String caller, boolean val) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[setRunServiceNow][" + caller + "]" + val);
+        }
+        runServiceNow.set(val);
+        if (val) {
+            cancelWaitFor();
+        }
     }
 
     public static void setServiceLogger() {

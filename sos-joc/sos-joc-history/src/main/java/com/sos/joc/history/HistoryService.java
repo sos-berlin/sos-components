@@ -89,9 +89,12 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+    public synchronized JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers,
+            AConfigurationSection serviceSettingsSection) {
         try {
             setLogger();
+            stopOnStart(mode);
+
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             processingStarted.set(true);
@@ -125,13 +128,13 @@ public class HistoryService extends AJocActiveMemberService {
                 threadPool.submit(task);
             }
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return JocCluster.getErrorAnswer(e);
         }
     }
 
     @Override
-    public JocClusterAnswer stop(StartupMode mode) {
+    public synchronized JocClusterAnswer stop(StartupMode mode) {
         stop.set(true);
         try {
             setLogger();
@@ -146,6 +149,7 @@ public class HistoryService extends AJocActiveMemberService {
             }
             closeFactory();
             JocCluster.shutdownThreadPool("[" + getIdentifier() + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            threadPool = null;
         } finally {
             stop.set(false);
             processingStarted.set(false);
@@ -154,11 +158,6 @@ public class HistoryService extends AJocActiveMemberService {
 
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
-    }
-
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
-
     }
 
     @Override
@@ -203,7 +202,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
+    public synchronized void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
         Runnable task = new Runnable() {
 
             @Override
@@ -242,7 +241,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection settingsSection) {
+    public synchronized void update(StartupMode mode, AConfigurationSection settingsSection) {
         setLogger();
         updateHistoryConfiguration();
     }
@@ -250,6 +249,20 @@ public class HistoryService extends AJocActiveMemberService {
     @Override
     public void update(StartupMode mode, JocConfiguration jocConfiguration) {
 
+    }
+
+    private void stopOnStart(StartupMode mode) {
+        try {
+            closeEventHandlers(mode);
+            closeFactory();
+            if (threadPool != null) {
+                JocCluster.shutdownThreadPool("[" + getIdentifier() + "][" + mode + "][stopOnStart]", threadPool,
+                        JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+                threadPool = null;
+            }
+        } catch (Throwable e) {
+            LOGGER.info("[closeIfStarted]" + e, e);
+        }
     }
 
     private void setConfig() {
@@ -647,11 +660,12 @@ public class HistoryService extends AJocActiveMemberService {
     private int closeEventHandlers(StartupMode mode) {
         String method = "closeEventHandlers";
 
-        int size = activeHandlers.size();
         JocClusterServiceLogger.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s][%s]found %s active handlers", getIdentifier(), method, size));
+
+        int size = activeHandlers.size();
         // JocClusterServiceLogger.clearAllLoggers();
         if (size > 0) {
+            LOGGER.info(String.format("[%s][%s][%s]found %s active handlers", getIdentifier(), mode, method, size));
             // close all event handlers
             ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-stop"));
             for (int i = 0; i < size; i++) {
@@ -676,7 +690,7 @@ public class HistoryService extends AJocActiveMemberService {
         } else {
             if (LOGGER.isDebugEnabled()) {
                 JocClusterServiceLogger.setLogger(IDENTIFIER);
-                LOGGER.debug(String.format("[%s][%s][skip]already closed", getIdentifier(), method));
+                LOGGER.debug(String.format("[%s][%s][%s][skip]already closed", getIdentifier(), mode, method));
                 // JocClusterServiceLogger.clearAllLoggers();
             }
         }
@@ -704,10 +718,14 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     private void closeFactory() {
-        if (factory != null) {
+        if (factory == null) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.info(String.format("[%s][skip closeFactory]database factory is null", getIdentifier()));
+            }
+        } else {
             factory.close();
             factory = null;
+            LOGGER.info(String.format("[%s]database factory closed", getIdentifier()));
         }
-        LOGGER.info(String.format("[%s]database factory closed", getIdentifier()));
     }
 }

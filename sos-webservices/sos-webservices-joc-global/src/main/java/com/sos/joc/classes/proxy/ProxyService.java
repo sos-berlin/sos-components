@@ -44,11 +44,6 @@ public class ProxyService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
-
-    }
-
-    @Override
     public JocClusterServiceActivity getActivity() {
         return JocClusterServiceActivity.Relax();
     }

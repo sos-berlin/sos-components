@@ -1,6 +1,13 @@
 package com.sos.joc.cluster.service.active;
 
+import java.util.List;
+
+import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public abstract class AJocActiveMemberService implements IJocActiveMemberService {
 
@@ -15,6 +22,11 @@ public abstract class AJocActiveMemberService implements IJocActiveMemberService
         parentThreadGroup = clusterThreadGroup;
         threadGroup = new ThreadGroup(parentThreadGroup, serviceIdentifier);
         identifier = serviceIdentifier;
+    }
+
+    @Override
+    public JocClusterAnswer runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+        return new JocClusterAnswer(JocClusterState.RUNNING);
     }
 
     @Override

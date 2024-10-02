@@ -63,7 +63,7 @@ public class JocClusterActiveMemberHandler {
             if (active) {
                 return JocCluster.getOKAnswer(JocClusterState.ALREADY_STARTED);
             }
-            if (StartupMode.manual_switchover.equals(mode) || StartupMode.automatic_switchover.equals(mode)) {
+            if (StartupMode.manual_switchover.equals(mode) || StartupMode.failover.equals(mode)) {
                 if (!cluster.getConfig().getClusterModeResult().getUse()) {
                     return JocCluster.getErrorAnswer(JocClusterState.MISSING_LICENSE);
                 }
@@ -244,22 +244,7 @@ public class JocClusterActiveMemberHandler {
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("[runServiceNow]handler not found for %s", identifier)));
         }
-        JocClusterAnswer answer = new JocClusterAnswer(JocClusterState.RUNNING);
-
-        IJocActiveMemberService s = os.get();
-        JocClusterServiceActivity activity = s.getActivity();
-        if (activity.isBusy()) {
-            answer.setState(JocClusterState.ALREADY_RUNNING);
-            JocClusterServiceLogger.setLogger(identifier);
-            LOGGER.info(String.format("[%s][runServiceNow][%s][skip]%s", mode, identifier, answer.getState()));
-            JocClusterServiceLogger.removeLogger(identifier);
-        } else {
-            JocClusterServiceLogger.setLogger();
-            LOGGER.info(String.format("[%s][runServiceNow][%s]start...", mode, identifier));
-            JocClusterServiceLogger.removeLogger();
-
-            s.runNow(mode, cluster.getControllers(), configuration);
-        }
+        JocClusterAnswer answer = os.get().runNow(mode, cluster.getControllers(), configuration);
 
         JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[%s][runServiceNow][%s]%s", mode, identifier, SOSString.toString(answer)));

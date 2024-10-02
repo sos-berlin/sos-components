@@ -4,7 +4,7 @@ public class JocClusterAnswerError {
 
     private String type;
     private String message;
-    private Exception exception;
+    private Throwable exception;
 
     public String getType() {
         return type;
@@ -21,12 +21,12 @@ public class JocClusterAnswerError {
     public void setMessage(String val) {
         message = val;
     }
-    
-    public Exception getException() {
+
+    public Throwable getException() {
         return exception;
     }
 
-    public void setException(Exception e) {
+    public void setException(Throwable e) {
         exception = e;
     }
 

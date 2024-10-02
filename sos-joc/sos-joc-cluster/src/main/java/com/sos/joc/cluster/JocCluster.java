@@ -433,7 +433,7 @@ public class JocCluster {
                 dbLayer.commit();
 
                 if (!isFirstRun) {
-                    mode = StartupMode.automatic_switchover;
+                    mode = StartupMode.failover;
                     item.setStartupMode(mode.name());
                 }
             } catch (SOSHibernateObjectOperationException e) {
@@ -484,7 +484,7 @@ public class JocCluster {
                         dbLayer.getSession().update(activeMemberHandleConfigurationGlobalsChanged(item));
                         dbLayer.commit();
 
-                        mode = config.getClusterModeResult().getUse() ? StartupMode.automatic_switchover : StartupMode.automatic;
+                        mode = config.getClusterModeResult().getUse() ? StartupMode.failover : StartupMode.automatic;
                         item.setStartupMode(mode.name());
                         LOGGER.info(String.format("[%s][active changed]%s", mode, SOSHibernate.toString(item)));
                     }
@@ -1051,11 +1051,11 @@ public class JocCluster {
         return getErrorAnswer(state, new Exception(state.toString()));
     }
 
-    public static JocClusterAnswer getErrorAnswer(Exception e) {
+    public static JocClusterAnswer getErrorAnswer(Throwable e) {
         return getErrorAnswer(JocClusterState.ERROR, e);
     }
 
-    public static JocClusterAnswer getErrorAnswer(JocClusterState state, Exception e) {
+    public static JocClusterAnswer getErrorAnswer(JocClusterState state, Throwable e) {
         JocClusterAnswer answer = new JocClusterAnswer(state);
         answer.setError(e);
         return answer;

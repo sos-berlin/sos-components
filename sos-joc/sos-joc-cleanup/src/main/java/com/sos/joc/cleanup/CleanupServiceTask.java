@@ -74,205 +74,212 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     @Override
     public JocClusterAnswer call() {
-        cleanupTasks = new ArrayList<>();
+        schedule.setBusy(true);
+
         CleanupService.setServiceLogger();
-
-        schedule.getService().setLastActivityStart(new Date().getTime());
         LOGGER.info(String.format("[%s][run]start ...", logIdentifier));
-        JocCluster cluster = JocClusterService.getInstance().getCluster();
-        if (cluster.getActiveMemberHandler().isActive()) {
-            CleanupServiceSchedule cleanupSchedule = this.schedule;
-            List<IJocActiveMemberService> services = cluster.getActiveMemberHandler().getServices();
-            LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
-            try {
-                createFactory(cleanupSchedule.getService().getConfig().getHibernateConfiguration(), cleanupSchedule.getService().getConfig()
-                        .getMaxPoolSize());
-            } catch (Exception e) {
-                LOGGER.error(String.format("[%s][createFactory]%s", logIdentifier, e.toString()), e);
-                return JocCluster.getErrorAnswer(e);
-            }
-            batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
-            try {
-                if (batchSize > MAX_BATCH_SIZE_ORACLE && Dbms.ORACLE.equals(factory.getDbms())) {
-                    LOGGER.info(String.format("[%s][run][configured batch_size=%s][skip]use max batch_size=%s for oracle", logIdentifier, batchSize,
-                            MAX_BATCH_SIZE_ORACLE));
+        cleanupTasks = new ArrayList<>();
+        try {
+            JocCluster cluster = JocClusterService.getInstance().getCluster();
+            if (cluster.getActiveMemberHandler().isActive()) {
+                CleanupServiceSchedule cleanupSchedule = this.schedule;
+                List<IJocActiveMemberService> services = cluster.getActiveMemberHandler().getServices();
+                LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
-                    batchSize = MAX_BATCH_SIZE_ORACLE;
+                try {
+                    createFactory(cleanupSchedule.getService().getConfig().getHibernateConfiguration(), cleanupSchedule.getService().getConfig()
+                            .getMaxPoolSize());
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[%s][createFactory]%s", logIdentifier, e.toString()), e);
+                    return JocCluster.getErrorAnswer(e);
                 }
-            } catch (Throwable e) {
-                LOGGER.warn(e.toString(), e);
-            }
+                batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
+                try {
+                    if (batchSize > MAX_BATCH_SIZE_ORACLE && Dbms.ORACLE.equals(factory.getDbms())) {
+                        LOGGER.info(String.format("[%s][run][configured batch_size=%s][skip]use max batch_size=%s for oracle", logIdentifier,
+                                batchSize, MAX_BATCH_SIZE_ORACLE));
 
-            final ForceCleanup forceCleanup = cleanupSchedule.getService().getConfig().getForceCleanup();
-
-            List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
-            // 1) service tasks
-            for (IJocActiveMemberService service : services) {
-                if (service.getIdentifier().equals(ClusterServices.cleanup.name())) {
-                    LOGGER.info("  [service][skip]" + service.getIdentifier());
-                    continue;
+                        batchSize = MAX_BATCH_SIZE_ORACLE;
+                    }
+                } catch (Throwable e) {
+                    LOGGER.warn(e.toString(), e);
                 }
-                LOGGER.info("  [service]" + service.getIdentifier());
-                Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
 
-                    @Override
-                    public JocClusterAnswer get() {
-                        CleanupService.setServiceLogger();
+                final ForceCleanup forceCleanup = cleanupSchedule.getService().getConfig().getForceCleanup();
 
-                        ICleanupTask task = null;
-                        boolean disabled = false;
-                        List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                        if (service.getIdentifier().equals(ClusterServices.history.name())) {
-                            TaskDateTime orderDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getOrderHistoryAge(),
-                                    cleanupSchedule.getFirstStart());
+                List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
+                // 1) service tasks
+                for (IJocActiveMemberService service : services) {
+                    if (service.getIdentifier().equals(ClusterServices.cleanup.name())) {
+                        LOGGER.info("  [service][skip]" + service.getIdentifier());
+                        continue;
+                    }
+                    LOGGER.info("  [service]" + service.getIdentifier());
+                    Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
 
-                            TaskDateTime orderLogsDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getOrderHistoryLogsAge(),
-                                    cleanupSchedule.getFirstStart());
+                        @Override
+                        public JocClusterAnswer get() {
+                            CleanupService.setServiceLogger();
 
-                            if (orderDatetime.getDatetime() == null && orderLogsDatetime.getDatetime() == null) {
-                                disabled = true;
-                            } else {
-                                task = new CleanupTaskHistory(factory, service, batchSize, forceCleanup);
-                                datetimes.add(orderDatetime);
-                                datetimes.add(orderLogsDatetime);
+                            ICleanupTask task = null;
+                            boolean disabled = false;
+                            List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
+                            if (service.getIdentifier().equals(ClusterServices.history.name())) {
+                                TaskDateTime orderDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getOrderHistoryAge(),
+                                        cleanupSchedule.getFirstStart());
 
+                                TaskDateTime orderLogsDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getOrderHistoryLogsAge(),
+                                        cleanupSchedule.getFirstStart());
+
+                                if (orderDatetime.getDatetime() == null && orderLogsDatetime.getDatetime() == null) {
+                                    disabled = true;
+                                } else {
+                                    task = new CleanupTaskHistory(factory, service, batchSize, forceCleanup);
+                                    datetimes.add(orderDatetime);
+                                    datetimes.add(orderLogsDatetime);
+
+                                }
+                            } else if (service.getIdentifier().equals(ClusterServices.dailyplan.name())) {
+                                TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getDailyPlanHistoryAge(),
+                                        cleanupSchedule.getFirstStart());
+                                if (datetime.getDatetime() == null) {
+                                    disabled = true;
+                                } else {
+                                    task = new CleanupTaskDailyPlan(factory, service, batchSize, forceCleanup);
+                                    datetimes.add(datetime);
+                                }
+                            } else if (service.getIdentifier().equals(ClusterServices.monitor.name())) {
+                                TaskDateTime monitoringDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getMonitoringHistoryAge(),
+                                        cleanupSchedule.getFirstStart());
+                                TaskDateTime notificationDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig()
+                                        .getNotificationHistoryAge(), cleanupSchedule.getFirstStart());
+                                if (monitoringDatetime.getDatetime() == null && notificationDatetime.getDatetime() == null) {
+                                    disabled = true;
+                                } else {
+                                    task = new CleanupTaskMonitoring(factory, service, batchSize, forceCleanup);
+                                    datetimes.add(monitoringDatetime);
+                                    datetimes.add(notificationDatetime);
+                                }
                             }
-                        } else if (service.getIdentifier().equals(ClusterServices.dailyplan.name())) {
-                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getDailyPlanHistoryAge(),
-                                    cleanupSchedule.getFirstStart());
-                            if (datetime.getDatetime() == null) {
-                                disabled = true;
-                            } else {
-                                task = new CleanupTaskDailyPlan(factory, service, batchSize, forceCleanup);
-                                datetimes.add(datetime);
-                            }
-                        } else if (service.getIdentifier().equals(ClusterServices.monitor.name())) {
-                            TaskDateTime monitoringDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getMonitoringHistoryAge(),
-                                    cleanupSchedule.getFirstStart());
-                            TaskDateTime notificationDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getNotificationHistoryAge(),
-                                    cleanupSchedule.getFirstStart());
-                            if (monitoringDatetime.getDatetime() == null && notificationDatetime.getDatetime() == null) {
-                                disabled = true;
-                            } else {
-                                task = new CleanupTaskMonitoring(factory, service, batchSize, forceCleanup);
-                                datetimes.add(monitoringDatetime);
-                                datetimes.add(notificationDatetime);
-                            }
-                        }
 
-                        if (disabled) {
-                            LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, service.getIdentifier()));
-                            LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
-                        } else {
-                            if (task == null) {
-                                LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
+                            if (disabled) {
+                                LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, service.getIdentifier()));
                                 LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
                             } else {
-                                executeTask(task, datetimes, cleanupSchedule.getUncompleted());
+                                if (task == null) {
+                                    LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
+                                    LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
+                                } else {
+                                    executeTask(task, datetimes, cleanupSchedule.getUncompleted());
+                                }
                             }
+
+                            return JocCluster.getOKAnswer(JocClusterState.COMPLETED);
                         }
+                    };
+                    tasks.add(task);
+                }
 
-                        return JocCluster.getOKAnswer(JocClusterState.COMPLETED);
-                    }
-                };
-                tasks.add(task);
-            }
+                // 2) manual tasks
+                List<ICleanupTask> manualTasks = getManualCleanupTasks(factory, batchSize, forceCleanup);
+                LOGGER.info(String.format("[%s][run]found %s manual tasks", logIdentifier, manualTasks.size()));
+                for (ICleanupTask manualTask : manualTasks) {
+                    LOGGER.info("  [manual]" + manualTask.getIdentifier());
+                    Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
 
-            // 2) manual tasks
-            List<ICleanupTask> manualTasks = getManualCleanupTasks(factory, batchSize, forceCleanup);
-            LOGGER.info(String.format("[%s][run]found %s manual tasks", logIdentifier, manualTasks.size()));
-            for (ICleanupTask manualTask : manualTasks) {
-                LOGGER.info("  [manual]" + manualTask.getIdentifier());
-                Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
+                        @Override
+                        public JocClusterAnswer get() {
+                            CleanupService.setServiceLogger();
 
-                    @Override
-                    public JocClusterAnswer get() {
-                        CleanupService.setServiceLogger();
+                            if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_DEPLOYMENT)) {
+                                int versions = cleanupSchedule.getService().getConfig().getDeploymentHistoryVersions();
+                                if (versions == 0) {
+                                    LOGGER.info(String.format("[%s][%s][skip]versions=0", manualTask.getTypeName(), manualTask.getIdentifier()));
+                                } else {
+                                    executeTask(manualTask, versions, cleanupSchedule.getUncompleted());
+                                }
+                            } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_AUDITLOG)) {
+                                List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
+                                TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getAuditLogAge(), cleanupSchedule
+                                        .getFirstStart());
+                                if (datetime.getDatetime() == null) {
+                                    LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
+                                    LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
+                                } else {
+                                    datetimes.add(datetime);
+                                    executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
+                                }
+                            } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_YADE)) {
+                                List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
+                                TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getFileTransferHistoryAge(),
+                                        cleanupSchedule.getFirstStart());
+                                if (datetime.getDatetime() == null) {
+                                    LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
+                                    LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
+                                } else {
+                                    datetimes.add(datetime);
+                                    executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
+                                }
 
-                        if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_DEPLOYMENT)) {
-                            int versions = cleanupSchedule.getService().getConfig().getDeploymentHistoryVersions();
-                            if (versions == 0) {
-                                LOGGER.info(String.format("[%s][%s][skip]versions=0", manualTask.getTypeName(), manualTask.getIdentifier()));
-                            } else {
-                                executeTask(manualTask, versions, cleanupSchedule.getUncompleted());
-                            }
-                        } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_AUDITLOG)) {
-                            List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getAuditLogAge(), cleanupSchedule
-                                    .getFirstStart());
-                            if (datetime.getDatetime() == null) {
-                                LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
-                                LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
-                            } else {
-                                datetimes.add(datetime);
+                            } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_USER_PROFILES)) {
+                                List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
+                                TaskDateTime profileDateTime = new TaskDateTime(cleanupSchedule.getService().getConfig().getProfileAge(),
+                                        cleanupSchedule.getFirstStart());
+                                TaskDateTime failedLoginHistoryDateTime = new TaskDateTime(cleanupSchedule.getService().getConfig()
+                                        .getFailedLoginHistoryAge(), cleanupSchedule.getFirstStart());
+                                if (profileDateTime.getDatetime() == null && failedLoginHistoryDateTime.getDatetime() == null) {
+                                    LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
+                                    LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
+                                } else {
+                                    datetimes.add(profileDateTime);
+                                    datetimes.add(failedLoginHistoryDateTime);
+                                    executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
+                                }
+
+                            } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_REPORTING)) {
+                                List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
+                                TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getReportingAge(), cleanupSchedule
+                                        .getFirstStart());
+                                if (datetime.getDatetime() == null) {
+                                    LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
+                                    LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
+                                } else {
+                                    datetimes.add(datetime);
+                                    executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
+                                }
+                            } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_GIT)) {
+                                List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
                                 executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
-                            }
-                        } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_YADE)) {
-                            List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getFileTransferHistoryAge(),
-                                    cleanupSchedule.getFirstStart());
-                            if (datetime.getDatetime() == null) {
-                                LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
-                                LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
                             } else {
-                                datetimes.add(datetime);
-                                executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
+                                LOGGER.info(String.format("  [%s][skip][%s]not implemented yet", manualTask.getTypeName(), manualTask
+                                        .getIdentifier()));
                             }
-
-                        } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_USER_PROFILES)) {
-                            List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                            TaskDateTime profileDateTime = new TaskDateTime(cleanupSchedule.getService().getConfig().getProfileAge(), cleanupSchedule
-                                    .getFirstStart());
-                            TaskDateTime failedLoginHistoryDateTime = new TaskDateTime(cleanupSchedule.getService().getConfig()
-                                    .getFailedLoginHistoryAge(), cleanupSchedule.getFirstStart());
-                            if (profileDateTime.getDatetime() == null && failedLoginHistoryDateTime.getDatetime() == null) {
-                                LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
-                                LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
-                            } else {
-                                datetimes.add(profileDateTime);
-                                datetimes.add(failedLoginHistoryDateTime);
-                                executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
-                            }
-
-                        } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_REPORTING)) {
-                            List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getReportingAge(), cleanupSchedule
-                                    .getFirstStart());
-                            if (datetime.getDatetime() == null) {
-                                LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
-                                LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
-                            } else {
-                                datetimes.add(datetime);
-                                executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
-                            }
-                        } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_GIT)) {
-                            List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                            executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
-                        } else {
-                            LOGGER.info(String.format("  [%s][skip][%s]not implemented yet", manualTask.getTypeName(), manualTask.getIdentifier()));
+                            return JocCluster.getOKAnswer(JocClusterState.COMPLETED);
                         }
-                        return JocCluster.getOKAnswer(JocClusterState.COMPLETED);
-                    }
-                };
-                tasks.add(task);
+                    };
+                    tasks.add(task);
+                }
+
+                if (tasks.size() > 0) {
+                    ExecutorService es = Executors.newFixedThreadPool(tasks.size(), new JocClusterThreadFactory(cleanupSchedule.getService()
+                            .getThreadGroup(), identifier + "-t-s-start"));
+                    List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es))
+                            .collect(Collectors.toList());
+                    CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
+                    JocCluster.shutdownThreadPool(null, es, 3);
+                }
+
+            } else {
+                LOGGER.info(String.format("[%s][run][skip]cluster not active", logIdentifier));
             }
 
-            if (tasks.size() > 0) {
-                ExecutorService es = Executors.newFixedThreadPool(tasks.size(), new JocClusterThreadFactory(cleanupSchedule.getService()
-                        .getThreadGroup(), identifier + "-t-s-start"));
-                List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(
-                        Collectors.toList());
-                CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-                JocCluster.shutdownThreadPool(null, es, 3);
-            }
-
-        } else {
-            LOGGER.info(String.format("[%s][run][skip]cluster not active", logIdentifier));
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            LOGGER.info(String.format("[%s][run]end", logIdentifier));
+            schedule.setBusy(false);
         }
-        LOGGER.info(String.format("[%s][run]end", logIdentifier));
-        schedule.getService().setLastActivityEnd(new Date().getTime());
-
         return getAnswer();
     }
 
@@ -335,55 +342,56 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         if (cleanupTasks == null || cleanupTasks.size() == 0) {
             return JocCluster.getOKAnswer(JocClusterState.STOPPED);
         }
-        schedule.getService().setLastActivityStart(new Date().getTime());
 
-        List<Supplier<JocClusterServiceTaskState>> tasks = new ArrayList<Supplier<JocClusterServiceTaskState>>();
-        for (int i = 0; i < cleanupTasks.size(); i++) {
-            ICleanupTask cleanupTask = cleanupTasks.get(i);
+        try {
+            List<Supplier<JocClusterServiceTaskState>> tasks = new ArrayList<Supplier<JocClusterServiceTaskState>>();
+            for (int i = 0; i < cleanupTasks.size(); i++) {
+                ICleanupTask cleanupTask = cleanupTasks.get(i);
 
-            Supplier<JocClusterServiceTaskState> task = new Supplier<JocClusterServiceTaskState>() {
+                Supplier<JocClusterServiceTaskState> task = new Supplier<JocClusterServiceTaskState>() {
 
-                @Override
-                public JocClusterServiceTaskState get() {
-                    CleanupService.setServiceLogger();
-                    JocClusterServiceTaskState state = null;
-                    if (cleanupTask.isStopped()) {
-                        state = cleanupTask.getState();
-                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]already stopped", logIdentifier, cleanupTask.getTypeName(),
-                                cleanupTask.getIdentifier(), cleanupTask.isCompleted()));
-                    } else {
-                        int t = timeout > 0 ? timeout : getMaxAwaitTimeout();
-                        String tMsg = "";
-                        if (t > 0) {
-                            tMsg = "[max waiting timeout=" + t + "s]";
+                    @Override
+                    public JocClusterServiceTaskState get() {
+                        CleanupService.setServiceLogger();
+                        JocClusterServiceTaskState state = null;
+                        if (cleanupTask.isStopped()) {
+                            state = cleanupTask.getState();
+                            LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]already stopped", logIdentifier, cleanupTask.getTypeName(),
+                                    cleanupTask.getIdentifier(), cleanupTask.isCompleted()));
+                        } else {
+                            int t = timeout > 0 ? timeout : getMaxAwaitTimeout();
+                            String tMsg = "";
+                            if (t > 0) {
+                                tMsg = "[max waiting timeout=" + t + "s]";
+                            }
+                            LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]%sstart...", logIdentifier, cleanupTask.getTypeName(),
+                                    cleanupTask.getIdentifier(), cleanupTask.isCompleted(), tMsg));
+                            state = cleanupTask.stop(t);
+                            LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s][end]%s", logIdentifier, cleanupTask.getTypeName(), cleanupTask
+                                    .getIdentifier(), cleanupTask.isCompleted(), state));
                         }
-                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]%sstart...", logIdentifier, cleanupTask.getTypeName(), cleanupTask
-                                .getIdentifier(), cleanupTask.isCompleted(), tMsg));
-                        state = cleanupTask.stop(t);
-                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s][end]%s", logIdentifier, cleanupTask.getTypeName(), cleanupTask
-                                .getIdentifier(), cleanupTask.isCompleted(), state));
+                        return state;
                     }
-                    return state;
-                }
-            };
-            tasks.add(task);
-        }
+                };
+                tasks.add(task);
+            }
 
-        // close all cleanups
-        if (tasks.size() > 0) {
-            ExecutorService es = Executors.newFixedThreadPool(tasks.size(), new JocClusterThreadFactory(schedule.getService().getThreadGroup(),
-                    identifier + "-t-s-stop"));
-            List<CompletableFuture<JocClusterServiceTaskState>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es))
-                    .collect(Collectors.toList());
-            CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-            JocCluster.shutdownThreadPool(null, es, 3);
+            // close all cleanups
+            if (tasks.size() > 0) {
+                ExecutorService es = Executors.newFixedThreadPool(tasks.size(), new JocClusterThreadFactory(schedule.getService().getThreadGroup(),
+                        identifier + "-t-s-stop"));
+                List<CompletableFuture<JocClusterServiceTaskState>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es))
+                        .collect(Collectors.toList());
+                CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
+                JocCluster.shutdownThreadPool(null, es, 3);
+            }
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            closeFactory();
+            cleanupTasks = new ArrayList<>();
         }
-        JocClusterAnswer answer = getAnswer();
-
-        closeFactory();
-        cleanupTasks = new ArrayList<>();
-        schedule.getService().setLastActivityEnd(new Date().getTime());
-        return answer;
+        return getAnswer();
     }
 
     private JocClusterAnswer getAnswer() {

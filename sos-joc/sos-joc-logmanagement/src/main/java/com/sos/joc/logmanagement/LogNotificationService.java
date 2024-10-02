@@ -27,8 +27,11 @@ public class LogNotificationService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+    public synchronized JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers,
+            AConfigurationSection serviceSettingsSection) {
         try {
+            stopOnStart(mode);
+
             closed.set(false);
             if (serviceSettingsSection != null && serviceSettingsSection instanceof ConfigurationGlobalsLogNotification) {
                 udpServer = new UDPServer((ConfigurationGlobalsLogNotification) serviceSettingsSection);
@@ -37,21 +40,16 @@ public class LogNotificationService extends AJocActiveMemberService {
             }
             udpServer.start();
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return JocCluster.getErrorAnswer(e);
         }
     }
 
     @Override
-    public JocClusterAnswer stop(StartupMode mode) {
+    public synchronized JocClusterAnswer stop(StartupMode mode) {
         udpServer.stop();
         closed.set(true);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
-    }
-
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
-
     }
 
     @Override
@@ -73,7 +71,7 @@ public class LogNotificationService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection settingsSection) {
+    public synchronized void update(StartupMode mode, AConfigurationSection settingsSection) {
         // port is changed ->
         if (!closed.get()) {
             if (settingsSection != null && settingsSection instanceof ConfigurationGlobalsLogNotification) {
@@ -91,6 +89,12 @@ public class LogNotificationService extends AJocActiveMemberService {
     @Override
     public void update(StartupMode mode, JocConfiguration jocConfiguration) {
 
+    }
+
+    private void stopOnStart(StartupMode mode) {
+        if (udpServer != null) {
+            udpServer.stop();
+        }
     }
 
 }

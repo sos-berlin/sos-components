@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -14,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,6 +52,7 @@ public class CleanupServiceSchedule {
     private ZonedDateTime start = null;
     private ZonedDateTime end = null;
     private List<String> uncompleted = null;
+    private AtomicBoolean isBusy = new AtomicBoolean(false);
     private String logPrefix = null;
 
     public CleanupServiceSchedule(CleanupService service) {
@@ -64,7 +65,10 @@ public class CleanupServiceSchedule {
     }
 
     public void start(StartupMode mode, boolean runNow) throws Exception {
-        service.setLastActivityStart(new Date().getTime());
+        if (runNow) {
+            setBusy(true);
+            service.setRunServiceNow("start", false);
+        }
         task.setStartMode(mode);
         setLogPrefix(mode);
         try {
@@ -72,13 +76,11 @@ public class CleanupServiceSchedule {
             long delay = runNow ? computeRunNowDelay() : computeNextDelay(mode);
             if (delay > 0) {
                 long timeout = computeTimeout();
-                service.setLastActivityEnd(new Date().getTime());
-
                 JocClusterAnswer answer = schedule(delay, timeout);
                 LOGGER.info(SOSString.toString(answer));
                 updateJocVariableOnResult(answer, runNow);
             } else {
-                throw new CleanupComputeException("delay can't be computed");
+                throw new CleanupComputeException("[invalid delay=" + delay + "]delay must be greater than 0");
             }
         } catch (TimeoutException e) {
             LOGGER.info(String.format("%s[max end at %s reached][max await termination timeout=%ss]try stop..", logPrefix, end.toString(),
@@ -92,21 +94,30 @@ public class CleanupServiceSchedule {
             closeTasks();
             throw e;
         } finally {
-            service.setLastActivityEnd(new Date().getTime());
+            if (runNow) {
+                setBusy(false);
+            }
         }
     }
 
     public void runNow(StartupMode mode) throws Exception {
-        service.setLastActivityStart(new Date().getTime());
+        setBusy(true);
+        service.setRunServiceNow("runNow", true);
+
         task.setStartMode(mode);
         setLogPrefix(mode);
         try {
             closeTasksForRunNow();
         } catch (Throwable e) {
-            LOGGER.info(logPrefix + "[runNow]" + e.toString(), e);
-        } finally {
-            service.setLastActivityEnd(new Date().getTime());
+            service.setRunServiceNow("runNow", false);
+            setBusy(false);
+
+            throw e;
         }
+    }
+
+    protected boolean isBusy() {
+        return isBusy.get();
     }
 
     private JocClusterAnswer schedule(long delay, long timeout) throws Exception {
@@ -122,8 +133,6 @@ public class CleanupServiceSchedule {
 
     private long computeRunNowDelay() {
         uncompleted = null;
-        ZonedDateTime now = service.getNow();
-        start = now.plusSeconds(5);
 
         long diff = DEFAULT_RUN_SERVICE_NOW_TIMEOUT;
         try {
@@ -139,6 +148,8 @@ public class CleanupServiceSchedule {
             }
         }
 
+        ZonedDateTime now = service.getNow();
+        start = now.plusSeconds(1);
         end = now.plusSeconds(diff);
         firstStart = start;
         return now.until(start, ChronoUnit.NANOS);
@@ -587,6 +598,10 @@ public class CleanupServiceSchedule {
 
     public List<String> getUncompleted() {
         return uncompleted;
+    }
+
+    protected void setBusy(boolean val) {
+        isBusy.set(val);
     }
 
     private StringBuilder getInitialValue() {

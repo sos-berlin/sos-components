@@ -36,10 +36,13 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
+    public synchronized JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers,
+            AConfigurationSection serviceSettingsSection) {
         try {
-            closed.set(false);
             MonitorService.setLogger();
+            stopOnStart(mode);
+
+            closed.set(false);
             LOGGER.info(String.format("[%s][%s]start...", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, mode));
 
             createFactory(getJocConfig().getHibernateConfiguration());
@@ -47,7 +50,7 @@ public class HistoryMonitorService extends AJocActiveMemberService {
             history.start(getThreadGroup());
 
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return JocCluster.getErrorAnswer(e);
         } finally {
             MonitorService.removeLogger();
@@ -55,7 +58,7 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer stop(StartupMode mode) {
+    public synchronized JocClusterAnswer stop(StartupMode mode) {
         MonitorService.setLogger();
         LOGGER.info(String.format("[%s][%s]stop...", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, mode));
 
@@ -65,11 +68,6 @@ public class HistoryMonitorService extends AJocActiveMemberService {
 
         MonitorService.removeLogger();
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
-    }
-
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection serviceSettingsSection) {
-
     }
 
     @Override
@@ -114,8 +112,13 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     private void close(StartupMode mode) {
         if (history != null) {
             history.close(mode);
+            history = null;
         }
         closeFactory();
+    }
+
+    private void stopOnStart(StartupMode mode) {
+        close(mode);
     }
 
     private void createFactory(Path configFile) throws Exception {

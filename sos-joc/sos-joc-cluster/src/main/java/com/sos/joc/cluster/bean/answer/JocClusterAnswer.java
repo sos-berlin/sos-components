@@ -33,7 +33,7 @@ public class JocClusterAnswer {
         return message;
     }
 
-    public void setError(Exception e) {
+    public void setError(Throwable e) {
         error = new JocClusterAnswerError();
         error.setType(e.getClass().getSimpleName());
         error.setMessage(e.toString());

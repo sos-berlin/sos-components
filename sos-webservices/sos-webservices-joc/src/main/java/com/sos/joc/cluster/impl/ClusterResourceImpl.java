@@ -168,7 +168,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
 
     private JOCDefaultResponse processAnswer(ClusterServices type, JocClusterAnswer answer) throws Exception {
         if (answer.getError() != null) {
-            Exception ex = answer.getError().getException();
+            Throwable ex = answer.getError().getException();
             if (ex != null) {
                 throw new JocServiceException(ex);
             } else {

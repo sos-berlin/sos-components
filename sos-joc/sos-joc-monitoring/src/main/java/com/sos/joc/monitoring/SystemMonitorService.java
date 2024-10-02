@@ -30,22 +30,24 @@ public class SystemMonitorService extends AJocEmbeddedService {
     }
 
     @Override
-    public JocClusterAnswer start(StartupMode mode) {
+    public synchronized JocClusterAnswer start(StartupMode mode) {
         try {
-            closed.set(false);
             MonitorService.setLogger();
+            stopOnStart(mode);
+
+            closed.set(false);
             LOGGER.info(String.format("[%s][%s]start...", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
 
             model = new SystemMonitoringModel(this);
             model.start(mode);
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return JocCluster.getErrorAnswer(e);
         }
     }
 
     @Override
-    public JocClusterAnswer stop(StartupMode mode) {
+    public synchronized JocClusterAnswer stop(StartupMode mode) {
         MonitorService.setLogger();
         LOGGER.info(String.format("[%s][%s]stop...", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
 
@@ -63,7 +65,7 @@ public class SystemMonitorService extends AJocEmbeddedService {
     }
 
     @Override
-    public void update(StartupMode mode, AConfigurationSection settingsSection) {
+    public synchronized void update(StartupMode mode, AConfigurationSection settingsSection) {
         if (!closed.get()) {
             if (settingsSection != null && settingsSection instanceof ConfigurationGlobalsJoc) {
                 MonitorService.setLogger();
@@ -81,7 +83,7 @@ public class SystemMonitorService extends AJocEmbeddedService {
     }
 
     @Override
-    public void update(StartupMode mode, JocConfiguration jocConfiguration) {
+    public synchronized void update(StartupMode mode, JocConfiguration jocConfiguration) {
         if (!closed.get()) {
             MonitorService.setLogger();
 
@@ -97,6 +99,16 @@ public class SystemMonitorService extends AJocEmbeddedService {
 
     public boolean closed() {
         return closed.get();
+    }
+
+    private void stopOnStart(StartupMode mode) {
+        if (model != null) {
+            LOGGER.info(String.format("[%s][%s][stopOnStart]stop...", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
+
+            closed.set(true);
+            model.close(mode);
+            model = null;
+        }
     }
 
 }
