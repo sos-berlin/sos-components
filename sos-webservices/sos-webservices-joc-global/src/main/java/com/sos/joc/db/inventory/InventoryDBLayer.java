@@ -2179,6 +2179,32 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
     
+    public Set<Long> getReferencesByIds (Long dependencyId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select invDependencyId from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        hql.append(" where invId = :dependencyId");
+        Query<Long> query = getSession().createQuery(hql.toString());
+        query.setParameter("dependencyId", dependencyId);
+        List<Long> results = query.getResultList();
+        if(results != null) {
+            return new HashSet<Long>(results);
+        } else {
+            return Collections.emptySet();
+        }
+    }
+    
+    public Set<Long> getReferencesIds (Long dependencyId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select invId from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        hql.append(" where invDependencyId = :dependencyId");
+        Query<Long> query = getSession().createQuery(hql.toString());
+        query.setParameter("dependencyId", dependencyId);
+        List<Long> results = query.getResultList();
+        if(results != null) {
+            return  new HashSet<Long>(results);
+        } else {
+            return Collections.emptySet();
+        }
+    }
+    
     public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
         hql.append(" where invId = :invId");
@@ -2212,7 +2238,7 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
     
-    public List<DBItemInventoryConfiguration> getDependenciesByReferences(Collection<Long> referencesByIds) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getReferencesByDependencies(Collection<Long> referencesByIds) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where id in (:invDepId)");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
@@ -2224,6 +2250,19 @@ public class InventoryDBLayer extends DBLayer {
             return Collections.emptyList();
         }
     }
+
+//    public List<DBItemInventoryConfiguration> getReferencesDependencies(Collection<Long> referencesByIds) throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+//        hql.append(" where id in (:invDepId)");
+//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+//        query.setParameterList("invDepId", referencesByIds);
+//        List<DBItemInventoryConfiguration> results = query.getResultList();
+//        if(results != null) {
+//            return results;
+//        } else {
+//            return Collections.emptyList();
+//        }
+//    }
 
     public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);

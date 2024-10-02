@@ -83,7 +83,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
 
         Map<Long, ConfigurationObject> cfgObjs = dblayer.getConfigurations(invIds).stream()
                 .map(item -> DependencyResolver.convert(item)).collect(Collectors.toMap(ConfigurationObject::getId, Function.identity()));
-        // group dependencies: <inventoryid of object, List of its dependencies inventoryIds>
+        // group dependencies: <inventoryid of object, List of its referencedBy inventoryIds>
         Map<Long, List<Long>> groupedDependencyIds = allDependencies.stream()
                 .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
                         Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
@@ -99,11 +99,13 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 new HashMap<ConfigurationObject, ResponseItem>();
         for(Map.Entry<Long, List<Long>> entry : groupedDependencyIds.entrySet()) {
             ResponseItem dep = dependencyToIdMap.get(cfgObjs.get(entry.getKey()));
-            Set<ResponseItem> referencedBy = dep.getReferencedBy();
-            entry.getValue().stream().map(id -> dependencyToIdMap.get(cfgObjs.get(id))).forEach(depCfg -> referencedBy.add(depCfg));
-            configurationMap.put(cfgObjs.get(entry.getKey()), dep);
+            if(dep != null) {
+                Set<ResponseItem> referencedBy = dep.getReferencedBy();
+                entry.getValue().stream().map(id -> dependencyToIdMap.get(cfgObjs.get(id))).forEach(depCfg -> referencedBy.add(depCfg));
+                configurationMap.put(cfgObjs.get(entry.getKey()), dep);
+            }
         }
-        resolveReferences(session, configurationMap);
+        resolveReferences(session, configurationMap, cfgObjs);
         
         for(RequestItem item : filter.getConfigurations()) {
             Optional<DBItemInventoryConfiguration> inventoryDbItemOptional = cfgs.values().stream()
@@ -121,18 +123,29 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     }
  
     public static List<ResponseItem> resolveReferences(SOSHibernateSession session, 
-            Map<ConfigurationObject, ResponseItem> dependencyConfigurationMap) throws SOSHibernateException,
+            Map<ConfigurationObject, ResponseItem> dependencyConfigurationMap, Map<Long, ConfigurationObject> cfgObjs)
+                    throws SOSHibernateException,
                 JsonMappingException, JsonProcessingException {
         // this method is in use
         List<ResponseItem> resolvedDependencies = new ArrayList<ResponseItem>();
-        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         for(Map.Entry<ConfigurationObject, ResponseItem> entry : dependencyConfigurationMap.entrySet()) {
             ResponseItem newInventoryDependency = new ResponseItem(entry.getKey());
             newInventoryDependency.getReferencedBy().add(entry.getValue());
-            DependencyResolver.resolveReferences(newInventoryDependency, session);
+            resolveReferences(newInventoryDependency, cfgObjs, session);
             resolvedDependencies.add(newInventoryDependency);
         }
         return resolvedDependencies;
+    }
+    
+    private static void resolveReferences(ResponseItem item, Map <Long, ConfigurationObject> cfgObjs, SOSHibernateSession session)
+            throws SOSHibernateException {
+        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        Set<Long> referencesIds = dbLayer.getReferencesIds(item.getDependency().getId());
+        if(!referencesIds.isEmpty()) {
+            for(Long id : referencesIds) {
+                item.getReferences().add(new ResponseItem(cfgObjs.get(id)));
+            }
+        }
     }
 
     private GetDependenciesResponse getResponse(List<ResponseItem> items)
