@@ -100,9 +100,9 @@ public class SOSHibernateTest {
             factory = createFactory();
             session = factory.openStatelessSession();
 
-            // must have aliases
-            StringBuilder hql = new StringBuilder("select new list(id as id,name as name,schemaLocation as schemaLocation) from "
-                    + DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS + " order by created");
+            // really should not have an alias...
+            StringBuilder hql = new StringBuilder("select new list(id,name,schemaLocation) from " + DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS
+                    + " order by created");
             Query<List<Object>> query = session.createQuery(hql.toString());
 
             query.setMaxResults(10); // only for this test
