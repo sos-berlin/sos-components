@@ -32,8 +32,8 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
@@ -119,14 +119,14 @@ public class JocClusterService {
                         createFactory(config.getHibernateConfiguration());
 
                         cluster = new JocCluster(factory, clusterConfig, config, startTime);
-                        Globals.configurationGlobals = cluster.getConfigurationGlobals(mode);
+                        Globals.setConfigurationGlobals(cluster.getConfigurationGlobals(mode));
                         cluster.startEmbeddedServices(mode);
 
-                        if (Globals.configurationGlobals != null) {// null when closed during cluster.getConfigurationGlobals (empty database or db errors)
+                        if (Globals.getConfigurationGlobals() != null) {// null when closed during cluster.getConfigurationGlobals (empty database or db errors)
                             if (onJocStart) {
                                 cluster.tryDeleteActiveCurrentMember();
                             }
-                            cluster.doProcessing(mode, Globals.configurationGlobals, onJocStart);
+                            cluster.doProcessing(mode, Globals.getConfigurationGlobals(), onJocStart);
                         }
                         LOGGER.info(String.format("[%s][start][end]", mode));
                     } catch (Throwable e) {
@@ -262,32 +262,72 @@ public class JocClusterService {
                         cluster.setConfigurationGlobalsChanged(new AtomicReference<List<String>>(sections));
 
                         // TODO restart asynchronous
+                        // Restart Active JOC Cluster services
                         for (String identifier : sections) {
                             AConfigurationSection section = null;
                             try {
                                 ClusterServices.valueOf(identifier);
-                                section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.valueOf(identifier));
+                                section = Globals.getConfigurationGlobals().getConfigurationSection(DefaultSections.valueOf(identifier));
                             } catch (Throwable e) {
                                 if (LOGGER.isDebugEnabled()) {
                                     JocClusterServiceLogger.setLogger();
-                                    LOGGER.debug(String.format("[%s][%s][restart][skip]is not a service", StartupMode.settings_changed.name(),
+                                    LOGGER.debug(String.format("[%s][%s][restartService][skip]is not a service", StartupMode.settings_changed.name(),
                                             identifier));
                                     JocClusterServiceLogger.removeLogger();
                                 }
                             }
                             if (section != null) {
                                 JocClusterServiceLogger.setLogger();
-                                LOGGER.info(String.format("[%s][%s]restart", StartupMode.settings_changed.name(), identifier));
+                                LOGGER.info(String.format("[%s][%s]restartService", StartupMode.settings_changed.name(), identifier));
                                 JocClusterServiceLogger.removeLogger();
                                 cluster.getActiveMemberHandler().restartService(StartupMode.settings_changed, identifier, section);
                             }
                         }
+
+                        // Update embedded and active JOC Cluster services
                         if (sections.contains(DefaultSections.joc.name())) {
-                            AConfigurationSection joc = Globals.configurationGlobals.getConfigurationSection(DefaultSections.joc);
-                            if (joc != null) {
-                                cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.history.name(), joc);
-                                cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.monitor.name(), joc);
-                                // cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.lognotification.name(), joc);
+                            // 1) Embedded services
+                            List<String> embeddedServices = new ArrayList<>();
+                            if (cluster.getEmbeddedServicesHandler() != null) {
+                                for (IJocEmbeddedService s : cluster.getEmbeddedServicesHandler().getServices()) {
+                                    embeddedServices.add(s.getIdentifier());
+                                }
+                            }
+
+                            // 2) Active JOC cluster services
+                            List<ClusterServices> activeClusterServices = new ArrayList<>();
+                            activeClusterServices.add(ClusterServices.history);
+                            // activeClusterServices.add(ClusterServices.monitor); // instead, an embedded service is used
+                            // updateServices.add(ClusterServices.lognotification);
+
+                            // 3) 1) and 2)
+                            List<String> allServicesToUpdate = new ArrayList<>();
+                            allServicesToUpdate.addAll(embeddedServices);
+                            allServicesToUpdate.addAll(activeClusterServices.stream().map(e -> e.name()).collect(Collectors.toList()));
+
+                            String updateServicesNames = String.join(",", allServicesToUpdate);
+                            AConfigurationSection joc = Globals.getConfigurationGlobals().getConfigurationSection(DefaultSections.joc);
+
+                            StartupMode mode = StartupMode.settings_changed;
+                            if (joc == null) {
+                                LOGGER.info(String.format("[%s][joc][updateService][%s][skip]joc section is null", mode.name(), updateServicesNames));
+                            } else {
+                                JocClusterServiceLogger.setLogger();
+                                LOGGER.info(String.format("[%s][joc][updateService][%s]forwarding of entries from the joc section", mode.name(),
+                                        updateServicesNames));
+                                JocClusterServiceLogger.removeLogger();
+
+                                // Embedded services
+                                if (embeddedServices.size() > 0) {
+                                    for (IJocEmbeddedService s : cluster.getEmbeddedServicesHandler().getServices()) {
+                                        s.update(mode, joc);
+                                    }
+                                }
+
+                                // Active JOC cluster services
+                                for (ClusterServices s : activeClusterServices) {
+                                    cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, s, joc);
+                                }
                             }
                         }
                     }
@@ -299,9 +339,34 @@ public class JocClusterService {
     }
 
     private void handleGlobalsOnNonActiveMember(ConfigurationGlobalsChanged evt) {
-        JocClusterServiceLogger.setLogger();
-        Globals.configurationGlobals = cluster.getConfigurationGlobals(StartupMode.unknown);
-        LOGGER.info(String.format("[%s]%s updated", StartupMode.settings_changed.name(), ConfigurationGlobals.class.getSimpleName()));
+        StartupMode mode = StartupMode.settings_changed;
+        Globals.setConfigurationGlobals(cluster.getConfigurationGlobals(mode));
+
+        List<String> embeddedServices = new ArrayList<>();
+        if (cluster.getEmbeddedServicesHandler() != null) {
+            for (IJocEmbeddedService s : cluster.getEmbeddedServicesHandler().getServices()) {
+                embeddedServices.add(s.getIdentifier());
+            }
+        }
+        String updateServicesNames = String.join(",", embeddedServices);
+        ConfigurationGlobalsJoc joc = Globals.getConfigurationGlobalsJoc();
+        if (joc == null) {
+            JocClusterServiceLogger.setLogger();
+            LOGGER.info(String.format("[%s][joc][updateService][%s][skip]joc section is null", mode.name(), updateServicesNames));
+            JocClusterServiceLogger.removeLogger();
+        } else {
+            // Embedded services
+            if (embeddedServices.size() > 0) {
+                JocClusterServiceLogger.setLogger();
+                LOGGER.info(String.format("[%s][joc][updateService][%s]forwarding of entries from the joc section", mode.name(),
+                        updateServicesNames));
+                JocClusterServiceLogger.removeLogger();
+
+                for (IJocEmbeddedService s : cluster.getEmbeddedServicesHandler().getServices()) {
+                    s.update(mode, joc);
+                }
+            }
+        }
     }
 
     private void stopSettingsChangedTimer() {
@@ -313,7 +378,7 @@ public class JocClusterService {
 
     private void closeCluster(StartupMode mode, boolean deleteActiveCurrentMember, boolean resetCurrentInstanceHeartBeat) {
         if (cluster != null) {
-            cluster.close(mode, Globals.configurationGlobals, deleteActiveCurrentMember, resetCurrentInstanceHeartBeat);
+            cluster.close(mode, Globals.getConfigurationGlobals(), deleteActiveCurrentMember, resetCurrentInstanceHeartBeat);
             cluster = null;
         }
     }
@@ -338,11 +403,11 @@ public class JocClusterService {
         JocClusterAnswer answer = null;
         switch (r.getType()) {
         case cleanup:
-            answer = cluster.getActiveMemberHandler().runServiceNow(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().runServiceNow(mode, ClusterServices.cleanup.name(), Globals.getConfigurationGlobals()
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         case dailyplan:
-            answer = cluster.getActiveMemberHandler().runServiceNow(mode, ClusterServices.dailyplan.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().runServiceNow(mode, ClusterServices.dailyplan.name(), Globals.getConfigurationGlobals()
                     .getConfigurationSection(DefaultSections.dailyplan));
             break;
         default:
@@ -369,18 +434,18 @@ public class JocClusterService {
             answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.history.name(), null);
             break;
         case dailyplan:
-            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.dailyplan.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.dailyplan.name(), Globals.getConfigurationGlobals()
                     .getConfigurationSection(DefaultSections.dailyplan));
             break;
         case cleanup:
-            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.cleanup.name(), Globals.getConfigurationGlobals()
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         case monitor:
             answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.monitor.name(), null);
             break;
         case lognotification:
-            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.lognotification.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.lognotification.name(), Globals.getConfigurationGlobals()
                     .getConfigurationSection(DefaultSections.lognotification));
             break;
         default:
@@ -420,7 +485,7 @@ public class JocClusterService {
             return JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }
 
-        JocClusterAnswer answer = cluster.switchMember(mode, Globals.configurationGlobals, memberId);
+        JocClusterAnswer answer = cluster.switchMember(mode, Globals.getConfigurationGlobals(), memberId);
         JocClusterServiceLogger.removeLogger();
         return answer;
     }

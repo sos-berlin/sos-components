@@ -280,7 +280,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     private boolean updateHistoryConfig(boolean onStart) {
-        ConfigurationGlobals cg = Globals.configurationGlobals;
+        ConfigurationGlobals cg = Globals.getConfigurationGlobals();
         boolean result = false;
         if (cg != null) {
             ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) cg.getConfigurationSection(DefaultSections.joc);
@@ -290,7 +290,10 @@ public class HistoryService extends AJocActiveMemberService {
             if (result && !onStart) {
                 String ltc = logTransferChanges == null ? "" : "[" + logTransferChanges + "]";
                 String lsc = logSizeChanges == null ? "" : "[" + logSizeChanges + "]";
-                LOGGER.info(String.format("[%s][%s]%s%s", getIdentifier(), StartupMode.settings_changed.name(), ltc, lsc));
+                LOGGER.info(String.format("[%s][%s][update]%s%s", getIdentifier(), StartupMode.settings_changed.name(), ltc, lsc));
+            } else if (!onStart) {
+                LOGGER.info(String.format("[%s][%s][update][skip]no relevant changes were found", getIdentifier(), StartupMode.settings_changed
+                        .name()));
             }
         }
         return result;
@@ -551,7 +554,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     private void truncateLogs(String caller, Path logDir) {
-        ConfigurationGlobals cg = Globals.configurationGlobals;
+        ConfigurationGlobals cg = Globals.getConfigurationGlobals();
         if (cg != null) {
             ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) cg.getConfigurationSection(DefaultSections.joc);
             if (joc != null) {

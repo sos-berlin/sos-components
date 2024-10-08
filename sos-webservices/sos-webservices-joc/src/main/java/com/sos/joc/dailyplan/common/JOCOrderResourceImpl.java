@@ -43,7 +43,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     public static DailyPlanSettings getDailyPlanSettings() {
         DailyPlanSettings settings = new DailyPlanSettings();
-        if (Globals.configurationGlobals == null) {// TODO to remove
+        if (Globals.getConfigurationGlobals() == null) {// TODO to remove
             settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
             settings.setDayAheadPlan(7);
@@ -51,17 +51,17 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             settings.setProjectionsMonthsAhead(6);
             LOGGER.warn("Could not read settings. Using defaults");
         } else {
-            AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+            AConfigurationSection section = Globals.getConfigurationGlobals().getConfigurationSection(DefaultSections.dailyplan);
             settings = new GlobalSettingsReader().getSettings(section);
         }
         return settings;
     }
-    
+
     public ZoneId getZoneId() {
-       if (settings == null) {
-           setSettings();
-       }
-       return ZoneId.of(settings.getTimeZone());
+        if (settings == null) {
+            setSettings();
+        }
+        return ZoneId.of(settings.getTimeZone());
     }
 
     protected void setSettings() {
@@ -77,13 +77,12 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return getOrderFilter(caller, controllerId, in, selectCyclicOrders, true);
     }
 
-    
     protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilterDef in, boolean selectCyclicOrders,
             boolean evalPermissions) throws SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        
+
         boolean hasPermission = true;
-        
+
         if (in.getWorkflowTags() != null && !in.getWorkflowTags().isEmpty()) {
             if (in.getWorkflowPaths() == null) {
                 in.setWorkflowPaths(getWorkflowPathsFromTags(in.getWorkflowTags(), controllerId));
@@ -93,11 +92,11 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             }
         }
 
-        if(!evalPermissions) {
-            if(in.getSchedulePaths() != null && !in.getSchedulePaths().isEmpty()) {
+        if (!evalPermissions) {
+            if (in.getSchedulePaths() != null && !in.getSchedulePaths().isEmpty()) {
                 filter.setScheduleNames(in.getSchedulePaths().stream().map(JocInventory::pathToName).collect(Collectors.toList()));
             }
-            if(in.getScheduleFolders() != null && !in.getScheduleFolders().isEmpty()) {
+            if (in.getScheduleFolders() != null && !in.getScheduleFolders().isEmpty()) {
                 Set<Folder> permitted = addPermittedFolder(in.getScheduleFolders(), folderPermissions);
                 if (permitted.isEmpty()) {
                     // hasPermission = false; //maybe the schedules were deleted
@@ -105,7 +104,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                     filter.addScheduleFolders(permitted);
                 }
             }
-            if(in.getWorkflowFolders() != null && !in.getWorkflowFolders().isEmpty()) {
+            if (in.getWorkflowFolders() != null && !in.getWorkflowFolders().isEmpty()) {
                 Set<Folder> permitted = addPermittedFolder(in.getWorkflowFolders(), folderPermissions);
                 if (permitted.isEmpty()) {
                     // hasPermission = false;
@@ -113,7 +112,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                     filter.addWorkflowFolders(permitted);
                 }
             }
-            if(in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
+            if (in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
                 filter.setWorkflowNames(in.getWorkflowPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList()));
             }
         } else {
@@ -123,7 +122,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             evaluator.setSchedulePaths(in.getSchedulePaths());
             evaluator.setWorkflowFolders(in.getWorkflowFolders());
             evaluator.setWorkflowPaths(in.getWorkflowPaths());
-            
+
             evaluator.getPermittedNames(folderPermissions, controllerId, filter);
             hasPermission = evaluator.isHasPermission();
         }
@@ -227,8 +226,9 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     }
 
-    protected Set<String> addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilterDef in,
-            List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails, Map<String, Set<String>> orderTags) {
+    protected Set<String> addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo,
+            DailyPlanOrderFilterDef in, List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails,
+            Map<String, Set<String>> orderTags) {
 
         boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
         Set<String> workflowNames = new HashSet<>();
@@ -329,7 +329,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         }
         return JobSchedulerDate.getDateFrom(date, "UTC");
     }
-    
+
     private static List<String> getWorkflowPathsFromTags(Set<String> tags, String controllerId) throws SOSHibernateException {
         if (tags == null || tags.isEmpty()) {
             return Collections.emptyList();

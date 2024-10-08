@@ -29,6 +29,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSec
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class JocClusterActiveMemberHandler {
@@ -227,11 +228,11 @@ public class JocClusterActiveMemberHandler {
         s.update(mode, cluster.getControllers(), controllerId, action);
     }
 
-    public void updateService(StartupMode mode, String identifier, AConfigurationSection configuration) {
-        Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+    public void updateService(StartupMode mode, ClusterServices service, AConfigurationSection configuration) {
+        Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(service.name())).findAny();
         if (!os.isPresent()) {
             JocClusterServiceLogger.setLogger();
-            LOGGER.error((String.format("handler not found for %s", identifier)));
+            LOGGER.error((String.format("handler not found for %s", service.name())));
             JocClusterServiceLogger.removeLogger();
             return;
         }

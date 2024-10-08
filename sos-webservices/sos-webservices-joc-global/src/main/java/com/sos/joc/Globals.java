@@ -55,7 +55,6 @@ public class Globals {
     public static TimeZone jocTimeZone = TimeZone.getDefault();
     public static Path servletContextRealPath = null;
     public static URI servletBaseUri = null;
-    public static ConfigurationGlobals configurationGlobals = null;
     public static String servletContextContextPath = null; // /joc
     public static String apiVersion = "";
     public static String inventoryVersion = "";
@@ -73,6 +72,7 @@ public class Globals {
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;
+    private static ConfigurationGlobals configurationGlobals = null;
     private static String clusterId = null;
     private static Integer ordering = null;
     public static Integer iamSessionTimeout;
@@ -199,14 +199,14 @@ public class Globals {
             // search in WEB-INF/classes of the web app
             stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
-                //version = Json.createReader(stream).readObject().getString("version", "unknown");
+                // version = Json.createReader(stream).readObject().getString("version", "unknown");
                 version = objectMapper.readValue(stream, Version.class);
                 LOGGER.info("JOC Cockpit version = " + version.getVersion());
             } else {
                 // fallback: search in root folder of the web app
                 stream = Globals.class.getResourceAsStream(versionFile);
                 if (stream != null) {
-                    //version = Json.createReader(stream).readObject().getString("version", "unknown");
+                    // version = Json.createReader(stream).readObject().getString("version", "unknown");
                     version = objectMapper.readValue(stream, Version.class);
                     LOGGER.info("JOC Cockpit version = " + version.getVersion());
                 } else {
@@ -478,6 +478,14 @@ public class Globals {
         }
     }
 
+    public static ConfigurationGlobals getConfigurationGlobals() {
+        return configurationGlobals;
+    }
+
+    public synchronized static void setConfigurationGlobals(ConfigurationGlobals val) {
+        configurationGlobals = val;
+    }
+
     public static ConfigurationGlobalsJoc getConfigurationGlobalsJoc() {
         return configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) configurationGlobals.getConfigurationSection(
                 DefaultSections.joc);
@@ -497,7 +505,7 @@ public class Globals {
         return configurationGlobals == null ? new ConfigurationGlobalsGit() : (ConfigurationGlobalsGit) configurationGlobals.getConfigurationSection(
                 DefaultSections.git);
     }
-    
+
     public static ConfigurationGlobalsLogNotification getConfigurationGlobalsLogNotification() {
         return configurationGlobals == null ? new ConfigurationGlobalsLogNotification() : (ConfigurationGlobalsLogNotification) configurationGlobals
                 .getConfigurationSection(DefaultSections.lognotification);
@@ -532,7 +540,7 @@ public class Globals {
             return 1;
         }
     }
-    
+
     public static void setSystemProperties() {
         System.setProperty("log4j2.contextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
         // Use less CPU when idling than default "Timeout":

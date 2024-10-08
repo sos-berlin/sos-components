@@ -36,7 +36,7 @@ public class SystemMonitorService extends AJocEmbeddedService {
             stopOnStart(mode);
 
             closed.set(false);
-            LOGGER.info(String.format("[%s][%s]start...", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
+            LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             model = new SystemMonitoringModel(this);
             model.start(mode);
@@ -49,13 +49,13 @@ public class SystemMonitorService extends AJocEmbeddedService {
     @Override
     public synchronized JocClusterAnswer stop(StartupMode mode) {
         MonitorService.setLogger();
-        LOGGER.info(String.format("[%s][%s]stop...", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
+        LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
 
         closed.set(true);
         if (model != null) {
             model.close(mode);
         }
-        LOGGER.info(String.format("[%s][%s]stopped", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
+        LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
@@ -75,9 +75,14 @@ public class SystemMonitorService extends AJocEmbeddedService {
                 String newValue = joc.getJocReverseProxyUrl().getValue();
                 if (!SOSString.equals(oldValue, newValue)) {
                     Configuration.INSTANCE.setJocReverseProxyUri(newValue);
-                    LOGGER.info(String.format("[%s][%s][%s][old=%s][new=%s]", MonitorService.MAIN_SERVICE_IDENTIFIER, StartupMode.settings_changed
-                            .name(), joc.getJocReverseProxyUrl().getName(), oldValue, newValue));
+                    LOGGER.info(String.format("[%s][%s][update][%s][old=%s][new=%s]", MonitorService.MAIN_SERVICE_IDENTIFIER,
+                            StartupMode.settings_changed.name(), joc.getJocReverseProxyUrl().getName(), oldValue, newValue));
+                } else {
+                    LOGGER.info(String.format("[%s][%s][update][skip]no relevant changes were found", MonitorService.MAIN_SERVICE_IDENTIFIER,
+                            StartupMode.settings_changed.name()));
                 }
+
+                MonitorService.removeLogger();
             }
         }
     }
@@ -91,9 +96,14 @@ public class SystemMonitorService extends AJocEmbeddedService {
             String newValue = jocConfiguration.getUri();
             if (!SOSString.equals(oldValue, newValue)) {
                 Configuration.INSTANCE.setJocUri(newValue);
-                LOGGER.info(String.format("[%s][%s][JOC Cockpit URL][old=%s][new=%s]", MonitorService.MAIN_SERVICE_IDENTIFIER, mode.name(), oldValue,
-                        Configuration.INSTANCE.getJocUri()));
+                LOGGER.info(String.format("[%s][%s][update][JOC Cockpit URL][old=%s][new=%s]", MonitorService.MAIN_SERVICE_IDENTIFIER, mode.name(),
+                        oldValue, Configuration.INSTANCE.getJocUri()));
+            } else {
+                LOGGER.info(String.format("[%s][%s][update][skip]no relevant changes were found", MonitorService.MAIN_SERVICE_IDENTIFIER,
+                        StartupMode.settings_changed.name()));
             }
+
+            MonitorService.removeLogger();
         }
     }
 
@@ -103,7 +113,7 @@ public class SystemMonitorService extends AJocEmbeddedService {
 
     private void stopOnStart(StartupMode mode) {
         if (model != null) {
-            LOGGER.info(String.format("[%s][%s][stopOnStart]stop...", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
+            LOGGER.info(String.format("[%s][%s][stopOnStart]stop...", getIdentifier(), mode));
 
             closed.set(true);
             model.close(mode);

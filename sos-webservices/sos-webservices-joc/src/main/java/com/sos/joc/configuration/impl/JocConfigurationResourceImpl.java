@@ -546,7 +546,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (sections.size() > 0) {
                 ConfigurationGlobals configurations = new ConfigurationGlobals();
                 configurations.setConfigurationValues(current);
-                Globals.configurationGlobals = configurations;
+                Globals.setConfigurationGlobals(configurations);
 
                 EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
             }
