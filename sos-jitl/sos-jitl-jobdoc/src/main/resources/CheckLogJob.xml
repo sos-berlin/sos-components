@@ -187,7 +187,7 @@ The count of matches
             <param name="js7CheckLogGroupsMatchesCount"
                    required="false">
                 <note>
-                    <title>Count of matches</title>
+                    <title>Count of groups</title>
                     <p>
 The count of matched groups. Depends on value for the parameter "multiline". 
 multiline=false -- matched groups when the log is regarded as one line.

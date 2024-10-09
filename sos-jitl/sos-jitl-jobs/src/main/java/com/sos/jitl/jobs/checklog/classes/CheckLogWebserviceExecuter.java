@@ -1,5 +1,11 @@
 package com.sos.jitl.jobs.checklog.classes;
 
+import java.io.StringReader;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.RunningTaskLogFilter;
@@ -55,6 +61,7 @@ public class CheckLogWebserviceExecuter {
 
         String body = Globals.objectMapper.writeValueAsString(orderFilter);
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/order", body);
+
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
@@ -62,6 +69,19 @@ public class CheckLogWebserviceExecuter {
             if (apiResponse.getException() != null) {
                 throw apiResponse.getException();
             } else {
+                JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(apiResponse.getResponseBody()));
+                JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
+                JsonObject jsonConfigurationResponseError = jsonConfigurationResponse.getJsonObject("error");
+
+                if (jsonConfigurationResponseError != null) {
+                    String code = jsonConfigurationResponseError.getString("code", "");
+                    String message = jsonConfigurationResponseError.getString("message", "");
+                    logger.info("code: " + code);
+                    logger.info("message: " + message);
+                    if (code.equals("JOC-400") && message.startsWith("ControllerObjectNotExistException:")) {
+                        throw new com.sos.commons.exception.SOSMissingDataException(apiResponse.getResponseBody());
+                    }
+                }
                 throw new Exception(apiResponse.getResponseBody());
             }
         }

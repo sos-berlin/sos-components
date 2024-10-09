@@ -13,6 +13,7 @@ public class CheckLogJobArguments extends JobArguments {
     private JobArgument<Boolean> multiline = new JobArgument<>("multiline", false, false);
     private JobArgument<Boolean> caseInsensitive = new JobArgument<>("case_insensitive", false, false);
     private JobArgument<Boolean> unixLines = new JobArgument<>("unix_lines", false, false);
+    private JobArgument<Integer> timeout = new JobArgument<>("timeout", false, 30);
 
     public CheckLogJobArguments() {
         super(new CredentialStoreArguments());
@@ -72,6 +73,14 @@ public class CheckLogJobArguments extends JobArguments {
 
     public void setUnixLines(Boolean unixLines) {
         this.unixLines.setValue(unixLines);
+    }
+
+    public Integer getTimeout() {
+        return timeout.getValue();
+    }
+
+    public void setTimeout(Integer timeout) {
+        this.timeout.setValue(timeout);
     }
 
 }

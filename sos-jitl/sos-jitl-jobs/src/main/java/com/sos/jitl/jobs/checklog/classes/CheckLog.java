@@ -154,13 +154,16 @@ public class CheckLog {
         orderFilter.setOrderId(step.getOrderId());
         orderFilter.setWithoutWorkflowTags(true);
         OrderV order = null;
-        try {
-            order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
-        } catch (Exception e) {
-            java.lang.Thread.sleep(3000);
-            order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
+        Integer t = args.getTimeout();
+        while (t > 0) {
+            try {
+                order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
+                t = 0;
+            } catch (com.sos.commons.exception.SOSMissingDataException e) {
+                java.lang.Thread.sleep(3000);
+                t = t - 3;
+            }
         }
-
         WorkflowFilter workflowFilter = new WorkflowFilter();
         workflowFilter.setCompact(false);
         workflowFilter.setControllerId(step.getControllerId());
