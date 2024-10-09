@@ -152,8 +152,14 @@ public class CheckLog {
         OrderFilter orderFilter = new OrderFilter();
         orderFilter.setControllerId(step.getControllerId());
         orderFilter.setOrderId(step.getOrderId());
-
-        OrderV order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
+        orderFilter.setWithoutWorkflowTags(true);
+        OrderV order = null;
+        try {
+            order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
+        } catch (Exception e) {
+            java.lang.Thread.sleep(3000);
+            order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
+        }
 
         WorkflowFilter workflowFilter = new WorkflowFilter();
         workflowFilter.setCompact(false);

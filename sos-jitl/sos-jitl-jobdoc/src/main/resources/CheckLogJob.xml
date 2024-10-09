@@ -58,7 +58,7 @@
 
 <b>Example 2: get event ids with event###</b>						
 <ul>
-<li>pattern = "event:\\d{3}";</li>
+<li>pattern = "event:\d{3}";</li>
 <li>log = "The first line with event:1234" + "\r\n" + "Line without event" + "\r\n"
                 + "And one line with event:456 and event:555 in the middle";</li>
 </ul>                
@@ -74,7 +74,7 @@
 
 <b>Example 3: Get all dates</b>						
 <ul>
-<li>pattern = "\\d{1,2}.\\d{1,2}.\\d{4}";</li>
+<li>pattern = "\d{1,2}.\d{1,2}.\d{4}";</li>
 <li>log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";</li>
 </ul>
  
@@ -90,7 +90,7 @@
 
 <b>Example 4:</b>
 <ul>
-<li>pattern = "(\\d{1,2}.\\d{1,2}.\\d{4}).(.*)$";</li>
+<li>pattern = "(\d{1,2}.\d{1,2}.\d{4}).(.*)$";</li>
 <li>log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";</li>
 </ul> 
 ==> Result:
@@ -142,7 +142,7 @@ Specifying this flag may impose a slight performance penalty.
             <param name="unix_lines"
                    required="false">
                 <note>
-                    <title>List of Agent IDs</title>
+                    <title>Handling of line mode</title>
                     <p>
 This flag enables Unix lines mode. In the Unix lines mode, 
 only '\n' is used as a line terminator and ‘\r’ is treated as a literal character.                    </p>
@@ -211,9 +211,11 @@ The number of groups in the pattern.
         <note>
             <title>What is the purpose of this job?</title>
             <p>
--Users would like to analyze log output of previously executed jobs.
--Analysis includes to identify warnings and errors.
--Analysis includes to identify output for decision-making about next steps in a workflow.            
+<ul>
+	<li>Users would like to analyze log output of previously executed jobs.</li>
+	<li>Analysis includes to identify warnings and errors.</li>
+	<li>Analysis includes to identify output for decision-making about next steps in a workflow.</li>
+</ul>            
 </p>
         </note>
          
