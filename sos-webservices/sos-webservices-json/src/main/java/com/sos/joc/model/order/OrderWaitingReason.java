@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum OrderWaitingReason {
 
     DELAYED_AFTER_ERROR("DELAYED_AFTER_ERROR"),
+    DELAYING_RETRY("DELAYING_RETRY"),
     FORKED("FORKED"),
     EXPECTING_NOTICES("EXPECTING_NOTICES"),
     WAITING_FOR_LOCK("WAITING_FOR_LOCK"),

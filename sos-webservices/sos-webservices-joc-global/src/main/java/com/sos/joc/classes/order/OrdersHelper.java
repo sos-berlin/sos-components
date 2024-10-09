@@ -164,6 +164,7 @@ public class OrdersHelper {
                     put(Order.ExpectingNotice.class, OrderStateText.WAITING); // only until 2.3
                     put(Order.ExpectingNotices.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
+                    put(Order.DelayingRetry.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.BetweenCycles.class, OrderStateText.WAITING);
@@ -192,6 +193,7 @@ public class OrdersHelper {
             put("Fresh", OrderStateText.SCHEDULED);
             put("Pending", OrderStateText.PENDING);
             put("DelayedAfterError", OrderStateText.WAITING);
+            put("DelayingRetry", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
             put("ExpectingNotice", OrderStateText.WAITING);
             put("ExpectingNotices", OrderStateText.WAITING);
@@ -221,6 +223,7 @@ public class OrdersHelper {
 
         {
             put("DelayedAfterError", OrderWaitingReason.DELAYED_AFTER_ERROR);
+            put("DelayingRetry", OrderWaitingReason.DELAYING_RETRY);
             put("Forked", OrderWaitingReason.FORKED);
             put("ExpectingNotice", OrderWaitingReason.EXPECTING_NOTICES);
             put("ExpectingNotices", OrderWaitingReason.EXPECTING_NOTICES); // TODO introduce plural in OrderWaitingReason??
@@ -401,6 +404,11 @@ public class OrdersHelper {
         return false;
     }
     
+    private static boolean isRetryState(JOrder order) {
+        Order.State state = order.asScala().state();
+        return ((state instanceof Order.DelayingRetry) || (state instanceof Order.DelayedAfterError));
+    }
+    
     public static boolean isNotFailed(JOrder order) {
         return !OrderStateText.FAILED.equals(getGroupedState(order.asScala().state().getClass()));
     }
@@ -526,6 +534,9 @@ public class OrdersHelper {
         // o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         JPosition origPos = JPosition.apply(jOrder.asScala().position());
         String jsonPos = origPos.toJson().replaceAll("\"(try|catch|cycle)\\+?[^\"]*", "\"$1");
+        if (jOrder.asScala().state() instanceof Order.DelayingRetry) { //change catch position -> try position
+            jsonPos = jsonPos.replaceFirst("\"catch(\"\\s*,\\s*\\d+\\s*])", "\"try$1");
+        }
         JPosition pos = JPosition.fromJson(jsonPos).get();
         o.setPosition(pos.toList());
         o.setPositionString(pos.toString());
@@ -534,7 +545,8 @@ public class OrdersHelper {
         o.setCycleState(oItem.getState().getCycleState());
         o.setExpectedNotices(getStillExpectedNotices(jOrder.id(), oItem, controllerState));
         int positionsSize = o.getPosition().size();
-        if ("DelayedAfterError".equals(oItem.getState().getTYPE())) {
+        
+        if (isRetryState(jOrder)) {
             OrderRetryState rs = new OrderRetryState();
             rs.setNext(oItem.getState().getUntil());
             if (positionsSize > 2) {
@@ -542,6 +554,8 @@ public class OrdersHelper {
                     String lastPosition = (String) origPos.toList().get(positionsSize - 2);
                     if (lastPosition.startsWith("try+")) {
                         rs.setAttempt(Integer.valueOf(lastPosition.substring(4)) + 1);
+                    } else if (lastPosition.startsWith("catch+")) {
+                        rs.setAttempt(Integer.valueOf(lastPosition.substring(6)) + 1);
                     }
                 } catch (Exception e) {
                     //
