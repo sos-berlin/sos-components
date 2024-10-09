@@ -61,7 +61,6 @@ public class OrderProcessStep<A extends JobArguments> {
     private final BlockingInternalJob.Step internalStep;
     private final OrderProcessStepLogger logger;
     private final OrderProcessStepOutcome outcome;
-    private final String threadName;
 
     /* Arguments of <A extends JobArguments> */
     private A declaredArguments;
@@ -95,7 +94,6 @@ public class OrderProcessStep<A extends JobArguments> {
         this.jobEnvironment = jobEnvironment;
         this.internalStep = step;
         this.logger = new OrderProcessStepLogger(internalStep);
-        this.threadName = Thread.currentThread().getName();
         this.outcome = new OrderProcessStepOutcome();
         this.resolverPrefixes = JobArgumentValueResolverCache.getResolverPrefixes();
     }
@@ -104,7 +102,6 @@ public class OrderProcessStep<A extends JobArguments> {
         this.jobEnvironment = jobEnvironment;
         this.internalStep = step.getInternalStep();
         this.logger = step.logger;
-        this.threadName = step.threadName;
         this.outcome = step.outcome;
         this.resolverPrefixes = step.resolverPrefixes;
     }
@@ -237,10 +234,6 @@ public class OrderProcessStep<A extends JobArguments> {
             this.workflowPosition = stepConfig.getWorkflowPosition();
         }
         init(arguments);
-    }
-
-    protected String getThreadName() {
-        return threadName;
     }
 
     public void addCancelableResource(SOSHibernateSession session) {

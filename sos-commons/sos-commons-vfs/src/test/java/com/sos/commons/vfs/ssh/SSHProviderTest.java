@@ -52,7 +52,7 @@ public class SSHProviderTest {
             LOGGER.info(p.getServerInfo().toString());
             cancelAfterSeconds(p, 2);
 
-            LOGGER.info(p.executeCommand("sleep 11").toString());
+            LOGGER.info(p.executeCommand("@powershell Start-Sleep -Seconds 10").toString());
 
         } catch (Throwable e) {
             throw e;
@@ -368,7 +368,7 @@ public class SSHProviderTest {
             try {
                 LOGGER.info("cancel after " + seconds + "s");
                 TimeUnit.SECONDS.sleep(seconds);
-                p.cancelWithKill();
+                LOGGER.info("    " + p.cancelCommands());
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
             }

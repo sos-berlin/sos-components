@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.SOSMissingDataException;
@@ -38,6 +39,7 @@ import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.Service;
 import net.schmizz.sshj.common.IOUtils;
+import net.schmizz.sshj.common.SSHException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.connection.channel.direct.Signal;
@@ -62,7 +64,8 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     private Config config;
     private SSHClient sshClient;
     private SFTPClient sftpClient;
-    private AtomicBoolean killCommands = new AtomicBoolean(false);
+
+    private Map<String, Command> commands = new ConcurrentHashMap<>();
 
     private SSHServerInfo serverInfo;
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
@@ -104,16 +107,21 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
 
     @Override
     public void disconnect() {
+        commands = new ConcurrentHashMap<>();
         if (sftpClient != null) {
             try {
                 sftpClient.close();
             } catch (IOException e) {
+            } finally {
+                sftpClient = null;
             }
         }
         if (sshClient != null) {
             try {
                 sshClient.close();
             } catch (IOException e) {
+            } finally {
+                sshClient = null;
             }
         }
     }
@@ -167,15 +175,6 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         }
     }
 
-    public void cancelWithKill() {
-        killCommands.set(true);
-        try {
-            TimeUnit.SECONDS.sleep(2);
-        } catch (InterruptedException e) {
-        }
-        disconnect();
-    }
-
     private void throwException(SFTPException e, String msg) throws Exception {
         StatusCode sc = e.getStatusCode();
         if (sc != null) {
@@ -227,7 +226,6 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         } catch (SFTPException e) {
             throwException(e, oldpath);
         }
-
         sftpClient.rename(oldpath, newpath);
     }
 
@@ -332,52 +330,64 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
             return result;
         }
 
+        String uuid = getUUID();
         try (Session session = sshClient.startSession()) {
             if (getArguments().getSimulateShell().getValue()) {
                 session.allocateDefaultPTY();
             }
-            command = handleEnvs(command, session, env);
-            final Command cmd = session.exec(command);
+            result.setCommand(handleEnvs(command, session, env));
+            try (final Command cmd = session.exec(result.getCommand())) {
+                commands.put(uuid, cmd);
+                // TODO use Charset?
+                // String cs = getArguments().getRemoteCharset().getValue().name();
+                result.setStdOut(IOUtils.readFully(cmd.getInputStream()).toString());
+                result.setStdErr(IOUtils.readFully(cmd.getErrorStream()).toString());
 
-            CompletableFuture.supplyAsync(() -> {
-                try {
-                    boolean signal = false;
-                    while (cmd.isOpen()) {
-                        TimeUnit.SECONDS.sleep(1);
-                        if (!signal && killCommands.get()) {
-                            cmd.signal(Signal.KILL);
-                            signal = true;
-
-                            // cmd.join(1, TimeUnit.SECONDS);
-                            // cmd.close();
-                        }
+                if (timeout == null) {
+                    cmd.join();
+                } else {
+                    cmd.join(timeout.getInterval(), timeout.getTimeUnit());
+                }
+                result.setExitCode(cmd.getExitStatus());
+                if (result.getExitCode() == null) {
+                    if (cmd.getExitSignal() != null) {
+                        throw new SOSSSHCommandExitViolentlyException(cmd.getExitSignal(), cmd.getExitErrorMessage());
                     }
-                } catch (Throwable e) {
-                }
-                return true;
-            });
-
-            // TODO use Charset?
-            // String cs = getArguments().getRemoteCharset().getValue().name();
-            result.setStdOut(IOUtils.readFully(cmd.getInputStream()).toString());
-            result.setStdErr(IOUtils.readFully(cmd.getErrorStream()).toString());
-
-            if (timeout == null) {
-                cmd.join();
-            } else {
-                cmd.join(timeout.getInterval(), timeout.getTimeUnit());
-            }
-            result.setExitCode(cmd.getExitStatus());
-            if (result.getExitCode() == null) {
-                if (cmd.getExitSignal() != null) {
-                    throw new SOSSSHCommandExitViolentlyException(cmd.getExitSignal(), cmd.getExitErrorMessage());
                 }
             }
-            cmd.close();
         } catch (Throwable e) {
             result.setException(e);
         }
+        resetCommand(uuid);
         return result;
+    }
+
+    private synchronized String getUUID() {
+        return UUID.randomUUID().toString();
+    }
+
+    // other thread
+    public SOSCommandResult cancelCommands() {
+        SOSCommandResult r = null;
+        if (commands != null && commands.size() > 0) {
+            r = new SOSCommandResult("Signal.KILL");
+            Iterator<Entry<String, Command>> iterator = commands.entrySet().iterator();
+            while (iterator.hasNext()) {
+                try {
+                    Command command = iterator.next().getValue();
+                    command.signal(Signal.KILL);
+                    r.setExitCode(command.getExitStatus());
+                } catch (SSHException e) {
+                    r.setException(e);
+                }
+                iterator.remove();
+            }
+        }
+        return r;
+    }
+
+    private void resetCommand(String uuid) {
+        commands.remove(uuid);
     }
 
     public SSHServerInfo getServerInfo() {

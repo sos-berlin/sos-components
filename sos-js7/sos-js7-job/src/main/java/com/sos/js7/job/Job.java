@@ -116,12 +116,12 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
 
     @Override
     public OrderProcess toOrderProcess(BlockingInternalJob.Step internalStep) {
-        return new OrderProcess() {
+        return new InterruptibleOrderProcess() {
 
             volatile boolean canceled = false;
             AtomicReference<OrderProcessStep<A>> orderProcessStepRef = null;
 
-            public JOutcome.Completed run() throws Exception {
+            public JOutcome.Completed runInteruptible() throws Exception {
                 while (!canceled) {
                     MockLevel mockLevel = MockLevel.OFF;
                     OrderProcessStep<A> step = new OrderProcessStep<A>(jobEnvironment, internalStep);
@@ -168,27 +168,29 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
 
             @Override
             public void cancel(boolean immediately) {
-                if (orderProcessStepRef != null && !canceled) {
-                    OrderProcessStep<A> orderProcessStep = orderProcessStepRef.get();
-                    if (orderProcessStep != null) {
-                        cancelOrderProcessStep(orderProcessStep);
-                        Thread thread = Thread.getAllStackTraces().keySet().stream().filter(t -> t.getName().equals(orderProcessStep.getThreadName()))
-                                .map(t -> {
-                                    return t;
-                                }).findAny().orElse(null);
+                try {
+                    if (orderProcessStepRef != null && !canceled) {
+                        OrderProcessStep<A> orderProcessStep = orderProcessStepRef.get();
+                        boolean log = false;
+                        if (orderProcessStep != null) {
+                            log = true;
+                            cancelOrderProcessStep(orderProcessStep);
+                        }
+                        Thread thread = thread();
                         if (thread == null) {
-                            try {
-                                orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + orderProcessStep.getThreadName()
-                                        + "][skip interrupt]thread not found");
-                            } catch (Throwable e) {
+                            if (log) {
+                                orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][skip interrupt]thread not found");
                             }
                         } else {
-                            orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + thread.getName() + "]interrupt ...");
+                            if (log) {
+                                orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + thread.getName() + "]interrupt ...");
+                            }
                             thread.interrupt();
                         }
                     }
+                } finally {
+                    canceled = true;
                 }
-                canceled = true;
             }
         };
     }
@@ -258,9 +260,9 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         try {
             Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_SSH_PROVIDER);
             if (o != null) {
-                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]ssh cancelWithKill ...");
                 SSHProvider p = (SSHProvider) o;
-                p.cancelWithKill();
+                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][ssh]" + p.cancelCommands());
+                p.disconnect();
             }
         } catch (Throwable e) {
             jobStep.getLogger().error(String.format("[%s][job name=%s][cancelSSHProvider]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
