@@ -595,8 +595,17 @@ public class OrderTags {
         if (historyIds == null || historyIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        
+
         Collection<List<Long>> chunkedHistoryIds = getChunkedCollection(historyIds);
+        return chunkedHistoryIds.stream().map(chunk -> getTagsByChunkOfHistoryIds(controllerId, chunk, connection)).flatMap(List::stream).collect(
+                Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getTagName, Collectors.toSet())));
+    }
+    
+    private static List<DBItemHistoryOrderTag> getTagsByChunkOfHistoryIds(String controllerId, List<Long> historyIds,
+            SOSHibernateSession connection) {
+        if (historyIds == null || historyIds.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
@@ -605,29 +614,19 @@ public class OrderTags {
                 clauses.add("controllerId=:controllerId");
             }
             clauses.add("historyId != 0");
-            String clause = IntStream.range(0, chunkedHistoryIds.size()).mapToObj(i -> "historyId in (:historyIds" + i + ")").collect(Collectors
-                    .joining(" or "));
-            if (chunkedHistoryIds.size() > 1) {
-                clause = "(" + clause + ")";
-            }
-            clauses.add(clause);
-            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by ordering");
+            clauses.add("historyId in (:historyIds)");
+            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
 
             Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString());
             if (controllerId != null && !controllerId.isBlank()) {
                 query.setParameter("controllerId", controllerId);
             }
-            AtomicInteger counter = new AtomicInteger();
-            for (List<Long> chunk : chunkedHistoryIds) {
-                query.setParameterList("historyIds" + counter.getAndIncrement(), chunk);
-            }
+            query.setParameterList("historyIds", historyIds);
             List<DBItemHistoryOrderTag> result = connection.getResultList(query);
             if (result == null) {
-                return Collections.emptyMap();
+                return Collections.emptyList();
             }
-            return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(
-                    DBItemHistoryOrderTag::getTagName, Collectors.toCollection(LinkedHashSet::new))));
-            
+            return result;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -760,8 +759,10 @@ public class OrderTags {
 
         if (oTags != null && !oTags.isEmpty()) {
             
-            if (oTags.size() > 5000) { // TODO 5000? maybe a different number?
-                
+            if (oTags.size() > 2000) { // TODO 2000? maybe a different number? 
+                /* MS SQL Server: 8003 The incoming request has too many parameters. The server supports a maximum of 2100 parameters. 
+                 * Reduce the number of parameters and resend the request.
+                 */
                 try {
                     StringBuilder hql = new StringBuilder("select historyId, tagName from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
                     List<String> clauses = new ArrayList<>(4);
