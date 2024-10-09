@@ -59,10 +59,11 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             Instant surveyDateInstant = currentState.instant();
             JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
             
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            Map<String, Set<String>> orderTags = OrderTags.getTags(orderFilter.getControllerId(), Collections.singletonList(jOrder), connection);
-
             if (jOrder != null) {
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                
+                Map<String, Set<String>> orderTags = OrderTags.getTags(orderFilter.getControllerId(), Collections.singletonList(jOrder), connection);
+
                 Map<List<Object>, String> positionToLabelsMap = getPositionToLabelsMap(orderFilter.getControllerId(), jOrder.workflowId());
                 Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
                 OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), folderPermissions.getListOfFolders(),
