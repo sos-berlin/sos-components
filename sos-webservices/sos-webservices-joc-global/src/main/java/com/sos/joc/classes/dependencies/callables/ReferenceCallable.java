@@ -4,12 +4,10 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class ReferenceCallable implements Callable<ReferencedDbItem>{
@@ -30,13 +28,8 @@ public class ReferenceCallable implements Callable<ReferencedDbItem>{
             ReferencedDbItem item = DependencyResolver.resolveReferencedBy(session, inventoryItem);
             DependencyResolver.resolveReferences(item, session);
             return item;
-        } catch (SOSHibernateException e) {
-            session.rollback();
-            throw new JocSosHibernateException(e);
         } finally {
-            if(session != null) {
-                session.close();
-            }
+            Globals.disconnect(session);
         }
 //        ReferencedDbItem item = DependencyResolver.resolveReferencedBy(inventoryItem, groupedItems);
 //        return DependencyResolver.resolveReferences(item, groupedItems);

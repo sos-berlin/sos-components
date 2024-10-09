@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.lang.StringBuilder;
 
 import org.hibernate.query.Query;
 
@@ -2169,6 +2170,19 @@ public class InventoryDBLayer extends DBLayer {
     public List<DBItemInventoryDependency> getDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
         hql.append(" where invId = :invId");
+        Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+        query.setParameter("invId", item.getId());
+        List<DBItemInventoryDependency> results = query.getResultList();
+        if(results != null) {
+            return results;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+    
+    public List<DBItemInventoryDependency> getRequestedDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        hql.append(" where invId = :invId or invDependencyId = :invId");
         Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
         query.setParameter("invId", item.getId());
         List<DBItemInventoryDependency> results = query.getResultList();
