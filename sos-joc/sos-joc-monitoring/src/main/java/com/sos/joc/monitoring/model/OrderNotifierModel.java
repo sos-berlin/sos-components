@@ -24,6 +24,7 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
@@ -304,6 +305,11 @@ public class OrderNotifierModel {
                     type), ANotifier.getInfo(analyzer), e.toString()), e);
         }
         int i = 1;
+
+        if (os != null) {
+            os.setTags(new InventoryJobTagDBLayer(dbLayer.getSession()).getGroupedTagsOfJob(analyzer.getOrder().getWorkflowName(), os.getJobName()));
+        }
+
         for (AMonitor m : notification.getMonitors()) {
             ANotifier n = null;
             try {

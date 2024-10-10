@@ -38,10 +38,9 @@ public abstract class ANotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ANotifier.class);
 
-    protected static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    protected static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(
+                    SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     protected static final String PREFIX_ENV_VAR = "JS7";
     protected static final String PREFIX_COMMON_VAR = "MON";
@@ -351,6 +350,7 @@ public abstract class ANotifier {
         // additional fields
         tableFields.put(PREFIX_TABLE_ORDERS + "_TIME_ELAPSED", "");
         tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_TIME_ELAPSED", "");
+        tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_JOB_TAGS", "");
         tableFields.put(PREFIX_TABLE_NOTIFICATIONS + "_STATUS", status.intValue().toString());
 
         if (mo == null) {
@@ -364,6 +364,9 @@ public abstract class ANotifier {
         } else {
             tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS, timeZone, true));
             adjustFields(PREFIX_TABLE_ORDER_STEPS);
+            if (mos.getTags() != null) {
+                tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_JOB_TAGS", mos.getTags());
+            }
         }
 
         // TODO - to remove later

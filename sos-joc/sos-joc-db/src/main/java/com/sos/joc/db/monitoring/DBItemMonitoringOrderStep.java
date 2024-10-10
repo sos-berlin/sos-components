@@ -117,6 +117,9 @@ public class DBItemMonitoringOrderStep extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 
+    @Transient
+    private String tags;
+
     public DBItemMonitoringOrderStep() {
     }
 
@@ -382,4 +385,13 @@ public class DBItemMonitoringOrderStep extends DBItem {
         }
     }
 
+    @Transient
+    public String getTags() {
+        return tags;
+    }
+
+    @Transient
+    public void setTags(String val) {
+        tags = val;
+    }
 }

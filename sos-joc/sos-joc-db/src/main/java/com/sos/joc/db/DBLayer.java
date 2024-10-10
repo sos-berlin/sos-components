@@ -246,7 +246,7 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_FAVORITES = DBItemInventoryFavorite.class.getSimpleName();
     public static final String TABLE_INV_FAVORITES = "INV_FAVORITES";
     public static final String TABLE_INV_FAVORITES_SEQUENCE = "SEQ_INV_F";
-    
+
     public static final String DBITEM_INV_TAGS = DBItemInventoryTag.class.getSimpleName();
     public static final String TABLE_INV_TAGS = "INV_TAGS";
     public static final String TABLE_INV_TAGS_SEQUENCE = "SEQ_INV_T";
@@ -257,7 +257,7 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_ADD_ORDER_TAGS = DBItemInventoryAddOrderTag.class.getSimpleName();
     public static final String TABLE_INV_ADD_ORDER_TAGS = "INV_ADD_ORDER_TAGS";
-    
+
     public static final String DBITEM_INV_JOB_TAGS = DBItemInventoryJobTag.class.getSimpleName();
     public static final String TABLE_INV_JOB_TAGS = "INV_JOB_TAGS";
     public static final String TABLE_INV_JOB_TAGS_SEQUENCE = "SEQ_INV_JT";
@@ -387,22 +387,22 @@ public class DBLayer implements Serializable {
 
     public static final String TABLE_IAM_ROLES = "IAM_ROLES";
     public static final String TABLE_IAM_ROLES_SEQUENCE = "SEQ_IAM_ROLES";
-    
+
     /** Reporting tables */
     public static final String DBITEM_REPORTS = DBItemReport.class.getSimpleName();
     public static final String TABLE_REPORTS = "REPORTS";
     public static final String TABLE_REPORTS_SEQUENCE = "SEQ_REP_REP";
-    
+
     public static final String DBITEM_REPORT_RUN = DBItemReportRun.class.getSimpleName();
     public static final String TABLE_REPORT_RUNS = "REPORT_RUNS";
     public static final String TABLE_REPORT_RUNS_SEQUENCE = "SEQ_REP_RUN";
-    
+
     public static final String DBITEM_ENC_CERTIFICATE = DBItemEncCertificate.class.getSimpleName();
     public static final String TABLE_ENC_CERTIFICATE = "ENC_CERTIFICATES";
-    
+
     public static final String DBITEM_ENC_AGENT_CERTIFICATES = DBItemEncAgentCertificate.class.getSimpleName();
     public static final String TABLE_ENC_AGENT_CERTIFICATES = "ENC_AGENT_CERTIFICATES";
-    
+
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
@@ -509,6 +509,10 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJocVariable.class);
         cl.add(DBItemXmlEditorConfiguration.class);
         cl.add(DBItemDepConfiguration.class);
+
+        cl.add(DBItemInventoryJobTag.class);
+        cl.add(DBItemInventoryJobTagging.class);
+        cl.add(DBItemInventoryTagGroup.class);
         return cl;
     }
 
@@ -582,10 +586,10 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamFido2Registration.class);
         cl.add(DBItemIamFido2Requests.class);
         cl.add(DBItemIamFido2Devices.class);
-        
+
         cl.add(DBItemReport.class);
         cl.add(DBItemReportRun.class);
-        
+
         cl.add(DBItemEncCertificate.class);
         cl.add(DBItemEncAgentCertificate.class);
 
@@ -594,7 +598,7 @@ public class DBLayer implements Serializable {
         cl.merge(getMonitoringClassMapping().getClasses());
 
         cl.add(DBItemXmlEditorConfiguration.class);
-        
+
         cl.add(DBItemHistoryOrderTag.class);
         return cl;
     }
