@@ -34,8 +34,8 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
-import com.sos.joc.model.inventory.dependencies.RequestedResponseItem;
-import com.sos.joc.model.inventory.dependencies.ResponseItem;
+import com.sos.joc.model.inventory.dependencies.get.RequestedResponseItem;
+import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -175,7 +175,8 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             }).map(dbItem -> DependencyResolver.convert(dbItem)).collect(Collectors.toSet()));
             newResponseItem.getRequestedItems().add(reqRes);
         }
-        newResponseItem.setAffectedItems(allUniqueItems.values().stream().map(item -> DependencyResolver.convert(item)).collect(Collectors.toSet()));
+        newResponseItem.setAffectedItems(allUniqueItems.values().stream().map(item -> DependencyResolver.convert(item))
+                .collect(Collectors.toSet()));
         return newResponseItem;
     }
     

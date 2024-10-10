@@ -1,7 +1,7 @@
 
-package com.sos.joc.model.inventory.dependencies;
+package com.sos.joc.model.inventory.dependencies.update;
 
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "references",
     "referencedBy"
 })
-public class ResponseItemRecursive {
+public class ResponseItem {
 
     /**
      * JS Object configuration
@@ -37,11 +37,11 @@ public class ResponseItemRecursive {
     @JsonProperty("dependency")
     private ConfigurationObject dependency;
     @JsonProperty("references")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseItemRecursive> references = new LinkedHashSet<ResponseItemRecursive>();
+    @JsonDeserialize(as = java.util.HashSet.class)
+    private Set<ResponseItem> references = new HashSet<ResponseItem>();
     @JsonProperty("referencedBy")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseItemRecursive> referencedBy = new LinkedHashSet<ResponseItemRecursive>();
+    @JsonDeserialize(as = java.util.HashSet.class)
+    private Set<ResponseItem> referencedBy = new HashSet<ResponseItem>();
 
     /**
      * JS Object configuration
@@ -68,22 +68,22 @@ public class ResponseItemRecursive {
     }
 
     @JsonProperty("references")
-    public Set<ResponseItemRecursive> getReferences() {
+    public Set<ResponseItem> getReferences() {
         return references;
     }
 
     @JsonProperty("references")
-    public void setReferences(Set<ResponseItemRecursive> references) {
+    public void setReferences(Set<ResponseItem> references) {
         this.references = references;
     }
 
     @JsonProperty("referencedBy")
-    public Set<ResponseItemRecursive> getReferencedBy() {
+    public Set<ResponseItem> getReferencedBy() {
         return referencedBy;
     }
 
     @JsonProperty("referencedBy")
-    public void setReferencedBy(Set<ResponseItemRecursive> referencedBy) {
+    public void setReferencedBy(Set<ResponseItem> referencedBy) {
         this.referencedBy = referencedBy;
     }
 
@@ -94,7 +94,7 @@ public class ResponseItemRecursive {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(referencedBy).append(references).append(dependency).toHashCode();
+        return new HashCodeBuilder().append(dependency).toHashCode();
     }
 
     @Override
@@ -102,14 +102,14 @@ public class ResponseItemRecursive {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ResponseItemRecursive) == false) {
+        if ((other instanceof ResponseItem) == false) {
             return false;
         }
-        ResponseItemRecursive rhs = ((ResponseItemRecursive) other);
+        ResponseItem rhs = ((ResponseItem) other);
         return new EqualsBuilder().append(dependency, rhs.dependency).isEquals();
     }
 
-    public ResponseItemRecursive(ConfigurationObject item) {
+    public ResponseItem(ConfigurationObject item) {
         this.dependency = item;
     }
 

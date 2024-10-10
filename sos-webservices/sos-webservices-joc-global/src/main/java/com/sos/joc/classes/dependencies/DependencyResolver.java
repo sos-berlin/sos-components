@@ -44,8 +44,8 @@ import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.dependencies.ResponseItem;
-import com.sos.joc.model.inventory.dependencies.ResponseItemRecursive;
+//import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
+import com.sos.joc.model.inventory.dependencies.update.ResponseItem;
 
 public class DependencyResolver {
 
@@ -481,7 +481,7 @@ public class DependencyResolver {
     }
     
     // with db access for dependency resolution of a single or few items or to use with threading
-    public static void resolveReferences (ResponseItemRecursive item, SOSHibernateSession session)
+    public static void resolveReferences (ResponseItem item, SOSHibernateSession session)
             throws JsonMappingException, JsonProcessingException {
         // this method is in use
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -502,7 +502,7 @@ public class DependencyResolver {
                 for(String lockId : lockIds) {
                     results = dbLayer.getConfigurationByName(lockId.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
                     if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
                     }
                 }
             } else {
@@ -512,7 +512,7 @@ public class DependencyResolver {
                     for (String lock : wfLockNames) {
                         results = dbLayer.getConfigurationByName(lock.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
                         if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
                         }
                     }
                 }
@@ -523,7 +523,7 @@ public class DependencyResolver {
                 for(String jobResourceName : wfInstructionJobResourceNames) {
                     results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
                     if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
                     }
                 }
             } else {
@@ -533,7 +533,7 @@ public class DependencyResolver {
                     for (String jobResource : wfJobResourceNames) {
                         results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
                         if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
                         }
                     }
                 }
@@ -544,7 +544,7 @@ public class DependencyResolver {
                 for(String boardName : boardNames) {
                     results = dbLayer.getConfigurationByName(boardName.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
                     if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
                     }
                 }
             } else {
@@ -554,7 +554,7 @@ public class DependencyResolver {
                     for (String board : wfBoardNames) {
                         results = dbLayer.getConfigurationByName(board.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
                         if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
                         }
                     }
                 }
@@ -565,7 +565,7 @@ public class DependencyResolver {
                 for(String workflowName : wfInstructionWorkflowNames) {
                     results = dbLayer.getConfigurationByName(workflowName.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                     if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
                     }
                 }
             } else {
@@ -575,7 +575,7 @@ public class DependencyResolver {
                     for (String wf : wfWorkflowNames) {
                         results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                         if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
                         }
                     }
                 }
@@ -594,7 +594,7 @@ public class DependencyResolver {
                 for(String wf : scheduleWorkflows) {
                     results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                     if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
                     }
                 }
             }
@@ -608,7 +608,7 @@ public class DependencyResolver {
                 for(String jobresource : jobTemplateJobResources) {
                     results = dbLayer.getConfigurationByName(jobresource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
                     if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
                     }
                 }
             }
@@ -622,7 +622,7 @@ public class DependencyResolver {
                 for(String wf : fosWorkflows) {
                     results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                     if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItemRecursive(convert(results.get(0))));
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
                     }
                 }
             }
