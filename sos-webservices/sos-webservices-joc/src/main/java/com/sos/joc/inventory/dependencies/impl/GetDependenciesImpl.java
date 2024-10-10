@@ -1,6 +1,5 @@
 package com.sos.joc.inventory.dependencies.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -14,8 +13,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -63,7 +60,10 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 depItems.getAllUniqueItems().entrySet().forEach(entry -> 
                 LOGGER.info(entry.getKey() + " : " + entry.getValue().getName() + "::" + entry.getValue().getTypeAsEnum().value()));
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(resolve(depItems, dblayer)));
+            GetDependenciesResponse response  = new GetDependenciesResponse();
+            response.setDeliveryDate(Date.from(Instant.now()));
+            response.setDependencies(resolve(depItems, dblayer));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(response));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -268,13 +268,5 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
 //            }
 //        }
 //    }
-
-    private GetDependenciesResponse getResponse(List<ResponseItem> items)
-            throws JsonParseException, JsonMappingException, SOSHibernateException, IOException {
-        GetDependenciesResponse dependenciesResponse = new GetDependenciesResponse();
-        dependenciesResponse.setDeliveryDate(Date.from(Instant.now()));
-        dependenciesResponse.setDependencies(items);
-        return dependenciesResponse;
-    }
 
 }

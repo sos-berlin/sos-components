@@ -1,9 +1,7 @@
 
 package com.sos.joc.model.inventory.dependencies;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -38,12 +36,14 @@ public class GetDependenciesResponse {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
+     * dependencies
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("dependencies")
-    private List<ResponseItem> dependencies = new ArrayList<ResponseItem>();
+    private ResponseItem dependencies;
 
     /**
      * timestamp
@@ -70,22 +70,26 @@ public class GetDependenciesResponse {
     }
 
     /**
+     * dependencies
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("dependencies")
-    public List<ResponseItem> getDependencies() {
+    public ResponseItem getDependencies() {
         return dependencies;
     }
 
     /**
+     * dependencies
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("dependencies")
-    public void setDependencies(List<ResponseItem> dependencies) {
+    public void setDependencies(ResponseItem dependencies) {
         this.dependencies = dependencies;
     }
 
