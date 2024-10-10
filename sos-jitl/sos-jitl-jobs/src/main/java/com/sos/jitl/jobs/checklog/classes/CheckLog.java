@@ -160,6 +160,7 @@ public class CheckLog {
                 order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
                 t = 0;
             } catch (com.sos.commons.exception.SOSMissingDataException e) {
+                logger.info("... waiting for order information");
                 java.lang.Thread.sleep(3000);
                 t = t - 3;
             }
@@ -170,9 +171,6 @@ public class CheckLog {
         workflowFilter.setWorkflowId(order.getWorkflowId());
         Workflow workflow = orderStateWebserviceExecuter.getWorkflow(workflowFilter, accessToken);
 
-        OrderHistoryFilter orderHistoryFilter = new OrderHistoryFilter();
-        orderHistoryFilter.setControllerId(step.getControllerId());
-        orderHistoryFilter.setOrderId(step.getOrderId());
         JobsFilter jobsFilter = new JobsFilter();
         jobsFilter.setControllerId(step.getControllerId());
         jobsFilter.setOrderId(step.getOrderId() + "*");
@@ -226,39 +224,56 @@ public class CheckLog {
                             + "'" + workflowFilter.getControllerId() + "'");
                 }
             }
-            TaskHistory taskHistory = orderStateWebserviceExecuter.getTaskHistory(jobsFilter, accessToken);
-            jobCount.clear();
-            label2Job.clear();
+            t = args.getTimeout();
+            TaskHistory taskHistory = null;
             Map<String, Long> label2TaskId = new HashMap<String, Long>();
 
-            for (TaskHistoryItem taskHistoryItem : taskHistory.getHistory()) {
-                if (taskHistoryItem.getTaskId() != null) {
-                    int count = jobCount.getOrDefault(taskHistoryItem.getJob(), 0);
-                    jobCount.put(taskHistoryItem.getJob(), count + 1);
-                    label2Job.put(taskHistoryItem.getLabel(), taskHistoryItem.getJob());
-                    if (label2TaskId.get(taskHistoryItem.getLabel()) == null) {
-                        label2TaskId.put(taskHistoryItem.getLabel(), taskHistoryItem.getTaskId());
+            while (t > 0) {
+                taskHistory = orderStateWebserviceExecuter.getTaskHistory(jobsFilter, accessToken);
+                jobCount.clear();
+                label2Job.clear();
+                label2TaskId.clear();
+
+                try {
+                    for (TaskHistoryItem taskHistoryItem : taskHistory.getHistory()) {
+                        if (taskHistoryItem.getTaskId() != null) {
+                            int count = jobCount.getOrDefault(taskHistoryItem.getJob(), 0);
+                            jobCount.put(taskHistoryItem.getJob(), count + 1);
+                            label2Job.put(taskHistoryItem.getLabel(), taskHistoryItem.getJob());
+                            if (label2TaskId.get(taskHistoryItem.getLabel()) == null) {
+                                label2TaskId.put(taskHistoryItem.getLabel(), taskHistoryItem.getTaskId());
+                            }
+                        }
                     }
-                }
-            }
 
-            if (jobCount.get(args.getJob()) == null) {
-                throw new Exception("job " + "'" + args.getJob() + "'" + " was not executed in workflow " + "'" + workflowFilter.getWorkflowId()
-                        .getPath() + "'" + " version " + "'" + workflowFilter.getWorkflowId().getVersionId() + "'" + " on Controller "
-                        + workflowFilter.getControllerId() + "'");
-            }
+                    if (jobCount.get(args.getJob()) == null) {
+                        throw new Exception("job " + "'" + args.getJob() + "'" + " was not executed in workflow " + "'" + workflowFilter
+                                .getWorkflowId().getPath() + "'" + " version " + "'" + workflowFilter.getWorkflowId().getVersionId() + "'"
+                                + " on Controller " + workflowFilter.getControllerId() + "'");
+                    }
 
-            if (jobCount.get(args.getJob()) > 1) {
-                if (args.getLabel() == null) {
-                    throw new Exception("value for <label> not specified, job " + "'" + args.getJob() + "'" + " occurs " + jobCount.get(args.getJob())
-                            + " times in workflow " + "'" + workflowFilter.getWorkflowId().getPath() + "'" + " version " + "'" + workflowFilter
-                                    .getWorkflowId().getVersionId() + "'" + " on Controller " + "'" + workflowFilter.getControllerId() + "'");
-                }
-                if (label2Job.get(args.getLabel()) == null) {
-                    throw new Exception("job with label " + "'" + args.getLabel() + "'" + " was not executed" + ", job " + "'" + args.getJob() + "'"
-                            + " occurs " + jobCount.get(args.getJob()) + " times in the history for the workflow " + "'" + workflowFilter
-                                    .getWorkflowId().getPath() + "'" + " version " + "'" + workflowFilter.getWorkflowId().getVersionId() + "'"
-                            + " on Controller " + workflowFilter.getControllerId() + "'");
+                    if (jobCount.get(args.getJob()) > 1) {
+                        if (args.getLabel() == null) {
+                            throw new Exception("value for <label> not specified, job " + "'" + args.getJob() + "'" + " occurs " + jobCount.get(args
+                                    .getJob()) + " times in workflow " + "'" + workflowFilter.getWorkflowId().getPath() + "'" + " version " + "'"
+                                    + workflowFilter.getWorkflowId().getVersionId() + "'" + " on Controller " + "'" + workflowFilter.getControllerId()
+                                    + "'");
+                        }
+                        if (label2Job.get(args.getLabel()) == null) {
+                            throw new Exception("job with label " + "'" + args.getLabel() + "'" + " was not executed" + ", job " + "'" + args.getJob()
+                                    + "'" + " occurs " + jobCount.get(args.getJob()) + " times in the history for the workflow " + "'"
+                                    + workflowFilter.getWorkflowId().getPath() + "'" + " version " + "'" + workflowFilter.getWorkflowId()
+                                            .getVersionId() + "'" + " on Controller " + workflowFilter.getControllerId() + "'");
+                        }
+                    }
+                    t = 0;
+                } catch (Exception e) {
+                    t = t - 3;
+                    if (t <= 0) {
+                        throw e;
+                    }
+                    logger.info("... waiting for task history");
+                    java.lang.Thread.sleep(3000);
                 }
             }
 

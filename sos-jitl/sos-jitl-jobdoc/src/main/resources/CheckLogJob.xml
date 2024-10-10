@@ -115,6 +115,18 @@
                     </p>
                 </note>
             </param>
+            <param name="timeout"
+            	   default="15"
+                   required="false">
+                <note>
+                    <title>Maximum duration to get task history</title>
+                    <p>
+						When the CheckLog job is executed, the database for the history may not yet be completed. 
+						Repeated calls are therefore made with a delay of 
+						of 3s each, but only for the maximum time specified for timeout.              
+                    </p>
+                </note>
+            </param>
             <param name="multiline"
                    required="false">
                 <note>
