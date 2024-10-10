@@ -761,12 +761,13 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     protected JOutcome.Completed failed(final String msg, Throwable e) {
-        // return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg, e);
         String fm = SOSString.isEmpty(msg) ? "" : msg;
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(getStepInfo(), e.toString(), ex);
-        return JOutcome.failed(logger.throwable2String(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(
-                JobHelper.DEFAULT_RETURN_CODE_FAILED)));
+        logger.error(logger.throwable2String(fm, ex));
+
+        String f = ex == null ? fm : fm + ex.toString();
+        return JOutcome.failed(f, mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(JobHelper.DEFAULT_RETURN_CODE_FAILED)));
     }
 
     private Map<String, Value> getOutcomeVariables() {
