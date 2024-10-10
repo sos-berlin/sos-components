@@ -10,7 +10,7 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 public class GroupedTag {
     
     private final String tag;
-    private final Optional<String> group;
+    private Optional<String> group;
     
     public GroupedTag(String tagWithOptionalGroup) {
         String[] s = tagWithOptionalGroup.split(":", 2);
@@ -34,6 +34,10 @@ public class GroupedTag {
     
     public Optional<String> getGroup() {
         return group;
+    }
+    
+    public void setGroup(String group) {
+        this.group = Optional.ofNullable(group);
     }
     
     public String getNonEmptyGroup() {

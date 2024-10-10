@@ -114,8 +114,8 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             return result;
         } else {
             try {
-                StringBuilder hql = new StringBuilder("select tg.workflowName from ").append(DBLayer.DBITEM_INV_JOB_TAGGINGS).append(" tg ");
-                hql.append(" left join ").append(DBLayer.DBITEM_INV_JOB_TAGS).append(" t on t.id=tg.tagId ");
+                StringBuilder hql = new StringBuilder("select tg.workflowName from ").append(getTaggingTable()).append(" tg ");
+                hql.append(" left join ").append(getTagTable()).append(" t on t.id=tg.tagId ");
                 hql.append("where t.name in (:tags) ");
                 hql.append("group by tg.workflowName");
 
@@ -147,8 +147,8 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             return result;
         } else {
             try {
-                StringBuilder hql = new StringBuilder("select tg.cid from ").append(DBLayer.DBITEM_INV_JOB_TAGGINGS).append(" tg ");
-                hql.append(" left join ").append(DBLayer.DBITEM_INV_JOB_TAGS).append(" t on t.id=tg.tagId ");
+                StringBuilder hql = new StringBuilder("select tg.cid from ").append(getTaggingTable()).append(" tg ");
+                hql.append(" left join ").append(getTagTable()).append(" t on t.id=tg.tagId ");
                 hql.append("where t.name in (:tags) ");
                 hql.append("group by tg.cid");
 
@@ -180,8 +180,8 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             return result;
         } else {
             try {
-                StringBuilder hql = new StringBuilder("select tg.cid from ").append(DBLayer.DBITEM_INV_JOB_TAGGINGS).append(" tg ");
-                hql.append(" left join ").append(DBLayer.DBITEM_INV_JOB_TAGS).append(" t on t.id=tg.tagId ");
+                StringBuilder hql = new StringBuilder("select tg.cid from ").append(getTaggingTable()).append(" tg ");
+                hql.append(" left join ").append(getTagTable()).append(" t on t.id=tg.tagId ");
                 hql.append("where t.id in (:tagIds) ");
                 hql.append("group by tg.cid");
 
@@ -247,8 +247,8 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
     public List<String> getTagsWithGroups(Long cid) {
         try {
             StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName());
-            sql.append("(g.name, t.name) from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg left join ")
-                .append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId left join ")
+            sql.append("(g.name, t.name) from ").append(getTaggingTable()).append(" tg left join ")
+                .append(getTagTable()).append(" t on t.id = tg.tagId left join ")
                 .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId");
 
             sql.append(" where tg.cid=:cid");
@@ -309,6 +309,36 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             query.setParameter("now", now);
 
             getSession().executeUpdate(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public String getGroupedTagsOfJob(String workflowName, String jobName) throws DBConnectionRefusedException, DBInvalidDataException {
+        if (workflowName == null || jobName == null) {
+            return "";
+        }
+        try {
+            StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName())
+                    .append("(g.name, t.name) from ").append(getTaggingTable()).append(" tg left join ")
+                    .append(getTagTable()).append(" t on t.id = tg.tagId left join ")
+                    .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId")
+                    .append(" where tg.workflowName=:workflowName")
+                    .append(" and tg.jobName=:jobName")
+                    .append(" order by t.ordering");
+            
+            Query<GroupedTag> query = getSession().createQuery(sql.toString());
+            query.setParameter("workflowName", workflowName);
+            query.setParameter("jobName", jobName);
+            
+            List<GroupedTag> result = getSession().getResultList(query);
+            if (result == null) {
+                return "";
+            }
+            return result.stream().map(GroupedTag::toString).collect(Collectors.joining(","));
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
