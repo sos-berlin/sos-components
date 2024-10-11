@@ -42,7 +42,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
     protected String getTaggingTable() {
         return DBLayer.DBITEM_INV_JOB_TAGGINGS;
     }
-    
+
     public Set<DBItemInventoryJobTagging> getTaggings(Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -65,7 +65,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public boolean hasTaggings(String workflowName) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -83,7 +83,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public int delete(String workflowName) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -101,7 +101,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getWorkflowNamesHavingTags(List<String> tags) throws DBConnectionRefusedException, DBInvalidDataException {
         if (tags == null || tags.isEmpty()) {
             return Collections.emptyList();
@@ -134,7 +134,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             }
         }
     }
-    
+
     public Set<Long> getWorkflowIdsHavingTags(List<String> tags) throws DBConnectionRefusedException, DBInvalidDataException {
         if (tags == null || tags.isEmpty()) {
             return Collections.emptySet();
@@ -167,7 +167,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             }
         }
     }
-    
+
     public Set<Long> getWorkflowIdsHavingTagIds(List<Long> tagIds) throws DBConnectionRefusedException, DBInvalidDataException {
         if (tagIds == null || tagIds.isEmpty()) {
             return Collections.emptySet();
@@ -200,21 +200,20 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             }
         }
     }
-    
+
     public Map<String, LinkedHashSet<String>> getTagsWithGroups(Long cid, Collection<String> jobNames) {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select g.name as group, tg.jobName as jobName, t.name as tagName, t.ordering as ordering from ")
-                .append(getTaggingTable()).append(" tg left join ")
-                .append(getTagTable()).append(" t on t.id = tg.tagId left join ")
-                .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId");
-            
+            sql.append("select g.name as group, tg.jobName as jobName, t.name as tagName, t.ordering as ordering from ").append(getTaggingTable())
+                    .append(" tg left join ").append(getTagTable()).append(" t on t.id = tg.tagId left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS)
+                    .append(" g on g.id = t.groupId");
+
             sql.append(" where tg.cid=:cid");
             if (jobNames != null && !jobNames.isEmpty()) {
                 if (jobNames.size() == 1) {
                     sql.append(" and tg.jobName=:jobName");
                 } else {
-                    sql.append(" and tg.jobName in (:jobNames)"); 
+                    sql.append(" and tg.jobName in (:jobNames)");
                 }
             }
 
@@ -243,13 +242,12 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getTagsWithGroups(Long cid) {
         try {
             StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName());
-            sql.append("(g.name, t.name) from ").append(getTaggingTable()).append(" tg left join ")
-                .append(getTagTable()).append(" t on t.id = tg.tagId left join ")
-                .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId");
+            sql.append("(g.name, t.name) from ").append(getTaggingTable()).append(" tg left join ").append(getTagTable()).append(
+                    " t on t.id = tg.tagId left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId");
 
             sql.append(" where tg.cid=:cid");
             sql.append(" order by t.ordering");
@@ -270,11 +268,11 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public void renameWorkflow(Long cid, String newWorkflowName) {
         renameWorkflow(cid, newWorkflowName, Date.from(Instant.now()));
     }
-    
+
     public void renameWorkflow(Long cid, String newWorkflowName, Date now) {
         try {
             StringBuilder hql = new StringBuilder();
@@ -296,7 +294,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
     public void renameJob(String workflowName, String oldJobName, String newJobName) {
         renameJob(workflowName, oldJobName, newJobName, Date.from(Instant.now()));
     }
-    
+
     public void renameJob(String workflowName, String oldJobName, String newJobName, Date now) {
         try {
             StringBuilder hql = new StringBuilder();
@@ -315,34 +313,46 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public String getGroupedTagsOfJob(String workflowName, String jobName) throws DBConnectionRefusedException, DBInvalidDataException {
         if (workflowName == null || jobName == null) {
             return "";
         }
         try {
-            StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName())
-                    .append("(g.name, t.name) from ").append(getTaggingTable()).append(" tg left join ")
-                    .append(getTagTable()).append(" t on t.id = tg.tagId left join ")
-                    .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId")
-                    .append(" where tg.workflowName=:workflowName")
-                    .append(" and tg.jobName=:jobName")
-                    .append(" order by t.ordering");
-            
-            Query<GroupedTag> query = getSession().createQuery(sql.toString());
+            StringBuilder hql = new StringBuilder("select new ").append(GroupedTag.class.getName());
+            hql.append("(g.name, t.name) from ").append(getTaggingTable());
+            hql.append(" tg left join ").append(getTagTable()).append(" t on t.id = tg.tagId left join ");
+            hql.append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId ");
+            hql.append("where tg.workflowName=:workflowName ");
+            hql.append("and tg.jobName=:jobName ");
+            hql.append("order by t.ordering");
+
+            Query<GroupedTag> query = getSession().createQuery(hql.toString());
             query.setParameter("workflowName", workflowName);
             query.setParameter("jobName", jobName);
-            
+
             List<GroupedTag> result = getSession().getResultList(query);
             if (result == null) {
                 return "";
             }
-            return result.stream().map(GroupedTag::toString).collect(Collectors.joining(","));
 
+            // return result.stream().map(GroupedTag::toString).collect(Collectors.joining(";"));
+            Map<String, List<String>> grouped = result.stream().collect(Collectors.groupingBy(gt -> gt.getGroup().orElse(""), Collectors.mapping(
+                    GroupedTag::getTag, Collectors.toList())));
+            return grouped.entrySet().stream().map(entry -> {
+                String groupName = entry.getKey();
+                List<String> tags = entry.getValue();
+                if (!groupName.isEmpty()) {
+                    return groupName + ":" + String.join(",", tags);
+                } else {
+                    return String.join(",", tags);
+                }
+            }).collect(Collectors.joining(";"));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
+
 }
