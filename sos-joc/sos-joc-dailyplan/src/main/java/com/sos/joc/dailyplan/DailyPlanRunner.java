@@ -1328,9 +1328,9 @@ public class DailyPlanRunner extends TimerTask {
         return getStartTimeCalendar(settings.getDailyPlanStartTime(), settings.getPeriodBegin(), settings.getTimeZone());
     }
 
-    public static java.util.Calendar getStartTimeCalendar(String startTime, String periodBegin, String timezone) {
+    private static java.util.Calendar getStartTimeCalendar(String startTime, String periodBegin, String timezone) {
         java.util.Calendar cal = null;
-        if (!"".equals(startTime)) {
+        if (!SOSString.isEmpty(startTime)) {
             cal = DailyPlanHelper.getCalendar(startTime, timezone);
         } else {
             cal = DailyPlanHelper.getCalendar(periodBegin, timezone);
