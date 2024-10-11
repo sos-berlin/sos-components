@@ -1,6 +1,9 @@
 package com.sos.joc.classes.tag;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -8,12 +11,16 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 
 public class GroupedTag {
-    
+
+    private static final String GROUP_DELIMITER = ":";
+    private static final String GROUPS_DELIMITER = ";";
+    private static final String TAGS_DELIMITER = ",";
+
     private final String tag;
     private Optional<String> group;
-    
+
     public GroupedTag(String tagWithOptionalGroup) {
-        String[] s = tagWithOptionalGroup.split(":", 2);
+        String[] s = tagWithOptionalGroup.split(GROUP_DELIMITER, 2);
         if (s.length == 1) {
             group = Optional.empty();
             tag = s[0];
@@ -22,7 +29,7 @@ public class GroupedTag {
             tag = s[1];
         }
     }
-    
+
     public GroupedTag(String group, String tag) {
         this.group = Optional.ofNullable(group);
         this.tag = tag;
@@ -31,15 +38,15 @@ public class GroupedTag {
     public String getTag() {
         return tag;
     }
-    
+
     public Optional<String> getGroup() {
         return group;
     }
-    
+
     public void setGroup(String group) {
         this.group = Optional.ofNullable(group);
     }
-    
+
     public String getNonEmptyGroup() {
         return group.get();
     }
@@ -47,15 +54,34 @@ public class GroupedTag {
     public boolean hasGroup() {
         return group.isPresent();
     }
-    
+
     public void checkJavaNameRules() {
         SOSCheckJavaVariableName.test("tag name: ", tag);
-        group.ifPresent(g -> SOSCheckJavaVariableName.test("group name: ", g)); 
+        group.ifPresent(g -> SOSCheckJavaVariableName.test("group name: ", g));
     }
-    
+
     @Override
     public String toString() {
-        return group.map(g -> g + ":" + tag).orElse(tag);
+        return group.map(g -> g + GROUP_DELIMITER + tag).orElse(tag);
+    }
+
+    public static String toString(List<GroupedTag> val) {
+        if (val == null) {
+            return "";
+        }
+
+        // return result.stream().map(GroupedTag::toString).collect(Collectors.joining(";"));
+        Map<String, List<String>> grouped = val.stream().collect(Collectors.groupingBy(gt -> gt.getGroup().orElse(""), Collectors.mapping(
+                GroupedTag::getTag, Collectors.toList())));
+        return grouped.entrySet().stream().map(entry -> {
+            String groupName = entry.getKey();
+            List<String> tags = entry.getValue();
+            if (!groupName.isEmpty()) {
+                return groupName + GROUP_DELIMITER + String.join(TAGS_DELIMITER, tags);
+            } else {
+                return String.join(TAGS_DELIMITER, tags);
+            }
+        }).collect(Collectors.joining(GROUPS_DELIMITER));
     }
 
     @Override

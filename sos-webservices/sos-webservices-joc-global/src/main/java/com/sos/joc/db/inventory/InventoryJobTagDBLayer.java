@@ -331,23 +331,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             query.setParameter("workflowName", workflowName);
             query.setParameter("jobName", jobName);
 
-            List<GroupedTag> result = getSession().getResultList(query);
-            if (result == null) {
-                return "";
-            }
-
-            // return result.stream().map(GroupedTag::toString).collect(Collectors.joining(";"));
-            Map<String, List<String>> grouped = result.stream().collect(Collectors.groupingBy(gt -> gt.getGroup().orElse(""), Collectors.mapping(
-                    GroupedTag::getTag, Collectors.toList())));
-            return grouped.entrySet().stream().map(entry -> {
-                String groupName = entry.getKey();
-                List<String> tags = entry.getValue();
-                if (!groupName.isEmpty()) {
-                    return groupName + ":" + String.join(",", tags);
-                } else {
-                    return String.join(",", tags);
-                }
-            }).collect(Collectors.joining(";"));
+            return GroupedTag.toString(getSession().getResultList(query));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
