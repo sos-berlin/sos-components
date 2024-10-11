@@ -1,5 +1,6 @@
 package com.sos.joc.classes.tag;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,9 +75,8 @@ public class GroupedTag {
             return "";
         }
 
-        // return result.stream().filter(GroupedTag::hasTag).map(GroupedTag::toString).collect(Collectors.joining(";"));
         Map<String, List<String>> grouped = val.stream().filter(GroupedTag::hasTag).collect(Collectors.groupingBy(gt -> gt.getGroup().orElse(""),
-                Collectors.mapping(GroupedTag::getTag, Collectors.toList())));
+                LinkedHashMap::new, Collectors.mapping(GroupedTag::getTag, Collectors.toList())));
         return grouped.entrySet().stream().map(entry -> {
             String groupName = entry.getKey();
             List<String> tags = entry.getValue();
