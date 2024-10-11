@@ -51,6 +51,10 @@ public class GroupedTag {
         return group.get();
     }
 
+    public boolean hasTag() {
+        return tag != null;
+    }
+
     public boolean hasGroup() {
         return group.isPresent();
     }
@@ -70,9 +74,9 @@ public class GroupedTag {
             return "";
         }
 
-        // return result.stream().map(GroupedTag::toString).collect(Collectors.joining(";"));
-        Map<String, List<String>> grouped = val.stream().collect(Collectors.groupingBy(gt -> gt.getGroup().orElse(""), Collectors.mapping(
-                GroupedTag::getTag, Collectors.toList())));
+        // return result.stream().filter(GroupedTag::hasTag).map(GroupedTag::toString).collect(Collectors.joining(";"));
+        Map<String, List<String>> grouped = val.stream().filter(GroupedTag::hasTag).collect(Collectors.groupingBy(gt -> gt.getGroup().orElse(""),
+                Collectors.mapping(GroupedTag::getTag, Collectors.toList())));
         return grouped.entrySet().stream().map(entry -> {
             String groupName = entry.getKey();
             List<String> tags = entry.getValue();
