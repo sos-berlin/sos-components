@@ -307,7 +307,13 @@ public class OrderNotifierModel {
         int i = 1;
 
         if (os != null) {
-            os.setTags(new InventoryJobTagDBLayer(dbLayer.getSession()).getGroupedTagsOfJob(analyzer.getOrder().getWorkflowName(), os.getJobName()));
+            try {
+                os.setTags(new InventoryJobTagDBLayer(dbLayer.getSession()).getGroupedTagsOfJob(analyzer.getOrder().getWorkflowName(), os
+                        .getJobName()));
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[notification id=%s][%s][%s]%s[step][setTags][failed]%s", notification.getNotificationId(), range,
+                        ANotifier.getTypeAsString(type), ANotifier.getInfo(analyzer), e.toString()), e);
+            }
         }
 
         for (AMonitor m : notification.getMonitors()) {
