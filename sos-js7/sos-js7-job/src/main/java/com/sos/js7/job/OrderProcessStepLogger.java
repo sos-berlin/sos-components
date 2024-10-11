@@ -218,19 +218,19 @@ public class OrderProcessStepLogger {
     }
 
     protected void failed2slf4j(String stepInfo, String msg) {
-        LOGGER.error(String.format("[failed]%s%s", stepInfo, SOSString.isEmpty(msg) ? "" : msg));
+        LOGGER.info(String.format("[failed]%s%s", stepInfo, SOSString.isEmpty(msg) ? "" : msg));
     }
 
     protected void failed2slf4j(String stepInfo, String msg, Throwable e) {
-        LOGGER.error(String.format("[failed]%s%s", stepInfo, msg), e);
+        LOGGER.info(String.format("[failed]%s%s", stepInfo, msg), e);
     }
 
     private void warn2slf4j(String stepInfo, String msg, Throwable e) {
-        LOGGER.warn(String.format("%s%s", stepInfo, msg), e);
+        LOGGER.info(String.format("%s%s", stepInfo, msg), e);
     }
 
     private void error2slf4j(String stepInfo, String msg, Throwable e) {
-        LOGGER.error(String.format("%s%s", stepInfo, msg), e);
+        LOGGER.info(String.format("%s%s", stepInfo, msg), e);
     }
 
     private String getMessage(LogLevel logLevel, Object msg) {
