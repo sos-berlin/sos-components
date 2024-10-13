@@ -91,10 +91,8 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 List<DBItemInventoryDependency> unsortedDependencies = dblayer.getRequestedDependencies(requestedItem);
                 // Map<Long: id of starting object, List<Long: id referencedBy objects>>
                 Map<Long, List<Long>> groupedDepInventoryIds = unsortedDependencies.stream()
-//                        .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
-//                                Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
-                        .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvDependencyId, 
-                                Collectors.mapping(DBItemInventoryDependency::getInvId, Collectors.toList())));
+                        .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
+                                Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
                 // add all primary referenced by Ids
                 item.getReferencedByIds().addAll(groupedDepInventoryIds.entrySet().stream().map(entry -> entry.getValue())
                         .flatMap(List::stream).collect(Collectors.toSet()));
