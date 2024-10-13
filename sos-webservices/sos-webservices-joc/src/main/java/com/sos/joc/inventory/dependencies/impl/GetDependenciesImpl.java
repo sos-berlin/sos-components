@@ -53,7 +53,6 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
             // TODO: resolve complete DependencyTree 
-//            List<ResponseItem> dependencies = process(filter, hibernateSession);
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
             DependencyItems depItems = getRelatedDependencyItems(filter, dblayer);
             if(!depItems.getAllUniqueItems().isEmpty()) {
@@ -95,7 +94,8 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                                 Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
                 // add all primary referenced by Ids
                 item.getReferencedByIds().addAll(groupedDepInventoryIds.entrySet().stream().map(entry -> entry.getValue())
-                        .flatMap(List::stream).collect(Collectors.toSet()));
+                        .flatMap(List::stream).filter(id -> !id.equals(item.getRequestedItem().getId()))
+                        .collect(Collectors.toSet()));
                 // add all primary references Ids
                 item.getReferencesIds().addAll(groupedDepInventoryIds.keySet().stream().map(id -> {
                     try {
@@ -104,6 +104,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                         throw new JocSosHibernateException(e);
                     }
                 }).flatMap(Set::stream).collect(Collectors.toSet()));
+                
                 resultItems.getRequesteditems().add(item);
                 // all current referenced by ids which are not already processed
                 Set<Long> currentReferencedByIds = groupedDepInventoryIds.values().stream().flatMap(List::stream)
