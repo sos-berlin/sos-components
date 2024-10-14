@@ -52,9 +52,9 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             JsonValidator.validate(dependencyFilter, GetDependenciesRequest.class);
             GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
-            // TODO: resolve complete DependencyTree 
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
             DependencyItems depItems = getRelatedDependencyItems(filter, dblayer);
+            // logging
             if(!depItems.getAllUniqueItems().isEmpty()) {
                 depItems.getAllUniqueItems().entrySet().forEach(entry -> 
                 LOGGER.info(entry.getKey() + " : " + entry.getValue().getName() + "::" + entry.getValue().getTypeAsEnum().value()));
@@ -93,18 +93,17 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                         .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
                                 Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
                 // add all primary referenced by Ids
-                item.getReferencedByIds().addAll(groupedDepInventoryIds.entrySet().stream().map(entry -> entry.getValue())
-                        .flatMap(List::stream).filter(id -> !id.equals(item.getRequestedItem().getId()))
-                        .collect(Collectors.toSet()));
+                item.getReferencedByIds().addAll(groupedDepInventoryIds.values().stream().flatMap(List::stream)
+                        .filter(id -> !id.equals(item.getRequestedItem().getId())).collect(Collectors.toSet()));
                 // add all primary references Ids
-                item.getReferencesIds().addAll(groupedDepInventoryIds.keySet().stream().map(id -> {
-                    try {
-                        return dblayer.getReferencesIds(id);
-                    } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                    }
-                }).flatMap(Set::stream).collect(Collectors.toSet()));
                 
+                item.getReferencesIds().addAll(groupedDepInventoryIds.entrySet().stream().map(entry -> {
+                    if(entry.getValue().contains(item.getRequestedItem().getId())) {
+                        return entry.getKey();
+                    } else {
+                        return null;
+                    }
+                }).filter(Objects::nonNull).collect(Collectors.toSet()));
                 resultItems.getRequesteditems().add(item);
                 // all current referenced by ids which are not already processed
                 Set<Long> currentReferencedByIds = groupedDepInventoryIds.values().stream().flatMap(List::stream)
