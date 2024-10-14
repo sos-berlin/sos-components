@@ -89,7 +89,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         // read all objects provided in the filter from the database
         List<DBItemInventoryConfiguration> configurationDBItemsToStore = null;
         if (!draftConfigsToStore.isEmpty()) {
-            configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
+            configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore, true);
         }
         /*
          * get all objects from INV_CONFIGURATION with deployed = false

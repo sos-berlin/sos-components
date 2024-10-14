@@ -709,10 +709,18 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<Configuration> configurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
+        return getFilteredInventoryConfiguration(configurations, false);
+    }
+    
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<Configuration> configurations, Boolean validOnly)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<DBItemInventoryConfiguration> results = new ArrayList<DBItemInventoryConfiguration>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where path = :path and type = :type");
+            if(validOnly) {
+                hql.append(" and valid = true");
+            }
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             for (Configuration cfg : configurations) {
                 if (ConfigurationType.FOLDER != cfg.getObjectType()) {
