@@ -130,8 +130,8 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
 
         case DELETE:
             List<DBItemInventoryTagGroup> dbTags = dbLayer.getGroups(modifyTags.getGroups());
-            // set groupId == 0 for Workflow, job, order tags
-            dbLayer.deleteGroupIds(dbTags.stream().map(DBItemInventoryTagGroup::getId).collect(Collectors.toList()));
+            //set groupId = 0 for Workflow, job, order tags
+            dbLayer.deleteGroupIds(dbTags.stream().map(DBItemInventoryTagGroup::getId).collect(Collectors.toList()), null);
             dbLayer.deleteGroups(dbTags);
 
             //TODO  events = tags.stream().map(InventoryTagDeleteEvent::new);

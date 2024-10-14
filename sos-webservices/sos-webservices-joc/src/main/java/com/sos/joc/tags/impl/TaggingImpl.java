@@ -19,11 +19,14 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.tag.ATagsModifyImpl;
 import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.event.EventBus;
@@ -71,6 +74,11 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             Map<String, GroupedTag> groupedTags = tags.stream().map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function
                     .identity()));
             List<DBItemInventoryTag> dbTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
+            
+            ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(session), "job");
+            ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
+            //TODO the same with historyOrderTags??
+            
             Date date = Date.from(Instant.now());
             Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
             tagEvents.addAll(newDbTagItems.stream().map(name -> new InventoryTagAddEvent(name.getName())).collect(Collectors.toList()));
@@ -154,6 +162,11 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                     Function.identity()));
 
             List<DBItemInventoryTag> dbTags = addTags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
+            
+            ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(session), "job");
+            ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
+            //TODO the same with historyOrderTags??
+            
             final Date date = Date.from(Instant.now());
             Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
             tagEvents.addAll(newDbTagItems.stream().map(name -> new InventoryTagAddEvent(name.getName())).collect(Collectors.toList()));

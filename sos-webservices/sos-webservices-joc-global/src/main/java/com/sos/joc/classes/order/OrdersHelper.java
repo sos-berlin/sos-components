@@ -65,6 +65,7 @@ import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -1503,7 +1504,7 @@ public class OrdersHelper {
         return variables;
     }
     
-    public static CompletableFuture<Either<Exception, Void>> storeTags(String controllerId, Map<OrderV, Set<String>> orderTags) {
+    public static CompletableFuture<Either<Exception, Void>> storeTags(String controllerId, Map<OrderV, Set<GroupedTag>> orderTags) {
         return CompletableFuture.supplyAsync(() -> OrderTags.addAdhocOrderTags(controllerId, orderTags));
     }
     

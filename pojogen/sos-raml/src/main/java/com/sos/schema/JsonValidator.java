@@ -201,6 +201,7 @@ public class JsonValidator {
             put("com.sos.joc.model.tag.common.RequestWorkflowJobFilter", "tag/common/request-workflow-jobs-schema.json");
             put("com.sos.joc.model.tag.group.RequestFilter", "tag/group/request-filter-schema.json");
             put("com.sos.joc.model.tag.group.RequestFilters", "tag/group/request-filters-schema.json");
+            put("com.sos.joc.model.tag.group.GroupTagsFilter", "tag/group/tags-request-schema.json");
             put("com.sos.joc.model.tag.rename.RequestJobFilter", "tag/rename/request-filter-job-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestJobFilter", "tag/tagging/request-filter-jobs-schema.json");
             put("com.sos.joc.model.tag.common.JobTags", "tag/common/jobTags-schema.json");

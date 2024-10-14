@@ -25,6 +25,9 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.IDBItemTag;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.event.EventBus;
@@ -77,31 +80,40 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     }
 
     private Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags, ATagDBLayer<T> dbLayer) throws Exception {
-        Set<GroupedTag> groupedTags = modifyTags.getTags() == null ? Collections.emptySet() : modifyTags.getTags().stream().map(GroupedTag::new)
-                .collect(Collectors.toSet());
-        Set<String> tags = groupedTags.stream().map(GroupedTag::getTag).collect(Collectors.toSet());
+        Map<String, GroupedTag> groupedTags = modifyTags.getTags() == null ? Collections.emptyMap() : modifyTags.getTags().stream().map(
+                GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function.identity()));
+        List<T> dbTags = Collections.emptyList();
         Stream<JOCEvent> events = Stream.empty();
         
         switch (action) {
         case ADD:
-            Set<T> result = insert(groupedTags, dbLayer.getTags(tags), Date.from(Instant.now()), dbLayer);
+            dbTags = modifyTags.getTags().isEmpty() ? Collections.emptyList() : dbLayer.getTags(groupedTags.keySet());
+            if (dbLayer instanceof InventoryTagDBLayer) {
+                checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(dbLayer.getSession()), "job");
+                checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(dbLayer.getSession()), "order");
+            } else if (dbLayer instanceof InventoryJobTagDBLayer) {
+                checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(dbLayer.getSession()), "workflow");
+                checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(dbLayer.getSession()), "order");
+            }
+            
+            Set<T> result = insert(groupedTags.values(), dbTags, Date.from(Instant.now()), dbLayer);
             events = result.stream().map(T::getName).map(InventoryTagAddEvent::new);
             break;
 
         case DELETE:
-            List<T> dbTags = dbLayer.getTags(tags);
+            dbTags = dbLayer.getTags(groupedTags.keySet());
             // IMPORTANT! first taggings, then tags
             dbLayer.deleteTaggingsByTagIds(dbTags.stream().map(T::getId).collect(Collectors.toList())); // TODO events for Workflows
             dbLayer.deleteTags(dbTags);
 
-            events = tags.stream().map(InventoryTagDeleteEvent::new);
+            events = groupedTags.keySet().stream().map(InventoryTagDeleteEvent::new);
             break;
 
         case ORDERING:
             List<T> dbAllTags = dbLayer.getAllTags();
             Map<String, T> mappedByName = dbAllTags.stream().collect(Collectors.toMap(T::getName, Function.identity()));
             int ordering = 1;
-            for (String name : tags) {
+            for (String name : groupedTags.keySet()) {
                 T dbItem = mappedByName.remove(name);
                 if (dbItem == null) {
                     continue;

@@ -25,6 +25,7 @@ import com.sos.joc.db.inventory.DBItemInventoryJobTag;
 import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
@@ -90,8 +91,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                 List<DBItemInventoryJobTag> dbJobTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
 
                 ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(session), "workflow");
-                //ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
-                
+                ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
                 //TODO the same with historyOrderTags??
 
                 Set<DBItemInventoryJobTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbJobTags, date, dbTagLayer);

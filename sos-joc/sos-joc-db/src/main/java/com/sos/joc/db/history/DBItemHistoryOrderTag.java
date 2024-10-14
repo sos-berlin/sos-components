@@ -41,7 +41,8 @@ public class DBItemHistoryOrderTag extends DBItem {
     @Column(name = "[TAG_NAME]", nullable = false)
     private String tagName;
     
-    //@Column(name = "[GROUP_ID]", nullable = false)
+    @Column(name = "[GROUP_ID]", nullable = false)
+    private Long groupId;
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
@@ -54,11 +55,12 @@ public class DBItemHistoryOrderTag extends DBItem {
         //
     }
     
-    public DBItemHistoryOrderTag(String controllerId, String orderId, String tagName, Integer ordering, Date startTime) {
+    public DBItemHistoryOrderTag(String controllerId, String orderId, String tagName, Long groupId, Integer ordering, Date startTime) {
         setId(null);
         setControllerId(controllerId);
         setOrderId(orderId);
         setTagName(tagName);
+        setGroupId(groupId);
         setStartTime(startTime);
         setOrdering(ordering);
         setHistoryId(0L);
@@ -107,15 +109,13 @@ public class DBItemHistoryOrderTag extends DBItem {
         tagName = val;
     }
     
-//    @Transient
-//    public String getGroup() {
-//        return group;
-//    }
-//
-//    @Transient
-//    public void setGroup(String val) {
-//        group = val;
-//    }
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Long val) {
+        groupId = val;
+    }
     
     public Integer getOrdering() {
         return ordering;

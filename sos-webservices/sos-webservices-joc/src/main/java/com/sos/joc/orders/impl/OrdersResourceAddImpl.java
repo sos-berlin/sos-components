@@ -33,6 +33,7 @@ import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -146,7 +147,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
             Consumer<AddOrder> workflowNameToPath = o -> o.setWorkflowPath(WorkflowPaths.getPath(JocInventory.pathToName(o.getWorkflowPath())));
-            Map<OrderV, Set<String>> orderTags = new HashMap<>();
+            Map<OrderV, Set<GroupedTag>> orderTags = new HashMap<>();
 
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
@@ -200,11 +201,12 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
                     
                     if (order.getTags() != null && !order.getTags().isEmpty()) {
-                        order.getTags().forEach(tag -> SOSCheckJavaVariableName.test("tags", tag));
+                        Set<GroupedTag> gts = order.getTags().stream().map(GroupedTag::new).peek(GroupedTag::checkJavaNameRules).collect(Collectors
+                                .toSet());
                         OrderV orderV = new OrderV();
                         orderV.setOrderId(o.id().string());
                         orderV.setScheduledFor(scheduledFor.orElse(Instant.now()).toEpochMilli());
-                        orderTags.put(orderV, order.getTags());
+                        orderTags.put(orderV, gts);
                     }
                     either = Either.right(o);
                 } catch (Exception ex) {

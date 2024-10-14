@@ -262,7 +262,7 @@ public class OrderTags {
         }
     }
 
-    public static Either<Exception, Void> addAdhocOrderTags(String controllerId, Map<OrderV, Set<String>> oTags) {
+    public static Either<Exception, Void> addAdhocOrderTags(String controllerId, Map<OrderV, Set<GroupedTag>> oTags) {
         if (controllerId != null && oTags != null && !oTags.isEmpty()) {
             SOSHibernateSession connection = null;
             try {
@@ -271,8 +271,10 @@ public class OrderTags {
                 connection.setAutoCommit(false);
                 Globals.beginTransaction(connection);
                 deleteTags(controllerId, oTags.keySet().stream().map(OrderV::getOrderId).distinct().collect(Collectors.toList()), connection);
-                for (Map.Entry<OrderV, Set<String>> oTag : oTags.entrySet()) {
-                    addTagsOfOrder(controllerId, oTag.getKey().getOrderId(), oTag.getValue(), connection, Date.from(Instant.ofEpochMilli(oTag.getKey()
+                for (Map.Entry<OrderV, Set<GroupedTag>> oTag : oTags.entrySet()) {
+                    Set<String> tags = oTag.getValue().stream().map(GroupedTag::getTag).collect(Collectors.toSet());
+                    // TODO consider groups
+                    addTagsOfOrder(controllerId, oTag.getKey().getOrderId(), tags, connection, Date.from(Instant.ofEpochMilli(oTag.getKey()
                             .getScheduledFor())));
                 }
                 Globals.commit(connection);
@@ -315,32 +317,18 @@ public class OrderTags {
         return Either.right(null);
     }
     
-//    private void addTagsOfOrder(OrderTagsEvent evt, SOSHibernateSession connection, Date now) {
-//        //orderTags.putIfAbsent(evt.getControllerId(), new ConcurrentHashMap<>());
-//        for (Map.Entry<String, Object> entry : evt.getTags().entrySet()) {
-//            //if (!orderTags.get(evt.getControllerId()).containsKey(entry.getKey())) {
-//                @SuppressWarnings("unchecked")
-//                Set<String> ts = (Set<String>) entry.getValue();
-//                //orderTags.get(evt.getControllerId()).put(entry.getKey(), ts);
-//                int i = 0;
-//                for (String tag : ts) {
-//                    try {
-//                        connection.save(new DBItemHistoryOrderTag(evt.getControllerId(), entry.getKey(), tag, ++i, now));
-//                    } catch (SOSHibernateInvalidSessionException ex) {
-//                        throw new DBConnectionRefusedException(ex);
-//                    } catch (Exception ex) {
-//                        throw new DBInvalidDataException(ex);
-//                    }
-//                }
-//            //}
-//        }
-//    }
-    
     private static void addTagsOfOrder(String controllerId, String orderId, Set<String> tags, SOSHibernateSession connection, Date scheduledFor) {
         int i = 0;
+        Map<String, Long> gts = Collections.emptyMap();
+        try {
+            gts = new InventoryOrderTagDBLayer(connection).getTags(tags).stream().distinct().collect(Collectors.toMap(
+                    DBItemInventoryOrderTag::getName, DBItemInventoryOrderTag::getGroupId));
+        } catch (Exception e) {
+            // TODO log error
+        }
         for (String tag : tags) {
             try {
-                connection.save(new DBItemHistoryOrderTag(controllerId, orderId, tag, ++i, scheduledFor));
+                connection.save(new DBItemHistoryOrderTag(controllerId, orderId, tag, gts.getOrDefault(tag, 0L), ++i, scheduledFor));
             } catch (SOSHibernateInvalidSessionException ex) {
                 throw new DBConnectionRefusedException(ex);
             } catch (Exception ex) {
@@ -480,7 +468,7 @@ public class OrderTags {
         if (result != null) {
             for (DBItemHistoryOrderTag oldItem : result) {
                 DBItemHistoryOrderTag newItem = new DBItemHistoryOrderTag(oldItem.getControllerId(), newOrderId, oldItem.getTagName(), oldItem
-                        .getOrdering(), scheduledFor);
+                        .getGroupId(), oldItem.getOrdering(), scheduledFor);
                 connection.save(newItem);
             }
         }
@@ -584,6 +572,8 @@ public class OrderTags {
         if (controllerId == null) {
             return Collections.emptyMap();
         }
+        
+        // TODO join with groups
 
         Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds);
 
@@ -632,6 +622,8 @@ public class OrderTags {
         if (historyIds == null || historyIds.isEmpty()) {
             return Collections.emptyList();
         }
+        
+        // TODO join with groups
 
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
@@ -668,6 +660,9 @@ public class OrderTags {
         if (controllerId == null) {
             return Collections.emptySet();
         }
+        
+        // TODO join with groups
+        
         connection = Globals.createSosHibernateStatelessConnection(OrderTags.class.getSimpleName());
         StringBuilder hql = new StringBuilder("select tagName from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
         hql.append(" where controllerId=:controllerId");
