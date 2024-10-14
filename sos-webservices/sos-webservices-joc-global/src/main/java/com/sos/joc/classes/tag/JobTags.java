@@ -2,7 +2,6 @@ package com.sos.joc.classes.tag;
 
 import java.util.Set;
 
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
@@ -10,7 +9,7 @@ import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 
 public class JobTags {
     
-    public static void update(Jobs jobs, DBItemInventoryConfiguration workflowDbItem, InventoryJobTagDBLayer dbTagLayer) throws SOSHibernateException {
+    public static void update(Jobs jobs, DBItemInventoryConfiguration workflowDbItem, InventoryJobTagDBLayer dbTagLayer) {
         // delete corpses
         
         Set<DBItemInventoryJobTagging> jobTaggings = dbTagLayer.getTaggings(workflowDbItem.getId());
@@ -24,7 +23,11 @@ public class JobTags {
             for (DBItemInventoryJobTagging jobTagging : jobTaggings) {
                 if (!jobNames.contains(jobTagging.getJobName())) {
                     //isChanged = true;
-                    dbTagLayer.getSession().delete(jobTagging);
+                    try {
+                        dbTagLayer.getSession().delete(jobTagging);
+                    } catch (Exception e) {
+                        //
+                    }
                 }
             }
 

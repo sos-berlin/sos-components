@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -12,6 +14,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.WorkflowConverter;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -66,9 +70,24 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                 }
             }
             
-            if (in.getWithPositions() == Boolean.TRUE && config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
-                item.setConfiguration(WorkflowsHelper.addWorkflowPositions((Workflow) JocInventory.content2IJSObject(config.getContent(), config
-                        .getType())));
+            if (config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
+                Workflow w = WorkflowConverter.convertInventoryWorkflow(config.getContent());
+                if (in.getWithPositions() == Boolean.TRUE) {
+                    w = WorkflowsHelper.addWorkflowPositions(w);
+                }
+                w = OrderTags.addGroupsToInstructions(w, session);
+                item.setConfiguration(w);
+                
+            } else if (config.getType().equals(ConfigurationType.FILEORDERSOURCE.intValue())) {
+                FileOrderSource fos = JocInventory.convertFileOrderSource(config.getContent(), FileOrderSource.class);
+                fos = OrderTags.addGroupsToFileOrderSource(fos, session);
+                item.setConfiguration(fos);
+                
+            } else if (config.getType().equals(ConfigurationType.SCHEDULE.intValue())) {
+                Schedule schedule = JocInventory.convertSchedule(config.getContent(), Schedule.class);
+                schedule = OrderTags.addGroupsToOrderPreparation(schedule, session);
+                item.setConfiguration(schedule);
+                
             } else {
                 item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             }

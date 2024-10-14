@@ -19,7 +19,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
-import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -43,185 +42,185 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
         return DBLayer.DBITEM_INV_TAGGINGS;
     }
 
-    public List<InventoryTagItem> getFoldersByTagAndTypeForInventory(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
-            throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            List<String> whereClause = new ArrayList<String>();
-            StringBuilder sql = new StringBuilder();
-            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-                    DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c on t.cid = c.id");
+//    public List<InventoryTagItem> getFoldersByTagAndTypeForInventory(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
+//            throws DBConnectionRefusedException, DBInvalidDataException {
+//        try {
+//            List<String> whereClause = new ArrayList<String>();
+//            StringBuilder sql = new StringBuilder();
+//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
+//                    DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c on t.cid = c.id");
+//
+//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+//                if (inventoryTypes.size() == 1) {
+//                    whereClause.add("c.type = :type");
+//                } else {
+//                    whereClause.add("c.type in (:types)");
+//                }
+//            }
+//            if (onlyValidObjects == Boolean.TRUE) {
+//                whereClause.add("c.valid = 1");
+//            }
+//            if (!whereClause.isEmpty()) {
+//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+//            }
+//
+//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
+//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+//                if (inventoryTypes.size() == 1) {
+//                    query.setParameter("type", inventoryTypes.iterator().next());
+//                } else {
+//                    query.setParameterList("types", inventoryTypes);
+//                }
+//            }
+//
+//            List<InventoryTagItem> result = getSession().getResultList(query);
+//            if (result == null) {
+//                return Collections.emptyList();
+//            }
+//
+//            return result;
+//
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
-            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-                if (inventoryTypes.size() == 1) {
-                    whereClause.add("c.type = :type");
-                } else {
-                    whereClause.add("c.type in (:types)");
-                }
-            }
-            if (onlyValidObjects == Boolean.TRUE) {
-                whereClause.add("c.valid = 1");
-            }
-            if (!whereClause.isEmpty()) {
-                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-            }
+//    public List<InventoryTagItem> getFoldersByTagAndTypeForInventoryTrash(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
+//            throws DBConnectionRefusedException, DBInvalidDataException {
+//        try {
+//            List<String> whereClause = new ArrayList<String>();
+//            StringBuilder sql = new StringBuilder();
+//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
+//                    DBLayer.DBITEM_INV_CONFIGURATION_TRASH).append(" c on (t.name = c.name and t.type = c.type)");
+//
+//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+//                if (inventoryTypes.size() == 1) {
+//                    whereClause.add("c.type = :type");
+//                } else {
+//                    whereClause.add("c.type in (:types)");
+//                }
+//            }
+//            if (onlyValidObjects == Boolean.TRUE) {
+//                whereClause.add("c.valid = 1");
+//            }
+//            if (!whereClause.isEmpty()) {
+//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+//            }
+//
+//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
+//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+//                if (inventoryTypes.size() == 1) {
+//                    query.setParameter("type", inventoryTypes.iterator().next());
+//                } else {
+//                    query.setParameterList("types", inventoryTypes);
+//                }
+//            }
+//
+//            List<InventoryTagItem> result = getSession().getResultList(query);
+//            if (result == null) {
+//                return Collections.emptyList();
+//            }
+//
+//            return result;
+//
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
-            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-                if (inventoryTypes.size() == 1) {
-                    query.setParameter("type", inventoryTypes.iterator().next());
-                } else {
-                    query.setParameterList("types", inventoryTypes);
-                }
-            }
+//    public List<InventoryTagItem> getFoldersByTagAndTypeForDeployedObjects(Set<Integer> deployTypes, String controllerId)
+//            throws DBConnectionRefusedException, DBInvalidDataException {
+//        try {
+//            List<String> whereClause = new ArrayList<String>();
+//            StringBuilder sql = new StringBuilder();
+//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
+//                    DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c on t.cid = c.inventoryConfigurationId");
+//
+//            if (deployTypes != null && !deployTypes.isEmpty()) {
+//                if (deployTypes.size() == 1) {
+//                    whereClause.add("c.type=:type");
+//                } else {
+//                    whereClause.add("c.type in (:types)");
+//                }
+//            }
+//            if (controllerId != null) {
+//                whereClause.add("c.controllerId=:controllerId");
+//            }
+//            if (!whereClause.isEmpty()) {
+//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+//            }
+//
+//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
+//            if (deployTypes != null && !deployTypes.isEmpty()) {
+//                if (deployTypes.size() == 1) {
+//                    query.setParameter("type", deployTypes.iterator().next());
+//                } else {
+//                    query.setParameterList("types", deployTypes);
+//                }
+//            }
+//            if (controllerId != null) {
+//                query.setParameter("controllerId", controllerId);
+//            }
+//
+//            List<InventoryTagItem> result = getSession().getResultList(query);
+//            if (result == null) {
+//                return Collections.emptyList();
+//            }
+//
+//            return result;
+//
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
-            List<InventoryTagItem> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-
-            return result;
-
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public List<InventoryTagItem> getFoldersByTagAndTypeForInventoryTrash(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
-            throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            List<String> whereClause = new ArrayList<String>();
-            StringBuilder sql = new StringBuilder();
-            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-                    DBLayer.DBITEM_INV_CONFIGURATION_TRASH).append(" c on (t.name = c.name and t.type = c.type)");
-
-            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-                if (inventoryTypes.size() == 1) {
-                    whereClause.add("c.type = :type");
-                } else {
-                    whereClause.add("c.type in (:types)");
-                }
-            }
-            if (onlyValidObjects == Boolean.TRUE) {
-                whereClause.add("c.valid = 1");
-            }
-            if (!whereClause.isEmpty()) {
-                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-            }
-
-            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-                if (inventoryTypes.size() == 1) {
-                    query.setParameter("type", inventoryTypes.iterator().next());
-                } else {
-                    query.setParameterList("types", inventoryTypes);
-                }
-            }
-
-            List<InventoryTagItem> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-
-            return result;
-
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public List<InventoryTagItem> getFoldersByTagAndTypeForDeployedObjects(Set<Integer> deployTypes, String controllerId)
-            throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            List<String> whereClause = new ArrayList<String>();
-            StringBuilder sql = new StringBuilder();
-            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-                    DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c on t.cid = c.inventoryConfigurationId");
-
-            if (deployTypes != null && !deployTypes.isEmpty()) {
-                if (deployTypes.size() == 1) {
-                    whereClause.add("c.type=:type");
-                } else {
-                    whereClause.add("c.type in (:types)");
-                }
-            }
-            if (controllerId != null) {
-                whereClause.add("c.controllerId=:controllerId");
-            }
-            if (!whereClause.isEmpty()) {
-                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-            }
-
-            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-            if (deployTypes != null && !deployTypes.isEmpty()) {
-                if (deployTypes.size() == 1) {
-                    query.setParameter("type", deployTypes.iterator().next());
-                } else {
-                    query.setParameterList("types", deployTypes);
-                }
-            }
-            if (controllerId != null) {
-                query.setParameter("controllerId", controllerId);
-            }
-
-            List<InventoryTagItem> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-
-            return result;
-
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public List<InventoryTagItem> getFoldersByTagAndTypeForReleasedObjects(Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        try {
-            List<String> whereClause = new ArrayList<String>();
-            StringBuilder sql = new StringBuilder();
-            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-                    DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" c on t.cid = c.cid");
-
-            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-                if (inventoryTypes.size() == 1) {
-                    whereClause.add("c.type=:type");
-                } else {
-                    whereClause.add("c.type in (:types)");
-                }
-            }
-            if (!whereClause.isEmpty()) {
-                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-            }
-
-            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-                if (inventoryTypes.size() == 1) {
-                    query.setParameter("type", inventoryTypes.iterator().next());
-                } else {
-                    query.setParameterList("types", inventoryTypes);
-                }
-            }
-
-            List<InventoryTagItem> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-
-            return result;
-
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
+//    public List<InventoryTagItem> getFoldersByTagAndTypeForReleasedObjects(Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
+//            DBInvalidDataException {
+//        try {
+//            List<String> whereClause = new ArrayList<String>();
+//            StringBuilder sql = new StringBuilder();
+//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
+//                    DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" c on t.cid = c.cid");
+//
+//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+//                if (inventoryTypes.size() == 1) {
+//                    whereClause.add("c.type=:type");
+//                } else {
+//                    whereClause.add("c.type in (:types)");
+//                }
+//            }
+//            if (!whereClause.isEmpty()) {
+//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+//            }
+//
+//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
+//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+//                if (inventoryTypes.size() == 1) {
+//                    query.setParameter("type", inventoryTypes.iterator().next());
+//                } else {
+//                    query.setParameterList("types", inventoryTypes);
+//                }
+//            }
+//
+//            List<InventoryTagItem> result = getSession().getResultList(query);
+//            if (result == null) {
+//                return Collections.emptyList();
+//            }
+//
+//            return result;
+//
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
     public List<DBItemInventoryTagging> getTaggings(Long cid) {
         try {

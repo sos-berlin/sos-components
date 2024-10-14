@@ -734,7 +734,7 @@ public class Validator {
             }
 
         } catch (JsonProcessingException e) {
-
+            //
         }
     }
     
@@ -1541,9 +1541,8 @@ public class Validator {
                 variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).filter(hasPositionSetting).forEach(
                         p -> checkAddOrderPositions(p, availableBlockPositions, workflowName, labelMap, position + ".positions."));
             }
-            variableSets.stream().map(OrderParameterisation::getTags).filter(Objects::nonNull).forEach(tags -> {
-                testJavaNameRulesAtTags(position, tags);
-            });
+            testJavaNameRulesAtTags(position, variableSets.stream().map(OrderParameterisation::getTags).filter(Objects::nonNull).flatMap(Set::stream)
+                    .collect(Collectors.toSet()));
         } else {
             try {
                 OrdersHelper.checkArguments(new Variables(), orderPreparation, allowEmptyArguments);
@@ -1627,7 +1626,7 @@ public class Validator {
         }
     }
     
-    private static void testJavaNameRulesAtTags(String prefix, Collection<String> tags) {
+    public static void testJavaNameRulesAtTags(String prefix, Collection<String> tags) {
         if (tags != null) {
             testJavaNameRulesAtTags(prefix, tags.stream());
         }
@@ -1643,8 +1642,8 @@ public class Validator {
     
     private static String testJavaNameRulesAtTag(String prefix, String value) throws JocConfigurationException {
         GroupedTag gt = new GroupedTag(value);
-        testJavaNameRules(prefix, "tag", gt.getTag());
-        gt.getGroup().ifPresent(g -> testJavaNameRules(prefix, "group", g));
+        testJavaNameRules(prefix + ": ", "tag", gt.getTag());
+        gt.getGroup().ifPresent(g -> testJavaNameRules(prefix + ": ", "group", g));
         return gt.getTag();
     }
     

@@ -48,10 +48,6 @@ public class GroupedTag {
         this.group = Optional.ofNullable(group);
     }
 
-    public String getNonEmptyGroup() {
-        return group.get();
-    }
-
     public boolean hasTag() {
         return tag != null;
     }
@@ -63,6 +59,14 @@ public class GroupedTag {
     public void checkJavaNameRules() {
         SOSCheckJavaVariableName.test("tag name: ", tag);
         group.ifPresent(g -> SOSCheckJavaVariableName.test("group name: ", g));
+    }
+    
+    public boolean testJavaNameRules() {
+        boolean test = SOSCheckJavaVariableName.test(tag);
+        if (test && group.isPresent()) {
+            test = SOSCheckJavaVariableName.test(group.get()); 
+        }
+        return test;
     }
 
     @Override

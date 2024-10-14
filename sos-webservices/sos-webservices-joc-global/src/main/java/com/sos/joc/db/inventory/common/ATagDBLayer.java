@@ -56,6 +56,54 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
         }
     }
     
+    public List<GroupedTag> getGroupedTags(Set<String> tagNames) throws DBConnectionRefusedException, DBInvalidDataException {
+        return getGroupedTags(tagNames, false);
+    }
+
+    public List<GroupedTag> getGroupedTags(Set<String> tagNames, boolean onlyTagsWithGroup) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        if (tagNames != null && tagNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName());
+            sql.append("(g.name, t.name) from ").append(getTagTable()).append(" t left join ")
+                .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on t.groupId = g.id");
+            List<String> clauses = new ArrayList<>(2);
+            if (onlyTagsWithGroup) {
+                clauses.add("t.groupId != 0");
+            }
+            if (tagNames != null) {
+                if (tagNames.size() == 1) {
+                    clauses.add("t.name = :name");
+                } else {
+                    clauses.add("t.name in (:names)");
+                }
+            }
+            if (!clauses.isEmpty()) {
+                sql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+            }
+            Query<GroupedTag> query = getSession().createQuery(sql.toString());
+            if (tagNames != null) {
+                if (tagNames.size() == 1) {
+                    query.setParameter("name", tagNames.iterator().next());
+                } else {
+                    query.setParameterList("names", tagNames);
+                }
+            }
+            List<GroupedTag> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public List<String> getAllGroupNames() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -391,7 +439,7 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
                     sql.append(" where name in (:names)");
                 }
             }
-            sql.append(" order by ordering");
+            //sql.append(" order by ordering");
             Query<DBItemInventoryTagGroup> query = getSession().createQuery(sql.toString());
             if (groupNames != null) {
                 if (groupNames.size() == 1) {

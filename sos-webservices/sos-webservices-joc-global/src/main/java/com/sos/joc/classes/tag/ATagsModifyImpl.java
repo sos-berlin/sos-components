@@ -33,6 +33,7 @@ import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagDeleteEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -376,6 +377,29 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             throws SOSHibernateException {
         return dbLayer.getTagsByFolders(folders, true).stream().filter(i -> folderIsPermitted(i.getFolder(), permittedFolders)).collect(Collectors
                 .groupingBy(InventoryTagItem::getNullableName, Collectors.mapping(InventoryTagItem::getPath, Collectors.toSet())));
+    }
+    
+    public static <T extends IDBItemTag> void checkAndAssignGroup(Map<String, GroupedTag> groupedTags, ATagDBLayer<T> dbLayer, String type) {
+        
+        Map<String, GroupedTag> dbGroupedTagsMap = dbLayer.getGroupedTags(groupedTags.keySet()).stream().collect(Collectors.toMap(GroupedTag::getTag,
+                Function.identity()));
+        for (Map.Entry<String, GroupedTag> gt : groupedTags.entrySet()) {
+            GroupedTag dbInvGroupedTag = dbGroupedTagsMap.get(gt.getKey());
+            if (dbInvGroupedTag != null) {
+                if (dbInvGroupedTag.hasGroup()) {
+                    if (gt.getValue().hasGroup()) {
+                        if (!gt.getValue().getGroup().equals(dbInvGroupedTag.getGroup())) {
+                            throw new JocBadRequestException(String.format("The tag '%s' has already the group '%s'", gt.getKey(), dbInvGroupedTag
+                                    .getGroup().get()));
+                        }
+                    } else {
+                        gt.getValue().setGroup(dbInvGroupedTag.getGroup().get());
+                    }
+                } else if (gt.getValue().hasGroup()) {
+                    throw new JocBadRequestException(String.format("The tag '%s' is already used as %s tag without a group", gt.getKey(), type));
+                }
+            }
+        }
     }
 
 }

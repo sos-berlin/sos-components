@@ -2,9 +2,9 @@ package com.sos.joc.tags.job.impl;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +16,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.tag.ATagsModifyImpl;
 import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -23,6 +25,7 @@ import com.sos.joc.db.inventory.DBItemInventoryJobTag;
 import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
@@ -61,7 +64,13 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             InventoryJobTagDBLayer dbTagLayer = new InventoryJobTagDBLayer(session);
             
             DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
-            List<InventoryTagEvent> tagEvents = new ArrayList<>(); // TODO Set is better
+            // without checking if job exists because Workflow is not completely stored when this API is called.
+//            Workflow workflow = WorkflowConverter.convertInventoryWorkflow(config.getContent());
+//            Jobs jobs = workflow.getJobs();
+//            if (jobs == null || jobs.getAdditionalProperties() == null) {
+//                throw new JocBadRequestException(String.format("Workflow '%s' doesn't have jobs", config.getPath()));
+//            }
+            Set<InventoryTagEvent> tagEvents = new HashSet<>();
             
             Set<JobTags> jobTags = in.getJobs() == null ? Collections.emptySet() : in.getJobs();
             Date date = Date.from(Instant.now());
@@ -69,15 +78,27 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             boolean taggingIsChanged = false;
             
             for (JobTags jobTag : jobTags) {
+                
+//                if (!jobs.getAdditionalProperties().containsKey(jobTag.getJobName())) {
+//                    throw new JocBadRequestException(String.format("Workflow '%s' doesn't have the job '%s'", config.getPath(), jobTag.getJobName()));
+//                }
                 Set<String> tags = jobTag.getJobTags() == null ? Collections.emptySet() : jobTag.getJobTags();
+                Validator.testJavaNameRulesAtTags("$.jobs[" + jobTag.getJobName() + "].jobTags: ", tags);
+                
                 Map<String, GroupedTag> groupedTags = tags.stream().map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag,
                         Function.identity()));
-                List<DBItemInventoryJobTag> dbTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
-                Set<DBItemInventoryJobTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
+                List<DBItemInventoryJobTag> dbJobTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
+
+                ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(session), "workflow");
+                //ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
+                
+                //TODO the same with historyOrderTags??
+
+                Set<DBItemInventoryJobTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbJobTags, date, dbTagLayer);
                 
                //TODO event for job tags?
-                tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryJobTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toList()));
-                newDbTagItems.addAll(dbTags);
+                tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryJobTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toSet()));
+                newDbTagItems.addAll(dbJobTags);
                 
                 Map<String, Long> tagNameToIdMap = newDbTagItems.stream().collect(Collectors.toMap(DBItemInventoryJobTag::getName,
                         DBItemInventoryJobTag::getId));

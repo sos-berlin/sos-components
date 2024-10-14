@@ -57,6 +57,7 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.tag.JobTags;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
@@ -305,7 +306,7 @@ public class JocInventory {
         return releasables;
     }
     
-    public static Workflow workflowContent2Workflow(String content) throws JsonParseException, JsonMappingException, IOException {
+    public static Workflow workflowContent2Workflow(String content) throws JsonProcessingException {
         if (SOSString.isEmpty(content)) {
             return null;
         }
@@ -781,7 +782,7 @@ public class JocInventory {
             } else if (name != null) {// name
                 List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
                 if (configs == null || configs.isEmpty()) {
-                    throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", name));
+                    throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), name));
                 }
                 config = configs.get(0); // TODO
                 if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
@@ -912,13 +913,26 @@ public class JocInventory {
         }
     }
     
-    private static void handleJobTags(SOSHibernateSession session, DBItemInventoryConfiguration item, IConfigurationObject config)
-            throws JsonMappingException, JsonProcessingException, SOSHibernateException {
+    private static void handleTags(SOSHibernateSession session, DBItemInventoryConfiguration item, IConfigurationObject config)
+            throws JsonMappingException, JsonProcessingException {
         if (ConfigurationType.WORKFLOW.intValue().equals(item.getType())) {
             if (config == null && !SOSString.isEmpty(item.getContent())) {
-                config = Globals.objectMapper.readValue(item.getContent(), Workflow.class);
+                config = workflowContent2Workflow(item.getContent());
             }
             JobTags.update(((Workflow) config).getJobs(), item, new InventoryJobTagDBLayer(session));
+            OrderTags.updateTagsFromInstructions((Workflow) config, item);
+            
+        } else if (ConfigurationType.FILEORDERSOURCE.intValue().equals(item.getType())) {
+            if (config == null && !SOSString.isEmpty(item.getContent())) {
+                config = convertFileOrderSource(item.getContent(), FileOrderSource.class);
+            }
+            OrderTags.updateTagsFromFileOrderSource((FileOrderSource) config, item);
+            
+        } else if (ConfigurationType.SCHEDULE.intValue().equals(item.getType())) {
+            if (config == null && !SOSString.isEmpty(item.getContent())) {
+                config = convertSchedule(item.getContent(), Schedule.class);
+            }
+            OrderTags.updateTagsFromOrderPreparation((Schedule) config, item);
         }
     }
 
@@ -1013,11 +1027,12 @@ public class JocInventory {
 
     public static void updateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        handleTags(dbLayer.getSession(), item, config);
+        
         dbLayer.getSession().update(item);
 
         handleWorkflowSearch(dbLayer, item, config);
         handleReleasedJobTemplate(dbLayer, item, config);
-        handleJobTags(dbLayer.getSession(), item, config);
         DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 
@@ -1028,9 +1043,11 @@ public class JocInventory {
 
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        handleTags(dbLayer.getSession(), item, config);
+        
         dbLayer.getSession().save(item);
+        
         handleWorkflowSearch(dbLayer, item, config);
-        handleJobTags(dbLayer.getSession(), item, config);
         DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 

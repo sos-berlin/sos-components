@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,6 +24,7 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -31,9 +33,27 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.ConsumeNotices;
+import com.sos.inventory.model.instruction.Cycle;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.StickySubagent;
+import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.schedule.OrderParameterisation;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.tag.ATagsModifyImpl;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
@@ -45,6 +65,12 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.history.DBItemHistoryOrderTag;
 import com.sos.joc.db.inventory.DBItemInventoryAddOrderTag;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryOrderTag;
+import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryOrderStarted;
@@ -910,6 +936,282 @@ public class OrderTags {
             return coll.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement() / SOSHibernate.LIMIT_IN_CLAUSE)).values();
         }
         return null;
+    }
+    
+    public static Workflow addGroupsToInstructions(Workflow workflow, SOSHibernateSession session) throws JsonProcessingException {
+        Set<String> tags = new HashSet<>();
+        List<Instruction> insts = workflow.getInstructions();
+        getOrderTags(tags, insts, new InventoryOrderTagDBLayer(session));
+        if (hasGroup(tags)) {
+            workflow.setInstructions(insts);
+        }
+        return workflow;
+    }
+
+    public static void updateTagsFromInstructions(Workflow workflow, DBItemInventoryConfiguration item) throws JsonProcessingException {
+        Set<String> tags = new HashSet<>();
+        List<Instruction> insts = workflow.getInstructions();
+        getOrderTags(tags, insts, null);
+        try {
+            Validator.testJavaNameRulesAtTags("", tags);
+            update(tags.stream());
+        } catch (Exception e) {
+            //
+        }
+        if (hasGroup(tags)) {
+            workflow.setInstructions(insts);
+            item.setContent(JocInventory.toString(workflow));
+        }
+    }
+
+    private static void getOrderTags(Set<String> tags, List<Instruction> insts, InventoryOrderTagDBLayer dbOrderTagLayer) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for (Branch b : f.getBranches()) {
+                        if (b.getWorkflow() != null) {
+                            getOrderTags(tags, b.getWorkflow().getInstructions(), dbOrderTagLayer);
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        getOrderTags(tags, fl.getWorkflow().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        getOrderTags(tags, ie.getThen().getInstructions(), dbOrderTagLayer);
+                    }
+                    if (ie.getElse() != null) {
+                        getOrderTags(tags, ie.getElse().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        getOrderTags(tags, tc.getTry().getInstructions(), dbOrderTagLayer);
+                    }
+                    if (tc.getCatch() != null) {
+                        getOrderTags(tags, tc.getCatch().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        getOrderTags(tags, l.getLockedWorkflow().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        getOrderTags(tags, c.getCycleWorkflow().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    if (cns.getSubworkflow() != null) {
+                        getOrderTags(tags, cns.getSubworkflow().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        getOrderTags(tags, ss.getSubworkflow().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        getOrderTags(tags, opts.getBlock().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case ADD_ORDER:
+                    AddOrder ao = inst.cast();
+                    if (ao.getTags() != null) {
+                        if (dbOrderTagLayer == null) {
+                            tags.addAll(ao.getTags());
+                            if (hasGroup(ao.getTags())) {
+                                ao.setTags(deleteGroupFromTags(ao.getTags()));
+                            }
+                        } else {
+                            try {
+                                Map<String, String> gt = dbOrderTagLayer.getGroupedTags(ao.getTags(), true).stream().distinct().collect(Collectors
+                                        .toMap(GroupedTag::getTag, GroupedTag::toString));
+                                ao.setTags(ao.getTags().stream().map(tag -> gt.getOrDefault(tag, tag)).collect(Collectors.toSet()));
+                                tags.addAll(ao.getTags());
+                            } catch (Exception e) {
+                                //
+                            }
+                        }
+                    }
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
+    public static Schedule addGroupsToOrderPreparation(Schedule schedule, SOSHibernateSession session) {
+        List<OrderParameterisation> orderParameterisations = schedule.getOrderParameterisations();
+        if (orderParameterisations != null) {
+            Set<String> tags = orderParameterisations.stream().map(OrderParameterisation::getTags).filter(Objects::nonNull).flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+            Map<String, String> gt =  new InventoryOrderTagDBLayer(session).getGroupedTags(tags, true).stream().distinct().collect(Collectors
+                    .toMap(GroupedTag::getTag, GroupedTag::toString));
+            if (!gt.isEmpty()) {
+                for (OrderParameterisation op : orderParameterisations) {
+                    if (op.getTags() != null) {
+                        op.setTags(op.getTags().stream().map(tag -> gt.getOrDefault(tag, tag)).collect(Collectors.toSet()));
+                    }
+                }
+            }
+        }
+        return schedule;
+    }
+
+    public static void updateTagsFromOrderPreparation(Schedule schedule, DBItemInventoryConfiguration item) throws JsonProcessingException {
+        boolean hasGroup = false;
+        List<OrderParameterisation> orderParameterisations = schedule.getOrderParameterisations();
+        if (orderParameterisations != null) {
+            Set<String> tags = orderParameterisations.stream().map(OrderParameterisation::getTags).filter(Objects::nonNull).flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+            try {
+                Validator.testJavaNameRulesAtTags("", tags);
+                update(tags.stream());
+            } catch (Exception e) {
+                //
+            }
+            for (OrderParameterisation op : orderParameterisations) {
+                if (op.getTags() != null) {
+                    if (hasGroup(op.getTags())) {
+                        hasGroup = true;
+                        op.setTags(deleteGroupFromTags(op.getTags()));
+                    }
+                }
+            }
+            if (hasGroup) {
+                schedule.setOrderParameterisations(orderParameterisations);
+                item.setContent(JocInventory.toString(schedule));
+            }
+        }
+    }
+    
+    public static FileOrderSource addGroupsToFileOrderSource(FileOrderSource fos, SOSHibernateSession session) throws JsonProcessingException {
+        Set<String> tags = fos.getTags();
+        if (tags != null) {
+            try {
+                Map<String, String> gt =  new InventoryOrderTagDBLayer(session).getGroupedTags(tags, true).stream().distinct().collect(Collectors
+                        .toMap(GroupedTag::getTag, GroupedTag::toString));
+                if (!gt.isEmpty()) {
+                    fos.setTags(tags.stream().map(tag -> gt.getOrDefault(tag, tag)).collect(Collectors.toSet()));  
+                }
+            } catch (Exception e) {
+                //
+            }
+        }
+        return fos;
+    }
+
+    public static void updateTagsFromFileOrderSource(FileOrderSource fos, DBItemInventoryConfiguration item) throws JsonProcessingException {
+        Set<String> tags = fos.getTags();
+        if (tags != null) {
+            try {
+                Validator.testJavaNameRulesAtTags("", tags);
+                update(tags.stream());
+            } catch (Exception e) {
+                //
+            }
+            if (hasGroup(tags)) {
+                fos.setTags(deleteGroupFromTags(tags));
+                item.setContent(JocInventory.toString(fos));
+            }
+        }
+    }
+
+    public static void update(Stream<String> tags) {
+        SOSHibernateSession session = null;
+        try {
+            Map<String, GroupedTag> groupedTags = tags.map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function
+                    .identity()));
+            if (!groupedTags.isEmpty()) {
+
+                session = Globals.createSosHibernateStatelessConnection("updateOrderTags");
+                session.setAutoCommit(false);
+                Globals.beginTransaction(session);
+                
+                InventoryOrderTagDBLayer dbTagLayer = new InventoryOrderTagDBLayer(session);
+                List<DBItemInventoryOrderTag> dbTags = groupedTags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
+
+                ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(session), "workflow");
+                ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(session), "job");
+                // TODO same with historyOrderTags??
+
+                Set<GroupedTag> alreadyExistingTagsInDB = dbTags.stream().map(DBItemInventoryOrderTag::getName).map(GroupedTag::new).collect(
+                        Collectors.toSet());
+                groupedTags.values().removeAll(alreadyExistingTagsInDB); // groupedTags contains only new tags
+
+                if (!groupedTags.isEmpty()) {
+
+                    Set<String> groups = groupedTags.values().stream().map(GroupedTag::getGroup).filter(Optional::isPresent).map(Optional::get)
+                            .collect(Collectors.toSet());
+                    List<DBItemInventoryTagGroup> dbGroups = groups.isEmpty() ? Collections.emptyList() : dbTagLayer.getGroups(groups);
+                    Map<String, Long> dbGroupsMap = dbGroups.stream().collect(Collectors.toMap(DBItemInventoryTagGroup::getName,
+                            DBItemInventoryTagGroup::getId));
+
+                    groups.removeAll(dbGroupsMap.keySet()); // groups contains only new groups
+                    Date date = Date.from(Instant.now());
+
+                    if (!groups.isEmpty()) {
+                        int maxGroupsOrdering = dbTagLayer.getMaxGroupsOrdering();
+                        for (String group : groups) {
+                            DBItemInventoryTagGroup item = new DBItemInventoryTagGroup();
+                            item.setName(group);
+                            item.setModified(date);
+                            item.setOrdering(++maxGroupsOrdering);
+                            dbTagLayer.getSession().save(item);
+                            dbGroupsMap.put(group, item.getId());
+                            // TODO events
+                        }
+                    }
+
+                    int maxOrdering = dbTagLayer.getMaxOrdering();
+                    for (GroupedTag groupedTag : groupedTags.values()) {
+                        DBItemInventoryOrderTag item = new DBItemInventoryOrderTag();
+                        item.setId(null);
+                        item.setModified(date);
+                        item.setName(groupedTag.getTag());
+                        item.setOrdering(++maxOrdering);
+                        if (groupedTag.getGroup().isPresent()) {
+                            item.setGroupId(dbGroupsMap.getOrDefault(groupedTag.getGroup().get(), 0L));
+                        } else {
+                            item.setGroupId(0L);
+                        }
+                        dbTagLayer.getSession().save(item);
+                    }
+                }
+                
+                Globals.commit(session);
+            }
+        } catch (Exception e) {
+            Globals.rollback(session);
+            LOGGER.warn("", e);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
+    private static Set<String> deleteGroupFromTags(Set<String> tagsWithGroups) {
+        return tagsWithGroups.stream().map(GroupedTag::new).map(GroupedTag::getTag).collect(Collectors.toSet());
+    }
+    
+    private static boolean hasGroup(Set<String> tagsWithGroups) {
+        return tagsWithGroups.stream().anyMatch(s -> s.contains(":"));
     }
 
 }
