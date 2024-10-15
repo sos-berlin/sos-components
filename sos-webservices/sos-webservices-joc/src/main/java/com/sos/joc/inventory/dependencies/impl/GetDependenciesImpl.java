@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,23 +94,26 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                         .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
                                 Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
                 // add all primary referenced by Ids
-                item.getReferencedByIds().addAll(groupedDepInventoryIds.values().stream().flatMap(List::stream)
-                        .filter(id -> !id.equals(item.getRequestedItem().getId())).collect(Collectors.toSet()));
-                // add all primary references Ids
+                Set<Long> referencedByIds = groupedDepInventoryIds.values().stream().flatMap(List::stream)
+                        .filter(id -> !id.equals(item.getRequestedItem().getId())).collect(Collectors.toSet());
+                item.getReferencedByIds().addAll(referencedByIds);
                 
-                item.getReferencesIds().addAll(groupedDepInventoryIds.entrySet().stream().map(entry -> {
+                // add all primary references Ids
+                Set<Long> referencesIds = groupedDepInventoryIds.entrySet().stream().map(entry -> {
                     if(entry.getValue().contains(item.getRequestedItem().getId())) {
                         return entry.getKey();
                     } else {
                         return null;
                     }
-                }).filter(Objects::nonNull).collect(Collectors.toSet()));
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
+                item.getReferencesIds().addAll(referencesIds);
                 resultItems.getRequesteditems().add(item);
-                // all current referenced by ids which are not already processed
-                Set<Long> currentReferencedByIds = groupedDepInventoryIds.values().stream().flatMap(List::stream)
+                // all current referenced ids which are not already processed
+                Set<Long> allCurrentIds = Stream.concat(referencedByIds.stream(),referencesIds.stream())
                         .filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet());
                 // add all items once to allUniqueItems, recursively 
-                resolveRecursively(allUniqueItems, currentReferencedByIds, dblayer);
+                resolveReferencesRecursively(allUniqueItems, allCurrentIds, dblayer);
+                
             }
             resultItems.setAllUniqueItems(allUniqueItems);
             return resultItems;
@@ -117,29 +121,39 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         return new DependencyItems(Collections.emptyMap());
     }
     
-    private static void resolveRecursively(Map <Long, DBItemInventoryConfiguration> allUniqueItems, Set<Long> referencedByIds, InventoryDBLayer dblayer) {
-        if(!referencedByIds.isEmpty()) {
-            Set<DBItemInventoryConfiguration> referencedByInvItems = referencedByIds.stream().map(id -> {
+    private static void resolveReferencesRecursively(Map <Long, DBItemInventoryConfiguration> allUniqueItems, Set<Long> referencedIds,
+            InventoryDBLayer dblayer) {
+        if(!referencedIds.isEmpty()) {
+            Set<DBItemInventoryConfiguration> referencedInvItems = referencedIds.stream().map(id -> {
                 try {
                     return dblayer.getConfiguration(id);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet());
-            if(!referencedByInvItems.isEmpty()) {
-                Map<Long, DBItemInventoryConfiguration> currentUniqueRefByItems = referencedByInvItems.stream()
+            if(!referencedInvItems.isEmpty()) {
+                Map<Long, DBItemInventoryConfiguration> currentUniqueItems = referencedInvItems.stream()
                         .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
-                allUniqueItems.putAll(currentUniqueRefByItems);
-                Set<Long> innerRefByItems = currentUniqueRefByItems.keySet().stream().map(id -> {
-                    try {
-                        return dblayer.getReferencesByIds(id);
-                    } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                    }
-                }).flatMap(Set::stream).collect(Collectors.toSet());
+                allUniqueItems.putAll(currentUniqueItems);
+                Set<Long> innerRefItems = Stream.concat(
+                        currentUniqueItems.keySet().stream().map(id -> {
+                            try {
+                                return dblayer.getReferencesByIds(id);
+                            } catch (SOSHibernateException e) {
+                                throw new JocSosHibernateException(e);
+                            }
+                        }).flatMap(Set::stream), 
+                        currentUniqueItems.keySet().stream().map(id -> {
+                            try {
+                                return dblayer.getReferencesIds(id);
+                            } catch (SOSHibernateException e) {
+                                throw new JocSosHibernateException(e);
+                            }
+                        }).flatMap(Set::stream)).filter(id -> !allUniqueItems.keySet().contains(id))
+                    .collect(Collectors.toSet());
                 // recursion
-                if(!innerRefByItems.isEmpty()) {
-                    resolveRecursively(allUniqueItems, innerRefByItems, dblayer);
+                if(!innerRefItems.isEmpty()) {
+                    resolveReferencesRecursively(allUniqueItems, innerRefItems, dblayer);
                 }
             }
         }
@@ -178,93 +192,4 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         return newResponseItem;
     }
     
-//    private List<ResponseItem> process(GetDependenciesRequest filter, SOSHibernateSession session) throws SOSHibernateException,
-//            JsonMappingException, JsonProcessingException {
-//        InventoryDBLayer dblayer = new InventoryDBLayer(session);
-//        List<ResponseItem> items = new ArrayList<ResponseItem>();
-//        // read all dependency items from DB
-//        List<DBItemInventoryDependency> allDependencies = dblayer.getAllDependencies();
-//        
-//        
-//        // get all inventory Ids for all items and their dependencies
-//        List<Long> invIds = allDependencies.stream().map(dep -> Arrays.asList(dep.getInvId(), dep.getInvDependencyId()))
-//                .flatMap(List::stream).distinct().collect(Collectors.toList());
-//        // get all inventory objects from db
-//        List<DBItemInventoryConfiguration> invDbItems = dblayer.getConfigurations(invIds);
-//        Map<Long, DBItemInventoryConfiguration> cfgs = invDbItems.stream()
-//                .collect(Collectors.toMap(DBItemInventoryConfiguration::getId, Function.identity()));
-//
-//        Map<Long, ConfigurationObject> cfgObjs = invDbItems.stream()
-//                .map(item -> DependencyResolver.convert(item)).collect(Collectors.toMap(ConfigurationObject::getId, Function.identity()));
-//        // group dependencies: <inventoryid of object, List of its referencedBy inventoryIds>
-//        Map<Long, List<Long>> groupedDependencyIds = allDependencies.stream()
-//                .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
-//                        Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
-//        // map 
-//        Map<Long, ResponseItem> dependencyToIdMap = Stream.concat(
-//                groupedDependencyIds.keySet().stream(), 
-//                groupedDependencyIds.values().stream().flatMap(List::stream))
-//                .distinct().map(id -> cfgObjs.get(id)).filter(Objects::nonNull).map(ResponseItem::new)
-//                .collect(Collectors.toMap(item -> item.getDependency().getId(), Function.identity()));
-//        
-//        
-//        Map<ConfigurationObject, ResponseItem> configurationMap = 
-//                new HashMap<ConfigurationObject, ResponseItem>();
-//        for(Map.Entry<Long, List<Long>> entry : groupedDependencyIds.entrySet()) {
-//            ResponseItem dep = dependencyToIdMap.get(entry.getKey());
-//            if(dep != null) {
-//                Set<ResponseItem> referencedBy = dep.getReferencedBy();
-//                entry.getValue().stream().map(id -> dependencyToIdMap.get(id)).forEach(depCfg -> {
-//                    if(depCfg.getDependency().getId() != entry.getKey()) {
-//                        referencedBy.add(depCfg);
-//                    }
-//                });
-//                configurationMap.put(cfgObjs.get(entry.getKey()), dep);
-//            }
-//        }
-//        resolveReferences(session, configurationMap, dependencyToIdMap);
-//        
-//        for(RequestItem item : filter.getConfigurations()) {
-//            Optional<DBItemInventoryConfiguration> inventoryDbItemOptional = cfgs.values().stream()
-//                    .filter(cfg -> cfg.getName().equals(item.getName()) 
-//                            && cfg.getTypeAsEnum().equals(ConfigurationType.fromValue(item.getType()))).findFirst();
-//            if(inventoryDbItemOptional.isPresent()) {
-//                DBItemInventoryConfiguration inventoryDbItem = inventoryDbItemOptional.get();
-//                ResponseItem depCfg = configurationMap.get(cfgObjs.get(inventoryDbItem.getId()));
-//                if(depCfg != null) {
-//                    items.add(depCfg);
-//                }
-//            }
-//        }
-//        return items;
-//    }
-// 
-//    public static List<ResponseItem> resolveReferences(SOSHibernateSession session, 
-//            Map<ConfigurationObject, ResponseItem> dependencyConfigurationMap, Map<Long, ResponseItem> cfgObjs)
-//                    throws SOSHibernateException,
-//                JsonMappingException, JsonProcessingException {
-//        // this method is in use
-//        List<ResponseItem> resolvedDependencies = new ArrayList<ResponseItem>();
-//        for(Map.Entry<ConfigurationObject, ResponseItem> entry : dependencyConfigurationMap.entrySet()) {
-//            ResponseItem newInventoryDependency = cfgObjs.get(entry.getKey().getId());
-////            newInventoryDependency.getReferencedBy().add(entry.getValue());
-//            resolveReferences(newInventoryDependency, cfgObjs, session);
-//            resolvedDependencies.add(newInventoryDependency);
-//        }
-//        return resolvedDependencies;
-//    }
-//    
-//    private static void resolveReferences(ResponseItem item, Map<Long, ResponseItem> cfgObjs, SOSHibernateSession session)
-//            throws SOSHibernateException {
-//        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-//        Set<Long> referencesIds = dbLayer.getReferencesIds(item.getDependency().getId());
-//        if(!referencesIds.isEmpty()) {
-//            for(Long id : referencesIds) {
-//                if(id != item.getDependency().getId()) {
-//                    item.getReferences().add(cfgObjs.get(id));
-//                }
-//            }
-//        }
-//    }
-
 }
