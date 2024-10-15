@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
@@ -50,6 +51,9 @@ public class DBItemHistoryOrderTag extends DBItem {
     @Column(name = "[START_TIME]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date startTime;
+    
+    @Transient
+    private String group;
     
     public DBItemHistoryOrderTag() {
         //
@@ -114,6 +118,9 @@ public class DBItemHistoryOrderTag extends DBItem {
     }
 
     public void setGroupId(Long val) {
+        if (val == null) {
+            val = 0L;
+        }
         groupId = val;
     }
     
@@ -134,6 +141,21 @@ public class DBItemHistoryOrderTag extends DBItem {
 
     public void setStartTime(Date val) {
         startTime = val;
+    }
+    
+    @Transient
+    public String getGroup() {
+        return group;
+    }
+
+    @Transient
+    public void setGroup(String val) {
+        group = val;
+    }
+    
+    @Transient
+    public String getGroupedTag() {
+        return group == null || group.isBlank() ? tagName : group + ":" + tagName;
     }
 
 }

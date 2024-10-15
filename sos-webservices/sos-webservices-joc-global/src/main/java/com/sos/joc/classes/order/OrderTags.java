@@ -573,24 +573,25 @@ public class OrderTags {
             return Collections.emptyMap();
         }
         
-        // TODO join with groups
-
         Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds);
 
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+        StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as group from ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
+        hql.append(" g on t.groupId = g.id");
+        
         List<String> clauses = new ArrayList<>(2);
         if (!controllerId.isBlank()) {
-            clauses.add("controllerId=:controllerId");
+            clauses.add("t.controllerId=:controllerId");
         }
-        String clause = IntStream.range(0, chunkedOrderIds.size()).mapToObj(i -> "orderId in (:orderIds" + i + ")").collect(Collectors.joining(
+        String clause = IntStream.range(0, chunkedOrderIds.size()).mapToObj(i -> "t.orderId in (:orderIds" + i + ")").collect(Collectors.joining(
                 " or "));
         if (chunkedOrderIds.size() > 1) {
             clause = "(" + clause + ")";
         }
         clauses.add(clause);
-        hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by ordering");
+        hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by t.ordering");
 
-        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
+        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString(), DBItemHistoryOrderTag.class);
         if (!controllerId.isBlank()) {
             query.setParameter("controllerId", controllerId);
         }
@@ -602,7 +603,7 @@ public class OrderTags {
         if (result == null) {
             return Collections.emptyMap();
         }
-        return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getTagName,
+        return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getGroupedTag,
                 Collectors.toCollection(LinkedHashSet::new))));
     }
     
@@ -614,7 +615,8 @@ public class OrderTags {
 
         Collection<List<Long>> chunkedHistoryIds = getChunkedCollection(historyIds);
         return chunkedHistoryIds.stream().map(chunk -> getTagsByChunkOfHistoryIds(controllerId, chunk, connection)).flatMap(List::stream).collect(
-                Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getTagName, Collectors.toSet())));
+                Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getGroupedTag, Collectors
+                        .toSet())));
     }
     
     private static List<DBItemHistoryOrderTag> getTagsByChunkOfHistoryIds(String controllerId, List<Long> historyIds,
@@ -623,19 +625,19 @@ public class OrderTags {
             return Collections.emptyList();
         }
         
-        // TODO join with groups
-
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+            StringBuilder hql = new StringBuilder("select t.id as id, t.tagName as tagName, g.name as group from ");
+            hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
+            hql.append(" g on t.groupId = g.id");
             List<String> clauses = new ArrayList<>(3);
             if (controllerId != null && !controllerId.isBlank()) {
-                clauses.add("controllerId=:controllerId");
+                clauses.add("t.controllerId=:controllerId");
             }
-            clauses.add("historyId != 0");
-            clauses.add("historyId in (:historyIds)");
+            clauses.add("t.historyId != 0");
+            clauses.add("t.historyId in (:historyIds)");
             hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
 
-            Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString());
+            Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString(), DBItemHistoryOrderTag.class);
             if (controllerId != null && !controllerId.isBlank()) {
                 query.setParameter("controllerId", controllerId);
             }
@@ -661,21 +663,22 @@ public class OrderTags {
             return Collections.emptySet();
         }
         
-        // TODO join with groups
-        
         connection = Globals.createSosHibernateStatelessConnection(OrderTags.class.getSimpleName());
-        StringBuilder hql = new StringBuilder("select tagName from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-        hql.append(" where controllerId=:controllerId");
-        hql.append(" and orderId=:orderId").append(" order by ordering");
+        
+        StringBuilder hql = new StringBuilder("select new ").append(GroupedTag.class.getName());
+        hql.append("(g.name, t.tagName) from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ");
+        hql.append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on t.groupId = g.id");
+        hql.append(" where t.controllerId=:controllerId");
+        hql.append(" and t.orderId=:orderId").append(" order by t.ordering");
 
-        Query<String> query = connection.createQuery(hql);
+        Query<GroupedTag> query = connection.createQuery(hql);
         query.setParameter("controllerId", controllerId);
         query.setParameter("orderId", orderId);
-        List<String> result = connection.getResultList(query);
+        List<GroupedTag> result = connection.getResultList(query);
         if (result == null) {
             return Collections.emptySet();
         }
-        return result.stream().collect(Collectors.toCollection(LinkedHashSet::new));
+        return result.stream().map(GroupedTag::toString).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public static List<String> getMainOrderIdsByTags(String controllerId, Set<String> oTags) {
