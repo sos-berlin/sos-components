@@ -515,6 +515,7 @@ public class OrdersHelper {
 //            boolean isDisrupted = hhh.get(hhh.size() - 1).outcome().show().contains("Disrupted");
 //        }
         boolean isDisrupted = false;
+        boolean isInRetryInstruction = isInRetryInstruction(jOrder, controllerState);
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
         if (outcomes != null && !outcomes.isEmpty()) {
             o.setLastOutcome(outcomes.get(outcomes.size() - 1).getOutcome());
@@ -526,7 +527,7 @@ public class OrdersHelper {
             o.setHistoricOutcome(null);
             o.setLastOutcome(null);
         }
-
+        
         Either<Problem, AgentPath> opt = jOrder.attached();
         if (opt.isRight()) {
             o.setAgentId(opt.get().string());
@@ -535,7 +536,8 @@ public class OrdersHelper {
         // o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         JPosition origPos = JPosition.apply(jOrder.asScala().position());
         String jsonPos = origPos.toJson().replaceAll("\"(try|catch|cycle)\\+?[^\"]*", "\"$1");
-        if (jOrder.asScala().state() instanceof Order.DelayingRetry) { //change catch position -> try position
+        if (isInRetryInstruction) {// || (oItem.getIsSuspended() && isCaught)) { 
+            //change catch position -> try position in a retry or after suspend-reset in a retry
             jsonPos = jsonPos.replaceFirst("\"catch(\"\\s*,\\s*\\d+\\s*])", "\"try$1");
         }
         JPosition pos = JPosition.fromJson(jsonPos).get();
@@ -547,7 +549,7 @@ public class OrdersHelper {
         o.setExpectedNotices(getStillExpectedNotices(jOrder.id(), oItem, controllerState));
         int positionsSize = o.getPosition().size();
         
-        if (isRetryState(jOrder)) {
+        if (isInRetryInstruction || isRetryState(jOrder)) {
             OrderRetryState rs = new OrderRetryState();
             rs.setNext(oItem.getState().getUntil());
             if (positionsSize > 2) {
@@ -563,7 +565,7 @@ public class OrdersHelper {
                 }
             }
             o.setRetryState(rs);
-            if (outcomes != null && outcomes.size() > 1) { // ignore last outcome from catch instruction; always succeeded
+            if (outcomes != null && outcomes.size() > 1) { // ignore last outcome from catch instruction; always caught
                 o.setLastOutcome(outcomes.get(outcomes.size() - 2).getOutcome());
             }
         }
@@ -667,6 +669,11 @@ public class OrdersHelper {
             o.setTags(orderTags.get(getParentOrderId(o.getOrderId())));
         }
         return o;
+    }
+    
+    private static boolean isInRetryInstruction(JOrder jOrder, JControllerState controllerState) {
+        return js7.data.workflow.instructions.Retry.class.isAssignableFrom(controllerState.asScala().instruction(jOrder.asScala().workflowPosition())
+                .getClass());
     }
     
     private static JPosition moveChildOrderPosToImplicitEnd(JPosition pos, JOrder o, JControllerState controllerState) {
