@@ -237,6 +237,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbSubagents.getKey()));
                             AgentDirectorClusterState clusterState = getClusterState(jAgentRefState);
                             agentClusterStates.put(dbSubagents.getKey(), clusterState);
+                            
+                            Optional<String> noActiveClusterNode = Optional.ofNullable(jAgentRefState).map(JAgentRefState::asScala).map(
+                                    AgentRefState::problem).map(OptionConverters::toJava).map(p -> p.map(ProblemHelper::getErrorMessage).filter(m -> m
+                                            .contains("NoActiveClusterNode")).orElse("")).filter(m -> !m.isEmpty());
 
                             subagentsPerAgentId.put(dbSubagents.getKey(), dbSubagents.getValue().stream().sorted(Comparator.comparingInt(
                                     DBItemInventorySubAgentInstance::getOrdering)).map(dbSubAgent -> {
@@ -258,7 +262,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                         
                                         if (Proxies.isCoupled(controllerId)) {
                                             if (SubagentDirectorType.NO_DIRECTOR.equals(dbSubAgent.getDirectorAsEnum())) {
-                                                addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState, subagentIsLost);
+                                                addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState, subagentIsLost,
+                                                        noActiveClusterNode, false);
 
                                             } else {
                                                 boolean isActive = isActive(clusterState, dbSubAgent);
@@ -279,14 +284,16 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                         if (clusterState != null && clusterState.getLostNodeProblem().isPresent()) {
                                                             subagent.setErrorMessage(clusterState.getLostNodeProblem().get());
                                                         } else {
-                                                            subagent.setErrorMessage("ClusterNodeLossNotConfirmed: This director is lost. Requires user confirmation");
+                                                            subagent.setErrorMessage(
+                                                                    "ClusterNodeLossNotConfirmed: This director is lost. Requires user confirmation");
                                                         }
                                                     }
                                                     AgentStateText stateText = getAgentStateText(couplingState, optProblem, subagentIsLost);
                                                     AgentStateReason stateReason = getAgentReasonText(couplingState, optProblem);
                                                     subagent.setState(getState(stateText, stateReason));
                                                 } else {
-                                                    addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState, subagentIsLost);
+                                                    addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState, subagentIsLost,
+                                                            noActiveClusterNode, true);
                                                 }
                                             }
                                         }
@@ -512,11 +519,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         return agent;
     }
     
-    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem) {
+    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<?> optProblem) {
         return getAgentStateText(couplingState, optProblem, Optional.empty());
     }
 
-    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem,
+    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<?> optProblem,
             Optional<SubagentDirectorType> subagentIsLost) {
         if (couplingState instanceof DelegateCouplingState.ShutDown$) {
             return AgentStateText.SHUTDOWN;
@@ -538,7 +545,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         return AgentStateText.UNKNOWN;
     }
     
-    private static AgentStateReason getAgentReasonText(DelegateCouplingState couplingState, Optional<Problem> optProblem) {
+    private static AgentStateReason getAgentReasonText(DelegateCouplingState couplingState, Optional<?> optProblem) {
         if (optProblem.isPresent()) {
             return null;
         }
@@ -602,7 +609,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     
     private static SubagentV addSubagentState(SubagentV subagent, DBItemInventorySubAgentInstance dbSubAgent,
             Map<SubagentId, JSubagentItemState> subagentItemStates, AgentDirectorClusterState clusterState,
-            Optional<SubagentDirectorType> subagentIsLost) {
+            Optional<SubagentDirectorType> subagentIsLost, Optional<String> noActiveClusterNode, boolean isDirector) {
         AgentStateText stateText = AgentStateText.UNKNOWN;
         AgentStateReason stateReason = null;
         JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
@@ -612,9 +619,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             DelegateCouplingState couplingState = subagentItemState.couplingState();
             OptionConverters.toJava(subagentItemState.platformInfo()).map(PlatformInfo::js7Version).map(Version::string).ifPresent(i -> subagent
                     .setVersion(i));
-            Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
+            Optional<String> optProblem = OptionConverters.toJava(subagentItemState.problem()).map(ProblemHelper::getErrorMessage);
+            if (noActiveClusterNode.isPresent()) {
+                optProblem = Optional.of(noActiveClusterNode.get());
+            }
             if (optProblem.isPresent()) {
-                subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                subagent.setErrorMessage(optProblem.get());
             } else if (subagentIsLost.isPresent()) {
                 if (clusterState != null && clusterState.getLostNodeProblem().isPresent()) {
                     subagent.setErrorMessage(clusterState.getLostNodeProblem().get());
@@ -622,7 +632,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     subagent.setErrorMessage("ClusterNodeLossNotConfirmed: This director is lost. Requires user confirmation");
                 }
             }
-            stateText = getAgentStateText(couplingState, optProblem, subagentIsLost);
+            if (isDirector || !noActiveClusterNode.isPresent()) {
+                stateText = getAgentStateText(couplingState, optProblem, subagentIsLost);
+            }
             stateReason = getAgentReasonText(couplingState, optProblem);
         }
         subagent.setState(getState(stateText, stateReason));
