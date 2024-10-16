@@ -575,7 +575,7 @@ public class OrderTags {
         
         Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds);
 
-        StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as group from ");
+        StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as groupName from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
         hql.append(" g on t.groupId = g.id");
         
@@ -626,7 +626,7 @@ public class OrderTags {
         }
         
         try {
-            StringBuilder hql = new StringBuilder("select t.id as id, t.tagName as tagName, g.name as group from ");
+            StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as groupName from ");
             hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
             hql.append(" g on t.groupId = g.id");
             List<String> clauses = new ArrayList<>(3);

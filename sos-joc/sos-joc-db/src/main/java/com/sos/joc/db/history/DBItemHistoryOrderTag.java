@@ -53,7 +53,7 @@ public class DBItemHistoryOrderTag extends DBItem {
     private Date startTime;
     
     @Transient
-    private String group;
+    private String groupName;
     
     public DBItemHistoryOrderTag() {
         //
@@ -144,18 +144,18 @@ public class DBItemHistoryOrderTag extends DBItem {
     }
     
     @Transient
-    public String getGroup() {
-        return group;
+    public String getGroupName() {
+        return groupName;
     }
 
     @Transient
-    public void setGroup(String val) {
-        group = val;
+    public void setGroupName(String val) {
+        groupName = val;
     }
     
     @Transient
     public String getGroupedTag() {
-        return group == null || group.isBlank() ? tagName : group + ":" + tagName;
+        return groupName == null || groupName.isBlank() ? tagName : groupName + ":" + tagName;
     }
 
 }
