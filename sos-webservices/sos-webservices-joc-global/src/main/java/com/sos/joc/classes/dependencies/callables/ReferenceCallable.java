@@ -31,8 +31,6 @@ public class ReferenceCallable implements Callable<ReferencedDbItem>{
         } finally {
             Globals.disconnect(session);
         }
-//        ReferencedDbItem item = DependencyResolver.resolveReferencedBy(inventoryItem, groupedItems);
-//        return DependencyResolver.resolveReferences(item, groupedItems);
     }
 
 }

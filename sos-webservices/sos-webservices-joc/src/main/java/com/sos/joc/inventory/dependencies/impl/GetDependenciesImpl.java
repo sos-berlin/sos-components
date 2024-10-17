@@ -32,6 +32,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
+import com.sos.joc.model.inventory.dependencies.get.AffectedResponseItem;
 import com.sos.joc.model.inventory.dependencies.get.RequestedResponseItem;
 import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
 import com.sos.schema.JsonValidator;
@@ -108,7 +109,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
                 item.getReferencesIds().addAll(referencesIds);
                 resultItems.getRequesteditems().add(item);
-                // all current referenced ids which are not already processed
+                // all current referenced ids which are not already processed to check for further references
                 Set<Long> allCurrentIds = Stream.concat(referencedByIds.stream(),referencesIds.stream())
                         .filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet());
                 // add all items once to allUniqueItems, recursively 
@@ -187,9 +188,16 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             }).map(dbItem -> DependencyResolver.convert(dbItem)).collect(Collectors.toSet()));
             newResponseItem.getRequestedItems().add(reqRes);
         }
-        newResponseItem.setAffectedItems(allUniqueItems.values().stream().map(item -> DependencyResolver.convert(item))
+        newResponseItem.setAffectedItems(allUniqueItems.values().stream().map(item -> convert(item))
                 .collect(Collectors.toSet()));
         return newResponseItem;
     }
     
+    public static AffectedResponseItem convert(DBItemInventoryConfiguration item) {
+        AffectedResponseItem responseItem = new AffectedResponseItem();
+        responseItem.setItem(DependencyResolver.convert(item));
+        responseItem.setDraft(!(item.getDeployed() || item.getReleased()));
+        return responseItem;
+    }
+
 }
