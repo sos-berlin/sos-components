@@ -5,11 +5,12 @@ import com.sos.joc.classes.tag.ATagsModifyImpl;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.tags.resource.ITags;
+import com.sos.joc.tags.resource.ITagsUsedBy;
 
 import jakarta.ws.rs.Path;
 
 @Path("tags")
-public class TagsImpl extends ATagsModifyImpl<DBItemInventoryTag> implements ITags {
+public class TagsImpl extends ATagsModifyImpl<DBItemInventoryTag> implements ITags, ITagsUsedBy {
 
     private static final String API_CALL = "./tags";
     private static final String API_USEDBY_CALL = "./tags/used";
