@@ -1023,4 +1023,5 @@ public class DependencyResolver {
         object.setObjectType(item.getTypeAsEnum());
         return object;
     }
+
 }
