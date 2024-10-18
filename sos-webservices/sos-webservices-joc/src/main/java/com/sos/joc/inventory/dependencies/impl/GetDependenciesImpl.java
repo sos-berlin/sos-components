@@ -11,9 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -44,7 +41,6 @@ import jakarta.ws.rs.Path;
 public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependencies {
     
     private static final String API_CALL = "./inventory/dependencies";
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetDependenciesImpl.class);
     
     @Override
     public JOCDefaultResponse postGetDependencies(String xAccessToken, byte[] dependencyFilter) {
@@ -56,11 +52,6 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
             DependencyItems depItems = getRelatedDependencyItems(filter, dblayer);
-            // logging
-            if(!depItems.getAllUniqueItems().isEmpty()) {
-                depItems.getAllUniqueItems().entrySet().forEach(entry -> 
-                LOGGER.info(entry.getKey() + " : " + entry.getValue().getName() + "::" + entry.getValue().getTypeAsEnum().value()));
-            }
             GetDependenciesResponse response  = new GetDependenciesResponse();
             response.setDeliveryDate(Date.from(Instant.now()));
             response.setDependencies(resolve(depItems, dblayer));
