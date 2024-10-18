@@ -167,17 +167,18 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         for(DependencyItem requestedItem : requested) {
             RequestedResponseItem reqRes = new RequestedResponseItem();
             DBItemInventoryConfiguration reqItem =  requestedItem.getRequestedItem();
-            reqRes.setConfiguration(DependencyResolver.convert(reqItem));
-            reqRes.setName(reqItem.getName());
-            reqRes.setType(reqItem.getTypeAsEnum().value());
-
+            if(reqItem != null) {
+                reqRes.setConfiguration(DependencyResolver.convert(reqItem));
+                reqRes.setName(reqItem.getName());
+                reqRes.setType(reqItem.getTypeAsEnum().value());
+            }
             reqRes.setReferencedBy(requestedItem.getReferencedByIds().stream().map(id -> {
                 try {
                     return dblayer.getConfiguration(id);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
-            }).map(dbItem -> DependencyResolver.convert(dbItem)).collect(Collectors.toSet()));
+            }).filter(Objects::nonNull).map(dbItem -> DependencyResolver.convert(dbItem)).collect(Collectors.toSet()));
             
             reqRes.setReferences(requestedItem.getReferencesIds().stream().map(id -> {
                 try {
@@ -185,11 +186,11 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
-            }).map(dbItem -> DependencyResolver.convert(dbItem)).collect(Collectors.toSet()));
+            }).filter(Objects::nonNull).map(dbItem -> DependencyResolver.convert(dbItem)).collect(Collectors.toSet()));
             newResponseItem.getRequestedItems().add(reqRes);
         }
-        newResponseItem.setAffectedItems(allUniqueItems.values().stream().map(item -> convert(item))
-                .collect(Collectors.toSet()));
+        newResponseItem.setAffectedItems(allUniqueItems.values().stream().filter(Objects::nonNull)
+                .map(item -> convert(item)).collect(Collectors.toSet()));
         return newResponseItem;
     }
     
