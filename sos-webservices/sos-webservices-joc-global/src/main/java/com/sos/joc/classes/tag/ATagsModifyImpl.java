@@ -110,29 +110,32 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             break;
 
         case ORDERING:
-            List<T> dbAllTags = dbLayer.getAllTags();
-            Map<String, T> mappedByName = dbAllTags.stream().collect(Collectors.toMap(T::getName, Function.identity()));
-            int ordering = 1;
-            for (String name : groupedTags.keySet()) {
-                T dbItem = mappedByName.remove(name);
-                if (dbItem == null) {
-                    continue;
+            if (!modifyTags.getTags().isEmpty()) {
+                List<T> dbAllTags = dbLayer.getAllTags();
+                Map<String, T> mappedByName = dbAllTags.stream().collect(Collectors.toMap(T::getName, Function.identity()));
+                int ordering = 1;
+                for (String groupedTag : modifyTags.getTags()) {
+                    String name = new GroupedTag(groupedTag).getTag();
+                    T dbItem = mappedByName.remove(name);
+                    if (dbItem == null) {
+                        continue;
+                    }
+                    if (ordering != dbItem.getOrdering()) {
+                        dbItem.setOrdering(ordering);
+                        dbLayer.getSession().update(dbItem);
+                    }
+                    ordering++;
                 }
-                if (ordering != dbItem.getOrdering()) {
-                    dbItem.setOrdering(ordering);
-                    dbLayer.getSession().update(dbItem);
+                for (T dbItem : mappedByName.values().stream().sorted(Comparator.comparingInt(T::getOrdering)).collect(Collectors.toCollection(
+                        LinkedList::new))) {
+                    if (ordering != dbItem.getOrdering()) {
+                        dbItem.setOrdering(ordering);
+                        dbLayer.getSession().update(dbItem);
+                    }
+                    ordering++;
                 }
-                ordering++;
+                events = Stream.of(new InventoryTagsEvent());
             }
-            for (T dbItem : mappedByName.values().stream().sorted(Comparator.comparingInt(T::getOrdering)).collect(Collectors.toCollection(
-                    LinkedList::new))) {
-                if (ordering != dbItem.getOrdering()) {
-                    dbItem.setOrdering(ordering);
-                    dbLayer.getSession().update(dbItem);
-                }
-                ordering++;
-            }
-            events = Stream.of(new InventoryTagsEvent());
             break;
         }
         return events;
