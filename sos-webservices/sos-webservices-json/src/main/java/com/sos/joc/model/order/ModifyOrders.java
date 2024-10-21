@@ -40,7 +40,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "kill",
     "deep",
     "reset",
+    "force",
     "position",
+    "fromCurrentBlock",
     "variables",
     "cycleEndTime",
     "auditLog"
@@ -128,8 +130,22 @@ public class ModifyOrders {
     @JsonProperty("reset")
     @JsonPropertyDescription("only relevant for 'suspend'")
     private Boolean reset = false;
+    /**
+     * only relevant for 'resume'
+     * 
+     */
+    @JsonProperty("force")
+    @JsonPropertyDescription("only relevant for 'resume'")
+    private Boolean force = false;
     @JsonProperty("position")
     private Object position;
+    /**
+     * only relevant for 'resume'
+     * 
+     */
+    @JsonProperty("fromCurrentBlock")
+    @JsonPropertyDescription("only relevant for 'resume'")
+    private Boolean fromCurrentBlock = false;
     /**
      * key-value pairs
      * <p>
@@ -373,6 +389,24 @@ public class ModifyOrders {
     public void setReset(Boolean reset) {
         this.reset = reset;
     }
+    
+    /**
+     * only relevant for 'resume'
+     * 
+     */
+    @JsonProperty("force")
+    public Boolean getForce() {
+        return force;
+    }
+
+    /**
+     * only relevant for 'resume'
+     * 
+     */
+    @JsonProperty("force")
+    public void setForce(Boolean force) {
+        this.force = force;
+    }
 
     @JsonProperty("position")
     public Object getPosition() {
@@ -387,6 +421,24 @@ public class ModifyOrders {
     @JsonProperty("position")
     public void setPosition(Object position) {
         this.position = position;
+    }
+    
+    /**
+     * only relevant for 'resume'
+     * 
+     */
+    @JsonProperty("fromCurrentBlock")
+    public Boolean getFromCurrentBlock() {
+        return fromCurrentBlock;
+    }
+
+    /**
+     * only relevant for 'resume'
+     * 
+     */
+    @JsonProperty("fromCurrentBlock")
+    public void setFromCurrentBlock(Boolean fromCurrentBlock) {
+        this.fromCurrentBlock = fromCurrentBlock;
     }
 
     /**
@@ -457,12 +509,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("reset", reset).append("position", position).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("reset", reset).append("force", force).append("position", position).append("fromCurrentBlock", fromCurrentBlock).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(deep).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(dateFrom).append(kill).append(states).append(cycleEndTime).append(dateTo).append(reset).append(orderIds).append(position).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(deep).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(dateFrom).append(kill).append(states).append(cycleEndTime).append(dateTo).append(reset).append(force).append(fromCurrentBlock).append(orderIds).append(position).toHashCode();
     }
 
     @Override
@@ -474,7 +526,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(deep, rhs.deep).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(kill, rhs.kill).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(reset, rhs.reset).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(deep, rhs.deep).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(kill, rhs.kill).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(reset, rhs.reset).append(force, rhs.force).append(force, rhs.force).append(fromCurrentBlock, rhs.fromCurrentBlock).append(position, rhs.position).isEquals();
     }
 
 }
