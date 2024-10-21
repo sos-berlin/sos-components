@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.DependencyUpdate;
 import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.agent.AgentClusterWatch;
@@ -100,7 +101,7 @@ public class JocServletContainer extends ServletContainer {
         ClusterWatch.getInstance();
         OrderTags.getInstance();
         JocClusterService.getInstance().start(StartupMode.automatic, true);
-
+        DependencyUpdate.getInstance().updateThreaded();
         try {
             cleanupOldDeployedFolders(false);
         } catch (Exception e) {
@@ -122,7 +123,7 @@ public class JocServletContainer extends ServletContainer {
         JocClusterServiceLogger.clearAllLoggers();
         // 2 - close proxies
         Proxies.closeAll();
-
+        DependencyUpdate.getInstance().close();
         if (Globals.sosHibernateFactory != null) {
             // if (Globals.sosHibernateFactory.dbmsIsH2()) {
             // SOSHibernateSession connection = null;
