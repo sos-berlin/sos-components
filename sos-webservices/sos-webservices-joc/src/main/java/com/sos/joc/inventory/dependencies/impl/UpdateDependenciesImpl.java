@@ -9,6 +9,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.dependencies.DependencyResolver;
+import com.sos.joc.classes.dependencies.common.DependencySemaphore;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -25,8 +26,13 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
     @Override
     public JOCDefaultResponse postUpdateDependencies(String xAccessToken) {
         SOSHibernateSession hibernateSession = null;
+        boolean permitted = false;
         try {
             initLogging(API_CALL, "".getBytes(), xAccessToken);
+            permitted = DependencySemaphore.tryAcquire();
+            if (!permitted) {
+                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            }
             final SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(xAccessToken);
             hibernateSession = session;
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
