@@ -2265,18 +2265,16 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-//    public List<DBItemInventoryConfiguration> getReferencesDependencies(Collection<Long> referencesByIds) throws SOSHibernateException {
-//        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-//        hql.append(" where id in (:invDepId)");
-//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-//        query.setParameterList("invDepId", referencesByIds);
-//        List<DBItemInventoryConfiguration> results = query.getResultList();
-//        if(results != null) {
-//            return results;
-//        } else {
-//            return Collections.emptyList();
-//        }
-//    }
+    public boolean checkDependenciesPresent() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(*) from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        Query<Long> query = getSession().createQuery(hql.toString());
+        Long result = query.getSingleResult();
+        if(result > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);

@@ -257,7 +257,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 }
             }
 
-
             storeAuditLog(account.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
 
@@ -544,18 +543,15 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
-  
-
     private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, AccountChangePassword account,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
 
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
 
-        if (IdentityServiceTypes.JOC
-                .value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-           
-           SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
+        if (IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+
+            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
 
             if (account.getPassword() != null && !account.getPassword().equals(account.getRepeatedPassword())) {
                 JocError error = new JocError();
@@ -598,7 +594,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount.setAccountPassword(SOSPasswordHasher.hash(password));
                 sosHibernateSession.update(dbItemIamAccount);
 
-                
             } else {
                 JocError error = new JocError();
                 error.setMessage("Unknown account or password is wrong");
@@ -678,12 +673,12 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
 
-            if (IdentityServiceTypes.JOC
-                    .value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.KEYCLOAK_JOC.value().equals(
-                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC_JOC.value().equals(
-                                    dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.value().equals(
-                                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(
-                                                    dbItemIamIdentityService.getIdentityServiceType()) ) {
+            if (IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.KEYCLOAK_JOC
+                    .value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC_JOC.value().equals(
+                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(
+                                    dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.FIDO.value().equals(
+                                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.CERTIFICATE.value().equals(
+                                                    dbItemIamIdentityService.getIdentityServiceType())) {
 
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 for (String accountName : accountsFilter.getAccountNames()) {

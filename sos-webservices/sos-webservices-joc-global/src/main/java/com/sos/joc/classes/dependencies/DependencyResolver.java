@@ -2,6 +2,8 @@ package com.sos.joc.classes.dependencies;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +25,7 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 
+import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -813,27 +816,57 @@ public class DependencyResolver {
 
         List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item, groupedItems)).collect(Collectors.toList());
         if(!callables.isEmpty()) {
-            ExecutorService executorService = Executors.newFixedThreadPool(Math.min(callables.size(), 5));
-            for (Future<ReferencedDbItem> result : executorService.invokeAll(callables)) {
-                try {
-                    ReferencedDbItem item = result.get();
-                    // store new dependencies if direct or indirect references are present
-                    if(!(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty())) {
-                        layer.insertOrReplaceDependencies(item.getReferencedItem(), convert(item, session));
-                    }
-                } catch (ExecutionException e) {
-                    if(e.getCause() != null) {
-                        LOGGER.error("", e.getCause());
-                    } else {
+//            ExecutorService executorService = Executors.newFixedThreadPool(Math.min(callables.size(), 5));
+            Integer maxPoolSize = readMaxPoolSize(session.getFactory().getConfigFile());
+            ExecutorService executorService = null;
+            try {
+                if(maxPoolSize != null) {
+                    executorService = Executors.newFixedThreadPool(Math.min(callables.size(), maxPoolSize/2));
+                } else {
+                    executorService = Executors.newFixedThreadPool(Math.min(callables.size(), 1));
+                }
+                for (Future<ReferencedDbItem> result : executorService.invokeAll(callables)) {
+                    try {
+                        ReferencedDbItem item = result.get();
+                        // store new dependencies if direct or indirect references are present
+                        if (!(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty())) {
+                            layer.insertOrReplaceDependencies(item.getReferencedItem(), convert(item, session));
+                        }
+                    } catch (ExecutionException e) {
+                        if (e.getCause() != null) {
+                            LOGGER.error("", e.getCause());
+                        } else {
+                            LOGGER.error("", e);
+                        }
+                    } catch (Exception e) {
                         LOGGER.error("", e);
                     }
-                } catch (Exception e) {
-                    LOGGER.error("", e);
-                }
+                } 
+            } finally {
+                executorService.shutdown();
             }
+            
         }
     }
 
+    private static Integer readMaxPoolSize (Optional<Path> hibernateConfigFile) {
+        try {
+            if(hibernateConfigFile.isPresent()) {
+                String cfg = Files.readString(hibernateConfigFile.get());
+                if(cfg.contains("hibernate.hikari.maximumPoolSize")) {
+                    Configuration config = new Configuration();
+                    config.configure(hibernateConfigFile.get().toUri().toURL());
+                    Object key = config.getProperties().get("hibernate.hikari.maximumPoolSize");
+                    if(key != null) {
+                        return Integer.valueOf(key.toString());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
+    }
 
     /**
      * This method is used by the DependencyResolver as used in ./inventory/dependencies/update API for processing multiple objects 
