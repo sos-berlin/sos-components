@@ -110,29 +110,33 @@ public class IamHistoryDbLayer {
         return getIamAccountList(filter, limit);
     }
 
-    public void addLoginAttempt(SOSAuthCurrentAccount account, Map<String, String> authenticationResult, boolean loginSuccess) throws SOSHibernateException {
+    public void addLoginAttempt(SOSAuthCurrentAccount account, Map<String, String> authenticationResult, boolean loginSuccess)
+            throws SOSHibernateException {
 
         String accountName = account.getAccountname();
         if (accountName == null || accountName.isEmpty()) {
             accountName = SOSAuthHelper.NONE;
         }
-        
-       
+        Long identityServiceId = null;
+
         DBItemIamHistory dbItemIamHistory = new DBItemIamHistory();
         dbItemIamHistory.setAccountName(accountName);
         dbItemIamHistory.setLoginDate(new Date());
         dbItemIamHistory.setLoginSuccess(loginSuccess);
-        dbItemIamHistory.setIdentityServiceId(account.getIdentityService().getIdentityServiceId());
+        if (account.getIdentityService() != null) {
+            identityServiceId = account.getIdentityService().getIdentityServiceId();
+        }
+        dbItemIamHistory.setIdentityServiceId(identityServiceId);
         if (loginSuccess) {
             IamHistoryFilter filter = new IamHistoryFilter();
             filter.setAccountName(accountName);
-            filter.setIdentityServiceId(account.getIdentityService().getIdentityServiceId());
+            filter.setIdentityServiceId(identityServiceId);
             filter.setLoginSuccess(true);
             List<DBItemIamHistory> l = getIamAccountList(filter, 1);
             if (l.size() > 0) {
                 dbItemIamHistory = l.get(0);
                 dbItemIamHistory.setLoginDate(new Date());
-                
+
                 sosHibernateSession.update(dbItemIamHistory);
             } else {
                 sosHibernateSession.save(dbItemIamHistory);

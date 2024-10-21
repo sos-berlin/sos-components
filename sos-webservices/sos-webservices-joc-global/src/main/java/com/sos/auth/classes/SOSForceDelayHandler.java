@@ -110,8 +110,9 @@ public class SOSForceDelayHandler {
         }
         if (delay > 0) {
             try {
-                LOGGER.debug("....force delay for " + delay + " seconds");
-                TimeUnit.MILLISECONDS.sleep(randomizeDelayToMilliseconds(delay));
+                int d = randomizeDelayToMilliseconds(delay);
+                LOGGER.debug("....force delay for " + d + " seconds");
+                TimeUnit.MILLISECONDS.sleep(randomizeDelayToMilliseconds(d));
             } catch (InterruptedException e) {
                 LOGGER.error("", e);
             }

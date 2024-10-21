@@ -649,44 +649,46 @@ public class SOSServicePermissionIam {
                 Map<String, String> authenticationResult = new HashMap<String, String>();
                 Set<String> setOfAccountPermissions = new HashSet<String>();
 
-                if (dbItemIamBlockedAccount != null) {
-                    msg = "Account is blocked";
-                    authenticationResult.put("*none", msg);
-                } else {
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                filter.setDisabled(false);
+                filter.setRequired(true);
+                filter.setSecondFactor(false);
+                filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getFirstIdentityService());
 
-                    IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-                    IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-                    filter.setDisabled(false);
-                    filter.setRequired(true);
-                    filter.setSecondFactor(false);
-                    filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getFirstIdentityService());
+                List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
-                    List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+                currentAccount.initFolders();
 
-                    currentAccount.initFolders();
+                if (!currentAccount.getSosLoginParameters().isOIDCLogin()) {
 
-                    if (!currentAccount.getSosLoginParameters().isOIDCLogin()) {
-
-                        for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                            if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())
-                                    && !dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC_JOC.value())) {
-                                msg = createAccount(currentAccount, password, dbItemIamIdentityService);
-                                if (msg.isEmpty()) {
-                                    SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
-                                            dbItemIamIdentityService));
-                                    currentAccount.setRoles(securityConfiguration);
-                                    if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                                        setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
-                                    }
-                                    addFolder(currentAccount);
-                                } else {
-                                    authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
-                                    LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName()
-                                            + " failed." + msg);
+                    for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
+                        if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value()) && !dbItemIamIdentityService
+                                .getIdentityServiceType().equals(IdentityServiceTypes.OIDC_JOC.value())) {
+                            msg = createAccount(currentAccount, password, dbItemIamIdentityService);
+                            if (dbItemIamBlockedAccount != null) {
+                                msg = "Account is blocked";
+                            }
+                            if (msg.isEmpty()) {
+                                SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
+                                        dbItemIamIdentityService));
+                                currentAccount.setRoles(securityConfiguration);
+                                if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                                    setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
                                 }
+                                addFolder(currentAccount);
+                            } else {
+                                authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
+                                currentAccount.setCurrentSubject(null);
+                                LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed. "
+                                        + msg);
+                                break;
                             }
                         }
                     }
+                }
+
+                if (msg.isEmpty()) {
 
                     if (currentAccount.getCurrentSubject() == null) {
                         filter.setRequired(false);
@@ -718,7 +720,11 @@ public class SOSServicePermissionIam {
                                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
                                         dbItemIamIdentityService));
                                 currentAccount.setRoles(securityConfiguration);
-
+                                if (dbItemIamBlockedAccount != null) {
+                                    msg = "Account is blocked";
+                                    currentAccount.setCurrentSubject(null);
+                                    throw new JocAuthenticationException(msg);
+                                }
                                 if (msg.isEmpty()) {
                                     String kid = "";
                                     if (currentAccount.getKid() != null && !currentAccount.getKid().isEmpty()) {
@@ -735,7 +741,9 @@ public class SOSServicePermissionIam {
                                 msg = e.getMessage();
                                 LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed:" + msg);
                                 authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
-                                continue;
+                                if (dbItemIamBlockedAccount == null) {
+                                    continue;
+                                }
                             } catch (JocWaitForSecondFactorException e) {
                                 LOGGER.debug("First factor with Identity Service " + dbItemIamIdentityService.getIdentityServiceName()
                                         + " successful.");
@@ -747,8 +755,8 @@ public class SOSServicePermissionIam {
                         }
 
                     }
-
                 }
+
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
 
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
