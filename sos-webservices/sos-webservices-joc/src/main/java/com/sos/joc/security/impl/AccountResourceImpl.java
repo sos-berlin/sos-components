@@ -684,6 +684,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                                     dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.value().equals(
                                             dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(
                                                     dbItemIamIdentityService.getIdentityServiceType()) ) {
+                                                    dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.value()
+                                                            .equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.FIDO
+                                                                    .value().equals(dbItemIamIdentityService.getIdentityServiceType())
+                    || IdentityServiceTypes.CERTIFICATE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
 
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 for (String accountName : accountsFilter.getAccountNames()) {
@@ -694,7 +698,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                             dbItemIamAccount.setDisabled(disable);
                         }
                         if (forcePasswordChange != null) {
-                            if (IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())
+                                    || IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                                 dbItemIamAccount.setForcePasswordChange(forcePasswordChange);
                             }
                         }
