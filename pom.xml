@@ -41,7 +41,7 @@
     <jackson.databind.version>2.14.2</jackson.databind.version>
     <jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
     <junit.version>4.13.1</junit.version>
-    <slf4j.version>2.0.13</slf4j.version>
+    <slf4j.version>2.0.16</slf4j.version>
     <javassist.version>3.29.2-GA</javassist.version>
     <log4j2.version>2.24.1</log4j2.version>
     <commons.io.version>2.15.1</commons.io.version>
@@ -80,7 +80,7 @@
     <sshj.version>0.38.0</sshj.version>
     <javax.jms-api.version>2.0.1</javax.jms-api.version>
     <jsendnsca.version>2.1.1</jsendnsca.version>
-    <jna.version>5.14.0</jna.version>
+    <jna.version>5.15.0</jna.version>
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
     <jaxb.impl.version>2.4.0-b180830.0438</jaxb.impl.version>

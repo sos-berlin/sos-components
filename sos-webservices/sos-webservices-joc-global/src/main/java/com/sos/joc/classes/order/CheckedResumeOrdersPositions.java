@@ -2,12 +2,12 @@ package com.sos.joc.classes.order;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,7 +37,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersResumePositions;
 import com.sos.joc.model.order.Position;
 import com.sos.joc.model.order.PositionChange;
@@ -49,6 +48,7 @@ import js7.base.problem.Problem;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.Workflow;
+import js7.data.workflow.position.Label;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
@@ -56,6 +56,7 @@ import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import scala.Function1;
+import scala.jdk.javaapi.OptionConverters;
 
 public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     
@@ -90,31 +91,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             return get(orders.iterator().next(), currentState, permittedFolders, null, true);
         }
         
-        Function1<Order<Order.State>, Object> stateFilter = o -> o.isSuspended();
-        Iterator<Function1<Order<Order.State>, Object>> failedStates = OrdersHelper.groupByStateClasses.entrySet().stream().filter(e -> e.getValue()
-                .equals(OrderStateText.FAILED)).map(Map.Entry::getKey).map(JOrderPredicates::byOrderState).iterator();
+        ConcurrentMap<JWorkflowId, Set<JOrder>> suspendedOrFailedOrders = getResumableOrders(orders, currentState, permittedFolders);
         
-        while (failedStates.hasNext()) {
-            stateFilter = JOrderPredicates.or(stateFilter, failedStates.next());
-        }
-        
-        stateFilter = JOrderPredicates.and(stateFilter, o -> orders.contains(o.id().string()));
-        ConcurrentMap<JWorkflowId, Set<JOrder>> suspendedOrFailedOrders = currentState.ordersBy(stateFilter).collect(Collectors.groupingByConcurrent(
-                JOrder::workflowId, Collectors.toSet()));
-
-        if (suspendedOrFailedOrders.isEmpty()) {
-            throw new JocBadRequestException("The orders are neither failed nor suspended");
-        }
-        
-        Set<JWorkflowId> notPermittedWorkflows = suspendedOrFailedOrders.keySet().stream().filter(wId -> !OrdersHelper.canAdd(WorkflowPaths.getPath(
-                wId), permittedFolders)).collect(Collectors.toSet());
-        for (JWorkflowId notPermittedWorkflow : notPermittedWorkflows) {
-            suspendedOrFailedOrders.remove(notPermittedWorkflow);
-        }
-
-        if (suspendedOrFailedOrders.isEmpty()) {
-            throw new JocFolderPermissionsException("Access denied");
-        }
+        jOrders = suspendedOrFailedOrders.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
         
         if (suspendedOrFailedOrders.size() > 1) {
             PositionChange pc = new PositionChange();
@@ -122,7 +101,6 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             pc.setMessage("The orders must be from the same workflow. Found workflows are: " + suspendedOrFailedOrders.keySet().toString());
             setDisabledPositionChange(pc);
             setOrderIds(orders);
-            jOrders = suspendedOrFailedOrders.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
             //throw new JocBadRequestException("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
         } else {
 
@@ -143,7 +121,6 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             final Set<String> orderIds = new HashSet<>();
             //final Set<JPosition> jPositions = new HashSet<>();
             
-            jOrders = suspendedOrFailedOrders.get(workflowId);
             jOrders.forEach(o -> {
                 orderIds.add(o.id().string());
                 //jPositions.add(JPosition.apply(o.asScala().position()));
@@ -265,6 +242,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         return this;
     }
     
+    @JsonIgnore
     public void disableIfNoCommonAllowedPositionsExist() {
         if (getPositions().isEmpty() && getOrderIds().size() > 1) {
             PositionChange pc = new PositionChange();
@@ -358,12 +336,115 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         return variables;
     }
     
+    public static ConcurrentMap<JWorkflowId, Set<JOrder>> getResumableOrders(Set<String> orders, JControllerState currentState,
+            Set<Folder> permittedFolders) {
+//        Function1<Order<Order.State>, Object> stateFilter = o -> o.isSuspended();
+//        Iterator<Function1<Order<Order.State>, Object>> failedStates = OrdersHelper.groupByStateClasses.entrySet().stream().filter(e -> e.getValue()
+//                .equals(OrderStateText.FAILED)).map(Map.Entry::getKey).map(JOrderPredicates::byOrderState).iterator();
+//
+//        while (failedStates.hasNext()) {
+//            stateFilter = JOrderPredicates.or(stateFilter, failedStates.next());
+//        }
+//        stateFilter = JOrderPredicates.and(stateFilter, o -> orders.contains(o.id().string()));
+
+        Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.and(o -> orders.contains(o.id().string()), OrdersHelper::isResumable);
+        ConcurrentMap<JWorkflowId, Set<JOrder>> resumableOrders = currentState.ordersBy(stateFilter).collect(Collectors.groupingByConcurrent(
+                JOrder::workflowId, Collectors.toSet()));
+
+        if (resumableOrders.isEmpty()) {
+            throw new JocBadRequestException("The orders are neither failed nor suspended");
+        }
+
+        Set<JWorkflowId> notPermittedWorkflows = resumableOrders.keySet().stream().filter(wId -> !OrdersHelper.canAdd(WorkflowPaths.getPath(
+                wId), permittedFolders)).collect(Collectors.toSet());
+        for (JWorkflowId notPermittedWorkflow : notPermittedWorkflows) {
+            resumableOrders.remove(notPermittedWorkflow);
+        }
+
+        if (resumableOrders.isEmpty()) {
+            throw new JocFolderPermissionsException("Access denied");
+        }
+
+        return resumableOrders;
+    }
+    
+    public Map<JOrder, Optional<JPosition>> filterOrdersbyLabelOrPosition(Set<String> orders, Object positionOrLabel, boolean force,
+            JControllerState currentState, Set<Folder> permittedFolders) {
+        if (positionOrLabel != null) {
+            if (positionOrLabel instanceof String) {
+                return filterOrdersbyLabel(orders, (String) positionOrLabel, force, currentState, permittedFolders);
+            } else if (positionOrLabel instanceof List<?>) {
+                @SuppressWarnings("unchecked")
+                List<Object> position = (List<Object>) positionOrLabel;
+                if (!position.isEmpty()) {
+                    return filterOrdersbyPosition(orders, position, force, currentState, permittedFolders);
+                }
+            }
+        }
+        return Collections.emptyMap();
+    }
+    
+    private Map<JOrder, Optional<JPosition>> filterOrdersbyLabel(Set<String> orders, String label, boolean force, JControllerState currentState,
+            Set<Folder> permittedFolders) {
+        return filterOrdersbyLabel(getResumableOrders(orders, currentState, permittedFolders), label, force, currentState);
+    }
+    
+    private Map<JOrder, Optional<JPosition>> filterOrdersbyPosition(Set<String> orders, List<Object> position, boolean force, JControllerState currentState,
+            Set<Folder> permittedFolders) {
+        return filterOrdersbyPosition(getResumableOrders(orders, currentState, permittedFolders), position, force, currentState);
+    }
+    
+    private Map<JOrder, Optional<JPosition>> filterOrdersbyLabel(ConcurrentMap<JWorkflowId, Set<JOrder>> resumableOrders, String label,
+            boolean force, JControllerState currentState) {
+        Label l = Label.fromString(label);
+
+        jOrders = resumableOrders.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
+        Map<JOrder, Optional<JPosition>> allowedOrders = new HashMap<>();
+        for (Map.Entry<JWorkflowId, Set<JOrder>> entry : resumableOrders.entrySet()) {
+            Optional<JWorkflow> jWorkflowOpt = currentState.repo().idToCheckedWorkflow(entry.getKey()).toJavaOptional();
+            if (jWorkflowOpt.isPresent()) {
+                Optional<JPosition> pos = labelToPosition(jWorkflowOpt.get(), l, currentState);
+                if (pos.isPresent()) {
+                    entry.getValue().stream().filter(o -> jWorkflowOpt.get().reachablePositions(o.workflowPosition().position()).stream().anyMatch(
+                            p -> p.equals(pos.get()))).forEach(o -> allowedOrders.put(o, forceOrderPosition(workflowPositionToOrderPosition(pos, o,
+                                    null), o, force)));
+
+                }
+            }
+        }
+        return allowedOrders;
+    }
+    
+    private static Optional<JPosition> labelToPosition(JWorkflow workflow, final Label label, JControllerState currentState) {
+        return OptionConverters.toJava(workflow.asScala().labelToPosition(label).toOption()).map(JPosition::apply);
+    }
+    
+    private Map<JOrder, Optional<JPosition>> filterOrdersbyPosition(ConcurrentMap<JWorkflowId, Set<JOrder>> resumableOrders, List<Object> position,
+            boolean force, JControllerState currentState) {
+        Optional<JPosition> pos = position == null || position.isEmpty() ? Optional.empty() : JPosition.fromList(position).toJavaOptional();
+
+        jOrders = resumableOrders.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
+        Map<JOrder, Optional<JPosition>> allowedOrders = new HashMap<>();
+        for (Map.Entry<JWorkflowId, Set<JOrder>> entry : resumableOrders.entrySet()) {
+            Optional<JWorkflow> jWorkflowOpt = currentState.repo().idToCheckedWorkflow(entry.getKey()).toJavaOptional();
+            if (jWorkflowOpt.isPresent()) {
+                if (pos.isPresent()) {
+                    entry.getValue().stream().filter(o -> jWorkflowOpt.get().reachablePositions(o.workflowPosition().position()).stream().anyMatch(
+                            p -> p.equals(pos.get()))).forEach(o -> allowedOrders.put(o, forceOrderPosition(workflowPositionToOrderPosition(pos, o,
+                                    null), o, force)));
+
+                }
+            }
+        }
+        return allowedOrders;
+    }
+    
     public String orderPositionToWorkflowPosition(String pos) {
         return pos.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
     }
     
     private JPosition orderPositionToWorkflowPosition(JPosition pos) {
-        return JPosition.fromList(pos.toList().stream().map(o ->{
+        return JPosition.fromList(pos.toList().stream().map(o -> {
             if (o instanceof String) {
                 return ((String) o).replaceAll("(try|catch|cycle)\\+?.*", "$1");
             } else {
@@ -372,11 +453,40 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }).collect(Collectors.toList())).get();
     }
     
+    public Optional<JPosition> forceOrderPosition(final Optional<JPosition> orderPosition, boolean force) {
+        return forceOrderPosition(orderPosition, null, force);
+    }
+    
+    public Optional<JPosition> forceOrderPosition(final Optional<JPosition> orderPosition, JOrder jOrder, boolean force) {
+        JPosition curOrderPosition = null;
+        if (jOrder == null) {
+            curOrderPosition = getCurrentOrderPosition();
+        } else {
+            curOrderPosition = JPosition.apply(jOrder.asScala().position());
+        }
+        if (orderPosition.isPresent()) {
+            if (curOrderPosition.equals(orderPosition.get()) && !force) {
+                return Optional.empty();
+            }
+        } else if (force) {
+            return Optional.of(curOrderPosition);
+        }
+        return orderPosition;
+    }
+    
     public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, Long cycleEndTime) {
+        if (cycleEndTime != null && workflowPosition.isEmpty()) { //consider cycleEndTime if workflowPosition is empty
+            return Optional.of(workflowPositionToOrderPosition(orderPositionToWorkflowPosition(getCurrentOrderPosition()), null, cycleEndTime)).map(
+                    JPosition::fromList).map(Either::get);
+        }
         return workflowPosition.map(l -> workflowPositionToOrderPosition(l, null, cycleEndTime)).map(JPosition::fromList).map(Either::get);
     }
 
     public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, JOrder jOrder, Long cycleEndTime) {
+        if (cycleEndTime != null && workflowPosition.isEmpty()) { // consider cycleEndTime if workflowPosition is empty
+            return Optional.of(workflowPositionToOrderPosition(orderPositionToWorkflowPosition(JPosition.apply(jOrder.asScala().position())), jOrder,
+                    cycleEndTime)).map(JPosition::fromList).map(Either::get);
+        }
         return workflowPosition.map(l -> workflowPositionToOrderPosition(l, jOrder, cycleEndTime)).map(JPosition::fromList).map(Either::get);
     }
 
@@ -453,14 +563,51 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         p.setPosition(jPos.toList());
         p.setPositionString(jPos.toString());
         p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
-        if ("Job".equals(p.getType())) {
-            try {
-                p.setLabel(w.labeledInstruction(jPos.asScala()).toOption().get().labelString().trim().replaceFirst(":$", ""));
-            } catch (Throwable e) {
-                //
+        //if ("Job".equals(p.getType())) { //not longer only JObs have labels
+        try {
+            p.setLabel(w.labeledInstruction(jPos.asScala()).toOption().map(l -> l.labelString().trim().replaceFirst(":$", "")).filter(s -> !s
+                    .isBlank()).getOrElse(null));
+        } catch (Throwable e) {
+            //
+        }
+        //}
+        return p;
+    }
+    
+    public static Map<OrderId, Optional<JPosition>> moveToBeginOfBlock(final Set<JOrder> jOrders, final boolean force) {
+        return jOrders.stream().collect(Collectors.toMap(JOrder::id, o -> CheckedResumeOrdersPositions.moveToBeginOfBlock(o, force)));
+    }
+    
+    public static Optional<JPosition> moveToBeginOfBlock(JOrder jOrder, boolean force) {
+        return moveToBeginOfBlock(JPosition.apply(jOrder.asScala().position()), force);
+    }
+    
+    public static Optional<JPosition> moveToBeginOfBlock(JPosition curPos, boolean force) {
+        /*
+         * position on top level will be unchanged
+         * [n] -> [n]
+         * [n, "(fork|forklist)+branchId", m] -> [n, "(fork|forklist)+branchId", m]
+         * otherwise
+         * [n, "notForkInstruction", m] -> [n]
+         */
+        boolean unchanged = false;
+        List<Object> curPosition = new ArrayList<>(curPos.toList());
+        if (curPosition.size() == 1) {
+            unchanged = true;
+        } else if (curPosition.size() > 2) {
+            String instructionBlock = (String) curPosition.get(curPosition.size() - 2);
+            if (instructionBlock.startsWith("fork")) {
+                unchanged = true;
+            } else {
+                // delete last two items
+                curPosition.remove(curPosition.size() - 1);
+                curPosition.remove(curPosition.size() - 1);
             }
         }
-        return p;
+        if (unchanged && !force) {
+            return Optional.empty();
+        }
+        return Optional.of(JPosition.fromList(curPosition).get());
     }
 
 }

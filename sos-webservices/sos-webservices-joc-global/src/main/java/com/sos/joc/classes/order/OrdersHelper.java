@@ -339,15 +339,18 @@ public class OrdersHelper {
     }
     
     public static boolean isResumable(JOrder order) {
-        Order<Order.State> o = order.asScala();
+        return isResumable(order.asScala());
+    }
+    
+    public static boolean isResumable(Order<Order.State> order) {
 //        LOGGER.info("isResumable? " + o.isResumable());
-        if (isCancellingOrResuming(o.mark()) || isSuspending(o.mark())) {
+        if (isCancellingOrResuming(order.mark()) || isSuspending(order.mark())) {
             return false;
         }
-        if (isDisrupted(o)) {
+        if (isDisrupted(order)) {
             return false;
         }
-        return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
+        return order.isSuspended() || isFailed(order);// || isSuspending(o.mark());
     }
     
     private static boolean isResumable(JOrder order, boolean disrupted) {
@@ -1539,6 +1542,12 @@ public class OrdersHelper {
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(JOrder jOrder, Long auditlogId, String controllerId) {
         return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(jOrder.workflowId().path().string()), jOrder.id()
                 .string(), controllerId)), auditlogId);
+    }
+    
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(String orderId, String workflowName, Long auditlogId,
+            String controllerId) {
+        return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(workflowName), orderId, controllerId)),
+                auditlogId);
     }
 
     public static boolean canAdd(String path, Set<Folder> listOfFolders) {
