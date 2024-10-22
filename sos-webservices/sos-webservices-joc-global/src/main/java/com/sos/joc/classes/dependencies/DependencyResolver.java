@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -446,6 +448,17 @@ public class DependencyResolver {
                     results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
+                    }
+                }
+            }
+            List<String> scheduleCalendars = new ArrayList<String>();
+            getValuesRecursively("", schedule, CALENDARNAME_SEARCH, scheduleCalendars);
+            if(!scheduleCalendars.isEmpty()) {
+                for(String cal : scheduleCalendars) {
+                    results = dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+                    results.addAll(dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
+                    if(!results.isEmpty()) {
+                        item.getReferences().addAll(results);
                     }
                 }
             }
@@ -904,9 +917,10 @@ public class DependencyResolver {
         return allDependencies.stream().filter(dep -> dep.getInvId().equals(item.getId())).collect(Collectors.toList());
     }
     
-    public static List<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
+    public static Set<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
         // this method is currently not in use
-        return reference.getReferencedBy().stream().map(item -> {
+        Set<DBItemInventoryDependency> dependencies = new HashSet<DBItemInventoryDependency>();
+        dependencies.addAll(reference.getReferencedBy().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(reference.getReferencedItem().getId());
             dependency.setDependencyType(item.getTypeAsEnum());
@@ -925,7 +939,28 @@ public class DependencyResolver {
                 }
             }
             return dependency;
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toSet()));
+        dependencies.addAll(reference.getReferences().stream().map(item -> {
+            DBItemInventoryDependency dependency = new DBItemInventoryDependency();
+            dependency.setInvId(item.getId());
+            dependency.setDependencyType(reference.getReferencedItem().getTypeAsEnum());
+            dependency.setInvDependencyId(reference.getReferencedItem().getId());
+            dependency.setPublished(reference.getReferencedItem().getDeployed() || reference.getReferencedItem().getReleased());
+            if(reference.getReferencedItem().getDeployed()) {
+                InventoryDBLayer dblayer = new InventoryDBLayer(session);
+                try {
+                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(item.getId());
+                    if(latestDeployed != null) {
+                        dependency.setDepDependencyId(latestDeployed.getId());
+                        dependency.setControllerId(latestDeployed.getControllerId());
+                    }
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+            }
+            return dependency;
+        }).collect(Collectors.toSet()));
+        return dependencies;
     }
     
     public static ReferencedDbItem convert(SOSHibernateSession session, DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies)
@@ -1030,7 +1065,7 @@ public class DependencyResolver {
                 }
             } else {
                 // value is neither object nor array and next key is the search key, ends the recursion
-                if(nextKey.equals(searchKey)) {
+                if(nextKey.equals(searchKey) || currentKey.equals(searchKey)) {
                     values.add(value.toString().replaceAll("\"", ""));
                 }
             }
