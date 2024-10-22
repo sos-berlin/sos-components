@@ -174,7 +174,7 @@ public class DBLayerChanges extends DBLayer {
 
     public List<ChangeItem> getChangeItems(Long changeId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(ChangeItem.class.getName());
-        hql.append("(name, path, type) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append("(name, path, type, valid, deployed, released) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where id in ");
         hql.append("(");
         hql.append("  select map.invId from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS).append(" as map ");

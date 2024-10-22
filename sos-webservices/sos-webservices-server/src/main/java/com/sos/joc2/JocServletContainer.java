@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.DependencyUpdate;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -76,6 +77,7 @@ public class JocServletContainer extends ServletContainer {
         if (withClusterService) {
             JocClusterService.getInstance().start(StartupMode.automatic, true);
         }
+        DependencyUpdate.getInstance().updateThreaded();
     }
 
     @Override
@@ -90,6 +92,7 @@ public class JocServletContainer extends ServletContainer {
         // 2 - close proxies
         QuickSearchStore.close(); //insert
         Proxies.closeAll();
+        DependencyUpdate.getInstance().close();
 
         if (Globals.sosHibernateFactory != null) {
             LOGGER.info("----> closing DB Connections");
