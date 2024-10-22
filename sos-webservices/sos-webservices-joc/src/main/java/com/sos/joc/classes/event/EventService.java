@@ -179,7 +179,7 @@ public class EventService {
             if (evtBus == null) {
                 evtBus = Proxy.of(controllerId).controllerEventBus();
                 if (evtBus != null) {
-                    LOGGER.info("Start EventBus");
+                    LOGGER.info("Start EventBus " + controllerId);
                     evtBus.subscribe(eventsOfController, callbackOfController);
                     burstFilter.set(true);
                     // setOrders();
@@ -218,12 +218,12 @@ public class EventService {
             ExecutionException {
         if (evt.getControllerId().equals(controllerId) && ProxyUser.JOC.name().equals(evt.getKey())) {
             if (evtBus != null) {
-                LOGGER.info("try to close EventBus");
+                LOGGER.info("try to close EventBus " + controllerId);
                 evtBus.close();
                 evtBus = null;
             }
             if (evtBus == null && (evt instanceof ProxyRestarted || evt instanceof ProxyClosed)) {
-                LOGGER.debug("try to restart EventBus");
+                LOGGER.debug("try to restart EventBus " + controllerId);
                 startEventService();
             }
         }
