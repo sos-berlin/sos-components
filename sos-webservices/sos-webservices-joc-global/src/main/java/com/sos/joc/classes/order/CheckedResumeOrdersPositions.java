@@ -499,6 +499,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
         List<Object> result = new LinkedList<>();
         int numOfCurPos = curOrderPosition == null ? 0 : curOrderPosition.size();
+        int lastInstructionInPos = numOfCurPos - 2;
         int index = 0;
         
         // 0 <= cycleEndTime <= 24h
@@ -514,18 +515,28 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             if (index < numOfCurPos && pos instanceof String) {
                 String posStr = (String) pos;
                 boolean isWorkflowPosition = posStr.equals(posStr.replaceAll("(try|catch|cycle)\\+?.*", "$1"));
-                if (isWorkflowPosition && (posStr.equals("cycle") || posStr.equals("try") || posStr.equals("catch"))) {
-                    String curOrderPos = (String) curOrderPosition.get(index);
-                    if (curOrderPos != null && posStr.equals(curOrderPos.replaceAll("(try|catch|cycle)\\+?.*", "$1"))) {
-                        if (posStr.equals("cycle")) {
-                            if (indexOfImplicitEndCyclePosition == index) {
-                                curOrderPos = posStr;
-                            } else if (cEndTime.isPresent()) {
-                                curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cEndTime.get());
+                if (isWorkflowPosition) {
+                    if (posStr.equals("cycle") || posStr.equals("try") || posStr.equals("catch")) {
+                        String curOrderPos = (String) curOrderPosition.get(index);
+                        if (curOrderPos != null) {
+                            if (posStr.equals(curOrderPos.replaceAll("(try|catch|cycle)\\+?.*", "$1"))) {
+                                if (posStr.equals("cycle")) {
+                                    if (indexOfImplicitEndCyclePosition == index) {
+                                        curOrderPos = posStr;
+                                    } else if (cEndTime.isPresent()) {
+                                        curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cEndTime.get());
+                                    }
+                                }
+                                result.add(curOrderPos);
+                                posIsAdded = true;
+                            } else if (index == lastInstructionInPos && ((posStr + curOrderPos).startsWith("trycatch") || (posStr + curOrderPos)
+                                    .startsWith("catchtry"))) {
+                                //new position from try to catch or from catch to try in the same instruction
+                                String stack = curOrderPos.replaceAll("(?:try|catch)(\\+?.*)", "$1");
+                                result.add(posStr + stack);
+                                posIsAdded = true;
                             }
                         }
-                        result.add(curOrderPos);
-                        posIsAdded = true;
                     }
                 }
             }
