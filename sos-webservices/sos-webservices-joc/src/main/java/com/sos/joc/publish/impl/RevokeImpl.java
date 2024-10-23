@@ -80,7 +80,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                 if (depHistoryDBItemsToRevoke != null && !depHistoryDBItemsToRevoke.isEmpty()) {
                     Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToRevoke.stream()
                             .collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
-                    depHistoryDBItemsToRevoke = grouped.keySet().stream().map(item -> grouped.get(item).get(0)).collect(Collectors.toList());
+                    depHistoryDBItemsToRevoke = grouped.keySet().stream().map(item -> grouped.get(item)).flatMap(List::stream).collect(Collectors.toList());
                 }
             }
             // collect Items for set of folders
