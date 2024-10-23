@@ -499,7 +499,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
         List<Object> result = new LinkedList<>();
         int numOfCurPos = curOrderPosition == null ? 0 : curOrderPosition.size();
-        int lastInstructionInPos = numOfCurPos - 2;
+        int lastInstructionInPos = workflowJPosition.toList().size() - 2;
         int index = 0;
         
         // 0 <= cycleEndTime <= 24h
