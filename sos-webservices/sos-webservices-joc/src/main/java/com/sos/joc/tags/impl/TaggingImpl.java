@@ -81,7 +81,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             
             Date date = Date.from(Instant.now());
             Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
-            tagEvents.addAll(newDbTagItems.stream().map(name -> new InventoryTagAddEvent(name.getName())).collect(Collectors.toList()));
+            tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toList()));
 
             newDbTagItems.addAll(dbTags);
             
@@ -169,7 +169,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             
             final Date date = Date.from(Instant.now());
             Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
-            tagEvents.addAll(newDbTagItems.stream().map(name -> new InventoryTagAddEvent(name.getName())).collect(Collectors.toList()));
+            tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toList()));
             
             newDbTagItems.addAll(dbTags);
             Set<Long> newTagIds = newDbTagItems.stream().map(DBItemInventoryTag::getId).collect(Collectors.toSet());

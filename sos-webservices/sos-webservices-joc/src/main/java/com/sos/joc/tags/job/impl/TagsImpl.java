@@ -18,7 +18,7 @@ public class TagsImpl extends ATagsModifyImpl<DBItemInventoryJobTag> implements 
 
     @Override
     public JOCDefaultResponse postTags(String accessToken) {
-        return postTags(API_CALL, accessToken, dbLayer);
+        return postTagsOrGroups(ResponseObject.JOBTAGS, API_CALL, accessToken, dbLayer);
     }
     
     @Override

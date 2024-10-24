@@ -32,6 +32,11 @@ import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.JOCEvent;
+import com.sos.joc.event.bean.inventory.InventoryGroupAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryGroupDeleteEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagDeleteEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagsEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagDeleteEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
@@ -56,10 +61,11 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     }
     
     protected enum ResponseObject {
-        TAGS, GROUPS
+        GROUPS, INVTAGS, JOBTAGS, ORDERTAGS
     }
 
-    private Stream<JOCEvent> postTagsModify(String apiCall, Action action, RequestFilters modifyTags, ATagDBLayer<T> dbLayer) throws Exception {
+    private Stream<JOCEvent> postTagsModify(ResponseObject responseObject, String apiCall, Action action, RequestFilters modifyTags,
+            ATagDBLayer<T> dbLayer) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(apiCall + "/" + action.name().toLowerCase());
@@ -67,7 +73,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             session.beginTransaction();
             dbLayer.setSession(session);
 
-            Stream<JOCEvent> events = postTagsModify(action, modifyTags, dbLayer);
+            Stream<JOCEvent> events = postTagsModify(responseObject, action, modifyTags, dbLayer);
 
             Globals.commit(session);
             return events;
@@ -79,7 +85,8 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         }
     }
 
-    private Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags, ATagDBLayer<T> dbLayer) throws Exception {
+    private Stream<JOCEvent> postTagsModify(ResponseObject responseObject, Action action, RequestFilters modifyTags, ATagDBLayer<T> dbLayer)
+            throws Exception {
         Map<String, GroupedTag> groupedTags = modifyTags.getTags() == null ? Collections.emptyMap() : modifyTags.getTags().stream().map(
                 GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function.identity()));
         List<T> dbTags = Collections.emptyList();
@@ -88,16 +95,30 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         switch (action) {
         case ADD:
             dbTags = modifyTags.getTags().isEmpty() ? Collections.emptyList() : dbLayer.getTags(groupedTags.keySet());
-            if (dbLayer instanceof InventoryTagDBLayer) {
+            switch (responseObject) {
+            case INVTAGS:
                 checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(dbLayer.getSession()), "job");
                 checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(dbLayer.getSession()), "order");
-            } else if (dbLayer instanceof InventoryJobTagDBLayer) {
+                break;
+            case JOBTAGS:
                 checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(dbLayer.getSession()), "workflow");
                 checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(dbLayer.getSession()), "order");
+                break;
+            default:
+                break;    
             }
             
             Set<T> result = insert(groupedTags.values(), dbTags, Date.from(Instant.now()), dbLayer);
-            events = result.stream().map(T::getName).map(InventoryTagAddEvent::new);
+            switch (responseObject) {
+            case INVTAGS:
+                events = result.stream().map(T::getName).map(InventoryTagAddEvent::new);
+                break;
+            case JOBTAGS:
+                events = result.stream().map(T::getName).map(InventoryJobTagAddEvent::new);
+                break;
+            default:
+                break;    
+            }
             break;
 
         case DELETE:
@@ -106,7 +127,16 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             dbLayer.deleteTaggingsByTagIds(dbTags.stream().map(T::getId).collect(Collectors.toList())); // TODO events for Workflows
             dbLayer.deleteTags(dbTags);
 
-            events = groupedTags.keySet().stream().map(InventoryTagDeleteEvent::new);
+            switch (responseObject) {
+            case INVTAGS:
+                events = groupedTags.keySet().stream().map(InventoryTagDeleteEvent::new);
+                break;
+            case JOBTAGS:
+                events = groupedTags.keySet().stream().map(InventoryJobTagDeleteEvent::new);
+                break;
+            default:
+                break;    
+            }
             break;
 
         case ORDERING:
@@ -134,7 +164,16 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                     }
                     ordering++;
                 }
-                events = Stream.of(new InventoryTagsEvent());
+                switch (responseObject) {
+                case INVTAGS:
+                    events = Stream.of(new InventoryTagsEvent());
+                    break;
+                case JOBTAGS:
+                    events = Stream.of(new InventoryJobTagsEvent());
+                    break;
+                default:
+                    break;    
+                }
             }
             break;
         }
@@ -221,14 +260,6 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         }
     }
 
-    protected JOCDefaultResponse postTags(String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
-        return postTagsOrGroups(ResponseObject.TAGS, apiCall, accessToken, dbLayer);
-    }
-    
-    protected JOCDefaultResponse postGroups(String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
-        return postTagsOrGroups(ResponseObject.GROUPS, apiCall, accessToken, dbLayer);
-    }
-    
     protected JOCDefaultResponse postTagsOrGroups(ResponseObject responseObject, String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
         try {
             initLogging(apiCall, null, accessToken);
@@ -237,12 +268,12 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 return jocDefaultResponse;
             }
             switch (responseObject) {
-            case TAGS:
-                Tags tags = postTags(apiCall, dbLayer);
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(tags));
-            default: //case GROUPS:
+            case GROUPS:
                 Groups groups = postGroups(apiCall, dbLayer);
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(groups));
+            default: //case all tags
+                Tags tags = postTags(apiCall, dbLayer);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(tags));
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -281,7 +312,8 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         }
     }
     
-    protected JOCDefaultResponse postTagsModify(String apiCall, Action action, String accessToken, byte[] filterBytes, ATagDBLayer<T> dbLayer) {
+    protected JOCDefaultResponse postTagsModify(ResponseObject responseObject, String apiCall, Action action, String accessToken, byte[] filterBytes,
+            ATagDBLayer<T> dbLayer) {
         try {
             RequestFilters modifyTags = initModifyRequest(apiCall, action, accessToken, filterBytes);
             JOCDefaultResponse jocDefaultResponse = initPermissions(accessToken);
@@ -290,7 +322,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             }
 
             storeAuditLog(modifyTags.getAuditLog(), CategoryType.INVENTORY);
-            Stream<JOCEvent> events = postTagsModify(apiCall, action, modifyTags, dbLayer);
+            Stream<JOCEvent> events = postTagsModify(responseObject, apiCall, action, modifyTags, dbLayer);
             events.forEach(evt -> EventBus.getInstance().post(evt));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -302,11 +334,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         }
     }
     
-    protected JOCDefaultResponse postTagRename(String apiCall, String accessToken, byte[] filterBytes, ATagDBLayer<T> dbLayer) {
-        return postTagRename(ResponseObject.TAGS, apiCall, accessToken, filterBytes, dbLayer);
-    }
-    
-    private JOCDefaultResponse postTagRename(ResponseObject responseObject, String apiCall, String accessToken, byte[] filterBytes,
+    protected JOCDefaultResponse postTagRename(ResponseObject responseObject, String apiCall, String accessToken, byte[] filterBytes,
             ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
         try {
@@ -319,7 +347,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 return jocDefaultResponse;
             }
             
-            String objectName = ResponseObject.TAGS.equals(responseObject) ? "tag" : "group";
+            String objectName = ResponseObject.GROUPS.equals(responseObject) ? "group" : "tag";
             
             storeAuditLog(modifyTag.getAuditLog(), CategoryType.INVENTORY);
             
@@ -340,12 +368,19 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             Globals.commit(session);
             
             switch (responseObject) {
-            case TAGS:
+            case INVTAGS:
                 EventBus.getInstance().post(new InventoryTagAddEvent(modifyTag.getNewName()));
                 EventBus.getInstance().post(new InventoryTagDeleteEvent(modifyTag.getName()));
                 break;
-            default: //case GROUPS
-                //TODO events
+            case JOBTAGS:
+                EventBus.getInstance().post(new InventoryJobTagAddEvent(modifyTag.getNewName()));
+                EventBus.getInstance().post(new InventoryJobTagDeleteEvent(modifyTag.getName()));
+                break;
+            case ORDERTAGS:
+                break;
+            case GROUPS:
+                EventBus.getInstance().post(new InventoryGroupAddEvent(modifyTag.getNewName()));
+                EventBus.getInstance().post(new InventoryGroupDeleteEvent(modifyTag.getName()));
                 break;
             }
             

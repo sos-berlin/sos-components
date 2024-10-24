@@ -20,6 +20,9 @@ import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.InventoryTagGroupDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.JOCEvent;
+import com.sos.joc.event.bean.inventory.InventoryGroupAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryGroupDeleteEvent;
+import com.sos.joc.event.bean.inventory.InventoryGroupsEvent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.tag.group.RequestFilters;
@@ -122,19 +125,17 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
                     item.setModified(date);
                     item.setOrdering(++maxGroupsOrdering);
                     dbLayer.getSession().save(item);
-                    // TODO events
                 }
+                events = modifyTags.getGroups().stream().map(InventoryGroupAddEvent::new);
             }
-            //TODO events = result.stream().map(T::getName).map(InventoryTagAddEvent::new);
             break;
 
         case DELETE:
-            List<DBItemInventoryTagGroup> dbTags = dbLayer.getGroups(modifyTags.getGroups());
+            List<DBItemInventoryTagGroup> dbGroups2 = dbLayer.getGroups(modifyTags.getGroups());
             //set groupId = 0 for Workflow, job, order tags
-            dbLayer.deleteGroupIds(dbTags.stream().map(DBItemInventoryTagGroup::getId).collect(Collectors.toList()), null);
-            dbLayer.deleteGroups(dbTags);
-
-            //TODO  events = tags.stream().map(InventoryTagDeleteEvent::new);
+            dbLayer.deleteGroupIds(dbGroups2.stream().map(DBItemInventoryTagGroup::getId).collect(Collectors.toList()), null);
+            dbLayer.deleteGroups(dbGroups2);
+            events = modifyTags.getGroups().stream().map(InventoryGroupDeleteEvent::new);
             break;
 
         case ORDERING:
@@ -161,7 +162,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
                 }
                 ordering++;
             }
-            //TODO events = Stream.of(new InventoryTagsEvent());
+            events = Stream.of(new InventoryGroupsEvent());
             break;
         }
         return events;

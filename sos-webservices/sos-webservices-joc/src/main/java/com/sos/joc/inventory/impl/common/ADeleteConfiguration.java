@@ -142,6 +142,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
                 InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                // TODO post JocInventory::postJobTaggingEvent
             }
             // post events for updating workflows and fileordersources
             if (allDeployments != null) {
@@ -225,6 +226,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
                 InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                // TODO post JocInventory::postJobTaggingEvent
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {

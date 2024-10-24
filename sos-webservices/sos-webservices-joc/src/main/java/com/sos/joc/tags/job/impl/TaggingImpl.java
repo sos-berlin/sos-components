@@ -28,7 +28,8 @@ import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -96,8 +97,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
 
                 Set<DBItemInventoryJobTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbJobTags, date, dbTagLayer);
                 
-               //TODO event for job tags?
-                tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryJobTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toSet()));
+                tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryJobTag::getName).map(InventoryJobTagAddEvent::new).collect(Collectors.toSet()));
                 newDbTagItems.addAll(dbJobTags);
                 
                 Map<String, Long> tagNameToIdMap = newDbTagItems.stream().collect(Collectors.toMap(DBItemInventoryJobTag::getName,
@@ -134,7 +134,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             }
             
             if (taggingIsChanged) {
-                tagEvents.add(new InventoryTagEvent(config.getName())); //TODO event for job tags? workflowname?
+                tagEvents.add(new InventoryJobTagEvent(config.getName())); //TODO event for job tags? workflowname?
             }
             
             Globals.commit(session);

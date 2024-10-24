@@ -13,5 +13,5 @@ public interface ITagModify {
     @POST
     @Path("rename")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postTagRename(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postRename(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

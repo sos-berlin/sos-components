@@ -14,8 +14,8 @@ public class TagModifyImpl extends ATagsModifyImpl<DBItemInventoryJobTag> implem
     private static final String API_CALL = "./tag/job/rename";
 
     @Override
-    public JOCDefaultResponse postTagRename(String accessToken, byte[] filterBytes) {
-        return postTagRename(API_CALL, accessToken, filterBytes, new InventoryJobTagDBLayer(null));
+    public JOCDefaultResponse postRename(String accessToken, byte[] filterBytes) {
+        return postTagRename(ResponseObject.JOBTAGS, API_CALL, accessToken, filterBytes, new InventoryJobTagDBLayer(null));
     }
 
 }

@@ -28,6 +28,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.JOCEvent;
 import com.sos.joc.event.bean.agent.AgentClusterNodeLossEvent;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
@@ -39,6 +40,8 @@ import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
+import com.sos.joc.event.bean.inventory.InventoryGroupsEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagsEvent;
 import com.sos.joc.event.bean.inventory.InventoryObjectEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
@@ -318,17 +321,17 @@ public class EventService {
     public void createInventoryTagEvent(InventoryTagEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
         eventSnapshot.setEventId(evt.getEventId() / 1000);
-        eventSnapshot.setEventType(evt.getKey()); // InventoryTaggingUpdated, InventoryTagAdded, InventoryTagDeleted
+        eventSnapshot.setEventType(evt.getKey()); // Inventory(Job)TaggingUpdated, Inventory(Job)TagAdded, Inventory(Job)TagDeleted
         eventSnapshot.setObjectType(EventType.TAG);
         eventSnapshot.setPath(evt.getTag());
         addEvent(eventSnapshot);
     }
     
-    @Subscribe({ InventoryTagsEvent.class })
-    public void createInventoryTagEvent(InventoryTagsEvent evt) {
+    @Subscribe({ InventoryTagsEvent.class, InventoryJobTagsEvent.class, InventoryGroupsEvent.class })
+    public void createInventoryTagEvent(JOCEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
         eventSnapshot.setEventId(evt.getEventId() / 1000);
-        eventSnapshot.setEventType(evt.getKey()); // InventoryTagsUpdated
+        eventSnapshot.setEventType(evt.getKey()); // InventoryTagsUpdated, InventoryJobTagsUpdated, InventoryGroupsUpdated
         eventSnapshot.setObjectType(EventType.TAG);
         addEvent(eventSnapshot);
     }

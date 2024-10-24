@@ -16,17 +16,17 @@ public class TagsModifyImpl extends ATagsModifyImpl<DBItemInventoryTag> implemen
 
     @Override
     public JOCDefaultResponse postTagsAdd(String accessToken, byte[] filterBytes) {
-        return postTagsModify(API_CALL, Action.ADD, accessToken, filterBytes, dbLayer);
+        return postTagsModify(ResponseObject.INVTAGS, API_CALL, Action.ADD, accessToken, filterBytes, dbLayer);
     }
 
     @Override
     public JOCDefaultResponse postTagsDelete(String accessToken, byte[] filterBytes) {
-        return postTagsModify(API_CALL, Action.DELETE, accessToken, filterBytes, dbLayer);
+        return postTagsModify(ResponseObject.INVTAGS, API_CALL, Action.DELETE, accessToken, filterBytes, dbLayer);
     }
 
     @Override
     public JOCDefaultResponse postTagsOrdering(String accessToken, byte[] filterBytes) {
-        return postTagsModify(API_CALL, Action.ORDERING, accessToken, filterBytes, dbLayer);
+        return postTagsModify(ResponseObject.INVTAGS, API_CALL, Action.ORDERING, accessToken, filterBytes, dbLayer);
     }
 
 }

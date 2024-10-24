@@ -73,6 +73,7 @@ import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryFolderEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagEvent;
 import com.sos.joc.event.bean.inventory.InventoryObjectEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
@@ -665,6 +666,10 @@ public class JocInventory {
     
     public static void postTaggingEvent(String tag) {
         EventBus.getInstance().post(new InventoryTagEvent(tag));
+    }
+    
+    public static void postJobTaggingEvent(String tag) {
+        EventBus.getInstance().post(new InventoryJobTagEvent(tag));
     }
 
     public static class InventoryPath {

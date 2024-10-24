@@ -16,7 +16,7 @@ public class TagsImpl extends ATagsModifyImpl<DBItemInventoryOrderTag> implement
 
     @Override
     public JOCDefaultResponse postTags(String accessToken) {
-        return postTags(API_CALL, accessToken, dbLayer);
+        return postTagsOrGroups(ResponseObject.ORDERTAGS, API_CALL, accessToken, dbLayer);
     }
     
 }

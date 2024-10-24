@@ -6,6 +6,8 @@ import com.sos.inventory.model.workflow.Jobs;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.inventory.InventoryJobTagEvent;
 
 public class JobTags {
     
@@ -18,11 +20,11 @@ public class JobTags {
             if (jobs == null || jobs.getAdditionalProperties() == null) {
                 jobs = new Jobs();
             }
-            //boolean isChanged = false;
+            boolean isChanged = false;
             Set<String> jobNames = jobs.getAdditionalProperties().keySet();
             for (DBItemInventoryJobTagging jobTagging : jobTaggings) {
                 if (!jobNames.contains(jobTagging.getJobName())) {
-                    //isChanged = true;
+                    isChanged = true;
                     try {
                         dbTagLayer.getSession().delete(jobTagging);
                     } catch (Exception e) {
@@ -31,9 +33,9 @@ public class JobTags {
                 }
             }
 
-//            if (isChanged) {
-//                EventBus.getInstance().post(new InventoryTagEvent(workflowDbItem.getName()));
-//            }
+            if (isChanged) {
+                EventBus.getInstance().post(new InventoryJobTagEvent(workflowDbItem.getName()));
+            }
         }
     }
 

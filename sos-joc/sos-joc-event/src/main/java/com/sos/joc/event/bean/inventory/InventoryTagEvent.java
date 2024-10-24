@@ -5,16 +5,6 @@ import com.sos.joc.event.bean.JOCEvent;
 
 public class InventoryTagEvent extends JOCEvent {
     
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public InventoryTagEvent() {
-    }
-
-    /**
-     * @param folder
-     */
     public InventoryTagEvent(String tag) {
         super("InventoryTaggingUpdated", null, null);
         putVariable("tag", tag);

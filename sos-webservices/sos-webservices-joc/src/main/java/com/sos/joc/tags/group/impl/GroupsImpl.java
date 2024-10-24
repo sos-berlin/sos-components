@@ -15,6 +15,6 @@ public class GroupsImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> impleme
 
     @Override
     public JOCDefaultResponse postGroups(String accessToken) {
-        return postGroups(API_CALL, accessToken, new InventoryTagGroupDBLayer(null));
+        return postTagsOrGroups(ResponseObject.GROUPS, API_CALL, accessToken, new InventoryTagGroupDBLayer(null));
     }
 }

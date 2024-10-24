@@ -35,8 +35,8 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
     private static final String API_CALL_STORE = "./tags/group/store";
 
     @Override
-    public JOCDefaultResponse postTagRename(String accessToken, byte[] filterBytes) {
-        return postTagRename(API_CALL_RENAME, accessToken, filterBytes, new InventoryTagGroupDBLayer(null));
+    public JOCDefaultResponse postRename(String accessToken, byte[] filterBytes) {
+        return postTagRename(ResponseObject.GROUPS, API_CALL_RENAME, accessToken, filterBytes, new InventoryTagGroupDBLayer(null));
     }
 
     @Override
