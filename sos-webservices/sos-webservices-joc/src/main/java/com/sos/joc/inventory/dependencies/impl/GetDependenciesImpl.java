@@ -127,22 +127,13 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 Map<Long, DBItemInventoryConfiguration> currentUniqueItems = referencedInvItems.stream()
                         .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
                 allUniqueItems.putAll(currentUniqueItems);
-                Set<Long> innerRefItems = Stream.concat(
-                        currentUniqueItems.keySet().stream().map(id -> {
-                            try {
-                                return dblayer.getReferencesByIds(id);
-                            } catch (SOSHibernateException e) {
-                                throw new JocSosHibernateException(e);
-                            }
-                        }).flatMap(Set::stream), 
-                        currentUniqueItems.keySet().stream().map(id -> {
-                            try {
-                                return dblayer.getReferencesIds(id);
-                            } catch (SOSHibernateException e) {
-                                throw new JocSosHibernateException(e);
-                            }
-                        }).flatMap(Set::stream)).filter(id -> !allUniqueItems.keySet().contains(id))
-                    .collect(Collectors.toSet());
+                Set<Long> innerRefItems = currentUniqueItems.keySet().stream().map(id -> {
+                    try {
+                        return dblayer.getReferencesByIds(id);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                }).flatMap(Set::stream).filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet());
                 // recursion
                 if(!innerRefItems.isEmpty()) {
                     resolveReferencesRecursively(allUniqueItems, innerRefItems, dblayer);
