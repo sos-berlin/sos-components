@@ -3,6 +3,7 @@ package com.sos.joc.inventory.dependencies.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +21,7 @@ import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
@@ -30,6 +32,7 @@ import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
 import com.sos.joc.model.inventory.dependencies.get.AffectedResponseItem;
+import com.sos.joc.model.inventory.dependencies.get.OperationType;
 import com.sos.joc.model.inventory.dependencies.get.RequestedResponseItem;
 import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
 import com.sos.schema.JsonValidator;
@@ -67,6 +70,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     }
     
     private static DependencyItems getRelatedDependencyItems(GetDependenciesRequest filter, InventoryDBLayer dblayer) throws SOSHibernateException {
+        DBLayerDependencies depDbLayer = new DBLayerDependencies(dblayer.getSession());
         List<RequestItem> requestItems = filter.getConfigurations();
         // get all inventory objects from request 
         List<DBItemInventoryConfiguration> reqDbItems = requestItems.stream().map(item -> {
@@ -80,7 +84,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             
             for(DBItemInventoryConfiguration requestedItem : reqDbItems) {
                 DependencyItem item = new DependencyItem(requestedItem);
-                List<DBItemInventoryDependency> unsortedDependencies = dblayer.getRequestedDependencies(requestedItem);
+                List<DBItemInventoryDependency> unsortedDependencies = depDbLayer.getRequestedDependencies(requestedItem);
                 // Map<Long: id of starting object, List<Long: id referencedBy objects>>
                 Map<Long, List<Long>> groupedDepInventoryIds = unsortedDependencies.stream()
                         .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
@@ -103,8 +107,9 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 // all current referenced ids which are not already processed to check for further references
                 Set<Long> allCurrentIds = Stream.concat(referencedByIds.stream(),referencesIds.stream())
                         .filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet());
+                OperationType type = filter.getOperationType();
                 // add all items once to allUniqueItems, recursively 
-                resolveReferencesRecursively(allUniqueItems, allCurrentIds, dblayer);
+                resolveReferencesRecursively(allUniqueItems, allCurrentIds, type, dblayer, depDbLayer);
                 
             }
             resultItems.setAllUniqueItems(allUniqueItems);
@@ -114,7 +119,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     }
     
     private static void resolveReferencesRecursively(Map <Long, DBItemInventoryConfiguration> allUniqueItems, Set<Long> referencedIds,
-            InventoryDBLayer dblayer) {
+            OperationType type, InventoryDBLayer dblayer, DBLayerDependencies depDbLayer) {
         if(!referencedIds.isEmpty()) {
             Set<DBItemInventoryConfiguration> referencedInvItems = referencedIds.stream().map(id -> {
                 try {
@@ -124,19 +129,62 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet());
             if(!referencedInvItems.isEmpty()) {
-                Map<Long, DBItemInventoryConfiguration> currentUniqueItems = referencedInvItems.stream()
-                        .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
-                allUniqueItems.putAll(currentUniqueItems);
+                Map<Long, DBItemInventoryConfiguration> currentUniqueItems = new HashMap<Long, DBItemInventoryConfiguration>();
+                if (type != null) {
+                    switch (type) {
+                    case DEPLOY: 
+                        currentUniqueItems = referencedInvItems.stream()
+                                .filter(item -> !item.getDeployed() && !item.getReleased())
+                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    case RELEASE:
+                        currentUniqueItems = referencedInvItems.stream()
+                                .filter(item -> !item.getDeployed() && !item.getReleased())
+                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    case REVOKE:
+                        currentUniqueItems = referencedInvItems.stream()
+                                .filter(item -> item.getDeployed() || item.getReleased())
+                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    case RECALL:
+                        currentUniqueItems = referencedInvItems.stream()
+                                .filter(item -> item.getReleased())
+                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    case REMOVE:
+                        currentUniqueItems = referencedInvItems.stream()
+                            .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    case EXPORT:
+                        currentUniqueItems = referencedInvItems.stream()
+                            .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    case GIT:
+                        currentUniqueItems = referencedInvItems.stream()
+                                .filter(item -> item.getValid())
+                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    default:
+                        currentUniqueItems = referencedInvItems.stream().collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        break;
+                    }
+                } else {
+                    currentUniqueItems = referencedInvItems.stream().collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                }
+//                Map<Long, DBItemInventoryConfiguration> currentUniqueItems = referencedInvItems.stream()
+//                        .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
                 Set<Long> innerRefItems = currentUniqueItems.keySet().stream().map(id -> {
                     try {
-                        return dblayer.getReferencesByIds(id);
+                        return depDbLayer.getReferencesIds(id);
                     } catch (SOSHibernateException e) {
                         throw new JocSosHibernateException(e);
                     }
                 }).flatMap(Set::stream).filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet());
+                allUniqueItems.putAll(currentUniqueItems);
                 // recursion
                 if(!innerRefItems.isEmpty()) {
-                    resolveReferencesRecursively(allUniqueItems, innerRefItems, dblayer);
+                    resolveReferencesRecursively(allUniqueItems, innerRefItems, type, dblayer, depDbLayer);
                 }
             }
         }

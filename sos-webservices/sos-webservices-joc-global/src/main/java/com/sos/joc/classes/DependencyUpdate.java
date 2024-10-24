@@ -10,6 +10,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 
 public class DependencyUpdate {
 
@@ -38,7 +39,8 @@ public class DependencyUpdate {
         try {
             session = Globals.createSosHibernateStatelessConnection(DependencyUpdate.class.getSimpleName());
             InventoryDBLayer dblayer = new InventoryDBLayer(session);
-            if(!dblayer.checkDependenciesPresent()) {
+            DBLayerDependencies depDblayer = new DBLayerDependencies(session);
+            if(!depDblayer.checkDependenciesPresent()) {
                 List<DBItemInventoryConfiguration> allConfigs = dblayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
                 DependencyResolver.updateDependencies(session, allConfigs);
             }

@@ -45,6 +45,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -802,7 +803,7 @@ public class DependencyResolver {
         // this method is in use (JocInventory update and insert methods)
         ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
         resolveReferences(references, session);
-        InventoryDBLayer layer = new InventoryDBLayer(session);
+        DBLayerDependencies layer = new DBLayerDependencies(session);
         // store new dependencies
         layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
     }
@@ -825,7 +826,7 @@ public class DependencyResolver {
                 Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, 
                         Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
         DependencyResolver.dependencyTypes.forEach(ctype -> groupedItems.putIfAbsent(ConfigurationType.fromValue(ctype), Collections.emptyMap()));
-        InventoryDBLayer layer = new InventoryDBLayer(session);
+        DBLayerDependencies layer = new DBLayerDependencies(session);
 
         List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item, groupedItems)).collect(Collectors.toList());
         if(!callables.isEmpty()) {
@@ -898,7 +899,7 @@ public class DependencyResolver {
         ReferencedDbItem references = resolveReferencedBy(inventoryDbItem, groupedItems);
         resolveReferences(references, groupedItems);
         // store new dependencies
-        InventoryDBLayer layer = new InventoryDBLayer(session);
+        DBLayerDependencies layer = new DBLayerDependencies(session);
         layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
 
     }
@@ -907,7 +908,7 @@ public class DependencyResolver {
             DBItemInventoryConfiguration inventoryObject) throws SOSHibernateException {
         // this method is in use
         List<DBItemInventoryDependency> dependencies = new ArrayList<DBItemInventoryDependency>();
-        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        DBLayerDependencies dbLayer = new DBLayerDependencies(session);
         dependencies = dbLayer.getDependencies(inventoryObject);
         return dependencies;
     }
