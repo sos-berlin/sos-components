@@ -46,18 +46,9 @@ public class JocServletContainer extends ServletContainer {
 
         Globals.sosCockpitProperties = new JocCockpitProperties(MapUrls.getJocProperties());
         Globals.setJocSecurityLevel(MapUrls.getSecurityLevelByUser());
-        Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC, MapUrls.getUrlMapperByUser());
-        WorkflowPaths.init();
-        WorkflowRefs.init();
-        SOSShell.printSystemInfos();
-        SOSShell.printJVMInfos();
         Globals.readUnmodifiables();
-        updateCertificate();
-        try {
-            Globals.setProperties();
-        } catch (Exception e) {
-            LOGGER.error(e.toString());
-        }
+        JOCJsonCommand.urlMapper = MapUrls.getUrlMapperByUser();
+        AgentHelper.testMode = true;
         
         try {
             CheckInstance.check();
@@ -70,14 +61,30 @@ public class JocServletContainer extends ServletContainer {
             throw new ServletException(e);
         }
         
-        JOCJsonCommand.urlMapper = MapUrls.getUrlMapperByUser();
-        AgentHelper.testMode = true;
+        updateCertificate();
         ClusterWatch.init(MapUrls.getUrlMapperByUser());
         OrderTags.getInstance();
-        if (withClusterService) {
-            JocClusterService.getInstance().start(StartupMode.automatic, true);
+        
+        try {
+            Globals.setProperties();
+        } catch (Exception e) {
+            LOGGER.error(e.toString());
         }
-        DependencyUpdate.getInstance().updateThreaded();
+        
+        new Thread(() -> {
+            Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC, MapUrls.getUrlMapperByUser());
+            new Thread(() -> {
+                WorkflowPaths.init();
+                WorkflowRefs.init();
+                SOSShell.printSystemInfos();
+                SOSShell.printJVMInfos();
+            }, "servlet-init2").start();
+            if (withClusterService) {
+                JocClusterService.getInstance().start(StartupMode.automatic, true);
+            }
+            DependencyUpdate.getInstance().updateThreaded();
+        }, "servlet-init").start();
+        
     }
 
     @Override

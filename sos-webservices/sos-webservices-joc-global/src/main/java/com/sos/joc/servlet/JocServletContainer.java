@@ -59,11 +59,11 @@ public class JocServletContainer extends ServletContainer {
     public void init() throws ServletException {
         LOGGER.debug("----> init on starting JOC");
         super.init();
+        
+        Globals.setSystemProperties();
+        Globals.sosCockpitProperties = new JocCockpitProperties();
         cleanupOldLogFiles(0);
 
-        Globals.setSystemProperties();
-
-        Globals.sosCockpitProperties = new JocCockpitProperties();
         Globals.readUnmodifiables();
         try {
             DbInstaller.createTables();
@@ -81,32 +81,41 @@ public class JocServletContainer extends ServletContainer {
             CheckInstance.stopJOC();
             throw new ServletException(e);
         }
+        
         JocCertificate.updateCertificate();
+        ClusterWatch.getInstance();
         DailyPlanCalendar.getInstance();
-        Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
-        CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
+        OrderTags.getInstance();
+        AgentStoreUtils.getInstance();
+        
         try {
             Globals.setProperties();
         } catch (Exception e1) {
             LOGGER.error(e1.toString());
         }
-        WorkflowPaths.init();
-        WorkflowRefs.init();
-        AgentStoreUtils.getInstance();
-        CompletableFuture.runAsync(() -> {
-            SOSShell.printSystemInfos();
-            SOSShell.printJVMInfos();
-            AReporting.deleteTmpFolder();
-        });
-        ClusterWatch.getInstance();
-        OrderTags.getInstance();
-        JocClusterService.getInstance().start(StartupMode.automatic, true);
-        DependencyUpdate.getInstance().updateThreaded();
-        try {
-            cleanupOldDeployedFolders(false);
-        } catch (Exception e) {
-            LOGGER.warn("cleanup deployed files: ", e.toString());
-        }
+        
+        new Thread(() -> {
+            Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
+            
+            new Thread(() -> {
+                WorkflowPaths.init();
+                WorkflowRefs.init();
+                JitlDocumentation.saveOrUpdate();
+                SOSShell.printSystemInfos();
+                SOSShell.printJVMInfos();
+                AReporting.deleteTmpFolder();
+            }, "servlet-init2").start();
+            
+            JocClusterService.getInstance().start(StartupMode.automatic, true);
+            DependencyUpdate.getInstance().updateThreaded();
+            try {
+                cleanupOldDeployedFolders(false);
+            } catch (Exception e) {
+                LOGGER.warn("cleanup deployed files: ", e.toString());
+            }
+        }, "servlet-init").start();
+        
+        
     }
 
     @Override
