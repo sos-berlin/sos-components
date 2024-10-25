@@ -95,7 +95,7 @@ public class DBLayerDependencies extends DBLayer {
             StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" as con ");
             hql.append(" where con.id in (");
             hql.append("select dep.invId from ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" as dep");
-            hql.append(" where invDependencyId = :invDepId");
+            hql.append(" where dep.invDependencyId = :invDepId");
             hql.append(")");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("invDepId", dependencyId);

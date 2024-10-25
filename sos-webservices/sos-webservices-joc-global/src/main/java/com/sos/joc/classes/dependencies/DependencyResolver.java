@@ -353,13 +353,29 @@ public class DependencyResolver {
             //Lock
             if(instructions != null) {
                 List<String> lockIds = getValuesFromInstructions(instructions, INSTRUCTION_LOCKS_SEARCH);
-                for(String lockId : lockIds) {
-                    results = dbLayer.getConfigurationByName(lockId.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(results.get(0));
+                if (!lockIds.isEmpty()) {
+                    // check from instructions info from WindowsSearch
+                    for(String lockId : lockIds) {
+                        results = dbLayer.getConfigurationByName(lockId.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
+                } else {
+                    // fallback: if result in WindowsSearch is empty check again directly in json
+                    List<String> wfLockNames = new ArrayList<String>(); 
+                    getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
+                    if(!wfLockNames.isEmpty()) {
+                        for (String lock : wfLockNames) {
+                            results = dbLayer.getConfigurationByName(lock.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
+                            if(!results.isEmpty()) {
+                                item.getReferences().add(results.get(0));
+                            }
+                        }
                     }
                 }
             } else {
+                // if no instructions are available in WindowsSearch check again directly in json
                 List<String> wfLockNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
                 if(!wfLockNames.isEmpty()) {
@@ -373,14 +389,30 @@ public class DependencyResolver {
             }
             //JobResource
             if(instructions != null) {
+                // check from instructions info from WindowsSearch
                 List<String> wfInstructionJobResourceNames = getValuesFromInstructions(instructions, JOBRESOURCENAMES_SEARCH);
-                for(String jobResourceName : wfInstructionJobResourceNames) {
-                    results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(results.get(0));
+                if(!wfInstructionJobResourceNames.isEmpty()) {
+                    for(String jobResourceName : wfInstructionJobResourceNames) {
+                        results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
+                } else {
+                    // fallback: if result in WindowsSearch is empty check again directly in json
+                    List<String> wfJobResourceNames = new ArrayList<String>(); 
+                    getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
+                    if(!wfJobResourceNames.isEmpty()) {
+                        for (String jobResource : wfJobResourceNames) {
+                            results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
+                            if(!results.isEmpty()) {
+                                item.getReferences().add(results.get(0));
+                            }
+                        }
                     }
                 }
             } else {
+                // if no instructions are available in WindowsSearch check again directly in json
                 List<String> wfJobResourceNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
                 if(!wfJobResourceNames.isEmpty()) {
@@ -394,14 +426,30 @@ public class DependencyResolver {
             }
             //NoticeBoards
             if(instructions != null) {
+                // check from instructions info from WindowsSearch
                 List<String> boardNames = getValuesFromInstructions(instructions, INSTRUCTION_BOARDS_SEARCH);
-                for(String boardName : boardNames) {
-                    results = dbLayer.getConfigurationByName(boardName.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(results.get(0));
+                if(!boardNames.isEmpty()) {
+                    for(String boardName : boardNames) {
+                        results = dbLayer.getConfigurationByName(boardName.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
+                } else {
+                    // fallback: if result in WindowsSearch is empty check again directly in json
+                    List<String> wfBoardNames = new ArrayList<String>(); 
+                    getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
+                    if(!wfBoardNames.isEmpty()) {
+                        for (String board : wfBoardNames) {
+                            results = dbLayer.getConfigurationByName(board.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
+                            if(!results.isEmpty()) {
+                                item.getReferences().add(results.get(0));
+                            }
+                        }
                     }
                 }
             } else {
+                // if no instructions are available in WindowsSearch check again directly in json
                 List<String> wfBoardNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
                 if(!wfBoardNames.isEmpty()) {
@@ -415,14 +463,30 @@ public class DependencyResolver {
             }
             //Workflow
             if(instructions != null) {
+                // check from instructions info from WindowsSearch
                 List<String> wfInstructionWorkflowNames = getValuesFromInstructions(instructions, INSTRUCTION_ADDORDERS_SEARCH);
-                for(String workflowName : wfInstructionWorkflowNames) {
-                    results = dbLayer.getConfigurationByName(workflowName.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(results.get(0));
+                if(!wfInstructionWorkflowNames.isEmpty()) {
+                    for(String workflowName : wfInstructionWorkflowNames) {
+                        results = dbLayer.getConfigurationByName(workflowName.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
+                } else {
+                    // fallback: if result in WindowsSearch is empty check again directly in json
+                    List<String> wfWorkflowNames = new ArrayList<String>(); 
+                    getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
+                    if(!wfWorkflowNames.isEmpty()) {
+                        for (String wf : wfWorkflowNames) {
+                            results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
+                            if(!results.isEmpty()) {
+                                item.getReferences().add(results.get(0));
+                            }
+                        }
                     }
                 }
             } else {
+                // if no instructions are available in WindowsSearch check again directly in json
                 List<String> wfWorkflowNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
                 if(!wfWorkflowNames.isEmpty()) {
@@ -434,13 +498,9 @@ public class DependencyResolver {
                     }
                 }
             }
-            // ScriptIncludes
-            if(json.contains("##!include")) {
-                
-            }
-            break;
         case SCHEDULE:
             // Workflow
+            // no instructions are available in WindowsSearch check always directly in json
             JsonObject schedule = jsonObjectFromString(json);
             List<String> scheduleWorkflows = new ArrayList<String>();
             getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
@@ -466,6 +526,7 @@ public class DependencyResolver {
             break;
         case JOBTEMPLATE:
             // jobResource
+            // no instructions are available in WindowsSearch check always directly in json
             JsonObject jobTemplate = jsonObjectFromString(json);
             List<String> jobTemplateJobResources = new ArrayList<String>();
             getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
@@ -480,6 +541,7 @@ public class DependencyResolver {
             break;
         case FILEORDERSOURCE:
             // Workflow
+            // no instructions are available in WindowsSearch check always directly in json
             JsonObject fos = jsonObjectFromString(json);
             List<String> fosWorkflows = new ArrayList<String>();
             getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);

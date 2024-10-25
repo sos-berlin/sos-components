@@ -1,9 +1,11 @@
 package com.sos.joc.inventory.dependencies.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,6 +46,11 @@ import jakarta.ws.rs.Path;
 public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependencies {
     
     private static final String API_CALL = "./inventory/dependencies";
+    private static final List<ConfigurationType> referencesType = Arrays.asList(
+            ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE, ConfigurationType.JOBTEMPLATE);
+    private static final List<ConfigurationType> referencedByType = Arrays.asList(
+            ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE, ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD,
+            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR);
     
     @Override
     public JOCDefaultResponse postGetDependencies(String xAccessToken, byte[] dependencyFilter) {
@@ -129,58 +136,137 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet());
             if(!referencedInvItems.isEmpty()) {
-                Map<Long, DBItemInventoryConfiguration> currentUniqueItems = new HashMap<Long, DBItemInventoryConfiguration>();
+                Map<Long, DBItemInventoryConfiguration> currentUniqueItems = referencedInvItems.stream()
+                        .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                Map<Long, DBItemInventoryConfiguration> currentUniqueReferencesItems = new HashMap<Long, DBItemInventoryConfiguration>();
+                Map<Long, DBItemInventoryConfiguration> currentUniqueReferencedByItems = new HashMap<Long, DBItemInventoryConfiguration>();
                 if (type != null) {
                     switch (type) {
                     case DEPLOY: 
-                        currentUniqueItems = referencedInvItems.stream()
-                                .filter(item -> !item.getDeployed() && !item.getReleased())
-                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all already released/deployed from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> !entry.getValue().getDeployed() && !entry.getValue().getReleased())
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> !entry.getValue().getDeployed() && !entry.getValue().getReleased())
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     case RELEASE:
-                        currentUniqueItems = referencedInvItems.stream()
-                                .filter(item -> !item.getDeployed() && !item.getReleased())
-                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all already released/deployed from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> !entry.getValue().getDeployed() && !entry.getValue().getReleased())
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> !entry.getValue().getDeployed() && !entry.getValue().getReleased())
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     case REVOKE:
-                        currentUniqueItems = referencedInvItems.stream()
-                                .filter(item -> item.getDeployed() || item.getReleased())
-                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all drafts from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> entry.getValue().getDeployed() || entry.getValue().getReleased())
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> entry.getValue().getDeployed() || entry.getValue().getReleased())
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     case RECALL:
-                        currentUniqueItems = referencedInvItems.stream()
-                                .filter(item -> item.getReleased())
-                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all drafts from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> entry.getValue().getReleased())
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> entry.getValue().getReleased())
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     case REMOVE:
-                        currentUniqueItems = referencedInvItems.stream()
-                            .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all drafts from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     case EXPORT:
-                        currentUniqueItems = referencedInvItems.stream()
-                            .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all drafts from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     case GIT:
-                        currentUniqueItems = referencedInvItems.stream()
-                                .filter(item -> item.getValid())
-                                .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all drafts from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     default:
-                        currentUniqueItems = referencedInvItems.stream().collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                        // filter: remove  all drafts from further processing
+                        // filter: only referencesTypes for recursive references processing
+                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: only referencedByTypes for recursive referencedBy processing
+                        currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                                .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         break;
                     }
                 } else {
-                    currentUniqueItems = referencedInvItems.stream().collect(Collectors.toMap(item -> item.getId(), Function.identity()));
+                    // filter: remove  all drafts from further processing
+                    // filter: only referencesTypes for recursive references processing
+                    currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+                            .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    // filter: only referencedByTypes for recursive referencedBy processing
+                    currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
+                            .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 }
-//                Map<Long, DBItemInventoryConfiguration> currentUniqueItems = referencedInvItems.stream()
-//                        .collect(Collectors.toMap(item -> item.getId(), Function.identity()));
-                Set<Long> innerRefItems = currentUniqueItems.keySet().stream().map(id -> {
+
+                Set<Long> innerRefItems = new HashSet<Long>();
+                innerRefItems.addAll(currentUniqueReferencesItems.keySet().stream().map(id -> {
                     try {
                         return depDbLayer.getReferencesIds(id);
                     } catch (SOSHibernateException e) {
                         throw new JocSosHibernateException(e);
                     }
-                }).flatMap(Set::stream).filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet());
+                }).flatMap(Set::stream).filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet()));
+                innerRefItems.addAll(currentUniqueReferencedByItems.keySet().stream().map(id -> {
+                    try {
+                        return depDbLayer.getReferencesByIds(id);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                }).flatMap(Set::stream).filter(id -> !allUniqueItems.keySet().contains(id)).collect(Collectors.toSet()));
+                
                 allUniqueItems.putAll(currentUniqueItems);
                 // recursion
                 if(!innerRefItems.isEmpty()) {
