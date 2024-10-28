@@ -6,12 +6,16 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.tag.ATagsModifyImpl;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.IDBItemTag;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
@@ -69,9 +73,11 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
             Long groupId = groups.get(0).getGroupId();
             Set<String> oldTags = dbLayer.getTagsByGroupId(groupId);
             
-            Set<String> addedTags =  new HashSet<>(modifyTags.getTags());
+            Set<String> tags = modifyTags.getTags().stream().map(GroupedTag::new).map(GroupedTag::getTag).collect(Collectors.toSet());
+
+            Set<String> addedTags =  new HashSet<>(tags);
             addedTags.removeAll(oldTags);
-            oldTags.removeAll(modifyTags.getTags()); //deletedTags
+            oldTags.removeAll(tags); //deletedTags
             
             dbLayer.deleteGroupIds(Collections.singletonList(groupId), oldTags);
             
