@@ -107,11 +107,11 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
             break;
         case H2:
             // REGEXP_LIKE(property,regexp)
-            sqlAppender.append("REGEXP_LIKE(");
+            sqlAppender.append("(case when (REGEXP_LIKE(");
             arguments.get(0).accept(translator);
             sqlAppender.append(",");
             arguments.get(1).accept(translator);
-            sqlAppender.append(")");
+            sqlAppender.append(")) then 1 else 0 end)");
             break;
         default:
             sqlAppender.append(NAME);
