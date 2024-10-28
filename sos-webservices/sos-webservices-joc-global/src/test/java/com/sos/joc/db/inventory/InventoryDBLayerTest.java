@@ -48,11 +48,8 @@ public class InventoryDBLayerTest {
             }
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -81,11 +78,8 @@ public class InventoryDBLayerTest {
             }
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -120,11 +114,8 @@ public class InventoryDBLayerTest {
             }
             e.printStackTrace();
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -157,11 +148,8 @@ public class InventoryDBLayerTest {
             }
             e.printStackTrace();
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -192,11 +180,8 @@ public class InventoryDBLayerTest {
             }
             e.printStackTrace();
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -227,11 +212,8 @@ public class InventoryDBLayerTest {
             }
             e.printStackTrace();
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -247,7 +229,7 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            String val = "mail";
+            String val = "test";
 
             List<DBItemInventoryConfiguration> result = dbLayer.getUsedWorkflowsByJobResource(val);
             for (DBItemInventoryConfiguration entry : result) {
@@ -262,11 +244,37 @@ public class InventoryDBLayerTest {
             }
             e.printStackTrace();
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testGetNumOfAddOrderWorkflowsByWorkflowName() {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
+
+            String val = "mail";
+
+            Long result = dbLayer.getNumOfAddOrderWorkflowsByWorkflowName(val);
+            LOGGER.info("RESULT=" + result);
+            session.commit();
+        } catch (Exception e) {
+            try {
+                session.rollback();
+            } catch (Throwable ex) {
+            }
+            e.printStackTrace();
+        } finally {
+            if (factory != null) {
+                factory.close(session);
             }
         }
     }
@@ -280,7 +288,7 @@ public class InventoryDBLayerTest {
         String folder = "/";
         boolean recursive = true;
         Collection<String> jobTemplateNames = null;
-        //jobTemplateNames = Collections.singletonList("jt_1");
+        // jobTemplateNames = Collections.singletonList("jt_1");
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
@@ -294,17 +302,14 @@ public class InventoryDBLayerTest {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.h2.xml"));
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.build();
         return factory;

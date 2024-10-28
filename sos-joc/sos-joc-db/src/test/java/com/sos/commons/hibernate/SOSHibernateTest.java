@@ -21,6 +21,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.encipherment.DBItemEncAgentCertificate;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 
 /** HQL Tests<br/>
@@ -327,6 +328,34 @@ public class SOSHibernateTest {
 
     @Ignore
     @Test
+    public void testBoolean() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+
+            String deployed = "true";
+            // deployed = "1";
+
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+            hql.append("where deployed=").append(deployed);
+
+            Query<DBItemInventoryConfiguration> query = session.createQuery(hql);
+            List<DBItemInventoryConfiguration> result = session.getResultList(query);
+            LOGGER.info("[SIZE]" + result.size());
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
     public void testNormalizeValueLen() throws IOException {
         String s = SOSPath.readFile(Paths.get("my_file.txt"), StandardCharsets.UTF_8);
         String n = DBItemHistoryOrderStep.normalizeErrorText(s);
@@ -335,7 +364,7 @@ public class SOSHibernateTest {
 
     public static SOSHibernateFactory createFactory() throws Exception {
         // System.setProperty("java.util.logging.config.file", Paths.get("src/test/resources/mssql/logging.properties").toString());
-        Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.mysql.xml");
+        Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.h2.xml");
         tryDoInsertIfH2(hibernateFile, false);
 
         SOSHibernateFactory factory = new SOSHibernateFactory(hibernateFile);
