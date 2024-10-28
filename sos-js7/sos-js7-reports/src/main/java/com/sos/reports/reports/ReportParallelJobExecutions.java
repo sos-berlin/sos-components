@@ -33,7 +33,7 @@ public class ReportParallelJobExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
     private static final String UTC = "UTC";
-    private static final int MAX_PERIODS_IN_LIST = 5000;
+    private static final int MAX_PERIODS_IN_LIST = 2500;
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
