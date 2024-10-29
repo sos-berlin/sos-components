@@ -128,6 +128,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                         taggingIsChanged = true;
                     }
                 }
+                // TODO delete obsolete Tags from INV_JOB_TAGS table
                 if (!dbTaggings.isEmpty()) {
                     dbTaggings.removeIf(i -> i.getJobName().equals(jobTag.getJobName()));
                 }

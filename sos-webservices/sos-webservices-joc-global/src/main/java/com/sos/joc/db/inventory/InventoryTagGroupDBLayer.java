@@ -15,6 +15,9 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
+import com.sos.joc.event.bean.JOCEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagsEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
@@ -37,22 +40,30 @@ public class InventoryTagGroupDBLayer extends ATagDBLayer<DBItemInventoryTagGrou
         return null;
     }
     
-    public Integer deleteGroupIds(List<Long> groupIds, Set<String> tagNames) throws SOSHibernateException {
+    public Integer deleteGroupIds(List<Long> groupIds, Set<String> tagNames, Set<JOCEvent> events) throws SOSHibernateException {
         if (groupIds == null || groupIds.isEmpty()) {
             return 0;
         }
         if (groupIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int result = 0;
             for (int i = 0; i < groupIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                result += deleteGroupIds(SOSHibernate.getInClausePartition(i, groupIds), tagNames);
+                result += deleteGroupIds(SOSHibernate.getInClausePartition(i, groupIds), tagNames, events);
             }
             return result;
         } else {
             int i = 0;
-            i = i + deleteGroupIds(groupIds, tagNames, DBLayer.DBITEM_INV_TAGS);
-            i = i + deleteGroupIds(groupIds, tagNames, DBLayer.DBITEM_INV_JOB_TAGS);
+            int i1 = deleteGroupIds(groupIds, tagNames, DBLayer.DBITEM_INV_TAGS);
+            if (i1 > 0) {
+                events.add(new InventoryTagsEvent());
+                i = i + i1;
+            }
+            int i2 = deleteGroupIds(groupIds, tagNames, DBLayer.DBITEM_INV_JOB_TAGS);
+            if (i2 > 0) {
+                events.add(new InventoryJobTagsEvent());
+                i = i + i2;
+            }
             i = i + deleteGroupIds(groupIds, tagNames, DBLayer.DBITEM_INV_ORDER_TAGS);
-            // TODO i = i + deleteGroupIds(groupIds, DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+            i = i + deleteGroupIds(groupIds, tagNames, DBLayer.DBITEM_HISTORY_ORDER_TAGS);
             return i;
         }
     }
@@ -71,9 +82,17 @@ public class InventoryTagGroupDBLayer extends ATagDBLayer<DBItemInventoryTagGrou
         }
         if (tagNames != null) {
             if (tagNames.size() == 1) {
-                sql.append(" and name = :tagName");
+                if (tablename.equals(DBLayer.DBITEM_HISTORY_ORDER_TAGS)) {
+                    sql.append(" and tagName = :tagName");
+                } else {
+                    sql.append(" and name = :tagName");
+                }
             } else {
-                sql.append(" and name in (:tagNames)");
+                if (tablename.equals("DBItemHistoryOrderTag")) {
+                    sql.append(" and tagName in (:tagNames)");
+                } else {
+                    sql.append(" and name in (:tagNames)");
+                }
             }
         }
         Query<Integer> query = getSession().createQuery(sql.toString());

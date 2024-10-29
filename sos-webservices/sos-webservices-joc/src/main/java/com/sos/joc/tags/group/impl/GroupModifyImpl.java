@@ -12,14 +12,20 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.tag.ATagsModifyImpl;
 import com.sos.joc.classes.tag.GroupedTag;
+import com.sos.joc.db.history.DBItemHistoryOrderTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.IDBItemTag;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagGroupDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.JOCEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagsEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -77,13 +83,23 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
             addedTags.removeAll(oldTags);
             oldTags.removeAll(tags); //deletedTags
             
-            dbLayer.deleteGroupIds(Collections.singletonList(groupId), oldTags);
+            Set<JOCEvent> events = new HashSet<>();
+            
+            dbLayer.deleteGroupIds(Collections.singletonList(groupId), oldTags, events);
             
             List<IDBItemTag> dbTagItems = new ArrayList<>();
+            int size = 0;
             dbTagItems.addAll(new InventoryTagDBLayer(session).getTags(addedTags));
+            size = dbTagItems.size() - size;
+            if (size > 0) {
+                events.add(new InventoryTagsEvent());
+            }
             dbTagItems.addAll(new InventoryJobTagDBLayer(session).getTags(addedTags));
+            size = dbTagItems.size() - size;
+            if (size > 0) {
+                events.add(new InventoryJobTagsEvent());
+            }
             dbTagItems.addAll(new InventoryOrderTagDBLayer(session).getTags(addedTags));
-            
             Date now = Date.from(Instant.now());
             
             for (IDBItemTag dbTagItem : dbTagItems) {
@@ -91,11 +107,16 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
                 dbTagItem.setModified(now);
                 session.update(dbTagItem);
             }
-            // TODO history orders?? dbTagItems.addAll(...)
             
-            // TODO events
+            List<DBItemHistoryOrderTag> historyOrderTags =  OrderTags.getTagsByTagNames(addedTags, session);
+            for (DBItemHistoryOrderTag dbTagItem : historyOrderTags) {
+                dbTagItem.setGroupId(groupId);
+                session.update(dbTagItem);
+            }
             
             Globals.commit(session);
+            events.forEach(e -> EventBus.getInstance().post(e));
+            
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {
             Globals.rollback(session);

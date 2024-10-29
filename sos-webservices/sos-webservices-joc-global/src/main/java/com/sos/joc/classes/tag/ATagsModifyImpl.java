@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -347,23 +348,69 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 return jocDefaultResponse;
             }
             
+            storeAuditLog(modifyTag.getAuditLog(), CategoryType.INVENTORY);
+            
+            GroupedTag groupedName = new GroupedTag(modifyTag.getName());
+            GroupedTag groupedNewName = new GroupedTag(modifyTag.getNewName());
+            
+            if (groupedName.toString().equals(groupedNewName.toString())) {
+                // nothing to do
+                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            }
+            
             String objectName = ResponseObject.GROUPS.equals(responseObject) ? "group" : "tag";
             
-            storeAuditLog(modifyTag.getAuditLog(), CategoryType.INVENTORY);
+            if (ResponseObject.GROUPS.equals(responseObject)) {
+                SOSCheckJavaVariableName.test(objectName + " name: ", modifyTag.getNewName());
+            } else {
+                groupedNewName.checkJavaNameRules();
+            }
             
             session = Globals.createSosHibernateStatelessConnection(apiCall);
             session.setAutoCommit(false);
             session.beginTransaction();
             
             dbLayer.setSession(session);
-            T tag = dbLayer.getTag(modifyTag.getName());
+            T tag = dbLayer.getTag(groupedName.getTag());
             if (tag == null) {
-               throw new DBMissingDataException("Couldn't find " + objectName + " with name '" + modifyTag.getName() + "'");
+               throw new DBMissingDataException("Couldn't find " + objectName + " with name '" + groupedName.getTag() + "'");
             }
-            SOSCheckJavaVariableName.test(objectName + " name: ", modifyTag.getNewName());
-            tag.setName(modifyTag.getNewName());
+            T newTag = dbLayer.getTag(groupedNewName.getTag());
+            if (newTag != null) {
+                throw new DBMissingDataException(objectName + " with name '" + groupedName.getTag() + "' already exists.");
+             }
+            
             Date now = Date.from(Instant.now());
+            DBItemInventoryTagGroup dbGroupItem = null;
+            Map<String, GroupedTag> groupedTags = new HashMap<>(1);
+            groupedTags.put(groupedNewName.getTag(), groupedNewName);
+
+            // consider group
+            switch (responseObject) {
+            case INVTAGS:
+                checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(session), "job");
+                checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
+                groupedNewName = groupedTags.get(groupedNewName.getTag());
+                dbGroupItem = getDbGroup(groupedNewName, now, dbLayer);
+                break;
+            case JOBTAGS:
+                checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(session), "workflow");
+                checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
+                groupedNewName = groupedTags.get(groupedNewName.getTag());
+                dbGroupItem = getDbGroup(groupedNewName, now, dbLayer);
+                break;
+            case ORDERTAGS:
+            case GROUPS:
+                break;
+            }
+
+            tag.setName(groupedNewName.getTag());
             tag.setModified(now);
+            if (dbGroupItem != null) {
+                tag.setGroupId(dbGroupItem.getId()); 
+            } else {
+                tag.setGroupId(0L); 
+            }
             dbLayer.getSession().update(tag);
             Globals.commit(session);
             
@@ -396,6 +443,25 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    private DBItemInventoryTagGroup getDbGroup(GroupedTag groupedNewName, Date now, ATagDBLayer<T> dbLayer) throws SOSHibernateException {
+        if (groupedNewName.hasGroup()) {
+            List<DBItemInventoryTagGroup> dbGroups = dbLayer.getGroups(Collections.singleton(groupedNewName.getGroup().get()));
+            if (dbGroups.isEmpty()) {
+                // insert group
+                int maxGroupsOrdering = dbLayer.getMaxGroupsOrdering();
+                DBItemInventoryTagGroup dbGroupItem = new DBItemInventoryTagGroup();
+                dbGroupItem.setName(groupedNewName.getGroup().get());
+                dbGroupItem.setModified(now);
+                dbGroupItem.setOrdering(++maxGroupsOrdering);
+                dbLayer.getSession().save(dbGroupItem);
+                return dbGroupItem;
+            } else {
+                return dbGroups.get(0);
+            }
+        }
+        return null;
     }
 
     private T createTypedDBItem(Class<T> clazz) {

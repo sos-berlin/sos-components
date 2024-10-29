@@ -607,6 +607,32 @@ public class OrderTags {
                 Collectors.toCollection(LinkedHashSet::new))));
     }
     
+    public static List<DBItemHistoryOrderTag> getTagsByTagNames(Collection<String> tagNames, SOSHibernateSession connection)
+            throws SOSHibernateException {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Collection<List<String>> chunkedTagNames = getChunkedCollection(tagNames);
+
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+        
+        String clause = IntStream.range(0, chunkedTagNames.size()).mapToObj(i -> "tagName in (:tagNames" + i + ")").collect(Collectors.joining(
+                " or "));
+        hql.append(" where " + clause);
+
+        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString(), DBItemHistoryOrderTag.class);
+        AtomicInteger counter = new AtomicInteger();
+        for (List<String> chunk : chunkedTagNames) {
+            query.setParameterList("tagNames" + counter.getAndIncrement(), chunk);
+        }
+        List<DBItemHistoryOrderTag> result = connection.getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
+    
     public static Map<String, Set<String>> getTagsByHistoryIds(String controllerId, List<Long> historyIds, SOSHibernateSession connection)
             throws SOSHibernateException {
         if (historyIds == null || historyIds.isEmpty()) {

@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -133,9 +135,13 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
         case DELETE:
             List<DBItemInventoryTagGroup> dbGroups2 = dbLayer.getGroups(modifyTags.getGroups());
             //set groupId = 0 for Workflow, job, order tags
-            dbLayer.deleteGroupIds(dbGroups2.stream().map(DBItemInventoryTagGroup::getId).collect(Collectors.toList()), null);
+            Set<JOCEvent> events2 = new HashSet<>();
+            dbLayer.deleteGroupIds(dbGroups2.stream().map(DBItemInventoryTagGroup::getId).collect(Collectors.toList()), null, events2);
             dbLayer.deleteGroups(dbGroups2);
             events = modifyTags.getGroups().stream().map(InventoryGroupDeleteEvent::new);
+            if (!events2.isEmpty()) {
+                events = Stream.concat(events, events2.stream());
+            }
             break;
 
         case ORDERING:
