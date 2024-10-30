@@ -169,8 +169,9 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             Instant now = Instant.now();
             Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
             
-            Map<String, Set<String>> expectedNotices = in.getExpectedNotices().stream().collect(Collectors.toMap(
-                    ExpectedNoticesPerBoard::getNoticeBoardPath, ExpectedNoticesPerBoard::getWorkflowPaths, (k, v) -> k));
+            Map<String, Set<String>> expectedNotices = in.getExpectedNotices().stream().peek(en -> en.setNoticeBoardPath(JocInventory.pathToName(en
+                    .getNoticeBoardPath()))).collect(Collectors.toMap(ExpectedNoticesPerBoard::getNoticeBoardPath, en -> en.getWorkflowPaths()
+                            .stream().map(JocInventory::pathToName).collect(Collectors.toSet()), (k, v) -> k));
             expectedNotices.keySet().removeIf(key -> !boardPaths.contains(BoardPath.of(key)));
             
             if (!expectedNotices.isEmpty()) {
