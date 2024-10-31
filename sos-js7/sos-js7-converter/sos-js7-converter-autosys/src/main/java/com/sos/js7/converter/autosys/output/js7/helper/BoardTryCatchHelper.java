@@ -13,6 +13,7 @@ import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.OutConditionHolder;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Job2Condition;
 
 public class BoardTryCatchHelper {
 

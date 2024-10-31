@@ -23,18 +23,26 @@ import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.OutConditionHolder;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
+import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Condition2ConsumeNotice;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Condition2ConsumeNotice.Condition2ConsumeNoticeType;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Job2Condition;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class BoardHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BoardHelper.class);
 
+    public static final Map<Condition, Path> JS7_BOARDS = new HashMap<>();
+    public static final Set<Condition2ConsumeNotice> JS7_CONSUME_NOTICES = AutosysConverterHelper.newContition2ConsumeNoticeTreeSet();
+
     // without space at end
     private static final String JS7_AND = " " + JS7ConverterHelper.JS7_NOTICE_AND;
     private static final String JS7_OR = " " + JS7ConverterHelper.JS7_NOTICE_OR;
 
-    public static final Map<Condition, Path> JS7_BOARDS = new HashMap<>();
-    public static final Set<Condition> JS7_CONSUME_NOTICES = new HashSet<>();
+    // create a ConsumeNotive if condition job is a cyclic job
+    // was true before 2024-10-31 ...
+    private static boolean CYCLIC_TO_COMSUME = false;
 
     public static void clear() {
         JS7_BOARDS.clear();
@@ -123,27 +131,27 @@ public class BoardHelper {
             if (o instanceof Condition) {
                 Condition c = (Condition) o;
 
-                boolean isConsume = false;
-                if (c.getJobName() != null) {
+                Condition2ConsumeNotice consumeBean = null;
+                if (CYCLIC_TO_COMSUME && c.getJobName() != null) {
                     ACommonJob j = analyzer.getAllJobs().get(c.getJobName());
                     if (j != null) {
                         if (j.getRunTime().isCyclic()) {
-                            isConsume = true;
+                            consumeBean = new Condition2ConsumeNotice(c, Condition2ConsumeNoticeType.CYCLIC);
                         }
                     }
                 }
 
                 String name = getBoardName(analyzer, currentJob, new Job2Condition(null, c));
                 if (name != null) {
-                    if (isConsume) {
+                    if (consumeBean != null) {
                         // TODO currently only AND
                         if (consume.length() > 0) {
                             consume.append(JS7_AND).append(" ");
                         }
 
                         consume.append(quote(name));
-                        if (!JS7_CONSUME_NOTICES.contains(c)) {
-                            JS7_CONSUME_NOTICES.add(c);
+                        if (!JS7_CONSUME_NOTICES.contains(consumeBean)) {
+                            JS7_CONSUME_NOTICES.add(consumeBean);
                         }
                     } else {
                         expect.append(quote(name));
@@ -259,6 +267,20 @@ public class BoardHelper {
             return new PostNotices(l);
         }
         return null;
+    }
+
+    public static Integer getLifeTimeInMinutes(Condition c) {
+        // null, because a default value 24h will be used - see JS7ConverterHelper.createNoticeBoard
+        if (c == null) {
+            return null;
+        }
+        Integer l = c.getLookBackAsMinutes();
+        // l.intValue() < 0 - lockBack=0
+        // l.intValue() > 24 * 60 - more as 24h
+        if (l == null || l.intValue() <= 0 || l.intValue() > 24 * 60) {
+            return null;
+        }
+        return l;
     }
 
 }

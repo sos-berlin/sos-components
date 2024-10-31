@@ -111,8 +111,13 @@ public class RunTimeHelper {
         Schedule s = new Schedule();
         // s.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle("xxxx"));
         s.setWorkflowNames(Collections.singletonList(wr.getName()));
-        s.setPlanOrderAutomatically(config.getScheduleConfig().planOrders());
-        s.setSubmitOrderToControllerWhenPlanned(config.getScheduleConfig().submitOrders());
+        if (j.getRunTime().hasDateConditions()) {
+            s.setPlanOrderAutomatically(config.getScheduleConfig().planOrders());
+            s.setSubmitOrderToControllerWhenPlanned(config.getScheduleConfig().submitOrders());
+        } else {
+            s.setPlanOrderAutomatically(false);
+            s.setSubmitOrderToControllerWhenPlanned(false);
+        }
         s.setCalendars(Collections.singletonList(calendar));
 
         return s;

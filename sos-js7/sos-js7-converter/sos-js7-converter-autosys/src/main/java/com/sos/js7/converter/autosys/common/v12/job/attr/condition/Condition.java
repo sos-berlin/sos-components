@@ -4,9 +4,14 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class Condition implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Condition.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -142,6 +147,55 @@ public class Condition implements Serializable {
 
     public String getLookBack() {
         return lookBack;
+    }
+
+    /** status(job_name, hhhh.mm)<br/>
+     * status(job_name^INS, hhhh.mm)<br/>
+     * exitcode(job_name, hhhh.mm) operator value <br/>
+     * exitcode(job_name^INS, hhhh.mm) operator value<br/>
+     * - hhhh Indicates the hours taken for the last run of the condition or predecessor job. You can look back approximately 416.58 days.<br/>
+     * Limits: 0-9999 <br/>
+     * - mm Indicates the minutes taken for the last run of the condition or predecessor job.<br/>
+     * Limits: 0-59 when specifying minutes; 0-9998 for hhhh when specifying hours and minutes (for example, 9998.59)<br/>
+     * Examples: 0, 00.15, 06.30, 23.30, 24, 98.30, 720, 9998.59, 9999<br/>
+     * <br/>
+     * Instead of using a period (.) to separate hhhh and mm, you can use a colon that must be escaped (\:) as shown in the following example: condition:
+     * success(Joba,01\:00) and failure(JobB,02\:15) */
+    public Integer getLookBackAsMinutes() {
+        if (lookBack == null) {
+            return null;
+        }
+        if ("0".equals(lookBack)) {
+            return Integer.valueOf(-1);
+        }
+        // if ("9999".equals(lookBack)) {
+        // return Integer.MAX_VALUE;
+        // }
+        String[] parts = lookBack.split("\\.|\\\\:");
+        int hours = 0;
+        int minutes = 0;
+        try {
+            if (parts.length == 1) {
+                hours = Integer.parseInt(parts[0]);
+            }
+            // "06.30" or "01\:00"
+            else if (parts.length == 2) {
+                hours = Integer.parseInt(parts[0]);
+                minutes = Integer.parseInt(parts[1]);
+                if (minutes < 0 || minutes > 59) {
+                    throw new IllegalArgumentException("[invalid minutes]" + minutes);
+                }
+            } else {
+                throw new IllegalArgumentException("invalid lookback format");
+            }
+            if (hours < 0 || hours > 9999) {
+                throw new IllegalArgumentException("[invalid hours]" + hours);
+            }
+        } catch (Throwable e) {
+            LOGGER.error("[" + lookBack + "]" + e.toString());
+            return null;
+        }
+        return Integer.valueOf(hours * 60 + minutes);
     }
 
     public String getInstanceTag() {

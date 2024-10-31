@@ -212,6 +212,10 @@ public class CommonJobRunTime extends AJobAttributes {
         return dateConditions;
     }
 
+    public boolean hasDateConditions() {
+        return dateConditions.getValue() != null && dateConditions.getValue().booleanValue();
+    }
+
     @ArgumentSetter(name = ATTR_DATE_CONDITIONS)
     public void setDateConditions(String val) {
         dateConditions.setValue(JS7ConverterHelper.booleanValue(val, false));

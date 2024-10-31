@@ -33,7 +33,9 @@ import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.autosys.input.JILJobParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
+import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.InConditionHolder;
 import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Condition2ConsumeNotice;
 import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobHelper;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
@@ -71,6 +73,7 @@ public class Report {
     private static final String FILE_NAME_CONDITIONS_WITH_OR = "Report-Conditions[OR].txt";
     private static final String FILE_NAME_CONDITIONS_WITH_GROUP = "Report-Conditions[Groups].txt";
     private static final String FILE_NAME_CONDITIONS_WITH_LOOKBACK = "Report-Conditions[LookBack].txt";
+    private static final String FILE_NAME_CONDITIONS_WITH_LOOKBACK_USAGE = "Report-Conditions[LookBack]usage.txt";
     private static final String FILE_NAME_CONDITIONS_WITH_INSTANCE_TAG = "Report-Conditions[InstanceTag].txt";
     private static final String FILE_NAME_CONDITIONS_JOBS_NOT_FOUND = "Report-Conditions[Jobs]not_found.txt";
 
@@ -244,9 +247,15 @@ public class Report {
             LOGGER.error("[writeConditionsReportBoxSuccessFailure]" + e.toString(), e);
         }
         try {
-            writeSummaryConditionsReportByLockBack(reportDir, analyzer);
+            writeSummaryConditionsReportByLookBack(reportDir, analyzer);
         } catch (Throwable e) {
-            LOGGER.error("[writeSummaryConditionsReportByLockBack]" + e.toString(), e);
+            LOGGER.error("[writeSummaryConditionsReportByLookBack]" + e.toString(), e);
+        }
+
+        try {
+            writeSummaryConditionsReportByLookBackUsage(reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeSummaryConditionsReportByLookBackUsage]" + e.toString(), e);
         }
 
         try {
@@ -275,7 +284,8 @@ public class Report {
             }
 
             String indentDetails = "%-15s";
-            for (Condition c : BoardHelper.JS7_CONSUME_NOTICES) {
+            for (Condition2ConsumeNotice cb : BoardHelper.JS7_CONSUME_NOTICES) {
+                Condition c = cb.getCondition();
                 ACommonJob cj = analyzer.getAllJobs().get(c.getJobName());
                 String cjp = PathResolver.getJILJobParentPathNormalized(cj);
                 String cjn = cj.getName();
@@ -758,7 +768,8 @@ public class Report {
         SOSPath.deleteIfExists(f);
 
         // SOSPath.appendLine(f, "Jobs by type:");
-        SOSPath.appendLine(f, "Jobs by runtime:      Total Jobs    Without runtime    Single Starts    Cyclic    Runtime without start time");
+        SOSPath.appendLine(f,
+                "Jobs by runtime:      Total Jobs    Without runtime    Single Starts    Cyclic    Runtime without start time    Runtime without time zone");
 
         String msg = "";
         int jobs = 0;
@@ -766,6 +777,7 @@ public class Report {
         Set<ACommonJob> runtimeSingleStarts = AutosysConverterHelper.newJobTreeSet();
         Set<ACommonJob> runtimeCyclic = AutosysConverterHelper.newJobTreeSet();
         Set<ACommonJob> runtimeUnknown = AutosysConverterHelper.newJobTreeSet();
+        Set<ACommonJob> runtimeWithoutTimezone = AutosysConverterHelper.newJobTreeSet();
         Map<String, Integer> calendars = new TreeMap<>();
         Map<String, Integer> timezones = new TreeMap<>();
         for (ACommonJob j : analyzer.getAllJobs().values()) {
@@ -775,6 +787,10 @@ public class Report {
             }
             mapCounter(calendars, j.getRunTime().getRunCalendar().getValue());
             mapCounter(timezones, j.getRunTime().getTimezone().getValue());
+
+            if (j.getRunTime().getTimezone().getValue() == null) {
+                runtimeWithoutTimezone.add(j);
+            }
 
             if (j.getRunTime().isSingleStarts()) {
                 runtimeSingleStarts.add(j);
@@ -786,8 +802,8 @@ public class Report {
         }
 
         SOSPath.appendLine(f, LINE_DELIMETER);
-        msg = String.format("%-18s %-14s %-18s %-15s %-10s %-10s", "", jobs, jobsWithoutRuntime, runtimeSingleStarts.size(), runtimeCyclic.size(),
-                runtimeUnknown.size());
+        msg = String.format("%-18s %-14s %-18s %-15s %-10s %-30s %-30s", "", jobs, jobsWithoutRuntime, runtimeSingleStarts.size(), runtimeCyclic
+                .size(), runtimeUnknown.size(), runtimeWithoutTimezone.size());
         SOSPath.appendLine(f, "    " + msg);
 
         SOSPath.appendLine(f, LINE_DETAILS);
@@ -808,7 +824,7 @@ public class Report {
         writeAllJobsRuntimeDetails(f, runtimeSingleStarts, "Single Starts");
         writeAllJobsRuntimeDetails(f, runtimeCyclic, "Cyclic");
         writeAllJobsRuntimeDetails(f, runtimeUnknown, "Runtime without start time");
-
+        writeAllJobsRuntimeDetails(f, runtimeWithoutTimezone, "Runtime without time zone");
     }
 
     private static void writeJobReportJobsAllByRuntimeRunWindow(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
@@ -1565,7 +1581,7 @@ public class Report {
         }
     }
 
-    private static void writeSummaryConditionsReportByLockBack(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+    private static void writeSummaryConditionsReportByLookBack(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_CONDITIONS_WITH_LOOKBACK);
 
         SOSPath.deleteIfExists(f);
@@ -1648,6 +1664,26 @@ public class Report {
             SOSPath.appendLine(f, LINE_DELIMETER);
         }
 
+    }
+
+    private static void writeSummaryConditionsReportByLookBackUsage(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_CONDITIONS_WITH_LOOKBACK_USAGE);
+
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobsWithLookBack = analyzer.getAllJobs().values().stream().filter(j -> j.hasLookBackConditions()).collect(Collectors
+                .toList());
+        if (jobsWithLookBack.size() == 0) {
+            return;
+        }
+
+        SOSPath.appendLine(f, "DRAFT .........................");
+        SOSPath.appendLine(f, LINE_DELIMETER);
+        
+        for (Map.Entry<String, InConditionHolder> e : analyzer.getConditionAnalyzer().getAllINConditions().entrySet()) {
+            String msg = String.format("%-60s%s", e.getKey(), e.getValue());
+            SOSPath.appendLine(f, msg);
+        }
     }
 
     private static void writeSummaryConditionsReportJobsNotFound(Path reportDir, AutosysAnalyzer analyzer) throws Exception {

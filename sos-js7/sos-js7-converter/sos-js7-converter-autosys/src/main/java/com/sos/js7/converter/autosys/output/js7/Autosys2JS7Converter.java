@@ -326,7 +326,7 @@ public class Autosys2JS7Converter {
             }
 
             JS7ConverterHelper.createNoticeBoardByParentPath(result, p, entry.getValue().getFileName().toString(), BoardHelper.getBoardTitle(entry
-                    .getKey()));
+                    .getKey()), BoardHelper.getLifeTimeInMinutes(entry.getKey()));
         }
     }
 

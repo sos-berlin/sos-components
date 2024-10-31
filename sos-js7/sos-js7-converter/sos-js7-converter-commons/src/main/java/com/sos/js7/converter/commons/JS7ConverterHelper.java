@@ -37,7 +37,6 @@ import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.calendar.WeekDays;
-import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
@@ -597,17 +596,39 @@ public class JS7ConverterHelper {
     }
 
     public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, String boardName, String boardTitle) {
-        result.add(getNoticeBoardPathFromJS7Path(workflowPath, boardName), createNoticeBoard(boardTitle));
+        createNoticeBoardFromWorkflowPath(result, workflowPath, boardName, boardTitle, null);
+    }
+
+    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, String boardName, String boardTitle,
+            Integer lifeTimeMinutes) {
+        result.add(getNoticeBoardPathFromJS7Path(workflowPath, boardName), createNoticeBoard(boardTitle, lifeTimeMinutes));
     }
 
     public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, String boardName, String boardTitle) {
-        result.add(parentPath.resolve(boardName + ".noticeboard.json"), createNoticeBoard(boardTitle));
+        createNoticeBoardByParentPath(result, parentPath, boardName, boardTitle, null);
     }
 
-    private static Board createNoticeBoard(String boardTitle) {
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, String boardName, String boardTitle,
+            Integer lifeTimeMinutes) {
+        result.add(parentPath.resolve(boardName + ".noticeboard.json"), createNoticeBoard(boardTitle, lifeTimeMinutes));
+    }
+
+    private static Board createNoticeBoard(String boardTitle, Integer lifeTimeMinutes) {
+        String lifeTimeMinutesAsString = "24 * 60";
+        if (lifeTimeMinutes != null && lifeTimeMinutes.intValue() > 0) {
+            if (lifeTimeMinutes.intValue() % 60 == 0) {
+                int hours = lifeTimeMinutes / 60;
+                lifeTimeMinutesAsString = String.valueOf(hours + " * 60");
+            } else {
+                lifeTimeMinutesAsString = String.valueOf(lifeTimeMinutes);
+            }
+        }
+        // default - $js7EpochMilli + 1 * 24 * 60 * 60 * 1000
+        String endOfLife = "$js7EpochMilli + 1 * " + lifeTimeMinutesAsString + " * 60 * 1000";
+
         Board b = new Board();
         b.setTitle(getJS7InventoryObjectTitle(boardTitle));
-        b.setEndOfLife("$js7EpochMilli + 1 * 24 * 60 * 60 * 1000");
+        b.setEndOfLife(endOfLife);
         b.setExpectOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
         b.setPostOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
         return b;
@@ -684,9 +705,9 @@ public class JS7ConverterHelper {
         return val.stream().distinct().collect(Collectors.toList());
     }
 
-    //public static PostNotices newPostNotices(List<String> val) {
-    //    return new PostNotices(removeDuplicates(val));
-    //}
+    // public static PostNotices newPostNotices(List<String> val) {
+    // return new PostNotices(removeDuplicates(val));
+    // }
 
     public static com.sos.inventory.model.calendar.Calendar createDefaultWorkingDaysCalendar() {
         com.sos.inventory.model.calendar.Calendar c = new com.sos.inventory.model.calendar.Calendar();
