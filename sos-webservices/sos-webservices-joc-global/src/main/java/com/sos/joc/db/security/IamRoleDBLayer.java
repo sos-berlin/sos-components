@@ -112,7 +112,7 @@ public class IamRoleDBLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamRole> iamRoleList = query.getResultList();
+        List<DBItemIamRole> iamRoleList = sosHibernateSession.getResultList(query);
         return iamRoleList == null ? Collections.emptyList() : iamRoleList;
     }
 
@@ -122,7 +122,7 @@ public class IamRoleDBLayer {
                 + " and  controllerId is not null ");
         bindParameters(filter, query);
 
-        List<String> iamRoleList = query.getResultList();
+        List<String> iamRoleList = sosHibernateSession.getResultList(query);
         if (!iamRoleList.contains("")) {
             iamRoleList.add("");
         }
@@ -149,7 +149,7 @@ public class IamRoleDBLayer {
                 .getSortMode());
         bindParameters(filter, query);
 
-        roleList = query.getResultList();
+        roleList = sosHibernateSession.getResultList(query);
         if (roleList.size() == 0) {
             return null;
         } else {

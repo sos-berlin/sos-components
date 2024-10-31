@@ -30,6 +30,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsGit;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsIdentityService;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsLogNotification;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
@@ -509,6 +510,11 @@ public class Globals {
     public static ConfigurationGlobalsLogNotification getConfigurationGlobalsLogNotification() {
         return configurationGlobals == null ? new ConfigurationGlobalsLogNotification() : (ConfigurationGlobalsLogNotification) configurationGlobals
                 .getConfigurationSection(DefaultSections.lognotification);
+    }
+
+    public static ConfigurationGlobalsIdentityService getConfigurationGlobalsIdentityService() {
+        return configurationGlobals == null ? new ConfigurationGlobalsIdentityService() : (ConfigurationGlobalsIdentityService) configurationGlobals
+                .getConfigurationSection(DefaultSections.identityService);
     }
 
     // -1: current version is older, 0: current version is equal, 1: current version

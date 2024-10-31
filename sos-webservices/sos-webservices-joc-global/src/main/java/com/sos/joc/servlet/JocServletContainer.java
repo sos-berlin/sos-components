@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.DBMoveIamConfiguration;
 import com.sos.joc.classes.DependencyUpdate;
 import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -83,6 +83,8 @@ public class JocServletContainer extends ServletContainer {
         }
         
         JocCertificate.updateCertificate();
+        DBMoveIamConfiguration.execute();
+
         ClusterWatch.getInstance();
         DailyPlanCalendar.getInstance();
         OrderTags.getInstance();

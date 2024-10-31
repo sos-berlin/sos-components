@@ -156,7 +156,7 @@ public class IamPermissionDBLayer {
         Query<DBItemIamPermission> query = sosHibernateSession.createQuery("from " + DBItemIamPermission + getWhere(filter));
         bindParameters(filter, query);
 
-        permissionList = query.getResultList();
+        permissionList = sosHibernateSession.getResultList(query);
         if (permissionList.size() == 0) {
             return null;
         } else {

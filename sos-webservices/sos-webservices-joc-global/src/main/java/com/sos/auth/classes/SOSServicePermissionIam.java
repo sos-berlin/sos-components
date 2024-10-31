@@ -224,7 +224,6 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setSignature(signature);
             sosLoginParameters.setCredentialId(credentialId);
             sosLoginParameters.setRequestId(requestId);
-
             return login(sosLoginParameters, pwd);
         } catch (JocAuthenticationException e) {
             return JOCDefaultResponse.responseStatus401(e.getSosAuthCurrentAccountAnswer());
@@ -897,13 +896,11 @@ public class SOSServicePermissionIam {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
             }
 
+
             Globals.jocTimeZone = TimeZone.getDefault();
             Globals.setProperties();
-            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getGlobalIamProperties();
-            if (properties != null) {
-                Globals.iamSessionTimeout = SOSAuthHelper.getGlobalIamProperties().getSessionTimeout();
-            }
-
+            Globals.iamSessionTimeout = SOSAuthHelper.getSecondsFromString(Globals.getConfigurationGlobalsIdentityService().getIdleSessionTimeout()
+                    .getValue());
             if (sosLoginParameters.basicAuthorizationHeaderIsEmpty()) {
                 if (sosLoginParameters.getCredentialId() != null && !sosLoginParameters.getCredentialId().isEmpty()) {
 

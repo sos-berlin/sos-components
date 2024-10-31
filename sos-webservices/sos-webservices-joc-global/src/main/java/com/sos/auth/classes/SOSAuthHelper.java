@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -60,6 +62,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthHelper {
 
+    private static final String SESSION_TIME_DEFAULT = "1800";
     private static final int PERCENT_DEVIATION = 6;
     private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_APPROVED = "JS7: Registration with JS7 JobScheduler is completed";
     private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMATION = "JS7: Registration with JS7 JobScheduler";
@@ -91,6 +94,7 @@ public class SOSAuthHelper {
     public static final String EMERGENCY_PERMISSION = "sos:products";
     public static final String EMERGENY_KEY = "sos_emergency_key";
     public static final String CONFIGURATION_TYPE_IAM = "IAM";
+    public static final String CONFIGURATION_TYPE_GLOBALS = "GLOBALS";
     public static final String OBJECT_TYPE_IAM_GENERAL = "GENERAL";
     public static final Integer LDAP_READ_TIMEOUT = 10000;
     public static final Integer RESTAPI_CONNECTION_TIMEOUT = 10000;
@@ -174,40 +178,24 @@ public class SOSAuthHelper {
     public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException,
             JsonMappingException, IOException, SOSHibernateException {
 
-        if (sosHibernateSession == null) {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSAuthHelper.class.getName() + ":accountIsDisabled");
-        }
+        String initialPassword = Globals.getConfigurationGlobalsIdentityService().getInitialPassword().getValue();
+        Long minPasswordLength = Long.valueOf(Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getValue());
         SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
-        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-        JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-        jocConfigurationFilter.setConfigurationType(CONFIGURATION_TYPE_IAM);
-        jocConfigurationFilter.setObjectType(OBJECT_TYPE_IAM_GENERAL);
-        List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 1);
-        String initialPassword;
-        Long minPasswordLength;
-        if (result.size() == 1) {
-            com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(result.get(0).getConfigurationItem(),
-                    com.sos.joc.model.security.properties.Properties.class);
-            initialPassword = properties.getInitialPassword();
-            if (properties.getMinPasswordLength() == null) {
-                minPasswordLength = 0L;
-            } else {
-                minPasswordLength = properties.getMinPasswordLength();
-            }
-            if (initialPassword == null) {
-                initialPassword = INITIAL;
-                System.out.println("Missing initial password settings. Using default value=" + INITIAL);
-            } else {
-                if (initialPassword.length() < minPasswordLength) {
-                    JocError error = new JocError();
-                    error.setMessage("Initial password is too short");
-                    throw new JocException(error);
-                }
-            }
-        } else {
-            initialPassword = INITIAL;
+
+        if (minPasswordLength == null) {
             minPasswordLength = 0L;
         }
+        if (initialPassword == null) {
+            initialPassword = INITIAL;
+            LOGGER.info("Missing initial password settings. Using default value=" + INITIAL);
+        } else {
+            if (initialPassword.length() < minPasswordLength) {
+                JocError error = new JocError();
+                error.setMessage("Initial password is too short");
+                throw new JocException(error);
+            }
+        }
+
         sosInitialPasswordSetting.setInitialPassword(initialPassword);
         sosInitialPasswordSetting.setMininumPasswordLength(minPasswordLength);
         return sosInitialPasswordSetting;
@@ -382,7 +370,8 @@ public class SOSAuthHelper {
         return 0L;
     }
 
-    public static com.sos.joc.model.security.properties.Properties getIamProperties(String identityServiceName,IdentityServiceTypes objectType) throws SOSException, IOException {
+    public static com.sos.joc.model.security.properties.Properties getIamProperties(String identityServiceName, IdentityServiceTypes objectType)
+            throws SOSException, IOException {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
@@ -564,31 +553,6 @@ public class SOSAuthHelper {
         return properties;
     }
 
-    public static com.sos.joc.model.security.properties.Properties getGlobalIamProperties() {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
-            DBItemJocConfiguration dbItem = null;
-            JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
-            filter.setObjectType(SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            List<DBItemJocConfiguration> listOfDbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
-            if (listOfDbItemJocConfiguration.size() == 1) {
-                dbItem = listOfDbItemJocConfiguration.get(0);
-                com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                        com.sos.joc.model.security.properties.Properties.class);
-                return properties;
-            }
-        } catch (Exception e) {
-            LOGGER.error("", e);
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-        return null;
-
-    }
-
     public static DBItemIamIdentityService getCheckIdentityService(String identityServiceName) throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         DBItemIamIdentityService dbItemIamIdentityService = null;
@@ -612,6 +576,42 @@ public class SOSAuthHelper {
         }
         return dbItemIamIdentityService;
 
+    }
+
+    public static Integer getSecondsFromString(String in) {
+        
+        if (in==null){
+            in = SESSION_TIME_DEFAULT;
+        }
+
+        in = in.toLowerCase().trim();
+        in = in.replaceAll(" ", "");
+
+        String p = "^(\\d+)(s|h|d|m)$";
+        Pattern pattern = Pattern.compile(p, Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(in);
+
+        matcher.reset();
+        String[] result = { SESSION_TIME_DEFAULT, "s" };
+        while (matcher.find()) {
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                result[i - 1] = matcher.group(i);
+            }
+        }
+
+        Integer sessionTimeout = Integer.valueOf(result[0]);
+        switch (result[1]) {
+        case "s":
+            return sessionTimeout;
+        case "m":
+            return sessionTimeout * 60;
+        case "h":
+            return sessionTimeout * 60 * 60;
+        case "d":
+            return sessionTimeout * 60 * 60 * 24;
+        default:
+            return sessionTimeout;
+        }
     }
 
 }
