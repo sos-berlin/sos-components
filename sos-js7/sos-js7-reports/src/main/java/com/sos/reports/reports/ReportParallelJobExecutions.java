@@ -33,7 +33,7 @@ public class ReportParallelJobExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
     private static final String UTC = "UTC";
-    private static final int MAX_PERIODS_IN_LIST = 2500;
+    private static final int MAX_PERIODS_IN_LIST = 1500;
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
@@ -99,7 +99,17 @@ public class ReportParallelJobExecutions implements IReport {
         reportResultDataItem.setWorkflowName(jobRecord.getWorkflowName());
         reportResultDataItem.setJobName(jobRecord.getJobName());
 
-        reportResultData.getData().add(reportResultDataItem);
+        if (reportResultData.getData().size() <=9) {
+            reportResultData.getData().add(reportResultDataItem);
+        }else {
+            reportResultDataItem.setJobName("... and more");
+            reportResultDataItem.setStartTime(null);
+            reportResultDataItem.setEndTime(null);
+            if (reportResultData.getData().size() == 9+1) {
+                reportResultData.getData().add(reportResultDataItem);
+            }
+        }
+        
         periods.put(periodKey, reportResultData);
 
     }
