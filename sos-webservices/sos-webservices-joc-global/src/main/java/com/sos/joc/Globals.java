@@ -513,8 +513,9 @@ public class Globals {
     }
 
     public static ConfigurationGlobalsIdentityService getConfigurationGlobalsIdentityService() {
-        return configurationGlobals == null ? new ConfigurationGlobalsIdentityService() : (ConfigurationGlobalsIdentityService) configurationGlobals
-                .getConfigurationSection(DefaultSections.identityService);
+        return null;
+ //       return configurationGlobals == null ? new ConfigurationGlobalsIdentityService() : (ConfigurationGlobalsIdentityService) configurationGlobals
+ //               .getConfigurationSection(DefaultSections.identityService);
     }
 
     // -1: current version is older, 0: current version is equal, 1: current version

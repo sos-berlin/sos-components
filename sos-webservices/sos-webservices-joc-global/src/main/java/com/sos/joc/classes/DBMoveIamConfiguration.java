@@ -102,7 +102,7 @@ public class DBMoveIamConfiguration {
                 globalIamSettingsSection.setAdditionalProperty("initial_password", initialPassword);
                 globalIamSettingsSection.setAdditionalProperty("idle_session_timeout", idleSessionTimeout);
                 globalIamSettingsSection.setAdditionalProperty("minimum_password_length", minimumPassword_length);
-                globalSettings.setAdditionalProperty(DefaultSections.identityService.name(), globalIamSettingsSection);
+             //   globalSettings.setAdditionalProperty(DefaultSections.identityService.name(), globalIamSettingsSection);
 
                 configurations.setConfigurationValues(globalSettings);
                 String globalConfigurationJson = Globals.objectMapper.writeValueAsString(globalSettings);

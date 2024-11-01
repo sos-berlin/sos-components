@@ -129,6 +129,15 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     updateControllerCalendar = StoreSettingsImpl.dailyPlanHasChanged(configuration.getConfigurationItem(), oldConfiguration);
                 }
                 break;
+            case IAM:
+                if (!getJocPermissions(accessToken).getAdministration().getAccounts().getManage()) {
+                    return accessDeniedResponse();
+                }
+
+                dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
+                account = ConfigurationGlobals.ACCOUNT;
+                storeAuditLog(configuration.getAuditLog(), CategoryType.IDENTITY);
+
             case CUSTOMIZATION:
                 if (isNew && !configuration.getConfigurationType().equals(ConfigurationType.IAM)) {
                     checkRequiredParameter("objectType", configuration.getObjectType());
@@ -263,8 +272,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
+            case IAM:
             case GLOBALS:
-            
+                // if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                // return accessDeniedResponse();
+                // }
                 break;
             default:
                 String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
