@@ -83,7 +83,7 @@ public class JocServletContainer extends ServletContainer {
         }
         
         JocCertificate.updateCertificate();
-        DBMoveIamConfiguration.execute();
+      //  DBMoveIamConfiguration.execute();
 
         ClusterWatch.getInstance();
         DailyPlanCalendar.getInstance();
