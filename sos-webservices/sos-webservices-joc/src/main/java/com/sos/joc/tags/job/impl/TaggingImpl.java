@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -165,6 +166,8 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            SOSCheckJavaVariableName.test("$.newJobName", in.getNewJobName());
             
             String workflowName = JocInventory.pathToName(in.getPath());
             String workflowPath = WorkflowPaths.getPath(workflowName);
