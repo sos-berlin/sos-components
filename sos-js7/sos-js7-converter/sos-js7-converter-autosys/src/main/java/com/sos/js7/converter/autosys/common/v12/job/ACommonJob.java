@@ -500,7 +500,7 @@ public abstract class ACommonJob {
                 String[] arr = val.split(LIST_VALUE_DELIMITER);
                 List<CommonJobResource> l = new ArrayList<>();
                 for (String r : arr) {
-                    l.add(new CommonJobResource(r));
+                    l.add(new CommonJobResource(r, false));// not exclusive (shared)
                 }
                 resourses.setValue(l.size() == 0 ? null : l);
             } catch (Throwable e) {
@@ -526,6 +526,89 @@ public abstract class ACommonJob {
 
     public boolean hasResources() {
         return resourses.getValue() != null && resourses.getValue().size() > 0;
+    }
+
+    // Help-method to convert NOTRUNNING conditions to the JS7 Exclusive Lock
+    public void addExclusiveResourcePaarIfNotExists(ACommonJob otherJob) {
+        if (otherJob == null) {
+            return;
+        }
+        String otherJobName = otherJob.getName();
+        CommonJobResource jr = getExclusiveResource(otherJobName);
+        CommonJobResource jrO = otherJob.getExclusiveResource(getName());
+        try {
+            // 1) not set
+            if (jr == null && jrO == null) {
+                addExclusiveResource(otherJobName);
+                otherJob.addExclusiveResource(otherJobName);
+            }
+            // 2) set by this job
+            else if (jr != null && jrO == null) {
+                otherJob.addExclusiveResource(jr.getName());
+            }
+            // 3) set by other job
+            else if (jr == null && jrO != null) {
+                addExclusiveResource(jrO.getName());
+            }
+            // 4) set by both jobs
+            else {
+                // set but different names
+                if (!jr.getName().equals(jrO.getName())) {
+                    otherJob.removeExclusiveResource(jrO.getName());
+                    otherJob.addExclusiveResource(jr.getName());
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("[addResourceIfNotExists]" + e);
+        }
+    }
+
+    private void addExclusiveResource(String name) throws Exception {
+        initResources();
+        resourses.getValue().add(new CommonJobResource("(" + name + ",QUANTITY=0,FREE=Y)", true));
+    }
+
+    private void removeExclusiveResource(String name) throws Exception {
+        resourses.getValue().removeIf(r -> r.isExclusive() && r.getName().equals(name));
+    }
+
+    private CommonJobResource getExclusiveResource(String otherJobName) {
+        if (resourses.getValue() == null) {
+            return null;
+        }
+        return resourses.getValue().stream().filter(r -> r.isExclusive() && (r.getName().equals(otherJobName)) || r.getName().equals(getName()))
+                .findFirst().orElse(null);
+    }
+
+    private void initResources() {
+        if (resourses.getValue() == null) {
+            resourses.setValue(new ArrayList<>());
+        }
+    }
+
+    public void addExclusiveResourceIfNotExistsXXX(Condition c) {
+        if (c == null) {
+            return;
+        }
+        String name = c.getJobName();
+        if (name == null || !c.isNotrunning()) {
+            return;
+        }
+
+        if (resourses.getValue() == null) {
+            resourses.setValue(new ArrayList<>());
+        }
+        CommonJobResource jr = resourses.getValue().stream().filter(r -> r.getName().equals(name)).findFirst().orElse(null);
+        if (jr == null) {
+            try {
+                // (GLOB.my_resource,QUANTITY=1,FREE=Y)
+                // QUANTITY=0, true - because Exclusive(Non Shared) Lock in JS7
+                resourses.getValue().add(new CommonJobResource("(" + name + ",QUANTITY=0,FREE=Y)", true));
+            } catch (Exception e) {
+                LOGGER.error("[addResourceIfNotExists]" + e);
+            }
+        }
+
     }
 
     public boolean isJobTerminator() {

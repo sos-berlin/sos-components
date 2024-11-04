@@ -105,9 +105,9 @@ public abstract class JS7ConverterMain {
         if (Files.exists(archive)) {
             try {
                 Files.delete(archive);
-                LOGGER.info("[archive][old][deleted]" + archive);
+                LOGGER.info("[archive][old][" + archive + "]deleted");
             } catch (IOException e) {
-                LOGGER.warn("[archive][old][can not be deleted][" + archive + "]" + e.toString(), e);
+                LOGGER.warn("[archive][old][" + archive + "][cannot be deleted]" + e.toString(), e);
             }
         }
         String fn = archive.getFileName().toString().toLowerCase();
@@ -119,17 +119,18 @@ public abstract class JS7ConverterMain {
             isZIP = true;
         }
 
+        LOGGER.info("[archive][new][" + archive + "]create...");
         if (isTarGZ) {
             try {
                 SOSGzipResult r = SOSGzip.compress(outputDir, false);
                 Files.write(archive, r.getCompressed(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-                LOGGER.info("[archive][new][created]" + archive);
+                LOGGER.info("[archive][new][" + archive + "]created");
             } catch (Throwable e) {
                 LOGGER.error("[archive][new][" + archive + "]" + e.toString(), e);
             }
         } else {
             ZipCompress.compress(outputDir, archive);
-            LOGGER.info("[archive][new][created]" + archive);
+            LOGGER.info("[archive][new][" + archive + "]created");
         }
 
     }

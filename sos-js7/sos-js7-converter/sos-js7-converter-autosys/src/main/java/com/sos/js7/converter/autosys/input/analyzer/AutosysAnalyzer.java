@@ -14,6 +14,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
+import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.config.items.AutosysDiagramConfig;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.autosys.input.diagram.AutosysGraphvizDiagramWriter;
@@ -68,11 +69,28 @@ public class AutosysAnalyzer {
         // Reports
         Report.writeParserReports(pr, reportDir, this);
 
+        adjustConditions(pr);
         return pr;
     }
 
     private void analyze(DirectoryParserResult pr, Path reportDir) {
+        Condition.ADJUST_LOOK_BACK_FOR_JS7 = false;
         setAllJobs(pr.getJobs());
+        conditionAnalyzer.analyze(pr.getJobs());
+    }
+
+    private void adjustConditions(DirectoryParserResult pr) {
+        Condition.ADJUST_LOOK_BACK_FOR_JS7 = true;
+
+        allJobs.entrySet().stream().forEach(e -> {
+            try {
+                e.getValue().getCondition().reread();
+            } catch (Exception e1) {
+                LOGGER.error("[" + e.getValue().getName() + "]" + e);
+            }
+        });
+
+        resetConditionAnalyzer();
         conditionAnalyzer.analyze(pr.getJobs());
     }
 
@@ -86,8 +104,12 @@ public class AutosysAnalyzer {
     }
 
     private void reset() {
-        conditionAnalyzer.init();
+        resetConditionAnalyzer();
         allJobs = new LinkedHashMap<>();
+    }
+
+    private void resetConditionAnalyzer() {
+        conditionAnalyzer.init();
     }
 
     private void deleteAllReports(Path reportDir) {

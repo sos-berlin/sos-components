@@ -634,6 +634,27 @@ public class JS7ConverterHelper {
         return b;
     }
 
+    public static void createLockByParentPath(JS7ConverterResult result, Path parentPath, String name, Integer capacity) {
+        result.add(parentPath.resolve(name + ".lock.json"), createLock(name, capacity));
+    }
+
+    public static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
+        for (Map.Entry<String, Integer> e : locks.entrySet()) {
+            Lock l = new Lock();
+            l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(e.getKey()));
+            l.setLimit(e.getValue());
+            result.add(Paths.get(e.getKey() + ".lock.json"), createLock(e.getKey(), e.getValue()));
+        }
+        return result;
+    }
+
+    private static Lock createLock(String name, Integer capacity) {
+        Lock l = new Lock();
+        l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(name));
+        l.setLimit(capacity);
+        return l;
+    }
+
     public static Path getJS7ObjectPath(Path path) {
         Path output = path.getRoot() == null ? Paths.get("") : path.getRoot();
         for (int i = 0; i < path.getNameCount(); i++) {
@@ -687,16 +708,6 @@ public class JS7ConverterHelper {
             si.setScript(e.getValue());
 
             result.add(Paths.get(e.getKey() + ".includescript.json"), si);
-        }
-        return result;
-    }
-
-    public static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
-        for (Map.Entry<String, Integer> e : locks.entrySet()) {
-            Lock l = new Lock();
-            l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(e.getKey()));
-            l.setLimit(e.getValue());
-            result.add(Paths.get(e.getKey() + ".lock.json"), l);
         }
         return result;
     }

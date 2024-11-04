@@ -108,7 +108,7 @@ public class ConverterStandaloneJobs {
         tryInstructions = Autosys2JS7Converter.getCommonJobInstructions(jilJob, wr.getName());
 
         // 1.3) Lock around Retry Instruction
-        tryInstructions = LockHelper.getLockInstructions(jilJob, tryInstructions);
+        tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, jilJob, tryInstructions);
         // 1.4) Cyclic around all previous instructions
         tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(jilJob, tryInstructions, btch);
         if (btch.getTryPostNotices() != null) {

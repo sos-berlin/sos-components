@@ -28,6 +28,11 @@ public class CommonJobCondition extends AJobAttributes {
         return condition;
     }
 
+    public void reread() throws Exception {
+        condition.setValue(null);
+        setCondition(originalCondition);
+    }
+
     @ArgumentSetter(name = ATTR_CONDITION)
     public void setCondition(String val) throws Exception {
         String v = JS7ConverterHelper.stringValue(val);

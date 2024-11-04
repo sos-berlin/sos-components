@@ -18,16 +18,23 @@ public class CommonJobResource {
         A, B, C, I, N, K, Y
     }
 
+    // internal usage for JS7
+    // false - original Autosys resource property
+    // true - set from a NOTRUNNING condition
+    private final boolean exclusive;
+
+    private String original;
     private String name;
     private int quantity;
     private FREE free;
-    private String original;
 
-    public CommonJobResource(String val) throws Exception {
+    public CommonJobResource(String val, boolean exclusive) throws Exception {
         this.original = val;
+        this.exclusive = exclusive;
         parseResource(val);
     }
 
+    // (GLOB.my_resource,QUANTITY=1,FREE=Y)
     private void parseResource(String val) throws Exception {
         Pattern pattern = Pattern.compile("\\(([^,]+),\\s*quantity=(\\d+)(?:,\\s*FREE=([A-Z]))?\\)", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(val);
@@ -76,10 +83,15 @@ public class CommonJobResource {
         this.original = original;
     }
 
+    public boolean isExclusive() {
+        return exclusive;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("name=").append(name);
+        sb.append(",exclusive=").append(exclusive);
         sb.append(",quantity=").append(quantity);
         if (free != null) {
             sb.append(",free=").append(free);

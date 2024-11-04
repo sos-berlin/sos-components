@@ -10,7 +10,6 @@ import java.util.TreeSet;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
-import com.sos.js7.converter.autosys.output.js7.helper.bean.Condition2ConsumeNotice;
 
 public class AutosysConverterHelper {
 
@@ -20,8 +19,8 @@ public class AutosysConverterHelper {
         return new TreeSet<>(Comparator.comparing(ACommonJob::getName, COLLATOR));
     }
 
-    public static TreeSet<Condition2ConsumeNotice> newContition2ConsumeNoticeTreeSet() {
-        return new TreeSet<>(Comparator.comparing((Condition2ConsumeNotice n) -> n.getCondition().getName(), COLLATOR));
+    public static TreeSet<Condition> newContitionsTreeSet() {
+        return new TreeSet<>(Comparator.comparing(Condition::getKey, COLLATOR));
     }
 
     public static TreeMap<ACommonJob, List<Condition>> newJobConditionsTreeMap() {
@@ -30,6 +29,10 @@ public class AutosysConverterHelper {
 
     public static TreeMap<JobBOX, Long> newJobBoxTreeMap() {
         return new TreeMap<>(Comparator.comparing(ACommonJob::getName, COLLATOR));
+    }
+
+    public static <T> TreeMap<WorkflowResult, ACommonJob> newWorkflowResultsTreeMap() {
+        return new TreeMap<>(Comparator.comparing(WorkflowResult::getName, COLLATOR));
     }
 
 }

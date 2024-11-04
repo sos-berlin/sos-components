@@ -11,32 +11,23 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.LockDemand;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobResource;
+import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
-import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
+import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Resource2Lock;
 
 public class LockHelper {
 
-    public static Map<String, String> LOCKS = new HashMap<>();
-
-    public static Integer CAPACITY = getCapacity();
+    public static Map<String, Resource2Lock> LOCKS = new HashMap<>();
+    public static Map<WorkflowResult, ACommonJob> WORKFLOWS_2_LOCKS = AutosysConverterHelper.newWorkflowResultsTreeMap();
 
     public static void clear() {
         LOCKS.clear();
-        CAPACITY = getCapacity();
+        WORKFLOWS_2_LOCKS.clear();
     }
 
-    private static Integer getCapacity() {
-        Integer capacity = null;
-        if (Autosys2JS7Converter.CONFIG.getGenerateConfig().getLocks()) {
-            capacity = Autosys2JS7Converter.CONFIG.getLockConfig().getForcedCapacity();
-            if (capacity == null) {
-                capacity = Autosys2JS7Converter.CONFIG.getLockConfig().getDefaultCapacity();
-            }
-        }
-        return capacity;
-    }
-
-    public static List<Instruction> getLockInstructions(ACommonJob j, List<Instruction> in) {
+    public static List<Instruction> getLockInstructions(AutosysAnalyzer analyzer, WorkflowResult wr, ACommonJob j, List<Instruction> in) {
         if (!Autosys2JS7Converter.CONFIG.getGenerateConfig().getLocks() || !j.hasResources()) {
             return in;
         }
@@ -45,12 +36,12 @@ public class LockHelper {
 
         for (CommonJobResource r : j.getResources().getValue()) {
             String key = r.getName();
-            String js7Name = LOCKS.get(key);
-            if (js7Name == null) {
-                js7Name = JS7ConverterHelper.getJS7ObjectName(key);
-                LOCKS.put(key, js7Name);
+            Resource2Lock r2l = LOCKS.get(key);
+            if (r2l == null) {
+                r2l = new Resource2Lock(analyzer, r);
+                LOCKS.put(key, r2l);
             }
-            demands.add(new LockDemand(js7Name, r.getQuantity()));
+            demands.add(new LockDemand(r2l.getJS7Name(), r.getQuantity() > 0 ? r.getQuantity() : null));
         }
 
         l.setDemands(demands);
@@ -58,6 +49,9 @@ public class LockHelper {
 
         in = new ArrayList<>();
         in.add(l);
+
+        WORKFLOWS_2_LOCKS.put(wr, j);
+
         return in;
     }
 

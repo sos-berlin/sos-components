@@ -585,7 +585,6 @@ public class ConditionAnalyzer {
             Report.writePerStandaloneJobConditionRefersReports(reportDir, job, toRemoveConditionsRefersToItself);
 
             if (toRemoveConditionsRefersToItself.size() > 0) {
-
                 OutConditionHolder h = getJobOUTConditions(job);
                 if (h != null) {
                     Iterator<Map.Entry<String, Map<String, Condition>>> iter = h.getJobConditions().entrySet().iterator();

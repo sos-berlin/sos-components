@@ -35,7 +35,6 @@ import com.sos.js7.converter.autosys.input.JILJobParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.InConditionHolder;
 import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
-import com.sos.js7.converter.autosys.output.js7.helper.bean.Condition2ConsumeNotice;
 import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobHelper;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
@@ -284,8 +283,7 @@ public class Report {
             }
 
             String indentDetails = "%-15s";
-            for (Condition2ConsumeNotice cb : BoardHelper.JS7_CONSUME_NOTICES) {
-                Condition c = cb.getCondition();
+            for (Condition c : BoardHelper.JS7_CONSUME_NOTICES) {
                 ACommonJob cj = analyzer.getAllJobs().get(c.getJobName());
                 String cjp = PathResolver.getJILJobParentPathNormalized(cj);
                 String cjn = cj.getName();
@@ -1593,6 +1591,7 @@ public class Report {
         }
 
         Map<ACommonJob, List<Condition>> withLookBackEquals0 = AutosysConverterHelper.newJobConditionsTreeMap();
+        Map<ACommonJob, List<Condition>> withLookBackEquals24 = AutosysConverterHelper.newJobConditionsTreeMap();
         Map<ACommonJob, List<Condition>> withLookBackNotEquals0 = AutosysConverterHelper.newJobConditionsTreeMap();
 
         for (ACommonJob j : jobsWithLookBack) {
@@ -1608,6 +1607,17 @@ public class Report {
                     }
                     withLookBackEquals0.put(j, l);
                 } else {
+                    if (c.getLookBack().equals("24") || c.getLookBack().equals("24:00")) {
+                        List<Condition> l = withLookBackEquals24.get(j);
+                        if (l == null) {
+                            l = new ArrayList<>();
+                        }
+                        if (!l.contains(c)) {
+                            l.add(c);
+                        }
+                        withLookBackEquals24.put(j, l);
+                    }
+
                     List<Condition> l = withLookBackNotEquals0.get(j);
                     if (l == null) {
                         l = new ArrayList<>();
@@ -1620,8 +1630,8 @@ public class Report {
             }
         }
 
-        SOSPath.appendLine(f, "Jobs with condition:    lookBack!=0    lookBack=0");
-        String msg = String.format("%-28s%-15s%s", "", withLookBackNotEquals0.size(), withLookBackEquals0.size());
+        SOSPath.appendLine(f, "Jobs with condition:    lookBack!=0    lookBack=0    lookBack=24");
+        String msg = String.format("%-28s%-15s%-15s%s", "", withLookBackNotEquals0.size(), withLookBackEquals0.size(), withLookBackEquals24.size());
         SOSPath.appendLine(f, msg);
 
         SOSPath.appendLine(f, "");
@@ -1664,6 +1674,26 @@ public class Report {
             SOSPath.appendLine(f, LINE_DELIMETER);
         }
 
+        if (withLookBackEquals24.size() > 0) {
+            SOSPath.appendLine(f, LINE_DELIMETER);
+            SOSPath.appendLine(f, "Jobs with condition lookBack=24 (" + withLookBackEquals24.size() + " jobs):");
+            SOSPath.appendLine(f, LINE_DELIMETER);
+            for (ACommonJob j : withLookBackEquals24.keySet()) {
+                msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+                SOSPath.appendLine(f, msg);
+                msg = String.format(indentDetails + "%-18s%-4s%s", "", "condition", "=", j.getCondition().getOriginalCondition());
+                SOSPath.appendLine(f, msg);
+
+                List<Condition> cl = withLookBackEquals24.get(j);
+                for (Condition c : cl) {
+                    msg = String.format(indentDetails + "%-18s%-4s%s", "", "lookBack part", "=", c.getOriginalValue());
+                    SOSPath.appendLine(f, msg);
+                }
+
+            }
+            SOSPath.appendLine(f, LINE_DELIMETER);
+        }
+
     }
 
     private static void writeSummaryConditionsReportByLookBackUsage(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
@@ -1679,7 +1709,7 @@ public class Report {
 
         SOSPath.appendLine(f, "DRAFT .........................");
         SOSPath.appendLine(f, LINE_DELIMETER);
-        
+
         for (Map.Entry<String, InConditionHolder> e : analyzer.getConditionAnalyzer().getAllINConditions().entrySet()) {
             String msg = String.format("%-60s%s", e.getKey(), e.getValue());
             SOSPath.appendLine(f, msg);

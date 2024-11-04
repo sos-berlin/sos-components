@@ -47,6 +47,7 @@ import com.sos.js7.converter.autosys.output.js7.helper.LockHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.Report;
 import com.sos.js7.converter.autosys.output.js7.helper.RetryHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.RunTimeHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Resource2Lock;
 import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobsHelper;
 import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -330,6 +331,17 @@ public class Autosys2JS7Converter {
         }
     }
 
+    private void convertLocks(JS7ConverterResult result) {
+        for (Map.Entry<String, Resource2Lock> entry : LockHelper.LOCKS.entrySet()) {
+            Resource2Lock r2l = entry.getValue();
+            Path p = entry.getValue().getPath().getParent();
+            if (p == null) {
+                p = Paths.get("");
+            }
+            JS7ConverterHelper.createLockByParentPath(result, p, r2l.getJS7Name(), r2l.getCapacity());
+        }
+    }
+
     private void convertAgents(JS7ConverterResult result, Path reportDir) {
         if (CONFIG.getGenerateConfig().getAgents()) {
             result = JS7ConverterHelper.convertAgents(result, machine2js7Agent.entrySet().stream().map(e -> e.getValue()).collect(Collectors
@@ -344,13 +356,6 @@ public class Autosys2JS7Converter {
             for (String name : RunTimeHelper.JS7_CALENDARS) {
                 result.add(JS7ConverterHelper.getCalendarPath(rootPath, name), JS7ConverterHelper.createDefaultWorkingDaysCalendar());
             }
-        }
-    }
-
-    private void convertLocks(JS7ConverterResult result) {
-        if (CONFIG.getGenerateConfig().getLocks()) {
-            Map<String, Integer> l = LockHelper.LOCKS.entrySet().stream().collect(Collectors.toMap(e -> e.getValue(), e -> LockHelper.CAPACITY));
-            result = JS7ConverterHelper.convertLocks2RootFolder(result, l);
         }
     }
 
@@ -719,6 +724,12 @@ public class Autosys2JS7Converter {
         List<Instruction> in = new ArrayList<>();
         in.add(getNamedJobInstruction(js7Name));
         in = RetryHelper.getRetryInstructions(j, in);
+        return in;
+    }
+
+    public static List<Instruction> getCommonJobInstructionsWithLock(AutosysAnalyzer analyzer, WorkflowResult wr, ACommonJob j, String js7Name) {
+        List<Instruction> in = getCommonJobInstructions(j, js7Name);
+        in = LockHelper.getLockInstructions(analyzer, wr, j, in);
         return in;
     }
 

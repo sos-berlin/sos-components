@@ -15,6 +15,11 @@ public class Condition implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // reset if:
+    // 1) 0 - according to the answer - 0 is the same as in the last 24 hours - is that correct?
+    // 2) 24:00
+    public static boolean ADJUST_LOOK_BACK_FOR_JS7 = false;
+
     public enum ConditionType {
         DONE, FAILURE, NOTRUNNING, SUCCESS, TERMINATED, EXITCODE, VARIABLE, SOS_UNKNOWN
     }
@@ -56,12 +61,25 @@ public class Condition implements Serializable {
             // this.type = getType(v.substring(0, i).toLowerCase(), val);
             this.name = resultMap.get(MapKeys.NAME);
             this.value = getValue(v);
-            this.lookBack = resultMap.get(MapKeys.LOOKBACK);
+            this.lookBack = getLookBack(resultMap);
             this.instanceTag = resultMap.get(MapKeys.INSTANCETAG);
             this.type = getType(v.substring(0, i).toLowerCase(), val);
         } catch (Throwable e) {
             throw new Exception(String.format("[%s]%s", val, e.toString()), e);
         }
+    }
+
+    private String getLookBack(Map<MapKeys, String> resultMap) {
+        String l = resultMap.get(MapKeys.LOOKBACK);
+
+        if (ADJUST_LOOK_BACK_FOR_JS7) {
+            if (l != null) {
+                if (l.equals("0") || l.equals("24") || l.equals("24:00")) {
+                    l = null;
+                }
+            }
+        }
+        return l;
     }
 
     private ConditionType getType(String t, String original) {
@@ -223,6 +241,10 @@ public class Condition implements Serializable {
 
     public boolean isSuccess() {
         return ConditionType.SUCCESS.equals(type);
+    }
+
+    public boolean isNotrunning() {
+        return ConditionType.NOTRUNNING.equals(type);
     }
 
     @Override

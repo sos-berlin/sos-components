@@ -54,6 +54,9 @@ public class ConverterBOXJobs {
     private final Autosys2JS7Converter converter;
     private final JS7ConverterResult result;
 
+    // tmp test
+    private boolean tryCreateLockByChildJobs = false;
+
     public static void clear() {
         USED_JOBS_PER_BOX.clear();
     }
@@ -203,14 +206,14 @@ public class ConverterBOXJobs {
                 }
             }
 
-            //LOGGER.info("SSSSS[" + box.getName() + "][" + firstLevelChildren.size() + "]" + firstLevelChildren);
-            tryInstructions.addAll(getInstructions(box, box, firstLevelChildren, bin));
+            // LOGGER.info("SSSSS[" + box.getName() + "][" + firstLevelChildren.size() + "]" + firstLevelChildren);
+            tryInstructions.addAll(getInstructions(wr, box, box, firstLevelChildren, bin));
 
-            //LOGGER.info("SSS2=" + BOXJobsHelper.CLOSING_BOX_JOB_HELPERS);
+            // LOGGER.info("SSS2=" + BOXJobsHelper.CLOSING_BOX_JOB_HELPERS);
 
         }
         // 1.3) Lock around Retry Instruction ???
-        tryInstructions = LockHelper.getLockInstructions(box, tryInstructions);
+        tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, box, tryInstructions);
         // 1.4) Cyclic around all previous instructions
         tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(box, tryInstructions, btch);
         if (btch.getTryPostNotices() != null) {
@@ -262,7 +265,7 @@ public class ConverterBOXJobs {
         converter.convertSchedule(result, wr, box);
     }
 
-    private List<Instruction> getInstructions(JobBOX box, ACommonJob j, List<BOXJobHelper> children, List<Instruction> in) {
+    private List<Instruction> getInstructions(WorkflowResult wr, JobBOX box, ACommonJob j, List<BOXJobHelper> children, List<Instruction> in) {
         switch (children.size()) {
         case 0:
             break;
@@ -284,19 +287,24 @@ public class ConverterBOXJobs {
             }
             BoardTryCatchHelper btch = new BoardTryCatchHelper(bj, converter.getAnalyzer(), nh);
 
-            in.addAll(Autosys2JS7Converter.getCommonJobInstructions(bj, JS7ConverterHelper.getJS7ObjectName(bj.getName())));
+            if (tryCreateLockByChildJobs) {
+                in.addAll(Autosys2JS7Converter.getCommonJobInstructionsWithLock(converter.getAnalyzer(), wr, bj, JS7ConverterHelper.getJS7ObjectName(
+                        bj.getName())));
+            } else {
+                in.addAll(Autosys2JS7Converter.getCommonJobInstructions(bj, JS7ConverterHelper.getJS7ObjectName(bj.getName())));
+            }
 
             if (btch.getTryPostNotices() != null) {
                 in.add(btch.getTryPostNotices());
             }
 
             BranchHelper bh = BOXJobsHelper.getJobChildren(box, bj);
-            in = getInstructions(box, bj, bh.getChildrenJobs(), in);
+            in = getInstructions(wr, box, bj, bh.getChildrenJobs(), in);
 
             // TODO check !!!!
             List<BOXJobHelper> oj = bh.getClosingJobs().stream().filter(x -> !x.isUsed()).collect(Collectors.toList());
             if (oj.size() > 0) {
-                in = getInstructions(box, bj, oj, in);
+                in = getInstructions(wr, box, bj, oj, in);
             }
 
             if (cn != null) {
@@ -306,13 +314,14 @@ public class ConverterBOXJobs {
 
             break;
         default:
-            in = createForkJoin(box, j, children, in);
+            in = createForkJoin(wr, box, j, children, in);
             break;
         }
         return in;
     }
 
-    private List<Instruction> createForkJoin(JobBOX box, ACommonJob currentJob, List<BOXJobHelper> children, List<Instruction> in) {
+    private List<Instruction> createForkJoin(WorkflowResult wr, JobBOX box, ACommonJob currentJob, List<BOXJobHelper> children,
+            List<Instruction> in) {
         List<Branch> branches = new ArrayList<>();
         Boolean joinIfFailed = false;
 
@@ -334,12 +343,18 @@ public class ConverterBOXJobs {
             }
 
             // JOB Instructions
-            bwIn.addAll(Autosys2JS7Converter.getCommonJobInstructions(bj, JS7ConverterHelper.getJS7ObjectName(bj.getName())));
+            if (tryCreateLockByChildJobs) {
+                bwIn.addAll(Autosys2JS7Converter.getCommonJobInstructionsWithLock(converter.getAnalyzer(), wr, bj, JS7ConverterHelper
+                        .getJS7ObjectName(bj.getName())));
+            } else {
+                bwIn.addAll(Autosys2JS7Converter.getCommonJobInstructions(bj, JS7ConverterHelper.getJS7ObjectName(bj.getName())));
+            }
+
             BranchHelper bh = BOXJobsHelper.getJobChildren(box, bj);
             if (bh.getClosingJobs().size() > 0) {
                 bhToClose.add(bh);
             }
-            bwIn = getInstructions(box, bj, bh.getChildrenJobs(), bwIn);
+            bwIn = getInstructions(wr, box, bj, bh.getChildrenJobs(), bwIn);
 
             BoardTryCatchHelper btch = new BoardTryCatchHelper(bj, converter.getAnalyzer(), nh);
             if (btch.getTryPostNotices() != null) {
@@ -374,12 +389,18 @@ public class ConverterBOXJobs {
                     }
 
                     ACommonJob j = bjh.getJob();
-                    in.addAll(Autosys2JS7Converter.getCommonJobInstructions(j, JS7ConverterHelper.getJS7ObjectName(j.getName())));
+
+                    if (tryCreateLockByChildJobs) {
+                        in.addAll(Autosys2JS7Converter.getCommonJobInstructionsWithLock(converter.getAnalyzer(), wr, j, JS7ConverterHelper
+                                .getJS7ObjectName(j.getName())));
+                    } else {
+                        in.addAll(Autosys2JS7Converter.getCommonJobInstructions(j, JS7ConverterHelper.getJS7ObjectName(j.getName())));
+                    }
                     bjh.isUsed(true);
 
                     BranchHelper bh2 = BOXJobsHelper.getJobChildren(box, j);
                     // LOGGER.info("AAAAA="+j+"="+bh2.getChildrenJobs());
-                    in = getInstructions(box, j, bh2.getChildrenJobs(), in);
+                    in = getInstructions(wr, box, j, bh2.getChildrenJobs(), in);
                 }
             }
         }

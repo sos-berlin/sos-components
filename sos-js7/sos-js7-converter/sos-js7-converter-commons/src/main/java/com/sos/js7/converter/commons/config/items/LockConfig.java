@@ -6,7 +6,7 @@ public class LockConfig extends AConfigItem {
 
     private static final String CONFIG_KEY = "lockConfig";
 
-    private static final int DEFAULT_CAPACITY = 9999;
+    private static final int DEFAULT_CAPACITY = 1;
 
     private Integer defaultCapacity;
     private Integer forcedCapacity;
