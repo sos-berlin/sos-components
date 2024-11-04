@@ -39,17 +39,17 @@ public class DependencyResolverTest {
         List<String> values = null;
         
         jsonObj = DependencyResolver.jsonObjectFromString(JSON_BOARD_INSTRUCTION);
-        values = DependencyResolver.getValuesFromInstructions(jsonObj, DependencyResolver.INSTRUCTION_BOARDS_SEARCH);
+        values = DependencyResolver.getValuesFromObject(jsonObj, DependencyResolver.INSTRUCTION_BOARDS_SEARCH);
         values.stream().forEach(value -> LOGGER.trace(value));
         assertEquals(1, values.size());
         
         jsonObj = DependencyResolver.jsonObjectFromString(JSON_ADDORDER_INSTRUCTION);
-        values = DependencyResolver.getValuesFromInstructions(jsonObj, DependencyResolver.INSTRUCTION_ADDORDERS_SEARCH);
+        values = DependencyResolver.getValuesFromObject(jsonObj, DependencyResolver.INSTRUCTION_ADDORDERS_SEARCH);
         values.stream().forEach(value -> LOGGER.trace(value));
         assertEquals(2, values.size());
         
         jsonObj = DependencyResolver.jsonObjectFromString(JSON_LOCK_INSTRUCTION);
-        values = DependencyResolver.getValuesFromInstructions(jsonObj, DependencyResolver.INSTRUCTION_LOCKS_SEARCH);
+        values = DependencyResolver.getValuesFromObject(jsonObj, DependencyResolver.INSTRUCTION_LOCKS_SEARCH);
         values.stream().forEach(value -> LOGGER.trace(value));
         assertEquals(1, values.size());
         
