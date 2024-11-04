@@ -50,7 +50,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE, ConfigurationType.JOBTEMPLATE);
     private static final List<ConfigurationType> referencedByType = Arrays.asList(
             ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE, ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD,
-            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR);
+            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.INCLUDESCRIPT);
     
     @Override
     public JOCDefaultResponse postGetDependencies(String xAccessToken, byte[] dependencyFilter) {
@@ -171,10 +171,11 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                     case REVOKE:
                         // filter: remove  all drafts from further processing
                         // filter: only referencesTypes for recursive references processing
-                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
-                                .filter(entry -> entry.getValue().getDeployed() || entry.getValue().getReleased())
-                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+//                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
+//                                .filter(entry -> entry.getValue().getDeployed() || entry.getValue().getReleased())
+//                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
+//                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        currentUniqueReferencesItems = Collections.emptyMap();
                         // filter: only referencedByTypes for recursive referencedBy processing
                         currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
                                 .filter(entry -> entry.getValue().getDeployed() || entry.getValue().getReleased())
@@ -183,11 +184,8 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                         break;
                     case RECALL:
                         // filter: remove  all drafts from further processing
-                        // filter: only referencesTypes for recursive references processing
-                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
-                                .filter(entry -> entry.getValue().getReleased())
-                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: referencesTypes not processed, empty map
+                        currentUniqueReferencesItems = Collections.emptyMap();
                         // filter: only referencedByTypes for recursive referencedBy processing
                         currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
                                 .filter(entry -> entry.getValue().getReleased())
@@ -196,10 +194,8 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                         break;
                     case REMOVE:
                         // filter: remove  all drafts from further processing
-                        // filter: only referencesTypes for recursive references processing
-                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
-                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: referencesTypes not processed, empty map
+                        currentUniqueReferencesItems = Collections.emptyMap();
                         // filter: only referencedByTypes for recursive referencedBy processing
                         currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
                                 .filter(entry -> referencedByType.contains(entry.getValue().getTypeAsEnum()))
