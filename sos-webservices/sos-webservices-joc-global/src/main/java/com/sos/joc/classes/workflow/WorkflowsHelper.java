@@ -371,8 +371,12 @@ public class WorkflowsHelper {
             JControllerState currentstate) {
         Stream<JOrder> taggedWorkflowNames = Stream.empty();
         if (orderTags != null && currentstate != null) {
-            List<String> taggedOIds = OrderTags.getMainOrderIdsByTags(controllerId, orderTags, session);
-            taggedWorkflowNames = currentstate.ordersBy(o -> taggedOIds.contains(o.id().string()));
+            Set<String> taggedOIds = OrderTags.getMainOrderIdsByTags(controllerId, orderTags, session).stream().collect(Collectors.toSet());
+            if (taggedOIds.isEmpty()) {
+                taggedWorkflowNames = Stream.empty();
+            } else {
+                taggedWorkflowNames = currentstate.ordersBy(o -> taggedOIds.contains(o.id().string()));
+            }
         }
         return taggedWorkflowNames;
     }
@@ -1498,7 +1502,8 @@ public class WorkflowsHelper {
         }
         
         Predicate<JOrder> orderTagsFilter = o -> true;
-        List<String> taggedOIds = OrderTags.getMainOrderIdsByTags(workflowsFilter.getControllerId(), workflowsFilter.getOrderTags());
+        Set<String> taggedOIds = OrderTags.getMainOrderIdsByTags(workflowsFilter.getControllerId(), workflowsFilter.getOrderTags()).stream().collect(
+                Collectors.toSet());
         if (workflowsFilter.getOrderTags() != null && !workflowsFilter.getOrderTags().isEmpty()) {
             orderTagsFilter = o -> taggedOIds.contains(OrdersHelper.getParentOrderId(o.id().string()));
         }

@@ -766,6 +766,7 @@ public class OrderTags {
                 for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                     r.addAll(getMainOrderIdsByTags(controllerId, SOSHibernate.getInClausePartition(i, oTags), connection));
                 }
+                return r;
             } else {
                 try {
                     StringBuilder hql = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
