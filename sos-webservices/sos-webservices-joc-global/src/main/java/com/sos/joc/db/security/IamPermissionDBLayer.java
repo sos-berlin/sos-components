@@ -98,7 +98,7 @@ public class IamPermissionDBLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamPermission> iamPermissionList = query.getResultList();
+        List<DBItemIamPermission> iamPermissionList = sosHibernateSession.getResultList(query);
         return iamPermissionList == null ? Collections.emptyList() : iamPermissionList;
     }
 
@@ -110,7 +110,7 @@ public class IamPermissionDBLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamPermission> iamPermissionList = query.getResultList();
+        List<DBItemIamPermission> iamPermissionList = sosHibernateSession.getResultList(query);
         return iamPermissionList == null ? Collections.emptyList() : iamPermissionList;
     }
 

@@ -115,7 +115,7 @@ public class IamFidoDBLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamFido2Registration> iamFido2RegistrationList = query.getResultList();
+        List<DBItemIamFido2Registration> iamFido2RegistrationList = sosHibernateSession.getResultList(query);
         return iamFido2RegistrationList == null ? Collections.emptyList() : iamFido2RegistrationList;
     }
 
@@ -130,7 +130,7 @@ public class IamFidoDBLayer {
 
         bindParameters(filter, query);
 
-        List<DBItemIamFido2Registration> iamFido2RegistrationList = query.getResultList();
+        List<DBItemIamFido2Registration> iamFido2RegistrationList = sosHibernateSession.getResultList(query);
         if (iamFido2RegistrationList.size() > 0) {
             return iamFido2RegistrationList.get(0);
         }
@@ -152,7 +152,7 @@ public class IamFidoDBLayer {
                 .getOrderCriteria() + filter.getSortMode());
         bindParameters(filter, query);
 
-        fido2RegistrationList = query.getResultList();
+        fido2RegistrationList = sosHibernateSession.getResultList(query);
         if (fido2RegistrationList.size() == 0) {
             return null;
         } else {
@@ -166,7 +166,7 @@ public class IamFidoDBLayer {
                 .getOrderCriteria() + filter.getSortMode());
         bindParameters(filter, query);
 
-        fido2RegistrationList = query.getResultList();
+        fido2RegistrationList = sosHibernateSession.getResultList(query);
         if (fido2RegistrationList.size() != 1) {
             return null;
         } else {

@@ -63,7 +63,7 @@ public class IamFidoRequestDBLayer {
         Query<DBItemIamFido2Requests> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Requests + getWhere(filter));
         bindParameters(filter, query);
 
-        requestList = query.getResultList();
+        requestList = sosHibernateSession.getResultList(query);
         if (requestList.size() == 0) {
             return null;
         } else {
@@ -78,7 +78,7 @@ public class IamFidoRequestDBLayer {
         query = sosHibernateSession.createQuery(hql);
         query = bindParameters(filter, query);
 
-        row = query.executeUpdate();
+        row = sosHibernateSession.executeUpdate(query);
         return row;
     }
 

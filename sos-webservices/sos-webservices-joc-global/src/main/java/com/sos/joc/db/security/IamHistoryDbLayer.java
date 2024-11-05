@@ -101,7 +101,7 @@ public class IamHistoryDbLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamHistory> iamHistoryList = query.getResultList();
+        List<DBItemIamHistory> iamHistoryList = sosHibernateSession.getResultList(query);
         return iamHistoryList == null ? Collections.emptyList() : iamHistoryList;
     }
 
@@ -163,7 +163,7 @@ public class IamHistoryDbLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamHistoryDetails> iamHistoryDetailsList = query.getResultList();
+        List<DBItemIamHistoryDetails> iamHistoryDetailsList = sosHibernateSession.getResultList(query);
         return iamHistoryDetailsList == null ? Collections.emptyList() : iamHistoryDetailsList;
     }
 

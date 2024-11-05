@@ -20,8 +20,7 @@ public class ConfigurationGlobals {
     public static final ConfigurationObjectType OBJECT_TYPE = null;
 
     public enum DefaultSections {
- //       dailyplan, cleanup, joc, user, git, lognotification, identityService
-        dailyplan, cleanup, joc, user, git, lognotification
+       dailyplan, cleanup, joc, user, git, lognotification, identityService
     }
 
     private GlobalSettings defaults = null;
@@ -35,7 +34,7 @@ public class ConfigurationGlobals {
         addDefaultSection(DefaultSections.user, 3);
         addDefaultSection(DefaultSections.git, 4);
         addDefaultSection(DefaultSections.lognotification, 5);
- //       addDefaultSection(DefaultSections.identityService, 6);
+        addDefaultSection(DefaultSections.identityService, 6);
     }
 
     public void setConfigurationValues(GlobalSettings values) {
@@ -110,8 +109,8 @@ public class ConfigurationGlobals {
             return new ConfigurationGlobalsGit();
         case lognotification:
             return new ConfigurationGlobalsLogNotification();
-//        case identityService:
-//            return new ConfigurationGlobalsIdentityService();
+        case identityService:
+            return new ConfigurationGlobalsIdentityService();
         default:
             return null;
         }

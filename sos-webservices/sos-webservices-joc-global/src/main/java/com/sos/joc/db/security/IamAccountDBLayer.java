@@ -123,7 +123,7 @@ public class IamAccountDBLayer {
                 deleteProfile(filter);
                 IamFidoDevicesDBLayer iamFidoDevicesDBLayer = new IamFidoDevicesDBLayer(sosHibernateSession);
                 iamFidoDevicesDBLayer.delete(filterCascade.getId());
-             }
+            }
         }
         return iamAccountList.size();
     }
@@ -236,7 +236,7 @@ public class IamAccountDBLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamAccount> iamAccountList = query.getResultList();
+        List<DBItemIamAccount> iamAccountList = sosHibernateSession.getResultList(query);
         return iamAccountList == null ? Collections.emptyList() : iamAccountList;
     }
 
@@ -308,7 +308,7 @@ public class IamAccountDBLayer {
         query.setParameter("roleName", roleName);
         query.setParameter("identityServiceId", identityServiceId);
 
-        iamRoleList = query.getResultList();
+        iamRoleList = sosHibernateSession.getResultList(query);
         if (iamRoleList.size() > 0) {
             return iamRoleList.get(0);
         }
@@ -323,7 +323,7 @@ public class IamAccountDBLayer {
         query.setParameter("roleId", roleId);
         query.setParameter("accountId", accountId);
 
-        iamAccount2RoleList = query.getResultList();
+        iamAccount2RoleList = sosHibernateSession.getResultList(query);
         if (iamAccount2RoleList.size() > 0) {
             return iamAccount2RoleList.get(0);
         }
@@ -362,7 +362,7 @@ public class IamAccountDBLayer {
 
         bindParameters(filter, query);
 
-        List<DBItemIamAccount> iamAccountList = query.getResultList();
+        List<DBItemIamAccount> iamAccountList = sosHibernateSession.getResultList(query);
         if (iamAccountList.size() > 0) {
             return iamAccountList.get(0);
         }
@@ -454,7 +454,7 @@ public class IamAccountDBLayer {
                 + filter.getSortMode());
         bindParameters(filter, query);
 
-        accountList = query.getResultList();
+        accountList = sosHibernateSession.getResultList(query);
         if (accountList.size() == 0) {
             return null;
         } else {
@@ -471,12 +471,12 @@ public class IamAccountDBLayer {
         List<DBItemIamFido2Devices> iamFido2Devices = sosHibernateSession.getResultList(query);
         if (iamFido2Devices.size() == 1) {
             dbItemIamAccount = sosHibernateSession.get(DBItemIamAccount.class, iamFido2Devices.get(0).getAccountId());
-            if (dbItemIamAccount.getDisabled()){
+            if (dbItemIamAccount.getDisabled()) {
                 return null;
-            } 
+            }
         }
-        return dbItemIamAccount; 
-    } 
+        return dbItemIamAccount;
+    }
 
     public boolean deleteRoleCascading(String role, Long identityServiceId) throws SOSHibernateException {
         DBItemIamRole dbItemIamRole = this.getRoleByName(role, identityServiceId);
@@ -501,7 +501,7 @@ public class IamAccountDBLayer {
         Query<DBItemIamBlockedAccount> query = sosHibernateSession.createQuery("from " + DBItemIamBlockedAccount + getWhere(filter));
         bindParameters(filter, query);
 
-        accountList = query.getResultList();
+        accountList = sosHibernateSession.getResultList(query);
         if (accountList.size() == 0) {
             return null;
         } else {
@@ -529,7 +529,7 @@ public class IamAccountDBLayer {
             query.setMaxResults(limit);
         }
 
-        List<DBItemIamBlockedAccount> iamBlockedAccountsList = query.getResultList();
+        List<DBItemIamBlockedAccount> iamBlockedAccountsList = sosHibernateSession.getResultList(query);
         return iamBlockedAccountsList == null ? Collections.emptyList() : iamBlockedAccountsList;
     }
 

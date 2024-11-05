@@ -901,13 +901,8 @@ public class SOSServicePermissionIam {
             Globals.setProperties();
             
             Globals.setProperties();
-            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getGlobalIamProperties();
-            if (properties != null) {
-                Globals.iamSessionTimeout = SOSAuthHelper.getGlobalIamProperties().getSessionTimeout();
-            }
-
-//            Globals.iamSessionTimeout = SOSAuthHelper.getSecondsFromString(Globals.getConfigurationGlobalsIdentityService().getIdleSessionTimeout()
-//                    .getValue());
+            Globals.iamSessionTimeout = SOSAuthHelper.getSecondsFromString(Globals.getConfigurationGlobalsIdentityService().getIdleSessionTimeout()
+                    .getValue());
             if (sosLoginParameters.basicAuthorizationHeaderIsEmpty()) {
                 if (sosLoginParameters.getCredentialId() != null && !sosLoginParameters.getCredentialId().isEmpty()) {
 

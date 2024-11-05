@@ -108,7 +108,7 @@ public class IamIdentityServiceDBLayer {
                 .getOrderCriteria() + filter.getSortMode());
         bindParameters(filter, query);
 
-        identityList = query.getResultList();
+        identityList = sosHibernateSession.getResultList(query);
         if (identityList.size() == 0) {
             return null;
         } else {
@@ -132,7 +132,7 @@ public class IamIdentityServiceDBLayer {
         if (limit > 0) {
             query.setMaxResults(limit);
         }
-        identityServiceList = query.getResultList();
+        identityServiceList = sosHibernateSession.getResultList(query);
         return identityServiceList;
     }
 
