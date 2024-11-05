@@ -247,7 +247,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
             DBItemJocConfiguration dbItem = null;
-            if (configuration.getId() == 0) {
+            if (configuration.getId() == 0 || configuration.getId() == null) {
                 JocConfigurationFilter filter = new JocConfigurationFilter();
                 filter.setConfigurationType(configuration.getConfigurationType().value());
                 filter.setName(configuration.getName());
