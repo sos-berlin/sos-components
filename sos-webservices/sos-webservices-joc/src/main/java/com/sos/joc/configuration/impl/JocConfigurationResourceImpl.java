@@ -37,6 +37,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.Configuration200;
 import com.sos.joc.model.configuration.ConfigurationOk;
+import com.sos.joc.model.configuration.ConfigurationRead;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
@@ -237,7 +238,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
     public JOCDefaultResponse postReadConfiguration(String accessToken, byte[] body) {
         SOSHibernateSession connection = null;
         try {
-            Configuration configuration = getConfiguration(API_CALL_READ, accessToken, body);
+            ConfigurationRead configuration = getConfigurationRead(API_CALL_READ, accessToken, body);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -247,7 +248,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
             DBItemJocConfiguration dbItem = null;
-            if (configuration.getId() == 0 || configuration.getId() == null) {
+            
+            if (configuration.getId() == null || configuration.getId() == 0) {
                 JocConfigurationFilter filter = new JocConfigurationFilter();
                 filter.setConfigurationType(configuration.getConfigurationType().value());
                 filter.setName(configuration.getName());
@@ -510,6 +512,12 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         }
     }
 
+    private ConfigurationRead getConfigurationRead(String action, String accessToken, byte[] body) throws SOSJsonSchemaException, IOException {
+        initLogging(action, body, accessToken);
+        JsonValidator.validateFailFast(body, ConfigurationRead.class);
+        return Globals.objectMapper.readValue(body, ConfigurationRead.class);
+    }
+    
     private Configuration getConfiguration(String action, String accessToken, byte[] body) throws SOSJsonSchemaException, IOException {
         initLogging(action, body, accessToken);
         JsonValidator.validateFailFast(body, Configuration.class);
