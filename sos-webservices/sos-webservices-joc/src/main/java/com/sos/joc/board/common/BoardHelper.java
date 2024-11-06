@@ -41,10 +41,10 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.common.Folder;
 
 import js7.data.board.BoardPath;
-import js7.data.board.GlobalBoardState;
+import js7.data.board.BoardState;
 import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
-import js7.data_for_java.board.JGlobalBoardState;
+import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
@@ -60,7 +60,7 @@ public class BoardHelper {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         Board item = init(dc);
 
-        JGlobalBoardState jBoardState = null;
+        JBoardState jBoardState = null;
         if (controllerState != null) {
             stateText = SyncStateText.NOT_IN_SYNC;
             jBoardState = controllerState.pathToBoardState().get(BoardPath.of(dc.getName()));
@@ -86,7 +86,7 @@ public class BoardHelper {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         Board item = init(dc);
 
-        JGlobalBoardState jBoardState = null;
+        JBoardState jBoardState = null;
         if (controllerState != null) {
             stateText = SyncStateText.NOT_IN_SYNC;
             jBoardState = controllerState.pathToBoardState().get(BoardPath.of(dc.getName()));
@@ -133,7 +133,7 @@ public class BoardHelper {
         });
 
         if (jBoardState != null) {
-            final GlobalBoardState bs = jBoardState.asScala();
+            final BoardState bs = jBoardState.asScala();
 
             JavaConverters.asJava(bs.notices()).forEach(n -> {
                 Notice notice = new Notice();

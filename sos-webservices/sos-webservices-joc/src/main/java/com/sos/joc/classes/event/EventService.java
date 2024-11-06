@@ -73,8 +73,8 @@ import com.sos.monitoring.notification.NotificationType;
 
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent;
+import js7.data.board.BoardEvent;
 import js7.data.board.BoardPath;
-import js7.data.board.NoticeEvent;
 import js7.data.cluster.ClusterEvent;
 import js7.data.cluster.ClusterWatchProblems;
 import js7.data.controller.ControllerEvent;
@@ -126,7 +126,7 @@ import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.WorkflowPathControlPath;
-import js7.data.workflow.instructions.NoticeInstruction;
+import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -146,7 +146,7 @@ public class EventService {
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAddedX.class, OrderProcessed.class, OrderSuspended$.class,
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, OrderPrompted.class,
             OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, OrderStopped$.class, VersionedItemAddedOrChanged.class,
-            UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, NoticeEvent.class, OrderLocksAcquired.class,
+            UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class, OrderLocksAcquired.class,
             OrderLocksQueued.class, OrderLocksReleased.class, OrderNoticeEvent.class, OrderTransferred.class, SubagentItemStateEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<IEventObject> events = new CopyOnWriteArraySet<>();
@@ -672,7 +672,7 @@ public class EventService {
                 String subagentPath = ((SubagentId) key).string();
                 addEvent(createAgentEvent(eventId, subagentPath));
                 uncoupledSubagents.remove(subagentPath);
-            } else if (evt instanceof NoticeEvent) {
+            } else if (evt instanceof BoardEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             }
 
@@ -692,7 +692,7 @@ public class EventService {
     private static Optional<Set<BoardPath>> orderPositionToBoardPaths(JOrder order, JControllerState controllerState) {
         Optional<JOrder> orderOpt = order == null ? Optional.empty() : Optional.of(order);
         return orderOpt.map(o -> controllerState.asScala().instruction(o.asScala().workflowPosition())).flatMap(instruction -> tryCast(
-                NoticeInstruction.class, instruction)).map(postNotice -> JavaConverters.asJava(postNotice.referencedBoardPaths()));
+                BoardInstruction.class, instruction)).map(postNotice -> JavaConverters.asJava(postNotice.referencedBoardPaths()));
     }
 
     @SuppressWarnings("unchecked")

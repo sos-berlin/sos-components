@@ -37,7 +37,7 @@ import js7.data.board.BoardPath;
 import js7.data.board.NoticeId;
 import js7.data.board.NoticePlace;
 import js7.data.controller.ControllerCommand;
-import js7.data_for_java.board.JGlobalBoardState;
+import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.proxy.javaapi.JControllerProxy;
 import scala.collection.JavaConverters;
@@ -109,7 +109,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             storeAuditLog(in.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             JControllerProxy proxy = Proxy.of(controllerId);
-            Map<BoardPath, JGlobalBoardState> boards = proxy.currentState().pathToBoardState();
+            Map<BoardPath, JBoardState> boards = proxy.currentState().pathToBoardState();
             Instant now = Instant.now();
             
             if (in.getNotices() != null && !in.getNotices().isEmpty()) {
@@ -206,11 +206,11 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
         return endOfLifeOpt;
     }
     
-    private Optional<JControllerCommand> getBatchCommand(Map<BoardPath, JGlobalBoardState> boards, ModifyNotices in, Action action) {
+    private Optional<JControllerCommand> getBatchCommand(Map<BoardPath, JBoardState> boards, ModifyNotices in, Action action) {
         return getBatchCommand(boards, in, Optional.empty(), action);
     }
     
-    private Optional<JControllerCommand> getBatchCommand(Map<BoardPath, JGlobalBoardState> boards, ModifyNotices in, Optional<Instant> endOfLife,
+    private Optional<JControllerCommand> getBatchCommand(Map<BoardPath, JBoardState> boards, ModifyNotices in, Optional<Instant> endOfLife,
             Action action) {
         Map<Boolean, List<BoardPath>> map = in.getNotices().stream()
                 .map(NoticeIdsPerBoard::getNoticeBoardPath)
