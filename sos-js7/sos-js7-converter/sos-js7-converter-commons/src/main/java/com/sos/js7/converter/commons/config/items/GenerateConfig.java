@@ -20,6 +20,10 @@ public class GenerateConfig extends AConfigItem {
     private boolean jobTemplates = true;
     private boolean cyclicOrders = false;
 
+    // only jobs without instructions - are generated in a separate report folder
+    private static final String PROPERTY_NAME_PSEUDO_WORKFLOWS = "pseudoWorkflows";
+    private boolean pseudoWorkflows = false;
+
     public GenerateConfig() {
         super(CONFIG_KEY);
     }
@@ -29,6 +33,9 @@ public class GenerateConfig extends AConfigItem {
         switch (propertyName.toLowerCase()) {
         case PROPERTY_NAME_WORKFLOWS:
             withWorkflows(Boolean.parseBoolean(val));
+            break;
+        case PROPERTY_NAME_PSEUDO_WORKFLOWS:
+            withPseudoWorkflows(Boolean.parseBoolean(val));
             break;
         case PROPERTY_NAME_AGENTS:
             withAgents(Boolean.parseBoolean(val));
@@ -93,6 +100,11 @@ public class GenerateConfig extends AConfigItem {
         return this;
     }
 
+    public GenerateConfig withPseudoWorkflows(boolean val) {
+        this.pseudoWorkflows = val;
+        return this;
+    }
+
     public GenerateConfig withAgents(boolean val) {
         this.agents = val;
         return this;
@@ -125,6 +137,10 @@ public class GenerateConfig extends AConfigItem {
 
     public boolean getWorkflows() {
         return workflows;
+    }
+
+    public boolean getPseudoWorkflows() {
+        return pseudoWorkflows;
     }
 
     public boolean getAgents() {

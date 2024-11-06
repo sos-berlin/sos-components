@@ -152,6 +152,12 @@ public class Autosys2JS7Converter {
         // 6 - Write JS7 files
         start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][write][start]...", method));
+        if (CONFIG.getGenerateConfig().getPseudoWorkflows()) {
+            LOGGER.info(String.format("[%s][JS7][write][pseudoWorkflows]...", method));
+            Path p = reportDir.resolve("pseudo-workflows");
+            OutputWriter.write(p, result.getPseudoWorkflows());
+        }
+
         if (CONFIG.getGenerateConfig().getWorkflows()) {
             LOGGER.info(String.format("[%s][JS7][write][workflows]...", method));
             OutputWriter.write(outputDir, result.getWorkflows());

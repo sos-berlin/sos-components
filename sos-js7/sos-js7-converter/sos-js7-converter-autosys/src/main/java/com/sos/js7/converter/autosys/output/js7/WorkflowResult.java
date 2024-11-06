@@ -9,6 +9,10 @@ import com.sos.js7.converter.autosys.output.js7.helper.BoardTryCatchHelper;
 
 public class WorkflowResult {
 
+    public enum Type {
+        REAL, PSEUDO
+    }
+
     private Path path;
     private String name;
     private String timezone;

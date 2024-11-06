@@ -31,6 +31,8 @@ public class JS7ConverterResult {
     private JS7ExportObjects<Lock> locks = new JS7ExportObjects<>();
     private JS7ExportObjects<JobTemplate> jobTemplates = new JS7ExportObjects<>();
 
+    private JS7ExportObjects<Workflow> pseudoWorkflows = new JS7ExportObjects<>();
+
     private Object converter;
 
     private PostNotices postNotices = this.new PostNotices();
@@ -39,6 +41,10 @@ public class JS7ConverterResult {
 
     public void add(Path path, Workflow val) {
         workflows.addItem(path, val);
+    }
+
+    public void addPseudoWorkflow(Path path, Workflow val) {
+        pseudoWorkflows.addItem(path, val);
     }
 
     public void add(Path path, Agent val) {
@@ -115,6 +121,10 @@ public class JS7ConverterResult {
 
     public JS7ExportObjects<Workflow> getWorkflows() {
         return workflows;
+    }
+
+    public JS7ExportObjects<Workflow> getPseudoWorkflows() {
+        return pseudoWorkflows;
     }
 
     public JS7ExportObjects<Agent> getAgents() {
