@@ -121,7 +121,8 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             volatile boolean canceled = false;
             AtomicReference<OrderProcessStep<A>> orderProcessStepRef = null;
 
-            public JOutcome.Completed runInteruptible() throws Exception {
+            @Override
+            public JOutcome.Completed runInterruptible() throws Exception {
                 while (!canceled) {
                     MockLevel mockLevel = MockLevel.OFF;
                     OrderProcessStep<A> step = new OrderProcessStep<A>(jobEnvironment, internalStep);
