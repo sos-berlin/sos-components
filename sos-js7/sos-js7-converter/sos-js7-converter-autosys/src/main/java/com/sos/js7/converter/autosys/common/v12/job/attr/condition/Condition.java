@@ -21,7 +21,7 @@ public class Condition implements Serializable {
     public static boolean ADJUST_LOOK_BACK_FOR_JS7 = false;
 
     public enum ConditionType {
-        DONE, FAILURE, NOTRUNNING, SUCCESS, TERMINATED, EXITCODE, VARIABLE, SOS_UNKNOWN
+        DONE, FAILURE, NOTRUNNING, SUCCESS, TERMINATED, EXITCODE, VARIABLE, JS7_UNKNOWN, JS7_INTERNAL
     }
 
     private enum MapKeys {
@@ -38,6 +38,15 @@ public class Condition implements Serializable {
     private final String instanceTag;
 
     private String jobName;
+
+    // Internal usage
+    public Condition(ConditionType type, String name) {
+        this.originalValue = null;
+        this.type = type;
+        this.name = name;
+        this.lookBack = null;
+        this.instanceTag = null;
+    }
 
     /** <br/>
      * v(app.varA) = "X"<br/>
@@ -85,7 +94,7 @@ public class Condition implements Serializable {
     private ConditionType getType(String t, String original) {
         jobName = null;
 
-        ConditionType type = ConditionType.SOS_UNKNOWN;
+        ConditionType type = ConditionType.JS7_UNKNOWN;
         switch (t) {
         case "d":
         case "done":
@@ -258,7 +267,7 @@ public class Condition implements Serializable {
     }
 
     public String getInfo() {
-        StringBuilder sb = new StringBuilder(name);
+        StringBuilder sb = new StringBuilder(name == null ? "" : name);
         if (instanceTag != null) {
             sb.append("^").append(instanceTag);
         }

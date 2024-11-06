@@ -167,7 +167,7 @@ public class RunTimeHelper {
     }
 
     // TODO replace by toCyclicInstruction method ...
-    public static List<Instruction> getCyclicWorkflowInstructions(ACommonJob j, List<Instruction> in, BoardTryCatchHelper btch) {
+    public static List<Instruction> getCyclicWorkflowInstructions(WorkflowResult wr, ACommonJob j, List<Instruction> in, BoardTryCatchHelper btch) {
         if (!convert2cyclic(j)) {
             return in;
         }
@@ -189,9 +189,12 @@ public class RunTimeHelper {
 
         if (btch != null) {
             if (btch.getTryPostNotices() != null) {
+                wr.addPostNotices(btch.getTryPostNotices());
+               
                 in.add(btch.getTryPostNotices());
                 btch.resetTryPostNotices();
             }
+            // TODO to remove ConsumeNotice because not generated...
             ConsumeNotices cn = btch.getConsumeNotices();
             if (cn != null) {
                 cn.setSubworkflow(new Instructions(in));
@@ -204,6 +207,8 @@ public class RunTimeHelper {
 
         in = new ArrayList<>();
         in.add(new Cycle(ci, cs));
+
+        wr.setCycle();
 
         return in;
     }

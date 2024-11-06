@@ -7,7 +7,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Finish;
@@ -15,8 +14,10 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Jobs;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
+import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
@@ -53,7 +54,7 @@ public class ConverterStandaloneJobs {
     }
 
     private void convertStandalone(JS7ConverterResult result, JobCMD jilJob) {
-        WorkflowResult wr = convertStandaloneWorkflow(result, jilJob);
+        WorkflowResult wr = convertStandaloneWorkflow(result, converter.getAnalyzer(), jilJob);
 
         if (!jilJob.hasRunTime()) {
             jilJob.getRunTime().setTimezone(wr.getTimezone());
@@ -62,10 +63,10 @@ public class ConverterStandaloneJobs {
         converter.convertSchedule(result, wr, jilJob);
     }
 
-    private WorkflowResult convertStandaloneWorkflow(JS7ConverterResult result, JobCMD jilJob) {
+    private WorkflowResult convertStandaloneWorkflow(JS7ConverterResult result, AutosysAnalyzer analyzer, JobCMD jilJob) {
         String runTimeTimezone = jilJob.getRunTime().getTimezone().getValue();
 
-        converter.getAnalyzer().getConditionAnalyzer().handleStandaloneJobConditions(jilJob);
+        converter.getAnalyzer().getConditionAnalyzer().handleStandaloneJobConditions(analyzer, jilJob);
 
         // WORKFLOW
         Workflow w = new Workflow();
@@ -110,7 +111,10 @@ public class ConverterStandaloneJobs {
         // 1.3) Lock around Retry Instruction
         tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, jilJob, tryInstructions);
         // 1.4) Cyclic around all previous instructions
-        tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(jilJob, tryInstructions, btch);
+        tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, jilJob, tryInstructions, btch);
+        // 1.5)
+        wr.addPostNotices(btch); // after cyclic
+        tryInstructions = AdditionalInstructionsHelper.consumeNoticesIfExists(analyzer, wr, tryInstructions);
         if (btch.getTryPostNotices() != null) {
             tryInstructions.add(btch.getTryPostNotices());
         }
@@ -141,6 +145,9 @@ public class ConverterStandaloneJobs {
         in.add(tryCatch);
 
         w.setInstructions(in);
+
+        // w = AdditionalInstructionsHelper.consumeNoticesIfExists(wr, w, btch);
+
         result.add(wr.getPath(), w);
         return wr;
     }

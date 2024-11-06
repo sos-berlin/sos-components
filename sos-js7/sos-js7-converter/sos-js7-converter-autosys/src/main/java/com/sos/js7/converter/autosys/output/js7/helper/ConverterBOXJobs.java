@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.ExpectNotices;
@@ -30,6 +29,7 @@ import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Parameters;
 import com.sos.inventory.model.workflow.Requirements;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
@@ -54,7 +54,7 @@ public class ConverterBOXJobs {
     private final Autosys2JS7Converter converter;
     private final JS7ConverterResult result;
 
-    // tmp test
+    // tmp test - currently not works because if=true generates duplicate locks ...
     private boolean tryCreateLockByChildJobs = false;
 
     public static void clear() {
@@ -215,7 +215,11 @@ public class ConverterBOXJobs {
         // 1.3) Lock around Retry Instruction ???
         tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, box, tryInstructions);
         // 1.4) Cyclic around all previous instructions
-        tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(box, tryInstructions, btch);
+        tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, box, tryInstructions, btch);
+        // 1.5)
+        wr.addPostNotices(btch); // after cyclic
+        tryInstructions = AdditionalInstructionsHelper.consumeNoticesIfExists(converter.getAnalyzer(), wr, tryInstructions);
+
         if (btch.getTryPostNotices() != null) {
             tryInstructions.add(btch.getTryPostNotices());
         }
@@ -260,6 +264,8 @@ public class ConverterBOXJobs {
             }
         }
 
+        // w = AdditionalInstructionsHelper.consumeNoticesIfExists(wr, w, btch);
+
         Report.writeJS7BOXReport(converter.getAnalyzer().getReportDir(), box, w);
 
         converter.convertSchedule(result, wr, box);
@@ -295,6 +301,8 @@ public class ConverterBOXJobs {
             }
 
             if (btch.getTryPostNotices() != null) {
+                wr.addPostNotices(btch.getTryPostNotices());
+                
                 in.add(btch.getTryPostNotices());
             }
 
@@ -358,6 +366,8 @@ public class ConverterBOXJobs {
 
             BoardTryCatchHelper btch = new BoardTryCatchHelper(bj, converter.getAnalyzer(), nh);
             if (btch.getTryPostNotices() != null) {
+                wr.addPostNotices(btch.getTryPostNotices());
+                
                 bwIn.add(btch.getTryPostNotices());
             }
 

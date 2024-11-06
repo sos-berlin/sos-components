@@ -519,7 +519,8 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         case NOTRUNNING:
             fillColor = "#CACACA"; // gray
             break;
-        case SOS_UNKNOWN:
+        case JS7_UNKNOWN:
+        case JS7_INTERNAL:
             break;
         case SUCCESS:
             break;

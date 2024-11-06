@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import com.sos.js7.converter.commons.config.items.AgentConfig;
+import com.sos.js7.converter.commons.config.items.BoardConfig;
 import com.sos.js7.converter.commons.config.items.CalendarConfig;
 import com.sos.js7.converter.commons.config.items.GenerateConfig;
 import com.sos.js7.converter.commons.config.items.JobConfig;
@@ -32,6 +33,7 @@ public class JS7ConverterConfig {
     private final CalendarConfig calendarConfig;
     private final ScheduleConfig scheduleConfig;
     private final LockConfig lockConfig;
+    private final BoardConfig boardConfig;
     private final SubFolderConfig subFolderConfig;
 
     public JS7ConverterConfig() {
@@ -44,6 +46,7 @@ public class JS7ConverterConfig {
         calendarConfig = new CalendarConfig();
         scheduleConfig = new ScheduleConfig();
         lockConfig = new LockConfig();
+        boardConfig = new BoardConfig();
         subFolderConfig = new SubFolderConfig();
     }
 
@@ -71,6 +74,8 @@ public class JS7ConverterConfig {
                 scheduleConfig.parse(p);
                 // LOCK
                 lockConfig.parse(p);
+                // BOARD
+                boardConfig.parse(p);
                 // SUBFOLDER - TODO autosys only
                 subFolderConfig.parse(p);
 
@@ -119,6 +124,10 @@ public class JS7ConverterConfig {
         return lockConfig;
     }
 
+    public BoardConfig getBoardConfig() {
+        return boardConfig;
+    }
+
     public SubFolderConfig getSubFolderConfig() {
         return subFolderConfig;
     }
@@ -148,6 +157,9 @@ public class JS7ConverterConfig {
         }
         if (!lockConfig.isEmpty()) {
             sb.append(",").append(lockConfig.toString());
+        }
+        if (!boardConfig.isEmpty()) {
+            sb.append(",").append(boardConfig.toString());
         }
         if (!subFolderConfig.isEmpty()) {
             sb.append(",").append(subFolderConfig.toString());

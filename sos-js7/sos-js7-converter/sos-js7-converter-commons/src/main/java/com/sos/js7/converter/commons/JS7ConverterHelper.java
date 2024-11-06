@@ -60,9 +60,9 @@ public class JS7ConverterHelper {
     public static final String JS7_NOTICE_OR = "||";
 
     private final static Set<Character> QUOTED_CHARS = new HashSet<>(Arrays.asList('\"', '$', '\n'));
-
     private final static Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
 
+    private static String defaultBoardLifeTimeMinutesAsString = "24 * 60";
     private static int converterNameCounter = 0;
 
     public static String getJS7JobTemplateHash(JobTemplate t) {
@@ -534,6 +534,16 @@ public class JS7ConverterHelper {
         return sb;
     }
 
+    public static void setBoardsConfig(JS7ConverterConfig config) {
+        if (!config.getBoardConfig().isEmpty()) {
+            if (!SOSString.isEmpty(config.getBoardConfig().getForcedLifetime())) {
+                defaultBoardLifeTimeMinutesAsString = config.getBoardConfig().getForcedLifetime();
+            } else if (!SOSString.isEmpty(config.getBoardConfig().getDefaultLifetime())) {
+                defaultBoardLifeTimeMinutesAsString = config.getBoardConfig().getDefaultLifetime();
+            }
+        }
+    }
+
     public static Job setFromConfig(JS7ConverterConfig config, Job j) {
         if (config.getJobConfig().getForcedGraceTimeout() != null) {
             j.setGraceTimeout(config.getJobConfig().getForcedGraceTimeout());
@@ -595,26 +605,39 @@ public class JS7ConverterHelper {
         return parent.resolve(boardName + ".noticeboard.json");
     }
 
-    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, String boardName, String boardTitle) {
-        createNoticeBoardFromWorkflowPath(result, workflowPath, boardName, boardTitle, null);
+    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, boolean isBusinessDaySpecific,
+            String boardName, String boardTitle) {
+        createNoticeBoardFromWorkflowPath(result, workflowPath, isBusinessDaySpecific, boardName, boardTitle, null);
     }
 
-    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, String boardName, String boardTitle,
-            Integer lifeTimeMinutes) {
-        result.add(getNoticeBoardPathFromJS7Path(workflowPath, boardName), createNoticeBoard(boardTitle, lifeTimeMinutes));
+    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, boolean isBusinessDaySpecific,
+            String boardName, String boardTitle, Integer lifeTimeMinutes) {
+        result.add(getNoticeBoardPathFromJS7Path(workflowPath, boardName), createNoticeBoard(isBusinessDaySpecific, boardName, boardTitle,
+                lifeTimeMinutes));
     }
 
-    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, String boardName, String boardTitle) {
-        createNoticeBoardByParentPath(result, parentPath, boardName, boardTitle, null);
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, boolean isBusinessDaySpecific, String boardName,
+            String boardTitle) {
+        createNoticeBoardByParentPath(result, parentPath, isBusinessDaySpecific, boardName, boardTitle, null);
     }
 
-    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, String boardName, String boardTitle,
-            Integer lifeTimeMinutes) {
-        result.add(parentPath.resolve(boardName + ".noticeboard.json"), createNoticeBoard(boardTitle, lifeTimeMinutes));
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, boolean isBusinessDaySpecific, String boardName,
+            String boardTitle, Integer lifeTimeMinutes) {
+        result.add(parentPath.resolve(boardName + ".noticeboard.json"), createNoticeBoard(isBusinessDaySpecific, boardName, boardTitle,
+                lifeTimeMinutes));
     }
 
-    private static Board createNoticeBoard(String boardTitle, Integer lifeTimeMinutes) {
-        String lifeTimeMinutesAsString = "24 * 60";
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, String boardName, Board board) {
+        result.add(parentPath.resolve(boardName + ".noticeboard.json"), board);
+    }
+
+    private static Board createNoticeBoard(boolean isBusinessDaySpecific, String boardName, String boardTitle, Integer lifeTimeMinutes) {
+        String lifeTimeMinutesAsString = defaultBoardLifeTimeMinutesAsString;
+        if (!isBusinessDaySpecific) {
+            // TODO configurable - 60 days
+            // lifeTimeMinutesAsString = "2 * 30 * " + lifeTimeMinutesAsString;
+        }
+
         if (lifeTimeMinutes != null && lifeTimeMinutes.intValue() > 0) {
             if (lifeTimeMinutes.intValue() % 60 == 0) {
                 int hours = lifeTimeMinutes / 60;
@@ -629,8 +652,22 @@ public class JS7ConverterHelper {
         Board b = new Board();
         b.setTitle(getJS7InventoryObjectTitle(boardTitle));
         b.setEndOfLife(endOfLife);
-        b.setExpectOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
-        b.setPostOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
+        if (isBusinessDaySpecific) {
+            b.setExpectOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
+            b.setPostOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
+        } else {
+            b.setExpectOrderToNoticeId("'" + boardName + "'");
+            b.setPostOrderToNoticeId(b.getExpectOrderToNoticeId());
+        }
+        return b;
+    }
+
+    public static Board createNoticeBoard(String title, String endOfLife, String orderToNoticeId) {
+        Board b = new Board();
+        b.setTitle(getJS7InventoryObjectTitle(title));
+        b.setEndOfLife(endOfLife);
+        b.setExpectOrderToNoticeId(orderToNoticeId);
+        b.setPostOrderToNoticeId(b.getExpectOrderToNoticeId());
         return b;
     }
 

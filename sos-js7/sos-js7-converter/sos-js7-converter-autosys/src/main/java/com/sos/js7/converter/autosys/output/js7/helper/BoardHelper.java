@@ -109,10 +109,13 @@ public class BoardHelper {
         case VARIABLE:
             sb.append("variable: " + c.getName());
             break;
+        case JS7_INTERNAL:
+            sb = new StringBuilder(c.getName());
+            break;
         case EXITCODE:
         case TERMINATED:
         case NOTRUNNING:
-        case SOS_UNKNOWN:
+        case JS7_UNKNOWN:
         default:
             sb.append(c.toString());
             break;

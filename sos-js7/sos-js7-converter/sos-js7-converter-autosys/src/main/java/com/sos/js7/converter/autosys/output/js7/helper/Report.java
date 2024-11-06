@@ -346,7 +346,7 @@ public class Report {
 
     }
 
-    public static void writePerJobBOXConditionRefersReports(Path reportDir, JobBOX boxJob,
+    public static void writePerJobBOXConditionRefersReports(Path reportDir, AutosysAnalyzer analyzer, JobBOX boxJob,
             Map<String, Condition> toRemoveConditionsRefersToChildrenJobs, Map<String, Condition> toRemoveConditionsRefersToBoxItself) {
         if (reportDir == null) {
             return;
@@ -388,6 +388,21 @@ public class Report {
                             .getOriginalValue());
                     try {
                         SOSPath.appendLine(report, msg2);
+
+                        SOSPath.appendLine(report, "");
+                        msg2 = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "total used by", ":", "");
+                        SOSPath.appendLine(report, msg2);
+                        InConditionHolder h = analyzer.getConditionAnalyzer().getAllINConditions().get(e.getValue().getKey());
+                        if (h != null && h.getJobNames() != null && h.getJobNames().size() > 0) {
+                            for (String j : h.getJobNames()) {
+                                ACommonJob cj = analyzer.getAllJobs().get(j);
+                                String jm = cj == null ? j : cj.toString();
+
+                                msg2 = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "", ":", jm);
+                                SOSPath.appendLine(report, msg2);
+                            }
+                        }
+
                     } catch (Throwable ex) {
                     }
                 });
@@ -398,7 +413,7 @@ public class Report {
         }
     }
 
-    public static void writePerStandaloneJobConditionRefersReports(Path reportDir, ACommonJob job,
+    public static void writePerStandaloneJobConditionRefersReports(Path reportDir, AutosysAnalyzer analyzer, ACommonJob job,
             Map<String, Condition> toRemoveConditionsRefersToItself) {
         if (reportDir == null) {
             return;
@@ -410,6 +425,8 @@ public class Report {
 
                 String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(job), job.getName());
                 SOSPath.appendLine(report, msg);
+                msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "runtime", ":", job.getRunTime());
+                SOSPath.appendLine(report, msg);
                 msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "condition", ":", job.getCondition().getOriginalCondition());
                 SOSPath.appendLine(report, msg);
 
@@ -418,9 +435,26 @@ public class Report {
                             .getOriginalValue());
                     try {
                         SOSPath.appendLine(report, msg2);
+
+                        SOSPath.appendLine(report, "");
+                        msg2 = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "total used by", ":", "");
+                        SOSPath.appendLine(report, msg2);
+
+                        InConditionHolder h = analyzer.getConditionAnalyzer().getAllINConditions().get(e.getValue().getKey());
+                        if (h != null && h.getJobNames() != null && h.getJobNames().size() > 0) {
+                            for (String j : h.getJobNames()) {
+                                ACommonJob cj = analyzer.getAllJobs().get(j);
+                                String jm = cj == null ? j : cj.toString();
+
+                                msg2 = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "", ":", jm);
+                                SOSPath.appendLine(report, msg2);
+                            }
+                        }
+
                     } catch (Throwable ex) {
                     }
                 });
+
                 SOSPath.appendLine(report, Report.LINE_DELIMETER);
             }
         } catch (Throwable e) {
@@ -1594,9 +1628,13 @@ public class Report {
         Map<ACommonJob, List<Condition>> withLookBackEquals24 = AutosysConverterHelper.newJobConditionsTreeMap();
         Map<ACommonJob, List<Condition>> withLookBackNotEquals0 = AutosysConverterHelper.newJobConditionsTreeMap();
 
+        Set<String> allLookBacks = new TreeSet<>();
         for (ACommonJob j : jobsWithLookBack) {
             List<Condition> cl = Conditions.getConditionsWithLookBack(j.getCondition().getCondition().getValue());
             for (Condition c : cl) {
+                if (!allLookBacks.contains(c.getLookBack())) {
+                    allLookBacks.add(c.getLookBack());
+                }
                 if (c.getLookBack().equals("0")) {
                     List<Condition> l = withLookBackEquals0.get(j);
                     if (l == null) {
@@ -1635,6 +1673,12 @@ public class Report {
         SOSPath.appendLine(f, msg);
 
         SOSPath.appendLine(f, "");
+        SOSPath.appendLine(f, LINE_DETAILS);
+
+        SOSPath.appendLine(f, "LookBacks used:");
+        for (String lb : allLookBacks) {
+            SOSPath.appendLine(f, "    " + lb);
+        }
         SOSPath.appendLine(f, LINE_DETAILS);
 
         String indentDetails = "%-40s";

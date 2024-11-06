@@ -38,6 +38,8 @@ public class ConditionAnalyzer {
     // key - job name, value - entire original condition as text
     private Map<String, String> jobsWithORConditions;
 
+    private Set<String> lookBacks;
+
     private boolean logAllINConditions = false;
     private boolean logAllOUTConditions = false;
 
@@ -51,6 +53,7 @@ public class ConditionAnalyzer {
         allOUTConditions = new TreeMap<>();
         allConditionsByType = new TreeMap<>();
         jobsWithORConditions = new TreeMap<>();
+        lookBacks = new TreeSet<>();
     }
 
     public void analyze(List<ACommonJob> jobs) {
@@ -184,6 +187,8 @@ public class ConditionAnalyzer {
         // LOGGER.info("[mapIn]job=" + j.getName());
         if (j.hasCondition()) {
             for (Condition c : j.conditionsAsList()) {
+                addLookBack(c);
+
                 InConditionHolder ch = null;
                 String condKey = c.getKey();
                 if (allINConditions.containsKey(condKey)) {
@@ -206,6 +211,18 @@ public class ConditionAnalyzer {
 
             Report.writePerJobConditionReport(reportDir, j);
         }
+    }
+
+    private void addLookBack(Condition c) {
+        if (c != null && c.getLookBack() != null) {
+            if (!lookBacks.contains(c.getLookBack())) {
+                lookBacks.add(c.getLookBack());
+            }
+        }
+    }
+
+    public Set<String> getLookBacks() {
+        return lookBacks;
     }
 
     private void conditionsByType(Condition c) {
@@ -264,7 +281,7 @@ public class ConditionAnalyzer {
     // -- e.g. box condition=v(my_var) = "up" & s(my_box.my_box_name)
     // - Remove duplicates
     // -- e.g. box condition=v(my_var) = "up" & s(my_box.my_box_job1) & s(my_box.my_box_job1)
-    private List<Condition> handleJobBoxMainConditions(JobBOX boxJob) throws Exception {
+    private List<Condition> handleJobBoxMainConditions(AutosysAnalyzer analyzer, JobBOX boxJob) throws Exception {
         List<Condition> mainConditions = boxJob.conditionsAsList();
 
         // Remove from BOX mainCondition conditions related to a "children" Box Job Box
@@ -291,7 +308,7 @@ public class ConditionAnalyzer {
                 }
             }
 
-            Report.writePerJobBOXConditionRefersReports(reportDir, boxJob, toRemoveConditionsRefersToChildrenJobs,
+            Report.writePerJobBOXConditionRefersReports(reportDir, analyzer, boxJob, toRemoveConditionsRefersToChildrenJobs,
                     toRemoveConditionsRefersToBoxItself);
 
             if (toRemoveConditionsRefersToChildrenJobs.size() > 0) {
@@ -394,7 +411,7 @@ public class ConditionAnalyzer {
 
         List<Condition> mainConditions = boxJob.conditionsAsList();
         // Step 1
-        mainConditions = handleJobBoxMainConditions(boxJob);
+        mainConditions = handleJobBoxMainConditions(analyzer, boxJob);
         if (doLog) {
             LOGGER.info("[mainConditions][box=" + boxJob.getName() + "]" + mainConditions);
         }
@@ -561,7 +578,7 @@ public class ConditionAnalyzer {
     }
 
     // TODO reports and mai
-    public List<Condition> handleStandaloneJobConditions(ACommonJob job) {
+    public List<Condition> handleStandaloneJobConditions(AutosysAnalyzer analyzer, ACommonJob job) {
         List<Condition> mainConditions = job.conditionsAsList();
 
         // Remove from BOX mainCondition conditions related to a "children" Box Job Box
@@ -582,7 +599,7 @@ public class ConditionAnalyzer {
                 }
             }
 
-            Report.writePerStandaloneJobConditionRefersReports(reportDir, job, toRemoveConditionsRefersToItself);
+            Report.writePerStandaloneJobConditionRefersReports(reportDir, analyzer, job, toRemoveConditionsRefersToItself);
 
             if (toRemoveConditionsRefersToItself.size() > 0) {
                 OutConditionHolder h = getJobOUTConditions(job);

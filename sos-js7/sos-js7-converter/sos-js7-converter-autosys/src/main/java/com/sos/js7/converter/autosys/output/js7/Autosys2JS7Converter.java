@@ -40,6 +40,7 @@ import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult
 import com.sos.js7.converter.autosys.input.JILJobParser;
 import com.sos.js7.converter.autosys.input.XMLJobParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
+import com.sos.js7.converter.autosys.output.js7.helper.AdditionalInstructionsHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.BoardHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.ConverterBOXJobs;
 import com.sos.js7.converter.autosys.output.js7.helper.ConverterStandaloneJobs;
@@ -103,6 +104,8 @@ public class Autosys2JS7Converter {
     }
 
     public static void convert(Path input, Path outputDir, Path reportDir) throws Exception {
+
+        JS7ConverterHelper.setBoardsConfig(CONFIG);
 
         String method = "convert";
 
@@ -228,6 +231,7 @@ public class Autosys2JS7Converter {
         LockHelper.clear();
         BOXJobsHelper.clear();
         ConverterBOXJobs.clear();
+        AdditionalInstructionsHelper.clear();
         // -------------------------
         String method = "convert";
 
@@ -322,12 +326,14 @@ public class Autosys2JS7Converter {
             if (p == null) {
                 p = Paths.get("");
             }
-            if (SOSString.isEmpty(entry.getValue().getFileName().toString())) {
-                LOGGER.info("AAAAAAAAAAAAA=" + entry.getValue() + "=" + p + "=" + entry.getKey());
+            String boardName = entry.getValue().getFileName().toString();
+            if (AdditionalInstructionsHelper.POST_CONSUME_BOARDS.containsKey(boardName)) {
+                JS7ConverterHelper.createNoticeBoardByParentPath(result, p, boardName, AdditionalInstructionsHelper.POST_CONSUME_BOARDS.get(
+                        boardName));
+            } else {
+                JS7ConverterHelper.createNoticeBoardByParentPath(result, p, false, boardName, BoardHelper.getBoardTitle(entry.getKey()), BoardHelper
+                        .getLifeTimeInMinutes(entry.getKey()));
             }
-
-            JS7ConverterHelper.createNoticeBoardByParentPath(result, p, entry.getValue().getFileName().toString(), BoardHelper.getBoardTitle(entry
-                    .getKey()), BoardHelper.getLifeTimeInMinutes(entry.getKey()));
         }
     }
 
@@ -378,7 +384,7 @@ public class Autosys2JS7Converter {
         }
     }
 
-    private static Job setFromConfig(Job j) {
+    public static Job setFromConfig(Job j) {
         if (CONFIG.getJobConfig().getForcedGraceTimeout() != null) {
             j.setGraceTimeout(CONFIG.getJobConfig().getForcedGraceTimeout());
         }

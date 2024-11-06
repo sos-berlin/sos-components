@@ -1,9 +1,11 @@
 package com.sos.js7.converter.autosys.output.js7;
 
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+
+import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.js7.converter.autosys.output.js7.helper.BoardTryCatchHelper;
 
 public class WorkflowResult {
 
@@ -11,9 +13,11 @@ public class WorkflowResult {
     private String name;
     private String timezone;
     private boolean isAutosysTimezone;
-    private Set<String> postNotices = new HashSet<>();
+    private boolean cycle = false;
+    private List<PostNotices> postNotices;
 
     public WorkflowResult() {
+        postNotices = new ArrayList<>();
     }
 
     public void setPath(Path val) {
@@ -45,23 +49,31 @@ public class WorkflowResult {
         return isAutosysTimezone;
     }
 
-    public void addPostNotice(String val) {
-        if (!postNotices.contains(val)) {
-            postNotices.add(val);
-        }
+    public void setCycle() {
+        cycle = true;
     }
 
-    public void addPostNotices(List<String> l) {
-        if (l == null || l.size() == 0) {
+    public boolean isCycle() {
+        return cycle;
+    }
+
+    public void addPostNotices(PostNotices val) {
+        if (val == null || val.getNoticeBoardNames() == null || val.getNoticeBoardNames().size() == 0) {
             return;
         }
-        for (String val : l) {
-            addPostNotice(val);
-        }
+        postNotices.add(val);
     }
 
-    public boolean hasPostNotice(String val) {
-        return postNotices.contains(val);
+    public void addPostNotices(BoardTryCatchHelper h) {
+        if (h == null) {
+            return;
+        }
+        addPostNotices(h.getTryPostNotices());
+        addPostNotices(h.getCatchPostNotices());
+    }
+
+    public List<PostNotices> getPostNotices() {
+        return postNotices;
     }
 
 }

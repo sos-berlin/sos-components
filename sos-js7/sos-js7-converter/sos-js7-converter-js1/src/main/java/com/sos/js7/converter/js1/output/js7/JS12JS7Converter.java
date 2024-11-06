@@ -436,7 +436,7 @@ public class JS12JS7Converter {
                             String replacement = "$1" + boardName + "\"\\]";
                             w = w.replaceAll(regex, replacement);
 
-                            JS7ConverterHelper.createNoticeBoardFromWorkflowPath(result, eo.getOriginalPath().getPath(), boardName, boardName);
+                            JS7ConverterHelper.createNoticeBoardFromWorkflowPath(result, eo.getOriginalPath().getPath(), true, boardName, boardName);
 
                             // Generate n ExpectNotices of all workflows
                             List<String> al = new ArrayList<>();

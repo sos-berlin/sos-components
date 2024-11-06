@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -15,6 +14,7 @@ import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 

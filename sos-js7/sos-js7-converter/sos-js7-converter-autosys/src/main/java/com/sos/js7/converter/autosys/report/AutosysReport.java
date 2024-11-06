@@ -7,22 +7,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions.Operator;
-import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.commons.report.ConverterReport;
 
 // TODO to remove - use ConditionAnalyzer instead
 public class AutosysReport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AutosysReport.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(AutosysReport.class);
 
     public static void analyze(List<ACommonJob> standaloneJobs, List<ACommonJob> boxJobs) {
         ConditionAnalyzerResult ar = analyzeStandalone(standaloneJobs);
@@ -268,10 +264,12 @@ public class AutosysReport {
                     ConverterReport.INSTANCE.addAnalyzerRecord("    " + name, String.format("[condition][TYPE=%s]%s", cn.getType(), j.getCondition()
                             .getOriginalCondition()));
                     break;
-                case SOS_UNKNOWN:
+                case JS7_UNKNOWN:
                     analyzerResult.unknown++;
                     ConverterReport.INSTANCE.addAnalyzerRecord("    " + name, String.format("[condition][TYPE=%s]%s", cn.getType(), j.getCondition()
                             .getOriginalCondition()));
+                    break;
+                case JS7_INTERNAL:
                     break;
                 }
 
