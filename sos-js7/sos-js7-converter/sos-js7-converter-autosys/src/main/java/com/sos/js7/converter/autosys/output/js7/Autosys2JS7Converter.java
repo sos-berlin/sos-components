@@ -333,10 +333,7 @@ public class Autosys2JS7Converter {
                 p = Paths.get("");
             }
             String boardName = entry.getValue().getFileName().toString();
-            if (AdditionalInstructionsHelper.POST_CONSUME_BOARDS.containsKey(boardName)) {
-                JS7ConverterHelper.createNoticeBoardByParentPath(result, p, boardName, AdditionalInstructionsHelper.POST_CONSUME_BOARDS.get(
-                        boardName));
-            } else {
+            if (!AdditionalInstructionsHelper.convertBoards(result, p, boardName)) {
                 JS7ConverterHelper.createNoticeBoardByParentPath(result, p, false, boardName, BoardHelper.getBoardTitle(entry.getKey()), BoardHelper
                         .getLifeTimeInMinutes(entry.getKey()));
             }

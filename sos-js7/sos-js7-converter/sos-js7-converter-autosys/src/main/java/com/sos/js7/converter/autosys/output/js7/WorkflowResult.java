@@ -62,10 +62,18 @@ public class WorkflowResult {
     }
 
     public void addPostNotices(PostNotices val) {
+        addPostNotices(val, -1);
+    }
+
+    public void addPostNotices(PostNotices val, int index) {
         if (val == null || val.getNoticeBoardNames() == null || val.getNoticeBoardNames().size() == 0) {
             return;
         }
-        postNotices.add(val);
+        if (index > -1) {
+            postNotices.add(index, val);
+        } else {
+            postNotices.add(val);
+        }
     }
 
     public void addPostNotices(BoardTryCatchHelper h) {

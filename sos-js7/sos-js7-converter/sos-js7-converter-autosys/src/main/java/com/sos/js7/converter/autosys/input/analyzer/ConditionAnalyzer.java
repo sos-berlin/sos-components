@@ -38,6 +38,7 @@ public class ConditionAnalyzer {
     // key - job name, value - entire original condition as text
     private Map<String, String> jobsWithORConditions;
 
+    private Set<String> boxRefersToItSelf;
     private Set<String> lookBacks;
 
     private boolean logAllINConditions = false;
@@ -53,6 +54,7 @@ public class ConditionAnalyzer {
         allOUTConditions = new TreeMap<>();
         allConditionsByType = new TreeMap<>();
         jobsWithORConditions = new TreeMap<>();
+        boxRefersToItSelf = new TreeSet<>();
         lookBacks = new TreeSet<>();
     }
 
@@ -225,6 +227,10 @@ public class ConditionAnalyzer {
         return lookBacks;
     }
 
+    public Set<String> getBoxRefersToItSelf() {
+        return boxRefersToItSelf;
+    }
+
     private void conditionsByType(Condition c) {
         Set<Condition> s = null;
 
@@ -319,6 +325,10 @@ public class ConditionAnalyzer {
                 mainConditions = boxJob.conditionsAsList();
             }
             if (toRemoveConditionsRefersToBoxItself.size() > 0) {
+                if (!boxRefersToItSelf.contains(boxJob.getName())) {
+                    boxRefersToItSelf.add(boxJob.getName());
+                }
+
                 List<Object> boxJobConditions = boxJob.getCondition().getCondition().getValue();
                 toRemoveConditionsRefersToBoxItself.entrySet().stream().forEach(e -> {
                     Conditions.remove(boxJobConditions, e.getValue());

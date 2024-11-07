@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,7 @@ import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.BranchWorkflow;
@@ -218,10 +220,30 @@ public class ConverterBOXJobs {
         tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, box, tryInstructions, btch);
         // 1.5)
         wr.addPostNotices(btch); // after cyclic
+        PostNotices postNoticeToBoxSelf = AdditionalInstructionsHelper.tryCreatePostNoticeToWorkflowItSelf(converter.getAnalyzer(), wr, box);
+        if (postNoticeToBoxSelf != null) {
+            wr.addPostNotices(postNoticeToBoxSelf, 0);
+        }
+
         tryInstructions = AdditionalInstructionsHelper.consumeNoticesIfExists(converter.getAnalyzer(), wr, tryInstructions);
 
         if (btch.getTryPostNotices() != null) {
-            tryInstructions.add(btch.getTryPostNotices());
+            PostNotices tpn = btch.getTryPostNotices();
+            if (postNoticeToBoxSelf != null) {
+                // merge without duplicates
+                // Set<String> mergedSet = new LinkedHashSet<>(tpn.getNoticeBoardNames());
+                // mergedSet.addAll(postNoticeToBoxSelf.getNoticeBoardNames());
+
+                Set<String> mergedSet = new LinkedHashSet<>(postNoticeToBoxSelf.getNoticeBoardNames());
+                mergedSet.addAll(tpn.getNoticeBoardNames());
+
+                tpn.setNoticeBoardNames(new ArrayList<>(mergedSet));
+            }
+            tryInstructions.add(tpn);
+        } else {
+            if (postNoticeToBoxSelf != null) {
+                tryInstructions.add(postNoticeToBoxSelf);
+            }
         }
 
         Instructions inst;
@@ -247,6 +269,27 @@ public class ConverterBOXJobs {
         // 3) add TryCatch
         // ##################################
         in.add(tryCatch);
+
+        if (postNoticeToBoxSelf != null) {
+            String postNoticeToBoxSelfName = "'" + postNoticeToBoxSelf.getNoticeBoardNames().get(0) + "'";
+            if (AdditionalInstructionsHelper.WORKFLOW_ITSELF_BOARDS_CREATE_AS_SEPARATE_EXPECT_NOTICE) {
+                ExpectNotices en = new ExpectNotices();
+                en.setNoticeBoardNames(postNoticeToBoxSelfName);
+                in.add(0, en);
+            } else {
+                Instruction firstInstruction = in.get(0);
+                if (firstInstruction != null) {
+                    if (firstInstruction instanceof ExpectNotices) {
+                        ExpectNotices en = ((ExpectNotices) firstInstruction);
+                        en.setNoticeBoardNames(postNoticeToBoxSelfName + " && " + en.getNoticeBoardNames());
+                    } else {
+                        ExpectNotices en = new ExpectNotices();
+                        en.setNoticeBoardNames(postNoticeToBoxSelfName);
+                        in.add(0, en);
+                    }
+                }
+            }
+        }
 
         w.setInstructions(in);
         w = setWorkflowOrderPreparation(w, fileWatchers);
@@ -302,7 +345,7 @@ public class ConverterBOXJobs {
 
             if (btch.getTryPostNotices() != null) {
                 wr.addPostNotices(btch.getTryPostNotices());
-                
+
                 in.add(btch.getTryPostNotices());
             }
 
@@ -367,7 +410,7 @@ public class ConverterBOXJobs {
             BoardTryCatchHelper btch = new BoardTryCatchHelper(bj, converter.getAnalyzer(), nh);
             if (btch.getTryPostNotices() != null) {
                 wr.addPostNotices(btch.getTryPostNotices());
-                
+
                 bwIn.add(btch.getTryPostNotices());
             }
 

@@ -662,6 +662,10 @@ public class JS7ConverterHelper {
         return b;
     }
 
+    public static String getDefaultBoarderLifeTime() {
+        return "$js7EpochMilli + 1 * " + defaultBoardLifeTimeMinutesAsString + " * 60 * 1000";
+    }
+
     public static Board createNoticeBoard(String title, String endOfLife, String orderToNoticeId) {
         Board b = new Board();
         b.setTitle(getJS7InventoryObjectTitle(title));

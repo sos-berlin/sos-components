@@ -376,8 +376,8 @@ public class Report {
             if (toRemoveConditionsRefersToBoxItself.size() > 0) {
                 Path report = reportDir.resolve(Report.FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF);
 
-                String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(boxJob), boxJob
-                        .getName());
+                String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-40s%s", PathResolver.getJILJobParentPathNormalized(boxJob), boxJob
+                        .getName(), "Jobs=" + boxJob.getJobs().size());
                 SOSPath.appendLine(report, msg);
                 msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "condition", ":", boxJob.getCondition()
                         .getOriginalCondition());
