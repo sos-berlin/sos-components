@@ -10,7 +10,7 @@ public class ConfigurationGlobalsIdentityService extends AConfigurationSection {
     private ConfigurationEntry idleSessionTimeout = new ConfigurationEntry("idle_session_timeout", "30m",
             GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry initialPassword = new ConfigurationEntry("initial_password", INITIAL, GlobalSettingsSectionValueType.PASSWORD);
-    private ConfigurationEntry minimumPasswordLength = new ConfigurationEntry("minimum_password_length", "0",
+    private ConfigurationEntry minimumPasswordLength = new ConfigurationEntry("minimum_password_length", "1",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
     public ConfigurationGlobalsIdentityService() {
