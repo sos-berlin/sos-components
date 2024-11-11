@@ -117,6 +117,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         }
                     } else {
                         allDeployments.addAll(deployments);
+                        deployments.stream().map(DBItemDeploymentHistory::getFolder).forEach(folder -> foldersForEvent.add(folder));
                     }
                 } else { 
                     // deployment descriptors (not releaseable and not deployable)
