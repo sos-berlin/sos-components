@@ -648,6 +648,7 @@ public class JS7ConverterHelper {
         }
         // default - $js7EpochMilli + 1 * 24 * 60 * 60 * 1000
         String endOfLife = "$js7EpochMilli + 1 * " + lifeTimeMinutesAsString + " * 60 * 1000";
+        endOfLife = "$js7EpochMilli + " + lifeTimeMinutesAsString + " * 60 * 1000";
 
         Board b = new Board();
         b.setTitle(getJS7InventoryObjectTitle(boardTitle));

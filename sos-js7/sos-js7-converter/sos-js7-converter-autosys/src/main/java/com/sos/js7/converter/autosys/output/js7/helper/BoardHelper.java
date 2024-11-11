@@ -69,7 +69,21 @@ public class BoardHelper {
         if (SOSString.isEmpty(val)) {
             return null;
         }
-        return JS7ConverterHelper.parentheses(SOSString.trim(val.toString(), JS7ConverterHelper.JS7_NOTICE_AND, JS7ConverterHelper.JS7_NOTICE_OR));
+        val = val.replace("()", "");
+        val = val.replace("( && )", "");
+        val = val.replace("( || )", "");
+        
+        val = val.replace("( || '", "('");
+        val = val.replace("' || )", "')");
+        val = val.replace("( && '", "('");
+        val = val.replace("' && )", "')");
+        
+        val = val.trim();
+        if (SOSString.isEmpty(val)) {
+            return null;
+        }
+
+        return JS7ConverterHelper.parentheses(SOSString.trim(val, JS7ConverterHelper.JS7_NOTICE_AND, JS7ConverterHelper.JS7_NOTICE_OR));
     }
 
     public static BoardExpectConsumHelper expectNotices(AutosysAnalyzer analyzer, ACommonJob j) {

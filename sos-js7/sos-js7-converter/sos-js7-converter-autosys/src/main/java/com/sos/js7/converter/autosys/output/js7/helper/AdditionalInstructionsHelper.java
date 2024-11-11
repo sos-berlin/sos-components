@@ -109,7 +109,8 @@ public class AdditionalInstructionsHelper {
         // okNotizeName = DEFAULT_POST_CONSUME_BOARD_NAME+"-"+wr.getName();// evtl. extends with the workflow name
 
         // 3) Create Instruction - PostNotices - internal Notice
-        PostNotices instructionPostNotice = new PostNotices(Collections.singletonList("'" + okNoticeName + "'"));
+        //PostNotices instructionPostNotice = new PostNotices(Collections.singletonList("'" + okNoticeName + "'"));
+        PostNotices instructionPostNotice = new PostNotices(Collections.singletonList(okNoticeName));
 
         // 4.1) Create Instruction - ConsumeNotices - the Notices separated by or(||) - controller will remove the existing notices
         List<String> l = new ArrayList<>();
