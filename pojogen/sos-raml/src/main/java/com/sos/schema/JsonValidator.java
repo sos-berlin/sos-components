@@ -161,6 +161,8 @@ public class JsonValidator {
 
             put("TreeFilter", "tree/treeFilter-schema.json");
 
+            put("com.sos.joc.model.configuration.ConfigurationRead", "configuration/configurationRead-schema.json");
+            
             put("com.sos.joc.model.favorite.FavoriteIdentifiers", "favorite/identifiers-schema.json");
             put("com.sos.joc.model.favorite.FavoriteSharedIdentifiers", "favorite/sharedIdentifiers-schema.json");
             put("com.sos.joc.model.favorite.OrderingFavorites", "favorite/orderingFavorite-schema.json");
