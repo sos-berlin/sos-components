@@ -15,7 +15,7 @@ public class JS1JobStreamConfig extends AConfigItem {
     @Override
     protected void parse(String key, String val) {
         switch (key) {
-        case "generateJobFileIfNotExists":
+        case "generate.jobFileIfNotExists":
             withGenerateJobFileIfNotExists(Boolean.parseBoolean(val));
             break;
         }
