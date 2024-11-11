@@ -1,7 +1,6 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -80,7 +79,8 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
             }
             
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(null);
-            List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
+            //List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
+            List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(null);
             
             // check uniqueness of SubagentUrl with DB
             Set<String> requestedSubagentUrls = subAgentsParam.getSubagents().stream().map(SubAgent::getUrl).collect(Collectors.toSet());

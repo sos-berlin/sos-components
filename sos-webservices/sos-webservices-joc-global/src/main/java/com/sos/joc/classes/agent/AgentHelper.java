@@ -1,7 +1,6 @@
 package com.sos.joc.classes.agent;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,7 +25,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -165,16 +163,36 @@ public class AgentHelper {
         }
     }
     
-    public static void validateInvalidWorkflowsByAgentNames(InventoryAgentInstancesDBLayer agentDbLayer, Set<String> agentNamesAndAliases)
-            throws SOSHibernateException {
+    public static void validateWorkflowsByAgentNames(InventoryAgentInstancesDBLayer agentDbLayer, Set<String> agentNamesAndAliases,
+            Set<String> missedAliases) throws SOSHibernateException {
+        
+        InventoryDBLayer invDbLayer = new InventoryDBLayer(agentDbLayer.getSession());
+        Set<String> events = new HashSet<>();
+        Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
+        
+        if (missedAliases != null && !missedAliases.isEmpty()) {
+            List<DBItemInventoryConfiguration> workflowsByMissedAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(missedAliases, true);
+            workflowsByMissedAgentNames.stream().peek(w -> w.setDeployed(false)).forEach(w -> {
+                if (w.getValid()) {
+                    try {
+                        Validator.validate(ConfigurationType.WORKFLOW, w.getContent().getBytes(StandardCharsets.UTF_8), invDbLayer, visibleAgentNames);
+                    } catch (Exception e) {
+                        w.setValid(false);
+                    }
+                }
+                try {
+                    events.add(w.getFolder());
+                    invDbLayer.getSession().update(w);
+                } catch (Exception e) {
+                    //
+                }
+            });
+        }
 
         if (agentNamesAndAliases != null && !agentNamesAndAliases.isEmpty()) {
-            InventoryDBLayer invDbLayer = new InventoryDBLayer(agentDbLayer.getSession());
-            List<DBItemInventoryConfiguration> invalidWorkflowsByAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(agentNamesAndAliases, true);
-            Set<String> events = new HashSet<>();
-            List<Long> workflowInvIds = new ArrayList<>();
+            List<DBItemInventoryConfiguration> invalidWorkflowsByAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(agentNamesAndAliases, false);
+//            List<Long> workflowInvIds = new ArrayList<>();
             if (!invalidWorkflowsByAgentNames.isEmpty()) {
-                Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
                 invalidWorkflowsByAgentNames.stream().filter(w -> {
                     try {
                         Validator.validate(ConfigurationType.WORKFLOW, w.getContent().getBytes(StandardCharsets.UTF_8), invDbLayer, visibleAgentNames);
@@ -185,9 +203,9 @@ public class AgentHelper {
                 }).peek(w -> w.setValid(true)).forEach(w -> {
                     try {
                         events.add(w.getFolder());
-                        if (JocInventory.isWorkflow(w.getType())) {
-                            workflowInvIds.add(w.getId());
-                        }
+//                        if (JocInventory.isWorkflow(w.getType())) {
+//                            workflowInvIds.add(w.getId());
+//                        }
                         //JocInventory.updateConfiguration(invDbLayer, w);
                         invDbLayer.getSession().update(w);
                     } catch (Exception e) {
@@ -195,13 +213,13 @@ public class AgentHelper {
                     }
                 });
             }
-            events.forEach(JocInventory::postEvent);
             // post event: InventoryTaggingUpdated
-            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
-                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(agentDbLayer.getSession());
-                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
-            }
+//            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+//                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(agentDbLayer.getSession());
+//                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+//            }
         }
+        events.forEach(JocInventory::postEvent);
     }
     
     public static OptionalInt getProcessLimit(Integer processLimit) {

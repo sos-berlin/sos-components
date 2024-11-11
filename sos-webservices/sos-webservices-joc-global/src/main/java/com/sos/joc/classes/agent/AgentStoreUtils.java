@@ -74,8 +74,13 @@ public class AgentStoreUtils {
             InventoryAgentInstancesDBLayer dbLayer) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAllAgents();
         Set<String> agentNamesAndAliases = new HashSet<>();
-        Map<String, Set<DBItemInventoryAgentName>> allAliases = dbLayer.getAgentNameAliases(agentMap.keySet());
+        Map<String, String> allNames = dbAgents != null ? dbAgents.stream().filter(a -> a.getControllerId().equals(controllerId)).collect(Collectors
+                .toMap(DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getAgentName)) : Collections.emptyMap();
+        Map<String, Set<DBItemInventoryAgentName>> allAliases = !allNames.isEmpty() ? dbLayer.getAgentNameAliases(allNames.keySet()) : Collections
+                .emptyMap();
         Map<String, Set<DBItemInventoryAgentName>> newAliases = new HashMap<>();
+        Set<String> missedAgentNames = new HashSet<>();
+                
         int position = -1;
         if (dbAgents != null && !dbAgents.isEmpty()) {
             if (overwrite) {
@@ -88,9 +93,12 @@ public class AgentStoreUtils {
                         continue;
                     }
                     if (!dbAgent.getControllerId().equals(controllerId)) {
-                        throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
+                        throw new JocBadRequestException(String.format("Agent '%s' is already assigned to Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
+                    
+                    missedAgentNames.addAll(checkUniquenessOfAgentNames(agentFound, allAliases, allNames));
+                    
                     dbAgent.setHidden(agentFound.getHidden());
                     if (!dbAgent.getAgentName().equals(agentFound.getAgentName())) {
                         dbAgent.setAgentName(agentFound.getAgentName());
@@ -111,6 +119,8 @@ public class AgentStoreUtils {
             }
         }
         for (Agent newAgent : agentMap.values()) {
+            checkUniquenessOfAgentNames(newAgent, allAliases, allNames);
+            
             DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
             dbAgent.setId(null);
             dbAgent.setAgentId(newAgent.getAgentId());
@@ -134,7 +144,7 @@ public class AgentStoreUtils {
 
         agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), newAliases.values().stream().flatMap(s -> s.stream().map(
                 DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
-        AgentHelper.validateInvalidWorkflowsByAgentNames(dbLayer, agentNamesAndAliases);
+        AgentHelper.validateWorkflowsByAgentNames(dbLayer, agentNamesAndAliases, missedAgentNames);
     }
     
     public static void storeClusterAgent(ClusterAgent clusterAgent, String controllerId, boolean overwrite,
@@ -150,11 +160,18 @@ public class AgentStoreUtils {
             Set<String> requestedSubagentIds, String controllerId, boolean overwrite, InventoryAgentInstancesDBLayer agentDbLayer, 
             InventorySubagentClustersDBLayer subagentDbLayer) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = agentDbLayer.getAllAgents();
-        Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDbLayer.getAgentNameAliases(clusterAgentMap.keySet());
+        
+        Map<String, String> allNames = dbAgents != null ? dbAgents.stream().filter(a -> a.getControllerId().equals(controllerId)).collect(Collectors
+                .toMap(DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getAgentName)) : Collections.emptyMap();
+        Map<String, Set<DBItemInventoryAgentName>> allAliases = !allNames.isEmpty() ? agentDbLayer.getAgentNameAliases(allNames.keySet())
+                : Collections.emptyMap();
+
         Map<String, Set<DBItemInventoryAgentName>> newAliases = new HashMap<>();
+        Set<String> missedAgentNames = new HashSet<>();
         Set<String> agentNamesAndAliases = new HashSet<>();
-        List<DBItemInventorySubAgentInstance> dbSubAgents = agentDbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
-                controllerId));
+//        List<DBItemInventorySubAgentInstance> dbSubAgents = agentDbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
+//                controllerId));
+        List<DBItemInventorySubAgentInstance> dbSubAgents = agentDbLayer.getSubAgentInstancesByControllerIds(null);
         // check uniqueness of SubagentUrl with DB
         Set<String> requestedSubagentUrls = requestedSubagents.stream().map(SubAgent::getUrl).collect(Collectors.toSet());
         dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s
@@ -186,9 +203,12 @@ public class AgentStoreUtils {
                     continue;
                 }
                 if (!dbAgent.getControllerId().equals(controllerId)) {
-                    throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
+                    throw new JocBadRequestException(String.format("Agent '%s' is already assigned to Controller '%s'", dbAgent.getAgentId(),
                             dbAgent.getControllerId()));
                 }
+                
+                missedAgentNames.addAll(checkUniquenessOfAgentNames(agent, allAliases, allNames));
+                
                 dbAgent.setHidden(agent.getHidden());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setTitle(agent.getTitle());
@@ -199,11 +219,13 @@ public class AgentStoreUtils {
                 agentNamesAndAliases.add(dbAgent.getAgentName());
                 agentDbLayer.updateAgent(dbAgent);
                 
-                AgentStoreUtils.saveOrUpdate(agentDbLayer, subagentDbLayer, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
+                saveOrUpdate(agentDbLayer, subagentDbLayer, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
                 newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
             }
         }
         for (ClusterAgent agent : clusterAgentMap.values()) {
+            checkUniquenessOfAgentNames(agent, allAliases, allNames);
+            
             DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
             dbAgent.setId(null);
             dbAgent.setAgentId(agent.getAgentId());
@@ -228,7 +250,7 @@ public class AgentStoreUtils {
         
         agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), newAliases.values().stream().flatMap(s -> s.stream().map(
                 DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
-        AgentHelper.validateInvalidWorkflowsByAgentNames(agentDbLayer, agentNamesAndAliases);
+        AgentHelper.validateWorkflowsByAgentNames(agentDbLayer, agentNamesAndAliases, missedAgentNames);
     }
     
     public static List<DBItemInventorySubAgentCluster> storeSubagentCluster (SubagentCluster subagentCluster,
@@ -319,12 +341,12 @@ public class AgentStoreUtils {
     // check uniqueness of AgentName/-aliases
     public static void checkUniquenessOfAgentNames(List<? extends Agent> agents) throws JocBadRequestException {
         agents.stream().map(a -> {
-            if (a.getAgentNameAliases() == null) {
-                a.setAgentNameAliases(Collections.singleton(a.getAgentName()));
-            } else {
-                a.getAgentNameAliases().add(a.getAgentName());
+            Set<String> aliases = new HashSet<>();
+            aliases.add(a.getAgentName());
+            if (a.getAgentNameAliases() != null) {
+                aliases.addAll(a.getAgentNameAliases());
             }
-            return a.getAgentNameAliases();
+            return aliases;
         }).flatMap(Set::stream).collect(Collectors.groupingBy(s -> s, Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 1L)
                 .findAny().ifPresent(e -> {
                     throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("AgentName/-aliase", e));
@@ -336,7 +358,7 @@ public class AgentStoreUtils {
             boolean overwrite) throws SOSHibernateException {
         subAgents.stream().collect(Collectors.groupingBy(SubAgent::getSubagentId, Collectors.counting())).entrySet().stream()
                 .filter(e -> e.getValue() > 1L).map(Map.Entry::getKey).findAny().ifPresent(sId -> {
-                    throw new JocBadRequestException("Subagent ID '" + sId + "' must be unique per contoller");
+                    throw new JocBadRequestException("Subagent ID '" + sId + "' must be unique");
                 });
         // TODO URL has to be unique?
         // subAgents.stream().collect(Collectors.groupingBy(SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(
@@ -351,13 +373,12 @@ public class AgentStoreUtils {
         // checks if subagentId from request is used in other agentIds
         mapOfAgentIds.getOrDefault(false, Collections.emptyList()).parallelStream().filter(s -> subAgentIds.contains(s.getSubAgentId())).findAny()
                 .ifPresent(s -> {
-                    throw new JocBadRequestException("Subagent Id has to be unique per Controller: '" + s.getSubAgentId()
+                    throw new JocBadRequestException("Subagent Id has to be unique: '" + s.getSubAgentId()
                             + "' is already used in Agent '" + s.getAgentId() + "'");
                 });
         // checks java name rules of SubagentIds
-        subAgentIds.forEach(id -> {
-            SOSCheckJavaVariableName.test("Subagent ID", id);
-        });
+        subAgentIds.forEach(id -> SOSCheckJavaVariableName.test("Subagent ID", id));
+        
         Set<String> existingSubagentClusters = clusterDbLayer.getSubagentClusterMembers(subAgentIds).stream().map(
                 DBItemInventorySubAgentClusterMember::getSubAgentClusterId).collect(Collectors.toSet());
         // checks that director and standby director can only exist once
@@ -479,6 +500,46 @@ public class AgentStoreUtils {
             dbAgent.setUri(directorUrl);
             dbLayer.updateAgent(dbAgent);
         }
+    }
+    
+    private static <T extends Agent> Set<String> checkUniquenessOfAgentNames(T agent, Map<String, Set<DBItemInventoryAgentName>> allAliases,
+            Map<String, String> allNames) {
+        
+        Set<String> missingAliases = Collections.emptySet();
+        
+        for (Map.Entry<String, String> name : allNames.entrySet()) {
+            Set<String> aliase = allAliases.getOrDefault(name.getKey(), Collections.emptySet()).stream().map(DBItemInventoryAgentName::getAgentName)
+                    .collect(Collectors.toSet());
+            aliase.add(name.getValue());
+
+            if (name.getKey().equals(agent.getAgentId())) {
+                if (agent.getAgentNameAliases() !=  null && !agent.getAgentNameAliases().isEmpty()) {
+                    aliase.removeAll(agent.getAgentNameAliases());
+                }
+                aliase.remove(agent.getAgentName());
+                missingAliases = aliase;
+                continue;
+            }
+
+            if (aliase.contains(agent.getAgentName())) {
+                throw new JocBadRequestException(String.format("Agent name '%s' is already used as name or alias by the agent '%s'", agent
+                        .getAgentName(), name.getKey()));
+            }
+            if (agent.getAgentNameAliases() != null && !agent.getAgentNameAliases().isEmpty()) {
+                aliase.retainAll(agent.getAgentNameAliases());
+                if (!aliase.isEmpty()) {
+                    if (aliase.size() == 1) {
+                        throw new JocBadRequestException(String.format("Agent '%s' has already the alias '%s' as name or alias", name.getKey(), aliase
+                                .iterator().next()));
+                    } else {
+                        throw new JocBadRequestException(String.format("Agent '%s' has already the aliases '%s' as name or aliases", name.getKey(),
+                                aliase.toString()));
+                    }
+                }
+            }
+        }
+        
+        return missingAliases;
     }
     
     private static void saveNewSubAgentCluster(SubAgent subAgent, String agentId, SOSHibernateSession connection, int position, Date now)

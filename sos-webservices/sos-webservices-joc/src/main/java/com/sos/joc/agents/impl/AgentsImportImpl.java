@@ -3,6 +3,7 @@ package com.sos.joc.agents.impl;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -175,7 +176,8 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                         agent.getStandaloneAgent().getAgentName()), 
                     agents.stream().map(agent -> agent.getAgentCluster() != null ? agent.getAgentCluster().getAgentNameAliases() : 
                         agent.getStandaloneAgent().getAgentNameAliases()).flatMap(Set::stream)).collect(Collectors.toSet());
-            AgentHelper.validateInvalidWorkflowsByAgentNames(agentInstanceDbLayer, agentNamesAndAliases);
+            // TODO investigate missedNames instead Collections.emptySet()
+            AgentHelper.validateWorkflowsByAgentNames(agentInstanceDbLayer, agentNamesAndAliases, Collections.emptySet());
             Globals.disconnect(hibernateSession);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
