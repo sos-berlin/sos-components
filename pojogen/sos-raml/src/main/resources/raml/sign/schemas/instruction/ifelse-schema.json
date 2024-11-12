@@ -3,9 +3,16 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.sign.model.instruction.IfElse",
   "type": "object",
-  "required": [
-  	"predicate",
-  	"then"
+  "anyOf": [{
+      "required": [
+        "predicate",
+    	"then"
+      ]
+    }, {
+      "required": [
+        "ifThens"
+      ]
+    }
   ],
   "extends" : {
     "$ref": "instruction-schema.json"
@@ -19,6 +26,14 @@
     },
     "then": {
       "$ref": "instructions-schema.json"
+    },
+    "ifThens": {
+      "alias": "whens",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+      	"$ref": "when-schema.json"
+      }	
     },
     "else": {
       "$ref": "optionalInstructions-schema.json"

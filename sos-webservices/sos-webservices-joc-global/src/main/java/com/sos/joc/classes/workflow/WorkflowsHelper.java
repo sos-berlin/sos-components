@@ -49,7 +49,6 @@ import com.sos.inventory.model.instruction.InstructionStateText;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.Lock;
-import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
@@ -1204,6 +1203,13 @@ public class WorkflowsHelper {
                     if (ie.getThen() != null) {
                         extractImplicitEnds(ie.getThen().getInstructions(), posSet, true);
                     }
+                    if (ie.getWhens() != null) {
+                        ie.getWhens().forEach(when -> {
+                            if (when.getThen() != null) {
+                                extractImplicitEnds(when.getThen().getInstructions(), posSet, true);
+                            }
+                        });
+                    }
                     if (ie.getElse() != null) {
                         extractImplicitEnds(ie.getElse().getInstructions(), posSet, true);
                     }
@@ -1807,82 +1813,82 @@ public class WorkflowsHelper {
         return false;
     }
     
-    public static Optional<NamedJob> getFirstJob(Instruction firstInst) {
-        return getFirstJob(firstInst, Collections.emptySet());
-    }
+//    public static Optional<NamedJob> getFirstJob(Instruction firstInst) {
+//        return getFirstJob(firstInst, Collections.emptySet());
+//    }
     
-    public static Optional<NamedJob> getFirstJob(Instruction firstInst, Set<String> skippedLabels) {
-        Object[] o = {};
-        return getFirstJob(o, firstInst, skippedLabels);
-    }
-    
-    private static Optional<NamedJob> getFirstJob(Object[] parentPosition, Instruction firstInst, Set<String> skippedLabels) {
-        if (firstInst != null) {
-            Object[] pos = extendArray(parentPosition, 0);
-            pos[parentPosition.length] = 0;
-            firstInst.setPosition(Arrays.asList(pos));
-            JPosition jPos = getJPosition(firstInst.getPosition());
-            firstInst.setPositionString(getJPositionString(jPos));
-            switch (firstInst.getTYPE()) {
-            case CONSUME_NOTICES:
-                ConsumeNotices cns = firstInst.cast();
-                if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null && !cns.getSubworkflow().getInstructions()
-                        .isEmpty()) {
-                    return getFirstJob(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions().get(0), skippedLabels);
-                }
-                break;
-            case IF:
-                IfElse ie = firstInst.cast();
-                if (!ie.getThen().getInstructions().isEmpty()) {
-                    return getFirstJob(extendArray(pos, "then"), ie.getThen().getInstructions().get(0), skippedLabels);
-                }
-                break;
-            case TRY:
-                TryCatch tc = firstInst.cast();
-                if (!tc.getTry().getInstructions().isEmpty()) {
-                    return getFirstJob(extendArray(pos, "try"), tc.getTry().getInstructions().get(0), skippedLabels);
-                }
-                break;
-            case LOCK:
-                Lock l = LockToLockDemandsConverter.lockToInventoryLockDemands(firstInst.cast());
-                if (l.getLockedWorkflow() != null && l.getLockedWorkflow().getInstructions() != null && !l.getLockedWorkflow().getInstructions()
-                        .isEmpty()) {
-                    return getFirstJob(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions().get(0), skippedLabels);
-                }
-                break;
-            case CYCLE:
-                Cycle c = firstInst.cast();
-                if (c.getCycleWorkflow() != null && c.getCycleWorkflow().getInstructions() != null && !c.getCycleWorkflow().getInstructions()
-                        .isEmpty()) {
-                    return getFirstJob(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions().get(0), skippedLabels);
-                }
-                break;
-            case EXECUTE_NAMED:
-                NamedJob nj = firstInst.cast();
-                if (skippedLabels.contains(nj.getLabel())) {
-                    nj.setState(getState(InstructionStateText.SKIPPED));
-                    //return Optional.of(nj);
-                }
-                return Optional.of(nj);
-            case STICKY_SUBAGENT:
-                StickySubagent sticky = firstInst.cast();
-                if (sticky.getSubworkflow() != null && sticky.getSubworkflow().getInstructions() != null && !sticky.getSubworkflow().getInstructions()
-                        .isEmpty()) {
-                    return getFirstJob(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions().get(0), skippedLabels);
-                }
-                break;
-            case OPTIONS:
-                Options opts = firstInst.cast();
-                if (opts.getBlock() != null && opts.getBlock().getInstructions() != null && !opts.getBlock().getInstructions().isEmpty()) {
-                    return getFirstJob(extendArray(pos, "options"), opts.getBlock().getInstructions().get(0), skippedLabels);
-                }
-                break;
-            default:
-                break;
-            }
-        }
-        return Optional.empty();
-    }
+//    public static Optional<NamedJob> getFirstJob(Instruction firstInst, Set<String> skippedLabels) {
+//        Object[] o = {};
+//        return getFirstJob(o, firstInst, skippedLabels);
+//    }
+//    
+//    private static Optional<NamedJob> getFirstJob(Object[] parentPosition, Instruction firstInst, Set<String> skippedLabels) {
+//        if (firstInst != null) {
+//            Object[] pos = extendArray(parentPosition, 0);
+//            pos[parentPosition.length] = 0;
+//            firstInst.setPosition(Arrays.asList(pos));
+//            JPosition jPos = getJPosition(firstInst.getPosition());
+//            firstInst.setPositionString(getJPositionString(jPos));
+//            switch (firstInst.getTYPE()) {
+//            case CONSUME_NOTICES:
+//                ConsumeNotices cns = firstInst.cast();
+//                if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null && !cns.getSubworkflow().getInstructions()
+//                        .isEmpty()) {
+//                    return getFirstJob(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions().get(0), skippedLabels);
+//                }
+//                break;
+//            case IF:
+//                IfElse ie = firstInst.cast();
+//                if (!ie.getThen().getInstructions().isEmpty()) {
+//                    return getFirstJob(extendArray(pos, "then"), ie.getThen().getInstructions().get(0), skippedLabels);
+//                }
+//                break;
+//            case TRY:
+//                TryCatch tc = firstInst.cast();
+//                if (!tc.getTry().getInstructions().isEmpty()) {
+//                    return getFirstJob(extendArray(pos, "try"), tc.getTry().getInstructions().get(0), skippedLabels);
+//                }
+//                break;
+//            case LOCK:
+//                Lock l = LockToLockDemandsConverter.lockToInventoryLockDemands(firstInst.cast());
+//                if (l.getLockedWorkflow() != null && l.getLockedWorkflow().getInstructions() != null && !l.getLockedWorkflow().getInstructions()
+//                        .isEmpty()) {
+//                    return getFirstJob(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions().get(0), skippedLabels);
+//                }
+//                break;
+//            case CYCLE:
+//                Cycle c = firstInst.cast();
+//                if (c.getCycleWorkflow() != null && c.getCycleWorkflow().getInstructions() != null && !c.getCycleWorkflow().getInstructions()
+//                        .isEmpty()) {
+//                    return getFirstJob(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions().get(0), skippedLabels);
+//                }
+//                break;
+//            case EXECUTE_NAMED:
+//                NamedJob nj = firstInst.cast();
+//                if (skippedLabels.contains(nj.getLabel())) {
+//                    nj.setState(getState(InstructionStateText.SKIPPED));
+//                    //return Optional.of(nj);
+//                }
+//                return Optional.of(nj);
+//            case STICKY_SUBAGENT:
+//                StickySubagent sticky = firstInst.cast();
+//                if (sticky.getSubworkflow() != null && sticky.getSubworkflow().getInstructions() != null && !sticky.getSubworkflow().getInstructions()
+//                        .isEmpty()) {
+//                    return getFirstJob(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions().get(0), skippedLabels);
+//                }
+//                break;
+//            case OPTIONS:
+//                Options opts = firstInst.cast();
+//                if (opts.getBlock() != null && opts.getBlock().getInstructions() != null && !opts.getBlock().getInstructions().isEmpty()) {
+//                    return getFirstJob(extendArray(pos, "options"), opts.getBlock().getInstructions().get(0), skippedLabels);
+//                }
+//                break;
+//            default:
+//                break;
+//            }
+//        }
+//        return Optional.empty();
+//    }
     
     private static Integer getNumOfWorkflowTagsDisplayed() {
         ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();

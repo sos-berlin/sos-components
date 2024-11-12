@@ -1,30 +1,26 @@
 
-package com.sos.inventory.model.instruction;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+package com.sos.sign.model.instruction;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * if
+ * when
  * <p>
- * instruction with fixed property 'TYPE':'If'
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "predicate",
-    "then",
-    "else"
+    "then"
 })
-public class IfElse
-    extends CaseWhen
-{
+public class When {
 
     /**
      * 
@@ -47,18 +43,16 @@ public class IfElse
      * No args constructor for use in serialization
      * 
      */
-    public IfElse() {
+    public When() {
     }
 
     /**
      * 
      * @param predicate
-     * @param _else
      * @param then
-     * 
      */
-    public IfElse(String predicate, Instructions then, OptionalInstructions _else) {
-        super(null, _else);
+    public When(String predicate, Instructions then) {
+        super();
         this.predicate = predicate;
         this.then = then;
     }
@@ -107,15 +101,14 @@ public class IfElse
         this.then = then;
     }
 
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("predicate", predicate).append("then", then).toString();
+        return new ToStringBuilder(this).append("predicate", predicate).append("then", then).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(predicate).append(then).toHashCode();
+        return new HashCodeBuilder().append(predicate).append(then).toHashCode();
     }
 
     @Override
@@ -123,11 +116,11 @@ public class IfElse
         if (other == this) {
             return true;
         }
-        if ((other instanceof IfElse) == false) {
+        if ((other instanceof When) == false) {
             return false;
         }
-        IfElse rhs = ((IfElse) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(predicate, rhs.predicate).append(then, rhs.then).isEquals();
+        When rhs = ((When) other);
+        return new EqualsBuilder().append(predicate, rhs.predicate).append(then, rhs.then).isEquals();
     }
 
 }

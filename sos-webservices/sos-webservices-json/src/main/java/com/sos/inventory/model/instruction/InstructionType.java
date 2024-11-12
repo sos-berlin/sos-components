@@ -28,7 +28,8 @@ public enum InstructionType {
     CYCLE("Cycle"),
     STICKY_SUBAGENT("StickySubagent"),
     OPTIONS("Options"),
-    BREAK("Break");
+    BREAK("Break"),
+    CASE_WHEN("CaseWhen");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();
 

@@ -37,7 +37,8 @@ import com.sos.inventory.model.common.ClassHelper;
 		visible = true)
 //@JsonTypeIdResolver(InstructionTypeIdResolver.class)
 @JsonSubTypes({ 
-		@JsonSubTypes.Type(value = IfElse.class, name = "If"),
+        @JsonSubTypes.Type(value = CaseWhen.class, name = "CaseWhen"),
+        @JsonSubTypes.Type(value = IfElse.class, name = "If"),
 		@JsonSubTypes.Type(value = NamedJob.class, name = "Execute.Named"),
 		@JsonSubTypes.Type(value = ForkJoin.class, name = "Fork"),
 		@JsonSubTypes.Type(value = ForkList.class, name = "ForkList"),
@@ -112,6 +113,11 @@ public abstract class Instruction
     @JsonProperty("TYPE")
     @JsonIgnore
     public InstructionType getTYPE() {
+//        if (InstructionType.IF.equals(tYPE)) {
+//            if (((IfElse) this).getWhens() != null) {
+//                return InstructionType.CASE_WHEN;
+//            }
+//        }
         return tYPE;
     }
 

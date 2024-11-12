@@ -1,0 +1,21 @@
+{
+  "title": "when",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.When",
+  "type": "object",
+  "required": [
+  	"predicate",
+    "then"
+  ],
+  
+  "properties": {
+  	"predicate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "then": {
+      "$ref": "instructions-schema.json"
+    }
+  },
+  "additionalProperties": false
+}
