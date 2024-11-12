@@ -145,10 +145,11 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                     } catch (SOSHibernateException e) {
                         throw new JocSosHibernateException(e);
                     }
-                    if(agent.getSubagentClusters() != null) {
-                        for(SubagentCluster subagentCluster : agent.getSubagentClusters()) {
+                    if (agent.getSubagentClusters() != null) {
+                        for (SubagentCluster subagentCluster : agent.getSubagentClusters()) {
                             try {
-                                AgentStoreUtils.storeSubagentCluster(subagentCluster, subagentClusterDbLayer, Date.from(Instant.now()));
+                                AgentStoreUtils.storeSubagentCluster(filter.getControllerId(), subagentCluster, subagentClusterDbLayer, Date.from(
+                                        Instant.now()));
                             } catch (SOSHibernateException e) {
                                 throw new JocSosHibernateException(e);
                             }

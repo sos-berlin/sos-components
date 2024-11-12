@@ -99,9 +99,10 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
             Comparator<String> comparator = Comparator.comparing(String::toLowerCase);
             if (withClusterLicense) {
                 List<DBItemInventorySubAgentCluster> subagentClusters = dbLayerCluster.getSubagentClusters(allowedControllers, null);
-                subagentClusterIdsPerAgentId = subagentClusters.stream().sorted(Comparator.comparing(DBItemInventorySubAgentCluster::getSubAgentClusterId)).collect(Collectors.groupingBy(
-                        DBItemInventorySubAgentCluster::getAgentId, Collectors.mapping(DBItemInventorySubAgentCluster::getSubAgentClusterId,
-                                Collectors.toList())));
+                subagentClusterIdsPerAgentId = subagentClusters.stream().sorted(Comparator.comparing(
+                        DBItemInventorySubAgentCluster::getSubAgentClusterId)).collect(Collectors.groupingBy(
+                                DBItemInventorySubAgentCluster::getAgentId, Collectors.mapping(DBItemInventorySubAgentCluster::getSubAgentClusterId,
+                                        Collectors.toList())));
             }
             
             List<String> clusterAgentIds = dbLayer.getClusterAgentIds(allowedControllers, false);

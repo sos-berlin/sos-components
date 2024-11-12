@@ -162,7 +162,8 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             }
 
             JControllerProxy proxy = Proxy.of(controllerId);
-            final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentBundle().keySet().stream().map(SubagentBundleId::string).collect(Collectors.toList());
+            final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentBundle().keySet().stream().map(SubagentBundleId::string)
+                    .collect(Collectors.toList());
             Predicate<String> knownInController = s -> knownSubagentSelectionIds.contains(s);
             
             List<String> unknownSubagentSelectionIds = subagentClusterIds.stream().filter(knownInController.negate()).collect(Collectors.toList());

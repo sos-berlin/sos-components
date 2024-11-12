@@ -18,8 +18,8 @@ import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
 @Entity
-@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SUBAGENT_CLUSTER_ID]",
-        "[SUBAGENT_ID]" }) })
+@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]",
+        "[SUBAGENT_CLUSTER_ID]", "[SUBAGENT_ID]" }) })
 @Proxy(lazy = false)
 public class DBItemInventorySubAgentClusterMember extends DBItem {
 
@@ -29,6 +29,9 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
     @Column(name = "[ID]", nullable = false)
     @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE)
     private Long id;
+
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
 
     @Column(name = "[SUBAGENT_CLUSTER_ID]", nullable = false)
     private String subAgentClusterId;
@@ -49,6 +52,14 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
 
     public void setId(Long val) {
         id = val;
+    }
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getSubAgentClusterId() {

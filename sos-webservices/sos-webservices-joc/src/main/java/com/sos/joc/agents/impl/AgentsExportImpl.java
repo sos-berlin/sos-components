@@ -69,7 +69,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
                             List<DBItemInventorySubAgentClusterMember> subagentClusterMemberInstances = 
                                 subagentClusterDbLayer.getSubagentClusterMembers(
                                     subagentClusterInstances.stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId)
-                                        .collect(Collectors.toList()));
+                                        .collect(Collectors.toList()), clAgent.getControllerId());
                             subagentClusterInstances.forEach(subagentClusterInstance -> 
                                 agent.getSubagentClusters().add(createSubagentCluster(
                                         subagentClusterInstance, subagentClusterMemberInstances, clAgent.getControllerId())));

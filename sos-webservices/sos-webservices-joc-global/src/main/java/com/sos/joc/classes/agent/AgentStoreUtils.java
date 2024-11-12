@@ -219,7 +219,7 @@ public class AgentStoreUtils {
                 agentNamesAndAliases.add(dbAgent.getAgentName());
                 agentDbLayer.updateAgent(dbAgent);
                 
-                saveOrUpdate(agentDbLayer, subagentDbLayer, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
+                saveOrUpdate(agentDbLayer, subagentDbLayer, controllerId, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
                 newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
             }
         }
@@ -244,7 +244,7 @@ public class AgentStoreUtils {
             dbAgent.setOrdering(++position);
             agentDbLayer.saveAgent(dbAgent);
             agentNamesAndAliases.add(dbAgent.getAgentName());
-            AgentStoreUtils.saveOrUpdate(agentDbLayer, subagentDbLayer, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
+            saveOrUpdate(agentDbLayer, subagentDbLayer, controllerId, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
             newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
         }
         
@@ -253,19 +253,19 @@ public class AgentStoreUtils {
         AgentHelper.validateWorkflowsByAgentNames(agentDbLayer, agentNamesAndAliases, missedAgentNames);
     }
     
-    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster (SubagentCluster subagentCluster,
+    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster(String controllerId, SubagentCluster subagentCluster,
             InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified) throws SOSHibernateException {
         Map<String, SubagentCluster> subagentClusterMap = new HashMap<String, SubagentCluster>(1);
         subagentClusterMap.put(subagentCluster.getSubagentClusterId(), subagentCluster);
-        return storeSubagentCluster(subagentClusterMap, agentClusterDBLayer, modified);
+        return storeSubagentCluster(controllerId, subagentClusterMap, agentClusterDBLayer, modified);
     }
     
-    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster (Map<String, SubagentCluster> subagentClusterMap, 
+    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster(String controllerId, Map<String, SubagentCluster> subagentClusterMap, 
             InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified) throws SOSHibernateException {
         List<String> subagentClusterIds = subagentClusterMap.keySet().stream().collect(Collectors.toList());
-        List<DBItemInventorySubAgentCluster> dbsubagentClusters = agentClusterDBLayer.getSubagentClusters(subagentClusterIds);
+        List<DBItemInventorySubAgentCluster> dbsubagentClusters = agentClusterDBLayer.getSubagentClusters(controllerId, subagentClusterIds);
         List<DBItemInventorySubAgentClusterMember> dbsubagentClusterMembers = 
-                agentClusterDBLayer.getSubagentClusterMembers(subagentClusterIds);
+                agentClusterDBLayer.getSubagentClusterMembers(subagentClusterIds, controllerId);
         
         Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap = Collections.emptyMap();
         if (dbsubagentClusterMembers != null) {
@@ -281,11 +281,12 @@ public class AgentStoreUtils {
                     throw new JocBadRequestException(String.format("Subagent Cluster ID '%s' is already used for Agent '%s'",
                             dbsubagentCluster.getSubAgentClusterId(), dbsubagentCluster.getAgentId()));
                 }
+                dbsubagentCluster.setControllerId(controllerId);
                 dbsubagentCluster.setDeployed(false);
                 dbsubagentCluster.setModified(modified);
                 dbsubagentCluster.setTitle(s.getTitle());
                 agentClusterDBLayer.getSession().update(dbsubagentCluster);
-                updateMembers(agentClusterDBLayer.getSession(), dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(),
+                updateMembers(agentClusterDBLayer.getSession(), controllerId, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(),
                         modified);
             }
         }
@@ -297,6 +298,7 @@ public class AgentStoreUtils {
             }
             DBItemInventorySubAgentCluster dbsubagentCluster = new DBItemInventorySubAgentCluster();
             dbsubagentCluster.setId(null);
+            dbsubagentCluster.setControllerId(controllerId);
             dbsubagentCluster.setDeployed(false);
             dbsubagentCluster.setModified(modified);
             dbsubagentCluster.setAgentId(s.getAgentId());
@@ -305,7 +307,7 @@ public class AgentStoreUtils {
             dbsubagentCluster.setOrdering(++position);
             agentClusterDBLayer.getSession().save(dbsubagentCluster);
 
-            updateMembers(agentClusterDBLayer.getSession(), dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), modified);
+            updateMembers(agentClusterDBLayer.getSession(), controllerId, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), modified);
         }
         return dbsubagentClusters;
     }
@@ -353,7 +355,7 @@ public class AgentStoreUtils {
                 });
     }
     
-    public static void saveOrUpdate(InventoryAgentInstancesDBLayer dbLayer, InventorySubagentClustersDBLayer clusterDbLayer,
+    public static void saveOrUpdate(InventoryAgentInstancesDBLayer dbLayer, InventorySubagentClustersDBLayer clusterDbLayer, String controllerId,
             DBItemInventoryAgentInstance dbAgent, Collection<DBItemInventorySubAgentInstance> dbSubAgents, Collection<SubAgent> subAgents,
             boolean overwrite) throws SOSHibernateException {
         subAgents.stream().collect(Collectors.groupingBy(SubAgent::getSubagentId, Collectors.counting())).entrySet().stream()
@@ -379,7 +381,7 @@ public class AgentStoreUtils {
         // checks java name rules of SubagentIds
         subAgentIds.forEach(id -> SOSCheckJavaVariableName.test("Subagent ID", id));
         
-        Set<String> existingSubagentClusters = clusterDbLayer.getSubagentClusterMembers(subAgentIds).stream().map(
+        Set<String> existingSubagentClusters = clusterDbLayer.getSubagentClusterMembers(subAgentIds, controllerId).stream().map(
                 DBItemInventorySubAgentClusterMember::getSubAgentClusterId).collect(Collectors.toSet());
         // checks that director and standby director can only exist once
         List<SubagentDirectorType> direcs = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
@@ -467,7 +469,7 @@ public class AgentStoreUtils {
                 }
             }
             if (subAgent.getWithGenerateSubagentCluster() && !existingSubagentClusters.contains(subAgent.getSubagentId())) {
-                saveNewSubAgentCluster(subAgent, agentId, dbLayer.getSession(), ++clusterPosition, now);
+                saveNewSubAgentCluster(subAgent, controllerId, agentId, dbLayer.getSession(), ++clusterPosition, now);
             }
         }
         if (primaryDirectorIsChanged || standbyDirectorIsChanged) {
@@ -542,10 +544,11 @@ public class AgentStoreUtils {
         return missingAliases;
     }
     
-    private static void saveNewSubAgentCluster(SubAgent subAgent, String agentId, SOSHibernateSession connection, int position, Date now)
+    private static void saveNewSubAgentCluster(SubAgent subAgent, String controllerId, String agentId, SOSHibernateSession connection, int position, Date now)
             throws SOSHibernateException {
             DBItemInventorySubAgentCluster dbSubagentCluster = new DBItemInventorySubAgentCluster();
             dbSubagentCluster.setId(null);
+            dbSubagentCluster.setControllerId(controllerId);
             dbSubagentCluster.setDeployed(false);
             dbSubagentCluster.setModified(now);
             dbSubagentCluster.setAgentId(agentId);
@@ -554,6 +557,7 @@ public class AgentStoreUtils {
             dbSubagentCluster.setOrdering(position);
             DBItemInventorySubAgentClusterMember dbSubagentClusterMember = new DBItemInventorySubAgentClusterMember();
             dbSubagentClusterMember.setId(null);
+            dbSubagentClusterMember.setControllerId(controllerId);
             dbSubagentClusterMember.setModified(now);
             dbSubagentClusterMember.setPriority("0");
             dbSubagentClusterMember.setSubAgentClusterId(subAgent.getSubagentId());
@@ -562,10 +566,10 @@ public class AgentStoreUtils {
             connection.save(dbSubagentClusterMember);
     }
     
-    private static void updateMembers(SOSHibernateSession connection, 
-            Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap,
-            List<SubAgentId> subAgents, String subagentClusterId, Date now) throws SOSHibernateException {
-        
+    private static void updateMembers(SOSHibernateSession connection, String controllerId,
+            Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap, List<SubAgentId> subAgents, String subagentClusterId,
+            Date now) throws SOSHibernateException {
+
         // TODO check if subagentId in inventory
         List<DBItemInventorySubAgentClusterMember> members = dbsubagentClusterMembersMap.remove(subagentClusterId);
         if (subAgents == null) {
@@ -593,6 +597,9 @@ public class AgentStoreUtils {
                 if (subAgent == null) {
                     connection.delete(member);
                 } else {
+                    if (member.getControllerId() == null || member.getControllerId().isEmpty()) {
+                        member.setControllerId(controllerId);
+                    }
                     member.setModified(now);
                     member.setPriority(subAgent.getPriority());
                     connection.update(member);
@@ -603,6 +610,7 @@ public class AgentStoreUtils {
         for (SubAgentId subAgent : subagentMap.values()) {
             DBItemInventorySubAgentClusterMember member = new DBItemInventorySubAgentClusterMember();
             member.setId(null);
+            member.setControllerId(controllerId);
             member.setModified(now);
             member.setPriority(subAgent.getPriority());
             member.setSubAgentId(subAgent.getSubagentId());
