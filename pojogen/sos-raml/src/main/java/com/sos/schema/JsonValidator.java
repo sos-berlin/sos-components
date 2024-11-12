@@ -147,6 +147,7 @@ public class JsonValidator {
 
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
             put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");
+            put("com.sos.joc.model.xmleditor.schema.SchemaDownloadConfiguration", "xmleditor/schema/download/schema-download-configuration-schema.json");
             put("DeleteAll", "xmleditor/delete/all/delete-all-schema.json");
             put("DeleteConfiguration", "xmleditor/delete/delete-configuration-schema.json");
             put("RemoveAll", "xmleditor/remove/all/remove-all-schema.json");
