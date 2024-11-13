@@ -9,12 +9,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
 import com.sos.joc.db.inventory.items.SubagentCluster;
@@ -27,6 +31,7 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
     private boolean withAgentOrdering = false;
+    private static final Logger LOGGER = LoggerFactory.getLogger(InventorySubagentClustersDBLayer.class);
 
     public InventorySubagentClustersDBLayer(SOSHibernateSession conn) {
         super(conn);
@@ -506,6 +511,79 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
         Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
         query.setParameter("agentId", agentId);
         List<DBItemInventorySubAgentCluster> result = getSession().getResultList(query);
+        if(result == null) {
+            return Collections.emptyList();
+        } else {
+            return result;
+        }
+    }
+    
+    public static void fillEmptyControllerIds() {
+        new Thread(() -> {
+            SOSHibernateSession connection = null;
+            try {
+                connection = Globals.createSosHibernateStatelessConnection("fillEmptyControllerIdsInSubAgentClusters");
+                new InventorySubagentClustersDBLayer(connection).fillEmptyControllerIdsInSubAgentClusters();
+            } catch (Exception e) {
+                LOGGER.warn(e.toString());
+            } finally {
+                Globals.disconnect(connection);
+            }
+        }, "updateSubAgentClusters").start();
+        
+    }
+    
+    public void fillEmptyControllerIdsInSubAgentClusters() throws SOSHibernateException {
+        List<DBItemInventorySubAgentCluster> agentClusters = getSubagentClustersWithEmptyControllerId();
+        if (!agentClusters.isEmpty()) {
+
+            InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(getSession());
+            Map<String, String> agentIdToControllerIdMap = agentDbLayer.getAllAgents().stream().collect(Collectors.toMap(
+                    DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getControllerId));
+
+            Map<String, List<DBItemInventorySubAgentClusterMember>> agentClusterMembersPerClusterId = getSubagentClusterMembersWithEmptyControllerId()
+                    .stream().collect(Collectors.groupingBy(DBItemInventorySubAgentClusterMember::getSubAgentClusterId));
+
+            agentClusters.stream().peek(a -> a.setControllerId(agentIdToControllerIdMap.get(a.getAgentId()))).forEach(a -> {
+                try {
+                    getSession().update(a);
+                    List<DBItemInventorySubAgentClusterMember> sacms = agentClusterMembersPerClusterId.get(a.getSubAgentClusterId());
+                    if (sacms != null) {
+                        sacms.stream().peek(sacm -> sacm.setControllerId(a.getControllerId())).forEach(sacm -> {
+                            try {
+                                getSession().update(sacm);
+                            } catch (SOSHibernateException e) {
+                                LOGGER.warn(e.toString());
+                            }
+                        });
+                    }
+                } catch (SOSHibernateException e) {
+                    LOGGER.warn(e.toString());
+                }
+            });
+
+        }
+    }
+    
+    private List<DBItemInventorySubAgentCluster> getSubagentClustersWithEmptyControllerId() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS);
+        hql.append(" where controllerId is null or controllerId = ''");
+        Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
+        List<DBItemInventorySubAgentCluster> result = getSession().getResultList(query);
+        if(result == null) {
+            return Collections.emptyList();
+        } else {
+            return result;
+        }
+    }
+    
+    private List<DBItemInventorySubAgentClusterMember> getSubagentClusterMembersWithEmptyControllerId() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS);
+        hql.append(" where controllerId is null or controllerId = ''");
+        Query<DBItemInventorySubAgentClusterMember> query = getSession().createQuery(hql.toString());
+        List<DBItemInventorySubAgentClusterMember> result = getSession().getResultList(query);
         if(result == null) {
             return Collections.emptyList();
         } else {

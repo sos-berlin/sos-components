@@ -40,6 +40,7 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DbInstaller;
 import com.sos.joc.db.cluster.CheckInstance;
+import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.log4j2.NotificationAppender;
 
@@ -100,6 +101,7 @@ public class JocServletContainer extends ServletContainer {
             Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
             
             new Thread(() -> {
+                InventorySubagentClustersDBLayer.fillEmptyControllerIds();
                 WorkflowPaths.init();
                 WorkflowRefs.init();
                 JitlDocumentation.saveOrUpdate();

@@ -23,6 +23,7 @@ import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.cluster.CheckInstance;
+import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import jakarta.servlet.ServletException;
@@ -74,6 +75,7 @@ public class JocServletContainer extends ServletContainer {
         new Thread(() -> {
             Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC, MapUrls.getUrlMapperByUser());
             new Thread(() -> {
+                InventorySubagentClustersDBLayer.fillEmptyControllerIds();
                 WorkflowPaths.init();
                 WorkflowRefs.init();
                 SOSShell.printSystemInfos();
