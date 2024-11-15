@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -17,5 +18,13 @@ public class SOSCollection {
     public static <T> Predicate<T> distinctByKey(Function<T, Object> function) {
         Map<Object, Boolean> seen = new ConcurrentHashMap<>();
         return t -> seen.putIfAbsent(function.apply(t), Boolean.TRUE) == null;
+    }
+
+    public static <T> boolean isEmpty(Collection<T> c) {
+        return c == null || c.isEmpty();
+    }
+
+    public static <K, V> boolean isEmpty(Map<K, V> c) {
+        return c == null || c.isEmpty();
     }
 }

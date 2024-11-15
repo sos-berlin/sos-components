@@ -24,7 +24,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "to",
     "weekdays",
     "monthdays",
-    "ultimos"
+    "ultimos",
+    "repetitions"
 })
 public class Months {
 
@@ -54,6 +55,8 @@ public class Months {
     private List<MonthDays> monthdays = null;
     @JsonProperty("ultimos")
     private List<MonthDays> ultimos = null;
+    @JsonProperty("repetitions")
+    private List<Repetition> repetitions = null;
 
     @JsonProperty("months")
     public List<Integer> getMonths() {
@@ -139,14 +142,24 @@ public class Months {
         this.ultimos = ultimos;
     }
 
+    @JsonProperty("repetitions")
+    public List<Repetition> getRepetitions() {
+        return repetitions;
+    }
+
+    @JsonProperty("repetitions")
+    public void setRepetitions(List<Repetition> repetitions) {
+        this.repetitions = repetitions;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("months", months).append("from", from).append("to", to).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).toString();
+        return new ToStringBuilder(this).append("months", months).append("from", from).append("to", to).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("repetitions", repetitions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(months).append(weekdays).append(from).append(monthdays).append(to).append(ultimos).toHashCode();
+        return new HashCodeBuilder().append(months).append(weekdays).append(from).append(monthdays).append(to).append(ultimos).append(repetitions).toHashCode();
     }
 
     @Override
@@ -158,7 +171,7 @@ public class Months {
             return false;
         }
         Months rhs = ((Months) other);
-        return new EqualsBuilder().append(months, rhs.months).append(weekdays, rhs.weekdays).append(from, rhs.from).append(monthdays, rhs.monthdays).append(to, rhs.to).append(ultimos, rhs.ultimos).isEquals();
+        return new EqualsBuilder().append(months, rhs.months).append(weekdays, rhs.weekdays).append(from, rhs.from).append(monthdays, rhs.monthdays).append(to, rhs.to).append(ultimos, rhs.ultimos).append(repetitions, rhs.repetitions).isEquals();
     }
 
 }

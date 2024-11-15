@@ -14,10 +14,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SOSString {
+
+    private static final String DEFAULT_JOIN_DELIMITER = ",";
 
     private static final String TO_STRING_JAVA_INTERNAL_REGEX = "^(java|javax|sun|com\\.sun|com\\.oracle|jdk)\\..*";
     private static final String TO_STRING_NULL_VALUE = "<null>";
@@ -315,5 +318,34 @@ public class SOSString {
             }
         }
         return result.toString();
+    }
+
+    public static String zeroPad(int val, int zeroCount) {
+        return String.format("%0" + zeroCount + "d", val);
+    }
+
+    public static String join(Collection<?> collection) {
+        return join(collection, DEFAULT_JOIN_DELIMITER, Object::toString);
+    }
+
+    /** e.g.: SOSString.join(myCollection, n -> SOSString.zeroPad(n, 2))
+     * 
+     * @param <T>
+     * @param collection
+     * @param transformation
+     * @return */
+    public static <T> String join(Collection<T> collection, Function<T, String> transformation) {
+        return join(collection, DEFAULT_JOIN_DELIMITER, transformation);
+    }
+
+    /** e.g.: SOSString.join(myCollection,";", n -> SOSString.zeroPad(n, 2))
+     * 
+     * @param <T>
+     * @param collection
+     * @param delimiter
+     * @param transformation
+     * @return */
+    public static <T> String join(Collection<T> collection, String delimiter, Function<T, String> transformation) {
+        return collection.stream().map(transformation).collect(Collectors.joining(delimiter));
     }
 }

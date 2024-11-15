@@ -29,19 +29,6 @@ public class FrequencyResolverTest {
 
     @Ignore
     @Test
-    public void restrictionsTest() throws Exception {
-        String from = "2022-02-03";
-        String to = "2022-02-04";
-        Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
-        Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions.json"));
-
-        FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
-        LOGGER.info("DATES: " + String.join(",", dates.getDates()));
-    }
-
-    @Ignore
-    @Test
     public void calendarEveryDailyTest() throws Exception {
         String from = "2022-04-16";
         String to = "2022-05-31";
@@ -50,6 +37,45 @@ public class FrequencyResolverTest {
 
         FrequencyResolver fr = new FrequencyResolver();
         Dates dates = fr.resolve(calendar, from, to);
+        LOGGER.info("DATES: " + String.join(",", dates.getDates()));
+    }
+
+    @Ignore
+    @Test
+    public void calendarMonthsWeekDaysTest() throws Exception {
+        String from = "2024-11-02";
+        String to = "2025-12-01";
+
+        Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_months_weekdays.json"));
+
+        FrequencyResolver fr = new FrequencyResolver();
+        Dates dates = fr.resolve(calendar, from, to);
+        LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
+    }
+
+    @Ignore
+    @Test
+    public void calendarMonthsEveryTest() throws Exception {
+        String from = "2024-11-02";
+        String to = "2025-12-01";
+
+        Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_months_every.json"));
+
+        FrequencyResolver fr = new FrequencyResolver();
+        Dates dates = fr.resolve(calendar, from, to);
+        LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
+    }
+
+    @Ignore
+    @Test
+    public void restrictionsTest() throws Exception {
+        String from = "2022-02-03";
+        String to = "2022-02-04";
+        Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
+        Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions.json"));
+
+        FrequencyResolver fr = new FrequencyResolver();
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -67,7 +93,7 @@ public class FrequencyResolverTest {
 
         FrequencyResolver fr = new FrequencyResolver();
         Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
-        LOGGER.info("DATES: " + String.join(",", dates.getDates()));
+        LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
     @Ignore
@@ -128,6 +154,36 @@ public class FrequencyResolverTest {
         FrequencyResolver fr = new FrequencyResolver();
         Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
+    }
+
+    @Ignore
+    @Test
+    public void restrictionsMonthsWeekDaysTest() throws Exception {
+        String from = "2024-11-02";
+        String to = "2025-12-01";
+
+        Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
+        Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_months_weekdays.json"));
+        // restrictions = null;
+
+        FrequencyResolver fr = new FrequencyResolver();
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
+    }
+
+    @Ignore
+    @Test
+    public void restrictionsMonthsEveryTest() throws Exception {
+        String from = "2024-11-10";
+        String to = "2025-12-31";
+
+        Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
+        Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_months_every.json"));
+        // restrictions = null;
+
+        FrequencyResolver fr = new FrequencyResolver();
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
     @Ignore
