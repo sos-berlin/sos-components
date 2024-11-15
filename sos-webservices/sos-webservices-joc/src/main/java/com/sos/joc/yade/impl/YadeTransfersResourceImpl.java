@@ -140,6 +140,8 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             filter.setProfiles(in.getProfiles());
             filter.setWorkflowNames(in.getWorkflowNames());
             filter.setLimit(limit);
+            filter.setNumOfFilesFrom(in.getNumOfFilesFrom());
+            filter.setNumOfFilesTo(in.getNumOfFilesTo());
             filter.setDateFrom(JobSchedulerDate.getDateFrom(JobSchedulerDate.setRelativeDateIntoPast(in.getDateFrom()), in.getTimeZone()));
             filter.setDateTo(JobSchedulerDate.getDateTo(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), in.getTimeZone()));
 

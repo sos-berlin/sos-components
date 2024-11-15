@@ -28,7 +28,7 @@ import com.sos.yade.commons.Yade.TransferState;
 
 public class JocDBLayerYade {
 
-    private static final String YADE_SOURCE_TARGET_FILES = YadeSourceTargetFiles.class.getName();
+    // private static final String YADE_SOURCE_TARGET_FILES = YadeSourceTargetFiles.class.getName();
     private static final String YADE_GROUPED_SUMMARY = YadeGroupedSummary.class.getName();
 
     private SOSHibernateSession session;
@@ -208,9 +208,9 @@ public class JocDBLayerYade {
         if (withProfiles) {
             hql.append(and).append(filter.getProfiles().stream().map(p -> {
                 if (SearchStringHelper.isGlobPattern(p)) {
-                   return "yt.profileName like '" + SearchStringHelper.globToSqlPattern(p) + "'"; 
+                    return "yt.profileName like '" + SearchStringHelper.globToSqlPattern(p) + "'";
                 } else {
-                   return "yt.profileName = '" + p + "'"; 
+                    return "yt.profileName = '" + p + "'";
                 }
             }).collect(Collectors.joining(" or ", " (", ")")));
             and = " and";
@@ -218,11 +218,19 @@ public class JocDBLayerYade {
         if (withWorkflowNames) {
             hql.append(and).append(filter.getWorkflowNames().stream().map(w -> {
                 if (SearchStringHelper.isGlobPattern(w)) {
-                   return "yt.workflowName like '" + SearchStringHelper.globToSqlPattern(w) + "'"; 
+                    return "yt.workflowName like '" + SearchStringHelper.globToSqlPattern(w) + "'";
                 } else {
-                   return "yt.workflowName = '" + w + "'"; 
+                    return "yt.workflowName = '" + w + "'";
                 }
             }).collect(Collectors.joining(" or ", " (", ")")));
+            and = " and";
+        }
+        if (filter.getNumOfFilesFrom() != null) {
+            hql.append(and).append(" yt.numOfFiles >= :numOfFilesFrom");
+            and = " and";
+        }
+        if (filter.getNumOfFilesTo() != null) {
+            hql.append(and).append(" yt.numOfFiles <= :numOfFilesTo");
             and = " and";
         }
         if (filter.getDateFrom() != null) {
@@ -231,6 +239,7 @@ public class JocDBLayerYade {
         }
         if (filter.getDateTo() != null) {
             hql.append(and).append(" yt.start < :dateTo");
+            and = " and";
         }
         if (onlyTransferIds) {
             hql.append(" group by yt.id");
@@ -266,6 +275,12 @@ public class JocDBLayerYade {
         if (withStates) {
             query.setParameterList("states", filter.getStates());
         }
+        if (filter.getNumOfFilesFrom() != null) {
+            query.setParameter("numOfFilesFrom", filter.getNumOfFilesFrom());
+        }
+        if (filter.getNumOfFilesTo() != null) {
+            query.setParameter("numOfFilesTo", filter.getNumOfFilesTo());
+        }
         if (filter.getDateFrom() != null) {
             query.setParameter("dateFrom", filter.getDateFrom(), TemporalType.TIMESTAMP);
         }
@@ -284,14 +299,14 @@ public class JocDBLayerYade {
 
     public List<DBItemYadeFile> getFilteredTransferFiles(List<Long> transferIds, FilesFilter filter, Integer limit) throws SOSHibernateException {
         boolean withTransferIds = transferIds != null && !transferIds.isEmpty();
-        
+
         if (withTransferIds && transferIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<DBItemYadeFile> r = new ArrayList<>();
             for (int i = 0; i < transferIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 r.addAll(getFilteredTransferFiles(SOSHibernate.getInClausePartition(i, transferIds), filter, limit));
                 int resultSize = r.size();
                 if (resultSize > limit) {
-                    //reduce r to limit items
+                    // reduce r to limit items
                     r.subList(limit, resultSize).clear();
                     break;
                 }
@@ -302,7 +317,7 @@ public class JocDBLayerYade {
             boolean withTargetFiles = filter.getTargetFiles() != null && !filter.getTargetFiles().isEmpty();
             boolean withStates = filter.getStates() != null && !filter.getStates().isEmpty();
             boolean withIntegrityHash = !SOSString.isEmpty(filter.getIntegrityHash());
-            
+
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_FILES);
             List<String> clauses = new ArrayList<>(5);
             if (withTransferIds) {
@@ -314,18 +329,18 @@ public class JocDBLayerYade {
             if (withSourceFiles) {
                 clauses.add(filter.getSourceFiles().stream().map(f -> {
                     if (SearchStringHelper.isGlobPattern(f)) {
-                       return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                        return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
                     } else {
-                       return "sourcePath = '" + f + "'"; 
+                        return "sourcePath = '" + f + "'";
                     }
                 }).collect(Collectors.joining(" or ", "(", ")")));
             }
             if (withTargetFiles) {
                 clauses.add(filter.getTargetFiles().stream().map(f -> {
                     if (SearchStringHelper.isGlobPattern(f)) {
-                       return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                        return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
                     } else {
-                       return "targetPath = '" + f + "'"; 
+                        return "targetPath = '" + f + "'";
                     }
                 }).collect(Collectors.joining(" or ", "(", ")")));
             }
@@ -343,8 +358,8 @@ public class JocDBLayerYade {
                 query.setParameterList("transferIds", transferIds);
             }
             if (withStates) {
-                query.setParameterList("states", filter.getStates().stream().map(s -> Yade.TransferEntryState.fromValue(s.value()).intValue()).collect(
-                        Collectors.toSet()));
+                query.setParameterList("states", filter.getStates().stream().map(s -> Yade.TransferEntryState.fromValue(s.value()).intValue())
+                        .collect(Collectors.toSet()));
             }
             if (withIntegrityHash) {
                 query.setParameter("integrityHash", filter.getIntegrityHash());
@@ -362,37 +377,37 @@ public class JocDBLayerYade {
         return session.get(DBItemYadeTransfer.class, id);
     }
 
-    public List<Long> transferIdsFilteredBySourceTargetPath(Collection<String> sourceFiles, Collection<String> targetFiles) throws SOSHibernateException {
+    public List<Long> transferIdsFilteredBySourceTargetPath(Collection<String> sourceFiles, Collection<String> targetFiles)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
         hql.append("select transferId from ").append(DBLayer.DBITEM_YADE_FILES);
         List<String> clauses = new ArrayList<>(2);
-        
+
         if (sourceFiles != null && !sourceFiles.isEmpty()) {
             clauses.add(sourceFiles.stream().map(f -> {
                 if (SearchStringHelper.isGlobPattern(f)) {
-                   return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                    return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
                 } else {
-                   return "sourcePath = '" + f + "'"; 
+                    return "sourcePath = '" + f + "'";
                 }
             }).collect(Collectors.joining(" or ", "(", ")")));
         }
         if (targetFiles != null && !targetFiles.isEmpty()) {
             clauses.add(targetFiles.stream().map(f -> {
                 if (SearchStringHelper.isGlobPattern(f)) {
-                   return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'"; 
+                    return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
                 } else {
-                   return "targetPath = '" + f + "'"; 
+                    return "targetPath = '" + f + "'";
                 }
             }).collect(Collectors.joining(" or ", "(", ")")));
         }
-        
 
         if (!clauses.isEmpty()) {
             hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
         }
         hql.append(" group by transferId");
         Query<Long> query = session.createQuery(hql.toString());
-        
+
         return session.getResultList(query);
     }
 

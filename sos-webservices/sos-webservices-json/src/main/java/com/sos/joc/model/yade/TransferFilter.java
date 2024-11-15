@@ -26,6 +26,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "profiles",
     "states",
     "operations",
+    "numOfFilesFrom",
+    "numOfFilesTo",
     "dateFrom",
     "dateTo",
     "timeZone",
@@ -70,6 +72,22 @@ public class TransferFilter {
     private List<TransferStateText> states = new ArrayList<TransferStateText>();
     @JsonProperty("operations")
     private List<Operation> operations = new ArrayList<Operation>();
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfFilesFrom")
+    private Integer numOfFilesFrom;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfFilesTo")
+    private Integer numOfFilesTo;
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -212,6 +230,50 @@ public class TransferFilter {
     }
 
     /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfFilesFrom")
+    public Integer getNumOfFilesFrom() {
+        return numOfFilesFrom;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfFilesFrom")
+    public void setNumOfFilesFrom(Integer numOfFilesFrom) {
+        this.numOfFilesFrom = numOfFilesFrom;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfFilesTo")
+    public Integer getNumOfFilesTo() {
+        return numOfFilesTo;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfFilesTo")
+    public void setNumOfFilesTo(Integer numOfFilesTo) {
+        this.numOfFilesTo = numOfFilesTo;
+    }
+
+    /**
      * string for dateFrom and dateTo as search filter
      * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
@@ -347,12 +409,12 @@ public class TransferFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("compact", compact).append("regex", regex).append("profiles", profiles).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("sources", sources).append("targets", targets).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("workflowNames", workflowNames).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("compact", compact).append("regex", regex).append("profiles", profiles).append("states", states).append("operations", operations).append("numOfFilesFrom", numOfFilesFrom).append("numOfFilesTo", numOfFilesTo).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("sources", sources).append("targets", targets).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("workflowNames", workflowNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(dateFrom).append(targets).append(states).append(workflowNames).append(regex).append(operations).append(sourceFiles).append(dateTo).append(limit).append(targetFiles).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(dateFrom).append(numOfFilesTo).append(targets).append(numOfFilesFrom).append(states).append(workflowNames).append(regex).append(operations).append(sourceFiles).append(dateTo).append(limit).append(targetFiles).toHashCode();
     }
 
     @Override
@@ -364,7 +426,7 @@ public class TransferFilter {
             return false;
         }
         TransferFilter rhs = ((TransferFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(states, rhs.states).append(workflowNames, rhs.workflowNames).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(numOfFilesTo, rhs.numOfFilesTo).append(targets, rhs.targets).append(numOfFilesFrom, rhs.numOfFilesFrom).append(states, rhs.states).append(workflowNames, rhs.workflowNames).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).isEquals();
     }
 
 }

@@ -29,9 +29,11 @@ public class JocYadeFilter {
     private Set<String> profiles;
     private Set<String> workflowNames;
     private Integer limit;
+    private Integer numOfFilesFrom;
+    private Integer numOfFilesTo;
     private Date dateFrom;
     private Date dateTo;
-    
+
     private static final Map<Operation, Yade.TransferOperation> TRANSFER_OPERATION_MAP = Collections.unmodifiableMap(
             new HashMap<Operation, Yade.TransferOperation>() {
 
@@ -46,7 +48,7 @@ public class JocYadeFilter {
                     put(Operation.COPYTOINTERNET, Yade.TransferOperation.COPYTOINTERNET);
                 }
             });
-    
+
     private static final Map<TransferStateText, Yade.TransferState> TRANSFER_STATE_MAP = Collections.unmodifiableMap(
             new HashMap<TransferStateText, Yade.TransferState>() {
 
@@ -58,7 +60,7 @@ public class JocYadeFilter {
                     put(TransferStateText.FAILED, Yade.TransferState.FAILED);
                 }
             });
-    
+
     private static final Map<Protocol, Yade.TransferProtocol> TRANSFER_PROTOCOL_MAP = Collections.unmodifiableMap(
             new HashMap<Protocol, Yade.TransferProtocol>() {
 
@@ -116,7 +118,7 @@ public class JocYadeFilter {
             this.states = states.stream().map(s -> TRANSFER_STATE_MAP.get(s).intValue()).collect(Collectors.toSet());
         }
     }
-    
+
     public void setSources(Collection<ProtocolFragment> sources) {
         if (sources != null && !sources.isEmpty()) {
             this.sourceProtocols = sources.stream().filter(s -> s.getHost() == null).map(s -> TRANSFER_PROTOCOL_MAP.get(s.getProtocol()).intValue())
@@ -126,19 +128,19 @@ public class JocYadeFilter {
                     .get(s.getProtocol()).intValue() + s.getHost()).collect(Collectors.toSet());
         }
     }
-    
+
     public Set<Integer> getSourceProtocols() {
         return sourceProtocols;
     }
-    
+
     public Set<String> getSourceHosts() {
         return sourceHosts;
     }
-    
+
     public Set<String> getSourceProtocolHosts() {
         return sourceProtocolHosts;
     }
-    
+
     public void setTargets(Collection<ProtocolFragment> targets) {
         if (targets != null && !targets.isEmpty()) {
             this.targetProtocols = targets.stream().filter(s -> s.getHost() == null).map(s -> TRANSFER_PROTOCOL_MAP.get(s.getProtocol()).intValue())
@@ -148,15 +150,15 @@ public class JocYadeFilter {
                     .get(s.getProtocol()).intValue() + s.getHost()).collect(Collectors.toSet());
         }
     }
-    
+
     public Set<Integer> getTargetProtocols() {
         return targetProtocols;
     }
-    
+
     public Set<String> getTargetHosts() {
         return targetHosts;
     }
-    
+
     public Set<String> getTargetProtocolHosts() {
         return targetProtocolHosts;
     }
@@ -172,7 +174,7 @@ public class JocYadeFilter {
             this.profiles = null;
         }
     }
-    
+
     public Set<String> getWorkflowNames() {
         return workflowNames;
     }
@@ -189,24 +191,40 @@ public class JocYadeFilter {
         return limit;
     }
 
-    public void setLimit(Integer limit) {
-        this.limit = limit;
+    public void setLimit(Integer val) {
+        limit = val;
+    }
+
+    public Integer getNumOfFilesFrom() {
+        return numOfFilesFrom;
+    }
+
+    public void setNumOfFilesFrom(Integer val) {
+        numOfFilesFrom = val;
+    }
+
+    public Integer getNumOfFilesTo() {
+        return numOfFilesTo;
+    }
+
+    public void setNumOfFilesTo(Integer val) {
+        numOfFilesTo = val;
     }
 
     public Date getDateFrom() {
         return dateFrom;
     }
 
-    public void setDateFrom(Date dateFrom) {
-        this.dateFrom = dateFrom;
+    public void setDateFrom(Date val) {
+        dateFrom = val;
     }
 
     public Date getDateTo() {
         return dateTo;
     }
 
-    public void setDateTo(Date dateTo) {
-        this.dateTo = dateTo;
+    public void setDateTo(Date val) {
+        dateTo = val;
     }
 
 }
