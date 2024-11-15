@@ -29,8 +29,8 @@ public class JocYadeFilter {
     private Set<String> profiles;
     private Set<String> workflowNames;
     private Integer limit;
-    private Integer numOfFilesFrom;
-    private Integer numOfFilesTo;
+    private Long numOfFilesFrom;
+    private Long numOfFilesTo;
     private Date dateFrom;
     private Date dateTo;
 
@@ -195,19 +195,19 @@ public class JocYadeFilter {
         limit = val;
     }
 
-    public Integer getNumOfFilesFrom() {
+    public Long getNumOfFilesFrom() {
         return numOfFilesFrom;
     }
 
-    public void setNumOfFilesFrom(Integer val) {
+    public void setNumOfFilesFrom(Long val) {
         numOfFilesFrom = val;
     }
 
-    public Integer getNumOfFilesTo() {
+    public Long getNumOfFilesTo() {
         return numOfFilesTo;
     }
 
-    public void setNumOfFilesTo(Integer val) {
+    public void setNumOfFilesTo(Long val) {
         numOfFilesTo = val;
     }
 

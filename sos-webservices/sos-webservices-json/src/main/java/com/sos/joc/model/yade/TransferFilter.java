@@ -73,21 +73,21 @@ public class TransferFilter {
     @JsonProperty("operations")
     private List<Operation> operations = new ArrayList<Operation>();
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFilesFrom")
-    private Integer numOfFilesFrom;
+    private Long numOfFilesFrom;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFilesTo")
-    private Integer numOfFilesTo;
+    private Long numOfFilesTo;
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -230,46 +230,46 @@ public class TransferFilter {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFilesFrom")
-    public Integer getNumOfFilesFrom() {
+    public Long getNumOfFilesFrom() {
         return numOfFilesFrom;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFilesFrom")
-    public void setNumOfFilesFrom(Integer numOfFilesFrom) {
+    public void setNumOfFilesFrom(Long numOfFilesFrom) {
         this.numOfFilesFrom = numOfFilesFrom;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFilesTo")
-    public Integer getNumOfFilesTo() {
+    public Long getNumOfFilesTo() {
         return numOfFilesTo;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFilesTo")
-    public void setNumOfFilesTo(Integer numOfFilesTo) {
+    public void setNumOfFilesTo(Long numOfFilesTo) {
         this.numOfFilesTo = numOfFilesTo;
     }
 
