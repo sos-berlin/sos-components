@@ -558,6 +558,7 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
+    // TODO to remove ...
     private void changeJsonAnnotations4H2() {
         for (Class<?> c : classMapping.getClasses()) {
             List<Field> fields = Arrays.stream(c.getDeclaredFields()).filter(m -> m.isAnnotationPresent(org.hibernate.annotations.Type.class) && m
@@ -568,7 +569,9 @@ public class SOSHibernateFactory implements Serializable {
                     org.hibernate.annotations.ColumnTransformer ct = field.getAnnotation(org.hibernate.annotations.ColumnTransformer.class);
                     if (ct != null) {
                         try {
-                            SOSReflection.changeAnnotationValue(ct, "write", SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_H2);
+                            if (!ct.write().equals(SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_H2)) {
+                                SOSReflection.changeAnnotationValue(ct, "write", SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_H2);
+                            }
                         } catch (Throwable e) {
                             LOGGER.warn(String.format("[%s.%s]%s", c.getSimpleName(), field.getName(), e.toString()), e);
                         }

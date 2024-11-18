@@ -19,6 +19,7 @@
 
   <modules>
     <module>pojogen</module>
+    <module>setup-helper</module>
     <module>sos-commons</module>
     <module>sos-yade</module>
     <module>sos-webservices</module>
