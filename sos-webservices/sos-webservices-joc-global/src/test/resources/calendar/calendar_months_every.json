@@ -13,7 +13,6 @@
 				"repetitions": [
 					{
 						"from": "2024-12-01",
-						"to": "2026-01-01",
 						"repetition": "DAILY",
 						"step": 5
 					}
