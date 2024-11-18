@@ -30,8 +30,7 @@
 							<classpathScope>compile</classpathScope>
 							<arguments>
 								<argument>${project.basedir}</argument>
-								<argument>
-									sos-components/sos-joc/sos-joc-db/src/main/java/com</argument>
+								<argument>sos-joc/sos-joc-db/src/main/java/com</argument>
 							</arguments>
 							<!--additionalClasspathElements>
 								<additionalClasspathElement>

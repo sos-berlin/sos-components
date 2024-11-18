@@ -20,12 +20,11 @@ public class Executor {
      * 1) Path of the base directory of the current project<br/>
      * -- ${project.basedir}<br/>
      * 2) Relative path of the source project (including the root package)<br/>
-     * -- sos-components/sos-joc/sos-joc-db/src/main/java/com<br/>
+     * -- sos-joc/sos-joc-db/src/main/java/com<br/>
      * 
      * @param args
      * @throws Exception */
     public static void main(String[] args) throws Exception {
-        // <argument>sos-components/sos-joc/sos-joc-db/src/main/java/com</argument>
         if (args.length < 2) {
             throw new Exception("[missing arguments]currentProject/sourceProject");
         }
@@ -42,13 +41,18 @@ public class Executor {
     }
 
     private static Path getSourceDir(Path currentProject, Path sourceProject) throws Exception {
-        Path mainProjectName = sourceProject.getName(0);
-        Path mainProjectDir = findMainProjectDirectory(currentProject, mainProjectName);
+        // <sos-components> / setup-helper / setup-helper-h2
+        // build environment uses e.g. ../020.sos-components.v2.7.centos8/setup-helper/setup-helper-h2
+        Path mainProjectDir = currentProject.getParent();
         if (mainProjectDir == null) {
-            throw new Exception("[main project='" + mainProjectName + "' not found in the current path]" + currentProject);
+            throw new Exception("[currentProject=" + currentProject + "][1]parent is null");
+        }
+        mainProjectDir = mainProjectDir.getParent();
+        if (mainProjectDir == null) {
+            throw new Exception("[currentProject=" + currentProject + "][2]parent is null");
         }
 
-        Path sourceProjectDir = mainProjectDir.getParent().resolve(sourceProject);
+        Path sourceProjectDir = mainProjectDir.resolve(sourceProject);
         if (!Files.exists(sourceProjectDir)) {
             throw new Exception("[source][" + sourceProjectDir + "]not found");
         }
@@ -59,19 +63,6 @@ public class Executor {
         Path dir = currentProject.resolve("src/main/java/com");
         SOSPath.deleteIfExists(dir);
         return dir;
-    }
-
-    private static Path findMainProjectDirectory(Path currentDir, Path mainDirName) {
-        Path dir = currentDir;
-        while (dir != null) {
-            Path fn = dir.getFileName();
-            System.out.println("[findMainProjectDirectory][" + dir + "]" + fn);
-            if (fn != null && fn.equals(mainDirName)) {
-                return dir;
-            }
-            dir = dir.getParent();
-        }
-        return null;
     }
 
     private static void processDBItemFile(Path sourceBase, Path sourcePath, Path targetBase) {
