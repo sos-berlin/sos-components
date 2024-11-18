@@ -64,7 +64,9 @@ public class Executor {
     private static Path findMainProjectDirectory(Path currentDir, Path mainDirName) {
         Path dir = currentDir;
         while (dir != null) {
-            if (dir.getFileName().equals(mainDirName)) {
+            Path fn = dir.getFileName();
+            System.out.println("[findMainProjectDirectory][" + dir + "]" + fn);
+            if (fn != null && fn.equals(mainDirName)) {
                 return dir;
             }
             dir = dir.getParent();
