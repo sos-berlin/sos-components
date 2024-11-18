@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
@@ -15,6 +16,8 @@ public class ParserConfig extends AConfigItem {
 
     private static final String CONFIG_KEY = "parserConfig";
 
+    private Set<String> extensions;
+    private Set<String> excludedFileNames;
     private Set<String> excludedDirectoryNames;
     private Map<Integer, Set<String>> excludedDirectoryPaths; // level, paths
 
@@ -25,6 +28,12 @@ public class ParserConfig extends AConfigItem {
     @Override
     protected void parse(String key, String val) {
         switch (key.toLowerCase()) {
+        case "extensions":
+            withExtensions(val);
+            break;
+        case "excluded.filenames":
+            withExcludedFileNames(val);
+            break;
         case "excluded.directorynames":
             withExcludedDirectoryNames(val);
             break;
@@ -36,7 +45,21 @@ public class ParserConfig extends AConfigItem {
 
     @Override
     public boolean isEmpty() {
-        return hasExcludedDirectoryNames() || hasExcludedDirectoryPaths();
+        return hasExtensions() || hasExcludedFileNames() || hasExcludedDirectoryNames() || hasExcludedDirectoryPaths();
+    }
+
+    public ParserConfig withExtensions(String val) {
+        if (!SOSString.isEmpty(val)) {
+            extensions = Arrays.stream(val.split(LIST_VALUE_DELIMITER)).map(e -> e.trim()).collect(Collectors.toSet());
+        }
+        return this;
+    }
+
+    public ParserConfig withExcludedFileNames(String val) {
+        if (!SOSString.isEmpty(val)) {
+            excludedFileNames = Arrays.stream(val.split(LIST_VALUE_DELIMITER)).map(e -> e.trim()).collect(Collectors.toSet());
+        }
+        return this;
     }
 
     public ParserConfig withExcludedDirectoryNames(String val) {
@@ -67,12 +90,28 @@ public class ParserConfig extends AConfigItem {
         return this;
     }
 
+    public boolean hasExtensions() {
+        return !SOSCollection.isEmpty(extensions);
+    }
+
+    public boolean hasExcludedFileNames() {
+        return !SOSCollection.isEmpty(excludedFileNames);
+    }
+
     public boolean hasExcludedDirectoryNames() {
-        return excludedDirectoryNames != null && excludedDirectoryNames.size() > 0;
+        return !SOSCollection.isEmpty(excludedDirectoryNames);
     }
 
     public boolean hasExcludedDirectoryPaths() {
-        return excludedDirectoryPaths != null && excludedDirectoryPaths.size() > 0;
+        return !SOSCollection.isEmpty(excludedDirectoryPaths);
+    }
+
+    public Set<String> getExtensions() {
+        return extensions;
+    }
+
+    public Set<String> getExcludedFileNames() {
+        return excludedFileNames;
     }
 
     public Set<String> getExcludedDirectoryNames() {

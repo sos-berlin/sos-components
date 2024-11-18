@@ -42,10 +42,11 @@ public class XMLJobParser extends AFileParser {
     private Path splitConfigurationMainDir;
 
     public XMLJobParser(AutosysConverterConfig config, Path reportDir) {
-        super(FileType.XML, config, reportDir);
+        super(ParserType.XML, config, reportDir);
         if (doSplitConfiguration()) {
             splitConfigurationMainDir = AutosysAnalyzer.getMainDirSplitConfiguration(AutosysAnalyzer.getAnalyzerDir(getReportDir()));
         }
+        getExtensions().add("xml");
     }
 
     @Override

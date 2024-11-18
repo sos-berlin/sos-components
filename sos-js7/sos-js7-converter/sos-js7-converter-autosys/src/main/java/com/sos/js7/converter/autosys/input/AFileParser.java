@@ -2,9 +2,11 @@ package com.sos.js7.converter.autosys.input;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.js7.converter.autosys.common.v12.JobParser;
@@ -15,28 +17,51 @@ import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult
 
 public abstract class AFileParser {
 
-    public enum FileType {
+    public enum ParserType {
         JIL, XML
     }
 
     public static final String EXPORT_FILE_PREFIX_BOX = "[BOX]";
     public static final String EXPORT_FILE_PREFIX_STANDALONE = "[ST]";
 
-    private final FileType fileType;
+    private final ParserType parserType;
     private final JobParser jobParser = new JobParser();
     private final AutosysConverterConfig config;
     private final Path reportDir;
+    private final Set<String> extensions;
 
-    public AFileParser(FileType fileType, AutosysConverterConfig config, Path reportDir) {
-        this.fileType = fileType;
+    public AFileParser(ParserType parserType, AutosysConverterConfig config, Path reportDir) {
+        this.parserType = parserType;
         this.config = config;
         this.reportDir = reportDir;
+        this.extensions = new HashSet<>();
     }
 
     public abstract FileParserResult parse(DirectoryParserResult r, Path file);
 
-    public FileType getFileType() {
-        return fileType;
+    public ParserType getParserType() {
+        return parserType;
+    }
+
+    public Set<String> getExtensions() {
+        return extensions;
+    }
+
+    public boolean acceptFile(Path file) {
+        String fileName = file.getFileName().toString().toLowerCase();
+        if (config.getParserConfig().hasExcludedFileNames()) {
+            for (String fn : config.getParserConfig().getExcludedFileNames()) {
+                if (fn.equalsIgnoreCase(fileName)) {
+                    return false;
+                }
+            }
+        }
+        for (String ex : extensions) {
+            if (fileName.endsWith("." + ex.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public JobParser getJobParser() {

@@ -34,10 +34,16 @@ public class JILJobParser extends AFileParser {
     private XMLWriter xmlWriter;
 
     public JILJobParser(AutosysConverterConfig config, Path reportDir) {
-        super(FileType.JIL, config, reportDir);
+        super(ParserType.JIL, config, reportDir);
         COUNTER_INSERT_JOB = 0;
         INSERT_JOBS = new TreeMap<>();
         MULTIPLE_ATTRIBUTES = new TreeMap<>();
+
+        if (config.getParserConfig().hasExtensions()) {
+            getExtensions().addAll(config.getParserConfig().getExtensions());
+        } else {
+            getExtensions().add("jil");
+        }
     }
 
     public void writeXMLStart(Path parent, String name) {

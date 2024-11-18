@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
-import com.sos.js7.converter.autosys.input.AFileParser.FileType;
+import com.sos.js7.converter.autosys.input.AFileParser.ParserType;
 import com.sos.js7.converter.autosys.output.js7.helper.Report;
 import com.sos.js7.converter.commons.config.items.ParserConfig;
 import com.sos.js7.converter.commons.report.ParserReport;
@@ -27,7 +27,7 @@ public class DirectoryParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
     public static DirectoryParserResult parse(ParserConfig config, AFileParser parser, Path input) {
-        DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult(input, parser.getFileType());
+        DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult(input, parser.getParserType());
 
         String method = "parse";
         if (Files.exists(input)) {
@@ -43,8 +43,7 @@ public class DirectoryParser {
                     }
 
                     try (Stream<Path> stream = Files.walk(input)) {
-                        for (Path p : stream.filter(f -> !f.equals(input) && f.getFileName().toString().toUpperCase().endsWith("." + parser
-                                .getFileType().toString())).collect(Collectors.toList())) {
+                        for (Path p : stream.filter(f -> !f.equals(input) && parser.acceptFile(f)).collect(Collectors.toList())) {
                             File f = p.toFile();
                             if (f.isFile()) {
                                 if (jilParser != null) {
@@ -64,7 +63,9 @@ public class DirectoryParser {
                             parent = input.getParent();
                         }
                         jilParser.writeXMLStart(parent, input.getFileName().toString());
-                        parser.parse(r, input);
+                        if (parser.acceptFile(input)) {
+                            parser.parse(r, input);
+                        }
                     } else {
                         r.addCountFiles();
                         r.addJobs(parser.parse(r, input));
@@ -142,13 +143,13 @@ public class DirectoryParser {
     public class DirectoryParserResult {
 
         private final Path input;
-        private final FileType parserType;
+        private final ParserType parserType;
 
         private Set<String> jobNames = new HashSet<>();
         private List<ACommonJob> jobs = new ArrayList<>();
         private int countFiles = 0;
 
-        private DirectoryParserResult(Path input, FileType parserType) {
+        private DirectoryParserResult(Path input, ParserType parserType) {
             this.input = input;
             this.parserType = parserType;
         }
@@ -174,7 +175,7 @@ public class DirectoryParser {
         }
 
         public boolean isXMLParser() {
-            return FileType.XML.equals(parserType);
+            return ParserType.XML.equals(parserType);
         }
 
         public Path getInput() {
