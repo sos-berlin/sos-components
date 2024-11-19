@@ -12,36 +12,82 @@
 
 	<artifactId>setup-helper-h2</artifactId>
 
+	<properties>
+		<generated.sources.dir>${project.build.directory}/generated-sources</generated.sources.dir>
+	</properties>
+
 	<build>
 		<plugins>
+			<!-- 1) add the directory "target/generated-sources"" as a source
+			directory for later compilation -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-generated-sources</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${generated.sources.dir}</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 2) Compile Executer only -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>setup-helper-h2-compile-executer</id>
+						<phase>validate</phase>
+						<configuration>
+							<includes>
+								<include>setup/**</include>
+							</includes>
+						</configuration>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 3) Run Executer (copy .java files) -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>3.1.0</version>
 				<executions>
 					<execution>
-						<id>process-annotations</id>
-						<phase>verify</phase>
+						<id>setup-helper-h2-run-executer</id>
+						<phase>generate-sources</phase>
 						<goals>
 							<goal>java</goal>
 						</goals>
 						<configuration>
 							<mainClass>setup.helper.h2.Executor</mainClass>
-							<classpathScope>compile</classpathScope>
+							<classpathScope>runtime</classpathScope>
 							<arguments>
-								<argument>${project.basedir}</argument>
-								<argument>sos-joc/sos-joc-db/src/main/java/com</argument>
+								<argument>sos-joc/sos-joc-db/src/main/java</argument>
+								<argument>${generated.sources.dir}</argument>
 							</arguments>
-							<!--additionalClasspathElements>
+							<additionalClasspathElements>
 								<additionalClasspathElement>
 									${project.build.outputDirectory}</additionalClasspathElement>
-							</additionalClasspathElements -->
+							</additionalClasspathElements>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
 
-
+			<!-- 4) Exclude Executor from .jar -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
