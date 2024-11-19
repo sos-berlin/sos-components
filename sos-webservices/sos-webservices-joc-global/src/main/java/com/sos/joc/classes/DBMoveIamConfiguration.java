@@ -44,6 +44,9 @@ public class DBMoveIamConfiguration {
             throws JsonMappingException, JsonProcessingException {
         DBItemJocConfiguration dbItem = getProperties(sosHibernateSession, SOSAuthHelper.CONFIGURATION_TYPE_IAM,
                 SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
+        if (dbItem == null) {
+            return null;
+        }
         com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                 com.sos.joc.model.security.properties.Properties.class);
         return properties;
@@ -126,7 +129,7 @@ public class DBMoveIamConfiguration {
             }
         } catch (Throwable e) {
             LOGGER.warn("error ocurred, update not processed." + e.getMessage());
-        } 
+        }
     }
 
     public static void execute() {
