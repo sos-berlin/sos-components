@@ -72,7 +72,7 @@ public class SOSFidoAuthLogin implements ISOSLogin {
             sosInternAuthSubject = new SOSInternAuthSubject();
             if (sosFidoAuthAccessToken == null) {
                 sosInternAuthSubject.setAuthenticated(false);
-                setMsg("There is no FIDO2 account with the given account");
+                setMsg("Access denied");
             } else {
                 sosInternAuthSubject.setAuthenticated(true);
                 sosInternAuthSubject.setIsForcePasswordChange(false);

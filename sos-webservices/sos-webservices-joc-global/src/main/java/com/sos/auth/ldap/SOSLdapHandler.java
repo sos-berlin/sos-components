@@ -161,7 +161,7 @@ public class SOSLdapHandler {
                 s = s + ex.getCause();
             }
             LOGGER.info(s);
-            msg = "There is no account with the given account name/password combination. " + s;
+            msg = "Access denied " + s;
         } catch (NamingException ex) {
             String s = ex.getMessage();
             if (ex.getCause() != null) {

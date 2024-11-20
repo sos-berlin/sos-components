@@ -73,7 +73,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
                 if (sosKeycloakAccountAccessToken == null) {
                     setMsg("Account has no roles. Login skipped.");
                 } else {
-                    setMsg("There is no user with the given account/password combination");
+                    setMsg("Access denied");
                 }
             } else {
                 sosKeycloakSubject.setAuthenticated(true);

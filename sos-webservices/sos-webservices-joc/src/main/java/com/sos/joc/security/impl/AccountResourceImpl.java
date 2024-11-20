@@ -197,6 +197,11 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 }
             }
 
+            if (SOSAuthHelper.containsPrivateUseArea(password)) {
+                JocError error = new JocError();
+                error.setMessage("Password is invalid");
+                throw new JocInfoException(error);
+            }
             dbItemIamAccount.setAccountName(account.getAccountName());
             if (dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.JOC.value())) {
 

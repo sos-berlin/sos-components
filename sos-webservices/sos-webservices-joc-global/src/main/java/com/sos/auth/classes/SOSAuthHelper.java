@@ -175,8 +175,6 @@ public class SOSAuthHelper {
         return false;
     }
 
-  
-
     public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException,
             JsonMappingException, IOException, SOSHibernateException {
 
@@ -614,6 +612,20 @@ public class SOSAuthHelper {
         default:
             return sessionTimeout;
         }
+    }
+
+    public static boolean containsPrivateUseArea(String s) {
+        ArrayList<Character.UnicodeBlock> privateUseArea = new ArrayList<>();
+        privateUseArea.add(Character.UnicodeBlock.SUPPLEMENTARY_PRIVATE_USE_AREA_A);
+        privateUseArea.add(Character.UnicodeBlock.SUPPLEMENTARY_PRIVATE_USE_AREA_B);
+        for (char currentChar : s.toCharArray()) {
+            Character.UnicodeBlock unicodeBlock = Character.UnicodeBlock.of(currentChar);
+            if (privateUseArea.contains(unicodeBlock)) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
 }

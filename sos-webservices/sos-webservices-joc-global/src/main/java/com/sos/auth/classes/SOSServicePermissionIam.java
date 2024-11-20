@@ -424,6 +424,12 @@ public class SOSServicePermissionIam {
 
     private String createAccount(SOSAuthCurrentAccount currentAccount, String password, DBItemIamIdentityService dbItemIdentityService)
             throws Exception {
+        
+        if  (SOSAuthHelper.containsPrivateUseArea(password)) {
+            return "Access denied";
+        }
+        
+
         SOSIdentityService sosIdentityService = null;
         ISOSAuthSubject sosAuthSubject = null;
 
@@ -684,6 +690,7 @@ public class SOSServicePermissionIam {
     private SOSAuthCurrentAccountAnswer authenticate(SOSAuthCurrentAccount currentAccount, String password) throws Exception {
 
         try {
+
             SOSPermissionMerger sosPermissionMerger = new SOSPermissionMerger();
             SOSHibernateSession sosHibernateSession = null;
             String msg = "";
@@ -871,9 +878,7 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setEnableTouch(enableTouch);
 
             return sosAuthCurrentUserAnswer;
-        } catch (
-
-        JocAuthenticationException e) {
+        } catch (JocAuthenticationException e) {
             return e.getSosAuthCurrentAccountAnswer();
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
@@ -896,10 +901,9 @@ public class SOSServicePermissionIam {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
             }
 
-
             Globals.jocTimeZone = TimeZone.getDefault();
             Globals.setProperties();
-            
+
             Globals.setProperties();
             Globals.iamSessionTimeout = SOSAuthHelper.getSecondsFromString(Globals.getConfigurationGlobalsIdentityService().getIdleSessionTimeout()
                     .getValue());
