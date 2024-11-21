@@ -3,7 +3,7 @@
 	<session-factory>
 		<property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
 		<property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
-		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/js7_x?serverTimezone=UTC</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/js7_x?serverTimezone=UTC&permitMysqlScheme</property>
 		<property name="hibernate.connection.username">scheduler</property>
 		<property name="hibernate.connection.password">scheduler</property>
 		
