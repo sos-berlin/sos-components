@@ -349,7 +349,6 @@ public class SOSHibernateFactory implements Serializable {
             }
             
             mapConfigurationProperties();
-//            setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
             setDbms(configuration.getProperties());
             updateConnectionUrlForMysqlWithMariaDriver(configuration.getProperties());
             databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
@@ -397,8 +396,9 @@ public class SOSHibernateFactory implements Serializable {
             if (dialect != null) {
                 switch (dbms) {
                 case MYSQL:
-                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_MYSQL)) {
-                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_MYSQL) ||
+                            configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MyInnoDBDialect")) {
+                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                     }
 //                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
 //                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
@@ -406,20 +406,20 @@ public class SOSHibernateFactory implements Serializable {
                     break;
                 case ORACLE:
                     if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_ORACLE)) {
-                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                     }
 //                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_ORACLE);
                     break;
                 case PGSQL:
                     if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_PGSQL)) {
-                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                     }
 //                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_PGSQL);
                     break;
                 case MSSQL:
                     if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect",
                             "org.hibernate.dialect.SQLServerDialect").contains(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT))) {
-                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                     }
 //                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect").contains(
 //                            dialect)) {
@@ -428,7 +428,7 @@ public class SOSHibernateFactory implements Serializable {
                     break;
                 case H2:
                     if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_H2)) {
-                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                     }
 //                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_H2);
                     break;
@@ -676,6 +676,12 @@ public class SOSHibernateFactory implements Serializable {
         default:
             throw new SOSHibernateConfigurationException(String.format("invalid transaction isolation level=%s", isolationLevel));
         }
+    }
+    
+    private void removeProperty(String key) {
+        configuration.getProperties().remove(key);
+        configuration.getStandardServiceRegistryBuilder().getSettings().remove(key);
+
     }
 
     public void addClassMapping(Class<?> c) {
