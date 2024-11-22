@@ -8,12 +8,16 @@ import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.Workf
 public abstract class AFatEventOrderBase extends AFatEvent {
 
     private final String orderId;
-    private final String position;
+    private final FatPosition position;
 
     public AFatEventOrderBase(Long eventId, Date eventDatetime, String orderId, Position position) {
         super(eventId, eventDatetime);
         this.orderId = orderId;
-        this.position = position == null ? null : position.asString();
+        if (position == null) {
+            this.position = null;
+        } else {
+            this.position = new FatPosition(position);
+        }
     }
 
     @Override
@@ -26,7 +30,7 @@ public abstract class AFatEventOrderBase extends AFatEvent {
         return orderId;
     }
 
-    public String getPosition() {
+    public FatPosition getPosition() {
         return position;
     }
 

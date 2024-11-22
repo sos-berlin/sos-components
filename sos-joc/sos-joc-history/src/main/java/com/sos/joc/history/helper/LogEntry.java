@@ -7,6 +7,7 @@ import java.util.List;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.inventory.model.common.Variables;
+import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
@@ -19,9 +20,9 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
-import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatInstruction;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
+import com.sos.joc.history.controller.proxy.fatevent.FatPosition;
 import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
 import com.sos.joc.model.history.order.caught.Caught;
 import com.sos.joc.model.history.order.caught.CaughtCause;
@@ -38,6 +39,7 @@ public class LogEntry {
     private Long historyOrderId = Long.valueOf(0);
     private Long historyOrderStepId = Long.valueOf(0);
     private String position;
+    private String positionOriginalIfDiff;
     private String jobName = ".";
     private String label;
     private String agentTimezone = null;
@@ -68,19 +70,38 @@ public class LogEntry {
     private boolean isOrderStarted;
 
     public LogEntry(OrderLogEntryLogLevel level, EventType type, Date controllerDate, Date agentDate) {
-        logLevel = level;
-        eventType = type;
-        controllerDatetime = controllerDate;
-        agentDatetime = agentDate;
-        isOrderStarted = true;
+        this.logLevel = level;
+        this.eventType = type;
+        this.controllerDatetime = controllerDate;
+        this.agentDatetime = agentDate;
+        this.isOrderStarted = true;
     }
 
-    public void onOrder(CachedOrder co, String position) {
-        onOrder(co, position, null);
+    public void onOrder(CachedOrder co, String workflowPosition, FatPosition position) {
+        this.orderId = co.getOrderId();
+        this.historyOrderMainParentId = co.getMainParentId();
+        this.historyOrderId = co.getId();
+        this.position = workflowPosition;
+        this.positionOriginalIfDiff = position == null ? null : position.getOrigIfDiff();
+        this.info = co.getOrderId();
     }
 
-    public void onOrderBase(CachedOrder co, String position, AFatEventOrderBase eo) {
-        onOrder(co, position, null);
+    public void onOrder(CachedOrder co, FatPosition position) {
+        this.orderId = co.getOrderId();
+        this.historyOrderMainParentId = co.getMainParentId();
+        this.historyOrderId = co.getId();
+        if (position == null) {
+            this.position = co.getWorkflowPosition();
+            this.positionOriginalIfDiff = null;
+        } else {
+            this.position = position.getValue();
+            this.positionOriginalIfDiff = position.getOrigIfDiff();
+        }
+        this.info = co.getOrderId();
+    }
+
+    public void onOrderBase(CachedOrder co, AFatEventOrderBase eo) {
+        onOrder(co, eo.getPosition());
         switch (eo.getType()) {
         case OrderRetrying:
             delayedUntil = ((FatEventOrderRetrying) eo).getDelayedUntil();
@@ -117,82 +138,72 @@ public class LogEntry {
         }
     }
 
-    public void onOrder(CachedOrder co, String workflowPosition, List<FatForkedChild> childs) {
-        orderId = co.getOrderId();
-        historyOrderMainParentId = co.getMainParentId();
-        historyOrderId = co.getId();
-        position = getPosition(workflowPosition);
-        info = co.getOrderId();
-    }
-
-    public void onNotStartedOrder(String orderId, String position) {
+    public void onNotStartedOrder(String orderId, FatPosition position) {
         this.orderId = orderId;
         this.historyOrderMainParentId = 0L;
         this.historyOrderId = 0L;
-        this.position = getPosition(position);
+        this.position = HistoryModel.getRequiredPosition(position);
+        this.positionOriginalIfDiff = position == null ? null : position.getOrigIfDiff();
         this.info = orderId;
         this.isOrderStarted = false;
     }
 
-    private String getPosition(String position) {
-        return SOSString.isEmpty(position) ? "0" : position;
-    }
-
     public void onOrderLock(CachedOrder co, AFatEventOrderLocks eo) {
-        onOrder(co, eo.getPosition(), null);
-        orderLocks = eo.getOrderLocks();
+        onOrder(co, eo.getPosition());
+        this.orderLocks = eo.getOrderLocks();
     }
 
     public void onOrderNotice(CachedOrder co, AFatEventOrderNotice eo) {
-        onOrder(co, eo.getPosition(), null);
-        orderNotice = eo;
+        onOrder(co, eo.getPosition());
+        this.orderNotice = eo;
     }
 
     public void onOrderMoved(CachedOrder co, FatEventOrderMoved eo) {
         if (co == null) {
             onNotStartedOrder(eo.getOrderId(), eo.getPosition());
         } else {
-            onOrder(co, eo.getPosition(), null);
+            onOrder(co, eo.getPosition());
         }
-        orderMoved = eo;
+        this.orderMoved = eo;
     }
 
     public void onOrderAttached(CachedOrder co, FatEventOrderAttached eo) {
         if (co == null) {
             onNotStartedOrder(eo.getOrderId(), eo.getPosition());
         } else {
-            onOrder(co, eo.getPosition(), null);
+            onOrder(co, eo.getPosition());
         }
-        orderAttached = eo;
+        this.orderAttached = eo;
     }
 
     public void setError(String state, CachedOrder co) {
-        error = true;
-        errorState = state == null ? null : state.toLowerCase();
+        this.error = true;
+        this.errorState = state == null ? null : state.toLowerCase();
         if (co.getLastStepError() != null) {
-            errorReason = co.getLastStepError().getReason();
-            errorCode = co.getLastStepError().getCode();
-            errorText = co.getLastStepError().getText();
+            this.errorReason = co.getLastStepError().getReason();
+            this.errorCode = co.getLastStepError().getCode();
+            this.errorText = co.getLastStepError().getText();
         }
     }
 
     public void setError(String state, FatOutcome outcome) {
-        error = true;
-        errorState = state == null ? null : state.toLowerCase();
-        errorReason = outcome.getErrorReason();
-        errorCode = outcome.getErrorCode();
-        errorText = outcome.getErrorMessage();
+        this.error = true;
+        this.errorState = state == null ? null : state.toLowerCase();
+        this.errorReason = outcome.getErrorReason();
+        this.errorCode = outcome.getErrorCode();
+        this.errorText = outcome.getErrorMessage();
     }
 
-    public void onOrderJoined(CachedOrder co, FatOutcome outcome, String workflowPosition, List<String> childs) {
-        orderId = co.getOrderId();
-        historyOrderMainParentId = co.getMainParentId();
-        historyOrderId = co.getId();
-        position = workflowPosition;
-        info = String.join(", ", childs);
+    public void onOrderJoined(CachedOrder co, FatOutcome outcome, FatPosition position, List<String> childs) {
+        this.orderId = co.getOrderId();
+        this.historyOrderMainParentId = co.getMainParentId();
+        this.historyOrderId = co.getId();
+        this.position = HistoryModel.getRequiredPosition(position);
+        this.positionOriginalIfDiff = position == null ? null : position.getOrigIfDiff();
+        this.info = String.join(", ", childs);
 
         if (outcome != null) {
-            returnCode = outcome.getReturnCode();
+            this.returnCode = outcome.getReturnCode();
             if (outcome.isFailed()) {
                 setError(OrderStateText.FAILED.value(), outcome);
                 co.setLastStepError(this);
@@ -205,69 +216,71 @@ public class LogEntry {
             setError(OrderStateText.FAILED.value(), co);
             setReturnCode(co.getLastStepError().getReturnCode());
             if (outcome.getErrorReason() != null) {
-                errorReason = outcome.getErrorReason();
+                this.errorReason = outcome.getErrorReason();
             }
         } else {
             setError(OrderStateText.FAILED.value(), outcome);
         }
     }
 
-    public void onOrderStep(CachedOrderStep cos) {
-        onOrderStep(cos, null);
+    public void onOrderStep(CachedOrderStep cos, FatPosition position) {
+        onOrderStep(cos, position, null);
     }
 
-    public void onOrderStep(CachedOrderStep cos, String entryInfo) {
-        orderId = cos.getOrderId();
-        historyOrderMainParentId = cos.getHistoryOrderMainParentId();
-        historyOrderId = cos.getHistoryOrderId();
-        historyOrderStepId = cos.getId();
-        position = cos.getWorkflowPosition();
-        jobName = cos.getJobName();
-        label = cos.getJobLabel();
-        agentTimezone = cos.getAgentTimezone();
-        agentId = cos.getAgentId();
-        agentName = cos.getAgentName();
-        agentUri = cos.getAgentUri();
-        subagentClusterId = cos.getSubagentClusterId();
+    public void onOrderStep(CachedOrderStep cos, FatPosition position, String entryInfo) {
+        this.orderId = cos.getOrderId();
+        this.historyOrderMainParentId = cos.getHistoryOrderMainParentId();
+        this.historyOrderId = cos.getHistoryOrderId();
+        this.historyOrderStepId = cos.getId();
+        this.position = cos.getWorkflowPosition();
+        this.positionOriginalIfDiff = position == null ? null : position.getOrigIfDiff();
+        this.jobName = cos.getJobName();
+        this.label = cos.getJobLabel();
+        this.agentTimezone = cos.getAgentTimezone();
+        this.agentId = cos.getAgentId();
+        this.agentName = cos.getAgentName();
+        this.agentUri = cos.getAgentUri();
+        this.subagentClusterId = cos.getSubagentClusterId();
         StringBuilder sb;
         switch (eventType) {
         case OrderProcessingStarted:
             String agentAdd = subagentClusterId == null ? "" : ", subagentClusterId=" + subagentClusterId;
-            info = String.format("[Start] Job=%s, label=%s, Agent(url=%s, id=%s, name=%s%s)", jobName, label, agentUri, agentId, agentName, agentAdd);
+            this.info = String.format("[Start] Job=%s, label=%s, Agent(url=%s, id=%s, name=%s%s)", jobName, label, agentUri, agentId, agentName,
+                    agentAdd);
             return;
         case OrderProcessed:
-            returnCode = cos.getReturnCode();
+            this.returnCode = cos.getReturnCode();
             sb = new StringBuilder("[End]");
-            if (error) {
+            if (this.error) {
                 sb.append(" [Error]");
             } else {
                 sb.append(" [Success]");
             }
-            if (returnCode != null) {
-                sb.append(" returnCode=").append(returnCode);
+            if (this.returnCode != null) {
+                sb.append(" returnCode=").append(this.returnCode);
             }
-            if (error) {
+            if (this.error) {
                 List<String> errorInfo = new ArrayList<String>();
-                if (errorState != null) {
-                    errorInfo.add("errorState=" + errorState);
+                if (this.errorState != null) {
+                    errorInfo.add("errorState=" + this.errorState);
                 }
-                if (errorCode != null) {
-                    errorInfo.add("code=" + errorCode);
+                if (this.errorCode != null) {
+                    errorInfo.add("code=" + this.errorCode);
                 }
-                if (errorReason != null) {
-                    errorInfo.add("reason=" + errorReason);
+                if (this.errorReason != null) {
+                    errorInfo.add("reason=" + this.errorReason);
                 }
-                if (errorText != null) {
-                    errorInfo.add("msg=" + errorText);
+                if (this.errorText != null) {
+                    errorInfo.add("msg=" + this.errorText);
                 }
                 if (errorInfo.size() > 0) {
                     sb.append(", ").append(String.join(", ", errorInfo));
                 }
             }
-            info = sb.toString();
+            this.info = sb.toString();
             return;
         default:
-            info = entryInfo;
+            this.info = entryInfo;
             break;
         }
 
@@ -303,6 +316,10 @@ public class LogEntry {
 
     public String getPosition() {
         return position;
+    }
+
+    public String getPositionOriginalIfDiff() {
+        return positionOriginalIfDiff;
     }
 
     public void setJobName(String val) {

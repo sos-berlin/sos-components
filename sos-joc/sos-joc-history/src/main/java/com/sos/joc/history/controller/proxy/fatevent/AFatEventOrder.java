@@ -14,7 +14,7 @@ public abstract class AFatEventOrder extends AFatEvent {
     private String workflowPath;
     private String workflowVersionId;
 
-    private String position;
+    private FatPosition position;
     private Map<String, Value> arguments;
 
     public AFatEventOrder(Long eventId, Date eventDatetime) {
@@ -29,7 +29,7 @@ public abstract class AFatEventOrder extends AFatEvent {
             this.workflowPath = (String) objects[1];
             this.workflowVersionId = (String) objects[2];
             if (objects[3] != null) {
-                this.position = ((Position) objects[3]).asString();
+                this.position = new FatPosition(((Position) objects[3]));
             }
             if (objects[4] != null) {
                 this.arguments = (Map<String, Value>) objects[4];
@@ -49,7 +49,7 @@ public abstract class AFatEventOrder extends AFatEvent {
         return workflowVersionId;
     }
 
-    public String getPosition() {
+    public FatPosition getPosition() {
         return position;
     }
 

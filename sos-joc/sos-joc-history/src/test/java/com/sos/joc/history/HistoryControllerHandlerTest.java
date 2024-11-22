@@ -113,7 +113,7 @@ public class HistoryControllerHandlerTest {
 
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
-    private static final int MAX_EXECUTION_TIME = 30; // seconds
+    private static final int MAX_EXECUTION_TIME = 10; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
     private static final Long START_EVENT_ID = 0L;
 
@@ -227,7 +227,7 @@ public class HistoryControllerHandlerTest {
                 // }
 
             } else {
-                LOGGER.info(SOSString.toString(event));
+                LOGGER.info(SOSString.toString(event, true));
             }
             if (SIMULATE_LONG_EXECUTION_INTERVAL > 0) {
                 try {

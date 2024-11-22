@@ -106,6 +106,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatExpectNotices;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatInstruction;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
+import com.sos.joc.history.controller.proxy.fatevent.FatPosition;
 import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 import com.sos.joc.history.controller.yade.YadeHandler;
 import com.sos.joc.history.db.DBLayerHistory;
@@ -969,7 +970,7 @@ public class HistoryModel {
 
             item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(eo.getWorkflowVersionId());
-            item.setWorkflowPosition(SOSString.isEmpty(eo.getPosition()) ? "0" : eo.getPosition());
+            item.setWorkflowPosition(getRequiredPosition(eo.getPosition()));
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(workflowName);
             item.setWorkflowTitle(cw.getTitle());
@@ -978,7 +979,7 @@ public class HistoryModel {
             item.setParentId(Long.valueOf(0));
             item.setParentOrderId(null);
             item.setHasChildren(false);
-            item.setRetryCounter(HistoryPosition.getRetry(eo.getPosition()));
+            item.setRetryCounter(HistoryPosition.getRetry(item.getWorkflowPosition()));
 
             item.setName(eo.getOrderId());
             item.setStartCause(OrderStartCause.order.name());// TODO
@@ -1031,7 +1032,7 @@ public class HistoryModel {
 
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderStarted, eo.getEventDatetime(), null);
             CachedOrder co = new CachedOrder(item);
-            le.onOrder(co, item.getWorkflowPosition());
+            le.onOrder(co, eo.getPosition());
             le.setArguments(arguments);
             storeLog2File(le);
             cacheHandler.addOrder(item.getOrderId(), co);
@@ -1054,6 +1055,17 @@ public class HistoryModel {
             cacheHandler.getOrderByConstraint(dbLayer, constraintHash, eo.getOrderId(), sb.toString());
             return null;
         }
+    }
+
+    public static String getRequiredPosition(FatPosition p) {
+        if (p == null) {
+            return "0";
+        }
+        return getRequiredPosition(p.getValue());
+    }
+
+    public static String getRequiredPosition(String p) {
+        return SOSString.isEmpty(p) ? "0" : p;
     }
 
     private void handleNotStartedOrderLog(String orderId, Long mainParentId) {
@@ -1112,8 +1124,8 @@ public class HistoryModel {
     }
 
     private HistoryOrderBean orderUpdate(DBLayerHistory dbLayer, EventType eventType, Long eventId, String orderId, Date eventDate,
-            FatOutcome outcome, String position, Map<String, CachedOrderStep> endedOrderSteps, FatInstruction instruction, boolean terminateOrder)
-            throws Exception {
+            FatOutcome outcome, FatPosition position, Map<String, CachedOrderStep> endedOrderSteps, FatInstruction instruction,
+            boolean terminateOrder) throws Exception {
 
         HistoryOrderBean hob = null;
         CachedOrder co = null;
@@ -1228,7 +1240,7 @@ public class HistoryModel {
                     }
                 }
 
-                le.onOrder(co, position == null ? co.getWorkflowPosition() : position);
+                le.onOrder(co, position == null ? co.getWorkflowPosition() : position.getValue(), position);
                 Path log = storeLog2File(le);
                 // if (completeOrder && co.getParentId().longValue() == 0L) {
                 if (terminateOrder) {
@@ -1417,7 +1429,7 @@ public class HistoryModel {
         CachedOrder co = cacheHandler.getOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
 
         LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, eventType, eo.getEventDatetime(), null);
-        le.onOrderBase(co, eo.getPosition(), eo);
+        le.onOrderBase(co, eo);
         storeLog2File(le);
     }
 
@@ -1458,7 +1470,7 @@ public class HistoryModel {
             }
         }
         LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, eventType, eo.getEventDatetime(), null);
-        le.onOrderBase(co, eo.getPosition(), eo);
+        le.onOrderBase(co, eo);
         storeLog2File(le);
     }
 
@@ -1494,7 +1506,7 @@ public class HistoryModel {
         dbLayer.updateOrderOnFork(co.getId(), co.getState(), eo.getEventDatetime());
 
         LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, EventType.OrderForked, eo.getEventDatetime(), null);
-        le.onOrder(co, eo.getPosition(), eo.getChilds());
+        le.onOrder(co, eo.getPosition().getValue(), eo.getPosition());
         storeLog2File(le);
 
         List<HistoryOrderBean> children = new ArrayList<HistoryOrderBean>();
@@ -1523,7 +1535,7 @@ public class HistoryModel {
 
             item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(eo.getWorkflowVersionId());
-            item.setWorkflowPosition(forkOrder.getPosition());
+            item.setWorkflowPosition(getRequiredPosition(forkOrder.getPosition()));
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(workflowName);
             item.setWorkflowTitle(cw.getTitle());
@@ -1532,13 +1544,13 @@ public class HistoryModel {
             item.setParentId(parentOrder.getId());
             item.setParentOrderId(parentOrder.getOrderId());
             item.setHasChildren(false);
-            item.setRetryCounter(HistoryPosition.getRetry(eo.getPosition()));
+            item.setRetryCounter(HistoryPosition.getRetry(item.getWorkflowPosition()));
 
             item.setName(forkOrder.getBranchIdOrName());
             item.setStartCause(OrderStartCause.fork.name());// TODO
             item.setStartTimeScheduled(eo.getEventDatetime());
             item.setStartTime(eo.getEventDatetime());
-            item.setStartWorkflowPosition(SOSString.isEmpty(eo.getPosition()) ? "0" : eo.getPosition());
+            item.setStartWorkflowPosition(getRequiredPosition(eo.getPosition()));
             item.setStartEventId(eo.getEventId());
             // item.setStartVariables(HistoryUtil.toJsonString(entry.getArguments())); // TODO or forkOrder arguments ???
             item.setStartVariables(null);
@@ -1574,7 +1586,7 @@ public class HistoryModel {
 
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, EventType.OrderStarted, item.getStartTime(), null);
             CachedOrder co = new CachedOrder(item);
-            le.onOrder(co, item.getWorkflowPosition());
+            le.onOrder(co, forkOrder.getPosition());
             storeLog2File(le);
             cacheHandler.addOrder(item.getOrderId(), co);
 
@@ -1642,14 +1654,14 @@ public class HistoryModel {
 
             item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(eos.getWorkflowVersionId());
-            item.setWorkflowPosition(eos.getPosition());
+            item.setWorkflowPosition(getRequiredPosition(eos.getPosition()));
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(workflowName);
 
             item.setHistoryOrderMainParentId(co.getMainParentId());
             item.setHistoryOrderId(co.getId());
-            item.setPosition(HistoryPosition.getLast(eos.getPosition()));
-            item.setRetryCounter(HistoryPosition.getRetry(eos.getPosition()));
+            item.setPosition(HistoryPosition.getLast(item.getWorkflowPosition()));
+            item.setRetryCounter(HistoryPosition.getRetry(item.getWorkflowPosition()));
 
             item.setJobName(eos.getJobName());
             item.setJobLabel(eos.getJobLabel());
@@ -1694,7 +1706,7 @@ public class HistoryModel {
             CachedOrderStep cos = new CachedOrderStep(item, ca.getTimezone());
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderProcessingStarted, JocClusterUtil.getEventIdAsDate(eos
                     .getEventId()), agentStartTime);
-            le.onOrderStep(cos, ca.getTimezone());
+            le.onOrderStep(cos, eos.getPosition(), ca.getTimezone());
             le.setArguments(arguments);
             storeLog2File(le);
             cacheHandler.addOrderStep(item.getOrderId(), cos);
@@ -1780,7 +1792,7 @@ public class HistoryModel {
                 String errorText = HistoryUtil.tryRemoveSpecialCharacters(le.getErrorText());
                 dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), eos.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
                         .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), errorText, new Date());
-                le.onOrderStep(cos);
+                le.onOrderStep(cos, eos.getPosition());
                 le.setArguments(outcome);
 
                 hosb = onOrderStepProcessed(dbLayer, eos.getEventId(), co, cos, le, errorText, endVariables);
@@ -1907,7 +1919,7 @@ public class HistoryModel {
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.INFO, eventType, JocClusterUtil.getEventIdAsDate(eos.getEventId()), eos
                     .getEventDatetime());
 
-            le.onOrderStep(cos);
+            le.onOrderStep(cos, null);
             storeLog2File(le, cos, eos.getChunck());
 
             tryStoreCurrentState(dbLayer, eos.getEventId());
@@ -2090,6 +2102,7 @@ public class HistoryModel {
         ole.setLogLevel(le.getLogLevel());
         ole.setLogEvent(le.getEventType());
         ole.setPosition(SOSString.isEmpty(le.getPosition()) ? null : le.getPosition());
+        ole.setPositionOriginalIfDiff(le.getPositionOriginalIfDiff());
         ole.setReturnCode(le.getReturnCode() == null ? null : le.getReturnCode().longValue());// TODO change to Integer
         ole.setReturnMessage(le.getReturnMessage());
         ole.setLocks(null);

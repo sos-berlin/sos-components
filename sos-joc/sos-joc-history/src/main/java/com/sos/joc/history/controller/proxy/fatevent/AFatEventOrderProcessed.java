@@ -8,7 +8,7 @@ public abstract class AFatEventOrderProcessed extends AFatEvent {
 
     private String orderId;
     private FatOutcome outcome;
-    private String position;
+    private FatPosition position;
 
     public AFatEventOrderProcessed(Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
@@ -23,7 +23,7 @@ public abstract class AFatEventOrderProcessed extends AFatEvent {
                     this.outcome = toFatOutcome(objects[1]);
                 }
                 if (objects.length > 2) {
-                    this.position = ((Position) objects[2]).asString();
+                    this.position = new FatPosition((Position) objects[2]);
                 }
             }
         }
@@ -37,7 +37,8 @@ public abstract class AFatEventOrderProcessed extends AFatEvent {
         return outcome;
     }
 
-    public String getPosition() {
+    public FatPosition getPosition() {
         return position;
     }
+
 }
