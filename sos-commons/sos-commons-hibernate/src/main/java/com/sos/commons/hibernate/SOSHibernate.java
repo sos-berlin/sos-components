@@ -134,6 +134,8 @@ public class SOSHibernate {
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD = "hibernate.sos.keystore_password";
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD = "hibernate.sos.keystore_keypassword";
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS = "hibernate.sos.keystore_keyalias";
+    // SOS Settings: dbms product
+    public static final String HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT = "hibernate.sos.dbms_product";
 
     public static final int LIMIT_IN_CLAUSE = 1000;
 

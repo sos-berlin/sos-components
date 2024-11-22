@@ -85,7 +85,7 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_TRANSACTION_ISOLATION, String.valueOf(
                 Connection.TRANSACTION_READ_COMMITTED));
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, "false");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT, "false");
+//        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT, "false");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS, "jta");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE, "none");
@@ -347,8 +347,11 @@ public class SOSHibernateFactory implements Serializable {
                     LOGGER.debug(String.format("%s configure connection without the hibernate file", method));
                 }
             }
+            
             mapConfigurationProperties();
-            setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
+//            setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
+            setDbms(configuration.getProperties());
+            updateConnectionUrlForMysqlWithMariaDriver(configuration.getProperties());
             databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
             mapDialect(dbms);
         } catch (MalformedURLException e) {
@@ -533,6 +536,59 @@ public class SOSHibernateFactory implements Serializable {
 
     private void setDbms(String dialect) {
         dbms = getDbms(dialect);
+    }
+    
+    private void setDbms(Properties properties) {
+        dbms = Dbms.UNKNOWN;
+        if(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL) != null 
+                && !properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).isEmpty()) {
+            if(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:h2")) {
+                dbms = Dbms.H2;
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:sqlserver")) {
+                dbms = Dbms.MSSQL;
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:oracle")) {
+                dbms = Dbms.ORACLE;
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:postgresql")) {
+                dbms = Dbms.PGSQL;
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql") 
+                    || properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mariadb")) {
+                dbms = Dbms.MYSQL;
+            }
+        } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT) != null 
+                && !properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).isEmpty()) {
+            if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("h2")) {
+                dbms = Dbms.H2;
+            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mssql")) {
+                dbms = Dbms.MSSQL;
+            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("oracle")) {
+                dbms = Dbms.ORACLE;
+            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("pgsql")) {
+                dbms = Dbms.PGSQL;
+            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mysql")
+                    || properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mariadb")) {
+                dbms = Dbms.MYSQL;
+            }
+        } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT) != null 
+                && !properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).isEmpty()) {
+            setDbms(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
+        }
+    }
+    
+    private void updateConnectionUrlForMysqlWithMariaDriver(Properties properties) {
+        String driver = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS);
+        String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+        if (driver != null && !driver.isEmpty() && connectionUrl != null && !connectionUrl.isEmpty()) {
+            if(driver.toLowerCase().contains("mariadb") && connectionUrl.contains("jdbc:mysql")) {
+                if(!connectionUrl.contains("permitMysqlScheme")) {
+                    if(connectionUrl.contains("?")) {
+                        connectionUrl = connectionUrl + "&amp;permitMysqlScheme";
+                    } else {
+                        connectionUrl = connectionUrl + "?permitMysqlScheme";
+                    }
+                }
+            }
+        }
+        properties.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, connectionUrl);
     }
 
     private void setDefaultConfigurationProperties() {
