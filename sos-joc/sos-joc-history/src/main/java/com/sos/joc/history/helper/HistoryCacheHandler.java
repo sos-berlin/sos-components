@@ -28,6 +28,7 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderNotFoundException;
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderStepNotFoundException;
 import com.sos.joc.history.controller.model.HistoryModel;
+import com.sos.joc.history.controller.proxy.fatevent.FatPosition;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.history.helper.CachedAgentCouplingFailed.AgentCouplingFailed;
 
@@ -195,19 +196,36 @@ public class HistoryCacheHandler {
         }
     }
 
-    public CachedOrderStep getOrderStepByOrder(DBLayerHistory dbLayer, CachedOrder co, String controllerTimezone, String workflowPosition)
+    public CachedOrderStep getOrderStepByOrder(DBLayerHistory dbLayer, CachedOrder co, String controllerTimezone, FatPosition position)
             throws Exception {
         CachedOrderStep cos = getOrderStep(co.getOrderId());
         if (cos == null) {
             DBItemHistoryOrderStep item = dbLayer.getOrderStep(co.getCurrentHistoryOrderStepId());
-            if (item != null && workflowPosition != null) {
-                if (!item.getWorkflowPosition().equals(workflowPosition)) {
-                    item = dbLayer.getOrderStepByWorkflowPosition(controllerId, co.getId(), workflowPosition);
+            String positionValue = position == null ? null : position.getValue();
+            if (item != null && positionValue != null) {
+                boolean equalsPositionValue = false;
+                boolean equalsPositionOrigValue = false;
+                if (item.getWorkflowPosition().equals(positionValue)) {
+                    equalsPositionValue = true;
+                } else {
+                    if (position.getOrigIfDiff() != null && item.getWorkflowPosition().equals(position.getOrigIfDiff())) {
+                        equalsPositionOrigValue = true;
+                    }
+                }
+
+                if (!equalsPositionValue && !equalsPositionOrigValue) {
+                    item = dbLayer.getOrderStepByWorkflowPosition(controllerId, co.getId(), positionValue);
+                    if (item == null) {
+                        if (position.getOrigIfDiff() != null) {
+                            positionValue = position.getOrigIfDiff();
+                            item = dbLayer.getOrderStepByWorkflowPosition(controllerId, co.getId(), positionValue);
+                        }
+                    }
                 }
             }
             if (item == null) {
                 throw new HistoryModelOrderStepNotFoundException(controllerId, String.format("[%s][%s][%s][%s]order step not found", identifier, co
-                        .getOrderId(), co.getCurrentHistoryOrderStepId(), workflowPosition));
+                        .getOrderId(), co.getCurrentHistoryOrderStepId(), positionValue));
             } else {
                 CachedAgent ca = getAgent(dbLayer, item.getAgentId(), controllerTimezone);
                 cos = new CachedOrderStep(item, ca.getTimezone());

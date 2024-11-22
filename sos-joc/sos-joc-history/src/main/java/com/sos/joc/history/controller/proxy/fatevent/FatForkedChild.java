@@ -6,12 +6,16 @@ public class FatForkedChild {
 
     private final String orderId;
     private final String branchIdOrName;
-    private final String position;
+    private final FatPosition position;
 
     public FatForkedChild(String orderId, String branchIdOrName, Position position) {
         this.orderId = orderId;
         this.branchIdOrName = branchIdOrName;
-        this.position = position == null ? null : position.asString();
+        if (position == null) {
+            this.position = null;
+        } else {
+            this.position = new FatPosition(position);
+        }
     }
 
     public String getOrderId() {
@@ -22,7 +26,8 @@ public class FatForkedChild {
         return branchIdOrName;
     }
 
-    public String getPosition() {
+    public FatPosition getPosition() {
         return position;
     }
+
 }

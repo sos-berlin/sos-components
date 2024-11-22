@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.history.HistoryPosition;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
 import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
@@ -67,6 +68,7 @@ import js7.data.workflow.Instruction;
 import js7.data.workflow.instructions.ExpectNotices;
 import js7.data.workflow.instructions.Fail;
 import js7.data.workflow.instructions.Finish;
+import js7.data.workflow.instructions.TryInstruction;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
@@ -474,10 +476,7 @@ public class HistoryEventEntry {
         public Instruction getCurrentPositionInstruction() throws Exception {
             WorkflowInfo wi = getWorkflowInfo();
             if (wi != null) {
-                JWorkflow w = wi.getWorkflow();
-                if (w != null) {
-                    return w.asScala().instruction(wi.getPosition().getUnderlying().asScala());
-                }
+                return wi.getInstruction(wi.getPosition());
             }
             return null;
         }
@@ -974,7 +973,60 @@ public class HistoryEventEntry {
                 path = workflowId.path().string();
                 versionId = workflowId.versionId().string();
                 position = new Position(wp.position());
+                resolvePosition(position);
+            }
 
+            /** currently only for "Try" instructions:<br/>
+             * <br/>
+             * Nested Try/Retry example: Try/Retry/Try/Retry<br/>
+             * <br/>
+             * if "try+" is detected in the position string:<br/>
+             * --- position=0/try+0:0/try+0:0/try+0:0/try+0:0<br />
+             * a copy of the position string is made when a Try instruction is a Retry<br/>
+             * --- positionResolved=0/try+0:0/retry+0:0/try+0:0/retry+0:0
+             * 
+             * @param p */
+            private void resolvePosition(Position p) {
+                if (p == null) {
+                    return;
+                }
+                String ps = p.asString();
+                // "/try+"
+                if (!ps.contains(HistoryPosition.TRY_IDENTIFIER)) {
+                    return;
+                }
+                try {
+                    String[] segments = ps.split(HistoryPosition.PATH_SEPARATOR);
+                    int parentSegmentCount = segments.length - 1;
+
+                    // segments is empty or only 1 element
+                    // can not actually happen if "/try+" is contained ...
+                    if (parentSegmentCount <= 0) {
+                        return;
+                    }
+
+                    int depth = 0;
+                    boolean hasRetry = false;
+
+                    Position pp = getParentPosition(p);
+                    while (pp != null && depth <= parentSegmentCount) {
+                        Instruction in = getInstruction(pp);
+                        if (in != null && in instanceof TryInstruction ti && ti.isRetry()) {
+                            int idx = parentSegmentCount - depth;
+                            if (idx >= 0) {// cannot be greater than the last index of the segments due to -1 - depth
+                                hasRetry = true;
+                                segments[idx] = segments[idx].replace(HistoryPosition.TRY_PREFIX, HistoryPosition.RETRY_PREFIX);
+                            }
+                        }
+                        pp = getParentPosition(pp);
+                        depth++;
+                    }
+                    if (hasRetry) {
+                        p.resolved = String.join(HistoryPosition.PATH_SEPARATOR, segments);
+                    }
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[resolvePosition][%s][%s]%s", getOrderId(), p.asString(), e.toString()), e);
+                }
             }
 
             public JWorkflow getWorkflow() throws Exception {
@@ -1009,15 +1061,42 @@ public class HistoryEventEntry {
             public Position createNewPosition(List<Object> positions) {
                 Either<Problem, JPosition> p = JPosition.fromList(positions);
                 try {
-                    return new Position(getFromEither(p));
+                    Position np = new Position(getFromEither(p));
+                    resolvePosition(np);
+                    return np;
+
                 } catch (Throwable e) {
                     return null;
                 }
             }
 
+            public Position getParentPosition(Position p) {
+                if (p == null || p.underlying == null) {
+                    return null;
+                }
+                Optional<js7.data.workflow.position.Position> cp = OptionConverters.toJava(p.underlying.asScala().parent());
+                if (cp.isPresent()) {
+                    return new Position(JPosition.apply(cp.get()));
+                }
+                return null;
+            }
+
+            public Instruction getInstruction(Position p) throws Exception {
+                if (p == null) {
+                    return null;
+                }
+                JWorkflow w = getWorkflow();
+                if (w != null) {
+                    return w.asScala().instruction(p.getUnderlying().asScala());
+                }
+                return null;
+            }
+
             public class Position {
 
                 private final JPosition underlying;
+                private String string;
+                private String resolved;
 
                 public Position(JPosition p) {
                     underlying = p;
@@ -1028,7 +1107,14 @@ public class HistoryEventEntry {
                 }
 
                 public String asString() {
-                    return underlying.toString();
+                    if (string == null) {
+                        string = underlying.toString();
+                    }
+                    return string;
+                }
+
+                public String asResolvedString() {
+                    return resolved;
                 }
             }
         }
