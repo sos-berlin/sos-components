@@ -388,7 +388,7 @@ public class FrequencyResolver {
         }
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][end][dates]%s", method, String.join(",", d.getDates())));
+            LOGGER.debug(String.format("[%s][end][dates size=%s]%s", method, d.getDates().size(), String.join(",", d.getDates())));
         }
 
         d.setDeliveryDate(Date.from(Instant.now()));
@@ -1118,6 +1118,18 @@ public class FrequencyResolver {
             tmpFrom.set(Calendar.DAY_OF_MONTH, 1);
         }
         addMonthsRepetitionsRestrictions(dates, m);
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][dates size=%s]%s", method, dates.size(), String.join(",", dates)));
+        }
+
+        Map<String, Calendar> tmpDatesWithoutRestrictions = new HashMap<String, Calendar>(datesWithoutRestrictions);
+        for (Entry<String, Calendar> entry : tmpDatesWithoutRestrictions.entrySet()) {
+            if (entry.getValue().before(from) || entry.getValue().after(to)) {
+                continue;
+            }
+            datesWithoutRestrictions.remove(entry.getKey());
+        }
+
         return dates;
     }
 
