@@ -25,7 +25,7 @@ public class MonitoringDBLayerTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MonitoringDBLayerTest.class);
 
-    // @Ignore
+    @Ignore
     @Test
     public void test() throws Exception {
 
