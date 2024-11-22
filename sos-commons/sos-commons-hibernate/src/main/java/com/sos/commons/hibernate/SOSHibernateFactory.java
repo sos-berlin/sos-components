@@ -397,24 +397,40 @@ public class SOSHibernateFactory implements Serializable {
             if (dialect != null) {
                 switch (dbms) {
                 case MYSQL:
-                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
-                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
+                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_MYSQL)) {
+                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                     }
+//                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
+//                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
+//                    }
                     break;
                 case ORACLE:
-                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_ORACLE);
+                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_ORACLE)) {
+                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                    }
+//                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_ORACLE);
                     break;
                 case PGSQL:
-                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_PGSQL);
+                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_PGSQL)) {
+                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                    }
+//                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_PGSQL);
                     break;
                 case MSSQL:
-                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect").contains(
-                            dialect)) {
-                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MSSQL);
+                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect",
+                            "org.hibernate.dialect.SQLServerDialect").contains(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT))) {
+                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                     }
+//                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect").contains(
+//                            dialect)) {
+//                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MSSQL);
+//                    }
                     break;
                 case H2:
-                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_H2);
+                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_H2)) {
+                        configuration.getProperties().remove(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                    }
+//                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_H2);
                     break;
                 default:
                     break;
@@ -586,9 +602,10 @@ public class SOSHibernateFactory implements Serializable {
                         connectionUrl = connectionUrl + "?permitMysqlScheme";
                     }
                 }
+                properties.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, connectionUrl);
             }
         }
-        properties.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, connectionUrl);
+        
     }
 
     private void setDefaultConfigurationProperties() {
