@@ -397,8 +397,9 @@ public class SOSHibernateFactory implements Serializable {
                 switch (dbms) {
                 case MYSQL:
                     if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_MYSQL) ||
-                            configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MyInnoDBDialect")) {
-                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                            configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MyInnoDBDialect") || 
+                            configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MariaDBDialect")) {
+                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
                     }
 //                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
 //                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
@@ -603,6 +604,7 @@ public class SOSHibernateFactory implements Serializable {
                     }
                 }
                 properties.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, connectionUrl);
+                properties.setProperty("hibernate." + SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, connectionUrl);
             }
         }
         
