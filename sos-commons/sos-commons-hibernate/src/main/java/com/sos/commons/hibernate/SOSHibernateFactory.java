@@ -85,7 +85,7 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_TRANSACTION_ISOLATION, String.valueOf(
                 Connection.TRANSACTION_READ_COMMITTED));
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, "false");
-//        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT, "false");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS, "jta");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE, "none");
@@ -396,10 +396,17 @@ public class SOSHibernateFactory implements Serializable {
             if (dialect != null) {
                 switch (dbms) {
                 case MYSQL:
-                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_MYSQL) ||
-                            configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MyInnoDBDialect") || 
-                            configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MariaDBDialect")) {
+                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MySQLInnoDBDialect")) {
                         configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
+                    }
+                    if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MariaDBDialect")) {
+                        if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql")) {
+                            configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
+                        } else {
+                            if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true")) {
+                                removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                            }
+                        }
                     }
 //                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
 //                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
@@ -500,7 +507,7 @@ public class SOSHibernateFactory implements Serializable {
         sessionFactory = configuration.buildSessionFactory();
         dialect = ((SessionFactoryImplementor) sessionFactory).getJdbcServices().getDialect();
         if (Dbms.UNKNOWN.equals(dbms)) {
-            setDbms(dialect.getClass().getSimpleName());
+            setDbms(configuration.getProperties());
         }
     }
 
@@ -683,7 +690,6 @@ public class SOSHibernateFactory implements Serializable {
     private void removeProperty(String key) {
         configuration.getProperties().remove(key);
         configuration.getStandardServiceRegistryBuilder().getSettings().remove(key);
-
     }
 
     public void addClassMapping(Class<?> c) {
