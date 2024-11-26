@@ -224,6 +224,24 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setSignature(signature);
             sosLoginParameters.setCredentialId(credentialId);
             sosLoginParameters.setRequestId(requestId);
+
+            int cnt = 0;
+            while (cnt < 15 && !Globals.clusterInitialized) {
+                java.lang.Thread.sleep(1000);
+                if (cnt == 0) {
+                    LOGGER.info("... JOC Cockpit Cluster not initialized. Still waiting");
+                }
+                cnt = cnt + 1;
+            }
+            if (cnt > 0) {
+                if (!Globals.clusterInitialized) {
+                    LOGGER.info("... JOC Cockpit Cluster still not initialized. Login will be proceeded now");
+                }else{
+                    LOGGER.info("... JOC Cockpit Cluster initialized. Waiting time: " + (cnt - 1) + " seconds");
+                }
+
+            }
+
             return login(sosLoginParameters, pwd);
         } catch (JocAuthenticationException e) {
             return JOCDefaultResponse.responseStatus401(e.getSosAuthCurrentAccountAnswer());
@@ -424,11 +442,10 @@ public class SOSServicePermissionIam {
 
     private String createAccount(SOSAuthCurrentAccount currentAccount, String password, DBItemIamIdentityService dbItemIdentityService)
             throws Exception {
-        
-        if  (SOSAuthHelper.containsPrivateUseArea(password)) {
+
+        if (SOSAuthHelper.containsPrivateUseArea(password)) {
             return "Access denied";
         }
-        
 
         SOSIdentityService sosIdentityService = null;
         ISOSAuthSubject sosAuthSubject = null;

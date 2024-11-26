@@ -69,6 +69,7 @@ public class Globals {
     public static int httpSocketTimeout = 5000;
     public static int maxResponseDuration = 55;
     public static boolean withHostnameVerification = false;
+    public static boolean clusterInitialized = false;
 
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
@@ -484,6 +485,7 @@ public class Globals {
     }
 
     public synchronized static void setConfigurationGlobals(ConfigurationGlobals val) {
+        clusterInitialized = true;
         configurationGlobals = val;
     }
 
