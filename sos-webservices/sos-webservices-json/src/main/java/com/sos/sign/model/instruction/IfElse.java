@@ -43,7 +43,7 @@ public class IfElse
     private Instructions then;
     @JsonProperty("ifThens")
     @JsonAlias({
-        "whens"
+        "cases"
     })
     private List<When> ifThens = null;
     /**

@@ -1201,6 +1201,13 @@ public abstract class PublishUtils {
                     if (ie.getThen() != null) {
                         replaceAgentNameWithAgentIdInInstructions(ie.getThen().getInstructions(), controllerId, agentNameToIdMap);
                     }
+                    if (ie.getIfThens() != null) {
+                        ie.getIfThens().forEach(when -> {
+                            if (when.getThen() != null) {
+                                replaceAgentNameWithAgentIdInInstructions(when.getThen().getInstructions(), controllerId, agentNameToIdMap);
+                            }
+                        });
+                    }
                     if (ie.getElse() != null) {
                         replaceAgentNameWithAgentIdInInstructions(ie.getElse().getInstructions(), controllerId, agentNameToIdMap);
                     }

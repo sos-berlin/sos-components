@@ -160,15 +160,15 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     }
     
     private static boolean isReachable(JPosition jPos) {
-        // only root level position or first level inside a "(re)try" or "if" instruction
+        // only root level position or first level inside a "(re)try", "if" or "options" instruction
 
         List<Object> posA = jPos.toList();
-        return posA.size() == 1 || (posA.size() == 3 && (((String) posA.get(1)).contains("try") || ((String) posA.get(1)).equals("then")
+        return posA.size() == 1 || (posA.size() == 3 && (((String) posA.get(1)).contains("try") || ((String) posA.get(1)).startsWith("then")
                 || ((String) posA.get(1)).equals("options")));
     }
     
     private static boolean isReachable(JPosition jPos, JBranchPath parentPos) {
-        // only root level position or first level inside a "(re)try" or "if" instruction
+        // only root level position or first level inside a "(re)try", "if" or "options" instruction
         
         if (parentPos.toString().isEmpty()) {
             return isReachable(jPos);
@@ -193,6 +193,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         Position p = new Position();
         p.setPosition(jPos.toList());
         p.setPositionString(jPos.toString());
+        // TODO If could be CaseWhen but Controller doesn't know a CaseWhen instruction
         p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
         if ("Job".equals(p.getType())) {
             try {

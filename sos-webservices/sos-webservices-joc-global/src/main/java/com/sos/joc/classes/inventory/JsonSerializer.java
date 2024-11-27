@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Fail;
@@ -22,6 +23,7 @@ import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Executable;
@@ -633,6 +635,19 @@ public class JsonSerializer {
                         cleanInventoryInstructions(ifElse.getElse().getInstructions(), jobs, forkListAgentName, stickyAgentName);
                     }
                     break;
+                case CASE_WHEN:
+                    CaseWhen caseWhen = inst.cast();
+                    if (caseWhen.getCases() != null) {
+                        for (When when : caseWhen.getCases()) {
+                            if (when.getThen() != null) {
+                                cleanInventoryInstructions(when.getThen().getInstructions(), jobs, forkListAgentName, stickyAgentName);
+                            }
+                        }
+                    }
+                    if (caseWhen.getElse() != null) {
+                        cleanInventoryInstructions(caseWhen.getElse().getInstructions(), jobs, forkListAgentName, stickyAgentName);
+                    }
+                    break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     if (tryCatch.getTry() != null) {
@@ -730,6 +745,13 @@ public class JsonSerializer {
                     com.sos.sign.model.instruction.IfElse ifElse = inst.cast();
                     if (ifElse.getThen() != null) {
                         cleanSignedInstructions(ifElse.getThen().getInstructions());
+                    }
+                    if (ifElse.getIfThens() != null) {
+                        for (com.sos.sign.model.instruction.When when : ifElse.getIfThens()) {
+                            if (when != null) {
+                                cleanSignedInstructions(when.getThen().getInstructions());
+                            }
+                        }
                     }
                     if (ifElse.getElse() != null) {
                         cleanSignedInstructions(ifElse.getElse().getInstructions());

@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.jitl.jobs.checklog.CheckLogJobArguments;
 import com.sos.joc.model.job.JobsFilter;
@@ -14,7 +15,6 @@ import com.sos.joc.model.job.RunningTaskLogFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderFilter;
-import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
@@ -84,6 +84,24 @@ public class CheckLog {
                 }
                 if (ifElse.getElse() != null) {
                     s = handleInstruction(ifElse.getElse().getInstructions(), jobCount, label2Job);
+                    if (s != null && !s.isEmpty()) {
+                        returnValue = s;
+                    }
+                }
+                break;
+            case CASE_WHEN:
+                com.sos.inventory.model.instruction.CaseWhen caseWhen = (com.sos.inventory.model.instruction.CaseWhen) instruction;
+
+                if (caseWhen.getCases() != null) {
+                    for (When when : caseWhen.getCases()) {
+                        s = handleInstruction(when.getThen().getInstructions(), jobCount, label2Job);
+                        if (s != null && !s.isEmpty()) {
+                            returnValue = s;
+                        }
+                    }
+                }
+                if (caseWhen.getElse() != null) {
+                    s = handleInstruction(caseWhen.getElse().getInstructions(), jobCount, label2Job);
                     if (s != null && !s.isEmpty()) {
                         returnValue = s;
                     }

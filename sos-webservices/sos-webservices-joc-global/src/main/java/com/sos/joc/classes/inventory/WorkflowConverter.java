@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
@@ -19,6 +20,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.job.Executable;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.InternalExecutableType;
@@ -82,6 +84,19 @@ public class WorkflowConverter {
                     }
                     if (ifElse.getElse() != null) {
                         convertInstructions(ifElse.getElse().getInstructions());
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen caseWhen = invInstruction.cast();
+                    if (caseWhen.getCases() != null) {
+                        for (When when : caseWhen.getCases()) {
+                            if (when.getThen() != null) {
+                                convertInstructions(when.getThen().getInstructions());
+                            }
+                        }
+                    }
+                    if (caseWhen.getElse() != null) {
+                        convertInstructions(caseWhen.getElse().getInstructions());
                     }
                     break;
                 case TRY:

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
@@ -29,6 +30,7 @@ import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableType;
@@ -574,6 +576,21 @@ public class JobTemplatesPropagate {
                                 withAddParams);
                     }
                     break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                setNodeArguments(when.getThen().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                        deleteUnknownNodeProps, withAddParams);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        setNodeArguments(cw.getElse().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
+                                withAddParams);
+                    }
+                    break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
@@ -664,6 +681,19 @@ public class JobTemplatesPropagate {
                     }
                     if (ie.getElse() != null) {
                         readNodeArguments(ie.getElse().getInstructions(), jobName, args);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                readNodeArguments(when.getThen().getInstructions(), jobName, args);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        readNodeArguments(cw.getElse().getInstructions(), jobName, args);
                     }
                     break;
                 case TRY:

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
@@ -18,6 +19,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
@@ -126,6 +128,19 @@ public class ReferenceValidator {
                     }
                     if (ifElse.getElse() != null) {
                         validateAddOrderInstructionArguments(ifElse.getElse().getInstructions(), orderPreparation);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen caseWhen = inst.cast();
+                    if (caseWhen.getCases() != null) {
+                        for (When when : caseWhen.getCases()) {
+                            if (when.getThen() != null) {
+                                validateAddOrderInstructionArguments(when.getThen().getInstructions(), orderPreparation);
+                            }
+                        }
+                    }
+                    if (caseWhen.getElse() != null) {
+                        validateAddOrderInstructionArguments(caseWhen.getElse().getInstructions(), orderPreparation);
                     }
                     break;
                 case TRY:

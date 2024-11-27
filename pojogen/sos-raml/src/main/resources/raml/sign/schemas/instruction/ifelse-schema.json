@@ -28,7 +28,7 @@
       "$ref": "instructions-schema.json"
     },
     "ifThens": {
-      "alias": "whens",
+      "alias": "cases",
       "type": "array",
       "minItems": 1,
       "items": {

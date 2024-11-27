@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Finish;
@@ -381,6 +382,20 @@ public class JsonConverter {
                     }
                     if (ifElse.getElse() != null) {
                         convertInstructions(controllerId, workflowName, ifElse.getElse().getInstructions(), sIfElse.getElse().getInstructions(),
+                                addOrderIndex, zoneId);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen caseWhen = invInstruction.cast();
+                    com.sos.sign.model.instruction.IfElse sCaseWhen = signInstruction.cast();
+                    if (caseWhen.getCases() != null) {
+                        for (i = 0; i < caseWhen.getCases().size(); i++) {
+                            convertInstructions(controllerId, workflowName, caseWhen.getCases().get(i).getThen().getInstructions(), sCaseWhen
+                                    .getIfThens().get(i).getThen().getInstructions(), addOrderIndex, zoneId);
+                        }
+                    }
+                    if (caseWhen.getElse() != null) {
+                        convertInstructions(controllerId, workflowName, caseWhen.getElse().getInstructions(), sCaseWhen.getElse().getInstructions(),
                                 addOrderIndex, zoneId);
                     }
                     break;

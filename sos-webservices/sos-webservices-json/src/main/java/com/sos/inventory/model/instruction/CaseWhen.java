@@ -20,7 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "whens",
+    "cases",
     "else"
 })
 public class CaseWhen
@@ -32,11 +32,11 @@ public class CaseWhen
      * (Required)
      * 
      */
-    @JsonProperty("whens")
+    @JsonProperty("cases")
     @JsonAlias({
         "ifThens"
     })
-    private List<When> whens = null;
+    private List<When> cases = null;
     /**
      * instructions
      * <p>
@@ -59,8 +59,8 @@ public class CaseWhen
      * @param _else
      * @param whens
      */
-    public CaseWhen(List<When> whens, OptionalInstructions _else) {
-        this.whens = whens;
+    public CaseWhen(List<When> cases, OptionalInstructions _else) {
+        this.cases = cases;
         this._else = _else;
     }
 
@@ -69,9 +69,9 @@ public class CaseWhen
      * (Required)
      * 
      */
-    @JsonProperty("whens")
-    public List<When> getWhens() {
-        return whens;
+    @JsonProperty("cases")
+    public List<When> getCases() {
+        return cases;
     }
 
     /**
@@ -79,9 +79,9 @@ public class CaseWhen
      * (Required)
      * 
      */
-    @JsonProperty("whens")
-    public void setWhens(List<When> whens) {
-        this.whens = whens;
+    @JsonProperty("cases")
+    public void setCases(List<When> cases) {
+        this.cases = cases;
     }
 
     /**
@@ -108,12 +108,12 @@ public class CaseWhen
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("whens", whens).append("_else", _else).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("cases", cases).append("_else", _else).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(whens).append(_else).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(cases).append(_else).toHashCode();
     }
 
     @Override
@@ -125,7 +125,7 @@ public class CaseWhen
             return false;
         }
         CaseWhen rhs = ((CaseWhen) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(whens, rhs.whens).append(_else, rhs._else).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(cases, rhs.cases).append(_else, rhs._else).isEquals();
     }
 
 }

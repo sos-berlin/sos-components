@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
@@ -28,6 +29,7 @@ import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
@@ -438,6 +440,25 @@ public class WorkflowSearcher {
                     result.add(new WorkflowInstruction<IfElse>(position, ie));
 
                     handleInstructions(result, ie.getElse().getInstructions(), position);
+                }
+                break;
+            case CASE_WHEN:
+                CaseWhen cw = in.cast();
+                if (cw.getCases() != null) {
+                    int caseIndex = 1;
+                    for (When when : cw.getCases()) {
+                        String position = getPosition(parentPosition, index, "case" + (caseIndex == 1 ? "" : "+" + caseIndex));
+                        caseIndex++;
+                        result.add(new WorkflowInstruction<CaseWhen>(position, cw));
+
+                        handleInstructions(result, when.getThen().getInstructions(), position);
+                    }
+                }
+                if (cw.getElse() != null) {
+                    String position = getPosition(parentPosition, index, "caseelse");
+                    result.add(new WorkflowInstruction<CaseWhen>(position, cw));
+
+                    handleInstructions(result, cw.getElse().getInstructions(), position);
                 }
                 break;
             case LOCK:

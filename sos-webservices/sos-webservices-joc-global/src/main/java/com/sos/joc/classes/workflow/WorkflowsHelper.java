@@ -35,6 +35,7 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
@@ -54,6 +55,7 @@ import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Parameters;
 import com.sos.inventory.model.workflow.Requirements;
@@ -667,6 +669,26 @@ public class WorkflowsHelper {
                                 stoppedPositions);
                     }
                     break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        int caseIndex = 1;
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                String cI = caseIndex == 1 ? "" : "+" + caseIndex;
+                                caseIndex++;
+                                setWorkflowPositionsAndForkListVariables(extendArray(pos, "then" + cI), when.getThen().getInstructions(),
+                                        forkListVariables, expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders,
+                                        skippedLabels, stoppedPositions);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "else"), cw.getElse().getInstructions(), forkListVariables,
+                                expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels,
+                                stoppedPositions);
+                    }
+                    break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "try"), tc.getTry().getInstructions(), forkListVariables,
@@ -792,6 +814,23 @@ public class WorkflowsHelper {
                         setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        int caseIndex = 1;
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                String cI = caseIndex == 1 ? "" : "+" + caseIndex;
+                                caseIndex++;
+                                setWorkflowPositions(extendArray(pos, "then" + cI), when.getThen().getInstructions(), mapLabelToPos,
+                                        withAllPositions);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        setWorkflowPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), mapLabelToPos, withAllPositions);
+                    }
+                    break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
@@ -887,6 +926,26 @@ public class WorkflowsHelper {
                         Object[] blockPos = extendArray(pos, "else");
                         blockPoss.add(getBlockPosition(blockPos, inst, "else", ie.getElse().getInstructions()));
                         setWorkflowBlockPositions(blockPos, ie.getElse().getInstructions(), blockPoss);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        int caseIndex = 1;
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                String cI = caseIndex == 1 ? "" : "+" + caseIndex;
+                                caseIndex++;
+                                Object[] blockPos = extendArray(pos, "then" + cI);
+                                blockPoss.add(getBlockPosition(blockPos, inst, "then" + cI, when.getThen().getInstructions()));
+                                setWorkflowBlockPositions(blockPos, when.getThen().getInstructions(), blockPoss);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        Object[] blockPos = extendArray(pos, "else");
+                        blockPoss.add(getBlockPosition(blockPos, inst, "else", cw.getElse().getInstructions()));
+                        setWorkflowBlockPositions(blockPos, cw.getElse().getInstructions(), blockPoss);
                     }
                     break;
                 case TRY:
@@ -1060,6 +1119,19 @@ public class WorkflowsHelper {
                         updateWorkflowBoardname(oldNewBoardNames, ie.getElse().getInstructions());
                     }
                     break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        cw.getCases().forEach(when -> {
+                            if (when.getThen() != null) {
+                                updateWorkflowBoardname(oldNewBoardNames, when.getThen().getInstructions());
+                            }
+                        });
+                    }
+                    if (cw.getElse() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, cw.getElse().getInstructions());
+                    }
+                    break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
@@ -1203,8 +1275,8 @@ public class WorkflowsHelper {
                     if (ie.getThen() != null) {
                         extractImplicitEnds(ie.getThen().getInstructions(), posSet, true);
                     }
-                    if (ie.getWhens() != null) {
-                        ie.getWhens().forEach(when -> {
+                    if (ie.getCases() != null) {
+                        ie.getCases().forEach(when -> {
                             if (when.getThen() != null) {
                                 extractImplicitEnds(when.getThen().getInstructions(), posSet, true);
                             }
@@ -1212,6 +1284,19 @@ public class WorkflowsHelper {
                     }
                     if (ie.getElse() != null) {
                         extractImplicitEnds(ie.getElse().getInstructions(), posSet, true);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        cw.getCases().forEach(when -> {
+                            if (when.getThen() != null) {
+                                extractImplicitEnds(when.getThen().getInstructions(), posSet, true);
+                            }
+                        });
+                    }
+                    if (cw.getElse() != null) {
+                        extractImplicitEnds(cw.getElse().getInstructions(), posSet, true);
                     }
                     break;
                 case TRY:
@@ -1715,6 +1800,23 @@ public class WorkflowsHelper {
                     }
                     if (ie.getElse() != null) {
                         if(hasBoard(boardName, ie.getElse().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                if(hasBoard(boardName, when.getThen().getInstructions())) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        if(hasBoard(boardName, cw.getElse().getInstructions())) {
                             return true;
                         }
                     }

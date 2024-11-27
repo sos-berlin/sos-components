@@ -34,6 +34,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
@@ -44,6 +45,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Branch;
@@ -1015,6 +1017,19 @@ public class OrderTags {
                     }
                     if (ie.getElse() != null) {
                         getOrderTags(tags, ie.getElse().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                getOrderTags(tags, when.getThen().getInstructions(), dbOrderTagLayer);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        getOrderTags(tags, cw.getElse().getInstructions(), dbOrderTagLayer);
                     }
                     break;
                 case TRY:

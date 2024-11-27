@@ -34,6 +34,7 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
@@ -51,6 +52,7 @@ import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.Prompt;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
@@ -879,6 +881,22 @@ public class Validator {
                                 labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     }
                     break;
+                case CASE_WHEN:
+                    CaseWhen caseWhen = inst.cast();
+                    int caseIndex = 0;
+                    for (When when : caseWhen.getCases()) {
+                        validateExpression("$." + instPosition + "predicate[" + caseIndex + "]: ", when.getPredicate());
+                        if (when.getThen() != null) {
+                            validateInstructions(when.getThen().getInstructions(), instPosition + "then[" + caseIndex + "].instructions", jobs,
+                                    orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                        }
+                        caseIndex++;
+                    }
+                    if (caseWhen.getElse() != null) {
+                        validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
+                                labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
+                    break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     if (tryCatch.getTry() != null) {
@@ -1153,6 +1171,22 @@ public class Validator {
                     }
                     if (ifElse.getElse() != null) {
                         validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
+                                labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen caseWhen = inst.cast();
+                    int caseIndex = 0;
+                    for (When when : caseWhen.getCases()) {
+                        validateExpression("$." + instPosition + "predicate[" + caseIndex + "]: ", when.getPredicate());
+                        if (when.getThen() != null) {
+                            validateInstructions(when.getThen().getInstructions(), instPosition + "then[" + caseIndex + "].instructions", jobs,
+                                    orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                        }
+                        caseIndex++;
+                    }
+                    if (caseWhen.getElse() != null) {
+                        validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
                                 labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
                     }
                     break;

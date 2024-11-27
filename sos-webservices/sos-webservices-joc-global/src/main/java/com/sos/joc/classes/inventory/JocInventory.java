@@ -143,6 +143,7 @@ public class JocInventory {
                     put(InstructionType.FORK, "classpath:/raml/inventory/schemas/instruction/forkJoin-schema.json");
                     put(InstructionType.FORKLIST, "classpath:/raml/inventory/schemas/instruction/forkList-schema.json");
                     put(InstructionType.IF, "classpath:/raml/inventory/schemas/instruction/ifelse-schema.json");
+                    put(InstructionType.CASE_WHEN, "classpath:/raml/inventory/schemas/instruction/caseWhen-schema.json");
                     put(InstructionType.LOCK, "classpath:/raml/inventory/schemas/instruction/lock-schema.json");
                     put(InstructionType.RETRY, "classpath:/raml/inventory/schemas/instruction/retryInCatch-schema.json");
                     put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");

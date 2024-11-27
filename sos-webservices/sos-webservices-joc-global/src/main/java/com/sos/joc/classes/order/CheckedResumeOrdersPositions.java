@@ -573,6 +573,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         Position p = new Position();
         p.setPosition(jPos.toList());
         p.setPositionString(jPos.toString());
+        // TODO If could be CaseWhen but Controller doesn't know a CaseWhen instruction
         p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
         //if ("Job".equals(p.getType())) { //not longer only JObs have labels
         try {
