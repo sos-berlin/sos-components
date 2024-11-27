@@ -546,12 +546,20 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
 
             agentClusters.stream().peek(a -> a.setControllerId(agentIdToControllerIdMap.get(a.getAgentId()))).forEach(a -> {
                 try {
-                    getSession().update(a);
+                    if (!agentIdToControllerIdMap.containsKey(a.getAgentId())) {
+                        getSession().delete(a); 
+                    } else if (a.getControllerId() != null) {
+                        getSession().update(a);
+                    }
                     List<DBItemInventorySubAgentClusterMember> sacms = agentClusterMembersPerClusterId.get(a.getSubAgentClusterId());
                     if (sacms != null) {
                         sacms.stream().peek(sacm -> sacm.setControllerId(a.getControllerId())).forEach(sacm -> {
                             try {
-                                getSession().update(sacm);
+                                if (!agentIdToControllerIdMap.containsKey(a.getAgentId())) {
+                                    getSession().delete(sacm);
+                                } else if (a.getControllerId() != null) {
+                                    getSession().update(sacm);
+                                }
                             } catch (SOSHibernateException e) {
                                 LOGGER.warn(e.toString());
                             }
