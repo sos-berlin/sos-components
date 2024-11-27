@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;

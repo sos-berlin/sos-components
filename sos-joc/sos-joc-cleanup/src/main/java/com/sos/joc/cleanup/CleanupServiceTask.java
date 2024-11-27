@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;

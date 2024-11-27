@@ -1,7 +1,7 @@
 package com.sos.joc.db.cleanup;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 
 public class AuditLogCleanup {

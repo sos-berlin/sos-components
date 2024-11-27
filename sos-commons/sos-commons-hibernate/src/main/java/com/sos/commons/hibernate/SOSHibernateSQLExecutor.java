@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.common.SOSBatchObject;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateSQLCommandExtractorException;

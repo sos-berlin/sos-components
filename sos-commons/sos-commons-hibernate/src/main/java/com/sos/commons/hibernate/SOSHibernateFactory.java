@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSReflection;
@@ -37,10 +38,6 @@ import com.sos.commons.util.SOSString;
 import jakarta.persistence.PersistenceException;
 
 public class SOSHibernateFactory implements Serializable {
-
-    public enum Dbms {
-        H2, MSSQL, MYSQL, ORACLE, PGSQL, UNKNOWN
-    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFactory.class);
     private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
@@ -348,11 +345,7 @@ public class SOSHibernateFactory implements Serializable {
                 }
             }
             
-            mapConfigurationProperties();
-            setDbms(configuration.getProperties());
-            updateConnectionUrlForMysqlWithMariaDriver(configuration.getProperties());
-            databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
-            mapDialect(dbms);
+            mapDeprecatedConfigurationProperties();
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
         } catch (PersistenceException e) {
@@ -368,7 +361,7 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    private void mapConfigurationProperties() {
+    private void mapDeprecatedConfigurationProperties() {
         // map deprecated
         mapDeprecatedConfigurationProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS_DEPRECATED,
                 SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS);
@@ -384,66 +377,6 @@ public class SOSHibernateFactory implements Serializable {
         if (val != null) {
             configuration.getProperties().setProperty(newName, val);
             configuration.getProperties().remove(deprecatedName);
-        }
-    }
-
-    private void mapDialect(Dbms dbms) {
-        // with Hibernate 6: Version-specific and spatial-specific dialects are deprecated
-        // simply MySQL8Dialect, SQLServer2012Dialect, SQLServer2016Dialect are still implemented
-        // so, old dialects are mapped: Example: org.hibernate.dialect.MySQLInnoDBDialect -> org.hibernate.dialect.MySQLDialect
-        if (configuration != null) {
-            String dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-            if (dialect != null) {
-                switch (dbms) {
-                case MYSQL:
-                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MySQLInnoDBDialect")) {
-                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
-                    }
-                    if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals("org.hibernate.dialect.MariaDBDialect")) {
-                        if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql")) {
-                            configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
-                        } else {
-                            if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true")) {
-                                removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                            }
-                        }
-                    }
-//                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
-//                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
-//                    }
-                    break;
-                case ORACLE:
-                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_ORACLE)) {
-                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                    }
-//                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_ORACLE);
-                    break;
-                case PGSQL:
-                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_PGSQL)) {
-                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                    }
-//                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_PGSQL);
-                    break;
-                case MSSQL:
-                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect",
-                            "org.hibernate.dialect.SQLServerDialect").contains(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT))) {
-                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                    }
-//                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect").contains(
-//                            dialect)) {
-//                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MSSQL);
-//                    }
-                    break;
-                case H2:
-                    if(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_H2)) {
-                        removeProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                    }
-//                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_H2);
-                    break;
-                default:
-                    break;
-                }
-            }
         }
     }
 
@@ -484,6 +417,19 @@ public class SOSHibernateFactory implements Serializable {
         return dbms;
     }
 
+    public static Dbms getDbms(Properties properties) {
+        Dbms dbms = Dbms.UNKNOWN;
+        String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+        if (!SOSString.isEmpty(connectionUrl)) {
+            dbms = SOSHibernate.JDBC2DBMS.entrySet().stream()
+                .filter(entry -> connectionUrl.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(Dbms.UNKNOWN);
+        }
+        return dbms;
+    }
+
     private void initClassMapping() {
         classMapping = new SOSClassList();
     }
@@ -498,6 +444,8 @@ public class SOSHibernateFactory implements Serializable {
         configure();
         setConfigurationProperties();
         configuration = configurationResolver.resolve(configuration);
+        setDbms(configuration.getProperties());
+        databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
     }
 
     private void buildSessionFactory() {
@@ -598,25 +546,6 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
     
-    private void updateConnectionUrlForMysqlWithMariaDriver(Properties properties) {
-        String driver = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS);
-        String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-        if (driver != null && !driver.isEmpty() && connectionUrl != null && !connectionUrl.isEmpty()) {
-            if(driver.toLowerCase().contains("mariadb") && connectionUrl.contains("jdbc:mysql")) {
-                if(!connectionUrl.contains("permitMysqlScheme")) {
-                    if(connectionUrl.contains("?")) {
-                        connectionUrl = connectionUrl + "&amp;permitMysqlScheme";
-                    } else {
-                        connectionUrl = connectionUrl + "?permitMysqlScheme";
-                    }
-                }
-                properties.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, connectionUrl);
-                properties.setProperty("hibernate." + SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, connectionUrl);
-            }
-        }
-        
-    }
-
     private void setDefaultConfigurationProperties() {
         if (useDefaultConfigurationProperties && defaultConfigurationProperties != null) {
             boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -687,11 +616,6 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
     
-    private void removeProperty(String key) {
-        configuration.getProperties().remove(key);
-        configuration.getStandardServiceRegistryBuilder().getSettings().remove(key);
-    }
-
     public void addClassMapping(Class<?> c) {
         classMapping.add(c);
     }

@@ -3,7 +3,7 @@ package com.sos.joc.classes.reporting;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.joc.classes.reporting.AReporting.ReportingType;
 
 public class ReportingLoader {

@@ -16,7 +16,7 @@ import java.util.stream.IntStream;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernate;
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;

@@ -1,7 +1,7 @@
 
 package com.sos.joc.classes.reporting;
 
-import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 
 public enum CSVColumns {
 

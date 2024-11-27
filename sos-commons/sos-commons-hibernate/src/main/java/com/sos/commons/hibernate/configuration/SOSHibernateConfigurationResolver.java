@@ -14,6 +14,7 @@ import org.hibernate.cfg.Configuration;
 import com.sos.commons.hibernate.configuration.resolver.ISOSHibernateConfigurationResolver;
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateCredentiaStoreResolver;
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateEncryptionResolver;
+import com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver;
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateJS7Resolver;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 
@@ -31,6 +32,8 @@ public class SOSHibernateConfigurationResolver {
         resolvers.add(new SOSHibernateJS7Resolver());
         // 3 - resolve cs:// entries
         resolvers.add(new SOSHibernateCredentiaStoreResolver());
+        // 4(last)- resolve configuration properties
+        resolvers.add(new SOSHibernateFinalPropertiesResolver());
     }
 
     public Configuration resolve(Configuration configuration) throws SOSHibernateConfigurationException {

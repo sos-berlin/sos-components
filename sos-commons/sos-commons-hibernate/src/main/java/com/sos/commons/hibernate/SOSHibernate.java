@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,11 +60,15 @@ import jakarta.persistence.Parameter;
  */
 public class SOSHibernate {
 
-    protected static final String DEFAULT_DIALECT_MYSQL = MySQLDialect.class.getName();
+    public static final String DEFAULT_DIALECT_MYSQL = MySQLDialect.class.getName();
     public static final String DEFAULT_DIALECT_ORACLE = OracleDialect.class.getName();
-    protected static final String DEFAULT_DIALECT_PGSQL = PostgreSQLDialect.class.getName();
-    protected static final String DEFAULT_DIALECT_MSSQL = SQLServerDialect.class.getName();
-    protected static final String DEFAULT_DIALECT_H2 = H2Dialect.class.getName();
+    public static final String DEFAULT_DIALECT_PGSQL = PostgreSQLDialect.class.getName();
+    public static final String DEFAULT_DIALECT_MSSQL = SQLServerDialect.class.getName();
+    public static final String DEFAULT_DIALECT_H2 = H2Dialect.class.getName();
+    public enum Dbms {
+        H2, MSSQL, MYSQL, ORACLE, PGSQL, UNKNOWN
+    }
+
 
     /** ---- JdbcSettings ------------------------------------------------------------------------------- */
     /** hibernate.connection.driver_class - The JPA-standard setting {@link #HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS} is now preferred */
@@ -138,6 +143,15 @@ public class SOSHibernate {
     public static final String HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT = "hibernate.sos.dbms_product";
 
     public static final int LIMIT_IN_CLAUSE = 1000;
+
+    public static final Map<String, Dbms> JDBC2DBMS = Map.of(
+            "jdbc:h2", Dbms.H2,
+            "jdbc:sqlserver", Dbms.MSSQL,
+            "jdbc:oracle", Dbms.ORACLE,
+            "jdbc:postgresql", Dbms.PGSQL,
+            "jdbc:mysql", Dbms.MYSQL,
+            "jdbc:mariadb", Dbms.MYSQL
+        );
 
     public static Exception findLockException(Exception cause) {
         Throwable e = cause;
