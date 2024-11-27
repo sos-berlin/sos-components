@@ -365,11 +365,13 @@ public class JsonConverter {
                 case FORK:
                     ForkJoin fj = invInstruction.cast();
                     com.sos.sign.model.instruction.ForkJoin sfj = signInstruction.cast();
-                    for (int j = 0; j < fj.getBranches().size(); j++) {
-                        Branch invBranch = fj.getBranches().get(j);
-                        if (invBranch.getWorkflow() != null) {
-                            convertInstructions(controllerId, workflowName, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j)
-                                    .getWorkflow().getInstructions(), addOrderIndex, zoneId);
+                    if (fj.getBranches() != null) {
+                        for (int j = 0; j < fj.getBranches().size(); j++) {
+                            Branch invBranch = fj.getBranches().get(j);
+                            if (invBranch.getWorkflow() != null) {
+                                convertInstructions(controllerId, workflowName, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j)
+                                        .getWorkflow().getInstructions(), addOrderIndex, zoneId);
+                            }
                         }
                     }
                     break;

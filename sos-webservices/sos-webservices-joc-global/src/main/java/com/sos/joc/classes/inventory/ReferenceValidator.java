@@ -109,9 +109,11 @@ public class ReferenceValidator {
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin fj = inst.cast();
-                    for (Branch branch : fj.getBranches()) {
-                        if (branch.getWorkflow() != null) {
-                            validateAddOrderInstructionArguments(branch.getWorkflow().getInstructions(), orderPreparation);
+                    if (fj.getBranches() != null) {
+                        for (Branch branch : fj.getBranches()) {
+                            if (branch.getWorkflow() != null) {
+                                validateAddOrderInstructionArguments(branch.getWorkflow().getInstructions(), orderPreparation);
+                            }
                         }
                     }
                     break;

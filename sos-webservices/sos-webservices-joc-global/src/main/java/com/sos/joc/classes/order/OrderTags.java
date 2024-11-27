@@ -998,9 +998,11 @@ public class OrderTags {
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
-                    for (Branch b : f.getBranches()) {
-                        if (b.getWorkflow() != null) {
-                            getOrderTags(tags, b.getWorkflow().getInstructions(), dbOrderTagLayer);
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            if (b.getWorkflow() != null) {
+                                getOrderTags(tags, b.getWorkflow().getInstructions(), dbOrderTagLayer);
+                            }
                         }
                     }
                     break;

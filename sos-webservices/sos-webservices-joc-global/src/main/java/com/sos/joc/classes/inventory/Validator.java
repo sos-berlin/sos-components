@@ -809,46 +809,47 @@ public class Validator {
                     
                     Map<String, String> resultKeys = new HashMap<>();
                     List<String> branchIds = new ArrayList<>();
-                    
-                    for (Branch branch : fj.getBranches()) {
-                        String branchId = branch.getId();
-                        if (branchId != null) {
-                            int otherBranchIndex = branchIds.indexOf(branchId);
-                            if (otherBranchIndex > -1) {
-                                throw new JocConfigurationException("$." + branchPosition + "[" + branchIndex + "].id: duplicate branch id with $."
-                                        + branchPosition + "[" + otherBranchIndex + "].id");
-                            } else {
-                                branchIds.add(branchId);
+                    if (fj.getBranches() != null) {
+                        for (Branch branch : fj.getBranches()) {
+                            String branchId = branch.getId();
+                            if (branchId != null) {
+                                int otherBranchIndex = branchIds.indexOf(branchId);
+                                if (otherBranchIndex > -1) {
+                                    throw new JocConfigurationException("$." + branchPosition + "[" + branchIndex
+                                            + "].id: duplicate branch id with $." + branchPosition + "[" + otherBranchIndex + "].id");
+                                } else {
+                                    branchIds.add(branchId);
+                                }
                             }
-                        }
-                        BranchWorkflow bw = branch.getWorkflow();
-                        if (bw != null) {
-                            if (bw.getResult() != null && bw.getResult().getAdditionalProperties() != null) {
-                                String branchInstPosition = branchPosition + "[" + branchIndex + "].workflow";
-                                for (Map.Entry<String, String> entry : bw.getResult().getAdditionalProperties().entrySet()) {
-                                    validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
-                                    if (entry.getKey() != null) {
-                                        if (resultKeys.containsKey(entry.getKey())) {
-                                            throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry
-                                                    .getKey() + "': already used in " + resultKeys.get(entry.getKey()));
-                                        } else {
-                                            resultKeys.put(entry.getKey(), branchInstPosition);
+                            BranchWorkflow bw = branch.getWorkflow();
+                            if (bw != null) {
+                                if (bw.getResult() != null && bw.getResult().getAdditionalProperties() != null) {
+                                    String branchInstPosition = branchPosition + "[" + branchIndex + "].workflow";
+                                    for (Map.Entry<String, String> entry : bw.getResult().getAdditionalProperties().entrySet()) {
+                                        validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
+                                        if (entry.getKey() != null) {
+                                            if (resultKeys.containsKey(entry.getKey())) {
+                                                throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry
+                                                        .getKey() + "': already used in " + resultKeys.get(entry.getKey()));
+                                            } else {
+                                                resultKeys.put(entry.getKey(), branchInstPosition);
+                                            }
                                         }
                                     }
                                 }
                             }
+                            branchIndex++;
                         }
-                        branchIndex++;
-                    }
-                    resultKeys = null;
-                    branchIndex = 0;
-                    for (Branch branch : fj.getBranches()) {
-                        String branchInstPosition = branchPosition + "[" + branchIndex + "].";
-                        if (branch.getWorkflow() != null) {
-                            validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
-                                    orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                        resultKeys = null;
+                        branchIndex = 0;
+                        for (Branch branch : fj.getBranches()) {
+                            String branchInstPosition = branchPosition + "[" + branchIndex + "].";
+                            if (branch.getWorkflow() != null) {
+                                validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
+                                        orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                            }
+                            branchIndex++;
                         }
-                        branchIndex++;
                     }
                     break;
                 case FORKLIST:
@@ -1102,46 +1103,47 @@ public class Validator {
                     
                     Map<String, String> resultKeys = new HashMap<>();
                     List<String> branchIds = new ArrayList<>();
-                    
-                    for (Branch branch : fj.getBranches()) {
-                        String branchId = branch.getId();
-                        if (branchId != null) {
-                            int otherBranchIndex = branchIds.indexOf(branchId);
-                            if (otherBranchIndex > -1) {
-                                throw new JocConfigurationException("$." + branchPosition + "[" + branchIndex + "].id: duplicate branch id with $."
-                                        + branchPosition + "[" + otherBranchIndex + "].id");
-                            } else {
-                                branchIds.add(branchId);
+                    if (fj.getBranches() != null) {
+                        for (Branch branch : fj.getBranches()) {
+                            String branchId = branch.getId();
+                            if (branchId != null) {
+                                int otherBranchIndex = branchIds.indexOf(branchId);
+                                if (otherBranchIndex > -1) {
+                                    throw new JocConfigurationException("$." + branchPosition + "[" + branchIndex
+                                            + "].id: duplicate branch id with $." + branchPosition + "[" + otherBranchIndex + "].id");
+                                } else {
+                                    branchIds.add(branchId);
+                                }
                             }
-                        }
-                        BranchWorkflow bw = branch.getWorkflow();
-                        if (bw != null) {
-                            if (bw.getResult() != null && bw.getResult().getAdditionalProperties() != null) {
-                                String branchInstPosition = branchPosition + "[" + branchIndex + "].workflow";
-                                for (Map.Entry<String, String> entry : bw.getResult().getAdditionalProperties().entrySet()) {
-                                    validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
-                                    if (entry.getKey() != null) {
-                                        if (resultKeys.containsKey(entry.getKey())) {
-                                            throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry
-                                                    .getKey() + "': already used in " + resultKeys.get(entry.getKey()));
-                                        } else {
-                                            resultKeys.put(entry.getKey(), branchInstPosition);
+                            BranchWorkflow bw = branch.getWorkflow();
+                            if (bw != null) {
+                                if (bw.getResult() != null && bw.getResult().getAdditionalProperties() != null) {
+                                    String branchInstPosition = branchPosition + "[" + branchIndex + "].workflow";
+                                    for (Map.Entry<String, String> entry : bw.getResult().getAdditionalProperties().entrySet()) {
+                                        validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
+                                        if (entry.getKey() != null) {
+                                            if (resultKeys.containsKey(entry.getKey())) {
+                                                throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry
+                                                        .getKey() + "': already used in " + resultKeys.get(entry.getKey()));
+                                            } else {
+                                                resultKeys.put(entry.getKey(), branchInstPosition);
+                                            }
                                         }
                                     }
                                 }
                             }
+                            branchIndex++;
                         }
-                        branchIndex++;
-                    }
-                    resultKeys = null;
-                    branchIndex = 0;
-                    for (Branch branch : fj.getBranches()) {
-                        String branchInstPosition = branchPosition + "[" + branchIndex + "].";
-                        if (branch.getWorkflow() != null) {
-                            validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
-                                    orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                        resultKeys = null;
+                        branchIndex = 0;
+                        for (Branch branch : fj.getBranches()) {
+                            String branchInstPosition = branchPosition + "[" + branchIndex + "].";
+                            if (branch.getWorkflow() != null) {
+                                validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
+                                        orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                            }
+                            branchIndex++;
                         }
-                        branchIndex++;
                     }
                     break;
                 case FORKLIST:

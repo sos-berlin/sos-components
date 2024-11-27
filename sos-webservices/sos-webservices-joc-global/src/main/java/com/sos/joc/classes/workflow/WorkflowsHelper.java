@@ -607,15 +607,17 @@ public class WorkflowsHelper {
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
-                    for (Branch b : f.getBranches()) {
-                        if (b.getWorkflow().getInstructions() != null) {
-                            b.getWorkflow().getInstructions().add(createImplicitEndInstruction());
-                        } else {
-                            b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            if (b.getWorkflow().getInstructions() != null) {
+                                b.getWorkflow().getInstructions().add(createImplicitEndInstruction());
+                            } else {
+                                b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+                            }
+                            setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(),
+                                    forkListVariables, expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders,
+                                    skippedLabels, stoppedPositions);
                         }
-                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(),
-                                forkListVariables, expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders,
-                                skippedLabels, stoppedPositions);
                     }
                     break;
                 case FORKLIST:
@@ -1098,9 +1100,11 @@ public class WorkflowsHelper {
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
-                    for (Branch b : f.getBranches()) {
-                        if (b.getWorkflow() != null) {
-                            updateWorkflowBoardname(oldNewBoardNames, b.getWorkflow().getInstructions());
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            if (b.getWorkflow() != null) {
+                                updateWorkflowBoardname(oldNewBoardNames, b.getWorkflow().getInstructions());
+                            }
                         }
                     }
                     break;
@@ -1262,8 +1266,10 @@ public class WorkflowsHelper {
                     break;
                 case FORK:
                     ForkJoin f = inst.cast();
-                    for (Branch b : f.getBranches()) {
-                        extractImplicitEnds(b.getWorkflow().getInstructions(), posSet, false);
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            extractImplicitEnds(b.getWorkflow().getInstructions(), posSet, false);
+                        }
                     }
                     break;
                 case FORKLIST:
@@ -1775,10 +1781,12 @@ public class WorkflowsHelper {
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
-                    for (Branch b : f.getBranches()) {
-                        if (b.getWorkflow() != null) {
-                            if(hasBoard(boardName, b.getWorkflow().getInstructions())) {
-                                return true;
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            if (b.getWorkflow() != null) {
+                                if (hasBoard(boardName, b.getWorkflow().getInstructions())) {
+                                    return true;
+                                }
                             }
                         }
                     }
