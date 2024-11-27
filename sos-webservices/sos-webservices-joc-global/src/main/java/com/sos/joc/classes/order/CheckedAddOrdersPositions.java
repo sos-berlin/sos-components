@@ -16,6 +16,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -78,9 +79,11 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         
 //        JPosition pos0 = JPosition.apply(js7.data.workflow.position.Position.First());
         
+        List<Instruction> insts = getInstructions(w, controllerId);
+        
         setWorkflowId(workflowId);
-        setPositions(getPositions(JBranchPath.empty(), w));
-        setBlockPositions(getBlockPositions(w, controllerId));
+        setPositions(getPositions(JBranchPath.empty(), w, WorkflowsHelper.getCaseWhenPositions(insts)));
+        setBlockPositions(getBlockPositions(insts));
 
         setDeliveryDate(Date.from(Instant.now()));
         setSurveyDate(Date.from(currentState.instant()));
@@ -89,18 +92,18 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
-    private static Set<Position> getPositions(JBranchPath parentFrom, JWorkflow w) {
+    private static Set<Position> getPositions(JBranchPath parentFrom, JWorkflow w, Set<String> caseWhenPositions) {
         Set<Position> pos = new LinkedHashSet<>();
         JPosition from = getFirstPositionOfBranch(parentFrom);
         w.reachablePositions(from).stream().forEachOrdered(jPos -> {
             if (isReachable(jPos, parentFrom)) {
-                Position p = createPosition(jPos, w.asScala());
+                Position p = createPosition(jPos, w.asScala(), caseWhenPositions);
                 pos.add(p);
             }
         });
         
         if (pos.isEmpty()) {
-            Position p = createPosition(from, w.asScala());
+            Position p = createPosition(from, w.asScala(), caseWhenPositions);
             pos.add(p);
         }
         return pos;
@@ -119,8 +122,8 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
-    private static Set<Position> getPositions(List<Object> fromBranch, JWorkflow w) {
-        return getPositions(JBranchPath.fromList(fromBranch).get(), w);
+    private static Set<Position> getPositions(List<Object> fromBranch, JWorkflow w, Set<String> caseWhenPositions) {
+        return getPositions(JBranchPath.fromList(fromBranch).get(), w, caseWhenPositions);
     }
     
     @JsonIgnore
@@ -137,6 +140,11 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     @JsonIgnore
     public static Set<BlockPosition> getBlockPositions(JWorkflow workflow, String controllerId) throws IOException {
         return WorkflowsHelper.getWorkflowBlockPositions(getInstructions(workflow, controllerId));
+    }
+    
+    @JsonIgnore
+    public static Set<BlockPosition> getBlockPositions(List<Instruction> insts) throws IOException {
+        return WorkflowsHelper.getWorkflowBlockPositions(insts);
     }
     
     private static List<Instruction> getInstructions(JWorkflow workflow, String controllerId) throws IOException {
@@ -189,19 +197,24 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         return JPosition.fromList(posAsList.subList(parentPos.toList().size(), posAsList.size())).getOrNull();
     }
     
-    private static Position createPosition(JPosition jPos, Workflow w) {
+    private static Position createPosition(JPosition jPos, Workflow w, Set<String> caseWhenPositions) {
         Position p = new Position();
         p.setPosition(jPos.toList());
         p.setPositionString(jPos.toString());
-        // TODO If could be CaseWhen but Controller doesn't know a CaseWhen instruction
-        p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
-        if ("Job".equals(p.getType())) {
-            try {
-                p.setLabel(w.labeledInstruction(jPos.asScala()).toOption().get().labelString().trim().replaceFirst(":$", ""));
-            } catch (Throwable e) {
-                //
-            }
+        // If could be CaseWhen but Controller doesn't know a CaseWhen instruction
+        if (caseWhenPositions != null && caseWhenPositions.contains(jPos.toString())) {
+            p.setType(InstructionType.CASE_WHEN.value());
+        } else {
+            p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
         }
+        //if ("Job".equals(p.getType())) { //not longer only Jobs have labels
+        try {
+            p.setLabel(w.labeledInstruction(jPos.asScala()).toOption().map(l -> l.labelString().trim().replaceFirst(":$", "")).filter(s -> !s
+                    .isBlank()).getOrElse(null));
+        } catch (Throwable e) {
+            //
+        }
+        //}
         return p;
     }
 

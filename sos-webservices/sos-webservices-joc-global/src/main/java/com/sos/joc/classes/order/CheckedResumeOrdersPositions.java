@@ -23,15 +23,23 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationFilter;
+import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -111,10 +119,11 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             
             JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
             List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
-            //List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
             Set<String> implicitEnds = WorkflowsHelper.extractDisallowedImplicitEnds(instructions);
 
             setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
+            
+            Set<String> caseWhenPositions = WorkflowsHelper.getCaseWhenPositions(getInstructions(w, currentState.asScala().controllerId().string()));
 
             final Map<String, Integer> counterPerPos = new HashMap<>();
             final Set<Position> pos = new LinkedHashSet<>();
@@ -125,7 +134,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                 orderIds.add(o.id().string());
                 //jPositions.add(JPosition.apply(o.asScala().position()));
                 w.reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
-                    Position p = createPosition(jPos, w.asScala());
+                    Position p = createPosition(jPos, w.asScala(), caseWhenPositions);
                     //positionsWithImplicitEnds.add(p);
                     if (!implicitEnds.contains(p.getPositionString())) {
                         pos.add(p);
@@ -185,14 +194,15 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             }).readValue(node.get("orderPreparation"));
         }
         
-        // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
         Set<String> implicitEnds = WorkflowsHelper.extractDisallowedImplicitEnds(instructions);
 
         setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
+        
+        Set<String> caseWhenPositions = WorkflowsHelper.getCaseWhenPositions(getInstructions(w, currentState.asScala().controllerId().string()));
 
         final Set<Position> pos = new LinkedHashSet<>();
         w.reachablePositions(jOrder.workflowPosition().position()).stream().forEachOrdered(jPos -> {
-            Position p = createPosition(jPos, w.asScala());
+            Position p = createPosition(jPos, w.asScala(), caseWhenPositions);
             boolean notImplicitEnd = !implicitEnds.contains(p.getPositionString());
             if (notImplicitEnd || jOrder.workflowPosition().position().toString().equals(jPos.toString())) {
                 positionsWithImplicitEnds.add(p);
@@ -210,7 +220,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         currentOrderPosition = JPosition.apply(jOrder.asScala().position());
         currentWorkflowPosition = orderPositionToWorkflowPosition(currentOrderPosition);
         if (pos.isEmpty()) {
-            Position p = createPosition(currentWorkflowPosition, w.asScala());
+            Position p = createPosition(currentWorkflowPosition, w.asScala(), caseWhenPositions);
             pos.add(p);
             // TODO + ImplicitEnd of the Order's scope
             setVariablesNotSettable(true);
@@ -569,12 +579,16 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                 .collect(Collectors.toCollection(LinkedList::new))).get();
     }
     
-    private static Position createPosition(JPosition jPos, Workflow w) {
+    private static Position createPosition(JPosition jPos, Workflow w, Set<String> caseWhenPositions) {
         Position p = new Position();
         p.setPosition(jPos.toList());
         p.setPositionString(jPos.toString());
-        // TODO If could be CaseWhen but Controller doesn't know a CaseWhen instruction
-        p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
+        // If could be CaseWhen but Controller doesn't know a CaseWhen instruction
+        if (caseWhenPositions != null && caseWhenPositions.contains(jPos.toString())) {
+            p.setType(InstructionType.CASE_WHEN.value());
+        } else {
+            p.setType(w.instruction(jPos.asScala()).instructionName().replace("Execute.Named", "Job"));
+        }
         //if ("Job".equals(p.getType())) { //not longer only JObs have labels
         try {
             p.setLabel(w.labeledInstruction(jPos.asScala()).toOption().map(l -> l.labelString().trim().replaceFirst(":$", "")).filter(s -> !s
@@ -620,6 +634,26 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             return Optional.empty();
         }
         return Optional.of(JPosition.fromList(curPosition).get());
+    }
+    
+    private static List<Instruction> getInstructions(JWorkflow workflow, String controllerId) throws IOException {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection("./orders/resume/positions");
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+            DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
+            dbFilter.setControllerId(controllerId);
+            dbFilter.setWorkflowIds(Collections.singleton(new WorkflowId(workflow.id().path().string(), workflow.id().versionId().string())));
+            dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+            List<DeployedContent> dbWorkflows = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
+            if (dbWorkflows != null && !dbWorkflows.isEmpty() && dbWorkflows.get(0).getContent() != null) {
+                return JocInventory.workflowContent2Workflow(dbWorkflows.get(0).getContent()).getInstructions();
+            } else {
+                throw new DBMissingDataException("Couldn't find workflow '" + workflow.id().path().string() + "' as deployed object in database");
+            }
+        } finally {
+            Globals.disconnect(connection);
+        }
     }
 
 }

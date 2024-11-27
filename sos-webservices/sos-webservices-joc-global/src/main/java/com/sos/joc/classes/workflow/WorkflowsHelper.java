@@ -875,7 +875,7 @@ public class WorkflowsHelper {
     
     public static Set<BlockPosition> getWorkflowBlockPositions(List<Instruction> insts) {
         Object[] parentPosition = {};
-        Set<BlockPosition> blockPoss = new HashSet<>();
+        Set<BlockPosition> blockPoss = new LinkedHashSet<>();
         setWorkflowBlockPositions(parentPosition, insts, blockPoss);
         return blockPoss;
     }
@@ -1058,6 +1058,22 @@ public class WorkflowsHelper {
                     }
                     // if (ie.getElse() != null) {
                     // setWorkflowAddOrderPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), positions);
+                    // }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        int caseIndex = 1;
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                String cI = caseIndex == 1 ? "" : "+" + caseIndex;
+                                caseIndex++;
+                                setWorkflowAddOrderPositions(extendArray(pos, "then" + cI), depth, when.getThen().getInstructions(), positions);
+                            }
+                        }
+                    }
+                    // if (cw.getElse() != null) {
+                    // setWorkflowAddOrderPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), positions);
                     // }
                     break;
                 case TRY:
@@ -1921,6 +1937,110 @@ public class WorkflowsHelper {
             }
         }
         return false;
+    }
+    
+    public static Set<String> getCaseWhenPositions(List<Instruction> insts) {
+        Object[] parentPosition = {};
+        Set<String> poss = new HashSet<>();
+        setCaseWhenPositions(parentPosition, insts, poss);
+        return poss;
+    }
+    
+    private static void setCaseWhenPositions(Object[] parentPosition, List<Instruction> insts, Set<String> poss) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Object[] pos = extendArray(parentPosition, i);
+                pos[parentPosition.length] = i;
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            if (b.getWorkflow().getInstructions() != null) {
+                                setCaseWhenPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), poss);
+                            }
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        if (fl.getWorkflow().getInstructions() != null) {
+                            setCaseWhenPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), poss);
+                        }
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = inst.cast();
+                    if (cn.getSubworkflow() != null) {
+                        setCaseWhenPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions(), poss);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        setCaseWhenPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), poss);
+                    }
+                    if (ie.getElse() != null) {
+                        setCaseWhenPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), poss);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    poss.add(getJPositionString(Arrays.asList(pos)));
+                    if (cw.getCases() != null) {
+                        int caseIndex = 1;
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                String cI = caseIndex == 1 ? "" : "+" + caseIndex;
+                                caseIndex++;
+                                setCaseWhenPositions(extendArray(pos, "then" + cI), when.getThen().getInstructions(), poss);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        setCaseWhenPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), poss);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        setCaseWhenPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), poss);
+                    }
+                    if (tc.getCatch() != null) {
+                        setCaseWhenPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), poss);
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        setCaseWhenPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), poss);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        setCaseWhenPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), poss);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent sticky = inst.cast();
+                    if (sticky.getSubworkflow() != null) {
+                        setCaseWhenPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(), poss);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        setCaseWhenPositions(extendArray(pos, "options"), opts.getBlock().getInstructions(), poss);
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
     }
     
 //    public static Optional<NamedJob> getFirstJob(Instruction firstInst) {
