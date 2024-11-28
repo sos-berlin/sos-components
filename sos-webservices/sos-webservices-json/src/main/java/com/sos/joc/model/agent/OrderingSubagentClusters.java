@@ -17,11 +17,20 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "subagentClusterId",
     "predecessorSubagentClusterId"
 })
 public class OrderingSubagentClusters {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * string without < and >
      * <p>
@@ -39,6 +48,28 @@ public class OrderingSubagentClusters {
      */
     @JsonProperty("predecessorSubagentClusterId")
     private String predecessorSubagentClusterId;
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * string without < and >
@@ -88,12 +119,12 @@ public class OrderingSubagentClusters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("subagentClusterId", subagentClusterId).append("predecessorSubagentClusterId", predecessorSubagentClusterId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("subagentClusterId", subagentClusterId).append("predecessorSubagentClusterId", predecessorSubagentClusterId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(predecessorSubagentClusterId).append(subagentClusterId).toHashCode();
+        return new HashCodeBuilder().append(predecessorSubagentClusterId).append(subagentClusterId).append(controllerId).toHashCode();
     }
 
     @Override
@@ -105,7 +136,7 @@ public class OrderingSubagentClusters {
             return false;
         }
         OrderingSubagentClusters rhs = ((OrderingSubagentClusters) other);
-        return new EqualsBuilder().append(predecessorSubagentClusterId, rhs.predecessorSubagentClusterId).append(subagentClusterId, rhs.subagentClusterId).isEquals();
+        return new EqualsBuilder().append(predecessorSubagentClusterId, rhs.predecessorSubagentClusterId).append(subagentClusterId, rhs.subagentClusterId).append(controllerId, rhs.controllerId).isEquals();
     }
 
 }
