@@ -42,7 +42,6 @@ import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
 import js7.data.subagent.SubagentId;
-import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
@@ -92,8 +91,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             }
             if (subAgentsMap.containsKey(true)) {
                 List<SubAgentItem> directors = dbLayer.getDirectorSubAgentIdsByControllerId(controllerId, subAgentsMap.get(true));
-                
-                // TODO check which director is active instead SubAgentItem::isPrimaryDirector 
+
                 directors.parallelStream().filter(SubAgentItem::isPrimaryDirector).findAny().ifPresent(s -> {
                     throw new JocBadRequestException("A primary director ('" + s.getSubAgentId()
                             + "') cannot be deleted. Change the primary director or delete the whole Agent cluster.");
@@ -104,12 +102,10 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                 
                 // if secondary director will be deleted then change the AgentRef settings in that way that only the primary is specified.
                 // and add to delete command
-                proxy.currentState().pathToAgentRef().get(AgentPath.of("")).asScala().processLimit();
-                //JAgentRef.of(null, null, null)
-                subAgents.addAll(directors.stream().collect(Collectors.groupingBy(SubAgentItem::getAgentId))
-                        .values().stream().filter(l -> l.size() == 2).flatMap(List::stream).filter(SubAgentItem::isPrimaryDirector).map(
-                                s -> JAgentRef.of(AgentPath.of(s.getAgentId()), SubagentId.of(s.getSubAgentId()))).map(
-                                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
+//                subAgents.addAll(directors.stream().collect(Collectors.groupingBy(SubAgentItem::getAgentId))
+//                        .values().stream().filter(l -> l.size() == 2).flatMap(List::stream).filter(SubAgentItem::isPrimaryDirector).map(
+//                                s -> JAgentRef.of(AgentPath.of(s.getAgentId()), SubagentId.of(s.getSubAgentId()))).map(
+//                                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
 
                 proxy.api().updateItems(Flux.fromIterable(subAgents)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
