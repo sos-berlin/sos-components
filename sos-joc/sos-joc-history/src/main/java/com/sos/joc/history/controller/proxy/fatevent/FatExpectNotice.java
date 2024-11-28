@@ -2,13 +2,15 @@ package com.sos.joc.history.controller.proxy.fatevent;
 
 import com.sos.commons.util.SOSString;
 
+import js7.data.board.NoticeId;
+
 public class FatExpectNotice {
 
     private final String noticeId;
     private final String boardPath;
 
-    public FatExpectNotice(String noticeId, String boardPath) {
-        this.noticeId = noticeId;
+    public FatExpectNotice(NoticeId noticeId, String boardPath) {
+        this.noticeId = noticeId.noticeKey().string();
         this.boardPath = boardPath;
     }
 

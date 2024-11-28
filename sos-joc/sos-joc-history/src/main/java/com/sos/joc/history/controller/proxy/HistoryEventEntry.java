@@ -499,7 +499,7 @@ public class HistoryEventEntry {
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
                 for (JExpectedNotice en : l) {
-                    r.add(new FatExpectNotice(en.noticeId().string(), en.boardPath().string()));
+                    r.add(new FatExpectNotice(en.noticeId(), en.boardPath().string()));
                 }
             }
             return r;
@@ -511,7 +511,7 @@ public class HistoryEventEntry {
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
                 for (JExpectedNotice en : l) {
-                    r.add(new FatExpectNotice(en.noticeId().string(), en.boardPath().string()));
+                    r.add(new FatExpectNotice(en.noticeId(), en.boardPath().string()));
                 }
             }
             return r;

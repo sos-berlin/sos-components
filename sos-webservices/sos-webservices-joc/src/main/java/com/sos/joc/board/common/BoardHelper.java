@@ -137,9 +137,9 @@ public class BoardHelper {
 
             JavaConverters.asJava(bs.notices()).forEach(n -> {
                 Notice notice = new Notice();
-                notice.setId(n.id().string());
-                if (n.endOfLife() != null) {
-                    notice.setEndOfLife(Date.from(Instant.ofEpochMilli(n.endOfLife().toEpochMilli())));
+                notice.setId(n.id().noticeKey().string());
+                if (n.endOfLife().isDefined()) {
+                    notice.setEndOfLife(Date.from(Instant.ofEpochMilli(n.endOfLife().get().toEpochMilli())));
                 }
                 notice.setState(getState(NoticeStateText.POSTED));
                 notice.setExpectingOrders(null);

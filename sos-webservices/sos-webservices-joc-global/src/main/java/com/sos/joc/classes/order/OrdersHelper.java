@@ -721,7 +721,7 @@ public class OrdersHelper {
         if ("ExpectingNotices".equals(oItem.getState().getTYPE())) {
             if (controllerState != null) {
                 return controllerState.orderToStillExpectedNotices(orderId).stream().map(n -> new ExpectedNotice(n.boardPath().string(), n.noticeId()
-                        .string())).collect(Collectors.toList());
+                        .noticeKey().string())).collect(Collectors.toList());
             } else {
                 return oItem.getState().getExpected();
             }

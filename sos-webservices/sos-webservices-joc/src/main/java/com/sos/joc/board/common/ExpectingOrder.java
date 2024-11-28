@@ -47,7 +47,7 @@ public class ExpectingOrder {
     }
     
     public String getNoticeId() {
-        return noticeId.string();
+        return noticeId.noticeKey().string();
     }
     
 }

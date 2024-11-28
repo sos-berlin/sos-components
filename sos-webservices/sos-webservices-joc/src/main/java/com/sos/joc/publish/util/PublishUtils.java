@@ -133,7 +133,7 @@ import js7.data.board.BoardPath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
-import js7.data_for_java.board.JBoard;
+import js7.data_for_java.board.JGlobalBoard;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
@@ -1723,7 +1723,7 @@ public abstract class PublishUtils {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }
 
-    public static JBoard getJBoard(Board board) {
+    public static JGlobalBoard getJBoard(Board board) {
         // JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
         JExpression toNoticeExpression = null;
         JExpression readingOrderToNoticeIdExpression = null;
@@ -1743,7 +1743,7 @@ public abstract class PublishUtils {
         if (board.getEndOfLife() != null) {
             endOfLifeExpression = getOrThrowEither(JExpression.parse(board.getEndOfLife()));
         }
-        return JBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
+        return JGlobalBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {

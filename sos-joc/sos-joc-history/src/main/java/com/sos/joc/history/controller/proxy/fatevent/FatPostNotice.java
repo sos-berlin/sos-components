@@ -9,6 +9,7 @@ import js7.base.time.Timestamp;
 import js7.data.board.BoardPath;
 import js7.data.board.Notice;
 import js7.data.board.NoticeId;
+import scala.Option;
 
 public class FatPostNotice {
 
@@ -26,7 +27,7 @@ public class FatPostNotice {
 
     private void setNoticeId(NoticeId nId) {
         if (nId != null) {
-            noticeId = nId.string();
+            noticeId = nId.noticeKey().string();
         }
     }
 
@@ -36,8 +37,10 @@ public class FatPostNotice {
         }
     }
 
-    private void setEndOfLife(Timestamp t) {
-        endOfLife = HistoryEventEntry.getDate(t);
+    private void setEndOfLife(Option<Timestamp> t) {
+        if (t.isDefined()) {
+            endOfLife = HistoryEventEntry.getDate(t.get());
+        }
     }
 
     public String getNoticeId() {
