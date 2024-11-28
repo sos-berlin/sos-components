@@ -32,13 +32,23 @@ import jakarta.ws.rs.Path;
 @Path("agents")
 public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore {
 
-    private static final String API_CALL = "./agents/inventory/cluster/subagents/store";
+    private static final String API_CALL_STORE = "./agents/inventory/cluster/subagents/store";
+    private static final String API_CALL_ADD = "./agents/inventory/cluster/subagents/add";
     
     @Override
     public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
+        return storeOrAdd(API_CALL_STORE, accessToken, filterBytes);
+    }
+    
+    @Override
+    public JOCDefaultResponse add(String accessToken, byte[] filterBytes) {
+        return storeOrAdd(API_CALL_ADD, accessToken, filterBytes);
+    }
+    
+    private JOCDefaultResponse storeOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(action, filterBytes, accessToken);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -55,7 +65,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
 
             storeAuditLog(subAgentsParam.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            connection = Globals.createSosHibernateStatelessConnection(action);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);

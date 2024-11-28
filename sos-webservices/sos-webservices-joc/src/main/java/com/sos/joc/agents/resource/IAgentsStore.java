@@ -27,4 +27,16 @@ public interface IAgentsStore {
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse clusterInventoryStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("inventory/add")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse inventoryAdd(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("inventory/cluster/add")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse clusterInventoryAdd(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

@@ -37,17 +37,29 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
     private static final String API_INVENTORY_STORE = "./agents/inventory/store";
     private static final String API_CLUSTER_INVENTORY_STORE = "./agents/inventory/cluster/store";
+    private static final String API_INVENTORY_ADD = "./agents/inventory/add";
+    private static final String API_CLUSTER_INVENTORY_ADD = "./agents/inventory/cluster/add";
+
 
     @Override
-    public JOCDefaultResponse inventoryStore(String accessToken, byte[] filterBytes) {
-        return store(accessToken, filterBytes);
+    public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
+        return inventoryStore(accessToken, filterBytes);
     }
     
     @Override
-    public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse inventoryStore(String accessToken, byte[] filterBytes) {
+        return inventoryStoreOrAdd(API_INVENTORY_STORE, accessToken, filterBytes);
+    }
+    
+    @Override
+    public JOCDefaultResponse inventoryAdd(String accessToken, byte[] filterBytes) {
+        return inventoryStoreOrAdd(API_INVENTORY_ADD, accessToken, filterBytes);
+    }
+    
+    private JOCDefaultResponse inventoryStoreOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_INVENTORY_STORE, filterBytes, accessToken);
+            initLogging(action, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
@@ -81,7 +93,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_INVENTORY_STORE);
+            connection = Globals.createSosHibernateStatelessConnection(action);
             connection.setAutoCommit(false);
             Globals.beginTransaction(connection);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
@@ -107,9 +119,18 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
     
     @Override
     public JOCDefaultResponse clusterInventoryStore(String accessToken, byte[] filterBytes) {
+        return clusterInventoryStoreOrAdd(API_CLUSTER_INVENTORY_STORE, accessToken, filterBytes);
+    }
+    
+    @Override
+    public JOCDefaultResponse clusterInventoryAdd(String accessToken, byte[] filterBytes) {
+        return clusterInventoryStoreOrAdd(API_CLUSTER_INVENTORY_ADD, accessToken, filterBytes);
+    }
+    
+    private JOCDefaultResponse clusterInventoryStoreOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CLUSTER_INVENTORY_STORE, filterBytes, accessToken);
+            initLogging(action, filterBytes, accessToken);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -153,7 +174,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CLUSTER_INVENTORY_STORE);
+            connection = Globals.createSosHibernateStatelessConnection(action);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
