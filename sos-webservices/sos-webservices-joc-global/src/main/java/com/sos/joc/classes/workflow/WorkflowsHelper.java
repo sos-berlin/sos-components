@@ -1056,9 +1056,9 @@ public class WorkflowsHelper {
                     if (ie.getThen() != null) {
                         setWorkflowAddOrderPositions(extendArray(pos, "then"), depth, ie.getThen().getInstructions(), positions);
                     }
-                    // if (ie.getElse() != null) {
-                    // setWorkflowAddOrderPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), positions);
-                    // }
+                    if (ie.getElse() != null) {
+                        setWorkflowAddOrderPositions(extendArray(pos, "else"), depth, ie.getElse().getInstructions(), positions);
+                    }
                     break;
                 case CASE_WHEN:
                     CaseWhen cw = inst.cast();
@@ -1072,9 +1072,9 @@ public class WorkflowsHelper {
                             }
                         }
                     }
-                    // if (cw.getElse() != null) {
-                    // setWorkflowAddOrderPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), positions);
-                    // }
+                    if (cw.getElse() != null) {
+                        setWorkflowAddOrderPositions(extendArray(pos, "else"), depth, cw.getElse().getInstructions(), positions);
+                    }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();

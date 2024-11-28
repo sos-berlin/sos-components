@@ -172,7 +172,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
 
         List<Object> posA = jPos.toList();
         return posA.size() == 1 || (posA.size() == 3 && (((String) posA.get(1)).contains("try") || ((String) posA.get(1)).startsWith("then")
-                || ((String) posA.get(1)).equals("options")));
+                || ((String) posA.get(1)).equals("else") || ((String) posA.get(1)).equals("options")));
     }
     
     private static boolean isReachable(JPosition jPos, JBranchPath parentPos) {
