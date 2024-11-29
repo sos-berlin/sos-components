@@ -412,8 +412,8 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public ScrollableResults<DBItemHistoryAgent> getAgents(Collection<String> controllerIds, Date dateFrom, Date dateTo)
-            throws SOSHibernateException {
+    public ScrollableResults<DBItemHistoryAgent> getAgentsWithPrevAndLast(Collection<String> controllerIds, Date dateFrom, Date dateTo) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" h ");
         String add = " where ";
         if (dateFrom == null) {
             if (dateTo != null) {
