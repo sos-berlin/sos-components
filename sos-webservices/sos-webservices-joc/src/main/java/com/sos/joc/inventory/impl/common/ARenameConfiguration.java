@@ -240,11 +240,17 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
     }
     
     private static void setItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem, Long auditLogId) {
+        boolean itemIsRenamed = false;
+        if(!oldItem.getName().equals(newItem.getFileName().toString())) {
+            itemIsRenamed = true;
+        }
         oldItem.setPath(newItem.toString().replace('\\', '/'));
         oldItem.setFolder(newItem.getParent().toString().replace('\\', '/'));
         oldItem.setName(newItem.getFileName().toString());
-        oldItem.setDeployed(false);
-        oldItem.setReleased(false);
+        if(itemIsRenamed) {
+            oldItem.setDeployed(false);
+            oldItem.setReleased(false);
+        }
         oldItem.setAuditLogId(auditLogId);
         oldItem.setModified(Date.from(Instant.now()));
     }
