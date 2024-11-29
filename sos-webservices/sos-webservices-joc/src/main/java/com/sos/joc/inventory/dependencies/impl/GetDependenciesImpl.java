@@ -170,11 +170,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                         break;
                     case REVOKE:
                         // filter: remove  all drafts from further processing
-                        // filter: only referencesTypes for recursive references processing
-//                        currentUniqueReferencesItems = currentUniqueItems.entrySet().stream()
-//                                .filter(entry -> entry.getValue().getDeployed() || entry.getValue().getReleased())
-//                                .filter(entry -> referencesType.contains(entry.getValue().getTypeAsEnum()))
-//                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        // filter: referencesTypes not processed, empty map
                         currentUniqueReferencesItems = Collections.emptyMap();
                         // filter: only referencedByTypes for recursive referencedBy processing
                         currentUniqueReferencedByItems = currentUniqueItems.entrySet().stream()
@@ -283,6 +279,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 reqRes.setConfiguration(DependencyResolver.convert(reqItem));
                 reqRes.setName(reqItem.getName());
                 reqRes.setType(reqItem.getTypeAsEnum().value());
+                allUniqueItems.remove(reqItem.getId());
             }
             reqRes.setReferencedBy(requestedItem.getReferencedByIds().stream().map(id -> {
                 try {
@@ -300,6 +297,9 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 }
             }).filter(Objects::nonNull).map(dbItem -> DependencyResolver.convert(dbItem)).collect(Collectors.toSet()));
             newResponseItem.getRequestedItems().add(reqRes);
+            // remove all referencedBy and all references items already present from the affectedItems
+            requestedItem.getReferencedByIds().forEach(key -> allUniqueItems.remove(key));
+            requestedItem.getReferencesIds().forEach(key -> allUniqueItems.remove(key));
         }
         newResponseItem.setAffectedItems(allUniqueItems.values().stream().filter(Objects::nonNull)
                 .map(item -> convert(item)).collect(Collectors.toSet()));

@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -41,6 +42,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.callables.ReferenceCallable;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
@@ -73,6 +75,8 @@ public class DependencyResolver {
     public static final String LOCKNAME_SEARCH = "lockName";
     public static final String CALENDARNAME_SEARCH = "calendarName";
     public static final String JOBTEMPLATE_SEARCH = "jobTemplate";
+    public static final String INCLUDESCRIPT_SEARCH = "scripts";
+    public static final String SCRIPT_SEARCH = "script";
 
     public static final List<Integer> dependencyTypes = Collections.unmodifiableList(new ArrayList<Integer>() {
         private static final long serialVersionUID = 1L;
@@ -582,12 +586,14 @@ public class DependencyResolver {
         String json = Globals.objectMapper.writeValueAsString(item.getDependency().getConfiguration());
         List<DBItemInventoryConfiguration> results = null;
         JsonObject instructions = null;
+        JsonObject jobScripts = null;
         switch (item.getDependency().getObjectType()) {
         // determine references in configurations json
         case WORKFLOW:
             DBItemSearchWorkflow wfSearch = dbLayer.getSearchWorkflow(item.getDependency().getId(), null);
             if(wfSearch != null) {
                 instructions = jsonObjectFromString(wfSearch.getInstructions());
+                jobScripts = jsonObjectFromString(wfSearch.getJobsScripts());
             }
             JsonObject workflow = jsonObjectFromString(json);
             //Lock
@@ -675,8 +681,31 @@ public class DependencyResolver {
                 }
             }
             // ScriptIncludes
-            if(json.contains("##!include")) {
-                
+            if(jobScripts != null) {
+                List<String> wfSearchJobScriptNames = getValuesFromObject(jobScripts, INCLUDESCRIPT_SEARCH);
+                for(String script : wfSearchJobScriptNames) {
+                    results = dbLayer.getConfigurationByName(script, ConfigurationType.INCLUDESCRIPT.intValue());
+                    if(!results.isEmpty()) {
+                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+                    }
+                }
+            } else {
+                if(json.contains("##!include")) {
+                    List<String> wfJobScriptNames = new ArrayList<String>();
+                    getValuesRecursively("", workflow, SCRIPT_SEARCH, wfJobScriptNames);
+                    if(!wfJobScriptNames.isEmpty()) {
+                        for(String script : wfJobScriptNames) {
+                            Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+                            if (m.find()) {
+                                String scriptName = m.group(2);
+                                results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+                                if(!results.isEmpty()) {
+                                    item.getReferences().add(new ResponseItem(convert(results.get(0))));
+                                }
+                            }
+                        }
+                    }
+                }
             }
             break;
         case SCHEDULE:
@@ -703,6 +732,23 @@ public class DependencyResolver {
                     results = dbLayer.getConfigurationByName(jobresource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(new ResponseItem(convert(results.get(0))));
+                    }
+                }
+            }
+            // include scripts
+            if(json.contains("##!include")) {
+                List<String> wfJobScriptNames = new ArrayList<String>();
+                getValuesRecursively("", jobTemplate, SCRIPT_SEARCH, wfJobScriptNames);
+                if(!wfJobScriptNames.isEmpty()) {
+                    for(String script : wfJobScriptNames) {
+                        Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+                        if (m.find()) {
+                            String scriptName = m.group(2);
+                            results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+                            if(!results.isEmpty()) {
+                                item.getReferences().add(new ResponseItem(convert(results.get(0))));
+                            }
+                        }
                     }
                 }
             }
