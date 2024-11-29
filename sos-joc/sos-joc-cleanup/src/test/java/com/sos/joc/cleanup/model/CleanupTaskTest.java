@@ -41,7 +41,7 @@ public class CleanupTaskTest {
         CleanupTaskDeployment t = null;
         try {
             factory = createFactory();
-            t = new CleanupTaskDeployment(factory, 1, "deployment");
+            t = new CleanupTaskDeployment(factory, 1, "deployment", null);
 
             t.cleanupSearch();
         } catch (Throwable e) {
@@ -79,7 +79,7 @@ public class CleanupTaskTest {
         CleanupTaskHistory t = null;
         try {
             factory = createFactory();
-            t = new CleanupTaskHistory(factory, null, 1000);
+            t = new CleanupTaskHistory(factory, null, 1000, null);
 
             Long eventId = JocClusterUtil.getDateAsEventId(SOSDate.add(new Date(), -365, ChronoUnit.DAYS));
 
@@ -105,7 +105,7 @@ public class CleanupTaskTest {
         CleanupTaskHistory t = null;
         try {
             factory = createFactory();
-            t = new CleanupTaskHistory(factory, null, 1000);
+            t = new CleanupTaskHistory(factory, null, 1000, null);
 
             Long eventId = JocClusterUtil.getDateAsEventId(SOSDate.add(new Date(), -365, ChronoUnit.DAYS));
 
@@ -244,6 +244,21 @@ public class CleanupTaskTest {
         }
         scheduler.shutdownNow();
         LOGGER.info("[END]");
+    }
+
+    private void rollback(CleanupTaskModel t) {
+        if (t != null && t.getDbLayer() != null) {
+            t.getDbLayer().rollback();
+        }
+    }
+
+    private void close(CleanupTaskModel t, SOSHibernateFactory factory) {
+        if (t != null && t.getDbLayer() != null) {
+            t.getDbLayer().close();
+        }
+        if (factory != null) {
+            factory.close();
+        }
     }
 
     private JocClusterHibernateFactory createFactory() throws Exception {
