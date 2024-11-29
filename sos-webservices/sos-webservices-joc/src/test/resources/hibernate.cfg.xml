@@ -10,11 +10,6 @@
 		
 		<property name="hibernate.show_sql">false</property>
 		<property name="hibernate.format_sql">true</property>
-
-		<property name="hibernate.sos.show_configuration_properties">false</property>
-
-		<!-- Hikari Connection Pool -->
-		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
-		<property name="hibernate.hikari.maximumPoolSize">10</property>
+  
 	</session-factory>
 </hibernate-configuration>

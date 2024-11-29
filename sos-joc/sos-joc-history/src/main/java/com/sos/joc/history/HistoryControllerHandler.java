@@ -32,6 +32,7 @@ import com.sos.joc.history.controller.proxy.FluxEventHandler;
 import com.sos.joc.history.controller.proxy.FluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
+import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentCoupled;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentShutDown;
@@ -45,6 +46,7 @@ import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.Workf
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.OutcomeType;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentShutDown;
@@ -463,6 +465,14 @@ public class HistoryControllerHandler {
 
                 event = new FatEventAgentSubagentDedicated(entry.getEventId(), entry.getEventDate());
                 break;
+
+            case AgentCoupled:
+                HistoryAgentCoupled ac = entry.getAgentCoupled();
+
+                event = new FatEventAgentCoupled(entry.getEventId(), entry.getEventDate());
+                event.set(ac.getId());
+                break;
+
             case AgentCouplingFailed:
                 HistoryAgentCouplingFailed acf = entry.getAgentCouplingFailed();
 

@@ -147,30 +147,6 @@ public class DBLayerHistory extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public Object[] getLastExecution(String controllerId, Long fromEventId, Long toEventId, String agentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select startTime, endTime from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
-        hql.append("where id=");
-        hql.append("(");
-        hql.append("select max(id) from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
-        hql.append("where controllerId=:controllerId ");
-        hql.append("and startEventId > :fromEventId ");
-        hql.append("and startEventId < :toEventId ");
-        if (agentId != null) {
-            hql.append("and agentId=:agentId ");
-        }
-        hql.append(")");
-
-        Query<Object[]> query = getSession().createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
-        query.setParameter("fromEventId", fromEventId);
-        query.setParameter("toEventId", toEventId);
-        if (agentId != null) {
-            query.setParameter("agentId", agentId);
-        }
-        return getSession().getSingleResult(query);
-    }
-
     public DBItemHistoryController getControllerByReadyEventId(String controllerId, Long readyEventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where controllerId=:controllerId ");

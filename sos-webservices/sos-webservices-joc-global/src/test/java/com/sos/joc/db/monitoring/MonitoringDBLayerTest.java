@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.hibernate.ScrollableResults;
 import org.junit.Ignore;
@@ -20,6 +21,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 
 public class MonitoringDBLayerTest {
 
@@ -55,11 +57,8 @@ public class MonitoringDBLayerTest {
             if (sr != null) {
                 sr.close();
             }
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
 
@@ -68,6 +67,8 @@ public class MonitoringDBLayerTest {
     @Ignore
     @Test
     public void testControllers() throws Exception {
+
+        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
@@ -133,14 +134,10 @@ public class MonitoringDBLayerTest {
             if (sr != null) {
                 sr.close();
             }
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
-
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
@@ -148,6 +145,7 @@ public class MonitoringDBLayerTest {
         factory.addClassMapping(DBLayer.getMonitoringClassMapping());
         factory.addClassMapping(DBItemHistoryController.class);
         factory.addClassMapping(DBItemHistoryAgent.class);
+        factory.addClassMapping(DBItemInventoryAgentInstance.class);
         factory.build();
         return factory;
     }
