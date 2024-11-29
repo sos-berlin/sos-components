@@ -16,4 +16,10 @@ public interface ISubAgentClusterStore {
     @Produces({ "application/json" })
     public JOCDefaultResponse store(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
+    @POST
+    @Path("cluster/add")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse add(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
 }

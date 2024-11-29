@@ -99,7 +99,12 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
 
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
-            AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, agentDBLayer);
+//            AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, false, false, agentDBLayer);
+            if (action.equals(API_INVENTORY_ADD)) {
+                AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, true, false, agentDBLayer);
+            } else {
+                AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, false, true, agentDBLayer);
+            }
 
             Globals.commit(connection);
             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentIds.keySet()));
@@ -182,7 +187,15 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             Map<String, ClusterAgent> agentMap = agentStoreParameter.getClusterAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function
                     .identity()));
-            AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, agentDBLayer, subagentClusterDBLayer);
+//            AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, false, false, agentDBLayer,
+//                    subagentClusterDBLayer);
+            if (action.equals(API_CLUSTER_INVENTORY_ADD)) {
+                AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, true, false, agentDBLayer,
+                        subagentClusterDBLayer);
+            } else {
+                AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, false, true, agentDBLayer,
+                        subagentClusterDBLayer);
+            }
 
             Globals.commit(connection);
             Globals.disconnect(connection);

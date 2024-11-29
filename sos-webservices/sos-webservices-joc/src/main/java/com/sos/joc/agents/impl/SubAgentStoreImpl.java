@@ -109,8 +109,16 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                         throw new JocBadRequestException(String.format("Subagent id '%s' is already used by an Agent", aId));
                     });
             
-            AgentStoreUtils.saveOrUpdate(dbLayer, new InventorySubagentClustersDBLayer(connection), controllerId, dbAgent, dbSubAgents, subAgentsParam
-                    .getSubagents(), true);
+//            AgentStoreUtils.saveOrUpdate(dbLayer, new InventorySubagentClustersDBLayer(connection), controllerId, dbAgent, dbSubAgents, subAgentsParam
+//                    .getSubagents(), true, false, false);
+            if (action.equals(API_CALL_ADD)) {
+                AgentStoreUtils.saveOrUpdate(dbLayer, new InventorySubagentClustersDBLayer(connection), controllerId, dbAgent, dbSubAgents, subAgentsParam
+                        .getSubagents(), true, true, false);
+            } else {
+                AgentStoreUtils.saveOrUpdate(dbLayer, new InventorySubagentClustersDBLayer(connection), controllerId, dbAgent, dbSubAgents, subAgentsParam
+                        .getSubagents(), true, false, true);
+            }
+
             Globals.commit(connection);
             Globals.disconnect(connection);
             connection = null;
