@@ -21,7 +21,6 @@ import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringRange;
 import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringScope;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
-import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.db.DBLayer;
 
 public class CleanupTaskTest {
@@ -75,13 +74,13 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000);
 
-            Long eventId = JocClusterUtil.getDateAsEventId(SOSDate.add(new Date(), -365, ChronoUnit.DAYS));
+            Date readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
 
             StringBuilder log = new StringBuilder();
 
             t.tryOpenSession();
             t.getDbLayer().beginTransaction();
-            t.deleteControllers(eventId, log);
+            t.deleteControllers(readyTime, log);
             t.getDbLayer().commit();
             LOGGER.info("[LOG]" + log);
         } catch (Throwable e) {
@@ -101,13 +100,13 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000);
 
-            Long eventId = JocClusterUtil.getDateAsEventId(SOSDate.add(new Date(), -365, ChronoUnit.DAYS));
+            Date readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
 
             StringBuilder log = new StringBuilder();
 
             t.tryOpenSession();
             t.getDbLayer().beginTransaction();
-            t.deleteAgents(eventId, log);
+            t.deleteAgents(readyTime, log);
             t.getDbLayer().commit();
             LOGGER.info("[LOG]" + log);
         } catch (Throwable e) {

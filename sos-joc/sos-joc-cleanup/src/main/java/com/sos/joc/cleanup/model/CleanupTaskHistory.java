@@ -435,27 +435,26 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][").append(ageInfo).append("][deleted]");
 
-        Long eventId = Long.valueOf(startTime.getTime() * 1_000 + 999);
-
         // getDbLayer().beginTransaction();
-        log = deleteControllers(eventId, log);
-        log = deleteAgents(eventId, log);
+        log = deleteControllers(startTime, log);
+        log = deleteAgents(startTime, log);
         // getDbLayer().commit();
 
         LOGGER.info(log.toString());
     }
 
-    protected StringBuilder deleteControllers(Long eventId, StringBuilder log) throws SOSHibernateException {
-        // - delete all older than the eventId
+    protected StringBuilder deleteControllers(Date readyTime, StringBuilder log) throws SOSHibernateException {
+        // - delete all older than the readyTime
         // -- but leave 1 last row per controller
         // --- if this last controller exists in the inventory
 
         Dialect d = getFactory().getDialect();
+        String columnReTime = SOSHibernate.quoteColumn(d, "READY_TIME");
         String columnReid = SOSHibernate.quoteColumn(d, "READY_EVENT_ID");
         String columnCid = SOSHibernate.quoteColumn(d, "CONTROLLER_ID");
 
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
-        hql.append("where " + columnReid + " < :eventId ");
+        hql.append("where " + columnReTime + " < :readyTime ");
         if (getFactory().getDbms().equals(Dbms.MYSQL)) {
             hql.append("and (").append(columnReid + "," + columnCid + ") not in (");
             hql.append("  select tmp.meid,tmp.cid from(");
@@ -486,25 +485,26 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             hql.append(")");
         }
         Query<?> query = getDbLayer().getSession().createNativeQuery(hql.toString());
-        query.setParameter("eventId", eventId);
+        query.setParameter("readyTime", readyTime);
         int r = getDbLayer().getSession().executeUpdate(query);
 
         log.append("[").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append("=").append(r).append("]");
         return log;
     }
 
-    protected StringBuilder deleteAgents(Long eventId, StringBuilder log) throws SOSHibernateException {
-        // - delete all older than the eventId
+    protected StringBuilder deleteAgents(Date readyTime, StringBuilder log) throws SOSHibernateException {
+        // - delete all older than the readyTime
         // -- but leave 1 last row per controller/agent
         // --- if this last agent exists in the inventory
 
         Dialect d = getFactory().getDialect();
+        String columnReTime = SOSHibernate.quoteColumn(d, "READY_TIME");
         String columnReid = SOSHibernate.quoteColumn(d, "READY_EVENT_ID");
         String columnCid = SOSHibernate.quoteColumn(d, "CONTROLLER_ID");
         String columnAid = SOSHibernate.quoteColumn(d, "AGENT_ID");
 
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
-        hql.append("where " + columnReid + "  < :eventId ");
+        hql.append("where " + columnReTime + "  < :readyTime ");
         switch (getFactory().getDbms()) {
         case MYSQL:
             hql.append("and (" + columnReid + "," + columnCid + "," + columnAid + ") ");
@@ -557,7 +557,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
 
         Query<?> query = getDbLayer().getSession().createNativeQuery(hql.toString());
-        query.setParameter("eventId", eventId);
+        query.setParameter("readyTime", readyTime);
         int r = getDbLayer().getSession().executeUpdate(query);
 
         log.append("[").append(DBLayer.TABLE_HISTORY_AGENTS).append("=").append(r).append("]");
