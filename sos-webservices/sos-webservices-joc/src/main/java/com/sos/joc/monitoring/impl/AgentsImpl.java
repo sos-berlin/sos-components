@@ -326,7 +326,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                         }
                         if (inventoryAgentInfo == null) {// no more in inventory
                             if (item.getShutdownTime() == null) {
-                                lastKnownTime = tryToAddToDateIfEndDateUnknown(item.getReadyTime(), dateTo);
+                                lastKnownTime = tryToEstimateIfEndDateUnknown(item, dateTo);
                                 source.setItem(EntryItemSource.historyNotInInventory);
                                 source.setTotalRunningTime(TotalRunningTimeSource.estimated);
                                 if (isDebugEnabled) {
@@ -382,8 +382,13 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         return result;
     }
 
-    private Date tryToAddToDateIfEndDateUnknown(Date date, Date dateTo) {
+    private Date tryToEstimateIfEndDateUnknown(DBItemHistoryAgent item, Date dateTo) {
+        Date date = item.getReadyTime();
         try {
+            if (item.getLastKnownTime().before(dateTo) && item.getLastKnownTime().after(item.getReadyTime())) {
+                date = item.getLastKnownTime();
+            }
+
             Date dateDayMax = SOSDate.getDateTime(SOSDate.getDateAsString(date) + " " + SOSDate.getTimeAsString(dateTo));
             Date datePlus = SOSDate.add(date, 1, ChronoUnit.HOURS);
             if (datePlus.before(dateDayMax)) {

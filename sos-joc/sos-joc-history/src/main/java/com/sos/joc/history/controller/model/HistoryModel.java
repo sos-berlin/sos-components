@@ -909,6 +909,16 @@ public class HistoryModel {
             if (item.getShutdownTime() == null) {
                 item.setShutdownTime(event.getEventDatetime());// agent date time
                 item.setLastKnownTime(JocClusterUtil.getEventIdAsDate(event.getEventId())); // controller date time
+
+                // if coupling failed is due to the agent shutdown
+                // coupling failed (controller time) is greater than the shutdown time(agent time)
+                if (item.getCouplingFailedTime() != null && item.getShutdownTime() != null) {
+                    if (item.getCouplingFailedTime().getTime() > item.getShutdownTime().getTime()) {
+                        item.setCouplingFailedTime(null);
+                        item.setCouplingFailedMessage(null);
+                    }
+                }
+
                 dbLayer.getSession().update(item);
             }
         }
