@@ -3,25 +3,23 @@ package com.sos.joc.agents.impl;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.time.Instant;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsImport;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.agent.AgentStoreUtils;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
@@ -30,8 +28,8 @@ import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
+import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.transfer.Agent;
@@ -129,8 +127,10 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                 SOSCheckJavaVariableName.test("Agent ID", agentId);
             }
 
-            InventoryAgentInstancesDBLayer agentInstanceDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
-            InventorySubagentClustersDBLayer subagentClusterDbLayer = new InventorySubagentClustersDBLayer(hibernateSession);
+            Map<String, com.sos.joc.model.agent.Agent> standaloneAgentMap = new HashMap<>();
+            Map<String, ClusterAgent> clusterAgentMap = new HashMap<>();
+            List<SubagentCluster> subagentClusters = new ArrayList<>();
+            
             agents.forEach(agent -> {
                 if(agent.getAgentCluster() != null) {
                     Set<SubAgent> requestedSubagents = agent.getAgentCluster().getSubagents().stream().collect(Collectors.toSet());
@@ -139,31 +139,64 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                     for (String subagentId : requestedSubagentIds) {
                         SOSCheckJavaVariableName.test("Subagent ID", subagentId);
                     }
-                    try {
-                        AgentStoreUtils.storeClusterAgent(agent.getAgentCluster(), filter.getControllerId(), filter.getOverwrite(),
-                                agentInstanceDbLayer, subagentClusterDbLayer);
-                    } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                    }
+                    clusterAgentMap.put(agent.getAgentCluster().getAgentId(), agent.getAgentCluster());
+//                    try {
+//                        AgentStoreUtils.storeClusterAgent(agent.getAgentCluster(), filter.getControllerId(), filter.getOverwrite(),
+//                                agentInstanceDbLayer, subagentClusterDbLayer);
+//                    } catch (SOSHibernateException e) {
+//                        throw new JocSosHibernateException(e);
+//                    }
                     if (agent.getSubagentClusters() != null) {
-                        for (SubagentCluster subagentCluster : agent.getSubagentClusters()) {
-                            try {
-                                AgentStoreUtils.storeSubagentCluster(filter.getControllerId(), subagentCluster, subagentClusterDbLayer, Date.from(
-                                        Instant.now()));
-                            } catch (SOSHibernateException e) {
-                                throw new JocSosHibernateException(e);
-                            }
-                        }
+                        subagentClusters.addAll(agent.getSubagentClusters());
+//                        for (SubagentCluster subagentCluster : agent.getSubagentClusters()) {
+//                            try {
+//                                AgentStoreUtils.storeSubagentCluster(filter.getControllerId(), subagentCluster, subagentClusterDbLayer, Date.from(
+//                                        Instant.now()));
+//                            } catch (SOSHibernateException e) {
+//                                throw new JocSosHibernateException(e);
+//                            }
+//                        }
                     }
-                } else {
-                    try {
-                        AgentStoreUtils.storeStandaloneAgent(agent.getStandaloneAgent(), filter.getControllerId(), filter.getOverwrite(),
-                                agentInstanceDbLayer);
-                    } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                    }
+                } else if(agent.getStandaloneAgent() != null) {
+                    standaloneAgentMap.put(agent.getStandaloneAgent().getAgentId(), agent.getStandaloneAgent());
+//                    try {
+//                        AgentStoreUtils.storeStandaloneAgent(agent.getStandaloneAgent(), filter.getControllerId(), filter.getOverwrite(),
+//                                agentInstanceDbLayer);
+//                    } catch (SOSHibernateException e) {
+//                        throw new JocSosHibernateException(e);
+//                    }
                 }
             });
+            
+            InventoryAgentInstancesDBLayer agentInstanceDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
+            InventorySubagentClustersDBLayer subagentClusterDbLayer = new InventorySubagentClustersDBLayer(hibernateSession);
+            
+            
+            
+            if (!standaloneAgentMap.isEmpty()) {
+                AgentStoreUtils.storeStandaloneAgent(standaloneAgentMap, filter.getControllerId(), filter.getOverwrite(), false, false,
+                        agentInstanceDbLayer);
+            }
+            if (!clusterAgentMap.isEmpty()) {
+                Set<SubAgent> requestedSubagents = clusterAgentMap.values().stream().map(ClusterAgent::getSubagents).flatMap(List::stream).collect(
+                        Collectors.toSet());
+                requestedSubagents.stream().collect(Collectors.groupingBy(SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(e -> e
+                        .getValue() > 1L).findAny().ifPresent(e -> {
+                            throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("Subagent url", e));
+                        });
+
+                Set<String> requestedSubagentIds = requestedSubagents.stream().map(SubAgent::getSubagentId).collect(Collectors.toSet());
+                AgentStoreUtils.storeClusterAgent(clusterAgentMap, requestedSubagents, requestedSubagentIds, filter.getControllerId(), filter
+                        .getOverwrite(), false, false, agentInstanceDbLayer, subagentClusterDbLayer);
+            }
+            if (!subagentClusters.isEmpty()) {
+
+                AgentStoreUtils.storeSubagentCluster(subagentClusters, agentInstanceDbLayer, subagentClusterDbLayer, filter.getOverwrite(), false,
+                        false);
+            }
+            
+            Globals.commit(hibernateSession);
+            
             EventBus.getInstance().post(new AgentInventoryEvent(filter.getControllerId(), agents.stream().map(agent -> {
                 if(agent.getAgentCluster() != null) {
                     return agent.getAgentCluster().getAgentId();
@@ -171,14 +204,14 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
                     return agent.getStandaloneAgent().getAgentId();
                 }
             }).collect(Collectors.toList())));
-            Globals.commit(hibernateSession);
-            Set<String> agentNamesAndAliases = Stream.concat(
-                    agents.stream().map(agent -> agent.getAgentCluster() != null ?  agent.getAgentCluster().getAgentName() :
-                        agent.getStandaloneAgent().getAgentName()), 
-                    agents.stream().map(agent -> agent.getAgentCluster() != null ? agent.getAgentCluster().getAgentNameAliases() : 
-                        agent.getStandaloneAgent().getAgentNameAliases()).flatMap(Set::stream)).collect(Collectors.toSet());
+            
+//            Set<String> agentNamesAndAliases = Stream.concat(
+//                    agents.stream().map(agent -> agent.getAgentCluster() != null ?  agent.getAgentCluster().getAgentName() :
+//                        agent.getStandaloneAgent().getAgentName()), 
+//                    agents.stream().map(agent -> agent.getAgentCluster() != null ? agent.getAgentCluster().getAgentNameAliases() : 
+//                        agent.getStandaloneAgent().getAgentNameAliases()).flatMap(Set::stream)).collect(Collectors.toSet());
             // TODO investigate missedNames instead Collections.emptySet()
-            AgentHelper.validateWorkflowsByAgentNames(agentInstanceDbLayer, agentNamesAndAliases, Collections.emptySet());
+            //AgentHelper.validateWorkflowsByAgentNames(agentInstanceDbLayer, agentNamesAndAliases, Collections.emptySet());
             Globals.disconnect(hibernateSession);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

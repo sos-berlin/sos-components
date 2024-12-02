@@ -24,6 +24,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
@@ -45,7 +46,9 @@ import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.SubagentDirectorType;
 
+import io.vavr.control.Either;
 import js7.data.platform.PlatformInfo;
+import js7.data_for_java.value.JExpression;
 
 public class AgentStoreUtils {
     
@@ -62,14 +65,6 @@ public class AgentStoreUtils {
             instance = new AgentStoreUtils();
         }
         return instance;
-    }
-    public static void storeStandaloneAgent(Agent agent, String controllerId, boolean overwrite, InventoryAgentInstancesDBLayer dbLayer)
-            throws SOSHibernateException {
-        Map<String, Agent> agentMap = new HashMap<String, Agent>(1);
-        agentMap.put(agent.getAgentId(), agent);
-        // TODO called by import: Should consider add/edit flags
-        // Import shouldn't call storeStandaloneAgent for each single agent in a loop, e.g. dbLayer.getAllAgents() again and again
-        storeStandaloneAgent(agentMap, controllerId, overwrite, false, false, dbLayer);
     }
     
     public static void storeStandaloneAgent(Map<String, Agent> agentMap, String controllerId, boolean overwrite, boolean onlyAdd, boolean onlyEdit,
@@ -182,18 +177,6 @@ public class AgentStoreUtils {
         agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), newAliases.values().stream().flatMap(s -> s.stream().map(
                 DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
         AgentHelper.validateWorkflowsByAgentNames(dbLayer, agentNamesAndAliases, missedAgentNames);
-    }
-    
-    public static void storeClusterAgent(ClusterAgent clusterAgent, String controllerId, boolean overwrite,
-            InventoryAgentInstancesDBLayer agentDbLayer, InventorySubagentClustersDBLayer subagentDbLayer) throws SOSHibernateException {
-        Map<String, ClusterAgent> clusterAgentMap = new HashMap<String, ClusterAgent>(1);
-        clusterAgentMap.put(clusterAgent.getAgentId(), clusterAgent);
-        Set<SubAgent> requestedSubagents = clusterAgent.getSubagents().stream().collect(Collectors.toSet());
-        Set<String> requestedSubagentIds = requestedSubagents.stream().map(SubAgent::getSubagentId).collect(Collectors.toSet());
-        // TODO called by import: Should consider add/edit flags
-        // Import shouldn't call storeClusterAgent for each single cluster agent in a loop
-        storeClusterAgent(clusterAgentMap, requestedSubagents, requestedSubagentIds, controllerId, overwrite, false, false, agentDbLayer, 
-                subagentDbLayer);
     }
     
     public static void storeClusterAgent(Map<String, ClusterAgent> clusterAgentMap, Set<SubAgent> requestedSubagents,
@@ -329,15 +312,57 @@ public class AgentStoreUtils {
         AgentHelper.validateWorkflowsByAgentNames(agentDbLayer, agentNamesAndAliases, missedAgentNames);
     }
     
-    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster(String controllerId, SubagentCluster subagentCluster,
-            InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified) throws SOSHibernateException {
-        Map<String, SubagentCluster> subagentClusterMap = new HashMap<String, SubagentCluster>(1);
-        subagentClusterMap.put(subagentCluster.getSubagentClusterId(), subagentCluster);
-        return storeSubagentCluster(controllerId, subagentClusterMap, agentClusterDBLayer, modified, false, false);
+    public static Set<String> storeSubagentCluster(List<SubagentCluster> subagentCluster, InventoryAgentInstancesDBLayer agentDbLayer,
+            InventorySubagentClustersDBLayer agentClusterDBLayer, boolean overwrite, boolean onlyAdd, boolean onlyEdit) throws SOSHibernateException {
+        
+        Map<String, String> agentToControllerMap = agentDbLayer.getAllAgents().stream().collect(Collectors.toMap(
+                DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getControllerId));
+
+        Map<String, List<SubagentCluster>> subagentClustersPerController = subagentCluster.stream().peek(subA -> subA.setControllerId(
+                agentToControllerMap.get(subA.getAgentId()))).collect(Collectors.groupingBy(SubagentCluster::getControllerId));
+        Date now = Date.from(Instant.now());
+
+        for (Map.Entry<String, List<SubagentCluster>> subagentClusterPerController : subagentClustersPerController.entrySet()) {
+
+            checkSubagentCluster(subagentClusterPerController.getValue(), agentClusterDBLayer);
+
+            Map<String, SubagentCluster> subagentMap = subagentCluster.stream().collect(Collectors.toMap(SubagentCluster::getSubagentClusterId,
+                    Function.identity()));
+
+            storeSubagentCluster(subagentClusterPerController.getKey(), subagentMap, agentClusterDBLayer, now, overwrite, onlyAdd, onlyEdit);
+        }
+        
+        return subagentClustersPerController.keySet();
     }
     
-    public static List<DBItemInventorySubAgentCluster> storeSubagentCluster(String controllerId, Map<String, SubagentCluster> subagentClusterMap, 
-            InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified, boolean onlyAdd, boolean onlyEdit) throws SOSHibernateException {
+    private static void checkSubagentCluster(List<SubagentCluster> subagentCluster, InventorySubagentClustersDBLayer agentClusterDBLayer) {
+        Map<String, Long> subagentClusterIds = subagentCluster.stream().collect(Collectors.groupingBy(
+                SubagentCluster::getSubagentClusterId, Collectors.counting()));
+
+        // check uniqueness of SubagentClusterIds per Controller
+        subagentClusterIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+            throw new JocBadRequestException(String.format("SubagentClusterId '%s' has to be unique per Controller", e.getKey()));
+        });
+        
+        // check java name rules of SubagentClusterIds
+        subagentClusterIds.keySet().forEach(sId -> SOSCheckJavaVariableName.test("Subagent Cluster ID", sId));
+        
+        // Check if all subagents in the inventory
+        List<String> subagentIds = subagentCluster.stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(
+                SubAgentId::getSubagentId).distinct().collect(Collectors.toList());
+        String missingSubagentId = agentClusterDBLayer.getFirstSubagentIdThatNotExists(subagentIds);
+        if (!missingSubagentId.isEmpty()) {
+            throw new JocBadRequestException(String.format("At least one Subagent doesn't exist: '%s'", missingSubagentId));
+        }
+
+        // Check priority expressions
+        subagentCluster.stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(SubAgentId::getPriority).map(
+                JExpression::parse).filter(Either::isLeft).findAny().ifPresent(ProblemHelper::throwProblemIfExist);
+    }
+    
+    private static List<DBItemInventorySubAgentCluster> storeSubagentCluster(String controllerId, Map<String, SubagentCluster> subagentClusterMap,
+            InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified, boolean overwrite, boolean onlyAdd, boolean onlyEdit)
+            throws SOSHibernateException {
         List<String> subagentClusterIds = subagentClusterMap.keySet().stream().collect(Collectors.toList());
         List<DBItemInventorySubAgentCluster> dbsubagentClusters = agentClusterDBLayer.getSubagentClusters(controllerId, subagentClusterIds);
         List<DBItemInventorySubAgentClusterMember> dbsubagentClusterMembers = 
@@ -353,6 +378,14 @@ public class AgentStoreUtils {
         if (dbsubagentClusters != null) {
             for (DBItemInventorySubAgentCluster dbsubagentCluster : dbsubagentClusters) {
                 SubagentCluster s = subagentClusterMap.remove(dbsubagentCluster.getSubAgentClusterId());
+                if (s == null) {
+                    continue;
+                }
+                
+                if (!overwrite) {
+                    continue;
+                }
+                
                 if (!dbsubagentCluster.getAgentId().equals(s.getAgentId())) {
                     throw new JocBadRequestException(String.format("Subagent Cluster ID '%s' is already used for Agent '%s'",
                             dbsubagentCluster.getSubAgentClusterId(), dbsubagentCluster.getAgentId()));

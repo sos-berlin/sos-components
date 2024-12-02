@@ -36,7 +36,7 @@ public class AgentImportFilter {
     @JsonProperty("format")
     private ArchiveFormat format = ArchiveFormat.fromValue("ZIP");
     @JsonProperty("overwrite")
-    private Boolean overwrite;
+    private Boolean overwrite = false;
     /**
      * controllerId
      * <p>
