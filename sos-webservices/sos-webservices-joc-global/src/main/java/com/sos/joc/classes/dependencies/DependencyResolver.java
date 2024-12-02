@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -37,7 +40,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.Workflow;
+import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.callables.ReferenceCallable;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
@@ -116,7 +122,7 @@ public class DependencyResolver {
         return resolvedItem;
     }
 
-    // with db access for dependency resolution of a single or few items ot to use with threading
+    // with db access for dependency resolution of a single or few items or to use with threading
     public static ReferencedDbItem resolveReferencedBy(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException {
         // this method is in use
         ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
@@ -159,6 +165,13 @@ public class DependencyResolver {
             if(workflowsWithInstruction != null) {
                 cfg.getReferencedBy().addAll(workflowsWithInstruction);
             }
+            List<DBItemInventoryConfiguration> wfWorkflowsOrJobTemplatesByIncludeScript = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
+            Set<DBItemInventoryConfiguration> wfWorkflows = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
+                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
+            Set<DBItemInventoryConfiguration> wfJobTemplates = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
+                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
+            resolveIncludeScriptByWorkflow(cfg, wfWorkflows);
+            resolveIncludeScriptByJobTemplate(cfg, wfJobTemplates);
             break;
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
@@ -173,6 +186,16 @@ public class DependencyResolver {
                 cfg.getReferencedBy().addAll(workflowsByJobTemplate);
             }
             break;
+        case INCLUDESCRIPT:
+            // TODO: 
+            List<DBItemInventoryConfiguration> isWorkflowsOrJobTemplatesByIncludeScript = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
+            Set<DBItemInventoryConfiguration> isWorkflows = isWorkflowsOrJobTemplatesByIncludeScript.stream()
+                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
+            Set<DBItemInventoryConfiguration> isJobTemplates = isWorkflowsOrJobTemplatesByIncludeScript.stream()
+                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
+            resolveIncludeScriptByWorkflow(cfg, isWorkflows);
+            resolveIncludeScriptByJobTemplate(cfg, isJobTemplates);
+            break;
         default:
             break;
         }
@@ -180,8 +203,9 @@ public class DependencyResolver {
     }
     
     // with minimal db access for dependency resolution of a collection of items
-    public static ReferencedDbItem resolveReferencedBy(DBItemInventoryConfiguration inventoryDbItem, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
-            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+    public static ReferencedDbItem resolveReferencedBy(DBItemInventoryConfiguration inventoryDbItem,
+            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws SOSHibernateException, JsonMappingException,
+                JsonProcessingException {
         // this method is currently not in use
         ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
         cfg.setReferencedItem(inventoryDbItem);
@@ -205,17 +229,88 @@ public class DependencyResolver {
         case JOBTEMPLATE:
             resolveJobTemplateReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
             break;
+        case INCLUDESCRIPT:
+            resolveIncludeScriptByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+            resolveIncludeScriptByJobTemplate(cfg, groupedItems.get(ConfigurationType.JOBTEMPLATE).values());
+            break;
         default:
             break;
         }
         return cfg;
     }
     
+    public static void resolveIncludeScriptByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> workflows) {
+        Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+"
+                + item.getReferencedItem().getName() + "\\s*").asPredicate();
+        for(DBItemInventoryConfiguration wf : workflows) {
+            if (hasScriptInclude.test(wf.getContent())) {
+                try {
+                    Workflow w = Globals.objectMapper.readValue(wf.getContent(), Workflow.class);
+                    if (w.getJobs() != null) {
+                        Map<String, Job> replacedJobs = new HashMap<>();
+                        w.getJobs().getAdditionalProperties().forEach((jobName, job) -> {
+                            if (job.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
+                                ExecutableScript es = job.getExecutable().cast();
+                                if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
+                                    String[] scriptLines = es.getScript().split("\n");
+                                    for (int i = 0; i < scriptLines.length; i++) {
+                                        String line = scriptLines[i];
+                                        if (hasScriptInclude.test(line)) {
+                                            Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+                                            if (m.find()) {
+                                                if (item.getReferencedItem().getName().equals(m.group(2))) {
+                                                    item.getReferencedBy().add(wf);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (JsonProcessingException e) {
+                    // do nothing !
+                }
+            }
+        }
+    }
+    
+    public static void resolveIncludeScriptByJobTemplate(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> jobTemplates) {
+        Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+"
+                + item.getReferencedItem().getName() + "\\s*").asPredicate();
+        for(DBItemInventoryConfiguration jobTemplate : jobTemplates) {
+            if (hasScriptInclude.test(jobTemplate.getContent())) {
+                try {
+                    JobTemplate jt = Globals.objectMapper.readValue(jobTemplate.getContent(), JobTemplate.class);
+                    if (jt.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(jt.getExecutable().getTYPE())) {
+                        ExecutableScript es = jt.getExecutable().cast();
+                        if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
+                            String[] scriptLines = es.getScript().split("\n");
+                            for (int i = 0; i < scriptLines.length; i++) {
+                                String line = scriptLines[i];
+                                if (hasScriptInclude.test(line)) {
+                                    Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+                                    if (m.find()) {
+                                        if (item.getReferencedItem().getName().equals(m.group(2))) {
+                                            item.getReferencedBy().add(jobTemplate);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (JsonProcessingException e) {
+                    // do nothing !
+                }
+            }
+        }
+    }
+    
     public static void resolveLockReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> workflows) {
         for(DBItemInventoryConfiguration cfg : workflows) {
             String json = cfg.getContent();
             JsonObject workflow = jsonObjectFromString(json);
-            //Lock
+            //IncludeScript
             List<String> wfLockNames = new ArrayList<String>(); 
             getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
             if(!wfLockNames.isEmpty()) {
@@ -517,6 +612,38 @@ public class DependencyResolver {
                     }
                 }
             }
+            // ScriptIncludes
+            if(wfsearchScripts != null) {
+                List<String> wfSearchJobScriptNames = getValuesFromObject(wfsearchScripts, INCLUDESCRIPT_SEARCH);
+                for(String script : wfSearchJobScriptNames) {
+                    Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+                    if (m.find()) {
+                        String scriptName = m.group(2);
+                        results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
+                }
+            } else {
+                if(json.contains("##!include")) {
+                    List<String> wfJobScriptNames = new ArrayList<String>();
+                    getValuesRecursively("", workflow, SCRIPT_SEARCH, wfJobScriptNames);
+                    if(!wfJobScriptNames.isEmpty()) {
+                        for(String script : wfJobScriptNames) {
+                            Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+                            if (m.find()) {
+                                String scriptName = m.group(2);
+                                results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+                                if(!results.isEmpty()) {
+                                    item.getReferences().add(results.get(0));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
         case SCHEDULE:
             // Workflow
             // no instructions are available in WindowsSearch check always directly in json
@@ -684,9 +811,13 @@ public class DependencyResolver {
             if(jobScripts != null) {
                 List<String> wfSearchJobScriptNames = getValuesFromObject(jobScripts, INCLUDESCRIPT_SEARCH);
                 for(String script : wfSearchJobScriptNames) {
-                    results = dbLayer.getConfigurationByName(script, ConfigurationType.INCLUDESCRIPT.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+                    Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+                    if (m.find()) {
+                        String scriptName = m.group(2);
+                        results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
+                        }
                     }
                 }
             } else {
