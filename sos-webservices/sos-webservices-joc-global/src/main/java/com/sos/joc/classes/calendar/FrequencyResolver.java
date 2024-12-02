@@ -804,7 +804,7 @@ public class FrequencyResolver {
 
         Map<String, Calendar> dates = new HashMap<String, Calendar>();
         Calendar from = getFrom(weekDay.getFrom(), cfrom);
-        Calendar to = getFrom(weekDay.getTo(), cto);
+        Calendar to = getTo(weekDay.getTo(), cto);
 
         while (from.compareTo(to) <= 0) {
             // Calendar.DAY_OF_WEEK: 1=Sunday, 2=Monday, ... -> -1
@@ -827,7 +827,7 @@ public class FrequencyResolver {
         }
         Set<String> dates = new HashSet<String>();
         Calendar from = getFrom(weekDay.getFrom(), cfrom);
-        Calendar to = getFrom(weekDay.getTo(), cto);
+        Calendar to = getTo(weekDay.getTo(), cto);
 
         for (Entry<String, Calendar> date : this.dates.entrySet()) {
             if (date == null || date.getValue() == null) {
@@ -863,7 +863,7 @@ public class FrequencyResolver {
         WeeklyDay weeklyDay = new WeeklyDay();
 
         Calendar from = getFrom(monthDay.getFrom(), cfrom);
-        Calendar to = getFrom(monthDay.getTo(), cto);
+        Calendar to = getTo(monthDay.getTo(), cto);
         while (from.compareTo(to) <= 0) {
             if (monthDay.getDays() != null) {
                 if (monthDay.getDays().contains(from.get(Calendar.DAY_OF_MONTH))) {
@@ -888,7 +888,7 @@ public class FrequencyResolver {
         List<WeeklyDay> weeklyDays = monthDay.getWeeklyDays();
 
         Calendar from = getFrom(monthDay.getFrom(), cfrom);
-        Calendar to = getFrom(monthDay.getTo(), cto);
+        Calendar to = getTo(monthDay.getTo(), cto);
 
         String method = "resolveMonthDaysRestrictions";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -1281,7 +1281,7 @@ public class FrequencyResolver {
         WeeklyDay weeklyDay = new WeeklyDay();
 
         Calendar from = getFrom(ultimo.getFrom(), cfrom);
-        Calendar to = getFrom(ultimo.getTo(), cto);
+        Calendar to = getTo(ultimo.getTo(), cto);
         while (from.compareTo(to) <= 0) {
             if (ultimo.getDays() != null) {
                 int dayOfUltimo = from.getActualMaximum(Calendar.DAY_OF_MONTH) + 1 - from.get(Calendar.DAY_OF_MONTH);
@@ -1307,7 +1307,7 @@ public class FrequencyResolver {
         List<WeeklyDay> weeklyDays = ultimo.getWeeklyDays();
 
         Calendar from = getFrom(ultimo.getFrom(), cfrom);
-        Calendar to = getFrom(ultimo.getTo(), cto);
+        Calendar to = getTo(ultimo.getTo(), cto);
 
         String method = "resolveUltimosRestrictions";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
