@@ -59,13 +59,12 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
             boolean allowMetadataOnBoot = isAllowMetadataOnBoot(configuration);
             switch (this.dbms) {
             case MYSQL:
-                boolean isMySQLURL = isMySQLURL(configuration);
                 if (dialect == null) {
-                    if (isMySQLURL) {
+                    if (isMySQLURL(configuration)) {
                         forceDefaultMySQLDialect(configuration);
                     }
                 } else if (dialect.equals(SOSHibernate.DEFAULT_DIALECT_MARIADB)) {
-                    if (isMySQLURL) {
+                    if (isMySQLURL(configuration)) {
                         removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
                         forceDefaultMySQLDialect(configuration);
                     }
