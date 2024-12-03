@@ -17,6 +17,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -60,7 +61,10 @@ import jakarta.persistence.Parameter;
  */
 public class SOSHibernate {
 
+    public static final String DEFAULT_DIALECT_PACKAGE = Dialect.class.getPackageName();
+
     public static final String DEFAULT_DIALECT_MYSQL = MySQLDialect.class.getName();
+    public static final String DEFAULT_DIALECT_MARIADB = MariaDBDialect.class.getName();
     public static final String DEFAULT_DIALECT_ORACLE = OracleDialect.class.getName();
     public static final String DEFAULT_DIALECT_PGSQL = PostgreSQLDialect.class.getName();
     public static final String DEFAULT_DIALECT_MSSQL = SQLServerDialect.class.getName();
@@ -110,6 +114,8 @@ public class SOSHibernate {
     /** ---- AvailableSettings ------------------------------------------------------------------------------- */
     /** hibernate.current_session_context_class - SOS default: jta */
     public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
+    /** hibernate.dialect_resolvers - SOS default: null, see com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver */
+    public static final String HIBERNATE_PROPERTY_DIALECT_RESOLVERS = AvailableSettings.DIALECT_RESOLVERS;
 
     /** ---- MappingSettings ------------------------------------------------------------------------------- */
     /** hibernate.id.db_structure_naming_strategy - SOS default: legacy */

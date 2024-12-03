@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.query.Query;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,7 +60,7 @@ public class SOSHibernateJsonTest {
             StringBuilder hql = new StringBuilder("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
 
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
-            // query.setMaxResults(1);
+            query.setMaxResults(1);
 
             List<DBItemInventoryConfiguration> result = session.getResultList(query);
             LOGGER.info("---- FOUND: " + result.size());
@@ -82,7 +83,8 @@ public class SOSHibernateJsonTest {
 
             result = session.getResultList(query);
             LOGGER.info("---- FOUND: " + result.size());
-
+            LOGGER.info("---- DIALECT " + factory.getDialect());
+            LOGGER.info(Dialect.class.getPackageName());
         } catch (Exception e) {
             throw e;
         } finally {

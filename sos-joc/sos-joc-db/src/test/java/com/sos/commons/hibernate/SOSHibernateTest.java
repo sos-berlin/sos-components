@@ -364,7 +364,7 @@ public class SOSHibernateTest {
 
     public static SOSHibernateFactory createFactory() throws Exception {
         // System.setProperty("java.util.logging.config.file", Paths.get("src/test/resources/mssql/logging.properties").toString());
-        Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.h2.xml");
+        Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.mysql.xml");
         tryDoInsertIfH2(hibernateFile, false);
 
         SOSHibernateFactory factory = new SOSHibernateFactory(hibernateFile);

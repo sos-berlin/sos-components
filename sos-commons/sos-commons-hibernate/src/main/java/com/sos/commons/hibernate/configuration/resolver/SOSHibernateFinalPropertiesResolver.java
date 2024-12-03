@@ -1,6 +1,5 @@
 package com.sos.commons.hibernate.configuration.resolver;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
@@ -12,12 +11,15 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
+import com.sos.commons.hibernate.configuration.resolver.dialect.SOSHibernateDialectResolver;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.util.SOSString;
 
 public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigurationResolver {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFinalPropertiesResolver.class);
+
+    private static final String DIALECT_RESOLVER = SOSHibernateDialectResolver.class.getName();
 
     private Dbms dbms;
 
@@ -54,54 +56,75 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         if (configuration != null) {
             this.dbms = getDbms(configuration.getProperties());
             String dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-            if (dialect != null) {
-                switch (this.dbms) {
-                case MYSQL:
-                    if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(
-                            "org.hibernate.dialect.MySQLInnoDBDialect")) {
-                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
+            boolean allowMetadataOnBoot = isAllowMetadataOnBoot(configuration);
+            switch (this.dbms) {
+            case MYSQL:
+                boolean isMySQLURL = isMySQLURL(configuration);
+                if (dialect == null) {
+                    if (isMySQLURL) {
+                        forceDefaultMySQLDialect(configuration);
                     }
-                    if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(
-                            "org.hibernate.dialect.MariaDBDialect")) {
-                        if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql")) {
-                            configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
-                        } else {
-                            if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true")) {
-                                removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                            }
-                        }
-                    }
-                    break;
-                case ORACLE:
-                    if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_ORACLE)
-                            && configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true")) {
+                } else if (dialect.equals(SOSHibernate.DEFAULT_DIALECT_MARIADB)) {
+                    if (isMySQLURL) {
                         removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                        forceDefaultMySQLDialect(configuration);
                     }
-                    break;
-                case PGSQL:
-                    if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_PGSQL)
-                            && configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true")) {
-                        removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                } else {
+                    mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_MYSQL);
+                    dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                    if (dialect == null) {
+                        forceDefaultMySQLDialect(configuration);
                     }
-                    break;
-                case MSSQL:
-                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect",
-                            "org.hibernate.dialect.SQLServerDialect").contains(configuration.getProperties().getProperty(
-                                    SOSHibernate.HIBERNATE_PROPERTY_DIALECT)) && configuration.getProperties().getProperty(
-                                            SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true")) {
-                        removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                    }
-                    break;
-                case H2:
-                    if (configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).equals(SOSHibernate.DEFAULT_DIALECT_H2)
-                            && configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true")) {
-                        removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                    }
-                    break;
-                default:
-                    break;
                 }
+                break;
+            case ORACLE:
+                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_ORACLE);
+                break;
+            case PGSQL:
+                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_PGSQL);
+                break;
+            case MSSQL:
+                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_MSSQL);
+                break;
+            case H2:
+                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_H2);
+                break;
+            default:
+                break;
             }
+        }
+    }
+
+    private boolean isMySQLURL(Configuration configuration) {
+        return configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql");
+    }
+
+    private boolean isAllowMetadataOnBoot(Configuration configuration) {
+        return configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true");
+    }
+
+    private String getConfiguredDialectOrDefault(Configuration configuration, String dialect, String defaultDialect) {
+        if (!isDefaultDialectPackage(dialect)) {
+            configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, defaultDialect);
+            return defaultDialect;
+        }
+        return dialect;
+    }
+
+    private boolean isDefaultDialectPackage(String dialect) {
+        if (dialect.startsWith(SOSHibernate.DEFAULT_DIALECT_PACKAGE)) {
+            return false;
+        }
+        return true;
+    }
+
+    private void mapDialect(Configuration configuration, boolean allowMetadataOnBoot, String dialect, String defaultDialect) {
+        if (dialect == null) {
+            return;
+        }
+        dialect = getConfiguredDialectOrDefault(configuration, dialect, defaultDialect);
+        if (dialect.equals(defaultDialect) && allowMetadataOnBoot) {
+            removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
         }
     }
 
@@ -135,6 +158,11 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
     private void removeProperty(Configuration configuration, String key) {
         configuration.getProperties().remove(key);
         configuration.getStandardServiceRegistryBuilder().getSettings().remove(key);
+    }
+
+    private void forceDefaultMySQLDialect(Configuration configuration) {
+        configuration.getProperties().put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT_RESOLVERS, DIALECT_RESOLVER);
+        configuration.getStandardServiceRegistryBuilder().getSettings().put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT_RESOLVERS, DIALECT_RESOLVER);
     }
 
     private static Dbms getDbms(Dialect dialect) {
