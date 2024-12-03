@@ -59,6 +59,7 @@ public class SOSHibernateJsonTest {
             StringBuilder hql = new StringBuilder("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
 
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            // query.setMaxResults(1);
 
             List<DBItemInventoryConfiguration> result = session.getResultList(query);
             LOGGER.info("---- FOUND: " + result.size());

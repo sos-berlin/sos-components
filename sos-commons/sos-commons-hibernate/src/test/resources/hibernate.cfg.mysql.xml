@@ -11,7 +11,7 @@
 		<property name="hibernate.show_sql">false</property>
 		<property name="hibernate.format_sql">true</property>
 
-		<property name="hibernate.sos.show_configuration_properties">false</property>
+		<property name="hibernate.sos.show_configuration_properties">true</property>
 
 		<!-- Hikari Connection Pool -->
 		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>

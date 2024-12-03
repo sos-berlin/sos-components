@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.configuration.SOSHibernateConfigurationResolver;
+import com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
@@ -373,53 +374,6 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    public static Dbms getDbms(Path configFile) throws SOSHibernateConfigurationException {
-        String dialect = null;
-        try {
-            Configuration conf = new Configuration();
-            conf.configure(configFile.toUri().toURL());
-            dialect = conf.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-        } catch (MalformedURLException e) {
-            throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
-        } catch (PersistenceException e) {
-            throw new SOSHibernateConfigurationException(e);
-        }
-        return getDbms(dialect);
-    }
-
-    public static Dbms getDbms(Dialect dialect) {
-        return getDbms(dialect == null ? null : dialect.getClass().getSimpleName());
-    }
-
-    public static Dbms getDbms(String dialect) {
-        Dbms dbms = Dbms.UNKNOWN;
-        if (dialect != null) {
-            String dialectClassName = dialect.toLowerCase();
-            if (dialectClassName.contains("h2")) {
-                dbms = Dbms.H2;
-            } else if (dialectClassName.contains("sqlserver")) {
-                dbms = Dbms.MSSQL;
-            } else if (dialectClassName.contains("mysql") || dialectClassName.contains("mariadb")) {
-                dbms = Dbms.MYSQL;
-            } else if (dialectClassName.contains("oracle")) {
-                dbms = Dbms.ORACLE;
-            } else if (dialectClassName.contains("postgre")) {
-                dbms = Dbms.PGSQL;
-            }
-        }
-        return dbms;
-    }
-
-    public static Dbms getDbms(Properties properties) {
-        Dbms dbms = Dbms.UNKNOWN;
-        String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-        if (!SOSString.isEmpty(connectionUrl)) {
-            dbms = SOSHibernate.JDBC2DBMS.entrySet().stream().filter(entry -> connectionUrl.contains(entry.getKey())).map(Map.Entry::getValue)
-                    .findFirst().orElse(Dbms.UNKNOWN);
-        }
-        return dbms;
-    }
-
     private void initClassMapping() {
         classMapping = new SOSClassList();
     }
@@ -434,7 +388,7 @@ public class SOSHibernateFactory implements Serializable {
         configure();
         setConfigurationProperties();
         configuration = configurationResolver.resolve(configuration);
-        setDbms(configuration.getProperties());
+        dbms = configurationResolver.getDbms();
         databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
     }
 
@@ -444,9 +398,7 @@ public class SOSHibernateFactory implements Serializable {
         }
         sessionFactory = configuration.buildSessionFactory();
         dialect = ((SessionFactoryImplementor) sessionFactory).getJdbcServices().getDialect();
-        if (Dbms.UNKNOWN.equals(dbms)) {
-            setDbms(configuration.getProperties());
-        }
+        dbms = SOSHibernateFinalPropertiesResolver.finalCheckAndSetDbms(sessionFactory, dialect, dbms);
     }
 
     private void showConfigurationProperties() {
@@ -493,46 +445,6 @@ public class SOSHibernateFactory implements Serializable {
                     LOGGER.trace(String.format("%s %s=%s", method, key, value));
                 }
             }
-        }
-    }
-
-    private void setDbms(String dialect) {
-        dbms = getDbms(dialect);
-    }
-
-    private void setDbms(Properties properties) {
-        dbms = Dbms.UNKNOWN;
-        if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL) != null && !properties.getProperty(
-                SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).isEmpty()) {
-            if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:h2")) {
-                dbms = Dbms.H2;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:sqlserver")) {
-                dbms = Dbms.MSSQL;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:oracle")) {
-                dbms = Dbms.ORACLE;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:postgresql")) {
-                dbms = Dbms.PGSQL;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql") || properties.getProperty(
-                    SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mariadb")) {
-                dbms = Dbms.MYSQL;
-            }
-        } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT) != null && !properties.getProperty(
-                SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).isEmpty()) {
-            if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("h2")) {
-                dbms = Dbms.H2;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mssql")) {
-                dbms = Dbms.MSSQL;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("oracle")) {
-                dbms = Dbms.ORACLE;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("pgsql")) {
-                dbms = Dbms.PGSQL;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mysql") || properties.getProperty(
-                    SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mariadb")) {
-                dbms = Dbms.MYSQL;
-            }
-        } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT) != null && !properties.getProperty(
-                SOSHibernate.HIBERNATE_PROPERTY_DIALECT).isEmpty()) {
-            setDbms(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
         }
     }
 

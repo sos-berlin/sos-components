@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.cfg.Configuration;
 
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.configuration.resolver.ISOSHibernateConfigurationResolver;
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateCredentiaStoreResolver;
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateEncryptionResolver;
@@ -22,6 +23,7 @@ public class SOSHibernateConfigurationResolver {
 
     private final List<ISOSHibernateConfigurationResolver> resolvers;
     private Map<String, String> result;
+    private SOSHibernateFinalPropertiesResolver finalResolver;
 
     public SOSHibernateConfigurationResolver() {
         resolvers = new ArrayList<>();
@@ -33,7 +35,8 @@ public class SOSHibernateConfigurationResolver {
         // 3 - resolve cs:// entries
         resolvers.add(new SOSHibernateCredentiaStoreResolver());
         // 4(last)- resolve configuration properties
-        resolvers.add(new SOSHibernateFinalPropertiesResolver());
+        finalResolver = new SOSHibernateFinalPropertiesResolver();
+        resolvers.add(finalResolver);
     }
 
     public Configuration resolve(Configuration configuration) throws SOSHibernateConfigurationException {
@@ -43,6 +46,10 @@ public class SOSHibernateConfigurationResolver {
         }
         setResult(configuration, cloned);
         return configuration;
+    }
+
+    public Dbms getDbms() {
+        return finalResolver == null ? Dbms.UNKNOWN : finalResolver.getDbms();
     }
 
     public void addResolver(ISOSHibernateConfigurationResolver resolver) {

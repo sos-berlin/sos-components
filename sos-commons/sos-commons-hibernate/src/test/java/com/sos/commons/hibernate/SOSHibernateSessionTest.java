@@ -32,7 +32,7 @@ public class SOSHibernateSessionTest {
             LOGGER.info(String.format("----[SYSTEM][%s]%s", TimeZone.getDefault().getID(), SOSDate.getCurrentDateTimeAsString()));
 
             session = factory.openStatelessSession("test");
-            LOGGER.info(String.format("[DB]%s", session.getCurrentDateTime()));
+            LOGGER.info(String.format("[DB][%s]%s", factory.getDbms(), session.getCurrentDateTime()));
             LOGGER.info(String.format("[DB][UTC]%s", session.getCurrentUTCDateTime()));
         } catch (Exception e) {
             throw e;

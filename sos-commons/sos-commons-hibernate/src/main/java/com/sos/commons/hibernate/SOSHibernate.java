@@ -65,10 +65,10 @@ public class SOSHibernate {
     public static final String DEFAULT_DIALECT_PGSQL = PostgreSQLDialect.class.getName();
     public static final String DEFAULT_DIALECT_MSSQL = SQLServerDialect.class.getName();
     public static final String DEFAULT_DIALECT_H2 = H2Dialect.class.getName();
+
     public enum Dbms {
         H2, MSSQL, MYSQL, ORACLE, PGSQL, UNKNOWN
     }
-
 
     /** ---- JdbcSettings ------------------------------------------------------------------------------- */
     /** hibernate.connection.driver_class - The JPA-standard setting {@link #HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS} is now preferred */
@@ -144,14 +144,14 @@ public class SOSHibernate {
 
     public static final int LIMIT_IN_CLAUSE = 1000;
 
-    public static final Map<String, Dbms> JDBC2DBMS = Map.of(
-            "jdbc:h2", Dbms.H2,
-            "jdbc:sqlserver", Dbms.MSSQL,
-            "jdbc:oracle", Dbms.ORACLE,
-            "jdbc:postgresql", Dbms.PGSQL,
-            "jdbc:mysql", Dbms.MYSQL,
-            "jdbc:mariadb", Dbms.MYSQL
-        );
+    public static final Map<String, Dbms> JDBC_TO_DBMS = Map.of("jdbc:h2", Dbms.H2, "jdbc:sqlserver", Dbms.MSSQL, "jdbc:oracle", Dbms.ORACLE,
+            "jdbc:postgresql", Dbms.PGSQL, "jdbc:mysql", Dbms.MYSQL, "jdbc:mariadb", Dbms.MYSQL);
+
+    public static final Map<String, Dbms> DBMS_PRODUCT_TO_DBMS = Map.of("h2", Dbms.H2, "mssql", Dbms.MSSQL, "oracle", Dbms.ORACLE, "pgsql",
+            Dbms.PGSQL, "mysql", Dbms.MYSQL, "mariadb", Dbms.MYSQL);
+
+    public static final Map<String, Dbms> DIALECT_TO_DBMS = Map.of("h2", Dbms.H2, "sqlserver", Dbms.MSSQL, "oracle", Dbms.ORACLE, "postgre",
+            Dbms.PGSQL, "mysql", Dbms.MYSQL, "mariadb", Dbms.MYSQL);
 
     public static Exception findLockException(Exception cause) {
         Throwable e = cause;

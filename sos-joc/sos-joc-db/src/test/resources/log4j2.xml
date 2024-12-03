@@ -19,9 +19,11 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
-		<Root level="trace">
+		<Root level="debug">
 			<AppenderRef ref="console" />
+			<!-- 
 			<AppenderRef ref="fileLogger" />
+			-->
 		</Root>
 		<Logger name="org.hibernate" level="warn" />
 		<Logger name="org.hibernate.SQL" level="debug" />

@@ -10,8 +10,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
+import com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver;
 
 /** Column type:<br />
  * H2 (MySQL Mode) - JSON<br />
@@ -32,7 +32,7 @@ public class SOSHibernateJsonType implements UserType<Object> {
     public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException,
             SQLException {
         if (dbms == null) {
-            dbms = SOSHibernateFactory.getDbms(session.getFactory().getJdbcServices().getDialect());
+            dbms = SOSHibernateFinalPropertiesResolver.getDbms(session.getFactory());
         }
         if (value == null) {
             if (Dbms.ORACLE.equals(dbms)) {
