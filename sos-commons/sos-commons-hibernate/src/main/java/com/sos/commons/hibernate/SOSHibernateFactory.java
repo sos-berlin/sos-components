@@ -107,7 +107,6 @@ public class SOSHibernateFactory implements Serializable {
             adjustConfiguration(configuration);
             showConfigurationProperties();
             configurationResolver = null;
-            adjustAnnotations(dbms);
             buildSessionFactory();
             if (LOGGER.isDebugEnabled()) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "build");
@@ -344,7 +343,7 @@ public class SOSHibernateFactory implements Serializable {
                     LOGGER.debug(String.format("%s configure connection without the hibernate file", method));
                 }
             }
-            
+
             mapDeprecatedConfigurationProperties();
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
@@ -421,11 +420,8 @@ public class SOSHibernateFactory implements Serializable {
         Dbms dbms = Dbms.UNKNOWN;
         String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
         if (!SOSString.isEmpty(connectionUrl)) {
-            dbms = SOSHibernate.JDBC2DBMS.entrySet().stream()
-                .filter(entry -> connectionUrl.contains(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .findFirst()
-                .orElse(Dbms.UNKNOWN);
+            dbms = SOSHibernate.JDBC2DBMS.entrySet().stream().filter(entry -> connectionUrl.contains(entry.getKey())).map(Map.Entry::getValue)
+                    .findFirst().orElse(Dbms.UNKNOWN);
         }
         return dbms;
     }
@@ -509,12 +505,12 @@ public class SOSHibernateFactory implements Serializable {
     private void setDbms(String dialect) {
         dbms = getDbms(dialect);
     }
-    
+
     private void setDbms(Properties properties) {
         dbms = Dbms.UNKNOWN;
-        if(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL) != null 
-                && !properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).isEmpty()) {
-            if(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:h2")) {
+        if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL) != null && !properties.getProperty(
+                SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).isEmpty()) {
+            if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:h2")) {
                 dbms = Dbms.H2;
             } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:sqlserver")) {
                 dbms = Dbms.MSSQL;
@@ -522,30 +518,30 @@ public class SOSHibernateFactory implements Serializable {
                 dbms = Dbms.ORACLE;
             } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:postgresql")) {
                 dbms = Dbms.PGSQL;
-            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql") 
-                    || properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mariadb")) {
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql") || properties.getProperty(
+                    SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mariadb")) {
                 dbms = Dbms.MYSQL;
             }
-        } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT) != null 
-                && !properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).isEmpty()) {
-            if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("h2")) {
+        } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT) != null && !properties.getProperty(
+                SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).isEmpty()) {
+            if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("h2")) {
                 dbms = Dbms.H2;
-            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mssql")) {
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mssql")) {
                 dbms = Dbms.MSSQL;
-            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("oracle")) {
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("oracle")) {
                 dbms = Dbms.ORACLE;
-            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("pgsql")) {
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("pgsql")) {
                 dbms = Dbms.PGSQL;
-            } else if(properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mysql")
-                    || properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mariadb")) {
+            } else if (properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mysql") || properties.getProperty(
+                    SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT).contains("mariadb")) {
                 dbms = Dbms.MYSQL;
             }
-        } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT) != null 
-                && !properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT).isEmpty()) {
+        } else if (properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT) != null && !properties.getProperty(
+                SOSHibernate.HIBERNATE_PROPERTY_DIALECT).isEmpty()) {
             setDbms(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
         }
     }
-    
+
     private void setDefaultConfigurationProperties() {
         if (useDefaultConfigurationProperties && defaultConfigurationProperties != null) {
             boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -557,40 +553,6 @@ public class SOSHibernateFactory implements Serializable {
                     LOGGER.trace(String.format("%s %s=%s", method, key, value));
                 }
                 configuration.setProperty(key, value);
-            }
-        }
-    }
-
-    private void adjustAnnotations(Dbms dbms) {
-        if (classMapping != null) {
-            if (Dbms.H2.equals(dbms)) {
-                changeJsonAnnotations4H2();
-            }
-        }
-    }
-
-    // TODO to remove ...
-    private void changeJsonAnnotations4H2() {
-        for (Class<?> c : classMapping.getClasses()) {
-            List<Field> fields = Arrays.stream(c.getDeclaredFields()).filter(m -> m.isAnnotationPresent(org.hibernate.annotations.Type.class) && m
-                    .getAnnotation(org.hibernate.annotations.Type.class).value().equals(SOSHibernateJsonType.class)).collect(Collectors.toList());
-            if (fields != null && fields.size() > 0) {
-                for (Field field : fields) {
-                    field.setAccessible(true);
-                    org.hibernate.annotations.ColumnTransformer ct = field.getAnnotation(org.hibernate.annotations.ColumnTransformer.class);
-                    if (ct != null) {
-                        try {
-                            if (!ct.write().equals(SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_H2)) {
-                                SOSReflection.changeAnnotationValue(ct, "write", SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_H2);
-                            }
-                        } catch (Throwable e) {
-                            LOGGER.warn(String.format("[%s.%s]%s", c.getSimpleName(), field.getName(), e.toString()), e);
-                        }
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(String.format("[ColumnTransformer][%s.%s]%s", c.getSimpleName(), field.getName(), ct.write()));
-                        }
-                    }
-                }
             }
         }
     }
@@ -615,7 +577,7 @@ public class SOSHibernateFactory implements Serializable {
             throw new SOSHibernateConfigurationException(String.format("invalid transaction isolation level=%s", isolationLevel));
         }
     }
-    
+
     public void addClassMapping(Class<?> c) {
         classMapping.add(c);
     }
