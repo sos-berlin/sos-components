@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -23,7 +22,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.controller.ControllerIdReq;
@@ -65,9 +63,8 @@ public class WorkflowsSnapshotImpl extends JOCResourceImpl implements IWorkflows
             final Set<Folder> folders = folderPermissions.getListOfFolders();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             
-            Map<SyncStateText, Long> summary = getWorkflows(controllerId, new DeployedConfigurationDBLayer(connection), currentstate, folders,
-                    getJocError());
-            
+            Map<SyncStateText, Long> summary = getWorkflows(controllerId, new DeployedConfigurationDBLayer(connection), currentstate, folders);
+
             WorkflowsSummary wSummary = new WorkflowsSummary();
             wSummary.setNotSynchronized(summary.getOrDefault(SyncStateText.NOT_IN_SYNC, 0L).intValue());
             wSummary.setSynchronized(summary.getOrDefault(SyncStateText.IN_SYNC, 0L).intValue());
@@ -89,7 +86,7 @@ public class WorkflowsSnapshotImpl extends JOCResourceImpl implements IWorkflows
     }
 
     public static Map<SyncStateText, Long> getWorkflows(String controllerId, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
-            Set<Folder> permittedFolders, JocError jocError) {
+            Set<Folder> permittedFolders) {
 
         WorkflowsFilter workflowsFilter = new WorkflowsFilter();
         workflowsFilter.setControllerId(controllerId);
