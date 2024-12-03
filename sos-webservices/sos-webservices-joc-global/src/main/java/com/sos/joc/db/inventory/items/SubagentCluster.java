@@ -19,6 +19,9 @@ public class SubagentCluster {
     }
     
     public SubAgentId getDBItemInventorySubAgentClusterMember() {
+        if (subagent.getSubagentId() == null) {
+            return null;
+        }
         return subagent;
     }
 }

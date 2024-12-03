@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
@@ -180,36 +181,41 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
             return r;
         } else {
             try {
+                List<String> clauses = new ArrayList<>(3);
                 StringBuilder hql = new StringBuilder();
                 hql.append("select new ").append(SubagentCluster.class.getName()).append("(sac, sacm.subAgentId, sacm.priority) from ");
-                hql.append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(" sac, ");
+                hql.append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(" sac ");
                 if (controllerIds != null && !controllerIds.isEmpty()) {
-                    hql.append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS).append(" sacm, ");
-                    hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" ai ");
-                    hql.append("where sac.subAgentClusterId = sacm.subAgentClusterId ");
-                    hql.append("and ai.agentId = sac.agentId ");
+                    hql.append("left join ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS).append(" sacm ");
+                    hql.append("on sac.subAgentClusterId = sacm.subAgentClusterId ");
+                    hql.append("left join ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" ai ");
+                    hql.append("on ai.agentId = sac.agentId ");
                     if (controllerIds.size() == 1) {
-                        hql.append("and ai.controllerId = :controllerId ");
+                        clauses.add("ai.controllerId = :controllerId");
                     } else {
-                        hql.append("and ai.controllerId in (:controllerIds) ");
+                        clauses.add("ai.controllerId in (:controllerIds)");
                     }
                 } else {
-                    hql.append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS).append(" sacm ");
-                    hql.append("where sac.subAgentClusterId = sacm.subAgentClusterId ");
+                    hql.append("left join ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS).append(" sacm ");
+                    hql.append("on sac.subAgentClusterId = sacm.subAgentClusterId ");
                 }
+                
                 if (agentIds != null && !agentIds.isEmpty()) {
                     if (agentIds.size() == 1) {
-                        hql.append(" and sac.agentId = :agentId ");
+                        clauses.add("sac.agentId = :agentId");
                     } else {
-                        hql.append(" and sac.agentId in (:agentIds) ");
+                        clauses.add("sac.agentId in (:agentIds)");
                     }
                 }
                 if (subagentClusterIds != null && !subagentClusterIds.isEmpty()) {
                     if (subagentClusterIds.size() == 1) {
-                        hql.append(" and sac.subAgentClusterId = :subagentClusterId");
+                        clauses.add("sac.subAgentClusterId = :subagentClusterId");
                     } else {
-                        hql.append(" and sac.subAgentClusterId in (:subagentClusterIds)");
+                        clauses.add("sac.subAgentClusterId in (:subagentClusterIds)");
                     }
+                }
+                if (clauses.size() > 0) {
+                    hql.append("where ").append(String.join(" and ", clauses)).append(" ");
                 }
                 Query<SubagentCluster> query = getSession().createQuery(hql.toString());
                 if (controllerIds != null && !controllerIds.isEmpty()) {
@@ -238,7 +244,7 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
                     return Collections.emptyMap();
                 }
                 return result.stream().collect(Collectors.groupingBy(SubagentCluster::getDBItemInventorySubAgentCluster, Collectors.mapping(
-                        SubagentCluster::getDBItemInventorySubAgentClusterMember, Collectors.toList())));
+                        SubagentCluster::getDBItemInventorySubAgentClusterMember, Collectors.filtering(Objects::nonNull, Collectors.toList()))));
             } catch (DBMissingDataException ex) {
                 throw ex;
             } catch (SOSHibernateInvalidSessionException ex) {

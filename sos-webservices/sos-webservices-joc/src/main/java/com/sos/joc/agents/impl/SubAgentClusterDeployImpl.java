@@ -88,6 +88,11 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                         .toString(), controllerId));
             }
             
+            subAgentClusters.entrySet().stream().filter(e -> e.getValue().isEmpty()).findAny().map(Map.Entry::getKey).map(
+                    DBItemInventorySubAgentCluster::getSubAgentClusterId).ifPresent(id -> {
+                        throw new JocBadRequestException(String.format("The Subagent Cluster '%s' doesn't contain any Subagents", id));
+                    });
+            
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentState = proxy.currentState();
             
