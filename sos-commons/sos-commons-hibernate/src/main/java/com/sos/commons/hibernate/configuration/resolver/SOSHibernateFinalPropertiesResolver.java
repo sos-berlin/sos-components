@@ -53,44 +53,42 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         // with Hibernate 6: Version-specific and spatial-specific dialects are deprecated
         // simply MySQL8Dialect, SQLServer2012Dialect, SQLServer2016Dialect are still implemented
         // so, old dialects are mapped: Example: org.hibernate.dialect.MySQLInnoDBDialect -> org.hibernate.dialect.MySQLDialect
-        if (configuration != null) {
-            this.dbms = getDbms(configuration.getProperties());
-            String dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-            boolean allowMetadataOnBoot = isAllowMetadataOnBoot(configuration);
-            switch (this.dbms) {
-            case MYSQL:
-                if (dialect == null) {
-                    if (isMySQLURL(configuration)) {
-                        forceDefaultMySQLDialect(configuration);
-                    }
-                } else if (dialect.equals(SOSHibernate.DEFAULT_DIALECT_MARIADB)) {
-                    if (isMySQLURL(configuration)) {
-                        removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                        forceDefaultMySQLDialect(configuration);
-                    }
-                } else {
-                    mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_MYSQL);
-                    dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
-                    if (dialect == null) {
-                        forceDefaultMySQLDialect(configuration);
-                    }
+        this.dbms = getDbms(configuration.getProperties());
+        String dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+        boolean allowMetadataOnBoot = isAllowMetadataOnBoot(configuration);
+        switch (this.dbms) {
+        case MYSQL:
+            if (dialect == null) {
+                if (isMySQLURL(configuration)) {
+                    forceDefaultMySQLDialect(configuration);
                 }
-                break;
-            case ORACLE:
-                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_ORACLE);
-                break;
-            case PGSQL:
-                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_PGSQL);
-                break;
-            case MSSQL:
-                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_MSSQL);
-                break;
-            case H2:
-                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_H2);
-                break;
-            default:
-                break;
+            } else if (dialect.equals(SOSHibernate.DEFAULT_DIALECT_MARIADB)) {
+                if (isMySQLURL(configuration)) {
+                    removeProperty(configuration, SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                    forceDefaultMySQLDialect(configuration);
+                }
+            } else {
+                mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_MYSQL);
+                dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+                if (dialect == null) {
+                    forceDefaultMySQLDialect(configuration);
+                }
             }
+            break;
+        case ORACLE:
+            mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_ORACLE);
+            break;
+        case PGSQL:
+            mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_PGSQL);
+            break;
+        case MSSQL:
+            mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_MSSQL);
+            break;
+        case H2:
+            mapDialect(configuration, allowMetadataOnBoot, dialect, SOSHibernate.DEFAULT_DIALECT_H2);
+            break;
+        default:
+            break;
         }
     }
 
