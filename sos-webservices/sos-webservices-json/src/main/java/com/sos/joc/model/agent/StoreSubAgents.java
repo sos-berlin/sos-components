@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "controllerId",
     "agentId",
     "subagents",
+    "update",
     "auditLog"
 })
 public class StoreSubAgents {
@@ -41,6 +42,7 @@ public class StoreSubAgents {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("agentId")
@@ -53,6 +55,8 @@ public class StoreSubAgents {
     @JsonProperty("subagents")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<SubAgent> subagents = new LinkedHashSet<SubAgent>();
+    @JsonProperty("update")
+    private Boolean update = false;
     /**
      * auditParams
      * <p>
@@ -90,6 +94,7 @@ public class StoreSubAgents {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("agentId")
@@ -101,6 +106,7 @@ public class StoreSubAgents {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("agentId")
@@ -128,6 +134,16 @@ public class StoreSubAgents {
         this.subagents = subagents;
     }
 
+    @JsonProperty("update")
+    public Boolean getUpdate() {
+        return update;
+    }
+
+    @JsonProperty("update")
+    public void setUpdate(Boolean update) {
+        this.update = update;
+    }
+
     /**
      * auditParams
      * <p>
@@ -152,12 +168,12 @@ public class StoreSubAgents {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("subagents", subagents).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("subagents", subagents).append("update", update).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(auditLog).append(subagents).toHashCode();
+        return new HashCodeBuilder().append(update).append(agentId).append(controllerId).append(auditLog).append(subagents).toHashCode();
     }
 
     @Override
@@ -169,7 +185,7 @@ public class StoreSubAgents {
             return false;
         }
         StoreSubAgents rhs = ((StoreSubAgents) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(subagents, rhs.subagents).isEquals();
+        return new EqualsBuilder().append(update, rhs.update).append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(subagents, rhs.subagents).isEquals();
     }
 
 }

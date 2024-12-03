@@ -69,7 +69,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                         true, true, false);
             } else {
                 controllerIds = AgentStoreUtils.storeSubagentCluster(agentStoreParameter.getSubagentClusters(), agentDbLayer, agentClusterDBLayer,
-                        true, false, true);
+                        true, false, agentStoreParameter.getUpdate() == Boolean.TRUE);
             }
 
             Globals.commit(connection);

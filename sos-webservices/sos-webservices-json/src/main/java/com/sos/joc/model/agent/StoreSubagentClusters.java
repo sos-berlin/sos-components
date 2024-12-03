@@ -21,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "subagentClusters",
+    "update",
     "auditLog"
 })
 public class StoreSubagentClusters {
@@ -32,6 +33,8 @@ public class StoreSubagentClusters {
      */
     @JsonProperty("subagentClusters")
     private List<SubagentCluster> subagentClusters = new ArrayList<SubagentCluster>();
+    @JsonProperty("update")
+    private Boolean update = false;
     /**
      * auditParams
      * <p>
@@ -61,6 +64,16 @@ public class StoreSubagentClusters {
         this.subagentClusters = subagentClusters;
     }
 
+    @JsonProperty("update")
+    public Boolean getUpdate() {
+        return update;
+    }
+
+    @JsonProperty("update")
+    public void setUpdate(Boolean update) {
+        this.update = update;
+    }
+
     /**
      * auditParams
      * <p>
@@ -85,12 +98,12 @@ public class StoreSubagentClusters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("subagentClusters", subagentClusters).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("subagentClusters", subagentClusters).append("update", update).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(subagentClusters).toHashCode();
+        return new HashCodeBuilder().append(update).append(auditLog).append(subagentClusters).toHashCode();
     }
 
     @Override
@@ -102,7 +115,7 @@ public class StoreSubagentClusters {
             return false;
         }
         StoreSubagentClusters rhs = ((StoreSubagentClusters) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(subagentClusters, rhs.subagentClusters).isEquals();
+        return new EqualsBuilder().append(update, rhs.update).append(auditLog, rhs.auditLog).append(subagentClusters, rhs.subagentClusters).isEquals();
     }
 
 }

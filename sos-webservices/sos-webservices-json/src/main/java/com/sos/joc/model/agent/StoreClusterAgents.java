@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "clusterAgents",
+    "update",
     "auditLog"
 })
 public class StoreClusterAgents {
@@ -42,6 +43,8 @@ public class StoreClusterAgents {
      */
     @JsonProperty("clusterAgents")
     private List<ClusterAgent> clusterAgents = new ArrayList<ClusterAgent>();
+    @JsonProperty("update")
+    private Boolean update = false;
     /**
      * auditParams
      * <p>
@@ -95,6 +98,16 @@ public class StoreClusterAgents {
         this.clusterAgents = clusterAgents;
     }
 
+    @JsonProperty("update")
+    public Boolean getUpdate() {
+        return update;
+    }
+
+    @JsonProperty("update")
+    public void setUpdate(Boolean update) {
+        this.update = update;
+    }
+
     /**
      * auditParams
      * <p>
@@ -119,12 +132,12 @@ public class StoreClusterAgents {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("clusterAgents", clusterAgents).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("clusterAgents", clusterAgents).append("update", update).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(clusterAgents).toHashCode();
+        return new HashCodeBuilder().append(update).append(controllerId).append(auditLog).append(clusterAgents).toHashCode();
     }
 
     @Override
@@ -136,7 +149,7 @@ public class StoreClusterAgents {
             return false;
         }
         StoreClusterAgents rhs = ((StoreClusterAgents) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(clusterAgents, rhs.clusterAgents).isEquals();
+        return new EqualsBuilder().append(update, rhs.update).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(clusterAgents, rhs.clusterAgents).isEquals();
     }
 
 }

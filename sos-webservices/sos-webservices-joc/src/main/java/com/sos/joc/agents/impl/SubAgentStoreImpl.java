@@ -116,7 +116,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                         .getSubagents(), true, true, false);
             } else {
                 AgentStoreUtils.saveOrUpdate(dbLayer, new InventorySubagentClustersDBLayer(connection), controllerId, dbAgent, dbSubAgents, subAgentsParam
-                        .getSubagents(), true, false, true);
+                        .getSubagents(), true, false, subAgentsParam.getUpdate() == Boolean.TRUE);
             }
 
             Globals.commit(connection);

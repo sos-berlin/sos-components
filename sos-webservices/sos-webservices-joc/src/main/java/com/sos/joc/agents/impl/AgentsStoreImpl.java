@@ -103,7 +103,8 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             if (action.equals(API_INVENTORY_ADD)) {
                 AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, true, false, agentDBLayer);
             } else {
-                AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, false, true, agentDBLayer);
+                AgentStoreUtils.storeStandaloneAgent(agentMap, controllerId, true, false, agentStoreParameter.getUpdate() == Boolean.TRUE,
+                        agentDBLayer);
             }
 
             Globals.commit(connection);
@@ -193,8 +194,8 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, true, false, agentDBLayer,
                         subagentClusterDBLayer);
             } else {
-                AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, false, true, agentDBLayer,
-                        subagentClusterDBLayer);
+                AgentStoreUtils.storeClusterAgent(agentMap, requestedSubagents, requestedSubagentIds, controllerId, true, false, agentStoreParameter
+                        .getUpdate() == Boolean.TRUE, agentDBLayer, subagentClusterDBLayer);
             }
 
             Globals.commit(connection);
