@@ -587,10 +587,16 @@ public class AgentStoreUtils {
                             standbyDirectorIsChanged = true;
                         }
                     }
+                    if (primaryDirectorIsChanged || standbyDirectorIsChanged) {
+                        dbSubAgent.setDeployed(false);
+                    }
+                    if (!dbSubAgent.getUri().equals(subAgent.getUrl())) {
+                        dbSubAgent.setDeployed(false);
+                    }
                     dbSubAgent.setIsDirector(subAgent.getIsDirector());
                     dbSubAgent.setUri(subAgent.getUrl());
                     dbSubAgent.setTitle(subAgent.getTitle());
-                    dbSubAgent.setDeployed(false);
+                    //dbSubAgent.setDeployed(false);
                     dbSubAgent.setTransaction("update");
                     curDbSubAgents.add(dbSubAgent);
                 }
