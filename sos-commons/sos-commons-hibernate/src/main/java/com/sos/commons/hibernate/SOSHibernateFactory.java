@@ -1,18 +1,14 @@
 package com.sos.commons.hibernate;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -21,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.configuration.SOSHibernateConfigurationResolver;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
@@ -28,11 +25,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
-import com.sos.commons.hibernate.type.SOSHibernateJsonType;
-import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 
 import jakarta.persistence.PersistenceException;
