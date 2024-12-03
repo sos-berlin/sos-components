@@ -33,8 +33,8 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
     private void updateConnectionUrlForMysqlWithMariaDriver(Properties properties) {
         String driver = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS);
         String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-        if (driver != null && !driver.isEmpty() && connectionUrl != null && !connectionUrl.isEmpty()) {
-            if (driver.toLowerCase().contains("mariadb") && connectionUrl.contains("jdbc:mysql")) {
+        if (!SOSString.isEmpty(driver) && !SOSString.isEmpty(connectionUrl)) {
+            if (driver.toLowerCase().contains("mariadb") && isMySQLURL(connectionUrl)) {
                 if (!connectionUrl.contains("permitMysqlScheme")) {
                     if (connectionUrl.contains("?")) {
                         connectionUrl = connectionUrl + "&amp;permitMysqlScheme";
@@ -95,7 +95,14 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
     }
 
     private boolean isMySQLURL(Configuration configuration) {
-        return configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL).contains("jdbc:mysql");
+        return isMySQLURL(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
+    }
+
+    private boolean isMySQLURL(String url) {
+        if (url == null) {
+            return false;
+        }
+        return url.contains("jdbc:mysql");
     }
 
     private boolean isAllowMetadataOnBoot(Configuration configuration) {
@@ -103,18 +110,11 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
     }
 
     private String getConfiguredDialectOrDefault(Configuration configuration, String dialect, String defaultDialect) {
-        if (!isDefaultDialectPackage(dialect)) {
+        if (dialect.startsWith(SOSHibernate.DEFAULT_DIALECT_PACKAGE)) {
             configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, defaultDialect);
             return defaultDialect;
         }
         return dialect;
-    }
-
-    private boolean isDefaultDialectPackage(String dialect) {
-        if (dialect.startsWith(SOSHibernate.DEFAULT_DIALECT_PACKAGE)) {
-            return false;
-        }
-        return true;
     }
 
     private void mapDialect(Configuration configuration, boolean allowMetadataOnBoot, String dialect, String defaultDialect) {
