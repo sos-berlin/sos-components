@@ -371,8 +371,9 @@ public class SOSHibernateTest {
         // factory.addClassMapping(DBItemInventoryTag.class);
         factory.addClassMapping(DBLayer.getJocClassMapping());
         // factory.setAutoCommit(true);
-        factory.build(true);
+        factory.build(false);
         LOGGER.info("DBMS=" + factory.getDbms() + ", DIALECT=" + factory.getDialect());
+        LOGGER.info("METADATA=" + factory.getDatabaseMetaData());
         return factory;
     }
 

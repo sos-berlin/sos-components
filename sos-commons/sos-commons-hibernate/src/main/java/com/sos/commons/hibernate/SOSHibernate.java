@@ -101,7 +101,7 @@ public class SOSHibernate {
     /** hibernate.dialect - deprecated<br/>
      * - HHH90000025: ...Dialect does not need to be specified explicitly using 'hibernate.dialect' */
     public static final String HIBERNATE_PROPERTY_DIALECT = JdbcSettings.DIALECT;
-    /** hibernate.boot.allow_jdbc_metadata_access - SOS default: false <br/>
+    /** hibernate.boot.allow_jdbc_metadata_access - SOS default: true <br/>
      * true - automatically detects Dialect if hibernate.dialect is not configured<br/>
      * --- sets org.hibernate.dialect.MariaDBDialect instead of MySQLDialect when using a Mariadb driver is used */
     public static final String HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT = JdbcSettings.ALLOW_METADATA_ON_BOOT;
@@ -115,7 +115,8 @@ public class SOSHibernate {
     /** ---- AvailableSettings ------------------------------------------------------------------------------- */
     /** hibernate.current_session_context_class - SOS default: jta */
     public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
-    /** hibernate.dialect_resolvers - SOS default: null, see com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver */
+    /** hibernate.dialect_resolvers - SOS default: SOSHibernateDefaultDialectResolver.<br/>
+     * see SOSHibernateFactory, SOSHibernateFinalPropertiesResolver */
     public static final String HIBERNATE_PROPERTY_DIALECT_RESOLVERS = AvailableSettings.DIALECT_RESOLVERS;
 
     /** ---- MappingSettings ------------------------------------------------------------------------------- */
@@ -149,11 +150,16 @@ public class SOSHibernate {
     // SOS Settings: dbms product
     public static final String HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT = "hibernate.sos.dbms_product";
 
-    public static final int LIMIT_IN_CLAUSE = 1000;
-
+    /** SOSHibernate variables */
     public static final Map<String, Dbms> JDBC_TO_DBMS = new HashMap<>();
     public static final Map<String, Dbms> DIALECT_PART_TO_DBMS = new HashMap<>();
     public static final Map<String, Dbms> SOS_DBMS_PRODUCT_TO_DBMS = new HashMap<>();
+
+    public static final int LIMIT_IN_CLAUSE = 1000;
+
+    /** is set on the Hibernate SessionFactory-Object */
+    public static final String SESSION_FACTORY_VAR_DBMS = "sos.session_factory_var.dbms";
+    public static final String SESSION_FACTORY_VAR_DATABASE_METADATA = "sos.session_factory_var.database_metadata";
 
     // the later usage/check is not case-sensitive
     static {

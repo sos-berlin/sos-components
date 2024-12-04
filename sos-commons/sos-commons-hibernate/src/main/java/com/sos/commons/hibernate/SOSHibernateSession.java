@@ -57,7 +57,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceException;
 
-public class SOSHibernateSession implements Serializable {
+public class SOSHibernateSession implements Serializable, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateSession.class);
     private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
@@ -130,7 +130,6 @@ public class SOSHibernateSession implements Serializable {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s%s, autoCommit=%s", method, sessionName, autoCommit));
             }
-            onOpenSession();
         } catch (IllegalStateException e) {
             throw new SOSHibernateOpenSessionException(e);
         } catch (PersistenceException e) {
@@ -191,6 +190,22 @@ public class SOSHibernateSession implements Serializable {
                 Session session = (Session) currentSession;
                 session.clear();
             }
+        } catch (IllegalStateException e) {
+            throwException(e, new SOSHibernateSessionException(e));
+        } catch (PersistenceException e) {
+            throwException(e, new SOSHibernateSessionException(e));
+        }
+    }
+
+    public void doWork(Work work) throws SOSHibernateException {
+        if (currentSession == null) {
+            throw new SOSHibernateInvalidSessionException("currentSession is NULL");
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "doWork"));
+        }
+        try {
+            currentSession.doWork(work);
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateSessionException(e));
         } catch (PersistenceException e) {
@@ -1239,27 +1254,6 @@ public class SOSHibernateSession implements Serializable {
             //
         }
 
-    }
-
-    private void onOpenSession() throws SOSHibernateOpenSessionException {
-        String method = SOSHibernate.getMethodName(logIdentifier, "onOpenSession");
-        try {
-            if (getFactory().readDatabaseMetaData() && !getFactory().getDatabaseMetaData().isSet()) {
-                // TODO
-                // currently only for Oracle because the returningClob issue
-                // should be later activated for all Dbms
-                if (Dbms.ORACLE.equals(getFactory().getDbms())) {
-                    getFactory().getDatabaseMetaData().set(getDatabaseMetaData());
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("%s[databaseMetaData]%s", method, getFactory().getDatabaseMetaData()));
-                    }
-                }
-            }
-        } catch (SOSHibernateConnectionException e) {
-            throw new SOSHibernateOpenSessionException(String.format("%s%s", method, e.getMessage()), e);
-        } catch (Exception e) {
-            LOGGER.warn(String.format("%s%s", method, e.toString()), e);
-        }
     }
 
     private void throwException(IllegalStateException cause, SOSHibernateException ex) throws SOSHibernateException {

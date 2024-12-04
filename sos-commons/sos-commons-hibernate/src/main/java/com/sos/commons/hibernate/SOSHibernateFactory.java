@@ -13,6 +13,7 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.configuration.SOSHibernateConfigurationResolver;
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver;
+import com.sos.commons.hibernate.configuration.resolver.dialect.SOSHibernateDefaultDialectResolver;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
@@ -55,7 +57,7 @@ public class SOSHibernateFactory implements Serializable {
     private String currentTimestampSelectString;
     private String currentUTCTimestampSelectString;
     private boolean useDefaultConfigurationProperties = true;
-    private boolean readDatabaseMetaData;
+    private boolean forceReadDatabaseMetaData;
 
     public SOSHibernateFactory() {
         this(asPath(null));
@@ -76,14 +78,16 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties = new Properties();
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_TRANSACTION_ISOLATION, String.valueOf(
                 Connection.TRANSACTION_READ_COMMITTED));
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, "false");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT, "true");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS, "jta");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE, "none");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY, "legacy");
+
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, "false");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "false");
-        // defaultConfigurationProperties.put("hibernate.jdbc.use_get_generated_keys", "false");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
+
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT, "true");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT_RESOLVERS, SOSHibernateDefaultDialectResolver.class.getName());
 
         configurationProperties = new Properties();
         configurationResolver = new SOSHibernateConfigurationResolver();
@@ -93,10 +97,9 @@ public class SOSHibernateFactory implements Serializable {
         build(false);
     }
 
-    public void build(boolean readDatabaseMetaData) throws SOSHibernateFactoryBuildException {
+    public void build(boolean forceReadDatabaseMetaData) throws SOSHibernateFactoryBuildException {
         try {
-            // see SOSHibernateSession.onOpenSession
-            this.readDatabaseMetaData = readDatabaseMetaData;
+            this.forceReadDatabaseMetaData = forceReadDatabaseMetaData;
 
             createConfiguration();
             adjustConfiguration(configuration);
@@ -389,7 +392,6 @@ public class SOSHibernateFactory implements Serializable {
         setConfigurationProperties();
         configuration = configurationResolver.resolve(configuration);
         dbms = configurationResolver.getDbms();
-        databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
     }
 
     private void buildSessionFactory() {
@@ -397,8 +399,42 @@ public class SOSHibernateFactory implements Serializable {
             LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "buildSessionFactory"));
         }
         sessionFactory = configuration.buildSessionFactory();
-        dialect = ((SessionFactoryImplementor) sessionFactory).getJdbcServices().getDialect();
+
+        JdbcServices jdbcServices = ((SessionFactoryImplementor) sessionFactory).getJdbcServices();
+        dialect = jdbcServices.getDialect();
         dbms = SOSHibernateFinalPropertiesResolver.finalCheckAndSetDbms(sessionFactory, dialect, dbms);
+        setDatabaseMetadata();
+    }
+
+    /** If hibernate.boot.allow_jdbc_metadata_access=true<br/>
+     * - Database Metadata is set by using SOSHibernateDefaultDialectResolver without an additional session/connection<br/>
+     * If hibernate.boot.allow_jdbc_metadata_access=false<br/>
+     * - an additional session/connection is used<br/>
+     * Notes:<br/>
+     * - For Oracle, always read the Database Metadata (if null) as JSON processing differs between versions<br/>
+     * -- see SOSHibernateDatabaseMetaData.supportJsonReturningClob<br/>
+     * - Reread Database Metadata if DBMS do not match<br/>
+     * -- SOSHibernateDatabaseMetaData was set early as the Factory's final DBMS<br/>
+     * --- see SOSHibernateFinalPropertiesResolver.finalCheckAndSetDbms<br/>
+     */
+    private void setDatabaseMetadata() {
+        databaseMetaData = SOSHibernateFinalPropertiesResolver.retrieveDatabaseMetadata(sessionFactory);
+        if (databaseMetaData == null || !databaseMetaData.getDbms().equals(dbms)) {
+            if (Dbms.ORACLE.equals(dbms) || forceReadDatabaseMetaData) {
+                try {
+                    try (SOSHibernateSession session = openStatelessSession("setDatabaseMetadata")) {
+                        session.doWork(connection -> {
+                            databaseMetaData = new SOSHibernateDatabaseMetaData(dbms, connection.getMetaData());
+                        });
+                    }
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[setDatabaseMetadata][%s]%s", dbms, e.toString()), e);
+                }
+            }
+        }
+        if (databaseMetaData == null) {
+            databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
+        }
     }
 
     private void showConfigurationProperties() {
@@ -461,10 +497,6 @@ public class SOSHibernateFactory implements Serializable {
                 configuration.setProperty(key, value);
             }
         }
-    }
-
-    protected boolean readDatabaseMetaData() {
-        return readDatabaseMetaData;
     }
 
     public static String getTransactionIsolationName(int isolationLevel) throws SOSHibernateConfigurationException {

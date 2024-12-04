@@ -17,10 +17,11 @@
 
 
 		<!-- Hikari Connection Pool -->
+		<!-- 
 		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider
 		</property>
 		<property name="hibernate.hikari.maximumPoolSize">10</property>
-
+-->
 		<!-- Map DBItems using a mapping file instead of factory.addClassMapping -->
 		<!-- <mapping resource="hibernate.dbitems.mapping.xml"></mapping> -->
 	</session-factory>

@@ -11,11 +11,8 @@ public class SOSHibernateDatabaseMetaData {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateDatabaseMetaData.class);
 
-    private static final int MAX_SET_RETRY = 5;
     private static final int ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB = 18;
 
-    // TODO declare the Dbms enum here instead of SOSHibernateFactory.Dbms
-    /** not null - evaluated from the hibernate configuration */
     private final Dbms dbms;
 
     /** can be null/0
@@ -26,41 +23,33 @@ public class SOSHibernateDatabaseMetaData {
     private int majorVersion;
     private int minorVersion;
     private boolean supportJsonReturningClob;
-
-    private boolean isSet;
-    private int setRetryCounter;
+    private boolean metadataAvailable;
 
     protected SOSHibernateDatabaseMetaData(Dbms dbms) {
-        this.dbms = dbms == null ? Dbms.UNKNOWN : dbms;
-        this.setRetryCounter = 0;
+        this(dbms, null);
+    }
+
+    public SOSHibernateDatabaseMetaData(Dbms dbms, DatabaseMetaData metaData) {
+        this.dbms = dbms;
+        setMetaData(metaData);
         setSupportJsonReturningClob();
     }
 
-    protected void set(DatabaseMetaData metaData) {
-        if (isSet) {
-            return;
-        }
+    private void setMetaData(DatabaseMetaData metaData) {
+        metadataAvailable = false;
         if (metaData == null) {
-            setRetryCounter++;
-            if (setRetryCounter >= MAX_SET_RETRY) {
-                isSet = true;
-            }
             return;
         }
-        doSet(metaData);
-    }
-
-    private void doSet(DatabaseMetaData metaData) {
-        isSet = true;
         try {
             productName = metaData.getDatabaseProductName();
             productVersion = metaData.getDatabaseProductVersion();
             majorVersion = metaData.getDatabaseMajorVersion();
             minorVersion = metaData.getDatabaseMinorVersion();
+
+            metadataAvailable = true;
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[doSet]%s", e.toString()), e);
+            LOGGER.warn(String.format("[setMetadata][%s]%s", dbms, e.toString()), e);
         }
-        setSupportJsonReturningClob();
     }
 
     private void setSupportJsonReturningClob() {
@@ -98,18 +87,21 @@ public class SOSHibernateDatabaseMetaData {
         return supportJsonReturningClob;
     }
 
-    protected boolean isSet() {
-        return isSet;
+    public boolean metadataAvailable() {
+        return metadataAvailable;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("[metadataAvailable=").append(metadataAvailable).append("]");
         sb.append("majorVersion=").append(majorVersion);
         sb.append(",minorVersion=").append(minorVersion);
         sb.append(",productName=").append(productName);
         sb.append(",productVersion=").append(productVersion);
-        sb.append(",supportJsonReturningClob=").append(supportJsonReturningClob);
+        if (Dbms.ORACLE.equals(dbms)) {
+            sb.append(",supportJsonReturningClob=").append(supportJsonReturningClob);
+        }
         return sb.toString();
     }
 

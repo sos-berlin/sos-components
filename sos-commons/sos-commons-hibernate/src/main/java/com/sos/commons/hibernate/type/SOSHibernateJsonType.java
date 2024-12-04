@@ -32,7 +32,7 @@ public class SOSHibernateJsonType implements UserType<Object> {
     public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException,
             SQLException {
         if (dbms == null) {
-            dbms = SOSHibernateFinalPropertiesResolver.getDbms(session.getFactory());
+            dbms = SOSHibernateFinalPropertiesResolver.retrieveDbms(session.getFactory());
         }
         if (value == null) {
             if (Dbms.ORACLE.equals(dbms)) {
