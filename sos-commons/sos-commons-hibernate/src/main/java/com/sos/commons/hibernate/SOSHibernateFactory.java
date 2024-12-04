@@ -413,13 +413,13 @@ public class SOSHibernateFactory implements Serializable {
      * Notes:<br/>
      * - For Oracle, always read the Database Metadata (if null) as JSON processing differs between versions<br/>
      * -- see SOSHibernateDatabaseMetaData.supportJsonReturningClob<br/>
-     * - Reread Database Metadata if DBMS do not match<br/>
+     * - Reread Database Metadata if DBMS do not match or Database Metadata was not set due to errors<br/>
      * -- SOSHibernateDatabaseMetaData was set early as the Factory's final DBMS<br/>
      * --- see SOSHibernateFinalPropertiesResolver.finalCheckAndSetDbms<br/>
      */
     private void setDatabaseMetadata() {
         databaseMetaData = SOSHibernateFinalPropertiesResolver.retrieveDatabaseMetadata(sessionFactory);
-        if (databaseMetaData == null || !databaseMetaData.getDbms().equals(dbms)) {
+        if (databaseMetaData == null || !databaseMetaData.metadataAvailable() || !databaseMetaData.getDbms().equals(dbms)) {
             if (Dbms.ORACLE.equals(dbms) || forceReadDatabaseMetaData) {
                 try {
                     try (SOSHibernateSession session = openStatelessSession("setDatabaseMetadata")) {
