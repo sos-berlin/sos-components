@@ -129,12 +129,12 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         Dbms dbms = Dbms.UNKNOWN;
         String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
         if (!SOSString.isEmpty(connectionUrl)) {
-            dbms = SOSHibernate.JDBC_TO_DBMS.entrySet().stream().filter(entry -> connectionUrl.contains(entry.getKey())).map(Map.Entry::getValue)
-                    .findFirst().orElse(Dbms.UNKNOWN);
+            dbms = SOSHibernate.JDBC_TO_DBMS.entrySet().stream().filter(entry -> SOSString.containsIgnoreCase(connectionUrl, entry.getKey())).map(
+                    Map.Entry::getValue).findFirst().orElse(Dbms.UNKNOWN);
         } else {
             String dbmsProduct = properties.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DBMS_PRODUCT);
             if (!SOSString.isEmpty(dbmsProduct)) {
-                dbms = SOSHibernate.DBMS_PRODUCT_TO_DBMS.entrySet().stream().filter(entry -> dbmsProduct.equalsIgnoreCase(entry.getKey())).map(
+                dbms = SOSHibernate.SOS_DBMS_PRODUCT_TO_DBMS.entrySet().stream().filter(entry -> dbmsProduct.equalsIgnoreCase(entry.getKey())).map(
                         Map.Entry::getValue).findFirst().orElse(Dbms.UNKNOWN);
             } else {
                 dbms = getDbmsFromDialect(properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
@@ -147,9 +147,8 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         if (SOSString.isEmpty(dialect)) {
             return Dbms.UNKNOWN;
         }
-        final String d = dialect.toLowerCase();
-        return SOSHibernate.DIALECT_TO_DBMS.entrySet().stream().filter(entry -> d.contains(entry.getKey())).map(Map.Entry::getValue).findFirst()
-                .orElse(Dbms.UNKNOWN);
+        return SOSHibernate.DIALECT_PART_TO_DBMS.entrySet().stream().filter(entry -> SOSString.containsIgnoreCase(dialect, entry.getKey())).map(
+                Map.Entry::getValue).findFirst().orElse(Dbms.UNKNOWN);
     }
 
     private void removeProperty(Configuration configuration, String key) {

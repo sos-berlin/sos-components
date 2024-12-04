@@ -36,6 +36,13 @@ public class SOSString {
         return Objects.equals(a, b);
     }
 
+    public static boolean containsIgnoreCase(String source, String term) {
+        if (source == null || term == null) {
+            return false;
+        }
+        return source.toLowerCase().contains(term.toLowerCase());
+    }
+
     public static String mapToString(Map<String, ?> o, boolean newLine) {
         StringBuilder sb = new StringBuilder();
         String add = newLine ? "\n" : "";

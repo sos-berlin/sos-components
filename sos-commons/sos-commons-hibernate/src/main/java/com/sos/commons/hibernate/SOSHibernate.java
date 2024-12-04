@@ -5,6 +5,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -150,14 +151,56 @@ public class SOSHibernate {
 
     public static final int LIMIT_IN_CLAUSE = 1000;
 
-    public static final Map<String, Dbms> JDBC_TO_DBMS = Map.of("jdbc:h2", Dbms.H2, "jdbc:sqlserver", Dbms.MSSQL, "jdbc:oracle", Dbms.ORACLE,
-            "jdbc:postgresql", Dbms.PGSQL, "jdbc:mysql", Dbms.MYSQL, "jdbc:mariadb", Dbms.MYSQL);
+    public static final Map<String, Dbms> JDBC_TO_DBMS = new HashMap<>();
+    public static final Map<String, Dbms> DIALECT_PART_TO_DBMS = new HashMap<>();
+    public static final Map<String, Dbms> SOS_DBMS_PRODUCT_TO_DBMS = new HashMap<>();
 
-    public static final Map<String, Dbms> DBMS_PRODUCT_TO_DBMS = Map.of("h2", Dbms.H2, "mssql", Dbms.MSSQL, "oracle", Dbms.ORACLE, "pgsql",
-            Dbms.PGSQL, "mysql", Dbms.MYSQL, "mariadb", Dbms.MYSQL);
+    // the later usage/check is not case-sensitive
+    static {
+        for (Dbms dbms : Dbms.values()) {
+            switch (dbms) {
+            case H2:
+                JDBC_TO_DBMS.put("jdbc:h2", dbms);
+                DIALECT_PART_TO_DBMS.put("H2", dbms);
+                SOS_DBMS_PRODUCT_TO_DBMS.put("H2", dbms);
+                break;
 
-    public static final Map<String, Dbms> DIALECT_TO_DBMS = Map.of("h2", Dbms.H2, "sqlserver", Dbms.MSSQL, "oracle", Dbms.ORACLE, "postgre",
-            Dbms.PGSQL, "mysql", Dbms.MYSQL, "mariadb", Dbms.MYSQL);
+            case MSSQL:
+                JDBC_TO_DBMS.put("jdbc:sqlserver", dbms);
+                DIALECT_PART_TO_DBMS.put("SQLServer", dbms);
+                SOS_DBMS_PRODUCT_TO_DBMS.put("MSSQL", dbms);
+                break;
+
+            case MYSQL:
+                // MySQL
+                JDBC_TO_DBMS.put("jdbc:mysql", dbms);
+                DIALECT_PART_TO_DBMS.put("MySQL", dbms);
+                SOS_DBMS_PRODUCT_TO_DBMS.put("MySQL", dbms);
+
+                // MariaDB
+                JDBC_TO_DBMS.put("jdbc:mariadb", dbms);
+                DIALECT_PART_TO_DBMS.put("MariaDB", dbms);
+                SOS_DBMS_PRODUCT_TO_DBMS.put("MariaDB", dbms);
+                break;
+
+            case ORACLE:
+                JDBC_TO_DBMS.put("jdbc:oracle", dbms);
+                DIALECT_PART_TO_DBMS.put("Oracle", dbms);
+                SOS_DBMS_PRODUCT_TO_DBMS.put("Oracle", dbms);
+                break;
+
+            case PGSQL:
+                JDBC_TO_DBMS.put("jdbc:postgresql", dbms);
+                DIALECT_PART_TO_DBMS.put("Postgre", dbms);
+                SOS_DBMS_PRODUCT_TO_DBMS.put("PgSQL", dbms);
+                break;
+
+            case UNKNOWN:
+            default:
+                break;
+            }
+        }
+    }
 
     public static Exception findLockException(Exception cause) {
         Throwable e = cause;
