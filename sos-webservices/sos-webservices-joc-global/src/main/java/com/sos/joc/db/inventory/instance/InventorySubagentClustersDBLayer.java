@@ -185,19 +185,15 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
                 StringBuilder hql = new StringBuilder();
                 hql.append("select new ").append(SubagentCluster.class.getName()).append("(sac, sacm.subAgentId, sacm.priority) from ");
                 hql.append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS).append(" sac ");
+                hql.append("left join ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS).append(" sacm ");
+                hql.append("on sac.subAgentClusterId = sacm.subAgentClusterId and sac.controllerId = sacm.controllerId ");
+                
                 if (controllerIds != null && !controllerIds.isEmpty()) {
-                    hql.append("left join ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS).append(" sacm ");
-                    hql.append("on sac.subAgentClusterId = sacm.subAgentClusterId ");
-                    hql.append("left join ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" ai ");
-                    hql.append("on ai.agentId = sac.agentId ");
                     if (controllerIds.size() == 1) {
-                        clauses.add("ai.controllerId = :controllerId");
+                        clauses.add("sac.controllerId = :controllerId");
                     } else {
-                        clauses.add("ai.controllerId in (:controllerIds)");
+                        clauses.add("sac.controllerId in (:controllerIds)");
                     }
-                } else {
-                    hql.append("left join ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS).append(" sacm ");
-                    hql.append("on sac.subAgentClusterId = sacm.subAgentClusterId ");
                 }
                 
                 if (agentIds != null && !agentIds.isEmpty()) {

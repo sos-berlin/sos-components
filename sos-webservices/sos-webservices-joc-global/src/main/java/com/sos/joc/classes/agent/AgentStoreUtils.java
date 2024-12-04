@@ -70,11 +70,24 @@ public class AgentStoreUtils {
     public static void storeStandaloneAgent(Map<String, Agent> agentMap, String controllerId, boolean overwrite, boolean onlyAdd, boolean onlyEdit,
             InventoryAgentInstancesDBLayer dbLayer) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAllAgents();
+        List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(null);
         Set<String> agentNamesAndAliases = new HashSet<>();
         Map<String, String> allNames = dbAgents != null ? dbAgents.stream().filter(a -> a.getControllerId().equals(controllerId)).collect(Collectors
                 .toMap(DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getAgentName)) : Collections.emptyMap();
         Map<String, Set<DBItemInventoryAgentName>> allAliases = !allNames.isEmpty() ? dbLayer.getAgentNameAliases(allNames.keySet()) : Collections
                 .emptyMap();
+        
+        agentMap.values().forEach(requestedA -> {
+            dbAgents.stream().filter(a -> !a.getAgentId().equals(requestedA.getAgentId())).filter(a -> a.getUri() != null && !a.getUri().isEmpty())
+                    .filter(a -> requestedA.getUrl().equals(a.getUri())).findAny().ifPresent(a -> {
+                        throw new JocBadRequestException(String.format("Agent url %s is already used by Agent %s", a.getUri(), a.getAgentId()));
+                    });
+            dbSubAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedA.getUrl().equals(a.getUri()))
+                    .findAny().ifPresent(a -> {
+                        throw new JocBadRequestException(String.format("Agent url %s is already used by Subagent %s", a.getUri(), a.getSubAgentId()));
+                    });
+        });
+        
         Map<String, Set<DBItemInventoryAgentName>> newAliases = new HashMap<>();
         Set<String> missedAgentNames = new HashSet<>();
         
