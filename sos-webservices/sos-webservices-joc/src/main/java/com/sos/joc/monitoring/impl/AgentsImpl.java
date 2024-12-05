@@ -287,6 +287,9 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                                     tmpLastKnownTime = dateTo;
                                     source.setTotalRunningTime(TotalRunningTimeSource.dateTo);
                                 }
+                                if (tmpLastKnownTime.after(now)) {
+                                    tmpLastKnownTime = now;
+                                }
 
                                 totalRunningTime = tmpLastKnownTime.getTime() - dateFrom.getTime();
 
