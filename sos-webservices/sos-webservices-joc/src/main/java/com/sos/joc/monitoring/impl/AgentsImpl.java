@@ -257,20 +257,32 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                             prev.setSource(prevSource);
                             agent.setPreviousEntry(prev);
 
-                            int nextIndex = i + 1;
-                            if (nextIndex < size && prev.getLastKnownTime() == null) {
-                                Date nextReady = a.getValue().get(nextIndex).getReadyTime();
+                            if (prev.getLastKnownTime() == null) {
+                                int nextIndex = i + 1;
+                                Date nextReady = dateFrom;
+                                boolean nextReadyExists = false;
+                                if (nextIndex < size) {
+                                    nextReady = a.getValue().get(nextIndex).getReadyTime();
+                                    nextReadyExists = true;
+                                }
+
                                 if (isDebugEnabled) {
-                                    LOGGER.debug(String.format("   [%s][2][nextReady=%s]totalRunningTime=%s", i, SOSDate.tryGetDateTimeAsString(
-                                            nextReady), totalRunningTime));
+                                    LOGGER.debug(String.format("   [%s][2][nextReadyExists=%s][nextReady=%s]totalRunningTime=%s", i, nextReadyExists,
+                                            SOSDate.tryGetDateTimeAsString(nextReady), totalRunningTime));
                                 }
 
                                 AgentItemEntryItemSource source = new AgentItemEntryItemSource();
                                 source.setItem(EntryItemSource.webservice);
                                 Date tmpLastKnownTime = null;
                                 if (nextReady.before(dateTo)) {
-                                    tmpLastKnownTime = nextReady;
-                                    source.setTotalRunningTime(TotalRunningTimeSource.nextReadyTime);
+                                    if (nextReadyExists) {
+                                        tmpLastKnownTime = nextReady;
+                                        source.setTotalRunningTime(TotalRunningTimeSource.nextReadyTime);
+                                    } else {
+                                        tmpLastKnownTime = dateTo;
+                                        source.setTotalRunningTime(TotalRunningTimeSource.dateFrom);
+                                    }
+
                                 } else {
                                     tmpLastKnownTime = dateTo;
                                     source.setTotalRunningTime(TotalRunningTimeSource.dateTo);
