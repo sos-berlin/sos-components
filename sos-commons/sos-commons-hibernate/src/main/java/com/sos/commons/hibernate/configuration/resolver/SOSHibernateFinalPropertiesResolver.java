@@ -200,14 +200,14 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         return o == null ? Dbms.UNKNOWN : (Dbms) o;
     }
 
-    public static void populateDatabaseMetadata(DialectResolutionInfo info) {
+    public static void populateDatabaseMetaData(DialectResolutionInfo info) {
         Dbms dbms = retrieveDbms(info);
         info.getConfigurationValues().put(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA, new SOSHibernateDatabaseMetaData(dbms, info
                 .getDatabaseMetadata()));
     }
 
     // one-time operation
-    public static SOSHibernateDatabaseMetaData retrieveDatabaseMetadata(SessionFactory f) {
+    public static SOSHibernateDatabaseMetaData retrieveDatabaseMetaData(SessionFactory f) {
         Object o = f.getProperties().get(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA);
         if (o == null) {
             return null;

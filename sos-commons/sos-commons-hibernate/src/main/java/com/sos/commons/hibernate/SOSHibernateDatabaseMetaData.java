@@ -23,7 +23,7 @@ public class SOSHibernateDatabaseMetaData {
     private int majorVersion;
     private int minorVersion;
     private boolean supportJsonReturningClob;
-    private boolean metadataAvailable;
+    private boolean metaDataAvailable;
 
     protected SOSHibernateDatabaseMetaData(Dbms dbms) {
         this(dbms, null);
@@ -36,7 +36,7 @@ public class SOSHibernateDatabaseMetaData {
     }
 
     private void setMetaData(DatabaseMetaData metaData) {
-        metadataAvailable = false;
+        metaDataAvailable = false;
         if (metaData == null) {
             return;
         }
@@ -46,9 +46,9 @@ public class SOSHibernateDatabaseMetaData {
             majorVersion = metaData.getDatabaseMajorVersion();
             minorVersion = metaData.getDatabaseMinorVersion();
 
-            metadataAvailable = true;
+            metaDataAvailable = true;
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[setMetadata][%s]%s", dbms, e.toString()), e);
+            LOGGER.warn(String.format("[setMetaData][%s]%s", dbms, e.toString()), e);
         }
     }
 
@@ -87,14 +87,14 @@ public class SOSHibernateDatabaseMetaData {
         return supportJsonReturningClob;
     }
 
-    public boolean metadataAvailable() {
-        return metadataAvailable;
+    public boolean metaDataAvailable() {
+        return metaDataAvailable;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("[metadataAvailable=").append(metadataAvailable).append("]");
+        sb.append("[metaDataAvailable=").append(metaDataAvailable).append("]");
         sb.append("majorVersion=").append(majorVersion);
         sb.append(",minorVersion=").append(minorVersion);
         sb.append(",productName=").append(productName);

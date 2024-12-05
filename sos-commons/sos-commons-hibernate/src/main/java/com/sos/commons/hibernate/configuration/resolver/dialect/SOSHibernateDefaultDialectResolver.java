@@ -6,7 +6,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver;
 
-/** Used to set the Database Metadata without opening an additional Connection<br/>
+/** Used to set the Database MetaData without opening an additional Connection<br/>
  * Note: will not be called by Hibernate if hibernate.boot.allow_jdbc_metadata_access=false */
 public class SOSHibernateDefaultDialectResolver implements DialectResolver {
 
@@ -14,7 +14,7 @@ public class SOSHibernateDefaultDialectResolver implements DialectResolver {
 
     @Override
     public Dialect resolveDialect(DialectResolutionInfo info) {
-        SOSHibernateFinalPropertiesResolver.populateDatabaseMetadata(info);
+        SOSHibernateFinalPropertiesResolver.populateDatabaseMetaData(info);
         return null;// standard resolver
     }
 

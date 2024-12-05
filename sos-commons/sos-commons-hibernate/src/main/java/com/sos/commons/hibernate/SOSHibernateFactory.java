@@ -403,32 +403,32 @@ public class SOSHibernateFactory implements Serializable {
         JdbcServices jdbcServices = ((SessionFactoryImplementor) sessionFactory).getJdbcServices();
         dialect = jdbcServices.getDialect();
         dbms = SOSHibernateFinalPropertiesResolver.finalCheckAndSetDbms(sessionFactory, dialect, dbms);
-        setDatabaseMetadata();
+        setDatabaseMetaData();
     }
 
     /** If hibernate.boot.allow_jdbc_metadata_access=true<br/>
-     * - Database Metadata is set by using SOSHibernateDefaultDialectResolver without an additional session/connection<br/>
+     * - Database MetaData is set by using SOSHibernateDefaultDialectResolver without an additional session/connection<br/>
      * If hibernate.boot.allow_jdbc_metadata_access=false<br/>
      * - an additional session/connection is used<br/>
      * Notes:<br/>
-     * - For Oracle, always read the Database Metadata (if null) as JSON processing differs between versions<br/>
+     * - For Oracle, always read the Database MetaData (if null) as JSON processing differs between versions<br/>
      * -- see SOSHibernateDatabaseMetaData.supportJsonReturningClob<br/>
-     * - Reread Database Metadata if DBMS do not match or Database Metadata was not set due to errors<br/>
+     * - Reread Database MetaData if DBMS do not match or Database MetaData was not set due to errors<br/>
      * -- SOSHibernateDatabaseMetaData was set early as the Factory's final DBMS<br/>
      * --- see SOSHibernateFinalPropertiesResolver.finalCheckAndSetDbms<br/>
      */
-    private void setDatabaseMetadata() {
-        databaseMetaData = SOSHibernateFinalPropertiesResolver.retrieveDatabaseMetadata(sessionFactory);
-        if (databaseMetaData == null || !databaseMetaData.metadataAvailable() || !databaseMetaData.getDbms().equals(dbms)) {
+    private void setDatabaseMetaData() {
+        databaseMetaData = SOSHibernateFinalPropertiesResolver.retrieveDatabaseMetaData(sessionFactory);
+        if (databaseMetaData == null || !databaseMetaData.metaDataAvailable() || !databaseMetaData.getDbms().equals(dbms)) {
             if (Dbms.ORACLE.equals(dbms) || forceReadDatabaseMetaData) {
                 try {
-                    try (SOSHibernateSession session = openStatelessSession("setDatabaseMetadata")) {
+                    try (SOSHibernateSession session = openStatelessSession("setDatabaseMetaData")) {
                         session.doWork(connection -> {
                             databaseMetaData = new SOSHibernateDatabaseMetaData(dbms, connection.getMetaData());
                         });
                     }
                 } catch (Throwable e) {
-                    LOGGER.warn(String.format("[setDatabaseMetadata][%s]%s", dbms, e.toString()), e);
+                    LOGGER.warn(String.format("[setDatabaseMetaData][%s]%s", dbms, e.toString()), e);
                 }
             }
         }

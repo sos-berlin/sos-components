@@ -103,7 +103,7 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_DIALECT = JdbcSettings.DIALECT;
     /** hibernate.boot.allow_jdbc_metadata_access - SOS default: true <br/>
      * true - automatically detects Dialect if hibernate.dialect is not configured<br/>
-     * --- sets org.hibernate.dialect.MariaDBDialect instead of MySQLDialect when using a Mariadb driver is used */
+     * --- sets org.hibernate.dialect.MariaDBDialect instead of MySQLDialect when using a MariaDB driver is used */
     public static final String HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT = JdbcSettings.ALLOW_METADATA_ON_BOOT;
     /** hibernate.connection.autocommit - SOS default: false */
     public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = JdbcSettings.AUTOCOMMIT;
