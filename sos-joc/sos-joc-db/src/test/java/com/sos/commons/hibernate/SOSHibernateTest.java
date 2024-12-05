@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -372,9 +375,25 @@ public class SOSHibernateTest {
         factory.addClassMapping(DBLayer.getJocClassMapping());
         // factory.setAutoCommit(true);
         factory.build(false);
-        LOGGER.info("DBMS=" + factory.getDbms() + ", DIALECT=" + factory.getDialect());
-        LOGGER.info("METADATA=" + factory.getDatabaseMetaData());
+        LOGGER.info("[DBMS]" + factory.getDbms() + ", DIALECT=" + factory.getDialect());
+        LOGGER.info("[METADATA]" + factory.getDatabaseMetaData());
+        LOGGER.info("[CONFIGURATION][getProperties    ]" + filteredProperties(factory.getConfiguration().getProperties()));
+        LOGGER.info("[CONFIGURATION][SSRB.getSettings ]" + filteredProperties(factory.getConfiguration().getStandardServiceRegistryBuilder()
+                .getSettings()));
+        LOGGER.info("[CONFIGURATION]F.SF.getProperties]" + filteredProperties(factory.getSessionFactory().getProperties()));
         return factory;
+    }
+
+    private static Map<String, Object> filteredProperties(Properties p) {
+        return filteredProperties(p.entrySet().stream().map(entry -> Map.entry(entry.getKey().toString(), entry.getValue())).collect(Collectors.toMap(
+                Map.Entry::getKey, Map.Entry::getValue)));
+    }
+
+    private static Map<String, Object> filteredProperties(Map<String, Object> p) {
+        Map<String, Object> m = p.entrySet().stream().map(entry -> Map.entry(entry.getKey().toString(), entry.getValue())).filter(entry -> entry
+                .getKey().matches("^(hibernate|jakarta|sos).*")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing,
+                        replacement) -> existing, TreeMap::new));
+        return m;
     }
 
     /** one-time execution</br>
