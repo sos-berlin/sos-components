@@ -3,6 +3,7 @@ package com.sos.joc.publish.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,6 +68,7 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocSosHibernateException;
@@ -103,6 +105,8 @@ import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.ArchiveValues;
 import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
+import com.sos.schema.JsonValidator;
+import com.sos.schema.exception.SOSJsonSchemaException;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.jobclass.JobClass;
@@ -115,6 +119,7 @@ public class ImportUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportUtils.class);
     private static final String AGENT_FILE_EXTENSION = ".agent.json";
     private static final Predicate<String> HAS_NOTICE_BOARDS = Pattern.compile("\"(?:noticeB|b)oardNames\"\\s*:\\s*").asPredicate();
+    private static final String jsonSchema = "classpath:/raml/api/schemas/agent/transfer/agent-schema.json";
 
     public static final String JOC_META_INFO_FILENAME = "meta_inf";
 
@@ -1342,8 +1347,7 @@ public class ImportUtils {
         return null;
     }
 
-    public static Set<Agent> readAgentsFromZipFileContent(InputStream inputStream) 
-            throws IOException, JocUnsupportedFileTypeException, JocConfigurationException {
+    public static Set<Agent> readAgentsFromZipFileContent(InputStream inputStream) throws IOException {
         Set<Agent> agents = new HashSet<Agent>();
         ZipInputStream zipStream = null;
         try {
@@ -1363,7 +1367,7 @@ public class ImportUtils {
                     while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                         outBuffer.write(binBuffer, 0, binRead);
                     }
-                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, filename);
+                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer.toByteArray(), filename);
                     if (fromArchive != null) {
                         agents.add(fromArchive);
                     }
@@ -1382,8 +1386,7 @@ public class ImportUtils {
         return agents;
     }
     
-    public static Set<Agent> readAgentsFromTarGzipFileContent(InputStream inputStream)
-            throws IOException, JocUnsupportedFileTypeException, JocConfigurationException {
+    public static Set<Agent> readAgentsFromTarGzipFileContent(InputStream inputStream) throws IOException {
         Set<Agent> agents = new HashSet<Agent>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
@@ -1405,7 +1408,7 @@ public class ImportUtils {
                     while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
                         outBuffer.write(binBuffer, 0, binRead);
                     }
-                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, filename);
+                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer.toByteArray(), filename);
                     if (fromArchive != null) {
                         agents.add(fromArchive);
                     }
@@ -1427,33 +1430,29 @@ public class ImportUtils {
         return agents;
     }
 
-    private static Agent createAgentFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String filename)
-            throws JsonParseException, JsonMappingException, IOException {
+    private static Agent createAgentFromArchiveFileEntry(byte[] bytes, String filename) throws IOException {
+        try {
+            JsonValidator.validate(bytes, URI.create(jsonSchema));
+        } catch (SOSJsonSchemaException e) {
+            throw new JocBadRequestException("Invalid JSON in " + filename + ": " + e.getMessage());
+        }
+        Agent agent = Globals.objectMapper.readValue(bytes, Agent.class);
         String agentId = filename.replace(AGENT_FILE_EXTENSION, "");
-        Agent agent = Globals.objectMapper.readValue(outBuffer.toByteArray(), Agent.class);
-        if(agent.getAgentCluster() != null) {
-            if(!agentId.equals(agent.getAgentCluster().getAgentId())) {
-                agent.getAgentCluster().setAgentId(agentId);
-                agent.getAgentCluster().setDeployed(false);
-                agent.getAgentCluster().setDisabled(false);
-                agent.getAgentCluster().setHidden(false);
-                agent.getAgentCluster().getSubagents().forEach(subagent -> {
-                    subagent.setAgentId(agentId);
-                    subagent.setDeployed(false);
-                    subagent.setDisabled(false);
-                    subagent.setSyncState(null);
-                    subagent.setWithGenerateSubagentCluster(false);
-                });
+        
+        if (agent.getAgentCluster() != null) {
+            agent.getAgentCluster().setAgentId(agentId);
+            
+            if (agent.getAgentCluster().getSubagents() != null) {
+                agent.getAgentCluster().getSubagents().forEach(subagent -> subagent.setAgentId(agentId));
             }
-        } else {
-            if(!agentId.equals(agent.getStandaloneAgent().getAgentId())) {
-                agent.getStandaloneAgent().setAgentId(agentId);
-                agent.getStandaloneAgent().setDeployed(false);
-                agent.getStandaloneAgent().setDisabled(false);
-                agent.getStandaloneAgent().setHidden(false);
-                agent.getStandaloneAgent().setOrdering(0);
-                agent.getStandaloneAgent().setSyncState(null);
-            }
+        }
+        
+        if (agent.getSubagentClusters() != null) {
+            agent.getSubagentClusters().forEach(sac -> sac.setAgentId(agentId));
+        }
+
+        if (agent.getStandaloneAgent() != null) {
+            agent.getStandaloneAgent().setAgentId(agentId);
         }
         return agent;
         
