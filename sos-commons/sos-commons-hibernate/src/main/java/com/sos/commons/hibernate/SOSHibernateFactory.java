@@ -109,8 +109,8 @@ public class SOSHibernateFactory implements Serializable {
             if (LOGGER.isDebugEnabled()) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "build");
                 int isolationLevel = getTransactionIsolation();
-                LOGGER.debug(String.format("%s autoCommit=%s, transactionIsolation=%s", method, getAutoCommit(), getTransactionIsolationName(
-                        isolationLevel)));
+                LOGGER.debug(String.format("%s[%s][%s][%s]autoCommit=%s,transactionIsolation=%s", method, dbms, dialect, databaseMetaData,
+                        getAutoCommit(), getTransactionIsolationName(isolationLevel)));
             }
         } catch (SOSHibernateConfigurationException ex) {
             throw new SOSHibernateFactoryBuildException(ex, configFile);
