@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -12,7 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.inventory.model.instruction.CaseWhen;
+import com.sos.inventory.model.instruction.ConsumeNotices;
+import com.sos.inventory.model.instruction.Instructions;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -63,6 +69,42 @@ public class ConverterTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    //@Test
+    public void convertCaseWhenToIfElse() throws JsonProcessingException {
+        CaseWhen inst = new CaseWhen();
+        inst.setCases(Collections.singletonList(new When("true", new Instructions())));
+        Workflow invWorkflow = new Workflow();
+        invWorkflow.setInstructions(Collections.singletonList(inst));
+        String invJson = Globals.objectMapper.writeValueAsString(invWorkflow);
+        System.out.println(invJson);
+        com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(invJson, com.sos.sign.model.workflow.Workflow.class);
+        String signJson = Globals.objectMapper.writeValueAsString(signWorkflow);
+        System.out.println(signJson);
+    }
+    
+    @Test
+    public void getPlannableBoard() throws JsonProcessingException {
+        
+        String json = "{\"TYPE\":\"Board\", \"boardType\":\"PLANNABLE\",\"path\":\"myBoard\"}";
+        String expected = "{\"TYPE\":\"PlannableBoard\",\"path\":\"myBoard\"}";
+        com.sos.sign.model.board.Board b = Globals.objectMapper.readValue(json, com.sos.sign.model.board.Board.class);
+        String result = JsonSerializer.serializeAsString(b);
+        System.out.println(result);
+        assertTrue(result.equals(expected));
+    }
+    
+    //@Test
+    public void getConsumeInstruction() throws JsonProcessingException {
+        
+        String json = "{\"TYPE\":\"ConsumeNotices\",\"noticeBoardNames\":\"b\",\"subworkflow\":{}}";
+        ConsumeNotices cn = new ConsumeNotices("b", new Instructions());
+        String cnJson = Globals.objectMapper.writeValueAsString(cn);
+        System.out.println(cnJson);
+        cn = Globals.objectMapper.readValue(json, ConsumeNotices.class);
+        cnJson = Globals.objectMapper.writeValueAsString(cn);
+        System.out.println(cnJson);
     }
     
     @Test
