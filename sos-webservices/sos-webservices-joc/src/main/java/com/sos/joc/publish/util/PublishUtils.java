@@ -133,7 +133,9 @@ import js7.data.board.BoardPath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
+import js7.data_for_java.board.JBoardItem;
 import js7.data_for_java.board.JGlobalBoard;
+import js7.data_for_java.board.JPlannableBoard;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
@@ -1723,7 +1725,28 @@ public abstract class PublishUtils {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }
 
-    public static JGlobalBoard getJBoard(Board board) {
+    @SuppressWarnings("unchecked")
+    public static <T extends JBoardItem> T getJBoard(Board board) {
+        if (board.getBoardType() != null) {
+            switch (board.getBoardType()) {
+            case PLANNABLE:
+                return (T) getJPlannableBoard(board);
+            default: // case GLOBAL
+                return (T) getJGlobalBoard(board);
+            }
+        } else if (board.getTYPE() != null) {
+            switch (board.getTYPE()) {
+            case PLANNABLEBOARD:
+                return (T) getJPlannableBoard(board);
+            default: // case GLOBAL
+                return (T) getJGlobalBoard(board);
+            }
+        } else {
+            return (T) getJGlobalBoard(board);
+        }
+    }
+    
+    private static JGlobalBoard getJGlobalBoard(Board board) {
         // JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
         JExpression toNoticeExpression = null;
         JExpression readingOrderToNoticeIdExpression = null;
@@ -1744,6 +1767,10 @@ public abstract class PublishUtils {
             endOfLifeExpression = getOrThrowEither(JExpression.parse(board.getEndOfLife()));
         }
         return JGlobalBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
+    }
+    
+    private static JPlannableBoard getJPlannableBoard(Board board) {
+        return JPlannableBoard.of(BoardPath.of(board.getPath()));
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {

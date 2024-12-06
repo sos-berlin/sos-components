@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.CaseWhen;
@@ -140,24 +141,34 @@ public class JsonSerializer {
         return jr;
     }
     
-    private static com.sos.inventory.model.board.Board emptyBoardValuesToNull(com.sos.inventory.model.board.Board b)
-            throws JsonProcessingException {
+    private static com.sos.inventory.model.board.Board emptyBoardValuesToNull(com.sos.inventory.model.board.Board b) throws JsonProcessingException {
         if (b == null) {
             return null;
         }
-        if (b.getEndOfLife() != null) {
-            b.setEndOfLife(b.getEndOfLife().replaceAll("(\\$)epochMilli", "$1js7EpochMilli"));
+        if (b.getBoardType() != null && b.getBoardType().equals(BoardType.PLANNABLE)) {
+            b.setEndOfLife(null);
+            b.setExpectOrderToNoticeId(null);
+            b.setPostOrderToNoticeId(null);
+        } else {
+            if (b.getEndOfLife() != null) {
+                b.setEndOfLife(b.getEndOfLife().replaceAll("(\\$)epochMilli", "$1js7EpochMilli"));
+            }
         }
         return b;
     }
     
-    private static com.sos.sign.model.board.Board emptyBoardValuesToNull(com.sos.sign.model.board.Board b)
-            throws JsonProcessingException {
+    private static com.sos.sign.model.board.Board emptyBoardValuesToNull(com.sos.sign.model.board.Board b) throws JsonProcessingException {
         if (b == null) {
             return null;
         }
-        if (b.getEndOfLife() != null) {
-            b.setEndOfLife(b.getEndOfLife().replaceAll("(\\$)epochMilli", "$1js7EpochMilli"));
+        if (b.getBoardType() != null && b.getBoardType().equals(BoardType.PLANNABLE)) {
+            b.setEndOfLife(null);
+            b.setExpectOrderToNoticeId(null);
+            b.setPostOrderToNoticeId(null);
+        } else {
+            if (b.getEndOfLife() != null) {
+                b.setEndOfLife(b.getEndOfLife().replaceAll("(\\$)epochMilli", "$1js7EpochMilli"));
+            }
         }
         return b;
     }

@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
@@ -1106,8 +1107,15 @@ public class ImportUtils {
     }
 
     private static boolean checkObjectNotEmpty(Board board) {
-        if (board != null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board.getPostOrderToNoticeId() == null
-                && board.getTYPE() == null) {
+        if (board == null) {
+            return false;
+        }
+        if (board.getTYPE() == null) {
+            return false;
+        }
+        if (board.getTYPE().equals(DeployType.PLANNABLEBOARD)) {
+            return true;
+        } else if (board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board.getPostOrderToNoticeId() == null) {
             return false;
         } else {
             return true;
@@ -1115,8 +1123,13 @@ public class ImportUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.board.Board board) {
-        if (board != null && board.getDocumentationName() == null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board
-                .getPostOrderToNoticeId() == null && board.getTYPE() == null) {
+        if (board == null) {
+            return false;
+        }
+        if (board.getBoardType() != null && board.getBoardType().equals(BoardType.PLANNABLE)) {
+            return board.getTYPE() != null || board.getDocumentationName() != null;
+        } else if (board.getDocumentationName() == null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null
+                && board.getPostOrderToNoticeId() == null && board.getTYPE() == null) {
             return false;
         } else {
             return true;

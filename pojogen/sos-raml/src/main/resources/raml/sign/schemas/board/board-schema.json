@@ -8,10 +8,7 @@
   ],
   "required": [
     "TYPE",
-    "path",
-    "postOrderToNoticeId",
-    "expectOrderToNoticeId",
-    "endOfLife"
+    "path"
   ],
   "propertyOrder": [
     "TYPE",
@@ -29,6 +26,9 @@
     },
     "path": {
     	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"
+    },
+    "boardType": {
+        "$ref": "../../../inventory/schemas/board/boardType-schema.json"
     },
     "postOrderToNoticeId": {
         "description": "Expression that returns a NoticeId for the PostNotice statement.",
