@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.query.Query;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
@@ -306,6 +308,49 @@ public class InventoryDBLayerTest {
                 factory.close(session);
             }
         }
+    }
+
+    @Ignore
+    @Test
+    public void testGetUsedSchedulesByWorkflowName() {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+
+        String workflowName = "test";
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+
+            List<DBItemInventoryConfiguration> result = dbLayer.getUsedSchedulesByWorkflowName(workflowName);
+            // getUsedSchedulesByWorkflowName(session, workflowName); //
+            for (DBItemInventoryConfiguration entry : result) {
+                LOGGER.info(SOSString.toString(entry));
+            }
+            LOGGER.info("SIZE=" + result.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowName(SOSHibernateSession session, String workflowName)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select c from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c ");
+        hql.append(", ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" sw ");
+        hql.append("where c.type = :type ");
+        hql.append("and sw.scheduleName = c.name ");
+        hql.append("and sw.workflowName = :workflowName ");
+
+        Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("workflowName", workflowName);
+        // query.setParameter("workflowName", workflowName, StandardBasicTypes.NSTRING);
+        return session.getResultList(query);
     }
 
     private SOSHibernateFactory createFactory() throws Exception {

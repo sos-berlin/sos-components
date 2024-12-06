@@ -375,8 +375,6 @@ public class SOSHibernateTest {
         factory.addClassMapping(DBLayer.getJocClassMapping());
         // factory.setAutoCommit(true);
         factory.build(false);
-        LOGGER.info("[DBMS]" + factory.getDbms() + ", DIALECT=" + factory.getDialect());
-        LOGGER.info("[METADATA]" + factory.getDatabaseMetaData());
         LOGGER.info("[CONFIGURATION][getProperties    ]" + filteredProperties(factory.getConfiguration().getProperties()));
         LOGGER.info("[CONFIGURATION][SSRB.getSettings ]" + filteredProperties(factory.getConfiguration().getStandardServiceRegistryBuilder()
                 .getSettings()));

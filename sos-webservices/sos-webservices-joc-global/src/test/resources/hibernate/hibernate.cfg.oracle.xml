@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</property>
+		
+		<property name="jakarta.persistence.jdbc.driver">oracle.jdbc.driver.OracleDriver</property>
+		<property name="jakarta.persistence.jdbc.url">jdbc:oracle:thin:@localhost:1521:XE</property>
+		<property name="jakarta.persistence.jdbc.user">scheduler</property>
+		<property name="jakarta.persistence.jdbc.password">scheduler</property>
+
+		<property name="hibernate.show_sql">false</property>
+		<property name="hibernate.format_sql">true</property>
+		
+		<property name="hibernate.sos.show_configuration_properties">false</property>
+				
+		<!-- Hikari Connection Pool -->
+		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+		<property name="hibernate.hikari.maximumPoolSize">10</property>
+	</session-factory>
+</hibernate-configuration>

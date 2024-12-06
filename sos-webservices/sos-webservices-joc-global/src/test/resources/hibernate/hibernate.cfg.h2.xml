@@ -13,4 +13,3 @@
         <property name="hibernate.hikari.maximumPoolSize">10</property>
     </session-factory>
 </hibernate-configuration>
-

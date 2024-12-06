@@ -19,11 +19,12 @@
 		</Logger>
 		<Logger name="akka.event.slf4j" level="warn"/>
 		<Logger name="js7" level="debug"/>
+		<Logger name="com.sos" level="debug"/>
 		<Logger name="com.mchange.v2" level="fatal" />
 		<Logger name="org.hibernate" level="fatal" />
 		<Logger name="org.hibernate.SQL" level="debug" />
 		<Logger name="org.hibernate.orm.jdbc.bind" level="trace"/>
-		<Root level="debug">
+		<Root level="info">
 			<AppenderRef ref="console" />
 		</Root>
 	</Loggers>
