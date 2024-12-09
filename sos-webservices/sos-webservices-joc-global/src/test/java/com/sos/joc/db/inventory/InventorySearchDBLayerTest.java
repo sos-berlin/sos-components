@@ -86,10 +86,11 @@ public class InventorySearchDBLayerTest {
             advanced.setLock(null);
             advanced.setArgumentName(null);
             advanced.setArgumentValue(null);
-            advanced.setFileOrderSource("dailyplan");
-            advanced.setWorkflow("dailyplan");
-            advanced.setCalendar("dailyplan");
-            advanced.setSchedule("dailyplan");
+            // advanced.setFileOrderSource("dailyplan");
+            // advanced.setWorkflow("dailyplan");
+            // advanced.setCalendar("dailyplan");
+            // advanced.setSchedule("dailyplan");
+            advanced.setJobScript("echo");
 
             factory = createFactory();
             session = factory.openStatelessSession();
@@ -123,7 +124,7 @@ public class InventorySearchDBLayerTest {
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.oracle.xml"));
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.build();
         return factory;

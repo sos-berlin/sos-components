@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
+import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.common.Variables;
@@ -247,14 +248,22 @@ public class Validator {
             }
         } else if (ConfigurationType.NOTICEBOARD.equals(type)) {
             Board board = (Board) config;
-            if (board.getPostOrderToNoticeId() != null) {
-                validateExpression("$.postOrderToNoticeId: ", board.getPostOrderToNoticeId());
-            }
-            if (board.getExpectOrderToNoticeId() != null) {
-                validateExpression("$.expectOrderToNoticeId: ", board.getExpectOrderToNoticeId());
-            }
-            if (board.getEndOfLife() != null) {
-                validateExpression("$.endOfLife: ", board.getEndOfLife());
+            if (board.getBoardType() == null || board.getBoardType().equals(BoardType.GLOBAL)) {
+                if (board.getPostOrderToNoticeId() != null) {
+                    validateExpression("$.postOrderToNoticeId: ", board.getPostOrderToNoticeId());
+                } else {
+                    throw new JocConfigurationException("$.postOrderToNoticeId: is required");
+                }
+                if (board.getExpectOrderToNoticeId() != null) {
+                    validateExpression("$.expectOrderToNoticeId: ", board.getExpectOrderToNoticeId());
+                } else {
+                    throw new JocConfigurationException("$.expectOrderToNoticeId: is required");
+                }
+                if (board.getEndOfLife() != null) {
+                    validateExpression("$.endOfLife: ", board.getEndOfLife());
+                } else {
+                    throw new JocConfigurationException("$.endOfLife: is required");
+                }
             }
         } else if (ConfigurationType.REPORT.equals(type)) {
             validateReport((Report) config);
@@ -323,9 +332,9 @@ public class Validator {
                 // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
                 validateJobResourceRefs(jobTemplate.getJobResourceNames(), invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections
                         .emptySet()));
-            } else if (ConfigurationType.REPORT.equals(type)) {
-                validateReport((Report) config);
             }
+        } else if (ConfigurationType.REPORT.equals(type)) {
+            validateReport((Report) config);
         }
     }
     

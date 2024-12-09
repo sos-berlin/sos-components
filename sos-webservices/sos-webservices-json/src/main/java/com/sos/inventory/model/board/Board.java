@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
+    "boardType",
     "postOrderToNoticeId",
     "endOfLife",
     "expectOrderToNoticeId",
@@ -43,6 +44,14 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.NOTICEBOARD;
     /**
+     * boardType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("boardType")
+    private BoardType boardType = BoardType.fromValue("GLOBAL");
+    /**
      * Expression that returns a NoticeId for the PostNotice statement.
      * 
      */
@@ -60,11 +69,11 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     @JsonPropertyDescription("Expression that returns for the PostNotice statement the time until when the note should be valid, expressed as number of milliseconds since 1970-01-01, 0 o'clock, UTC. Then JS7 will delete the note.")
     private String endOfLife;
     /**
-     * Expression that returns a NoticeId for the ReadNotice statement.
+     * Expression that returns a NoticeId for the ExpectNotice statement.
      * 
      */
     @JsonProperty("expectOrderToNoticeId")
-    @JsonPropertyDescription("Expression that returns a NoticeId for the ReadNotice statement.")
+    @JsonPropertyDescription("Expression that returns a NoticeId for the ExpectNotice statement.")
     @JsonAlias({
         "readingOrderToNoticeId"
     })
@@ -77,7 +86,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.1.0";
+    private String version = "1.7.2";
     /**
      * string without < and >
      * <p>
@@ -104,16 +113,18 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     /**
      * 
-     * @param expectOrderToNoticeId
+     * @param boardType
      * @param postOrderToNoticeId
+     * @param expectOrderToNoticeId
      * @param documentationName
      * 
      * @param title
      * @param version
      * @param endOfLife
      */
-    public Board(String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
+    public Board(BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
         super();
+        this.boardType = boardType;
         this.postOrderToNoticeId = postOrderToNoticeId;
         this.endOfLife = endOfLife;
         this.expectOrderToNoticeId = expectOrderToNoticeId;
@@ -131,6 +142,28 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
+    }
+
+    /**
+     * deployType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("TYPE")
+    public void setTYPE(DeployType tYPE) {
+        this.tYPE = tYPE;
+    }
+
+    /**
+     * boardType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("boardType")
+    public BoardType getBoardType() {
+        return boardType;
     }
 
     /**
@@ -170,7 +203,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     }
 
     /**
-     * Expression that returns a NoticeId for the ReadNotice statement.
+     * Expression that returns a NoticeId for the ExpectNotice statement.
      * 
      */
     @JsonProperty("expectOrderToNoticeId")
@@ -179,7 +212,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     }
 
     /**
-     * Expression that returns a NoticeId for the ReadNotice statement.
+     * Expression that returns a NoticeId for the ExpectNotice statement.
      * 
      */
     @JsonProperty("expectOrderToNoticeId")
@@ -255,12 +288,12 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("boardType", boardType).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(expectOrderToNoticeId).append(postOrderToNoticeId).append(documentationName).append(tYPE).append(title).append(version).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(boardType).append(postOrderToNoticeId).append(expectOrderToNoticeId).append(documentationName).append(tYPE).append(title).append(version).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -272,7 +305,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(boardType, rhs.boardType).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }

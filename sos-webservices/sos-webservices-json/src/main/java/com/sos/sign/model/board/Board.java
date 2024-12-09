@@ -2,10 +2,12 @@
 package com.sos.sign.model.board;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IDeployObject;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "path",
+    "boardType",
     "postOrderToNoticeId",
     "endOfLife",
     "expectOrderToNoticeId"
@@ -48,6 +51,14 @@ public class Board implements IDeployObject
      */
     @JsonProperty("path")
     private String path;
+    /**
+     * boardType
+     * <p>
+     * 
+     * 
+     */
+    @JsonIgnore
+    private BoardType boardType = BoardType.fromValue("GLOBAL");
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
      * 
@@ -93,7 +104,7 @@ public class Board implements IDeployObject
      */
     public Board(DeployType tYPE, String path, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId) {
         super();
-        this.tYPE = tYPE;
+        setTYPE(tYPE);
         this.path = path;
         this.postOrderToNoticeId = postOrderToNoticeId;
         this.endOfLife = endOfLife;
@@ -109,7 +120,11 @@ public class Board implements IDeployObject
      */
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
-        return tYPE;
+        if (getBoardType() != null && getBoardType().equals(BoardType.PLANNABLE)) {
+            return DeployType.PLANNABLEBOARD;
+        } else {
+            return tYPE;
+        }
     }
 
     /**
@@ -121,6 +136,9 @@ public class Board implements IDeployObject
      */
     @JsonProperty("TYPE")
     public void setTYPE(DeployType tYPE) {
+        if (tYPE != null && tYPE.equals(DeployType.PLANNABLEBOARD)) {
+            setBoardType(BoardType.PLANNABLE);
+        }
         this.tYPE = tYPE;
     }
 
@@ -146,6 +164,28 @@ public class Board implements IDeployObject
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
+    }
+
+    /**
+     * boardType
+     * <p>
+     * 
+     * 
+     */
+    @JsonIgnore
+    public BoardType getBoardType() {
+        return boardType;
+    }
+
+    /**
+     * boardType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("boardType")
+    public void setBoardType(BoardType boardType) {
+        this.boardType = boardType;
     }
 
     /**
@@ -204,12 +244,12 @@ public class Board implements IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("boardType", boardType).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(postOrderToNoticeId).append(expectOrderToNoticeId).append(tYPE).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(path).append(boardType).append(postOrderToNoticeId).append(expectOrderToNoticeId).append(tYPE).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -221,7 +261,7 @@ public class Board implements IDeployObject
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().append(path, rhs.path).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(tYPE, rhs.tYPE).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(boardType, rhs.boardType).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(tYPE, rhs.tYPE).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }

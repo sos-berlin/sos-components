@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
+import com.sos.inventory.model.board.BoardType;
 
 
 /**
@@ -88,6 +89,7 @@ public class Board
 
     /**
      * 
+     * @param boardType
      * @param numOfNotices
      * @param expectOrderToNoticeId
      * @param title
@@ -101,8 +103,8 @@ public class Board
      * @param state
      * @param documentationName
      */
-    public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfExpectingOrders, List<Notice> notices, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
-        super(postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
+    public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfExpectingOrders, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
+        super(boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;

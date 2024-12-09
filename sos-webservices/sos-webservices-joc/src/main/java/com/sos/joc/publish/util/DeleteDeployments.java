@@ -59,6 +59,7 @@ public class DeleteDeployments {
             DeployType.FILEORDERSOURCE, 
             DeployType.WORKFLOW, 
             DeployType.JOBRESOURCE, 
+            DeployType.PLANNABLEBOARD, 
             DeployType.NOTICEBOARD, 
             DeployType.LOCK);
     private static final List<ConfigurationType> RESTORE_ORDER = Arrays.asList(

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.dialect">org.hibernate.community.dialect.OracleLegacyDialect
+		</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.OracleDialect</property>
+		<property name="hibernate.connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
+		<property name="hibernate.connection.url">jdbc:oracle:thin:@localhost:1522:orcl12c?NLS_COMP=LINGUISTIC&amp;NLS_SORT=BINARY_CI
+		</property>
+		<property name="hibernate.connection.username">scheduler</property>
+		<property name="hibernate.connection.password">scheduler</property>
+
+		<property name="hibernate.show_sql">false</property>
+		<property name="hibernate.format_sql">true</property>
+
+
+		<property name="hibernate.hikari.connectionInitSql">
+			BEGIN
+				EXECUTE IMMEDIATE 'ALTER SESSION SET NLS_LENGTH_SEMANTICS = CHAR';
+				EXECUTE IMMEDIATE 'ALTER SESSION SET NLS_SORT = BINARY_CI';
+				EXECUTE IMMEDIATE 'ALTER SESSION SET NLS_COMP = LINGUISTIC';
+			END;
+		</property>
+
+		<!-- Hikari Connection Pool -->
+		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+		</property>
+		<property name="hibernate.hikari.maximumPoolSize">10</property>
+
+		<!-- <property name="hibernate.hikari.leakDetectionThreshold">30000</property> -->
+
+	</session-factory>
+</hibernate-configuration>
