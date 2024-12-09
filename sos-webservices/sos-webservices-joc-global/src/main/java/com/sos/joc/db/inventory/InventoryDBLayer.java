@@ -132,9 +132,10 @@ public class InventoryDBLayer extends DBLayer {
     public String getDeployedInventoryContent(Long configId, String commitId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select invContent from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where inventoryConfigurationId = :configId");
             hql.append(" and commitId = :commitId");
-            hql.append(" and state = :state");
+            hql.append(" and state = :state )");
             Query<String> query = getSession().createQuery(hql.toString());
             query.setParameter("configId", configId);
             query.setParameter("commitId", commitId);
@@ -2057,8 +2058,9 @@ public class InventoryDBLayer extends DBLayer {
 
     public String getPathByNameFromDepHistory(String name, ConfigurationType type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
+        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where name = :name");
-        hql.append(" and type = :type");
+        hql.append(" and type = :type )");
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("name", name);
         query.setParameter("type", type.intValue());
@@ -2168,14 +2170,32 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId = :cid");
-        hql.append(" and state = 0");
-        hql.append(" and operation = 0").append(")");
-        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-        query.setParameter("cid", configurationId);
-        return getSession().getSingleResult(query);
+        if (configurationId != null) {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where inventoryConfigurationId = :cid");
+            hql.append(" and state = 0").append(")");
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+            query.setParameter("cid", configurationId);
+            return getSession().getSingleResult(query);
+        }
+        return null;
+    }
+    
+    public List<DBItemDeploymentHistory> getDeployedConfigurations(Long inventoryConfigurationId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" where inventoryConfigurationId = :inventoryConfigurationId");
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(sql.toString());
+            query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
+            return getSession().getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
 }

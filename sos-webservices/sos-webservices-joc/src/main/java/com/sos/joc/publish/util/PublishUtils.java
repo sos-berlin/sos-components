@@ -68,10 +68,6 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.deploy.DeployHistoryFileOrdersSourceEvent;
-import com.sos.joc.event.bean.deploy.DeployHistoryJobResourceEvent;
-import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -780,7 +776,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
-                postDeployHistoryEvent(newDeployedObject);
+                JocInventory.postDeployHistoryEvent(newDeployedObject);
                 DBItemDepSignatures signature = entry.getValue();
                 if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
@@ -899,7 +895,7 @@ public abstract class PublishUtils {
                 } else {
                     dbLayerDeploy.getSession().update(depHistoryItem);
                 }
-                postDeployHistoryEvent(depHistoryItem);
+                JocInventory.postDeployHistoryEvent(depHistoryItem);
                 if (depSignatureItem != null) {
                     depSignatureItem.setDepHistoryId(depHistoryItem.getId());
                     dbLayerDeploy.getSession().save(depSignatureItem);
@@ -946,7 +942,7 @@ public abstract class PublishUtils {
                     redeployed.setSignedContent(".");
                 }
                 dbLayerDeploy.getSession().save(redeployed);
-                postDeployHistoryEvent(redeployed);
+                JocInventory.postDeployHistoryEvent(redeployed);
                 deployedObjects.add(redeployed);
             }
         } catch (SOSHibernateException e) {
@@ -993,7 +989,7 @@ public abstract class PublishUtils {
                     }
                     dbLayer.getSession().save(newEntry);
                     deletedObjects.add(newEntry);
-                    postDeployHistoryEventWhenDeleted(newEntry);
+                    JocInventory.postDeployHistoryEventWhenDeleted(newEntry);
                     if (withTrash) {
                         DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
                         if (orig != null) {
@@ -1764,28 +1760,28 @@ public abstract class PublishUtils {
         return String.format(idPattern, timeZone);
     }
 
-    public static void postDeployHistoryEvent(DBItemDeploymentHistory dbItem) {
-        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
-        } else if (DeployType.JOBRESOURCE.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.JOBRESOURCE.intValue()));
-        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
-        }
-    }
-    
-    public static void postDeployHistoryEventWhenDeleted(DBItemDeploymentHistory dbItem) {
-        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
-        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
-        }
-    }
+//    public static void postDeployHistoryEvent(DBItemDeploymentHistory dbItem) {
+//        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
+//            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+//                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
+//        } else if (DeployType.JOBRESOURCE.intValue() == dbItem.getType()) {
+//            EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+//                    .getPath(), ConfigurationType.JOBRESOURCE.intValue()));
+//        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
+//            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+//                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
+//        }
+//    }
+//    
+//    public static void postDeployHistoryEventWhenDeleted(DBItemDeploymentHistory dbItem) {
+//        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
+//            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+//                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
+//        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
+//            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+//                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
+//        }
+//    }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,
             String commitId, Long auditLogId, Map<String, String> releasedScripts) {

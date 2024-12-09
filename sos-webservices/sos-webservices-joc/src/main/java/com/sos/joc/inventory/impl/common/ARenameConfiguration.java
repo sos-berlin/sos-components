@@ -27,11 +27,15 @@ import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.deploy.DeploymentHistoryMoveEvent;
+import com.sos.joc.event.bean.inventory.InventoryJobTagEvent;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.rename.RequestFilter;
+import com.sos.joc.publish.db.DBLayerDeploy;
 
 public abstract class ARenameConfiguration extends JOCResourceImpl {
 
@@ -223,6 +227,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             Globals.commit(session);
             events.forEach(JocInventory::postEvent);
             folderEvents.forEach(JocInventory::postFolderEvent);
+            
             // post event: InventoryTaggingUpdated
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
                 InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
@@ -241,8 +246,12 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
     
     private static void setItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem, Long auditLogId) {
         boolean itemIsRenamed = false;
+        boolean itemIsMoved = false;
         if(!oldItem.getName().equals(newItem.getFileName().toString())) {
             itemIsRenamed = true;
+        }
+        if(!oldItem.getFolder().equals(newItem.getParent().toString().replace('\\', '/'))) {
+            itemIsMoved = true;
         }
         oldItem.setPath(newItem.toString().replace('\\', '/'));
         oldItem.setFolder(newItem.getParent().toString().replace('\\', '/'));
@@ -253,6 +262,14 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
         }
         oldItem.setAuditLogId(auditLogId);
         oldItem.setModified(Date.from(Instant.now()));
+        if(itemIsMoved && !itemIsRenamed) {
+            // TODO: post events
+            postNewDepHistoryEntryEvent(oldItem.getName(), newItem.getParent().toString().replace('\\', '/'), oldItem.getType(), oldItem.getId(), auditLogId);
+        }
     }
 
+    private static void postNewDepHistoryEntryEvent(String name, String folder, Integer objectType, Long inventoryId, Long auditLogId) {
+        EventBus.getInstance().post(new DeploymentHistoryMoveEvent(name, folder, objectType, inventoryId, auditLogId));
+    }
+    
 }

@@ -107,7 +107,7 @@ public class StoreDeployments {
                         item.setState(DeploymentState.DEPLOYED.value());
                         item.setAuditlogId(signedItemsSpec.getAuditlogId());
                         dbLayer.getSession().save(item);
-                        PublishUtils.postDeployHistoryEvent(item);
+                        JocInventory.postDeployHistoryEvent(item);
                         if (signature != null) {
                             signature.setDepHistoryId(item.getId());
                             dbLayer.getSession().save(signature);
@@ -235,7 +235,7 @@ public class StoreDeployments {
             optimistic.setErrorMessage(message);
             optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
             dbLayer.getSession().update(optimistic);
-            PublishUtils.postDeployHistoryEventWhenDeleted(optimistic);
+            JocInventory.postDeployHistoryEventWhenDeleted(optimistic);
             // update related inventory configuration to deployed=false 
             DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
             if (cfg != null) {

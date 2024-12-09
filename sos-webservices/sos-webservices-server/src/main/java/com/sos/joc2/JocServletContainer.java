@@ -17,6 +17,7 @@ import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.classes.publish.listener.DeploymentHistoryMoveListener;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowRefs;
@@ -78,6 +79,7 @@ public class JocServletContainer extends ServletContainer {
                 InventorySubagentClustersDBLayer.fillEmptyControllerIds();
                 WorkflowPaths.init();
                 WorkflowRefs.init();
+                DeploymentHistoryMoveListener.getInstance();
                 SOSShell.printSystemInfos();
                 SOSShell.printJVMInfos();
             }, "servlet-init2").start();

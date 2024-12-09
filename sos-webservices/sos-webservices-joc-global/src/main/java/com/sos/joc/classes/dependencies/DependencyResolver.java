@@ -60,6 +60,7 @@ import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 //import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
 import com.sos.joc.model.inventory.dependencies.update.ResponseItem;
+import com.sos.joc.model.publish.OperationType;
 
 public class DependencyResolver {
 
@@ -1185,7 +1186,7 @@ public class DependencyResolver {
                 InventoryDBLayer dblayer = new InventoryDBLayer(session);
                 try {
                     DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(reference.getReferencedItem().getId());
-                    if(latestDeployed != null) {
+                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
                         dependency.setDepDependencyId(latestDeployed.getId());
                         dependency.setControllerId(latestDeployed.getControllerId());
                     }
@@ -1205,7 +1206,7 @@ public class DependencyResolver {
                 InventoryDBLayer dblayer = new InventoryDBLayer(session);
                 try {
                     DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(item.getId());
-                    if(latestDeployed != null) {
+                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
                         dependency.setDepDependencyId(latestDeployed.getId());
                         dependency.setControllerId(latestDeployed.getControllerId());
                     }

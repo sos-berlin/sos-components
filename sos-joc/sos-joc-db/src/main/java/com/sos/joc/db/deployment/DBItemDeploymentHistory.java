@@ -18,12 +18,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
-import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
 @Entity
-@Table(name = DBLayer.TABLE_DEP_HISTORY, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]", "[TYPE]", "[CONTROLLER_ID]",
-        "[COMMIT_ID]" }) })
+@Table(name = DBLayer.TABLE_DEP_HISTORY)
 @Proxy(lazy = false)
 public class DBItemDeploymentHistory extends DBItem {
 

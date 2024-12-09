@@ -368,7 +368,7 @@ public class DeleteDeployments {
                     }
                     dbLayer.getSession().save(newEntry);
                     deletedObjects.add(newEntry);
-                    PublishUtils.postDeployHistoryEventWhenDeleted(newEntry);
+                    JocInventory.postDeployHistoryEventWhenDeleted(newEntry);
                     DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType());
                     if (orig != null) {
                         orig.setDeployed(false);

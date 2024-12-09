@@ -38,6 +38,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.common.IInventoryObject;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.InstructionType;
@@ -71,6 +72,9 @@ import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.deploy.DeployHistoryFileOrdersSourceEvent;
+import com.sos.joc.event.bean.deploy.DeployHistoryJobResourceEvent;
+import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryFolderEvent;
 import com.sos.joc.event.bean.inventory.InventoryJobTagEvent;
@@ -94,6 +98,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.folder.Folder;
+import com.sos.joc.model.publish.OperationType;
 
 public class JocInventory {
 
@@ -406,7 +411,7 @@ public class JocInventory {
         cfg.setIsReferencedBy(null);
         if (dbItem.getDeployed()) {
             DBItemDeploymentHistory lastDeployment = dbLayer.getLatestActiveDepHistoryItem(dbItem.getId());
-            if (lastDeployment != null) {
+            if (lastDeployment != null && OperationType.UPDATE.value().equals(lastDeployment.getOperation())) {
                 dbItem.setContent(lastDeployment.getInvContent());
             } else {
                 throw new DBMissingDataException(
@@ -1574,5 +1579,28 @@ public class JocInventory {
             }
         }
         return workflows;
+    }
+
+    public static void postDeployHistoryEvent(DBItemDeploymentHistory dbItem) {
+        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
+        } else if (DeployType.JOBRESOURCE.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.JOBRESOURCE.intValue()));
+        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
+        }
+    }
+    
+    public static void postDeployHistoryEventWhenDeleted(DBItemDeploymentHistory dbItem) {
+        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
+        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
+        }
     }
 }
