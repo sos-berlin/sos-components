@@ -79,15 +79,26 @@ public class Functions {
             if (token.contains("[")) {
                 String key = token.substring(0, token.indexOf("["));
                 int index = extractIndex(token);
-                return Optional.ofNullable(obj.get(key)).flatMap(value -> extractValue(value.asJsonArray().get(index), tokens));
+                return Optional.ofNullable(obj.get(key)).flatMap(value -> extractValue(value, index, tokens));
             } else {
                 return Optional.ofNullable(obj.get(token)).flatMap(value -> extractValue(value, tokens));
             }
         case ARRAY:
-            JsonArray arr = current.asJsonArray();
             int index = extractIndex(token);
-            return extractValue(arr.get(index), tokens);
+            return extractValue(current, index, tokens);
         default:
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<JsonValue> extractValue(JsonValue value, int index, Iterator<String> tokens) {
+        if (value == null || value.getValueType() != JsonValue.ValueType.ARRAY) {
+            return Optional.empty();
+        }
+        JsonArray arr = value.asJsonArray();
+        if (index < arr.size()) {
+            return extractValue(arr.get(index), tokens);
+        } else {
             return Optional.empty();
         }
     }
