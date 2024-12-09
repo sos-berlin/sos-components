@@ -165,6 +165,17 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     public BoardType getBoardType() {
         return boardType;
     }
+    
+    /**
+     * boardType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("boardType")
+    public void setBoardType(BoardType boardType) {
+        this.boardType = boardType;
+    }
 
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
