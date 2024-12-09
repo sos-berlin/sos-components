@@ -1,14 +1,16 @@
 package com.sos.commons.hibernate.function.json.h2;
 
-import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Optional;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonString;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
 
 /** see http://h2database.com/html/features.html?highlight=drop%2Calias&search=drop%20alias#user_defined_functions */
 
@@ -24,157 +26,95 @@ public class Functions {
 
     /** SOS_JSON_VALUE - used by com.sos.commons.hibernate.function.json.SOSHibernateJsonValue
      * 
-     * @param path ,e.g. '$.ports.usb' */
+     * @param path ,e.g. '$.calendars[1].calendarName' */
     public static String jsonValue(final String jsonValue, final String path) {
-        JsonStructure jsonStruct;
+        Optional<JsonValue> result = resolveJsonValue(jsonValue, path);
+        return result.map(Functions::toStringValue).orElse(null);
+    }
+
+    /** SOS_JSON_ARRAY_LENGTH - currently used only in the SQL scripts
+     * 
+     * @param path - array ,e.g. '$.calendars' */
+    public static int jsonArrayLength(final String jsonValue, final String path) {
+        Optional<JsonValue> result = resolveJsonValue(jsonValue, path);
+        if (result.isPresent() && result.get().getValueType() == JsonValue.ValueType.ARRAY) {
+            return result.get().asJsonArray().size();
+        }
+        return -1;
+    }
+
+    private static Optional<JsonValue> resolveJsonValue(final String jsonValue, final String path) {
+        if (jsonValue == null || jsonValue.isEmpty() || path == null || path.isEmpty()) {
+            return Optional.empty();
+        }
+
         try {
-            if (jsonValue == null || path == null) {
-                return null;
-            }
-            jsonStruct = string2json(jsonValue);
-            if (jsonStruct == null) {
-                return null;
-            }
-            String[] paths = path.split("\\.");
-            if (path.length() < 2) { // $
-                return jsonStruct.toString();
-            } else {
-                if (!jsonStruct.getValueType().equals(ValueType.OBJECT)) {
-                    return null;
-                }
+            JsonStructure json;
+            try (JsonReader r = Json.createReader(new java.io.StringReader(jsonValue))) {
+                json = r.read();
             }
 
-            JsonObject json = (JsonObject) jsonStruct;
-            JsonValue result = json;
-            for (String p : paths) {
-                if (!p.equals("$")) {
-                    SOSJsonArray arr = newSOSJsonArray(p);
-                    p = arr.index > -1 ? arr.name : p;
-                    result = json.get(p);
-                    if (result == null) {
-                        return null;
-                    }
-                    if (result.getValueType().equals(ValueType.OBJECT)) {
-                        json = (JsonObject) result;
-                    } else if (result.getValueType().equals(ValueType.ARRAY) && arr.index > -1) {
-                        try {
-                            result = ((JsonArray) result).get(arr.index);
-                        } catch (Throwable e) {
-                        }
-                    }
+            if (json.getValueType() != JsonValue.ValueType.OBJECT) {
+                if (path.equals("$")) {
+                    return Optional.of(json);
                 }
+                return Optional.empty();
             }
-            return result.getValueType().equals(ValueType.STRING) ? trim(result.toString()) : result.toString();
+            String p = path.startsWith("$.") ? path.substring(2) : path;
+            return extractValue(json, Arrays.stream(p.split("\\.")).iterator());
         } catch (Throwable e) {
+            System.err.println("[resolveJsonValue][" + jsonValue + "][" + path + "]" + e);
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<JsonValue> extractValue(JsonValue current, Iterator<String> tokens) {
+        if (!tokens.hasNext() || current == null) {
+            return Optional.ofNullable(current);
+        }
+        String token = tokens.next();
+        switch (current.getValueType()) {
+        case OBJECT:
+            JsonObject obj = current.asJsonObject();
+            if (token.contains("[")) {
+                String key = token.substring(0, token.indexOf("["));
+                int index = extractIndex(token);
+                return Optional.ofNullable(obj.get(key)).flatMap(value -> extractValue(value.asJsonArray().get(index), tokens));
+            } else {
+                return Optional.ofNullable(obj.get(token)).flatMap(value -> extractValue(value, tokens));
+            }
+        case ARRAY:
+            JsonArray arr = current.asJsonArray();
+            int index = extractIndex(token);
+            return extractValue(arr.get(index), tokens);
+        default:
+            return Optional.empty();
+        }
+    }
+
+    private static int extractIndex(String token) {
+        int start = token.indexOf('[');
+        int end = token.indexOf(']', start);
+        if (start != -1 && end != -1) {
+            return Integer.parseInt(token.substring(start + 1, end));
+        }
+        return -1;
+    }
+
+    private static String toStringValue(JsonValue value) {
+        if (value == null) {
             return null;
         }
-    }
-
-    /** SOS_JSON_ARRAY_LENGTH - currently used only in the sql scripts
-     * 
-     * @param path - array ,e.g. '$.ports.usb' */
-    public static int jsonArrayLength(final String jsonValue, final String path) {
-        JsonStructure jsonStruct;
-        int length = -1;
-        try {
-            if (jsonValue == null || path == null) {
-                return length;
+        switch (value.getValueType()) {
+        case STRING:
+            String val = ((JsonString) value).getString();
+            // trim " (if available)
+            if (val.length() > 1 && val.startsWith("\"") && val.endsWith("\"")) {
+                val = val.substring(1, val.length() - 1);
             }
-            jsonStruct = string2json(jsonValue);
-            if (jsonStruct == null) {
-                return length;
-            }
-            String[] paths = path.split("\\.");
-            if (path.length() < 2) { // $
-                return length;
-            } else {
-                if (!jsonStruct.getValueType().equals(ValueType.OBJECT)) {
-                    return length;
-                }
-            }
-
-            JsonObject json = (JsonObject) jsonStruct;
-            JsonValue result = json;
-            for (String p : paths) {
-                if (!p.equals("$")) {
-                    SOSJsonArray arr = newSOSJsonArray(p);
-                    p = arr.index > -1 ? arr.name : p;
-                    result = json.get(p);
-                    if (result == null) {
-                        return length;
-                    }
-                    if (result.getValueType().equals(ValueType.OBJECT)) {
-                        json = (JsonObject) result;
-                    } else if (result.getValueType().equals(ValueType.ARRAY)) {
-                        if (arr.index > -1) {
-                            try {
-                                result = ((JsonArray) result).get(arr.index);
-                                if (result.getValueType().equals(ValueType.ARRAY)) {
-                                    length = ((JsonArray) result).size();
-                                }
-                            } catch (Throwable e) {
-                            }
-                        } else {
-                            length = ((JsonArray) result).size();
-                        }
-                    }
-                }
-            }
-        } catch (Throwable e) {
-
-        }
-        return length;
-    }
-
-    private static SOSJsonArray newSOSJsonArray(String propertyName) {
-        return new Functions().new SOSJsonArray(propertyName);
-    }
-
-    private static JsonStructure string2json(String response) throws Exception {
-        JsonStructure json = null;
-        StringReader sr = null;
-        JsonReader jr = null;
-        try {
-            sr = new StringReader(response);
-            jr = Json.createReader(sr);
-
-            json = jr.read();
-        } catch (Throwable e) {
-            throw e;
-        } finally {
-            if (jr != null) {
-                jr.close();
-            }
-            if (sr != null) {
-                sr.close();
-            }
-        }
-
-        return json;
-    }
-
-    private static String trim(String str) {
-        // remove leading and closing "
-        return str.substring(1, str.length() - 1);
-    }
-
-    private class SOSJsonArray {
-
-        private String name;
-        private int index = -1;
-
-        private SOSJsonArray(String name) {
-            if (name.endsWith("]")) {
-                int i = name.indexOf("[");
-                if (i > -1) {
-                    try {
-                        this.index = Integer.parseInt(name.substring(i + 1, name.length() - 1));
-                        this.name = name.substring(0, i);
-                    } catch (Throwable e) {
-                    }
-                }
-            }
+            return val;
+        default: // NUMBER,BOOLEAN,ARRAY,OBJECT...
+            return value.toString();
         }
     }
-
 }

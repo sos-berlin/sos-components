@@ -32,4 +32,22 @@ public class FunctionsTest {
         searchPath = "$.my_array";
         LOGGER.info(String.format("[H2 SOS_JSON_ARRAY_LENGTH][%s]=%s", searchPath, Functions.jsonArrayLength(json, searchPath)));
     }
+
+    @Ignore
+    @Test
+    public void testWorkflowCalendarFromSchedule() throws Exception {
+        String json =
+                "{\"version\":\"1.7.3\",\"workflowNames\":[\"myWorkflow1\",\"myWorkflow2\",\"myWorkflow3\"],\"submitOrderToControllerWhenPlanned\":false,\"planOrderAutomatically\":false,\"calendars\":[{\"calendarName\":\"AnyDays\",\"timeZone\":\"Europe/Berlin\",\"periods\":[{\"singleStart\":\"10:00:00\",\"whenHoliday\":\"SUPPRESS\"}]}],\"orderParameterisations\":[]}";
+        LOGGER.info(String.format("[JSON]%s", json));
+
+        String searchPath = "$.workflowNames";
+        LOGGER.info(String.format("[WORKFLOW][SOS_JSON_ARRAY_LENGTH][%s]=%s", searchPath, Functions.jsonArrayLength(json, searchPath)));
+        searchPath += "[1]";
+        LOGGER.info(String.format("    [%s]=%s", searchPath, Functions.jsonValue(json, searchPath)));
+
+        searchPath = "$.calendars";
+        LOGGER.info(String.format("[CALENDAR][SOS_JSON_ARRAY_LENGTH][%s]=%s", searchPath, Functions.jsonArrayLength(json, searchPath)));
+        searchPath += "[0].calendarName";
+        LOGGER.info(String.format("    [%s]=%s", searchPath, Functions.jsonValue(json, searchPath)));
+    }
 }
