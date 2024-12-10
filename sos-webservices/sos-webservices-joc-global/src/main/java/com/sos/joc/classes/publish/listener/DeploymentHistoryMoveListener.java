@@ -1,5 +1,6 @@
 package com.sos.joc.classes.publish.listener;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -9,11 +10,16 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.dailyplan.DBLayerDailyPlan;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.event.bean.deploy.DeploymentHistoryMoveEvent;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 
@@ -37,6 +43,7 @@ public class DeploymentHistoryMoveListener {
         String folder = evt.getFolder();
         Long inventoryId = evt.getInventoryId();
         Long auditLogId = evt.getAuditLogId();
+        ConfigurationType objectType = ConfigurationType.fromValue(evt.getObjectType());
         
         SOSHibernateSession session = null;
         // TODO: get latest successful from History
@@ -59,6 +66,35 @@ public class DeploymentHistoryMoveListener {
                 session.save(latest);
             }
             deployments.stream().forEach(item -> JocInventory.postDeployHistoryEvent(item));
+            List<DBItemDailyPlanOrder> ordersToUpdate = new ArrayList<DBItemDailyPlanOrder>();
+            DBItemInventoryReleasedConfiguration released = null;
+            DBLayerDailyPlan dbLayerDP = new DBLayerDailyPlan(session);
+            if(ConfigurationType.WORKFLOW.equals(objectType)) {
+                // TODO: Workflow update DPL_ORDERS
+                ordersToUpdate = dbLayerDP.getOrdersByWorkflowName(evt.getName());
+            } else if(ConfigurationType.SCHEDULE.equals(objectType)) {
+                // TODO: Schedule update INV_RELEASED_CONFIGURATIONS and DPL_ORDERS
+                ordersToUpdate = dbLayerDP.getOrdersByScheduleName(evt.getName());
+                released = dbLayer.getReleasedConfiguration(inventoryId);
+            }
+            for(DBItemDailyPlanOrder order : ordersToUpdate) {
+                if(ConfigurationType.WORKFLOW.equals(objectType)) {
+                    order.setWorkflowFolder(folder);
+                    order.setWorkflowPath(folder.concat("/").concat(order.getWorkflowName()));
+                } else if (ConfigurationType.SCHEDULE.equals(objectType)) {
+                    order.setScheduleFolder(folder);
+                    order.setSchedulePath(folder.concat("/").concat(order.getScheduleName()));
+                }
+                session.update(order);
+            }
+            if(released != null) {
+                released.setFolder(folder);
+                released.setPath(folder.concat("/").concat(released.getName()));
+                session.update(released);
+            }
+            if(!ordersToUpdate.isEmpty()) {
+                EventBus.getInstance().post(new DailyPlanEvent(null, null));
+            }
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
