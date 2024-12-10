@@ -49,7 +49,7 @@ public class HistoryFilter {
     private Set<Folder> folders;
     private Set<HistoryStateText> states;
     private Set<OrderStateText> orderStates;
-    private Set<String> criticalities;
+    private Set<Integer> criticalities;
     private Map<String, Set<String>> orders;
 //    private Map<String, Set<String>> excludedOrders;
     private Map<String, Set<String>> jobs;
@@ -174,13 +174,13 @@ public class HistoryFilter {
     
     public void setCriticalities(Collection<JobCriticality> criticalities) {
         if (criticalities != null) {
-            this.criticalities = criticalities.stream().map(c -> c.value().toLowerCase()).collect(Collectors.toSet());
+            this.criticalities = criticalities.stream().map(JobCriticality::intValue).collect(Collectors.toSet());
         } else {
             this.criticalities = null;
         }
     }
     
-    public Set<String> getCriticalities() {
+    public Set<Integer> getCriticalities() {
         return criticalities;
     }
 
