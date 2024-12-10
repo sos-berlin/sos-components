@@ -75,7 +75,7 @@ public class DeploymentHistoryMoveListener {
             } else if(ConfigurationType.SCHEDULE.equals(objectType)) {
                 // TODO: Schedule update INV_RELEASED_CONFIGURATIONS and DPL_ORDERS
                 ordersToUpdate = dbLayerDP.getOrdersByScheduleName(evt.getName());
-                released = dbLayer.getReleasedConfiguration(inventoryId);
+                released = dbLayer.getReleasedItemByConfigurationId(inventoryId);
             }
             for(DBItemDailyPlanOrder order : ordersToUpdate) {
                 if(ConfigurationType.WORKFLOW.equals(objectType)) {
