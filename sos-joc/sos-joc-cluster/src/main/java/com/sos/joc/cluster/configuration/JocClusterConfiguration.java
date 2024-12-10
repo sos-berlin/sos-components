@@ -1,5 +1,6 @@
 package com.sos.joc.cluster.configuration;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -9,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,56 +189,60 @@ public class JocClusterConfiguration {
     }
 
     private ClusterModeResult clusterMode() {
-        final ClassLoader webAppCL = this.getClass().getClassLoader();
-        URL lJar = null;
+        final ClassLoader currentCL = this.getClass().getClassLoader();
+        URL clusterModeJar = null;
         try {
-            lJar = webAppCL.loadClass(CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
+            clusterModeJar = currentCL.loadClass(CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
         } catch (Throwable e1) {
             return new ClusterModeResult(false);
         }
 
         ClusterModeResult result = new ClusterModeResult(true);
-        URLClassLoader currentCL = null;
-        try {
-            List<URL> jars = new ArrayList<>();
-            jars.add(lJar);
+        List<URL> jars = new ArrayList<>();
+        jars.add(clusterModeJar);
 
-            URL slf4jJar = webAppCL.loadClass(LoggerFactory.class.getName()).getProtectionDomain().getCodeSource().getLocation();
-            List<Path> logJars = SOSPath.getFileList(Paths.get(slf4jJar.toURI()).getParent(), "^slf4j|^log4j",
+        Throwable dependenciesException = null;
+        try {
+            // support old versions - slf4j,log4j + asynchronous logging based on LMAX Disruptor
+            URL slf4jJar = currentCL.loadClass(LoggerFactory.class.getName()).getProtectionDomain().getCodeSource().getLocation();
+            List<Path> logJars = SOSPath.getFileList(Paths.get(slf4jJar.toURI()).getParent(), "^slf4j|^log4j|^disruptor-",
                     java.util.regex.Pattern.CASE_INSENSITIVE);
             for (Path jar : logJars) {
                 jars.add(jar.toUri().toURL());
             }
-            currentCL = new URLClassLoader(jars.stream().toArray(URL[]::new));
-            Object o = currentCL.loadClass(CLUSTER_MODE).getDeclaredConstructor().newInstance();
-            for (Method m : o.getClass().getDeclaredMethods()) {
-                switch (m.getName()) {
-                case "getValidFrom":
-                    result.setValidFrom((Date) m.invoke(o));
-                    break;
-                case "getValidUntil":
-                    result.setValidUntil((Date) m.invoke(o));
-                    break;
-                default:
-                    result.setUse((boolean) m.invoke(o));
-                    break;
-                }
-            }
-
-            try {
-                TimeUnit.SECONDS.sleep(1);// waiting for lJar logging because currentCL will be closed...
-            } catch (Throwable e) {
-            }
-            return result;
         } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-        } finally {
-            if (currentCL != null) {
-                try {
-                    currentCL.close();
-                } catch (Throwable e) {
+            dependenciesException = e;
+        }
+
+        try (URLClassLoader tmpCL = new URLClassLoader(jars.stream().toArray(URL[]::new))) {
+            try {
+                Object o = tmpCL.loadClass(CLUSTER_MODE).getDeclaredConstructor().newInstance();
+                for (Method m : o.getClass().getDeclaredMethods()) {
+                    switch (m.getName()) {
+                    case "getValidFrom":
+                        result.setValidFrom((Date) m.invoke(o));
+                        break;
+                    case "getValidUntil":
+                        result.setValidUntil((Date) m.invoke(o));
+                        break;
+                    default:
+                        result.setUse((boolean) m.invoke(o));
+                        break;
+                    }
                 }
+            } catch (Throwable e) {
+                if (dependenciesException != null) {
+                    LOGGER.warn("[clusterMode][dependencies cannot be loaded]" + dependenciesException, dependenciesException);
+                    dependenciesException = null;
+                }
+                LOGGER.error("[clusterMode]Validation failed. Ensure that the current licensed binary code is applied.");
+                LOGGER.error("[clusterMode]" + e, e);
             }
+        } catch (IOException e) {
+            if (dependenciesException != null) {
+                LOGGER.warn("[clusterMode][dependencies cannot be loaded]" + dependenciesException, dependenciesException);
+            }
+            LOGGER.warn("[clusterMode][error while closing the class loader]" + e, e);
         }
         return result;
     }
