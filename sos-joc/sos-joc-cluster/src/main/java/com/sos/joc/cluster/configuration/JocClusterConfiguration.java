@@ -235,7 +235,15 @@ public class JocClusterConfiguration {
                     LOGGER.warn("[clusterMode][dependencies cannot be loaded]" + dependenciesException, dependenciesException);
                     dependenciesException = null;
                 }
-                LOGGER.error("[clusterMode]Validation failed. Ensure that the current licensed binary code is applied.");
+                String msg = "Validation failed. ";
+                if (e instanceof SecurityException) {
+                    msg += "SecurityException occurred: Access denied to class or method.";
+                } else {
+                    // ClassNotFoundException,InstantiationException,NoSuchMethodException
+                    // IllegalAccessException,IllegalArgumentException,InvocationTargetException,
+                    msg += "Ensure that the current licensed binary code is applied.";
+                }
+                LOGGER.error("[clusterMode]" + msg);
                 LOGGER.error("[clusterMode]" + e, e);
             }
         } catch (IOException e) {
