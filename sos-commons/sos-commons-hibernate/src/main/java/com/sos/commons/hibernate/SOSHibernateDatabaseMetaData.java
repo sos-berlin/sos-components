@@ -11,6 +11,13 @@ public class SOSHibernateDatabaseMetaData {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateDatabaseMetaData.class);
 
+    /** Used with JSON_QUERY to retrieve JSON result longer than 4000 characters<br/>
+     * - If such case is not handled separately, Oracle will return null in this case,<br/>
+     * -- because JSON_QUERY uses the return type VARCHAR2(4000) by default<br/>
+     * TODO introduction of ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_NCLOB<br/>
+     * - 18c - ORA-40449 invalid data type for return value<br/>
+     * - 21c - accepts RETURNING NCLOB - from which version is RETURNING NCLOB supported?<br/>
+     */
     private static final int ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB = 18;
 
     private final Dbms dbms;

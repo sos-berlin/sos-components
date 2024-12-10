@@ -89,16 +89,13 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             }
             break;
         case ORACLE:
-            // TODO
-            // returning clob
-            // ---- SELECT json_value(j, '$.bar' returning clob) FROM j
-            // -------- available from 18c? 12c - ORA-40444 error ..;
-            // ERROR ON ERROR
-            // ---- SELECT json_value(j, '$.bar' returning varchar2(32000) ERROR ON ERROR) FROM j;
+            // RETURNING CLOB - available from 18 (c ?)
+            // - Used with JSON_QUERY to retrieve JSON result longer than 4000 characters
+            // -- If such case is not handled separately, Oracle will return null in this case,
+            // --- because JSON_QUERY uses the return type VARCHAR2(4000) by default
             retType = argument2ReturnType(arguments.get(0));
             if (retType.equals(ReturnType.SCALAR)) {
-                // tested with 18c - not support RETURNING CLOB - gets empty value - use VARCHAR2(32000)?
-                // JSON_VALUE(property,path)
+                // OK without
                 sqlAppender.append("JSON_VALUE(");
                 arguments.get(1).accept(translator);
                 sqlAppender.append(",");
@@ -111,8 +108,11 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 sqlAppender.append(",");
                 arguments.get(2).accept(translator);
                 if (this.factory.getDatabaseMetaData().supportJsonReturningClob()) {
+                    // RETURNING NCLOB:
+                    // - 18c-ORA-40449 invalid data type for return value
+                    // - 21c-OK - TODO from which version is RETURNING NCLOB supported?
                     sqlAppender.append(" RETURNING CLOB");
-                }
+                }// else - if result longer than 4000 will returns null ...
                 sqlAppender.append(")");
             }
             break;
@@ -139,6 +139,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
         case H2:
             // path = '$.ports.usb' -> '$.ports.usb'
             // SOS_JSON_VALUE(property,path)
+            // does not use ReturnType(SCALAR,JSON) because the H2 NAME_JSON_VALUE function also returns a String value for the JSON objects
             sqlAppender.append(com.sos.commons.hibernate.function.json.h2.Functions.NAME_JSON_VALUE);
             sqlAppender.append("(");
             arguments.get(1).accept(translator);

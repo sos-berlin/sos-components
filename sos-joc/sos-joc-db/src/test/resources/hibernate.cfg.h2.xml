@@ -4,7 +4,7 @@
 		<property name="hibernate.dialect">org.hibernate.dialect.H2Dialect</property>
         
         <property name="jakarta.persistence.jdbc.driver">org.h2.Driver</property>
-        <property name="jakarta.persistence.jdbc.url">jdbc:h2:D:\_Workspace\install\JS7\js7.x\joc\joc_4449_h2\idata\resources\joc\h2\joc;AUTO_SERVER=TRUE</property>
+        <property name="jakarta.persistence.jdbc.url">jdbc:h2:D:\_Workspace\install\JS7\js7.x\joc\joc_4449_h2\data\resources\joc\h2\joc;AUTO_SERVER=TRUE</property>
         <property name="jakarta.persistence.jdbc.user">joc</property>
         <property name="jakarta.persistence.jdbc.password"></property>
         

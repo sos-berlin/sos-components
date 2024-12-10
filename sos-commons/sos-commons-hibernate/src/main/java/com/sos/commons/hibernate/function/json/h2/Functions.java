@@ -1,5 +1,6 @@
 package com.sos.commons.hibernate.function.json.h2;
 
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Optional;
@@ -24,18 +25,20 @@ public class Functions {
     public static final String NAME_JSON_VALUE = "SOS_JSON_VALUE";
     public static final String NAME_JSON_ARRAY_LENGTH = "SOS_JSON_ARRAY_LENGTH";
 
-    /** SOS_JSON_VALUE - used by com.sos.commons.hibernate.function.json.SOSHibernateJsonValue
+    /** SOS_JSON_VALUE - used by com.sos.commons.hibernate.function.json.SOSHibernateJsonValue<br/>
+     * Throws an exception (like e.g. MSSQL) if JSON cannot be parsed
      * 
      * @param path ,e.g. '$.calendars[1].calendarName' */
-    public static String jsonValue(final String jsonValue, final String path) {
+    public static String jsonValue(final String jsonValue, final String path) throws Exception {
         Optional<JsonValue> result = resolveJsonValue(jsonValue, path);
         return result.map(Functions::toStringValue).orElse(null);
     }
 
-    /** SOS_JSON_ARRAY_LENGTH - currently used only in the SQL scripts
+    /** SOS_JSON_ARRAY_LENGTH - currently used only in the SQL scripts<br/>
+     * Throws an exception (like e.g. MSSQL) if JSON cannot be parsed
      * 
      * @param path - array ,e.g. '$.calendars' */
-    public static int jsonArrayLength(final String jsonValue, final String path) {
+    public static int jsonArrayLength(final String jsonValue, final String path) throws Exception {
         Optional<JsonValue> result = resolveJsonValue(jsonValue, path);
         if (result.isPresent() && result.get().getValueType() == JsonValue.ValueType.ARRAY) {
             return result.get().asJsonArray().size();
@@ -43,17 +46,20 @@ public class Functions {
         return -1;
     }
 
-    private static Optional<JsonValue> resolveJsonValue(final String jsonValue, final String path) {
+    private static Optional<JsonValue> resolveJsonValue(final String jsonValue, final String path) throws Exception {
         if (jsonValue == null || jsonValue.isEmpty() || path == null || path.isEmpty()) {
             return Optional.empty();
         }
 
+        JsonStructure json;
+        try (JsonReader r = Json.createReader(new StringReader(jsonValue))) {
+            json = r.read();
+        } catch (Throwable e) {
+            // H2 throws an exception,e.g.: Exception calling user-defined function: "jsonArrayLength"(<arguments>) <exception>
+            // So, the H2 message contains the values of "jsonValue" and "path"
+            throw e;
+        }
         try {
-            JsonStructure json;
-            try (JsonReader r = Json.createReader(new java.io.StringReader(jsonValue))) {
-                json = r.read();
-            }
-
             if (json.getValueType() != JsonValue.ValueType.OBJECT) {
                 if (path.equals("$")) {
                     return Optional.of(json);

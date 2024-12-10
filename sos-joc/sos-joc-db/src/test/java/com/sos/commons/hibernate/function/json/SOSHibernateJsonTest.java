@@ -2,7 +2,13 @@ package com.sos.commons.hibernate.function.json;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.Query;
@@ -11,11 +17,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SOSHibernateTest;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSReflection;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -130,6 +138,37 @@ public class SOSHibernateJsonTest {
 
     @Ignore
     @Test
+    public void testSelectJson() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = SOSHibernateTest.createFactory();
+            session = factory.openStatelessSession();
+
+            StringBuilder hql = new StringBuilder("select ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars[0].periods")).append(" ");
+            hql.append("as calendars ");
+            hql.append("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+            hql.append("where type=7 ");
+
+            Query<String> query = session.createQuery(hql.toString());
+            List<String> result = session.getResultList(query);
+            LOGGER.info("---- FOUND: " + result.size());
+            for (String w : result) {
+                LOGGER.info("   calendars=" + w);
+            }
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
     public void testScalarSelectAndWhere() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
@@ -138,7 +177,7 @@ public class SOSHibernateJsonTest {
             session = factory.openStatelessSession();
 
             StringBuilder hql = new StringBuilder("select ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append(" ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append(" ");
             hql.append("as workflow ");
             hql.append("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
@@ -174,7 +213,7 @@ public class SOSHibernateJsonTest {
             session = factory.openStatelessSession();
 
             StringBuilder hql = new StringBuilder("select ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.variables")).append(" ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.variables")).append(" ");
             hql.append("as variables ");
             hql.append("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
@@ -210,16 +249,16 @@ public class SOSHibernateJsonTest {
             session = factory.openStatelessSession();
 
             StringBuilder hql = new StringBuilder("select ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.workingCalendars")).append(" ");
-            hql.append("as workingCalendars ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars")).append(" ");
+            hql.append("as calendars ");
             hql.append("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
             hql.append("and ");
             hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append("=:workflowPath").append(" ");
             hql.append("and ");
-            // hql.append(SOSHibernateRegexp.getFunction(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workingCalendars"),
+            // hql.append(SOSHibernateRegexp.getFunction(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars"),
             // ":calendarPath"));
-            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workingCalendars");
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
             hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
 
             Query<String> query = session.createQuery(hql.toString());
@@ -230,7 +269,7 @@ public class SOSHibernateJsonTest {
             List<String> result = session.getResultList(query);
             LOGGER.info("---- FOUND: " + result.size());
             for (String w : result) {
-                LOGGER.info("   workingCalendars=" + w);
+                LOGGER.info("   calendars=" + w);
             }
 
         } catch (Exception e) {
@@ -240,5 +279,25 @@ public class SOSHibernateJsonTest {
                 factory.close(session);
             }
         }
+    }
+
+    @Ignore
+    @Test
+    public void generateLargeJsonFileToManuallyInsertIntoDBTestTable() throws Exception {
+        Path outputFile = Paths.get("src/test/resources/large_json_file.json");
+
+        LOGGER.info("[START]...");
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        JsonArrayBuilder ab = Json.createArrayBuilder();
+        for (int i = 1; i <= 1_000; i++) {
+            JsonObjectBuilder ob = Json.createObjectBuilder();
+            ob.add("person_" + i, Json.createObjectBuilder().add("name", "Fritz Tester" + i).add("age", 30));
+            ab.add(ob);
+        }
+        builder.add("persons", ab);
+
+        ObjectMapper mapper = new ObjectMapper();
+        SOSPath.overwrite(outputFile, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(builder.build()));
+        LOGGER.info("[END]" + outputFile);
     }
 }
