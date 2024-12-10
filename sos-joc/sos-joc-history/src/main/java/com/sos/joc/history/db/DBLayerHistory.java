@@ -432,7 +432,7 @@ public class DBLayerHistory extends DBLayer {
 
     public Object[] getDeployedWorkflow(String controllerId, String workflowName, String workflowVersionId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path,invContent from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
-        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
         hql.append("where type=:type ");
         hql.append("and controllerId=:controllerId ");
         hql.append("and name=:workflowName ");
