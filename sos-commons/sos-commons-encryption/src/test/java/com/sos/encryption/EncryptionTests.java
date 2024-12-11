@@ -48,7 +48,7 @@ public class EncryptionTests {
   public void test01EncryptTextAndDecrypt() throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException,
       InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException {
     LOGGER.trace("******************  Test encrypt a String and decrypt it afterwards started  *******************");
-    String input = "myTestInput";
+    String input = "my%Test$/Input";
     SecretKey key = EncryptionUtils.generateSecretKey(128);
     IvParameterSpec ivParameterSpec = EncryptionUtils.generateIv();
     String algorithm = "AES/CBC/PKCS5Padding";
