@@ -164,25 +164,27 @@ public class SOSReflection {
     }
 
     public static List<Class<?>> findClassesInJarFile(Path filePath, Class<?> targetInterface) throws Exception {
-        final File file = filePath.toFile();
         List<Class<?>> r = new ArrayList<>();
-        try (JarFile jarFile = new JarFile(file)) {
-            Enumeration<JarEntry> entries = jarFile.entries();
-            URL[] urls = { new URL("jar:file:" + file.getAbsolutePath() + "!/") };
-            URLClassLoader classLoader = URLClassLoader.newInstance(urls);
 
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                if (entry.getName().endsWith(".class")) {
-                    String className = entry.getName().replace("/", ".").replace(".class", "");
-                    try {
-                        Class<?> clazz = classLoader.loadClass(className);
-                        if (targetInterface.isAssignableFrom(clazz) && !clazz.isInterface() && !java.lang.reflect.Modifier.isAbstract(clazz
-                                .getModifiers())) {
-                            r.add(clazz);
+        final File file = filePath.toFile();
+        URL[] urls = { new URL("jar:file:" + file.getAbsolutePath() + "!/") };
+        try (URLClassLoader classLoader = URLClassLoader.newInstance(urls)) {
+            try (JarFile jarFile = new JarFile(file)) {
+                Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    if (entry.getName().endsWith(".class")) {
+                        String className = entry.getName().replace("/", ".").replace(".class", "");
+                        try {
+                            Class<?> clazz = classLoader.loadClass(className);
+                            int modifiers = clazz.getModifiers();
+                            if (targetInterface.isAssignableFrom(clazz) && !clazz.isInterface() && !java.lang.reflect.Modifier.isAbstract(
+                                    modifiers)) {
+                                r.add(clazz);
+                            }
+                        } catch (NoClassDefFoundError | ClassNotFoundException e) {
+                            // System.err.println("Error loading class " + className + " from " + file.getName() + ": " + e.getMessage());
                         }
-                    } catch (NoClassDefFoundError | ClassNotFoundException e) {
-                        // System.err.println("Error loading class " + className + " from " + file.getName() + ": " + e.getMessage());
                     }
                 }
             }
