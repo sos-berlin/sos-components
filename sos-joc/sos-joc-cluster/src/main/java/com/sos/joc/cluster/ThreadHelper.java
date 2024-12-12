@@ -17,8 +17,7 @@ public class ThreadHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadHelper.class);
 
     public static ThreadGroup getThreadGroup() {
-        SecurityManager s = System.getSecurityManager();
-        return (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+        return Thread.currentThread().getThreadGroup();
     }
 
     public static Collection<Thread> getThreads(final ThreadGroup group, final boolean recurse, final String threadPrefix) {
@@ -74,7 +73,6 @@ public class ThreadHelper {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     public static void tryStop(final StartupMode mode, final ThreadGroup group) {
         try {
             if (group != null && group.activeCount() > 0) {
