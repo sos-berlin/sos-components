@@ -215,8 +215,8 @@ public abstract class PublishUtils {
             throw new JocMissingKeyException(
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {
-            DBItemDepSignatures sig = null;
             for (DBItemDeploymentHistory deployed : unsignedDeployments) {
+                DBItemDepSignatures sig = null;
                 updateVersionId(deployed, commitId);
                 updatePath(deployed);
                 // update agentName in Workflow jobs before signing agentName -> agentId
@@ -449,6 +449,7 @@ public abstract class PublishUtils {
     private static void updateVersionId(DBItemDeploymentHistory draft, String commitId) {
         if (ConfigurationType.WORKFLOW.intValue() == draft.getType()) {
             ((Workflow) draft.readUpdateableContent()).setVersionId(commitId);
+            draft.setCommitId(commitId);
         }
     }
     

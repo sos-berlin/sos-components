@@ -216,6 +216,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                             try {
                                 item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(controllerId, item.getPath(), item
                                         .getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
+                                item.setCommitId(commitId);
                             } catch (IOException e) {
                                 throw new JocException(e);
                             }
@@ -362,7 +363,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDraftConfigurations().stream()
                     .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+                    .map(Config::getConfiguration).peek(item -> item.setCommitId(null)).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
             return new ArrayList<Configuration>();
         }
@@ -370,8 +371,9 @@ public abstract class ADeploy extends JOCResourceImpl {
     
     private List<Configuration> getDraftConfigurationFoldersToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
-            return deployFilter.getStore().getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType().equals(
-                    ConfigurationType.FOLDER)).map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+            return deployFilter.getStore().getDraftConfigurations().stream()
+                    .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
             return new ArrayList<Configuration>();
         }
