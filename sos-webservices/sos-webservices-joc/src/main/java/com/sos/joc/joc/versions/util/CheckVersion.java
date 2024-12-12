@@ -54,6 +54,9 @@ public class CheckVersion {
         {
             add("2.5.6");
             add("2.6.3");
+            add("2.7.0");
+            add("2.7.1");
+            add("2.7.2");
         }
     });
     
@@ -72,7 +75,13 @@ public class CheckVersion {
         } else if(controllerVersionSplitted.get(1) != jocVersionSplitted.get(1)) {
             return CompatibilityLevel.NOT_COMPATIBLE;
         } else if (controllerVersionSplitted.get(2) <= jocVersionSplitted.get(2) && !isIncompatible(controllerVersion, null, jocVersion)) {
-            return CompatibilityLevel.COMPATIBLE;
+            if(controllerVersionSplitted.get(2) == jocVersionSplitted.get(2)) {
+                return CompatibilityLevel.COMPATIBLE;
+            } else if(!versionBackwardIncompatibilties.contains(coreControllerVersion)) {
+                return CompatibilityLevel.COMPATIBLE;
+            }else {
+                return CompatibilityLevel.NOT_COMPATIBLE;
+            }
         } else {
             return CompatibilityLevel.NOT_COMPATIBLE;
         }

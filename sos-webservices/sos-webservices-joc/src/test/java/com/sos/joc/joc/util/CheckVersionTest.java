@@ -76,4 +76,13 @@ public class CheckVersionTest {
         assertEquals(CompatibilityLevel.COMPATIBLE, CheckVersion.checkAgentVersionMatches2Controller(agent26CompatibleVersion, controller26CompatibleVersion));
     }
     
+    @Test
+    public void checkIncompatibile() {
+        
+        String controllerVersion = "2.7.2";
+//        String agentVersion = "2.7.2";
+        String jocVersion = "2.7.3";
+        assertEquals(CompatibilityLevel.NOT_COMPATIBLE, CheckVersion.checkControllerVersionMatches2Joc(controllerVersion, jocVersion));
+    }
+    
 }
