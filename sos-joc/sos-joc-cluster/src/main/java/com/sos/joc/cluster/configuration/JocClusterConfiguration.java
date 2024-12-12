@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,12 +189,15 @@ public class JocClusterConfiguration {
         clusterModeResult = clusterMode();
     }
 
-    private ClusterModeResult clusterMode() {
+    private synchronized ClusterModeResult clusterMode() {
         final ClassLoader currentCL = this.getClass().getClassLoader();
         URL clusterModeJar = null;
         try {
             clusterModeJar = currentCL.loadClass(CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
-        } catch (Throwable e1) {
+        } catch (Throwable e) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[clusterMode][skip][cannot be loaded/located][because not found?]" + e);
+            }
             return new ClusterModeResult(false);
         }
 
@@ -203,7 +207,7 @@ public class JocClusterConfiguration {
 
         Throwable dependenciesException = null;
         try {
-            // support old versions - slf4j,log4j + asynchronous logging based on LMAX Disruptor
+            // Support old versions - slf4j,log4j + asynchronous logging based on LMAX Disruptor
             URL slf4jJar = currentCL.loadClass(LoggerFactory.class.getName()).getProtectionDomain().getCodeSource().getLocation();
             List<Path> logJars = SOSPath.getFileList(Paths.get(slf4jJar.toURI()).getParent(), "^slf4j|^log4j|^disruptor-",
                     java.util.regex.Pattern.CASE_INSENSITIVE);
@@ -230,27 +234,43 @@ public class JocClusterConfiguration {
                         break;
                     }
                 }
+
+                try {
+                    // Support old versions - wait for possible logging,
+                    // because if tmpCL is closed immediately, the log libraries are no longer available for "later" logging.
+                    // An exception can occur(logged in jetty.log), especially with asynchronous logging:
+                    // - AsyncLogger error handling event seq=0, value='org.apache.logging.log4j.core.async.RingBufferLogEvent@ ...
+                    // -- java.lang.NoClassDefFoundError: org/apache/logging/log4j/message/ParameterizedMessage
+                    // - This exception can be ignored because the check was successful and "only" the asynchronous logging failed.
+                    // - Sleep tries to avoid this exception...
+                    // TODO - This is not particularly efficient because sleep is also executed for current versions where no logging is used...
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (Throwable e) {
+
+                }
             } catch (Throwable e) {
                 if (dependenciesException != null) {
                     LOGGER.warn("[clusterMode][dependencies cannot be loaded]" + dependenciesException, dependenciesException);
                     dependenciesException = null;
                 }
-                String msg = "Validation failed. ";
+                String msg = "Licensed binary code check failed. ";
                 if (e instanceof SecurityException) {
-                    msg += "SecurityException occurred: Access denied to class or method.";
+                    msg += "SecurityException occurred: Access denied to class or method";
                 } else {
                     // ClassNotFoundException,InstantiationException,NoSuchMethodException
                     // IllegalAccessException,IllegalArgumentException,InvocationTargetException,
-                    msg += "Ensure that the current licensed binary code is applied.";
+                    msg += "Ensure that the current Licensed binary code is applied";
                 }
-                LOGGER.error("[clusterMode]" + msg);
-                LOGGER.error("[clusterMode]" + e, e);
+                LOGGER.error("[clusterMode][" + msg + "]" + e, e);
             }
         } catch (IOException e) {
             if (dependenciesException != null) {
                 LOGGER.warn("[clusterMode][dependencies cannot be loaded]" + dependenciesException, dependenciesException);
             }
             LOGGER.warn("[clusterMode][error while closing the class loader]" + e, e);
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[clusterMode]executed");
         }
         return result;
     }
