@@ -4,12 +4,16 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.slf4j.Logger;
@@ -408,6 +412,22 @@ public class SOSDate {
 
     public static long getTimeAsMillis(String val) {
         return getTimeAsSeconds(val) * 1_000;
+    }
+
+    /** @param startIsoLocalDate text string such as 2024-12-11
+     * @param endIsoLocalDate text string such as 2024-12-01
+     * @return */
+    public static List<String> getDatesInRange(String startIsoLocalDate, String endIsoLocalDate) {
+        LocalDate start = LocalDate.parse(startIsoLocalDate);
+        LocalDate end = LocalDate.parse(endIsoLocalDate);
+
+        List<String> dates = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
+        while (!start.isAfter(end)) {
+            dates.add(start.format(formatter));
+            start = start.plusDays(1);
+        }
+        return dates;
     }
 
     public static void main(String[] args) {

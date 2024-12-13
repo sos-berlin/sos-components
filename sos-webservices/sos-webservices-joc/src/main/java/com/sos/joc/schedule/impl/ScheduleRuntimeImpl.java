@@ -20,8 +20,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +29,7 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
@@ -50,6 +49,8 @@ import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.schedule.resource.IScheduleRuntimeResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("schedule")
 public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRuntimeResource {
 
@@ -58,6 +59,12 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
     private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     private static DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
     private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
+
+    // true (new behavior) - create a preview per day in the date range, like the DailyPlan does
+    // - TODO in some cases performance problems(next year view), e.g. Every 2nd day starting with day 01.12.2024 of Dec ...
+    // -- because Every/Repetitions is calculated from a specific start day - so if start=2024.. there is more to calculate for 2030 than for 2025...
+    // false (previous behavior) - create a preview for the entire date range with one call
+    private static final boolean DAILY_PLAN_MODE = false;
 
     @Override
     public JOCDefaultResponse postScheduleRuntime(String accessToken, byte[] filterBytes) {
@@ -116,18 +123,23 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                         restrictions.setIncludes(c.getIncludes());
                         // restrictions.setExcludes(c.getExcludes());
                         Calendar basedOn = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
-                        fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
-                                date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone, getJocError())).collect(Collectors.toCollection(
-                                        () -> periods));
+                        if (DAILY_PLAN_MODE) {
+                            for (String asDailyPlanSingleDay : SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo())) {
+                                new FrequencyResolver().resolveRestrictions(basedOn, restrictions, asDailyPlanSingleDay, asDailyPlanSingleDay)
+                                        .getDates().stream().flatMap(date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone,
+                                                getJocError())).collect(Collectors.toCollection(() -> periods));
+                            }
+                        } else {
+                            fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
+                                    date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone, getJocError())).collect(Collectors
+                                            .toCollection(() -> periods));
+                        }
                     }
                 }
                 entity.setPeriods(new ArrayList<>(periods));
             }
-
             entity.setDeliveryDate(Date.from(Instant.now()));
-
             return JOCDefaultResponse.responseStatus200(entity);
-
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
