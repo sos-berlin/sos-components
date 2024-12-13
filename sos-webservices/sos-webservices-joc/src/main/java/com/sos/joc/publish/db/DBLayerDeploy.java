@@ -23,7 +23,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
@@ -1054,7 +1053,7 @@ public class DBLayerDeploy {
             if (overwrite) {
                 if (existingConfiguration != null) {
                     existingConfiguration.setModified(Date.from(Instant.now()));
-                    existingConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
+                    existingConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
                     if (configuration.getConfiguration().getTitle() != null) {
                         existingConfiguration.setTitle(configuration.getConfiguration().getTitle());
                     }
@@ -1074,7 +1073,7 @@ public class DBLayerDeploy {
                     Date now = Date.from(Instant.now());
                     newConfiguration.setModified(now);
                     newConfiguration.setCreated(now);
-                    newConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
+                    newConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
                     newConfiguration.setPath(configuration.getPath());
                     newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                     newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1095,7 +1094,7 @@ public class DBLayerDeploy {
                 Date now = Date.from(Instant.now());
                 newConfiguration.setModified(now);
                 newConfiguration.setCreated(now);
-                newConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
+                newConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
                 newConfiguration.setPath(configuration.getPath());
                 newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                 newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1129,7 +1128,7 @@ public class DBLayerDeploy {
             Date now = Date.from(Instant.now());
             newConfiguration.setModified(now);
             newConfiguration.setCreated(now);
-            newConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
+            newConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
             newConfiguration.setPath(configuration.getPath());
             newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
             newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());

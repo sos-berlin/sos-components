@@ -42,186 +42,6 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
         return DBLayer.DBITEM_INV_TAGGINGS;
     }
 
-//    public List<InventoryTagItem> getFoldersByTagAndTypeForInventory(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
-//            throws DBConnectionRefusedException, DBInvalidDataException {
-//        try {
-//            List<String> whereClause = new ArrayList<String>();
-//            StringBuilder sql = new StringBuilder();
-//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-//                    DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c on t.cid = c.id");
-//
-//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-//                if (inventoryTypes.size() == 1) {
-//                    whereClause.add("c.type = :type");
-//                } else {
-//                    whereClause.add("c.type in (:types)");
-//                }
-//            }
-//            if (onlyValidObjects == Boolean.TRUE) {
-//                whereClause.add("c.valid = 1");
-//            }
-//            if (!whereClause.isEmpty()) {
-//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-//            }
-//
-//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-//                if (inventoryTypes.size() == 1) {
-//                    query.setParameter("type", inventoryTypes.iterator().next());
-//                } else {
-//                    query.setParameterList("types", inventoryTypes);
-//                }
-//            }
-//
-//            List<InventoryTagItem> result = getSession().getResultList(query);
-//            if (result == null) {
-//                return Collections.emptyList();
-//            }
-//
-//            return result;
-//
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-
-//    public List<InventoryTagItem> getFoldersByTagAndTypeForInventoryTrash(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
-//            throws DBConnectionRefusedException, DBInvalidDataException {
-//        try {
-//            List<String> whereClause = new ArrayList<String>();
-//            StringBuilder sql = new StringBuilder();
-//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-//                    DBLayer.DBITEM_INV_CONFIGURATION_TRASH).append(" c on (t.name = c.name and t.type = c.type)");
-//
-//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-//                if (inventoryTypes.size() == 1) {
-//                    whereClause.add("c.type = :type");
-//                } else {
-//                    whereClause.add("c.type in (:types)");
-//                }
-//            }
-//            if (onlyValidObjects == Boolean.TRUE) {
-//                whereClause.add("c.valid = 1");
-//            }
-//            if (!whereClause.isEmpty()) {
-//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-//            }
-//
-//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-//                if (inventoryTypes.size() == 1) {
-//                    query.setParameter("type", inventoryTypes.iterator().next());
-//                } else {
-//                    query.setParameterList("types", inventoryTypes);
-//                }
-//            }
-//
-//            List<InventoryTagItem> result = getSession().getResultList(query);
-//            if (result == null) {
-//                return Collections.emptyList();
-//            }
-//
-//            return result;
-//
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-
-//    public List<InventoryTagItem> getFoldersByTagAndTypeForDeployedObjects(Set<Integer> deployTypes, String controllerId)
-//            throws DBConnectionRefusedException, DBInvalidDataException {
-//        try {
-//            List<String> whereClause = new ArrayList<String>();
-//            StringBuilder sql = new StringBuilder();
-//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-//                    DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c on t.cid = c.inventoryConfigurationId");
-//
-//            if (deployTypes != null && !deployTypes.isEmpty()) {
-//                if (deployTypes.size() == 1) {
-//                    whereClause.add("c.type=:type");
-//                } else {
-//                    whereClause.add("c.type in (:types)");
-//                }
-//            }
-//            if (controllerId != null) {
-//                whereClause.add("c.controllerId=:controllerId");
-//            }
-//            if (!whereClause.isEmpty()) {
-//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-//            }
-//
-//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-//            if (deployTypes != null && !deployTypes.isEmpty()) {
-//                if (deployTypes.size() == 1) {
-//                    query.setParameter("type", deployTypes.iterator().next());
-//                } else {
-//                    query.setParameterList("types", deployTypes);
-//                }
-//            }
-//            if (controllerId != null) {
-//                query.setParameter("controllerId", controllerId);
-//            }
-//
-//            List<InventoryTagItem> result = getSession().getResultList(query);
-//            if (result == null) {
-//                return Collections.emptyList();
-//            }
-//
-//            return result;
-//
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-
-//    public List<InventoryTagItem> getFoldersByTagAndTypeForReleasedObjects(Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
-//            DBInvalidDataException {
-//        try {
-//            List<String> whereClause = new ArrayList<String>();
-//            StringBuilder sql = new StringBuilder();
-//            sql.append("select t.tagId as tagId, c.folder as folder from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" t join ").append(
-//                    DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" c on t.cid = c.cid");
-//
-//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-//                if (inventoryTypes.size() == 1) {
-//                    whereClause.add("c.type=:type");
-//                } else {
-//                    whereClause.add("c.type in (:types)");
-//                }
-//            }
-//            if (!whereClause.isEmpty()) {
-//                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
-//            }
-//
-//            Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
-//            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
-//                if (inventoryTypes.size() == 1) {
-//                    query.setParameter("type", inventoryTypes.iterator().next());
-//                } else {
-//                    query.setParameterList("types", inventoryTypes);
-//                }
-//            }
-//
-//            List<InventoryTagItem> result = getSession().getResultList(query);
-//            if (result == null) {
-//                return Collections.emptyList();
-//            }
-//
-//            return result;
-//
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-
     public List<DBItemInventoryTagging> getTaggings(Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -344,6 +164,32 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<GroupedTag> getTagsWithGroupsAndOrdering(Long cid) {
+        try {
+            StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName());
+            sql.append("(g.name, t.name, t.ordering) from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg left join ")
+                .append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId left join ")
+                .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId");
+
+            sql.append(" where tg.cid=:cid");
+
+            Query<GroupedTag> query = getSession().createQuery(sql.toString());
+            query.setParameter("cid", cid);
+
+            List<GroupedTag> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+
+            return result;
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
 //    public List<String> getTags(String name, Integer type) {
 //        try {
@@ -371,32 +217,6 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
 //            throw new DBInvalidDataException(ex);
 //        }
 //    }
-
-    public List<DBItemInventoryTag> getTagDBItems(String name, Integer type) {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("select t from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(DBLayer.DBITEM_INV_TAGS).append(
-                    " t on t.id = tg.tagId");
-
-            sql.append(" where tg.name=:name and tg.type=:type");
-
-            Query<DBItemInventoryTag> query = getSession().createQuery(sql.toString());
-            query.setParameter("name", name);
-            query.setParameter("type", type);
-
-            List<DBItemInventoryTag> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-
-            return result;
-
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
 
     public List<String> getTags(List<Long> cids) {
         if (cids == null || cids.isEmpty()) {

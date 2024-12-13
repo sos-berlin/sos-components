@@ -18,6 +18,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -56,6 +59,8 @@ import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceImpl {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(ATagsModifyImpl.class);
 
     protected enum Action {
         ADD, DELETE, ORDERING
@@ -181,7 +186,13 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         return events;
     }
     
-    public Set<T> insert(Collection<GroupedTag> groupedTags, List<T> oldDBTags, Date date, ATagDBLayer<T> dbLayer) throws SOSHibernateException {
+    public Set<T> insert(Collection<GroupedTag> groupedTags, List<T> oldDBTags, Date date, ATagDBLayer<T> dbLayer)
+            throws SOSHibernateException {
+        return insert(groupedTags, oldDBTags, null, date, dbLayer);
+    }
+    
+    public Set<T> insert(Collection<GroupedTag> groupedTags, List<T> oldDBTags, Map<String, Long> dbGroupsMap, Date date, ATagDBLayer<T> dbLayer)
+            throws SOSHibernateException {
         if (groupedTags == null || groupedTags.isEmpty()) {
             return new HashSet<>();
         }
@@ -194,9 +205,11 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             // select groups, getGroups from DB of these groups and insert to DB if necessary
             Set<String> groups = groupedTagsCopy.stream().map(GroupedTag::getGroup).filter(Optional::isPresent).map(Optional::get).collect(Collectors
                     .toSet());
-            List<DBItemInventoryTagGroup> dbGroups = groups.isEmpty() ? Collections.emptyList() : dbLayer.getGroups(groups);
-            Map<String, Long> dbGroupsMap = dbGroups.stream().collect(Collectors.toMap(DBItemInventoryTagGroup::getName,
-                    DBItemInventoryTagGroup::getId));
+            if (dbGroupsMap == null) {
+                List<DBItemInventoryTagGroup> dbGroups = groups.isEmpty() ? Collections.emptyList() : dbLayer.getGroups(groups);
+                dbGroupsMap = dbGroups.stream().collect(Collectors.toMap(DBItemInventoryTagGroup::getName,
+                        DBItemInventoryTagGroup::getId));
+            }
             groups.removeAll(dbGroupsMap.keySet()); // groups contains only new groups
 
             if (!groups.isEmpty()) {
@@ -496,7 +509,16 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     }
     
     public static <T extends IDBItemTag> void checkAndAssignGroup(Map<String, GroupedTag> groupedTags, ATagDBLayer<T> dbLayer, String type) {
-        
+        checkAndAssignGroup(groupedTags, dbLayer, type, false);
+    }
+    
+    public static <T extends IDBItemTag> void checkAndAssignGroupModerate(Map<String, GroupedTag> groupedTags, ATagDBLayer<T> dbLayer, String type) {
+        checkAndAssignGroup(groupedTags, dbLayer, type, true);
+    }
+    
+    public static <T extends IDBItemTag> void checkAndAssignGroup(Map<String, GroupedTag> groupedTags, ATagDBLayer<T> dbLayer, String type,
+            boolean withoutJocBadRequestException) {
+
         Map<String, GroupedTag> dbGroupedTagsMap = dbLayer.getGroupedTags(groupedTags.keySet()).stream().collect(Collectors.toMap(GroupedTag::getTag,
                 Function.identity()));
         for (Map.Entry<String, GroupedTag> gt : groupedTags.entrySet()) {
@@ -505,14 +527,25 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 if (dbInvGroupedTag.hasGroup()) {
                     if (gt.getValue().hasGroup()) {
                         if (!gt.getValue().getGroup().equals(dbInvGroupedTag.getGroup())) {
-                            throw new JocBadRequestException(String.format("The tag '%s' has already the group '%s'", gt.getKey(), dbInvGroupedTag
-                                    .getGroup().get()));
+                            if (withoutJocBadRequestException) {
+                                gt.getValue().setGroup(dbInvGroupedTag.getGroup().get());
+                                LOGGER.info(String.format("The tag '%s' has already the group '%s'. The group '%s' will be ignored.", gt.getKey(),
+                                        dbInvGroupedTag.getGroup().get(), gt.getValue().getGroup()));
+                            } else {
+                                throw new JocBadRequestException(String.format("The tag '%s' has already the group '%s'", gt.getKey(), dbInvGroupedTag
+                                        .getGroup().get()));
+                            }
                         }
                     } else {
                         gt.getValue().setGroup(dbInvGroupedTag.getGroup().get());
                     }
                 } else if (gt.getValue().hasGroup()) {
-                    throw new JocBadRequestException(String.format("The tag '%s' is already used as %s tag without a group", gt.getKey(), type));
+                    if (withoutJocBadRequestException) {
+                        gt.getValue().setGroup(null);
+                        LOGGER.info(String.format("The tag '%s' is already used as %s tag without a group. The group won't be used.", gt.getKey(), type));
+                    } else {
+                        throw new JocBadRequestException(String.format("The tag '%s' is already used as %s tag without a group", gt.getKey(), type));
+                    }
                 }
             }
         }

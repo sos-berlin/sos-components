@@ -38,6 +38,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tag.Tags;
+import com.sos.joc.model.tag.common.JobTags;
 import com.sos.joc.model.tag.tagging.RequestFilter;
 import com.sos.joc.model.tag.tagging.RequestModifyFilter;
 import com.sos.joc.tags.resource.ITagging;
@@ -68,55 +69,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
             
             DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
-            List<InventoryTagEvent> tagEvents = new ArrayList<>();
-            
-            Set<String> tags = in.getTags() == null ? Collections.emptySet() : in.getTags();
-            Map<String, GroupedTag> groupedTags = tags.stream().map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function
-                    .identity()));
-            List<DBItemInventoryTag> dbTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
-            
-            ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(session), "job");
-            ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
-            //TODO the same with historyOrderTags??
-            
-            Date date = Date.from(Instant.now());
-            Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, date, dbTagLayer);
-            tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toList()));
-
-            newDbTagItems.addAll(dbTags);
-            
-            Map<String, Long> tagNameToIdMap = newDbTagItems.stream().collect(Collectors.toMap(DBItemInventoryTag::getName,
-                    DBItemInventoryTag::getId));
-            
-            Set<DBItemInventoryTagging> requestedTaggings = groupedTags.keySet().stream().map(tagName -> {
-                DBItemInventoryTagging taggingItem = new DBItemInventoryTagging();
-                taggingItem.setCid(config.getId());
-                taggingItem.setName(config.getName());
-                taggingItem.setType(config.getType());
-                taggingItem.setTagId(tagNameToIdMap.get(tagName));
-                taggingItem.setId(null);
-                taggingItem.setModified(date);
-                return taggingItem;
-            }).collect(Collectors.toSet());
-            
-            List<DBItemInventoryTagging> dbTaggings = dbTagLayer.getTaggings(config.getId());
-            
-            boolean taggingIsChanged = false;
-            for (DBItemInventoryTagging requestedTagging : requestedTaggings) {
-                if (dbTaggings.contains(requestedTagging)) {
-                    dbTaggings.remove(requestedTagging);
-                } else {
-                    dbTagLayer.getSession().save(requestedTagging);
-                    taggingIsChanged = true;
-                }
-            }
-            for (DBItemInventoryTagging dbTagging : dbTaggings) {
-                dbTagLayer.getSession().delete(dbTagging);
-                taggingIsChanged = true;
-            }
-            if (taggingIsChanged) {
-                tagEvents.add(new InventoryTagEvent(config.getName())); //TODO workflowname?
-            }
+            Set<InventoryTagEvent> tagEvents = storeTaggings(in.getTags(), config, dbTagLayer);
             
             Globals.commit(session);
             
@@ -133,6 +86,78 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    // used for import
+    public static Set<InventoryTagEvent> storeTaggings(Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows, Map<String, Long> dbGroupsMap,
+            InventoryTagDBLayer dbTagLayer, boolean checkGroupModerate) throws SOSHibernateException {
+        Set<InventoryTagEvent> tagEvents = new HashSet<>();
+
+        for (Map.Entry<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflow : tagsPerWorkflows.entrySet()) {
+            tagEvents.addAll(storeTaggings(tagsPerWorkflow.getValue(), tagsPerWorkflow.getKey(), dbGroupsMap, dbTagLayer, checkGroupModerate));
+        }
+
+        return tagEvents;
+    }
+    
+    private static Set<InventoryTagEvent> storeTaggings(Set<String> inTags, DBItemInventoryConfiguration config, InventoryTagDBLayer dbTagLayer)
+            throws SOSHibernateException {
+        return storeTaggings(inTags, config, null, dbTagLayer, false);
+    }
+    
+    private static Set<InventoryTagEvent> storeTaggings(Set<String> inTags, DBItemInventoryConfiguration config, Map<String, Long> dbGroupsMap,
+            InventoryTagDBLayer dbTagLayer, boolean checkGroupModerate) throws SOSHibernateException {
+        Set<InventoryTagEvent> tagEvents = new HashSet<>();
+
+        Set<String> tags = inTags == null ? Collections.emptySet() : inTags;
+        Map<String, GroupedTag> groupedTags = tags.stream().map(GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function
+                .identity()));
+        List<DBItemInventoryTag> dbTags = tags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
+        
+        ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(dbTagLayer.getSession()), "job", checkGroupModerate);
+        ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(dbTagLayer.getSession()), "order", checkGroupModerate);
+        //TODO the same with historyOrderTags??
+        
+        Date date = Date.from(Instant.now());
+        Set<DBItemInventoryTag> newDbTagItems = new TagsModifyImpl().insert(groupedTags.values(), dbTags, dbGroupsMap, date, dbTagLayer);
+        tagEvents.addAll(newDbTagItems.stream().map(DBItemInventoryTag::getName).map(InventoryTagAddEvent::new).collect(Collectors.toList()));
+
+        newDbTagItems.addAll(dbTags);
+        
+        Map<String, Long> tagNameToIdMap = newDbTagItems.stream().collect(Collectors.toMap(DBItemInventoryTag::getName,
+                DBItemInventoryTag::getId));
+        
+        Set<DBItemInventoryTagging> requestedTaggings = groupedTags.keySet().stream().map(tagName -> {
+            DBItemInventoryTagging taggingItem = new DBItemInventoryTagging();
+            taggingItem.setCid(config.getId());
+            taggingItem.setName(config.getName());
+            taggingItem.setType(config.getType());
+            taggingItem.setTagId(tagNameToIdMap.get(tagName));
+            taggingItem.setId(null);
+            taggingItem.setModified(date);
+            return taggingItem;
+        }).collect(Collectors.toSet());
+        
+        List<DBItemInventoryTagging> dbTaggings = dbTagLayer.getTaggings(config.getId());
+        
+        boolean taggingIsChanged = false;
+        for (DBItemInventoryTagging requestedTagging : requestedTaggings) {
+            if (dbTaggings.contains(requestedTagging)) {
+                dbTaggings.remove(requestedTagging);
+            } else {
+                dbTagLayer.getSession().save(requestedTagging);
+                taggingIsChanged = true;
+            }
+        }
+        for (DBItemInventoryTagging dbTagging : dbTaggings) {
+            dbTagLayer.getSession().delete(dbTagging);
+            taggingIsChanged = true;
+        }
+        if (taggingIsChanged) {
+            tagEvents.add(new InventoryTagEvent(config.getName())); //TODO workflowname?
+        }
+        
+        return tagEvents;
     }
     
     @Override

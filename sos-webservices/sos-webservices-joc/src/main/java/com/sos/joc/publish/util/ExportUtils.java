@@ -7,7 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,10 +34,13 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
+import com.sos.joc.classes.order.OrderTags;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryTag;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -53,8 +58,10 @@ import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.folder.ExportFolderFilter;
+import com.sos.joc.model.tag.ExportedJobTagItem;
+import com.sos.joc.model.tag.ExportedJobTagItems;
 import com.sos.joc.model.tag.ExportedTagItem;
-import com.sos.joc.model.tag.ExportedTagItems;
+import com.sos.joc.model.tag.ExportedTaggedObject;
 import com.sos.joc.model.tag.ExportedTags;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
@@ -75,6 +82,26 @@ public class ExportUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportUtils.class);
     private static final String AGENT_FILE_EXTENSION = ".agent.json";
     public static final String TAGS_ENTRY_NAME = "workflow.tags.json";
+    
+    public static final Map<ConfigurationType, String> extensionMap = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString());
+            put(ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString());
+            put(ConfigurationType.JOBTEMPLATE, ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString());
+            put(ConfigurationType.JOBCLASS, ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString());
+            put(ConfigurationType.JOBRESOURCE, ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString());
+            put(ConfigurationType.LOCK, ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString());
+            put(ConfigurationType.FILEORDERSOURCE, ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString());
+            put(ConfigurationType.SCHEDULE, ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString());
+            put(ConfigurationType.INCLUDESCRIPT, ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString());
+            put(ConfigurationType.WORKFLOW, ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString());
+            put(ConfigurationType.NOTICEBOARD, ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString());
+            put(ConfigurationType.REPORT, ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString());
+        }
+    });
 
     
     public static Set<ControllerObject> getFolderControllerObjectsForSigning(ExportFolderFilter filter, String account, DBLayerDeploy dbLayer,
@@ -350,7 +377,6 @@ public class ExportUtils {
     public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
-        ExportedTags tags = getTagsToExportFromControllerObjects(deployables, dbLayer.getSession());
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -387,6 +413,7 @@ public class ExportUtils {
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
+                            case PLANNABLEBOARD:
                             case NOTICEBOARD:
                                 extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
                                 Board board = (Board) deployable.getContent();
@@ -416,11 +443,6 @@ public class ExportUtils {
                             zipOut.write(contentBytes);
                             zipOut.closeEntry();
                         }
-                        ZipEntry entry = new ZipEntry(TAGS_ENTRY_NAME);
-                        zipOut.putNextEntry(entry);
-                        contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
-                        zipOut.write(contentBytes);
-                        zipOut.closeEntry();
                     }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, commitId);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
@@ -452,6 +474,9 @@ public class ExportUtils {
     public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
             Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) {
         ExportedTags tags = getTagsToExportFromConfigurationObjects(deployables, dbLayer.getSession());
+        
+        Map<String, String> groupedOrderTags = getGroupedOrderTags(deployables, dbLayer.getSession());
+
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -462,56 +487,36 @@ public class ExportUtils {
                     String content = null;
                     if (deployables != null && !deployables.isEmpty()) {
                         for (ConfigurationObject deployable : deployables) {
-                            String extension = null;
                             switch (deployable.getObjectType()) {
                             case WORKFLOW:
-                                extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                                break;
-                            case JOBRESOURCE:
-                                extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
-                                break;
-                            case LOCK:
-                                extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
-                                break;
-                            case NOTICEBOARD:
-                                extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
-                                break;
-                            case JOBCLASS:
-                                extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                deployable.setConfiguration(OrderTags.addGroupsToInstructions((com.sos.inventory.model.workflow.Workflow) deployable
+                                        .getConfiguration(), groupedOrderTags));
                                 break;
                             case FILEORDERSOURCE:
-                                extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                                deployable.setConfiguration(OrderTags.addGroupsToFileOrderSource(
+                                        (com.sos.inventory.model.fileordersource.FileOrderSource) deployable.getConfiguration(), groupedOrderTags));
                                 break;
                             case SCHEDULE:
-                                extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
-                                break;
-                            case INCLUDESCRIPT:
-                                extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
-                                break;
-                            case JOBTEMPLATE:
-                                extension = ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
-                                break;
-                            case WORKINGDAYSCALENDAR:
-                            case NONWORKINGDAYSCALENDAR:
-                                extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
-                                break;
-                            case REPORT:
-                                extension = ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
+                                deployable.setConfiguration(OrderTags.addGroupsToOrderPreparation(
+                                        (com.sos.inventory.model.schedule.Schedule) deployable.getConfiguration(), groupedOrderTags));
                                 break;
                             default:
                                 break;
                             }
+                            String extension = extensionMap.get(deployable.getObjectType());
                             if (extension != null) {
                                 content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                                 String zipEntryName = null;
-                                if(relativePath && startPaths != null && !startPaths.isEmpty()) {
-                                    Optional<String> startPathOptional = startPaths.stream().filter(path -> deployable.getPath().startsWith(path)).findFirst();
-                                    if(startPathOptional.isPresent()) {
+                                if (relativePath && startPaths != null && !startPaths.isEmpty()) {
+                                    Optional<String> startPathOptional = startPaths.stream().filter(path -> deployable.getPath().startsWith(path))
+                                            .findFirst();
+                                    if (startPathOptional.isPresent()) {
                                         String startPath = startPathOptional.get();
                                         String startFolder = Paths.get(startPath).getFileName().toString();
                                         Path path = Paths.get(deployable.getPath());
-                                        if(startPath != null && path.startsWith(startPath)) {
-                                            zipEntryName = startFolder.concat("/").concat(Paths.get(startPath).relativize(path).toString().replace('\\', '/').concat(extension));
+                                        if (startPath != null && path.startsWith(startPath)) {
+                                            zipEntryName = startFolder.concat("/").concat(Paths.get(startPath).relativize(path).toString().replace(
+                                                    '\\', '/').concat(extension));
                                         }
                                     } else {
                                         zipEntryName = deployable.getPath().substring(1).concat(extension);
@@ -526,11 +531,12 @@ public class ExportUtils {
                             }
                         }
                     }
-                    ZipEntry tagEntry = new ZipEntry(TAGS_ENTRY_NAME);
-                    zipOut.putNextEntry(tagEntry);
-                    byte[] contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
-                    zipOut.write(contentBytes);
-                    zipOut.closeEntry();
+                    if (tags != null && tags.getTags() != null && !tags.getTags().isEmpty()) {
+                        ZipEntry tagEntry = new ZipEntry(TAGS_ENTRY_NAME);
+                        zipOut.putNextEntry(tagEntry);
+                        zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(tags));
+                        zipOut.closeEntry();
+                    }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, null);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
@@ -556,7 +562,7 @@ public class ExportUtils {
     public static StreamingOutput writeTarGzipFileForSigning(Set<ControllerObject> deployables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
-        ExportedTags tags = getTagsToExportFromControllerObjects(deployables, dbLayer.getSession());
+        
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -596,6 +602,7 @@ public class ExportUtils {
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
+                            case PLANNABLEBOARD:
                             case NOTICEBOARD:
                                 extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
                                 Board board = (Board) deployable.getContent();
@@ -625,12 +632,6 @@ public class ExportUtils {
                             tarOut.closeArchiveEntry();
                         }
                     }
-                    TarArchiveEntry tagEntry = new TarArchiveEntry(TAGS_ENTRY_NAME);
-                    contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
-                    tagEntry.setSize(contentBytes.length);
-                    tarOut.putArchiveEntry(tagEntry);
-                    tarOut.write(contentBytes);
-                    tarOut.closeArchiveEntry();
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, commitId);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
@@ -680,6 +681,9 @@ public class ExportUtils {
     public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
             Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) throws Exception {
         ExportedTags tags = getTagsToExportFromConfigurationObjects(configurations, dbLayer.getSession());
+        
+        Map<String, String> groupedOrderTags = getGroupedOrderTags(configurations, dbLayer.getSession());
+
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -695,45 +699,24 @@ public class ExportUtils {
                     String content = null;
                     if (configurations != null && !configurations.isEmpty()) {
                         for (ConfigurationObject deployable : configurations) {
-                            String extension = null;
                             switch (deployable.getObjectType()) {
                             case WORKFLOW:
-                                extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                                break;
-                            case JOBRESOURCE:
-                                extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
-                                break;
-                            case LOCK:
-                                extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
-                                break;
-                            case NOTICEBOARD:
-                                extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
-                                break;
-                            case JOBCLASS:
-                                extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                deployable.setConfiguration(OrderTags.addGroupsToInstructions((com.sos.inventory.model.workflow.Workflow) deployable
+                                        .getConfiguration(), groupedOrderTags));
                                 break;
                             case FILEORDERSOURCE:
-                                extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                                deployable.setConfiguration(OrderTags.addGroupsToFileOrderSource(
+                                        (com.sos.inventory.model.fileordersource.FileOrderSource) deployable.getConfiguration(), groupedOrderTags));
                                 break;
                             case SCHEDULE:
-                                extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
-                                break;
-                            case INCLUDESCRIPT:
-                                extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
-                                break;
-                            case JOBTEMPLATE:
-                                extension = ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
-                                break;
-                            case WORKINGDAYSCALENDAR:
-                            case NONWORKINGDAYSCALENDAR:
-                                extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
-                                break;
-                            case REPORT:
-                                extension = ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
+                                deployable.setConfiguration(OrderTags.addGroupsToOrderPreparation(
+                                        (com.sos.inventory.model.schedule.Schedule) deployable.getConfiguration(), groupedOrderTags));
                                 break;
                             default:
                                 break;
                             }
+                            
+                            String extension = extensionMap.get(deployable.getObjectType());
                             if (extension != null) {
                                 content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                                 String zipEntryName = null;
@@ -919,57 +902,65 @@ public class ExportUtils {
         return streamingOutput;
     }
     
-    private static ExportedTags getTagsToExportFromControllerObjects(Set<ControllerObject> deployables, SOSHibernateSession session) {
-      ExportedTags tagsToExport = new ExportedTags();
-      InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
-      for(ControllerObject deployable : deployables) {
-        List<DBItemInventoryTag> tags = null;
-        if(deployable.getPath().contains("/")) {
-          tags = tagDbLayer.getTagDBItems(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
-        } else {
-          tags = tagDbLayer.getTagDBItems(deployable.getPath(), deployable.getObjectType().intValue());
-        }
-        
-        tags.stream().forEach(tag -> {
-          ExportedTagItem tagItem = new ExportedTagItem();
-          tagItem.setName(tag.getName());
-          tagItem.setOrdering(tag.getOrdering());
-          ExportedTagItems references = new ExportedTagItems();
-          references.setName(deployable.getPath());
-          references.setType(ConfigurationType.fromValue(deployable.getObjectType().intValue()).value());
-          tagItem.getUsedBy().add(references);
-          tagsToExport.getTags().add(tagItem);
-        });
-      }
-      return tagsToExport;
+    private static Map<String, String> getGroupedOrderTags(Set<ConfigurationObject> configurations, SOSHibernateSession session) {
+        InventoryOrderTagDBLayer dbOrderTagLayer = new InventoryOrderTagDBLayer(session);
+        Set<ConfigurationType> objectsWithOrderTags = EnumSet.of(ConfigurationType.WORKFLOW, ConfigurationType.SCHEDULE,
+                ConfigurationType.FILEORDERSOURCE);
+        boolean hasObjectsWithOrderTags = configurations != null && configurations.stream().anyMatch(d -> objectsWithOrderTags.contains(d
+                .getObjectType()));
+        return hasObjectsWithOrderTags ? dbOrderTagLayer.getGroupedTags(null, true).stream().distinct().collect(
+                Collectors.toMap(GroupedTag::getTag, GroupedTag::toString)) : Collections.emptyMap();
     }
 
     private static ExportedTags getTagsToExportFromConfigurationObjects(Set<ConfigurationObject> deployables, SOSHibernateSession session) {
-      ExportedTags tagsToExport = new ExportedTags();
-      InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
-      for(ConfigurationObject deployable : deployables) {
-        List<DBItemInventoryTag> tags = null;
-        if(deployable.getPath().contains("/")) {
-          tags = tagDbLayer.getTagDBItems(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
-        } else {
-          tags = tagDbLayer.getTagDBItems(deployable.getPath(), deployable.getObjectType().intValue());
+        ExportedTags tagsToExport = new ExportedTags();
+        InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
+        InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
+        Map<String, ExportedTagItem> tags = new HashMap<>();
+        Set<ExportedJobTagItem> jobTags = new HashSet<>();
+        
+        for (ConfigurationObject deployable : deployables) {
+            
+            ExportedTaggedObject references = new ExportedTaggedObject();
+            references.setName(JocInventory.pathToName(deployable.getPath()));
+            references.setType(deployable.getObjectType().value());
+            ExportedJobTagItems jti = getJobTags(deployable, dbJobTagLayer);
+            if (jti != null) {
+                ExportedJobTagItem job = new ExportedJobTagItem();
+                job.setJobs(jti);
+                job.setName(references.getName());
+                jobTags.add(job);
+            }
+            
+            tagDbLayer.getTagsWithGroupsAndOrdering(deployable.getId()).forEach(tag -> {
+                tags.putIfAbsent(tag.toString(), new ExportedTagItem());
+                ExportedTagItem tagItem = tags.get(tag.toString());
+                tagItem.setName(tag.toString());
+                tagItem.setOrdering(tag.getOrdering());
+                tagItem.getUsedBy().add(references);
+                tags.putIfAbsent(tag.toString(), tagItem);
+            });
         }
-        tags.stream().forEach(tag -> {
-          ExportedTagItem tagItem = new ExportedTagItem();
-          tagItem.setName(tag.getName());
-          tagItem.setOrdering(tag.getOrdering());
-          ExportedTagItems references = new ExportedTagItems();
-          if(deployable.getPath().contains("/")) {
-            references.setName(Paths.get(deployable.getPath()).getFileName().toString());
-          } else {
-            references.setName(deployable.getPath());
-          }
-          references.setType(ConfigurationType.fromValue(deployable.getObjectType().intValue()).value());
-          tagItem.getUsedBy().add(references);
-          tagsToExport.getTags().add(tagItem);
-        });
-      }
-      return tagsToExport;
+        
+        tagsToExport.setTags(tags.values().stream().collect(Collectors.toList()));
+        tagsToExport.setJobTags(jobTags.stream().collect(Collectors.toList()));
+        return tagsToExport;
+    }
+    
+    private static ExportedJobTagItems getJobTags(ConfigurationObject deployable, InventoryJobTagDBLayer dbJobTagLayer) {
+        if (ConfigurationType.WORKFLOW.equals(deployable.getObjectType())) {
+            com.sos.inventory.model.workflow.Workflow w = (com.sos.inventory.model.workflow.Workflow) deployable.getConfiguration();
+            if (w.getJobs() != null && w.getJobs().getAdditionalProperties() != null) {
+                ExportedJobTagItems jobTags = new ExportedJobTagItems();
+                jobTags.setAdditionalProperties(dbJobTagLayer.getTagsWithGroups(deployable.getId(), w.getJobs().getAdditionalProperties().keySet()));
+                if (jobTags.getAdditionalProperties() == null || jobTags.getAdditionalProperties().isEmpty()) {
+                    return null;
+                } else {
+                    return jobTags;
+                }
+            }
+        }
+        return null;
     }
 
 }

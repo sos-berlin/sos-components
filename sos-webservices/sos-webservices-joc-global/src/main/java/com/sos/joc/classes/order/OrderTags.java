@@ -978,7 +978,7 @@ public class OrderTags {
     public static void updateTagsFromInstructions(Workflow workflow, DBItemInventoryConfiguration item) throws JsonProcessingException {
         Set<String> tags = new HashSet<>();
         List<Instruction> insts = workflow.getInstructions();
-        getOrderTags(tags, insts, null);
+        getOrderTags(tags, insts, (InventoryOrderTagDBLayer) null);
         try {
             Validator.testJavaNameRulesAtTags("", tags);
             update(tags.stream());
@@ -1099,6 +1099,118 @@ public class OrderTags {
         }
     }
     
+    public static Workflow addGroupsToInstructions(Workflow workflow, Map<String, String> gt) throws JsonProcessingException {
+        Set<String> tags = new HashSet<>();
+        List<Instruction> insts = workflow.getInstructions();
+        if (gt == null) {
+            gt = Collections.emptyMap(); 
+         }
+        getOrderTags(tags, insts, gt);
+        if (hasGroup(tags)) {
+            workflow.setInstructions(insts);
+        }
+        return workflow;
+    }
+    
+    private static void getOrderTags(Set<String> tags, List<Instruction> insts, Map<String, String> gt) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    if (f.getBranches() != null) {
+                        for (Branch b : f.getBranches()) {
+                            if (b.getWorkflow() != null) {
+                                getOrderTags(tags, b.getWorkflow().getInstructions(), gt);
+                            }
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        getOrderTags(tags, fl.getWorkflow().getInstructions(), gt);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        getOrderTags(tags, ie.getThen().getInstructions(), gt);
+                    }
+                    if (ie.getElse() != null) {
+                        getOrderTags(tags, ie.getElse().getInstructions(), gt);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                getOrderTags(tags, when.getThen().getInstructions(), gt);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        getOrderTags(tags, cw.getElse().getInstructions(), gt);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        getOrderTags(tags, tc.getTry().getInstructions(), gt);
+                    }
+                    if (tc.getCatch() != null) {
+                        getOrderTags(tags, tc.getCatch().getInstructions(), gt);
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        getOrderTags(tags, l.getLockedWorkflow().getInstructions(), gt);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        getOrderTags(tags, c.getCycleWorkflow().getInstructions(), gt);
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    if (cns.getSubworkflow() != null) {
+                        getOrderTags(tags, cns.getSubworkflow().getInstructions(), gt);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        getOrderTags(tags, ss.getSubworkflow().getInstructions(), gt);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        getOrderTags(tags, opts.getBlock().getInstructions(), gt);
+                    }
+                    break;
+                case ADD_ORDER:
+                    AddOrder ao = inst.cast();
+                    if (ao.getTags() != null) {
+                        try {
+                            ao.setTags(ao.getTags().stream().map(tag -> gt.getOrDefault(tag, tag)).collect(Collectors.toSet()));
+                            tags.addAll(ao.getTags());
+                        } catch (Exception e) {
+                            //
+                        }
+                    }
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
     public static Schedule addGroupsToOrderPreparation(Schedule schedule, SOSHibernateSession session) {
         List<OrderParameterisation> orderParameterisations = schedule.getOrderParameterisations();
         if (orderParameterisations != null) {
@@ -1111,6 +1223,18 @@ public class OrderTags {
                     if (op.getTags() != null) {
                         op.setTags(op.getTags().stream().map(tag -> gt.getOrDefault(tag, tag)).collect(Collectors.toSet()));
                     }
+                }
+            }
+        }
+        return schedule;
+    }
+    
+    public static Schedule addGroupsToOrderPreparation(Schedule schedule, Map<String, String> gt) {
+        List<OrderParameterisation> orderParameterisations = schedule.getOrderParameterisations();
+        if (orderParameterisations != null && !gt.isEmpty()) {
+            for (OrderParameterisation op : orderParameterisations) {
+                if (op.getTags() != null) {
+                    op.setTags(op.getTags().stream().map(tag -> gt.getOrDefault(tag, tag)).collect(Collectors.toSet()));
                 }
             }
         }
@@ -1159,6 +1283,14 @@ public class OrderTags {
         }
         return fos;
     }
+    
+    public static FileOrderSource addGroupsToFileOrderSource(FileOrderSource fos, Map<String, String> gt) throws JsonProcessingException {
+        Set<String> tags = fos.getTags();
+        if (tags != null && !gt.isEmpty()) {
+            fos.setTags(tags.stream().map(tag -> gt.getOrDefault(tag, tag)).collect(Collectors.toSet()));
+        }
+        return fos;
+    }
 
     public static void updateTagsFromFileOrderSource(FileOrderSource fos, DBItemInventoryConfiguration item) throws JsonProcessingException {
         Set<String> tags = fos.getTags();
@@ -1190,8 +1322,8 @@ public class OrderTags {
                 InventoryOrderTagDBLayer dbTagLayer = new InventoryOrderTagDBLayer(session);
                 List<DBItemInventoryOrderTag> dbTags = groupedTags.isEmpty() ? Collections.emptyList() : dbTagLayer.getTags(groupedTags.keySet());
 
-                ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(session), "workflow");
-                ATagsModifyImpl.checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(session), "job");
+                ATagsModifyImpl.checkAndAssignGroupModerate(groupedTags, new InventoryTagDBLayer(session), "workflow");
+                ATagsModifyImpl.checkAndAssignGroupModerate(groupedTags, new InventoryJobTagDBLayer(session), "job");
                 // TODO same with historyOrderTags??
 
                 Set<GroupedTag> alreadyExistingTagsInDB = dbTags.stream().map(DBItemInventoryOrderTag::getName).map(GroupedTag::new).collect(

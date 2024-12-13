@@ -19,6 +19,7 @@ public class GroupedTag {
 
     private final String tag;
     private Optional<String> group;
+    private Integer ordering;
 
     public GroupedTag(String tagWithOptionalGroup) {
         String[] s = tagWithOptionalGroup.split(GROUP_DELIMITER, 2);
@@ -35,6 +36,12 @@ public class GroupedTag {
         this.group = Optional.ofNullable(group);
         this.tag = tag;
     }
+    
+    public GroupedTag(String group, String tag, Integer ordering) {
+        this.group = Optional.ofNullable(group);
+        this.tag = tag;
+        this.ordering = ordering;
+    }
 
     public String getTag() {
         return tag;
@@ -42,6 +49,10 @@ public class GroupedTag {
 
     public Optional<String> getGroup() {
         return group;
+    }
+    
+    public Integer getOrdering() {
+        return ordering;
     }
 
     public void setGroup(String group) {

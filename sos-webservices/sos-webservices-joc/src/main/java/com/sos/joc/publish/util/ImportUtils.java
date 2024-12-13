@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -20,10 +21,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -54,17 +56,18 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
-import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryTag;
-import com.sos.joc.db.inventory.DBItemInventoryTagging;
+import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.db.inventory.InventoryTagGroupDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -99,13 +102,17 @@ import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.sign.Signature;
 import com.sos.joc.model.sign.SignaturePath;
-import com.sos.joc.model.tag.ExportedTagItems;
+import com.sos.joc.model.tag.ExportedJobTagItem;
+import com.sos.joc.model.tag.ExportedJobTagItems;
+import com.sos.joc.model.tag.ExportedTagItem;
 import com.sos.joc.model.tag.ExportedTags;
+import com.sos.joc.model.tag.common.JobTags;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.ArchiveValues;
 import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
+import com.sos.joc.tags.impl.TaggingImpl;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 import com.sos.sign.model.board.Board;
@@ -334,7 +341,7 @@ public class ImportUtils {
         DBItemInventoryConfiguration alreadyExist = dbLayer.getInventoryConfigurationByNameAndType(config.getName(), config.getObjectType().intValue());
         if (alreadyExist != null) {
             try {
-                alreadyExist.setContent(Globals.objectMapper.writeValueAsString(config.getConfiguration()));
+                alreadyExist.setContent(JocInventory.toString(config.getConfiguration()));
                 alreadyExist.setModified(Date.from(Instant.now()));
                 try {
                     Validator.validate(alreadyExist.getTypeAsEnum(), alreadyExist.getContent().getBytes(), new InventoryDBLayer(dbLayer.getSession()), null);
@@ -657,7 +664,7 @@ public class ImportUtils {
                 }
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    JocMetaInfo fromFile = Globals.objectMapper.readValue(outBuffer.toByteArray(), JocMetaInfo.class);
                     if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
@@ -666,7 +673,7 @@ public class ImportUtils {
                     }
                 }
                 if(entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
-                  tagsFromArchive = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), ExportedTags.class);
+                  tagsFromArchive = Globals.objectMapper.readValue(outBuffer.toByteArray(), ExportedTags.class);
                 }
                 ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
                 if (fromArchive != null) {
@@ -843,9 +850,9 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             WorkflowEdit workflowEdit = new WorkflowEdit();
-            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toByteArray(),
-                    com.sos.inventory.model.workflow.Workflow.class);
-            workflow = JsonSerializer.emptyValuesToNull(workflow);
+            com.sos.inventory.model.workflow.Workflow workflow = (com.sos.inventory.model.workflow.Workflow) JocInventory.content2IJSObject(outBuffer
+                    .toString(StandardCharsets.UTF_8), ConfigurationType.WORKFLOW);
+            //workflow = JsonSerializer.emptyValuesToNull(workflow);
             if (checkObjectNotEmpty(workflow)) {
                 workflowEdit.setConfiguration(workflow);
             } else {
@@ -863,8 +870,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             JobResourceEdit jobResourceEdit = new JobResourceEdit();
-            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(outBuffer.toByteArray(),
-                    com.sos.inventory.model.jobresource.JobResource.class);
+            com.sos.inventory.model.jobresource.JobResource jobResource = (com.sos.inventory.model.jobresource.JobResource) JocInventory
+                    .content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.JOBRESOURCE);
             if (checkObjectNotEmpty(jobResource)) {
                 jobResourceEdit.setConfiguration(jobResource);
             } else {
@@ -881,8 +888,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             LockEdit lockEdit = new LockEdit();
-            com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(outBuffer.toByteArray(),
-                    com.sos.inventory.model.lock.Lock.class);
+            com.sos.inventory.model.lock.Lock lock = (com.sos.inventory.model.lock.Lock) JocInventory.content2IJSObject(outBuffer.toString(
+                    StandardCharsets.UTF_8), ConfigurationType.LOCK);
             if (checkObjectNotEmpty(lock)) {
                 lockEdit.setConfiguration(lock);
             } else {
@@ -898,8 +905,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             BoardEdit boardEdit = new BoardEdit();
-            com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(outBuffer.toByteArray(),
-                    com.sos.inventory.model.board.Board.class);
+            com.sos.inventory.model.board.Board board = (com.sos.inventory.model.board.Board) JocInventory.content2IJSObject(outBuffer.toString(
+                    StandardCharsets.UTF_8), ConfigurationType.NOTICEBOARD);
             if (checkObjectNotEmpty(board)) {
                 boardEdit.setConfiguration(board);
             } else {
@@ -915,8 +922,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             JobClassEdit jobClassEdit = new JobClassEdit();
-            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toByteArray(),
-                    com.sos.inventory.model.jobclass.JobClass.class);
+            com.sos.inventory.model.jobclass.JobClass jobClass = (com.sos.inventory.model.jobclass.JobClass) JocInventory.content2IJSObject(outBuffer
+                    .toString(StandardCharsets.UTF_8), ConfigurationType.JOBCLASS);
             if (checkObjectNotEmpty(jobClass)) {
                 jobClassEdit.setConfiguration(jobClass);
             } else {
@@ -934,9 +941,10 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toByteArray(),
-                    com.sos.inventory.model.fileordersource.FileOrderSource.class);
-            fileOrderSource = JsonSerializer.emptyValuesToNull(fileOrderSource);
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource =
+                    (com.sos.inventory.model.fileordersource.FileOrderSource) JocInventory.content2IJSObject(outBuffer
+                            .toString(StandardCharsets.UTF_8), ConfigurationType.FILEORDERSOURCE);
+            //fileOrderSource = JsonSerializer.emptyValuesToNull(fileOrderSource);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
             } else {
@@ -954,7 +962,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             ScheduleEdit scheduleEdit = new ScheduleEdit();
-            Schedule schedule = Globals.objectMapper.readValue(outBuffer.toByteArray(), Schedule.class);
+            Schedule schedule = (Schedule) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.SCHEDULE);
             if (checkObjectNotEmpty(schedule)) {
                 scheduleEdit.setConfiguration(schedule);
             } else {
@@ -972,7 +980,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             ScriptEdit scriptEdit = new ScriptEdit();
-            Script script = Globals.objectMapper.readValue(outBuffer.toByteArray(), Script.class);
+            Script script = (Script) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.INCLUDESCRIPT);
             if (checkObjectNotEmpty(script)) {
                 scriptEdit.setConfiguration(script);
             } else {
@@ -990,7 +998,8 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             JobEdit jobEdit = new JobEdit();
-            JobTemplate jobTemplate = Globals.objectMapper.readValue(outBuffer.toByteArray(), JobTemplate.class);
+            JobTemplate jobTemplate = (JobTemplate) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8),
+                    ConfigurationType.JOBTEMPLATE);
             if (checkObjectNotEmpty(jobTemplate)) {
                 jobEdit.setConfiguration(jobTemplate);
             } else {
@@ -1007,7 +1016,8 @@ public class ImportUtils {
             if (normalizedPath.startsWith("//")) {
                 normalizedPath = normalizedPath.substring(1);
             }
-            Calendar cal = Globals.objectMapper.readValue(outBuffer.toByteArray(), Calendar.class);
+            Calendar cal = (Calendar) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8),
+                    ConfigurationType.WORKINGDAYSCALENDAR);
             if (checkObjectNotEmpty(cal)) {
                 if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                     WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
@@ -1035,7 +1045,7 @@ public class ImportUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             ReportEdit reportEdit = new ReportEdit();
-            Report report = Globals.objectMapper.readValue(outBuffer.toByteArray(), Report.class);
+            Report report = (Report) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.REPORT);
             if (checkObjectNotEmpty(report)) {
                 reportEdit.setConfiguration(report);
             } else {
@@ -1517,94 +1527,194 @@ public class ImportUtils {
         }
     }
     
-    public static void importTags(List<DBItemInventoryConfiguration> cfgs, ExportedTags tagsFromArchive, SOSHibernateSession session) {
-      InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
-      List<DBItemInventoryTag> newTags = new ArrayList<DBItemInventoryTag>();
-      List<DBItemInventoryTag> storedTags = new ArrayList<DBItemInventoryTag>();
-      Date now = Date.from(Instant.now());
-      if(tagsFromArchive != null) {
-        if(!tagsFromArchive.getTags().isEmpty()) {
-          tagsFromArchive.getTags().stream().forEach(item -> {
-            final DBItemInventoryTag tag = dbLayer.getTag(item.getName());
-            List<ExportedTagItems> taggingItems = item.getUsedBy();
-            if(tag != null) {
-              tag.setModified(now);
-              try {
-                session.update(tag);
-              } catch (SOSHibernateException e) {
-                throw new JocSosHibernateException(e);
-              }
-              storedTags.add(tag);
-              List<DBItemInventoryTagging> existingTaggings = dbLayer.getTaggingsByTagId(tag.getId());
-              taggingItems.stream().forEach(tagging -> {
-                List<DBItemInventoryTagging> taggingsByNameType = dbLayer.getTaggings(tagging.getName(), ConfigurationType.fromValue(tagging.getType()).intValue());
-                existingTaggings.addAll(taggingsByNameType.stream().filter(tagItem -> tagItem.getTagId().equals(tag.getId())).collect(Collectors.toList()));
-                taggingItems.stream().forEach(used -> {
-                  DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
-                  if(config != null) {
-                    DBItemInventoryTagging exTagging = existingTaggings.stream().filter(cfgTagging -> cfgTagging.getName().equals(config.getName()) && cfgTagging.getType().equals(config.getType())).findAny().orElse(null);
-                    if(exTagging != null) {
-                      exTagging.setTagId(tag.getId());
-                      exTagging.setModified(now);
-                      try {
-                        session.update(exTagging);
-                      } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                      }
+    public static void importTags(List<DBItemInventoryConfiguration> cfgs, Map<String, String> oldNewNameMap, ExportedTags tagsFromArchive,
+            SOSHibernateSession session) throws SOSHibernateException {
+//        List<DBItemInventoryTag> newTags = new ArrayList<>();
+//        List<DBItemInventoryTag> storedTags = new ArrayList<>();
+   
+        
+        if (tagsFromArchive != null) {
+            
+            InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+            InventoryTagGroupDBLayer dbGroupLayer = new InventoryTagGroupDBLayer(session);
+            Date now = Date.from(Instant.now());
+            Map<String, DBItemInventoryTagGroup> allGroups = dbGroupLayer.getAllGroups().stream().collect(Collectors.toMap(
+                    DBItemInventoryTagGroup::getName, Function.identity()));
+            Integer maxGroupOrdering2 = allGroups.values().stream().collect(Collectors.maxBy(Comparator
+                    .comparingInt(DBItemInventoryTagGroup::getOrdering))).map(DBItemInventoryTagGroup::getOrdering).orElse(0);
+            AtomicInteger maxGroupOrdering = new AtomicInteger(maxGroupOrdering2 + 1);
+//            Map<String, DBItemInventoryTag> allTags = dbLayer.getAllTags().stream().collect(Collectors.toMap(
+//                    DBItemInventoryTag::getName, Function.identity()));
+
+            // add new groups
+            Consumer<GroupedTag> addGroup = gt -> {
+                gt.checkJavaNameRules();
+                gt.getGroup().map(g -> {
+
+                    DBItemInventoryTagGroup gItem = allGroups.get(g);
+                    if (gItem == null) {
+                        gItem = new DBItemInventoryTagGroup();
+                        gItem.setName(g);
+                        gItem.setModified(now);
+                        gItem.setOrdering(maxGroupOrdering.getAndIncrement());
                     }
-                  }
+                    return gItem;
+
+                }).filter(groupItem -> groupItem.getId() == null).ifPresent(groupItem -> {
+                    try {
+                        session.save(groupItem);
+                        allGroups.put(groupItem.getName(), groupItem);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
                 });
-              });
-            } else {
-              DBItemInventoryTag newTag = new DBItemInventoryTag();
-              newTag.setName(item.getName());
-              newTag.setOrdering(item.getOrdering());
-              newTag.setModified(now);
-              newTags.add(newTag);
-              try {
-                session.save(newTag);
-              } catch (SOSHibernateException e) {
-                throw new JocSosHibernateException(e);
-              }
-              storedTags.add(newTag);
-              taggingItems.stream().forEach(used -> {
-                DBItemInventoryTagging newTagging = new DBItemInventoryTagging();
-                DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
-                if(config != null) {
-                  newTagging.setCid(config.getId());
-                }
-                newTagging.setName(used.getName());
-                newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
-                newTagging.setTagId(newTag.getId());
-                newTagging.setModified(now);
-                try {
-                  session.save(newTagging);
-                } catch (SOSHibernateException e) {
-                  throw new JocSosHibernateException(e);
-                }
-              });
-              
+            };
+            
+            if (tagsFromArchive.getTags() != null) {
+                tagsFromArchive.getTags().stream().map(ExportedTagItem::getName).map(GroupedTag::new).forEach(addGroup);
             }
-          });
+            if (tagsFromArchive.getJobTags() != null) {
+                tagsFromArchive.getJobTags().stream().map(ExportedJobTagItem::getJobs).filter(Objects::nonNull).map(
+                        ExportedJobTagItems::getAdditionalProperties).filter(Objects::nonNull).map(Map::values).flatMap(Collection::stream).flatMap(
+                                Collection::stream).distinct().map(GroupedTag::new).forEach(addGroup);
+            }
+            
+            Map<String, Long> dbGroupsMap = allGroups.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getId()));
+
+            Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap = cfgs.stream().collect(Collectors.groupingBy(
+                    DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
+            
+            if (tagsFromArchive.getTags() != null) {
+                
+                Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows = new HashMap<>();
+                tagsFromArchive.getTags().stream().sorted(Comparator.comparingInt(ExportedTagItem::getOrdering)).forEachOrdered(tag -> {
+                    tag.getUsedBy().forEach(o -> {
+                        try {
+                            DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(ConfigurationType.fromValue(o.getType()), Collections.emptyMap())
+                                    .get(oldNewNameMap.getOrDefault(o.getName(), o.getName()));
+                            if (conf != null) {
+                                tagsPerWorkflows.putIfAbsent(conf, new HashSet<>());
+                                tagsPerWorkflows.get(conf).add(tag.getName());
+                            }
+                        } catch (IllegalArgumentException e1) {
+                            //
+                        }
+                    });
+                });
+                
+                if (!tagsPerWorkflows.isEmpty()) {
+                    TaggingImpl.storeTaggings(tagsPerWorkflows, dbGroupsMap, dbLayer, true);
+                }
+            }
+            
+            if (tagsFromArchive.getJobTags() != null) {
+                Map<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflows = new HashMap<>();
+                tagsFromArchive.getJobTags().forEach(w -> {
+                    if (w.getJobs() != null && w.getJobs().getAdditionalProperties() != null && !w.getJobs().getAdditionalProperties().isEmpty() && w
+                            .getName() != null) {
+                        DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap()).get(oldNewNameMap
+                                .getOrDefault(w.getName(), w.getName()));
+                        if (conf != null) {
+                            jobTagsPerWorkflows.put(conf, w.getJobs().getAdditionalProperties().entrySet().stream().map(e -> {
+                                JobTags jt = new JobTags();
+                                jt.setJobName(e.getKey());
+                                jt.setJobTags(e.getValue());
+                                return jt;
+                            }).collect(Collectors.toSet()));
+                        }
+                    }
+                });
+                if (!jobTagsPerWorkflows.isEmpty()) {
+                    com.sos.joc.tags.job.impl.TaggingImpl.storeTaggings(jobTagsPerWorkflows, dbGroupsMap, new InventoryJobTagDBLayer(session), true);
+                }
+            }
+            
+            
+//            if (!tagsFromArchive.getTags().isEmpty()) {
+//                tagsFromArchive.getTags().stream().forEach(item -> {
+//                    GroupedTag gt = new GroupedTag(item.getName());
+//                    final DBItemInventoryTag tag = dbLayer.getTag(gt.getTag());
+//                    List<ExportedTaggedObject> taggingItems = item.getUsedBy();
+//                    if (tag != null) {
+//                        tag.setModified(now);
+//                        try {
+//                            session.update(tag);
+//                        } catch (SOSHibernateException e) {
+//                            throw new JocSosHibernateException(e);
+//                        }
+//                        storedTags.add(tag);
+//                        List<DBItemInventoryTagging> existingTaggings = dbLayer.getTaggingsByTagId(tag.getId());
+//                        taggingItems.stream().forEach(tagging -> {
+//                            List<DBItemInventoryTagging> taggingsByNameType = dbLayer.getTaggings(tagging.getName(), ConfigurationType.fromValue(
+//                                    tagging.getType()).intValue());
+//                            existingTaggings.addAll(taggingsByNameType.stream().filter(tagItem -> tagItem.getTagId().equals(tag.getId())).collect(
+//                                    Collectors.toList()));
+//                            taggingItems.stream().forEach(used -> {
+//                                DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg
+//                                        .getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
+//                                if (config != null) {
+//                                    DBItemInventoryTagging exTagging = existingTaggings.stream().filter(cfgTagging -> cfgTagging.getName().equals(
+//                                            config.getName()) && cfgTagging.getType().equals(config.getType())).findAny().orElse(null);
+//                                    if (exTagging != null) {
+//                                        exTagging.setTagId(tag.getId());
+//                                        exTagging.setModified(now);
+//                                        try {
+//                                            session.update(exTagging);
+//                                        } catch (SOSHibernateException e) {
+//                                            throw new JocSosHibernateException(e);
+//                                        }
+//                                    }
+//                                }
+//                            });
+//                        });
+//                    } else {
+//                        DBItemInventoryTag newTag = new DBItemInventoryTag();
+//                        newTag.setName(item.getName());
+//                        newTag.setOrdering(item.getOrdering());
+//                        newTag.setModified(now);
+//                        newTags.add(newTag);
+//                        try {
+//                            session.save(newTag);
+//                        } catch (SOSHibernateException e) {
+//                            throw new JocSosHibernateException(e);
+//                        }
+//                        storedTags.add(newTag);
+//                        taggingItems.stream().forEach(used -> {
+//                            DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType()
+//                                    .equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
+//                            if (config != null) {
+//                                DBItemInventoryTagging newTagging = new DBItemInventoryTagging();
+//                                newTagging.setCid(config.getId());
+//                                newTagging.setName(used.getName());
+//                                newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
+//                                newTagging.setTagId(newTag.getId());
+//                                newTagging.setModified(now);
+//                                try {
+//                                    session.save(newTagging);
+//                                } catch (SOSHibernateException e) {
+//                                    throw new JocSosHibernateException(e);
+//                                }
+//                            }
+//                        });
+//
+//                    }
+//                });
+//            }
+//            if (storedTags != null) {
+//                AtomicInteger ordering = new AtomicInteger(1);
+//                List<DBItemInventoryTag> allDbTags = dbLayer.getAllTags();
+//                // new HashSet<DBItemInventoryTag>(storedTags);
+//                // get all Tags from db and merge them to update ordering for all tags
+//                // for each item from import file json -> DBItemInventoryTag -> items.add()
+//                Stream.concat(allDbTags.stream(), storedTags.stream()).distinct().sorted(Comparator.comparing(DBItemInventoryTag::getOrdering)
+//                        .thenComparing(DBItemInventoryTag::getName)).peek(item -> item.setOrdering(ordering.getAndIncrement())).forEach(tag -> {
+//                            try {
+//                                session.update(tag);
+//                            } catch (SOSHibernateException e) {
+//                                throw new JocSosHibernateException(e);
+//                            }
+//                        });
+//            }
         }
-        if(storedTags != null) {
-          AtomicInteger ordering = new AtomicInteger(1);
-          List<DBItemInventoryTag> allDbTags = dbLayer.getAllTags();
-          Set<DBItemInventoryTag> items = 
-//              new HashSet<DBItemInventoryTag>(storedTags);
-          // get all Tags from db and merge them to update ordering for all tags
-          Stream.concat(allDbTags.stream(), storedTags.stream()).collect(Collectors.toSet());
-          //for each item from import file json -> DBItemInventoryTag -> items.add()
-          items.stream()
-              .sorted(Comparator.comparing(DBItemInventoryTag::getOrdering).thenComparing(DBItemInventoryTag::getName))
-              .peek(item -> item.setOrdering(ordering.getAndIncrement())).forEach(tag -> {
-                  try {
-                    session.update(tag);
-                  } catch (SOSHibernateException e) {
-                    throw new JocSosHibernateException(e);
-                  }
-              });
-        }
-      }
     }
 }
