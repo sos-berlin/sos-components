@@ -151,6 +151,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
             final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
+            Map<String, String> oldNewNameMap = new HashMap<>();
+            
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
                     Stream<ConfigurationObject> cfgStream = configurations.stream();
@@ -180,24 +182,28 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         
                     	Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
                     			.collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
-                        Map<ConfigurationObject, Set<ConfigurationObject>> updatedReferencesByUpdateableConfiguration = new HashMap<ConfigurationObject, Set<ConfigurationObject>>();
-                    	for (ConfigurationType type : importOrder) {
-                    		List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
-                    		if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
-                        		for (ConfigurationObject configuration : configurationsByType.get(type)) {
-                            		DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                        			if (canAdd(configuration.getPath(), permittedFolders)) {
-                        				filteredConfigurations.add(configuration);
-                                    	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
-                                    			existingConfiguration, configuration, configurationsByType, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
-                                    	ImportUtils.replaceReferences(updateable);
-                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable.getReferencedBy());
-                                        storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(
-                                                updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames));
-                        			}
-                        		}
-                    		}
-                    	}
+                        Map<ConfigurationObject, Set<ConfigurationObject>> updatedReferencesByUpdateableConfiguration = new HashMap<>();
+                        for (ConfigurationType type : importOrder) {
+                            List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
+                            if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
+                                for (ConfigurationObject configuration : configurationsByType.get(type)) {
+                                    DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(),
+                                            configuration.getObjectType());
+                                    if (canAdd(configuration.getPath(), permittedFolders)) {
+                                        filteredConfigurations.add(configuration);
+                                        UpdateableConfigurationObject updateable = ImportUtils.createUpdateableConfiguration(existingConfiguration,
+                                                configuration, configurationsByType, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(),
+                                                dbLayer);
+                                        ImportUtils.replaceReferences(updateable);
+                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable
+                                                .getReferencedBy());
+                                        storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account,
+                                                auditLogId, filter.getOverwrite(), agentNames));
+                                        oldNewNameMap.put(updateable.getOldName(), updateable.getNewName());
+                                    }
+                                }
+                            }
+                        }
                     	// update the changed referenced object if already exists
                     	Set<ConfigurationObject> alreadyStored = new HashSet<ConfigurationObject>();
                     	for (ConfigurationObject reference : updatedReferencesByUpdateableConfiguration.keySet()) {
@@ -251,16 +257,20 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     JocAuditLog.storeAuditLogDetails(filteredConfigurations.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
                             .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-                    filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(item -> {
-                        try {
-                            JocInventory.makeParentDirs(invDbLayer, item, auditLogId, ConfigurationType.FOLDER);
-                        } catch (SOSHibernateException e) {
-                            throw new JocSosHibernateException(e);
-                        }
-                    });
+                    filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(
+                            item -> {
+                                try {
+                                    JocInventory.makeParentDirs(invDbLayer, item, auditLogId, ConfigurationType.FOLDER);
+                                } catch (SOSHibernateException e) {
+                                    throw new JocSosHibernateException(e);
+                                }
+                            });
                 }
             }
             
+            if (values.getTags() != null) {
+                ImportUtils.importTags(storedConfigurations, oldNewNameMap, values.getTags(), hibernateSession);
+            }
             InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
             List<DBItemInventoryConfiguration> invalidDBItems = invDbLayer.getAllInvalidConfigurations();
             CompletableFuture.runAsync(() -> {
@@ -284,9 +294,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     .forEach(JocInventory::postFolderEvent);
                 }
             });
-            if(values.getTags() != null) {
-              ImportUtils.importTags(storedConfigurations, values.getTags(), hibernateSession);
-            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

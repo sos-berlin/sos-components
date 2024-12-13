@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
@@ -34,7 +33,7 @@ public class DBItemInventoryTag extends DBItem implements IDBItemTag {
     private String name;
 
     @Column(name = "[GROUP_ID]", nullable = false)
-    private Long groupId;
+    private Long groupId = 0L;
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;

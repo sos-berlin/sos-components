@@ -40,6 +40,10 @@ public class InventoryTagGroupDBLayer extends ATagDBLayer<DBItemInventoryTagGrou
         return null;
     }
     
+    public List<DBItemInventoryTagGroup> getAllGroups() throws DBConnectionRefusedException, DBInvalidDataException {
+        return getTags((Set<String>) null);
+    }
+    
     public Integer deleteGroupIds(List<Long> groupIds, Set<String> tagNames, Set<JOCEvent> events) throws SOSHibernateException {
         if (groupIds == null || groupIds.isEmpty()) {
             return 0;

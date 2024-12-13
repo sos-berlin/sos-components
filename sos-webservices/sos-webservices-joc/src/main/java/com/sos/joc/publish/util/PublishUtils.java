@@ -728,6 +728,7 @@ public abstract class PublishUtils {
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
+                case PLANNABLEBOARD:
                 case NOTICEBOARD:
                     String board = JsonSerializer.serializeAsString(((BoardPublish) entry.getKey()).getContent());
                     newDeployedObject.setContent(board);
@@ -1574,6 +1575,7 @@ public abstract class PublishUtils {
     public static ConfigurationObject getConfigurationObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
         try {
             ConfigurationObject configurationObject = new ConfigurationObject();
+            configurationObject.setId(item.getInventoryConfigurationId());
             configurationObject.setPath(item.getPath());
             configurationObject.setName(item.getName());
             configurationObject.setObjectType(ConfigurationType.fromValue(item.getType()));
@@ -1587,7 +1589,7 @@ public abstract class PublishUtils {
     public static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryConfiguration item) {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
-            // configuration.setId(item.getId());
+            configuration.setId(item.getId());
             configuration.setName(item.getName());
             configuration.setPath(item.getPath());
             configuration.setObjectType(item.getTypeAsEnum());
@@ -1602,7 +1604,7 @@ public abstract class PublishUtils {
     public static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryReleasedConfiguration item) {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
-            // configuration.setId(item.getId());
+            configuration.setId(item.getCid());
             configuration.setName(item.getName());
             configuration.setPath(item.getPath());
             configuration.setObjectType(item.getTypeAsEnum());

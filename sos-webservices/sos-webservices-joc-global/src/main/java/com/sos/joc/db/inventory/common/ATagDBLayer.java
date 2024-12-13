@@ -123,20 +123,9 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
         }
     }
     
-    public List<T> getAllGroups() throws DBConnectionRefusedException, DBInvalidDataException {
-        return getTags((Set<String>) null);
-    }
-
     public List<T> getAllTags() throws DBConnectionRefusedException, DBInvalidDataException {
         return getTags((Set<String>) null);
     }
-    
-//    public List<T> getTagsByGroupedTags(Collection<GroupedTag> tagNamesWithOptionalGroups) throws DBConnectionRefusedException, DBInvalidDataException {
-//        if (tagNamesWithOptionalGroups == null) {
-//            return getAllTags();
-//        }
-//        return getTags(tagNamesWithOptionalGroups.stream().map(GroupedTag::getTag).collect(Collectors.toSet()));
-//    }
     
     public List<T> getTags(Set<String> tagNames) throws DBConnectionRefusedException, DBInvalidDataException {
         if (tagNames != null && tagNames.isEmpty()) {

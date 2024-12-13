@@ -43,7 +43,7 @@ public class ExportedTagItem {
     @JsonProperty("ordering")
     private Integer ordering;
     @JsonProperty("usedBy")
-    private List<ExportedTagItems> usedBy = new ArrayList<ExportedTagItems>();
+    private List<ExportedTaggedObject> usedBy = new ArrayList<ExportedTaggedObject>();
 
     /**
      * string without < and >
@@ -92,12 +92,12 @@ public class ExportedTagItem {
     }
 
     @JsonProperty("usedBy")
-    public List<ExportedTagItems> getUsedBy() {
+    public List<ExportedTaggedObject> getUsedBy() {
         return usedBy;
     }
 
     @JsonProperty("usedBy")
-    public void setUsedBy(List<ExportedTagItems> usedBy) {
+    public void setUsedBy(List<ExportedTaggedObject> usedBy) {
         this.usedBy = usedBy;
     }
 

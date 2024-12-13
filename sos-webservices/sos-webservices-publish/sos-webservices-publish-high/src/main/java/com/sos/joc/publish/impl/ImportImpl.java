@@ -151,6 +151,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
             final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
+            Map<String, String> oldNewNameMap = new HashMap<>();
+            
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
                     Stream<ConfigurationObject> cfgStream = configurations.stream();
@@ -194,6 +196,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                         updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable.getReferencedBy());
                                         storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(
                                                 updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames));
+                                        oldNewNameMap.put(updateable.getOldName(), updateable.getNewName());
                         			}
                         		}
                     		}
@@ -260,6 +263,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     });
                 }
             }
+            if (values.getTags() != null) {
+                ImportUtils.importTags(storedConfigurations, oldNewNameMap, values.getTags(), hibernateSession);
+            }
             
             InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
             List<DBItemInventoryConfiguration> invalidDBItems = invDbLayer.getAllInvalidConfigurations();
@@ -284,9 +290,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     .forEach(JocInventory::postFolderEvent);
                 }
             });
-            if(values.getTags() != null) {
-              ImportUtils.importTags(storedConfigurations, values.getTags(), hibernateSession);
-            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

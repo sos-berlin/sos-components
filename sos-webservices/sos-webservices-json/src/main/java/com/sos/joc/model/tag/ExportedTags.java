@@ -19,7 +19,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "tags"
+    "tags",
+    "jobTags"
 })
 public class ExportedTags {
 
@@ -30,6 +31,8 @@ public class ExportedTags {
      */
     @JsonProperty("tags")
     private List<ExportedTagItem> tags = new ArrayList<ExportedTagItem>();
+    @JsonProperty("jobTags")
+    private List<ExportedJobTagItem> jobTags = new ArrayList<ExportedJobTagItem>();
 
     /**
      * 
@@ -51,14 +54,24 @@ public class ExportedTags {
         this.tags = tags;
     }
 
+    @JsonProperty("jobTags")
+    public List<ExportedJobTagItem> getJobTags() {
+        return jobTags;
+    }
+
+    @JsonProperty("jobTags")
+    public void setJobTags(List<ExportedJobTagItem> jobTags) {
+        this.jobTags = jobTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tags", tags).toString();
+        return new ToStringBuilder(this).append("tags", tags).append("jobTags", jobTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tags).toHashCode();
+        return new HashCodeBuilder().append(jobTags).append(tags).toHashCode();
     }
 
     @Override
@@ -70,7 +83,7 @@ public class ExportedTags {
             return false;
         }
         ExportedTags rhs = ((ExportedTags) other);
-        return new EqualsBuilder().append(tags, rhs.tags).isEquals();
+        return new EqualsBuilder().append(jobTags, rhs.jobTags).append(tags, rhs.tags).isEquals();
     }
 
 }
