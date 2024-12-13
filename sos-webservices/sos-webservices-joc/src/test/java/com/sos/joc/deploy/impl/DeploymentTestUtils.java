@@ -1973,16 +1973,16 @@ public class DeploymentTestUtils {
       ExportedTagItem tagItemSecond = new ExportedTagItem();
       tagItemSecond.setName("MySecondTag");
 
-      ExportedTagItems usedByFirst = new ExportedTagItems();
-      usedByFirst.setName("myWorkflow1");
-      usedByFirst.setType(ConfigurationType.WORKFLOW.value());
-      ExportedTagItems usedBySecond = new ExportedTagItems();
-      usedBySecond.setName("myWorkflow2");
-      usedBySecond.setType(ConfigurationType.WORKFLOW.value());
+      //ExportedTagItems usedByFirst = new ExportedTagItems();
+      //usedByFirst.setName("myWorkflow1");
+      //usedByFirst.setType(ConfigurationType.WORKFLOW.value());
+      //ExportedTagItems usedBySecond = new ExportedTagItems();
+      //usedBySecond.setName("myWorkflow2");
+      //usedBySecond.setType(ConfigurationType.WORKFLOW.value());
       
-      tagItemFirst.getUsedBy().add(usedByFirst);
-      tagItemSecond.getUsedBy().add(usedByFirst);
-      tagItemSecond.getUsedBy().add(usedBySecond);
+      //tagItemFirst.getUsedBy().add(usedByFirst);
+      //tagItemSecond.getUsedBy().add(usedByFirst);
+      //tagItemSecond.getUsedBy().add(usedBySecond);
       tags.getTags().add(tagItemFirst);
       tags.getTags().add(tagItemSecond);
       return tags;
