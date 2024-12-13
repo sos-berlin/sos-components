@@ -109,7 +109,6 @@ import com.sos.joc.model.publish.repository.UpdateFromFilter;
 import com.sos.joc.model.settings.StoreSettingsFilter;
 import com.sos.joc.model.sign.Signature;
 import com.sos.joc.model.tag.ExportedTagItem;
-import com.sos.joc.model.tag.ExportedTagItems;
 import com.sos.joc.model.tag.ExportedTags;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.sign.model.instruction.ForkJoin;
