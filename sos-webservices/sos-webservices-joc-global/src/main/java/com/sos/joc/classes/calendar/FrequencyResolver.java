@@ -958,8 +958,8 @@ public class FrequencyResolver {
                         && dateFromMonth == curMonth) || !SOSCollection.isEmpty(baseCalendarIncludes.getRepetitions()));
 
                 if (isDebugEnabled && !missingDaysResolved) {
-                    LOGGER.debug(String.format("    [checkMissingDays=%s][curMonth=%s][baseCalendarIncludes.hasRepetitions=%s]", checkMissingDays,
-                            curMonth, !SOSCollection.isEmpty(baseCalendarIncludes.getRepetitions())));
+                    LOGGER.debug(String.format("    [checkMissingDays=%s][dateFromMonth=%s,curMonth=%s][baseCalendarIncludes.hasRepetitions=%s]",
+                            checkMissingDays, dateFromMonth, curMonth, !SOSCollection.isEmpty(baseCalendarIncludes.getRepetitions())));
                 }
 
                 if (checkMissingDays) {
@@ -1015,16 +1015,16 @@ public class FrequencyResolver {
                     dayOfMonth++;
                 }
                 if (days.contains(dayOfMonth)) {
-                    if (missingDaysResolved && !missingDaysCurrentDayFound) {
+                    if (missingDaysResolved && !missingDaysCurrentDayFound) { // TODO remove see above
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("    [%s][skip][curDate not found in the fromFirstDayOfMonth][dayOfMonth=%s][days=%s]dates=%s",
-                                    debugCurDate, dayOfMonth, debugDays, dates));
+                            LOGGER.debug(String.format("    [skip][curDate not found in the fromFirstDayOfMonth][dayOfMonth=%s][days=%s]dates=%s",
+                                    dayOfMonth, debugDays, dates));
                         }
                     } else {
                         if (curDate.before(dateFromOrig)) {
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("    [%s][skip][dayOfMonth=%s][curDate before dateFromOrig=%s][days=%s]dates=%s",
-                                        debugCurDate, dayOfMonth, SOSDate.getDateTimeAsString(dateFromOrig), debugDays, dates));
+                                LOGGER.debug(String.format("    [skip][dayOfMonth=%s][curDate before dateFromOrig=%s][days=%s]dates=%s", dayOfMonth,
+                                        SOSDate.getDateTimeAsString(dateFromOrig), debugDays, dates));
                             }
                         } else {
                             dates.add(date.getKey());
