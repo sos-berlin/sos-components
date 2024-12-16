@@ -19,8 +19,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "noticeBoardNames",
-    "subworkflow",
-    "whenNotAnnounced"
+    "subworkflow"
 })
 public class ConsumeNotices
     extends Instruction
@@ -44,14 +43,6 @@ public class ConsumeNotices
      */
     @JsonProperty("subworkflow")
     private Instructions subworkflow;
-    /**
-     * WhenNotAnnouced Enum
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("whenNotAnnounced")
-    private WhenNotAnnouced whenNotAnnounced = WhenNotAnnouced.fromValue("Wait");
 
     /**
      * No args constructor for use in serialization
@@ -113,36 +104,14 @@ public class ConsumeNotices
         this.subworkflow = subworkflow;
     }
 
-    /**
-     * WhenNotAnnouced Enum
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("whenNotAnnounced")
-    public WhenNotAnnouced getWhenNotAnnounced() {
-        return whenNotAnnounced;
-    }
-
-    /**
-     * WhenNotAnnouced Enum
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("whenNotAnnounced")
-    public void setWhenNotAnnounced(WhenNotAnnouced whenNotAnnounced) {
-        this.whenNotAnnounced = whenNotAnnounced;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("noticeBoardNames", noticeBoardNames).append("subworkflow", subworkflow).append("whenNotAnnounced", whenNotAnnounced).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("noticeBoardNames", noticeBoardNames).append("subworkflow", subworkflow).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(subworkflow).append(noticeBoardNames).append(whenNotAnnounced).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(subworkflow).append(noticeBoardNames).toHashCode();
     }
 
     @Override
@@ -154,7 +123,7 @@ public class ConsumeNotices
             return false;
         }
         ConsumeNotices rhs = ((ConsumeNotices) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(subworkflow, rhs.subworkflow).append(noticeBoardNames, rhs.noticeBoardNames).append(whenNotAnnounced, rhs.whenNotAnnounced).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(subworkflow, rhs.subworkflow).append(noticeBoardNames, rhs.noticeBoardNames).isEquals();
     }
 
 }

@@ -21,9 +21,6 @@
     	"type": "string",
     	"pattern": "^[^<>]*$",
   		"minLength": 1
-    },
-    "whenNotAnnounced": {
-        "$ref": "../../../inventory/schemas/instruction/whenNotAnnounced-schema.json"  
     }
   },
   "additionalProperties": false
