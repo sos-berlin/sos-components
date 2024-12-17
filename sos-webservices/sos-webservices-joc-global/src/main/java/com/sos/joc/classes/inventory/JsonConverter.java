@@ -538,8 +538,7 @@ public class JsonConverter {
             AtomicInteger addOrderIndex, ZoneId zoneId) {
         sao.setDeleteWhenTerminated(ao.getRemainWhenTerminated() != Boolean.TRUE);
         String timeZone = zoneId.getId();
-        int n = addOrderIndex.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x + 1);
-        String sAddOrderIndex = ("" + (100 + (n % 100))).substring(1);
+        String sAddOrderIndex = ("" + (100 + (addOrderIndex.getAndIncrement() % 100))).substring(1);
         String datetimePattern = "#[0-9]{4}-[0-9]{2}-[0-9]{2}#[^-]+";
         // first replaceAll(replaceAll...):
         //      #2022-01-01#T12345678901-test|branchname of parent orderId -> 2022010112345678901
@@ -548,7 +547,8 @@ public class JsonConverter {
         // resp.
         //      #2022-01-01#T12345678901-2022010112345678901!-test|branchname of parent orderId -> test|branchname -> test
         String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#D' ++ " + OrdersHelper.mainOrderIdControllerPattern + " ++ '"
-                + sAddOrderIndex + "-' ++ replaceAll(replaceAll($js7OrderId, '^(" + datetimePattern
+                + "uniqueOrderId('" + sAddOrderIndex + "-%05d')" + "-' ++ replaceAll(replaceAll($js7OrderId, '^(" + datetimePattern
+                //+ sAddOrderIndex + "-' ++ replaceAll(replaceAll($js7OrderId, '^(" + datetimePattern
                 + ")-.*$', '$1'), '\\D', \"\") ++ replaceAll(replaceAll($js7OrderId, '^" + datetimePattern
                 + "-([^!]+!-)?(.*)$', '$2'), '^([^|]+).*', '!-$1')";
         sao.setOrderId(String.format(idPattern, timeZone));
