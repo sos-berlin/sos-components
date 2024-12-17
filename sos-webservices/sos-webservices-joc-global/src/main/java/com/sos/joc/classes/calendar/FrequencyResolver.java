@@ -1048,22 +1048,22 @@ public class FrequencyResolver {
                     if (curDate.before(dateFromOrig)) {
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format(
-                                    "  [%s][skip][weeklyDay day=%s, weekOfMonth=%s][curDate before dateFromOrig=%s][weeklyDays=%s]dates=%s",
-                                    debugCurDate, weeklyDay.getDay(), weeklyDay.getWeekOfMonth(), SOSDate.getDateTimeAsString(dateFromOrig),
-                                    debugWeeklyDays, dates));
+                                    "    [skip][weeklyDay=%s,weekOfMonth=%s][curDate before dateFromOrig=%s][weeklyDays=%s]dates=%s", weeklyDay
+                                            .getDay(), weeklyDay.getWeekOfMonth(), SOSDate.getDateTimeAsString(dateFromOrig), debugWeeklyDays,
+                                    dates));
                         }
                     } else {
                         dates.add(date.getKey());
 
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("  [%s][added][weeklyDay day=%s, weekOfMonth=%s][weeklyDays=%s]dates=%s", debugCurDate,
-                                    weeklyDay.getDay(), weeklyDay.getWeekOfMonth(), debugWeeklyDays, dates));
+                            LOGGER.debug(String.format("    [added][weeklyDay=%s,weekOfMonth=%s][weeklyDays=%s]dates=%s", weeklyDay.getDay(),
+                                    weeklyDay.getWeekOfMonth(), debugWeeklyDays, dates));
                         }
                     }
                 } else {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("  [%s][skip][weeklyDay day=%s, weekOfMonth=%s][weeklyDays=%s]dates=%s", debugCurDate, weeklyDay
-                                .getDay(), weeklyDay.getWeekOfMonth(), debugWeeklyDays, dates));
+                        LOGGER.debug(String.format("    [skip][weeklyDay=%s,weekOfMonth=%s not match weeklyDays=%s]dates=%s", weeklyDay.getDay(),
+                                weeklyDay.getWeekOfMonth(), debugWeeklyDays, dates));
                     }
                 }
             }
