@@ -3,6 +3,7 @@ package com.sos.joc.history.controller.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import js7.data.agent.AgentRefStateEvent.AgentCoupled$;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
 import js7.data.agent.AgentRefStateEvent.AgentShutDown$;
@@ -58,6 +59,8 @@ public enum HistoryEventType {
     AgentReady(AgentReady.class.getSimpleName()),
 
     AgentSubagentDedicated(SubagentDedicated.class.getSimpleName()),
+
+    AgentCoupled(AgentCoupled$.class.getSimpleName()),
 
     AgentCouplingFailed(AgentCouplingFailed.class.getSimpleName()),
 

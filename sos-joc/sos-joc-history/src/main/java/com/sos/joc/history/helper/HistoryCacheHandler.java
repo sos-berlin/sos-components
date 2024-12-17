@@ -29,7 +29,6 @@ import com.sos.joc.history.controller.exception.model.HistoryModelOrderNotFoundE
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderStepNotFoundException;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.db.DBLayerHistory;
-import com.sos.joc.history.helper.CachedAgentCouplingFailed.AgentCouplingFailed;
 
 public class HistoryCacheHandler {
 
@@ -47,7 +46,6 @@ public class HistoryCacheHandler {
     private Map<String, CachedOrderStep> orderSteps;
     private Map<String, CachedAgent> agents;
     private Map<String, CachedWorkflow> workflows;
-    private CachedAgentCouplingFailed agentsCouplingFailed;
 
     private String identifier;
     private boolean isDebugEnabled;
@@ -63,7 +61,6 @@ public class HistoryCacheHandler {
         orderSteps = new HashMap<>();
         agents = new HashMap<>();
         workflows = new HashMap<>();
-        agentsCouplingFailed = new CachedAgentCouplingFailed();
     }
 
     public void initLogLevels() {
@@ -222,27 +219,6 @@ public class HistoryCacheHandler {
             LOGGER.debug(String.format("[%s][cache][addAgent][%s]%s", identifier, agentId, SOSString.toString(ca)));
         }
         agents.put(agentId, ca);
-    }
-
-    public void addAgentsCouplingFailed(String agentId, Long eventId, String message) {
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][cache][addAgentsCouplingFailed]%s", identifier, agentId));
-        }
-        agentsCouplingFailed.add(agentId, eventId, message);
-    }
-
-    public void removeAgentsCouplingFailed(String agentId) {
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][cache][removeAgentsCouplingFailed]%s", identifier, agentId));
-        }
-        agentsCouplingFailed.remove(agentId);
-    }
-
-    public AgentCouplingFailed getLastAgentCouplingFailed(String agentId, Long nextReadyEventId) {
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][cache][getLastAgentsCouplingFailed]%s", identifier, agentId));
-        }
-        return agentsCouplingFailed.getLast(agentId, nextReadyEventId);
     }
 
     public CachedAgent addAgentByReadyEventId(DBLayerHistory dbLayer, String agentId, Long readyEventId) {

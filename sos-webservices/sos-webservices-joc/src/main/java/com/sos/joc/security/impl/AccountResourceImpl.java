@@ -743,7 +743,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                                             dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(
                                                     dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.value()
                                                             .equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.FIDO
-                                                                    .value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                                                                    .value().equals(dbItemIamIdentityService.getIdentityServiceType())
+                    || IdentityServiceTypes.CERTIFICATE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
 
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 for (String accountName : accountsFilter.getAccountNames()) {

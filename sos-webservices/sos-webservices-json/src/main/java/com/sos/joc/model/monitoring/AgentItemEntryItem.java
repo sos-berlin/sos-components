@@ -21,7 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "totalRunningTime",
     "readyTime",
-    "lastKnownTime"
+    "lastKnownTime",
+    "source"
 })
 public class AgentItemEntryItem {
 
@@ -53,6 +54,14 @@ public class AgentItemEntryItem {
     @JsonProperty("lastKnownTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date lastKnownTime;
+    /**
+     * origin of item properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("source")
+    private AgentItemEntryItemSource source;
 
     /**
      * non negative long
@@ -124,14 +133,36 @@ public class AgentItemEntryItem {
         this.lastKnownTime = lastKnownTime;
     }
 
+    /**
+     * origin of item properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("source")
+    public AgentItemEntryItemSource getSource() {
+        return source;
+    }
+
+    /**
+     * origin of item properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("source")
+    public void setSource(AgentItemEntryItemSource source) {
+        this.source = source;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("totalRunningTime", totalRunningTime).append("readyTime", readyTime).append("lastKnownTime", lastKnownTime).toString();
+        return new ToStringBuilder(this).append("totalRunningTime", totalRunningTime).append("readyTime", readyTime).append("lastKnownTime", lastKnownTime).append("source", source).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(lastKnownTime).append(readyTime).append(totalRunningTime).toHashCode();
+        return new HashCodeBuilder().append(lastKnownTime).append(readyTime).append(totalRunningTime).append(source).toHashCode();
     }
 
     @Override
@@ -143,7 +174,7 @@ public class AgentItemEntryItem {
             return false;
         }
         AgentItemEntryItem rhs = ((AgentItemEntryItem) other);
-        return new EqualsBuilder().append(lastKnownTime, rhs.lastKnownTime).append(readyTime, rhs.readyTime).append(totalRunningTime, rhs.totalRunningTime).isEquals();
+        return new EqualsBuilder().append(lastKnownTime, rhs.lastKnownTime).append(readyTime, rhs.readyTime).append(totalRunningTime, rhs.totalRunningTime).append(source, rhs.source).isEquals();
     }
 
 }

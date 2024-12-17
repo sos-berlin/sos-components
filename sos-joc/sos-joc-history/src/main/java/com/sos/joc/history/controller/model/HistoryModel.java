@@ -70,6 +70,7 @@ import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderNotice;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderProcessed;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentShutDown;
@@ -109,7 +110,6 @@ import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 import com.sos.joc.history.controller.yade.YadeHandler;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.history.helper.CachedAgent;
-import com.sos.joc.history.helper.CachedAgentCouplingFailed.AgentCouplingFailed;
 import com.sos.joc.history.helper.CachedOrder;
 import com.sos.joc.history.helper.CachedOrderStep;
 import com.sos.joc.history.helper.CachedWorkflow;
@@ -347,6 +347,10 @@ public class HistoryModel {
                         break;
                     case AgentSubagentDedicated:
                         counter.getAgent().addSubagentDedicated();
+                        break;
+                    case AgentCoupled:
+                        agentCoupled(dbLayer, (FatEventAgentCoupled) entry);
+                        counter.getAgent().addCoupled();
                         break;
                     case AgentCouplingFailed:
                         agentCouplingFailed(dbLayer, (FatEventAgentCouplingFailed) entry);
@@ -766,7 +770,6 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             controllerTimezone = item.getTimezone();
-            setPreviousControllerLastKnownTime(dbLayer, item);
             tryStoreCurrentState(dbLayer, event.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
@@ -779,33 +782,6 @@ public class HistoryModel {
                 controllerTimezone = HistoryUtil.getTimeZone("controllerReady " + controllerConfiguration.getCurrent().getId(), event.getTimezone());
             }
         }
-    }
-
-    private void setPreviousControllerLastKnownTime(DBLayerHistory dbLayer, DBItemHistoryController current) throws Exception {
-        DBItemHistoryController previous = dbLayer.getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), current
-                .getReadyEventId());
-        if (previous != null && previous.getShutdownTime() == null) {
-            Date knownTime = getLastKnownTime(dbLayer, previous.getLastKnownTime(), previous.getReadyEventId(), current.getReadyEventId(), null);
-            if (knownTime != null) {
-                previous.setLastKnownTime(knownTime);
-                dbLayer.getSession().update(previous);
-            }
-        }
-    }
-
-    private Date getLastKnownTime(DBLayerHistory dbLayer, Date itemLastKnownTime, Long fromEventId, Long toEventId, String agentId) throws Exception {
-        Object[] result = dbLayer.getLastExecution(controllerConfiguration.getCurrent().getId(), fromEventId, toEventId, agentId);
-        if (result != null) {
-            Date startTime = (Date) result[0];
-            Date endTime = (Date) result[1];
-            Date knownTime = endTime == null ? startTime : endTime;
-            if (itemLastKnownTime == null) {
-                return knownTime;
-            } else if (knownTime.getTime() > itemLastKnownTime.getTime()) {
-                return knownTime;
-            }
-        }
-        return null;
     }
 
     private void controllerShutDown(DBLayerHistory dbLayer, FatEventControllerShutDown event) throws Exception {
@@ -837,61 +813,27 @@ public class HistoryModel {
         }
     }
 
-    private void agentCouplingFailed(DBLayerHistory dbLayer, FatEventAgentCouplingFailed event) throws Exception {
-        DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), event.getId(), event.getEventId());
-        if (item == null) {
-            LOGGER.info(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
-                    getDateAsString(event.getEventDatetime())));
-        } else {
-            if (item.getShutdownTime() == null) {
-                if (item.getCouplingFailedTime() == null) {
-                    item.setCouplingFailedMessage(event.getMessage());
-                    item.setCouplingFailedTime(event.getEventDatetime());
-                    item.setLastKnownTime(item.getCouplingFailedTime());
-                    tmpAgentShuttingDown(item);
-                    dbLayer.getSession().update(item);
-                } else {
-                    cacheHandler.addAgentsCouplingFailed(item.getAgentId(), event.getEventId(), event.getMessage());
-                }
-            }
-        }
-        tryStoreCurrentState(dbLayer, event.getEventId());
-    }
-
-    private void agentShutDown(DBLayerHistory dbLayer, FatEventAgentShutDown event) throws Exception {
-        DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), event.getId(), event.getEventId());
-        if (item == null) {
-            LOGGER.info(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
-                    getDateAsString(event.getEventDatetime())));
-        } else {
-            if (item.getShutdownTime() == null || isAgentCouplingFailedBecauseShutdown(item)) {
-                item.setShutdownTime(event.getEventDatetime());
-                item.setLastKnownTime(item.getShutdownTime());
-                dbLayer.getSession().update(item);
-            }
-            cacheHandler.removeAgentsCouplingFailed(item.getAgentId());
-        }
-        tryStoreCurrentState(dbLayer, event.getEventId());
-    }
-
     private void agentReady(DBLayerHistory dbLayer, FatEventAgentReady event) throws Exception {
         try {
             checkControllerTimezone(dbLayer);
 
             DBItemHistoryAgent item = new DBItemHistoryAgent();
+            // controller event id
             item.setReadyEventId(event.getEventId());
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setAgentId(event.getId());
             item.setUri(event.getUri());
             item.setTimezone(HistoryUtil.getTimeZone("agentReady " + item.getAgentId(), event.getTimezone()));
+            // agent date time - may differ from date time based on controller event ID
             item.setReadyTime(event.getEventDatetime());
+            // controller date time
             item.setCouplingFailedTime(null);
-            item.setLastKnownTime(item.getReadyTime());
+            // controller date time, because failed/coupled are controller date times
+            item.setLastKnownTime(JocClusterUtil.getEventIdAsDate(item.getReadyEventId()));
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
 
-            setPreviousAgentLastKnownTime(dbLayer, item);
             tryStoreCurrentState(dbLayer, event.getEventId());
             cacheHandler.addAgent(item.getAgentId(), new CachedAgent(item));
         } catch (SOSHibernateObjectOperationException e) {
@@ -904,47 +846,74 @@ public class HistoryModel {
         }
     }
 
-    private void setPreviousAgentLastKnownTime(DBLayerHistory dbLayer, DBItemHistoryAgent current) throws Exception {
-        DBItemHistoryAgent previous = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), current.getAgentId(), current
-                .getReadyEventId());
-        if (previous != null && previous.getShutdownTime() == null) {
-            boolean update = false;
-            Date knownTime = getLastKnownTime(dbLayer, previous.getLastKnownTime(), previous.getReadyEventId(), current.getReadyEventId(), current
-                    .getAgentId());
-            if (knownTime != null) {
-                previous.setLastKnownTime(knownTime);
-                update = true;
-            }
-            AgentCouplingFailed cf = cacheHandler.getLastAgentCouplingFailed(current.getAgentId(), current.getReadyEventId());
-            if (cf != null) {
-                previous.setCouplingFailedTime(JocClusterUtil.getEventIdAsDate(cf.getEventId()));
-                previous.setCouplingFailedMessage(cf.getMessage());
-
-                if (previous.getLastKnownTime() != null) {
-                    if (previous.getCouplingFailedTime().getTime() > previous.getLastKnownTime().getTime()) {
-                        previous.setLastKnownTime(previous.getCouplingFailedTime());
-                    }
+    private void agentCouplingFailed(DBLayerHistory dbLayer, FatEventAgentCouplingFailed event) throws Exception {
+        DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), event.getId(), event.getEventId());
+        if (item == null) {
+            LOGGER.info(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
+                    getDateAsString(event.getEventDatetime())));
+        } else {
+            // can occur after the AgentShutdown and before the next AgentReady - so ignore it if shutdown is already set
+            if (item.getShutdownTime() == null) {
+                item.setCouplingFailedMessage(event.getMessage());
+                item.setCouplingFailedTime(event.getEventDatetime()); // controller date time
+                item.setLastKnownTime(item.getCouplingFailedTime());// controller date time
+                if (isAgentCouplingFailedBecauseShutdown(item)) {
+                    item.setShutdownTime(item.getCouplingFailedTime()); // controller date time
+                    item.setLastKnownTime(item.getCouplingFailedTime()); // controller date time
                 }
-                tmpAgentShuttingDown(previous);
-                update = true;
-            }
-            if (update) {
-                dbLayer.getSession().update(previous);
+                dbLayer.getSession().update(item);
             }
         }
-        cacheHandler.removeAgentsCouplingFailed(current.getAgentId());
-    }
-
-    private void tmpAgentShuttingDown(DBItemHistoryAgent item) {
-        if (isAgentCouplingFailedBecauseShutdown(item)) {
-            item.setShutdownTime(item.getCouplingFailedTime());
-            item.setLastKnownTime(item.getShutdownTime());
-        }
+        tryStoreCurrentState(dbLayer, event.getEventId());
     }
 
     private boolean isAgentCouplingFailedBecauseShutdown(DBItemHistoryAgent item) {
         return item.getCouplingFailedMessage() != null && item.getCouplingFailedMessage().toLowerCase().contains(
                 AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE);
+    }
+
+    private void agentCoupled(DBLayerHistory dbLayer, FatEventAgentCoupled event) throws Exception {
+        DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), event.getId(), event.getEventId());
+        if (item == null) {
+            LOGGER.info(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
+                    getDateAsString(event.getEventDatetime())));
+        } else {
+            // can occur after the AgentShutdown and before the next AgentReady - so ignore it if shutdown is already set
+            // creating a new entry cannot be done because this event only contains the controller event id and no agent date time
+            if (item.getShutdownTime() == null && item.getCouplingFailedTime() != null) {
+                // item.setCouplingFailedMessage(null);
+                // item.setCouplingFailedTime(null); // controller date time
+                item.setLastKnownTime(event.getEventDatetime());// controller date time
+
+                dbLayer.getSession().update(item);
+            }
+        }
+        tryStoreCurrentState(dbLayer, event.getEventId());
+    }
+
+    private void agentShutDown(DBLayerHistory dbLayer, FatEventAgentShutDown event) throws Exception {
+        DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), event.getId(), event.getEventId());
+        if (item == null) {
+            LOGGER.info(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, event.getType(), event.getId(),
+                    getDateAsString(event.getEventDatetime())));
+        } else {
+            if (item.getShutdownTime() == null) {
+                item.setShutdownTime(event.getEventDatetime());// agent date time
+                item.setLastKnownTime(JocClusterUtil.getEventIdAsDate(event.getEventId())); // controller date time
+
+                // if coupling failed is due to the agent shutdown
+                // coupling failed (controller time) is greater than the shutdown time(agent time)
+                if (item.getCouplingFailedTime() != null && item.getShutdownTime() != null) {
+                    if (item.getCouplingFailedTime().getTime() > item.getShutdownTime().getTime()) {
+                        item.setCouplingFailedTime(null);
+                        item.setCouplingFailedMessage(null);
+                    }
+                }
+
+                dbLayer.getSession().update(item);
+            }
+        }
+        tryStoreCurrentState(dbLayer, event.getEventId());
     }
 
     private HistoryOrderBean orderStarted(DBLayerHistory dbLayer, FatEventOrderStarted eo) throws Exception {

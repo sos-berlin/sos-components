@@ -181,6 +181,10 @@ public class HistoryEventEntry {
         return new HistoryControllerReady();
     }
 
+    public HistoryAgentCoupled getAgentCoupled() {
+        return new HistoryAgentCoupled();
+    }
+
     public HistoryAgentCouplingFailed getAgentCouplingFailed() {
         return new HistoryAgentCouplingFailed();
     }
@@ -433,7 +437,7 @@ public class HistoryEventEntry {
                 JOrderEvent ev = getJOrderEvent();
                 if (ev instanceof JOrderFailed) {
                     outcomeInfo = getOutcomeInfo(((JOrderFailed) getJOrderEvent()).outcome());
-                } 
+                }
                 if (outcomeInfo != null) {
                     Instruction i = getCurrentPositionInstruction();
                     if (i != null && i instanceof Fail) {
@@ -1070,6 +1074,20 @@ public class HistoryEventEntry {
 
         public Long getTotalRunningTimeAsMillis() {
             return Long.valueOf(totalRunningTime == null ? 0 : totalRunningTime.toMillis());
+        }
+    }
+
+    public class HistoryAgentCoupled {
+
+        private final String id;
+
+        public HistoryAgentCoupled() {
+            AgentPath arp = (AgentPath) keyedEvent.key();
+            id = arp.string();
+        }
+
+        public String getId() {
+            return id;
         }
     }
 

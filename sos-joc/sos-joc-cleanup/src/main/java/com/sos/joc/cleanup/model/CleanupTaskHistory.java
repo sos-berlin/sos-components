@@ -435,104 +435,130 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][").append(ageInfo).append("][deleted]");
 
-        Long eventId = Long.valueOf(startTime.getTime() * 1_000 + 999);
-
         // getDbLayer().beginTransaction();
-        log = deleteControllers(eventId, log);
-        log = deleteAgents(eventId, log);
+        log = deleteControllers(startTime, log);
+        log = deleteAgents(startTime, log);
         // getDbLayer().commit();
 
         LOGGER.info(log.toString());
     }
 
-    protected StringBuilder deleteControllers(Long eventId, StringBuilder log) throws SOSHibernateException {
-        // 1) delete controllers that no longer exist
-        StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
-        hql.append("where readyEventId > 0 ");
-        hql.append("and controllerId not in (");
-        hql.append("select controllerId from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
-        hql.append(")");
-        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        int r = getDbLayer().getSession().executeUpdate(query);
+    protected StringBuilder deleteControllers(Date readyTime, StringBuilder log) throws SOSHibernateException {
+        // - delete all older than the readyTime
+        // -- but leave 1 last row per controller
+        // --- if this last controller exists in the inventory
 
-        // 2) leaves 1 last row per controller
         Dialect d = getFactory().getDialect();
+        String columnReTime = SOSHibernate.quoteColumn(d, "READY_TIME");
         String columnReid = SOSHibernate.quoteColumn(d, "READY_EVENT_ID");
         String columnCid = SOSHibernate.quoteColumn(d, "CONTROLLER_ID");
 
-        hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
-        hql.append("where " + columnReid + " < :eventId ");
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
+        hql.append("where " + columnReTime + " < :readyTime ");
         if (getFactory().getDbms().equals(Dbms.MYSQL)) {
             hql.append("and (").append(columnReid + "," + columnCid + ") not in (");
             hql.append("  select tmp.meid,tmp.cid from(");
-            hql.append("      select max(" + columnReid + ") as meid," + columnCid + " as cid ");
-            hql.append("      from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
-            hql.append("      group by ").append(columnCid);
+            hql.append("      select max(h." + columnReid + ") as meid,h." + columnCid + " as cid ");
+            hql.append("      from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" h ");
+
+            hql.append("      where exists (");
+            hql.append("          select 1 ");
+            hql.append("          from ").append(DBLayer.TABLE_INV_JS_INSTANCES).append(" i ");
+            hql.append("          where i." + columnCid + "=h.").append(columnCid);
+            hql.append("      ) ");
+
+            hql.append("      group by h.").append(columnCid);
             hql.append("   ) as tmp ");
             hql.append(")");
         } else {
             hql.append("and concat(").append(columnReid + "," + columnCid + ") not in (");
-            hql.append("   select concat(max(" + columnReid + ")," + columnCid + ") ");
-            hql.append("   from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
-            hql.append("   group by ").append(columnCid);
+            hql.append("   select concat(max(h." + columnReid + "),h." + columnCid + ") ");
+            hql.append("   from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" h ");
+
+            hql.append("      where exists (");
+            hql.append("          select 1 ");
+            hql.append("          from ").append(DBLayer.TABLE_INV_JS_INSTANCES).append(" i ");
+            hql.append("          where i." + columnCid + "=h.").append(columnCid);
+            hql.append("      ) ");
+
+            hql.append("   group by h.").append(columnCid);
             hql.append(")");
         }
-        query = getDbLayer().getSession().createNativeQuery(hql.toString());
-        query.setParameter("eventId", eventId);
-        r += getDbLayer().getSession().executeUpdate(query);
+        Query<?> query = getDbLayer().getSession().createNativeQuery(hql.toString());
+        query.setParameter("readyTime", readyTime);
+        int r = getDbLayer().getSession().executeUpdate(query);
 
         log.append("[").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append("=").append(r).append("]");
         return log;
     }
 
-    protected StringBuilder deleteAgents(Long eventId, StringBuilder log) throws SOSHibernateException {
-        // 1) delete agents that no longer exist
-        StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
-        hql.append("where concat(controllerId,agentId) not in (");
-        hql.append("select concat(controllerId,agentId) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-        hql.append(")");
-        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        int r = getDbLayer().getSession().executeUpdate(query);
+    protected StringBuilder deleteAgents(Date readyTime, StringBuilder log) throws SOSHibernateException {
+        // - delete all older than the readyTime
+        // -- but leave 1 last row per controller/agent
+        // --- if this last agent exists in the inventory
 
-        // 2) leaves 1 last row per controller/agent
         Dialect d = getFactory().getDialect();
+        String columnReTime = SOSHibernate.quoteColumn(d, "READY_TIME");
         String columnReid = SOSHibernate.quoteColumn(d, "READY_EVENT_ID");
         String columnCid = SOSHibernate.quoteColumn(d, "CONTROLLER_ID");
         String columnAid = SOSHibernate.quoteColumn(d, "AGENT_ID");
 
-        hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
-        hql.append("where " + columnReid + "  < :eventId ");
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
+        hql.append("where " + columnReTime + "  < :readyTime ");
         switch (getFactory().getDbms()) {
         case MYSQL:
-            hql.append("and (" + columnReid + "," + columnCid + "," + columnAid + ") not in (");
-            hql.append("  select meid,cid,aid from (");
-            hql.append("      select max(" + columnReid + ") as meid," + columnCid + " as cid," + columnAid + " as aid ");
-            hql.append("      from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
-            hql.append("      group by " + columnCid + "," + columnAid);
+            hql.append("and (" + columnReid + "," + columnCid + "," + columnAid + ") ");
+            hql.append("not in (");
+            hql.append("  select tmp.meid,tmp.cid,tmp.aid from (");
+            hql.append("      select max(h." + columnReid + ") as meid,h." + columnCid + " as cid,h." + columnAid + " as aid ");
+            hql.append("      from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" h ");
+
+            hql.append("      where exists (");
+            hql.append("          select 1 ");
+            hql.append("          from ").append(DBLayer.TABLE_INV_AGENT_INSTANCES).append(" i ");
+            hql.append("          where concat(i." + columnCid + ",i." + columnAid + ") = ");
+            hql.append("                concat(h." + columnCid + ",h." + columnAid + ")");
+            hql.append("      ) ");
+
+            hql.append("      group by h." + columnCid + ",h." + columnAid);
             hql.append("   ) as tmp ");
             hql.append(")");
             break;
         case ORACLE:
-            hql.append("and (" + columnReid + "||" + columnCid + "||" + columnAid + ") not in (");
-            hql.append("  select (max(" + columnReid + ")||" + columnCid + "||" + columnAid + ") ");
-            hql.append("  from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
-            hql.append("  group by " + columnCid + "," + columnAid);
+            hql.append("and (" + columnReid + "||" + columnCid + "||" + columnAid + ") ");
+            hql.append("not in (");
+            hql.append("  select (max(h." + columnReid + ")||h." + columnCid + "||h." + columnAid + ") ");
+            hql.append("  from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" h ");
+
+            hql.append("  where exists (");
+            hql.append("      select 1 ");
+            hql.append("      from ").append(DBLayer.TABLE_INV_AGENT_INSTANCES).append(" i ");
+            hql.append("      where i." + columnCid + "||i." + columnAid + " = ");
+            hql.append("            h." + columnCid + "||h." + columnAid + " ");
+            hql.append("  ) ");
+
+            hql.append("  group by h." + columnCid + ",h." + columnAid);
             hql.append(")");
             break;
         default:
-            hql.append("and concat(" + columnReid + "," + columnCid + "," + columnAid + ") not in (");
-            hql.append("  select concat(max(" + columnReid + ")," + columnCid + "," + columnAid + ") ");
-            hql.append("  from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
-            hql.append("  group by " + columnCid + "," + columnAid);
+            hql.append("and concat(" + columnReid + "," + columnCid + "," + columnAid + ") ");
+            hql.append("not in (");
+            hql.append("  select concat(max(h." + columnReid + "),h." + columnCid + ",h." + columnAid + ") ");
+            hql.append("  from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" h ");
+
+            hql.append("  where concat(h." + columnCid + ",h." + columnAid + ") in (");
+            hql.append("    select concat(i." + columnCid + ",i." + columnAid + ") ");
+            hql.append("    from ").append(DBLayer.TABLE_INV_AGENT_INSTANCES).append(" i ");
+            hql.append("  ) ");
+
+            hql.append("  group by h." + columnCid + ",h." + columnAid);
             hql.append(")");
             break;
         }
 
-        query = getDbLayer().getSession().createNativeQuery(hql.toString());
-        query.setParameter("eventId", eventId);
-        r += getDbLayer().getSession().executeUpdate(query);
+        Query<?> query = getDbLayer().getSession().createNativeQuery(hql.toString());
+        query.setParameter("readyTime", readyTime);
+        int r = getDbLayer().getSession().executeUpdate(query);
 
         log.append("[").append(DBLayer.TABLE_HISTORY_AGENTS).append("=").append(r).append("]");
         return log;

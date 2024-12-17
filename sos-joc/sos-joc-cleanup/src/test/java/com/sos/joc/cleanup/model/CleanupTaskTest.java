@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.model.CleanupTaskHistory.Range;
@@ -28,28 +29,24 @@ public class CleanupTaskTest {
 
     @Ignore
     @Test
-    public void testCleanupDeployment() throws Exception {
+    public void testCleanupDeploymentSearch() throws Exception {
         JocClusterHibernateFactory factory = null;
+        CleanupTaskDeployment t = null;
         try {
             factory = createFactory();
-            CleanupTaskDeployment t = new CleanupTaskDeployment(factory, 1, "deployment");
+            t = new CleanupTaskDeployment(factory, 1, "deployment");
 
             t.cleanupSearch();
-
-            t.getDbLayer().close();
-
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw e;
         } finally {
-            if (factory != null) {
-                factory.close();
-            }
+            close(t, factory);
         }
     }
 
     @Ignore
     @Test
-    public void testCleanupHistory() throws Exception {
+    public void testCleanupHistoryOrders() throws Exception {
         JocClusterHibernateFactory factory = null;
         CleanupTaskHistory t = null;
         try {
@@ -60,24 +57,69 @@ public class CleanupTaskTest {
 
             JocServiceTaskAnswerState state = t.cleanupOrders(Scope.MAIN, Range.ALL, d, "", true);
             LOGGER.info("[STATE]" + state);
-        } catch (Exception e) {
-            if (t != null && t.getDbLayer() != null) {
-                t.getDbLayer().rollback();
-            }
+        } catch (Throwable e) {
+            rollback(t);
             throw e;
         } finally {
-            if (t != null && t.getDbLayer() != null) {
-                t.getDbLayer().close();
-            }
-            if (factory != null) {
-                factory.close();
-            }
+            close(t, factory);
         }
     }
 
     @Ignore
     @Test
-    public void testCleanupMonitoring() throws Exception {
+    public void testCleanupHistoryControllers() throws Exception {
+        JocClusterHibernateFactory factory = null;
+        CleanupTaskHistory t = null;
+        try {
+            factory = createFactory();
+            t = new CleanupTaskHistory(factory, null, 1000);
+
+            Date readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
+
+            StringBuilder log = new StringBuilder();
+
+            t.tryOpenSession();
+            t.getDbLayer().beginTransaction();
+            t.deleteControllers(readyTime, log);
+            t.getDbLayer().commit();
+            LOGGER.info("[LOG]" + log);
+        } catch (Throwable e) {
+            rollback(t);
+            throw e;
+        } finally {
+            close(t, factory);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testCleanupHistoryAgents() throws Exception {
+        JocClusterHibernateFactory factory = null;
+        CleanupTaskHistory t = null;
+        try {
+            factory = createFactory();
+            t = new CleanupTaskHistory(factory, null, 1000);
+
+            Date readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
+
+            StringBuilder log = new StringBuilder();
+
+            t.tryOpenSession();
+            t.getDbLayer().beginTransaction();
+            t.deleteAgents(readyTime, log);
+            t.getDbLayer().commit();
+            LOGGER.info("[LOG]" + log);
+        } catch (Throwable e) {
+            rollback(t);
+            throw e;
+        } finally {
+            close(t, factory);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testCleanupMonitoringOrders() throws Exception {
         JocClusterHibernateFactory factory = null;
         CleanupTaskMonitoring t = null;
         try {
@@ -88,18 +130,11 @@ public class CleanupTaskTest {
 
             JocServiceTaskAnswerState state = t.cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, d, "");
             LOGGER.info("[STATE]" + state);
-        } catch (Exception e) {
-            if (t != null && t.getDbLayer() != null) {
-                t.getDbLayer().rollback();
-            }
+        } catch (Throwable e) {
+            rollback(t);
             throw e;
         } finally {
-            if (t != null && t.getDbLayer() != null) {
-                t.getDbLayer().close();
-            }
-            if (factory != null) {
-                factory.close();
-            }
+            close(t, factory);
         }
     }
 
@@ -116,8 +151,23 @@ public class CleanupTaskTest {
 
     }
 
+    private void rollback(CleanupTaskModel t) {
+        if (t != null && t.getDbLayer() != null) {
+            t.getDbLayer().rollback();
+        }
+    }
+
+    private void close(CleanupTaskModel t, SOSHibernateFactory factory) {
+        if (t != null && t.getDbLayer() != null) {
+            t.getDbLayer().close();
+        }
+        if (factory != null) {
+            factory.close();
+        }
+    }
+
     private JocClusterHibernateFactory createFactory() throws Exception {
-        JocClusterHibernateFactory factory = new JocClusterHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"), 1, 1);
+        JocClusterHibernateFactory factory = new JocClusterHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.mysql.xml"), 1, 1);
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.setAutoCommit(false);
         factory.build();
