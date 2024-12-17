@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1266,98 +1267,102 @@ public class WorkflowsHelper {
 
     public static Set<String> extractDisallowedImplicitEnds(List<Instruction> insts) {
         Set<String> posSet = new HashSet<>();
-        extractImplicitEnds(insts, posSet, false);
+        extractImplicitEnds(insts, posSet, 0, false);
         return posSet;
     }
 
-    private static void extractImplicitEnds(List<Instruction> insts, Set<String> posSet, boolean extract) {
+    private static void extractImplicitEnds(List<Instruction> insts, Set<String> posSet, int thensIndex, boolean extract) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Instruction inst = insts.get(i);
                 switch (inst.getTYPE()) {
                 case IMPLICIT_END:
                     if (extract) {
-                        posSet.add(getJPositionString(inst.getPosition()));
+                        posSet.add(getJPositionString(inst.getPosition(), thensIndex));
                     }
                     break;
                 case FORK:
                     ForkJoin f = inst.cast();
                     if (f.getBranches() != null) {
                         for (Branch b : f.getBranches()) {
-                            extractImplicitEnds(b.getWorkflow().getInstructions(), posSet, false);
+                            extractImplicitEnds(b.getWorkflow().getInstructions(), posSet, 0, false);
                         }
                     }
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    extractImplicitEnds(fl.getWorkflow().getInstructions(), posSet, false);
+                    if (fl.getWorkflow() != null) {
+                        extractImplicitEnds(fl.getWorkflow().getInstructions(), posSet, 0, false);
+                    }
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        extractImplicitEnds(ie.getThen().getInstructions(), posSet, true);
+                        extractImplicitEnds(ie.getThen().getInstructions(), posSet, 0, true);
                     }
                     if (ie.getCases() != null) {
+                        AtomicInteger index = new AtomicInteger(1);
                         ie.getCases().forEach(when -> {
                             if (when.getThen() != null) {
-                                extractImplicitEnds(when.getThen().getInstructions(), posSet, true);
+                                extractImplicitEnds(when.getThen().getInstructions(), posSet, index.getAndIncrement(), true);
                             }
                         });
                     }
                     if (ie.getElse() != null) {
-                        extractImplicitEnds(ie.getElse().getInstructions(), posSet, true);
+                        extractImplicitEnds(ie.getElse().getInstructions(), posSet, 0, true);
                     }
                     break;
                 case CASE_WHEN:
                     CaseWhen cw = inst.cast();
                     if (cw.getCases() != null) {
+                        AtomicInteger index = new AtomicInteger(1);
                         cw.getCases().forEach(when -> {
                             if (when.getThen() != null) {
-                                extractImplicitEnds(when.getThen().getInstructions(), posSet, true);
+                                extractImplicitEnds(when.getThen().getInstructions(), posSet, index.getAndIncrement(), true);
                             }
                         });
                     }
                     if (cw.getElse() != null) {
-                        extractImplicitEnds(cw.getElse().getInstructions(), posSet, true);
+                        extractImplicitEnds(cw.getElse().getInstructions(), posSet, 0, true);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
-                        extractImplicitEnds(tc.getTry().getInstructions(), posSet, true);
+                        extractImplicitEnds(tc.getTry().getInstructions(), posSet, 0, true);
                     }
                     if (tc.getCatch() != null) {
-                        extractImplicitEnds(tc.getCatch().getInstructions(), posSet, true);
+                        extractImplicitEnds(tc.getCatch().getInstructions(), posSet, 0, true);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
-                        extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, true);
+                        extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, 0, true);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, false);
+                        extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, 0, false);
                     }
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
                     if (cn.getSubworkflow() != null) {
-                        extractImplicitEnds(cn.getSubworkflow().getInstructions(), posSet, true);
+                        extractImplicitEnds(cn.getSubworkflow().getInstructions(), posSet, 0, true);
                     }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
-                        extractImplicitEnds(ss.getSubworkflow().getInstructions(), posSet, true);
+                        extractImplicitEnds(ss.getSubworkflow().getInstructions(), posSet, 0, true);
                     }
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
-                        extractImplicitEnds(opts.getBlock().getInstructions(), posSet, true);
+                        extractImplicitEnds(opts.getBlock().getInstructions(), posSet, 0, true);
                     }
                     break;
                 default:
@@ -1367,63 +1372,18 @@ public class WorkflowsHelper {
         }
     }
 
-    // private static void extractImplicitEndOfScope(List<Instruction> insts, Set<String> posSet, boolean extract) {
-    // if (insts != null) {
-    // for (int i = 0; i < insts.size(); i++) {
-    // Instruction inst = insts.get(i);
-    // switch (inst.getTYPE()) {
-    // case IMPLICIT_END:
-    // if (extract) {
-    // posSet.add(getJPositionString(inst.getPosition()));
-    // }
-    // break;
-    // case FORK:
-    // ForkJoin f = inst.cast();
-    // for (Branch b : f.getBranches()) {
-    // extractImplicitEnds(b.getWorkflow().getInstructions(), posSet, true);
-    // }
-    // break;
-    // case FORKLIST:
-    // ForkList fl = inst.cast();
-    // extractImplicitEnds(fl.getWorkflow().getInstructions(), posSet, true);
-    // break;
-    // case IF:
-    // IfElse ie = inst.cast();
-    // if (ie.getThen() != null) {
-    // extractImplicitEnds(ie.getThen().getInstructions(), posSet, false);
-    // }
-    // if (ie.getElse() != null) {
-    // extractImplicitEnds(ie.getElse().getInstructions(), posSet, false);
-    // }
-    // break;
-    // case TRY:
-    // TryCatch tc = inst.cast();
-    // if (tc.getTry() != null) {
-    // extractImplicitEnds(tc.getTry().getInstructions(), posSet, false);
-    // }
-    // if (tc.getCatch() != null) {
-    // extractImplicitEnds(tc.getCatch().getInstructions(), posSet, false);
-    // }
-    // break;
-    // case LOCK:
-    // Lock l = inst.cast();
-    // if (l.getLockedWorkflow() != null) {
-    // extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, false);
-    // }
-    // break;
-    // case CYCLE:
-    // Cycle c = inst.cast();
-    // if (c.getCycleWorkflow() != null) {
-    // extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, false);
-    // }
-    // break;
-    // default:
-    // break;
-    // }
-    // }
-    // }
-    // }
-
+    private static String getJPositionString(List<Object> positionList, int thensIndex) {
+        Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
+        if (jPosEither.isRight()) {
+            if (thensIndex > 1) { //fix: JWorkflow.withPositions().toJson() send "then" in position for all "thens"
+                return jPosEither.get().toString().replaceFirst("(.*)/then:(\\d+)$", "$1/then+" + thensIndex + ":$2");
+            } else {
+                return jPosEither.get().toString();
+            }
+        }
+        return "";
+    }
+    
     public static String getJPositionString(List<Object> positionList) {
         Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
         if (jPosEither.isRight()) {
