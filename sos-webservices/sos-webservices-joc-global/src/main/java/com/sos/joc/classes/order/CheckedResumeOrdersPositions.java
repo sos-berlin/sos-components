@@ -120,6 +120,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
             List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
             Set<String> implicitEnds = WorkflowsHelper.extractDisallowedImplicitEnds(instructions);
+            
+            OrderPreparation orderPreparation = node.get("orderPreparation") != null ? Globals.objectMapper.reader().forType(
+                    new TypeReference<OrderPreparation>() {}).readValue(node.get("orderPreparation")) : null;
 
             setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
             
@@ -152,9 +155,43 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).collect(Collectors.toCollection(LinkedHashSet::new)));
             disableIfNoCommonAllowedPositionsExist();
             setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
-            setVariablesNotSettable(orderIds.size() > 1);
-        }
+            
+            Variables allConstants = new Variables();
+            Variables allVars = new Variables();
+            jOrders.stream().map(jOrder -> {
+                OrdersResumePositions orp = new OrdersResumePositions();
+                Variables constants = OrdersHelper.scalaValuedArgumentsToVariables(jOrder.arguments());
+                if (orderPreparation != null && orderPreparation.getParameters() != null && orderPreparation.getParameters()
+                        .getAdditionalProperties() != null) {
+                    orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                        if (v.getDefault() != null && !constants.getAdditionalProperties().containsKey(k)) {
+                            constants.setAdditionalProperty(k, v.getDefault());
+                        } else if (v.getFinal() != null && !constants.getAdditionalProperties().containsKey(k)) {
+                            constants.setAdditionalProperty(k, v.getFinal());
+                        }
+                    });
+                }
+                try {
+                    orp.setVariables(getVariables(jOrder, JPosition.apply(jOrder.asScala().position()), implicitEnds, constants.getAdditionalProperties()
+                            .keySet()));
+                } catch (Exception e1) {
+                }
 
+                orp.setConstants(constants);
+                return orp;
+            }).forEach(orp -> {
+                if (orp.getConstants() != null && orp.getConstants().getAdditionalProperties() != null) {
+                    allConstants.setAdditionalProperties(orp.getConstants().getAdditionalProperties());
+                }
+                if (orp.getVariables() != null && orp.getVariables().getAdditionalProperties() != null) {
+                    allVars.setAdditionalProperties(orp.getVariables().getAdditionalProperties());
+                }
+            });
+            
+            setConstants(allConstants);
+            setVariables(allVars);
+        }
+        
         setDeliveryDate(Date.from(Instant.now()));
         setSurveyDate(Date.from(currentState.instant()));
         
@@ -259,7 +296,10 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             pc.setCode(PositionChangeCode.NO_COMMON_POSITIONS);
             pc.setMessage("The orders " + getOrderIds().toString() + " don't have common allowed positions.");
             setDisabledPositionChange(pc);
+            setVariablesNotSettable(true);
             //throw new JocBadRequestException("The orders " + getOrderIds().toString() + " don't have common allowed positions.");
+        } else {
+            setVariablesNotSettable(false);
         }
     }
     

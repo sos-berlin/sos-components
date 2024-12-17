@@ -27,7 +27,9 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.common.Outcome;
@@ -62,6 +64,7 @@ import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
@@ -369,8 +372,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return;
         }
         
-        Optional<JPosition> positionOpt = Optional.empty();
-        Optional<String> workflowPositionStringOpt = Optional.empty();
+        //Optional<JPosition> positionOpt = Optional.empty();
+        //Optional<String> workflowPositionStringOpt = Optional.empty();
 
         // JOC-1453 consider labels
         Object positionObj = modifyOrders.getPosition();
@@ -383,216 +386,60 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         
         if (orders.size() == 1) { //single order
             
-            CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions().get(orders, currentState, folderPermissions.getListOfFolders());
-            final JOrder jOrder = cop.getJOrders().iterator().next();
-            
-            List<JHistoryOperation> historyOperations = Collections.emptyList();
-            Set<String> allowedPositions = cop.getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(
-                    LinkedHashSet::new));
-            
-            if (modifyOrders.getFromCurrentBlock() == Boolean.TRUE) {
-                positionOpt = CheckedResumeOrdersPositions.moveToBeginOfBlock(jOrder, modifyOrders.getForce());
-                
-            } else if (withPositionOrLabel) {
-                List<Object> pos = null;
-                if (positionObj instanceof String) {
-                    SOSHibernateSession connection = null;
-                    try {
-                        JWorkflowId jWorkflowId = jOrder.workflowId();
-                        Map<String, List<Object>> labelMap = Collections.emptyMap();
-
-                        connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-                        DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-                        DeployedContent dbWorkflow = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), jWorkflowId.path()
-                                .string(), jWorkflowId.versionId().string());
-                        Globals.disconnect(connection);
-                        connection = null;
-                        if (dbWorkflow != null) {
-                            com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
-                            if (w != null) {
-                                labelMap = WorkflowsHelper.getLabelToPositionsMap(w);
-                            }
-                        }
-                        pos = OrdersHelper.getPosition(positionObj, labelMap);
-
-                    } finally {
-                        Globals.disconnect(connection);
-                    }
-
-                } else if (positionObj instanceof List<?>) {
-                    pos = (List<Object>) positionObj;
-                    if (pos.isEmpty()) {
-                        pos = null;
-                    }
-                }
-                if (pos != null) {
-                    Either<Problem, JPosition> posFromList = JPosition.fromList(pos);
-                    if (posFromList.isLeft()) {
-                        ProblemHelper.throwProblemIfExist(posFromList);
-                    }
-                    positionOpt = Optional.of(posFromList.get());
-                }
-
-                workflowPositionStringOpt = positionOpt.map(pos1 -> cop.orderPositionToWorkflowPosition(pos1.toString()));
-
-                if (positionOpt.isPresent() && !allowedPositions.contains(workflowPositionStringOpt.get())) {
-                    if (cop.getCurrentWorkflowPosition().toString().equals(positionOpt.get().toString()) || cop
-                            .getCurrentOrderPosition().toString().equals(positionOpt.get().toString())) {
-                        positionOpt = Optional.empty();
-                    } else {
-                        throw new JocBadRequestException("Disallowed position '" + workflowPositionStringOpt.get() + "'. Allowed positions are: "
-                                + allowedPositions.toString());
-                    }
-                }
-            }
-            
-            if (withVariables) {
-                Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Position::getPositionString).collect(
-                        Collectors.toCollection(LinkedHashSet::new));
-                int posIndex = getIndex(allowedPositionsWithImplicitEnds, workflowPositionStringOpt.orElse(""));
-                int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentWorkflowPosition().toString());
-                boolean isNotFuturePosition = posIndex <= curPosIndex;
-                
-                Map<String, Object> vars = modifyOrders.getVariables().getAdditionalProperties();
-                if (vars.containsKey("returnCode") && vars.get("returnCode") instanceof String && ((String) vars.get("returnCode")).matches(
-                        "\\d+")) {
-                    modifyOrders.getVariables().setAdditionalProperty("returnCode", Long.valueOf((String) vars.get("returnCode")));
-                }
-
-                // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous position
-                List<Object> prevPos = null;
-                String prevPosString = null;
-                if (isNotFuturePosition) {
-                    
-                    List<JPosition> historicPositions = JavaConverters.asJava(jOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
-                            .apply(h.position())).collect(Collectors.toCollection(LinkedList::new));
-                    List<String> historicWorkflowPositions = historicPositions.stream().map(JPosition::toString).map(p -> cop
-                            .orderPositionToWorkflowPosition(p)).collect(Collectors.toCollection(LinkedList::new));
-                    int lastIndexOfWorkflowPos =  historicWorkflowPositions.lastIndexOf(workflowPositionStringOpt.orElse(""));
-                    if (lastIndexOfWorkflowPos > 0) {
-                        JPosition jPos = historicPositions.get(lastIndexOfWorkflowPos - 1);
-                        if (jPos != null) {
-                            prevPos = jPos.toList();
-                            prevPosString = jPos.toString();
-                        }
-                    } else {
-//                        prevPos = cop.getCurrentOrderPosition().toList();
-//                        prevPosString = cop.getCurrentOrderPosition().toString();
-                    }
-                    
-                } else {
-                    prevPos = cop.getCurrentOrderPosition().toList();
-                    prevPosString = cop.getCurrentOrderPosition().toString();
-                }
-                if (prevPos != null) {
-//                    final String prevPString = prevPosString;
-//                    Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
-//                            .toString().equals(prevPString)).findFirst();
-                    HistoricOutcome h = null;
-                    for (HistoricOutcome ho : cop.getHistoricOutcomes()) {
-                        if (JPosition.fromList(ho.getPosition()).get().toString().equals(prevPosString)) {
-                            h = ho;
-                        }
-                    }
-                    if (h != null) {
-                        //HistoricOutcome h = hoOpt.get();
-                        Variables v = h.getOutcome().getNamedValues();
-                        if (v == null) {
-                            v = new Variables();
-                        }
-                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        if ("Disrupted".equals(h.getOutcome().getTYPE())) {
-                            String errMsg = null;
-                            try {
-                                errMsg = h.getOutcome().getReason().getProblem().getMessage();
-                            } catch (Exception e) {
-                                //
-                            }
-                            h = new HistoricOutcome(prevPos, new Outcome("Failed", errMsg, v, null, null));
-                        } else {
-                            h.getOutcome().setNamedValues(v);
-                        }
-                        historyOperations = getJHistoricOperations(h, getJocError(), "replace", null);
-                    } else {
-                        Variables v = new Variables();
-                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)),
-                                getJocError(), "append", null);
-                    }
-                } else {
-                    Variables v = new Variables();
-                    v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                    List<Object> posList = new LinkedList<>(cop.getCurrentOrderPosition().toList());
-                    int prev = ((Integer) posList.remove(posList.size() - 1)) - 1;
-                    posList.add(Math.max(0, prev));
-                    historyOperations = getJHistoricOperations(new HistoricOutcome(posList, new Outcome("Succeeded", null, v, null, null)),
-                            getJocError(), "insert", cop.getCurrentOrderPosition());
-                }
-            }
-            
-            Optional<JPosition> orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
-            orderPositionOpt = cop.forceOrderPosition(orderPositionOpt, modifyOrders.getForce() == Boolean.TRUE);
-
-            OrderId oId = jOrder.id();
-            String workflowName = jOrder.workflowId().path().string();
-            // TODO handle grouped fresh cyclicOrders
-            Set<OrderId> orderIds = Collections.emptySet();
-            if (OrdersHelper.isCyclicOrderId(oId.string())) {
-                orderIds = cyclicFreshOrderIds(Collections.singleton(oId.string()), currentState).filter(OrdersHelper::isResumable).map(
-                        JOrder::id).collect(Collectors.toSet());
-            }
-            if (orderIds.isEmpty()) {
-                orderIds = Collections.singleton(oId);
-            }
-            //LOGGER.info("Resume-Position: " + orderPositionOpt.map(JPosition::toString).orElse(""));
-            for (OrderId orderId : orderIds) {
-                ControllerApi.of(controllerId).resumeOrder(orderId, orderPositionOpt, historyOperations, true).thenAccept(either -> {
-                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                    if (either.isRight()) {
-                        OrdersHelper.storeAuditLogDetailsFromJOrder(orderId.string(), workflowName, dbAuditLog.getId(), controllerId).thenAccept(
-                                either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-                    }
-                });
-            }
+            singleOrder(orders.iterator().next(), modifyOrders, currentState, withPositionOrLabel, true, dbAuditLog.getId());
             
         } else {
-            if (withVariables) {
-                throw new JocBadRequestException("Variables can only be set for resuming a single order.");
-            }
+//            if (withVariables) {
+//                throw new JocBadRequestException("Variables can only be set for resuming a single order.");
+//            }
             if (withCycleEndTime) {
                 throw new JocBadRequestException("The cycle end time can only be set for resuming a single order.");
             }
             if (modifyOrders.getFromCurrentBlock() == Boolean.TRUE) {
-                Set<JOrder> jOrders = CheckedResumeOrdersPositions.getResumableOrders(orders, currentState, folderPermissions.getListOfFolders()).values()
-                        .stream().flatMap(Set::stream).collect(Collectors.toSet());
+                ConcurrentMap<JWorkflowId, Set<JOrder>> jOrdersPerWorkflow = CheckedResumeOrdersPositions.getResumableOrders(orders, currentState,
+                        folderPermissions.getListOfFolders());
+                if (withVariables && jOrdersPerWorkflow.size() > 1) {
+                    throw new JocBadRequestException("Variables can only be set for resuming orders of the same workflow."); 
+                }
+                Set<JOrder> jOrders = jOrdersPerWorkflow.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
                 if (!jOrders.isEmpty()) {
-                    Stream<JOrder> cyclicOrders = cyclicFreshOrderIds(jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors.toSet()),
-                            currentState).filter(OrdersHelper::isResumable);
-                    
-                    JControllerApi api = ControllerApi.of(controllerId);
-                    Set<JOrder> ordersWithEmptyPos = new HashSet<>();
-                    Stream.concat(jOrders.stream(), cyclicOrders).distinct().forEach(o -> {
-                        Optional<JPosition> pos = CheckedResumeOrdersPositions.moveToBeginOfBlock(o, modifyOrders.getForce());
-                        if (pos.isPresent()) {
-                            api.resumeOrder(o.id(), pos, Collections.emptyList(), true).thenAccept(either -> {
-                                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                                if (either.isRight()) {
-                                    OrdersHelper.storeAuditLogDetailsFromJOrder(o, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
-                                            .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-                                }
-                            });
-                        } else {
-                            ordersWithEmptyPos.add(o);
+
+                    if (withVariables) {
+                        for (JOrder jOrder : jOrders) {
+                            singleOrder(jOrder, modifyOrders, currentState, withPositionOrLabel, dbAuditLog.getId());
                         }
-                    });
-                    if (!ordersWithEmptyPos.isEmpty()) { // use resumeOrders instead resumeOrder
-                        api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
-                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                            if (either.isRight()) {
-                                OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
-                                        either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                    } else {
+
+                        Stream<JOrder> cyclicOrders = cyclicFreshOrderIds(jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors
+                                .toSet()), currentState).filter(OrdersHelper::isResumable);
+
+                        JControllerApi api = ControllerApi.of(controllerId);
+                        Set<JOrder> ordersWithEmptyPos = new HashSet<>();
+                        Stream.concat(jOrders.stream(), cyclicOrders).distinct().forEach(o -> {
+                            Optional<JPosition> pos = CheckedResumeOrdersPositions.moveToBeginOfBlock(o, modifyOrders.getForce());
+                            if (pos.isPresent()) {
+                                api.resumeOrder(o.id(), pos, Collections.emptyList(), true).thenAccept(either -> {
+                                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                    if (either.isRight()) {
+                                        OrdersHelper.storeAuditLogDetailsFromJOrder(o, dbAuditLog.getId(), controllerId).thenAccept(
+                                                either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                        controllerId));
+                                    }
+                                });
+                            } else {
+                                ordersWithEmptyPos.add(o);
                             }
                         });
+                        if (!ordersWithEmptyPos.isEmpty()) { // use resumeOrders instead resumeOrder
+                            api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
+                                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                if (either.isRight()) {
+                                    OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
+                                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                    controllerId));
+                                }
+                            });
+                        }
                     }
                 }
                 
@@ -604,35 +451,48 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 JControllerApi api = ControllerApi.of(controllerId);
                 Set<JOrder> ordersWithEmptyPos = new HashSet<>();
                 
-                orderPositions.entrySet().stream().forEach(entry -> {
-                    if (entry.getValue().isPresent()) {
-                        api.resumeOrder(entry.getKey().id(), entry.getValue(), Collections.emptyList(), true).thenAccept(either -> {
+                boolean oneWorkflow = orderPositions.keySet().stream().map(JOrder::workflowId).distinct().count() == 1L;
+                if (withVariables && !oneWorkflow) {
+                    throw new JocBadRequestException("Variables can only be set for resuming orders of the same workflow."); 
+                }
+
+                if (withVariables) {
+                    for (JOrder jOrder : orderPositions.keySet()) {
+                        singleOrder(jOrder, modifyOrders, currentState, withPositionOrLabel, dbAuditLog.getId());
+                    }
+                } else {
+
+                    orderPositions.entrySet().stream().forEach(entry -> {
+                        if (entry.getValue().isPresent()) {
+                            api.resumeOrder(entry.getKey().id(), entry.getValue(), Collections.emptyList(), true).thenAccept(either -> {
+                                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                if (either.isRight()) {
+                                    OrdersHelper.storeAuditLogDetailsFromJOrder(entry.getKey(), dbAuditLog.getId(), controllerId).thenAccept(
+                                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                    controllerId));
+                                }
+                            });
+                        } else {
+                            ordersWithEmptyPos.add(entry.getKey());
+                        }
+                    });
+
+                    // same position for cyclicOrders
+                    ordersWithEmptyPos.addAll(cyclicFreshOrderIds(orderPositions.keySet().stream().map(JOrder::id).map(OrderId::string).collect(
+                            Collectors.toSet()), currentState).filter(OrdersHelper::isResumable).filter(o -> !orderPositions.containsKey(o)).collect(
+                                    Collectors.toSet()));
+
+                    if (!ordersWithEmptyPos.isEmpty()) {
+                        api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
                             ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                             if (either.isRight()) {
-                                OrdersHelper.storeAuditLogDetailsFromJOrder(entry.getKey(), dbAuditLog.getId(), controllerId).thenAccept(
+                                OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
                                         either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                             }
                         });
-                    } else {
-                        ordersWithEmptyPos.add(entry.getKey());
                     }
-                });
-                
-                //same position for cyclicOrders
-                ordersWithEmptyPos.addAll(cyclicFreshOrderIds(orderPositions.keySet().stream().map(JOrder::id).map(OrderId::string).collect(Collectors
-                        .toSet()), currentState).filter(OrdersHelper::isResumable).filter(o -> !orderPositions.containsKey(o)).collect(Collectors
-                                .toSet()));
-
-                if (!ordersWithEmptyPos.isEmpty()) {
-                    api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
-                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                        if (either.isRight()) {
-                            OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
-                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-                        }
-                    });
                 }
-                
+
                 cop.getJOrders().removeAll(orderPositions.keySet());
                 if (!cop.getJOrders().isEmpty()) {
                     if (withLabel) {
@@ -647,51 +507,265 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
                 
             } else { //without any position or label
-                Set<JOrder> jOrders = CheckedResumeOrdersPositions.getResumableOrders(orders, currentState, folderPermissions.getListOfFolders()).values()
-                        .stream().flatMap(Set::stream).collect(Collectors.toSet());
+                ConcurrentMap<JWorkflowId, Set<JOrder>> jOrdersPerWorkflow = CheckedResumeOrdersPositions.getResumableOrders(orders, currentState,
+                        folderPermissions.getListOfFolders());
+                if (withVariables && jOrdersPerWorkflow.size() > 1) {
+                    throw new JocBadRequestException("Variables can only be set for resuming orders of the same workflow."); 
+                }
+                Set<JOrder> jOrders = jOrdersPerWorkflow.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
+                
                 if (!jOrders.isEmpty()) {
-                    
-                    JControllerApi api = ControllerApi.of(controllerId);
-                    if (modifyOrders.getForce()) {
-                        jOrders.stream().forEach(o -> {
-                            api.resumeOrder(o.id(), Optional.of(JPosition.apply(o.asScala().position())), Collections.emptyList(), true).thenAccept(
-                                    either -> {
-                                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                                        if (either.isRight()) {
-                                            OrdersHelper.storeAuditLogDetailsFromJOrder(o, dbAuditLog.getId(), controllerId).thenAccept(
-                                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
-                                                            controllerId));
-                                        }
-                                    });
-                        });
-                        
-                        // same position for cyclicOrders
-                        Set<JOrder> ordersWithEmptyPos = cyclicFreshOrderIds(jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors
-                                .toSet()), currentState).filter(OrdersHelper::isResumable).filter(o -> !jOrders.contains(o)).collect(Collectors.toSet());
 
-                        if (!ordersWithEmptyPos.isEmpty()) {
-                            api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
+                    if (withVariables) {
+                        for (JOrder jOrder : jOrders) {
+                            singleOrder(jOrder, modifyOrders, currentState, withPositionOrLabel, dbAuditLog.getId());
+                        }
+                    } else {
+
+                        JControllerApi api = ControllerApi.of(controllerId);
+                        if (modifyOrders.getForce()) {
+                            jOrders.stream().forEach(o -> {
+                                api.resumeOrder(o.id(), Optional.of(JPosition.apply(o.asScala().position())), Collections.emptyList(), true)
+                                        .thenAccept(either -> {
+                                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                            if (either.isRight()) {
+                                                OrdersHelper.storeAuditLogDetailsFromJOrder(o, dbAuditLog.getId(), controllerId).thenAccept(
+                                                        either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                                controllerId));
+                                            }
+                                        });
+                            });
+
+                            // same position for cyclicOrders
+                            Set<JOrder> ordersWithEmptyPos = cyclicFreshOrderIds(jOrders.stream().map(JOrder::id).map(OrderId::string).collect(
+                                    Collectors.toSet()), currentState).filter(OrdersHelper::isResumable).filter(o -> !jOrders.contains(o)).collect(
+                                            Collectors.toSet());
+
+                            if (!ordersWithEmptyPos.isEmpty()) {
+                                api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
+                                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                    if (either.isRight()) {
+                                        OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
+                                                either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                        controllerId));
+                                    }
+                                });
+                            }
+
+                        } else {
+                            command(currentState, Action.RESUME, modifyOrders, jOrders).thenAccept(either -> {
                                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                                 if (either.isRight()) {
-                                    OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
-                                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                                    OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
+                                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                    controllerId));
                                 }
                             });
                         }
-                        
-                    } else {
-                        command(currentState, Action.RESUME, modifyOrders, jOrders).thenAccept(either -> {
-                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                            if (either.isRight()) {
-                                OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
-                                        either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-                            }
-                        });
-                    }
 
+                    }
                 }
             }
         }
+    }
+    
+    private void singleOrder(JOrder jOrder, ModifyOrders modifyOrders, JControllerState currentState, boolean withPositionOrLabel,
+            Long auditLogId) throws JsonParseException, JsonMappingException, JocBadRequestException,
+            JocFolderPermissionsException, IOException {
+        singleOrder(jOrder.id().string(), modifyOrders, currentState, withPositionOrLabel, false, auditLogId);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void singleOrder(String order1, ModifyOrders modifyOrders, JControllerState currentState, boolean withPositionOrLabel,
+            boolean withStatusCheck, Long auditLogId) throws JsonParseException, JsonMappingException, JocBadRequestException,
+            JocFolderPermissionsException, IOException {
+
+        Optional<JPosition> positionOpt = Optional.empty();
+        Optional<String> workflowPositionStringOpt = Optional.empty();
+        String controllerId = modifyOrders.getControllerId();
+        Object positionObj = modifyOrders.getPosition();
+        
+        CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions().get(order1, currentState, folderPermissions.getListOfFolders(), null,
+                withStatusCheck);
+        final JOrder jOrder = cop.getJOrders().iterator().next();
+        
+        List<JHistoryOperation> historyOperations = Collections.emptyList();
+        Set<String> allowedPositions = cop.getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(
+                LinkedHashSet::new));
+        
+        if (modifyOrders.getFromCurrentBlock() == Boolean.TRUE) {
+            positionOpt = CheckedResumeOrdersPositions.moveToBeginOfBlock(jOrder, modifyOrders.getForce());
+            
+        } else if (withPositionOrLabel) {
+            List<Object> pos = null;
+            if (positionObj instanceof String) {
+                SOSHibernateSession connection = null;
+                try {
+                    JWorkflowId jWorkflowId = jOrder.workflowId();
+                    Map<String, List<Object>> labelMap = Collections.emptyMap();
+
+                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                    DeployedContent dbWorkflow = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), jWorkflowId.path()
+                            .string(), jWorkflowId.versionId().string());
+                    Globals.disconnect(connection);
+                    connection = null;
+                    if (dbWorkflow != null) {
+                        com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
+                        if (w != null) {
+                            labelMap = WorkflowsHelper.getLabelToPositionsMap(w);
+                        }
+                    }
+                    pos = OrdersHelper.getPosition(positionObj, labelMap);
+
+                } finally {
+                    Globals.disconnect(connection);
+                }
+
+            } else if (positionObj instanceof List<?>) {
+                pos = (List<Object>) positionObj;
+                if (pos.isEmpty()) {
+                    pos = null;
+                }
+            }
+            if (pos != null) {
+                Either<Problem, JPosition> posFromList = JPosition.fromList(pos);
+                if (posFromList.isLeft()) {
+                    ProblemHelper.throwProblemIfExist(posFromList);
+                }
+                positionOpt = Optional.of(posFromList.get());
+            }
+
+            workflowPositionStringOpt = positionOpt.map(pos1 -> cop.orderPositionToWorkflowPosition(pos1.toString()));
+
+            if (positionOpt.isPresent() && !allowedPositions.contains(workflowPositionStringOpt.get())) {
+                if (cop.getCurrentWorkflowPosition().toString().equals(positionOpt.get().toString()) || cop
+                        .getCurrentOrderPosition().toString().equals(positionOpt.get().toString())) {
+                    positionOpt = Optional.empty();
+                } else {
+                    throw new JocBadRequestException("Disallowed position '" + workflowPositionStringOpt.get() + "'. Allowed positions are: "
+                            + allowedPositions.toString());
+                }
+            }
+        }
+        
+        historyOperations = getHistoryOperations(jOrder, modifyOrders.getVariables(), cop, workflowPositionStringOpt, getJocError());
+        
+        Optional<JPosition> orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
+        orderPositionOpt = cop.forceOrderPosition(orderPositionOpt, modifyOrders.getForce() == Boolean.TRUE);
+
+        OrderId oId = jOrder.id();
+        String workflowName = jOrder.workflowId().path().string();
+        // TODO handle grouped fresh cyclicOrders
+        Set<OrderId> orderIds = Collections.emptySet();
+        if (OrdersHelper.isCyclicOrderId(oId.string())) {
+            orderIds = cyclicFreshOrderIds(Collections.singleton(oId.string()), currentState).filter(OrdersHelper::isResumable).map(
+                    JOrder::id).collect(Collectors.toSet());
+        }
+        if (orderIds.isEmpty()) {
+            orderIds = Collections.singleton(oId);
+        }
+        //LOGGER.info("Resume-Position: " + orderPositionOpt.map(JPosition::toString).orElse(""));
+        for (OrderId orderId : orderIds) {
+            ControllerApi.of(controllerId).resumeOrder(orderId, orderPositionOpt, historyOperations, true).thenAccept(either -> {
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                if (either.isRight()) {
+                    OrdersHelper.storeAuditLogDetailsFromJOrder(orderId.string(), workflowName, auditLogId, controllerId).thenAccept(
+                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                }
+            });
+        }
+    }
+    
+    private static List<JHistoryOperation> getHistoryOperations(JOrder jOrder, Variables variables, CheckedResumeOrdersPositions cop,
+            Optional<String> workflowPositionStringOpt, JocError jocError) throws JsonProcessingException {
+        
+        List<JHistoryOperation> historyOperations = Collections.emptyList();
+        if (variables == null || variables.getAdditionalProperties() == null || variables.getAdditionalProperties().isEmpty()) {
+            return historyOperations;
+        }
+        Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Position::getPositionString).collect(
+                Collectors.toCollection(LinkedHashSet::new));
+        int posIndex = getIndex(allowedPositionsWithImplicitEnds, workflowPositionStringOpt.orElse(""));
+        int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentWorkflowPosition().toString());
+        boolean isNotFuturePosition = posIndex <= curPosIndex;
+        
+        Map<String, Object> vars = variables.getAdditionalProperties();
+        if (vars.containsKey("returnCode") && vars.get("returnCode") instanceof String && ((String) vars.get("returnCode")).matches(
+                "\\d+")) {
+            variables.setAdditionalProperty("returnCode", Long.valueOf((String) vars.get("returnCode")));
+        }
+
+        // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous position
+        List<Object> prevPos = null;
+        String prevPosString = null;
+        if (isNotFuturePosition) {
+            
+            List<JPosition> historicPositions = JavaConverters.asJava(jOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
+                    .apply(h.position())).collect(Collectors.toCollection(LinkedList::new));
+            List<String> historicWorkflowPositions = historicPositions.stream().map(JPosition::toString).map(p -> cop
+                    .orderPositionToWorkflowPosition(p)).collect(Collectors.toCollection(LinkedList::new));
+            int lastIndexOfWorkflowPos =  historicWorkflowPositions.lastIndexOf(workflowPositionStringOpt.orElse(""));
+            if (lastIndexOfWorkflowPos > 0) {
+                JPosition jPos = historicPositions.get(lastIndexOfWorkflowPos - 1);
+                if (jPos != null) {
+                    prevPos = jPos.toList();
+                    prevPosString = jPos.toString();
+                }
+            } else {
+//                prevPos = cop.getCurrentOrderPosition().toList();
+//                prevPosString = cop.getCurrentOrderPosition().toString();
+            }
+            
+        } else {
+            prevPos = cop.getCurrentOrderPosition().toList();
+            prevPosString = cop.getCurrentOrderPosition().toString();
+        }
+        if (prevPos != null) {
+//            final String prevPString = prevPosString;
+//            Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
+//                    .toString().equals(prevPString)).findFirst();
+            HistoricOutcome h = null;
+            for (HistoricOutcome ho : cop.getHistoricOutcomes()) {
+                if (JPosition.fromList(ho.getPosition()).get().toString().equals(prevPosString)) {
+                    h = ho;
+                }
+            }
+            if (h != null) {
+                //HistoricOutcome h = hoOpt.get();
+                Variables v = h.getOutcome().getNamedValues();
+                if (v == null) {
+                    v = new Variables();
+                }
+                v.setAdditionalProperties(variables.getAdditionalProperties());
+                if ("Disrupted".equals(h.getOutcome().getTYPE())) {
+                    String errMsg = null;
+                    try {
+                        errMsg = h.getOutcome().getReason().getProblem().getMessage();
+                    } catch (Exception e) {
+                        //
+                    }
+                    h = new HistoricOutcome(prevPos, new Outcome("Failed", errMsg, v, null, null));
+                } else {
+                    h.getOutcome().setNamedValues(v);
+                }
+                historyOperations = getJHistoricOperations(h, jocError, "replace", null);
+            } else {
+                Variables v = new Variables();
+                v.setAdditionalProperties(variables.getAdditionalProperties());
+                historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)),
+                        jocError, "append", null);
+            }
+        } else {
+            Variables v = new Variables();
+            v.setAdditionalProperties(variables.getAdditionalProperties());
+            List<Object> posList = new LinkedList<>(cop.getCurrentOrderPosition().toList());
+            int prev = ((Integer) posList.remove(posList.size() - 1)) - 1;
+            posList.add(Math.max(0, prev));
+            historyOperations = getJHistoricOperations(new HistoricOutcome(posList, new Outcome("Succeeded", null, v, null, null)),
+                    jocError, "insert", cop.getCurrentOrderPosition());
+        }
+        return historyOperations;
     }
 
     private static List<JHistoryOperation> getJHistoricOperations(HistoricOutcome h, JocError err, String command, JPosition posBefore)
