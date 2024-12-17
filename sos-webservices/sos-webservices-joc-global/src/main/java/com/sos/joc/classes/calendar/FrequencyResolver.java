@@ -566,7 +566,7 @@ public class FrequencyResolver {
     private void addWeekDays(List<WeekDays> weekDays, Calendar from, Calendar to) throws SOSInvalidDataException {
         if (weekDays != null) {
             for (WeekDays weekDay : weekDays) {
-                addAll(resolveWeekDays(weekDay, from, to));
+                addAll(resolveWeekDays(weekDay, from, to, false));
             }
         }
     }
@@ -574,7 +574,7 @@ public class FrequencyResolver {
     private void addWeekDays(Map<String, Calendar> dates, List<WeekDays> weekDays, Calendar from, Calendar to) throws SOSInvalidDataException {
         if (weekDays != null) {
             for (WeekDays weekDay : weekDays) {
-                addAll(dates, resolveWeekDays(weekDay, from, to));
+                addAll(dates, resolveWeekDays(weekDay, from, to, false));
             }
         }
     }
@@ -582,7 +582,7 @@ public class FrequencyResolver {
     private void removeWeekDays(List<WeekDays> weekDays, Calendar from, Calendar to) throws SOSInvalidDataException {
         if (weekDays != null) {
             for (WeekDays weekDay : weekDays) {
-                removeAll(resolveWeekDays(weekDay, from, to));
+                removeAll(resolveWeekDays(weekDay, from, to, false));
             }
         }
     }
@@ -793,7 +793,8 @@ public class FrequencyResolver {
         return d;
     }
 
-    private Map<String, Calendar> resolveWeekDays(WeekDays weekDay, Calendar cfrom, Calendar cto) throws SOSInvalidDataException {
+    private Map<String, Calendar> resolveWeekDays(WeekDays weekDay, Calendar cfrom, Calendar cto, boolean calculateMissingDates)
+            throws SOSInvalidDataException {
         List<Integer> days = weekDay.getDays();
         if (days == null || days.isEmpty()) {
             throw new SOSInvalidDataException("json field 'days' in 'weekdays' is undefined.");
@@ -803,9 +804,8 @@ public class FrequencyResolver {
         }
 
         Map<String, Calendar> dates = new HashMap<String, Calendar>();
-        Calendar from = getFrom(weekDay.getFrom(), cfrom);
-        Calendar to = getTo(weekDay.getTo(), cto);
-
+        Calendar from = calculateMissingDates ? clone(cfrom) : getFrom(weekDay.getFrom(), cfrom);
+        Calendar to = calculateMissingDates ? clone(cto) : getTo(weekDay.getTo(), cto);
         while (from.compareTo(to) <= 0) {
             // Calendar.DAY_OF_WEEK: 1=Sunday, 2=Monday, ... -> -1
             if (days.contains(from.get(Calendar.DAY_OF_WEEK) - 1)) {
@@ -922,8 +922,8 @@ public class FrequencyResolver {
             }
             if (date.getValue().after(to)) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][break][after to]%s", SOSDate.getDateTimeAsString(date.getValue()), SOSDate.getDateTimeAsString(
-                            to)));
+                    LOGGER.debug(String.format("[%s]", SOSDate.getDateTimeAsString(date.getValue())));
+                    LOGGER.debug(String.format("    [skip][break][after to]%s", SOSDate.getDateTimeAsString(to)));
                 }
                 break;
             }
@@ -964,8 +964,8 @@ public class FrequencyResolver {
 
                 if (checkMissingDays) {
                     missingDaysResolved = true;
-                    // List<String> missingDays = getDatesFromIncludes(this.dateFrom, dateFromOrig, false);
-                    List<String> missingDays = getDatesFromIncludes(this.dateFrom, curDate, false);
+                    // List<String> missingDays = getMissingDatesFromBaseCalendar(this.dateFrom, dateFromOrig, false);
+                    List<String> missingDays = getMissingDatesFromBaseCalendar(this.dateFrom, curDate, false);
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("    [missingDays][fromFirstDayOfMonth]from=%s,to=%s", SOSDate.getDateTimeAsString(this.dateFrom),
                                 debugCurDate));
@@ -1152,8 +1152,7 @@ public class FrequencyResolver {
     }
 
     // used by restrictions
-    // TODO from, to is not really used
-    private List<String> getDatesFromIncludes(Calendar from, Calendar to, boolean isUltimos) throws SOSInvalidDataException {
+    private List<String> getMissingDatesFromBaseCalendar(Calendar from, Calendar to, boolean isUltimos) throws SOSInvalidDataException {
         Map<String, Calendar> result = new HashMap<>();
 
         if (!SOSCollection.isEmpty(baseCalendarIncludes.getDates())) {
@@ -1168,7 +1167,7 @@ public class FrequencyResolver {
 
         if (!SOSCollection.isEmpty(baseCalendarIncludes.getWeekdays())) {
             for (WeekDays weekDay : baseCalendarIncludes.getWeekdays()) {
-                result.putAll(resolveWeekDays(weekDay, from, to));
+                result.putAll(resolveWeekDays(weekDay, from, to, true));
             }
         }
 
@@ -1210,7 +1209,7 @@ public class FrequencyResolver {
 
             if (result.size() > 0 && !SOSCollection.isEmpty(baseCalendarExcludes.getWeekdays())) {
                 for (WeekDays weekDay : baseCalendarExcludes.getWeekdays()) {
-                    result = removeDays(result, resolveWeekDays(weekDay, from, to));
+                    result = removeDays(result, resolveWeekDays(weekDay, from, to, true));
                 }
             }
 
@@ -1388,7 +1387,7 @@ public class FrequencyResolver {
                 if (!missingDaysResolved && baseCalendarIncludes != null && ((toBeforeLastDayOfMonthCalendar
                         && lastDayOfMonthCalendarMonth == curMonth) || !SOSCollection.isEmpty(baseCalendarIncludes.getRepetitions()))) {
                     missingDaysResolved = true;
-                    List<String> missingDays = getDatesFromIncludes(from, lastDayOfMonthCalendar, true);
+                    List<String> missingDays = getMissingDatesFromBaseCalendar(from, lastDayOfMonthCalendar, true);
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[%s][%s][fromLastDayOfMonth][start][from=%s, to=%s]%s", method, SOSDate.getDateTimeAsString(
                                 curDate), SOSDate.getDateTimeAsString(from), SOSDate.getDateTimeAsString(lastDayOfMonthCalendar), String.join(",",
@@ -1727,7 +1726,7 @@ public class FrequencyResolver {
                 if (!missingDaysResolved) {
                     missingDaysResolved = true;
                     if (curDate.after(from)) {
-                        List<String> missingDays = getDatesFromIncludes(from, curDate, false);
+                        List<String> missingDays = getMissingDatesFromBaseCalendar(from, curDate, false);
                         int s = missingDays.size();
                         int diff = 0;
                         if (s > 0) {
@@ -1773,7 +1772,7 @@ public class FrequencyResolver {
                 if (!missingDaysResolved) {
                     missingDaysResolved = true;
                     if (curDate.after(from)) {
-                        List<String> missingDays = getDatesFromIncludes(from, curDate, false);
+                        List<String> missingDays = getMissingDatesFromBaseCalendar(from, curDate, false);
                         for (String md : missingDays) {
                             Calendar mdc = getCalendar(md);
                             if (mdc.equals(curDate)) {
@@ -1844,7 +1843,7 @@ public class FrequencyResolver {
                 if (!missingDaysResolved) {
                     missingDaysResolved = true;
                     if (curDate.after(from)) {
-                        List<String> missingDays = getDatesFromIncludes(from, curDate, false);
+                        List<String> missingDays = getMissingDatesFromBaseCalendar(from, curDate, false);
                         for (String md : missingDays) {
                             Calendar mdc = getCalendar(md);
                             if (mdc.equals(curDate)) {
@@ -1953,7 +1952,7 @@ public class FrequencyResolver {
                 if (!missingDaysResolved) {
                     missingDaysResolved = true;
                     if (curDate.after(from)) {
-                        List<String> missingDays = getDatesFromIncludes(from, curDate, false);
+                        List<String> missingDays = getMissingDatesFromBaseCalendar(from, curDate, false);
                         for (String md : missingDays) {
                             Calendar mdc = getCalendar(md);
                             if (mdc.equals(curDate)) {
