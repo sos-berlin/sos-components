@@ -1546,12 +1546,7 @@ public class InventorySearchDBLayer extends DBLayer {
             if (!SOSString.isEmpty(operator)) {
                 hql.append(operator).append(" ");// and,or ..
             }
-            String jsonFunc = null;
-            if (!getSession().getFactory().getDatabaseMetaData().supportJsonReturningClob() && jsonAttribute.equals("$.scripts")) {
-                jsonFunc = columnName;
-            } else {
-                jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
-            }
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
             hql.append("lower(").append(jsonFunc).append(") ");
             if (paramValue.equals(FIND_ALL)) {
                 hql.append("is not null ");

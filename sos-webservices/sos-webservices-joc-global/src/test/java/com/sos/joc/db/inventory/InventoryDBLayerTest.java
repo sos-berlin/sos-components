@@ -337,6 +337,33 @@ public class InventoryDBLayerTest {
         }
     }
 
+    @Ignore
+    @Test
+    public void testGetUsedReleasedSchedulesByWorkflowName() {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+
+        String workflowName = "test";
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+
+            List<DBItemInventoryReleasedConfiguration> result = dbLayer.getUsedReleasedSchedulesByWorkflowName(workflowName);
+            // getUsedSchedulesByWorkflowName(session, workflowName); //
+            for (DBItemInventoryReleasedConfiguration entry : result) {
+                LOGGER.info(SOSString.toString(entry));
+            }
+            LOGGER.info("SIZE=" + result.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
     @SuppressWarnings("unused")
     private List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowName(SOSHibernateSession session, String workflowName)
             throws SOSHibernateException {
@@ -354,7 +381,7 @@ public class InventoryDBLayerTest {
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.h2.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.mysql.xml"));
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.build();
         return factory;

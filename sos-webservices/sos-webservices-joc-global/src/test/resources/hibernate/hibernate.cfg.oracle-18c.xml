@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<hibernate-configuration>
+ <session-factory>
+  	<property name="hibernate.dialect">org.hibernate.dialect.Oracle12cDialect</property>
+  
+  	<property name="jakarta.persistence.jdbc.driver">oracle.jdbc.OracleDriver</property>
+  	<property name="jakarta.persistence.jdbc.url">jdbc:oracle:thin:@//minos.sos:1521/xe</property>
+  	<property name="jakarta.persistence.jdbc.user">enc:BCVBVeq3eIUJfGCLNOCGu7nPPLPBD0M1jCJlkV1zRghICwpZfdLoRjHiCB6s821oSXKgTESRqTC6SjatXI6sMgxz4kNIdpVAAoAS3IZ6MI+O138yQw/GRO+yANGzRH8EAFkKOtjpqN6tScoe6QOC1GNiLP3U H3Cmh1+g8IJM+zc3FG9sWw== b04NjhnzAOoWfyJFD9zjaw==</property>
+  	<property name="jakarta.persistence.jdbc.password">enc:BCVBVeq3eIUJfGCLNOCGu7nPPLPBD0M1jCJlkV1zRghICwpZfdLoRjHiCB6s821oSXKgTESRqTC6SjatXI6sMgxz4kNIdpVAAoAS3IZ6MI+O138yQw/GRO+yANGzRH8EAFkKOtjpqN6tScoe6QOC1GNiLP3U H3Cmh1+g8IJM+zc3FG9sWw== b04NjhnzAOoWfyJFD9zjaw==</property>
+  	
+  	<property name="hibernate.show_sql">false</property>
+  	<property name="hibernate.format_sql">true</property>
+  
+  	<!-- Hikari Connection Pool -->
+  	<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+  	<property name="hibernate.hikari.maximumPoolSize">10</property>
+  	<property name="hibernate.hikari.leakDetectionThreshold">30000</property>
+  	<property name="hibernate.sos.decryption_key">../../sos-jitl/sos-jitl-jobs/src/test/resources/encryption/ec_test.key</property>
+ </session-factory>
+</hibernate-configuration>
