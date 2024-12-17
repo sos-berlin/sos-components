@@ -54,6 +54,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.tag.ATagsModifyImpl;
 import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowRefs;
@@ -150,11 +151,15 @@ public class OrderTags {
         if (orderIdModifier.equals("D")) {
             SOSHibernateSession connection = null;
             try {
-                String orderIdPattern = orderId.substring(OrdersHelper.mainOrderIdLength, OrdersHelper.mainOrderIdLength + 19);
-                connection = Globals.createSosHibernateStatelessConnection("deleteAddOrderTags");
-                DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
-                if (dbItem != null) {
-                    connection.delete(dbItem);
+                String orderIdPattern = getOrderIdPattern(orderId);
+                boolean allAddOrderOrdersAreTerminated = Proxy.of(controllerId).currentState().ordersBy(o -> o.id().string().contains(orderIdPattern
+                        + "!")).count() == 0L;
+                if (allAddOrderOrdersAreTerminated) {
+                    connection = Globals.createSosHibernateStatelessConnection("deleteAddOrderTags");
+                    DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
+                    if (dbItem != null) {
+                        connection.delete(dbItem);
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.error("[deleteAddOrderTags][" + orderId + "]: " + e.toString(), e);
@@ -162,6 +167,10 @@ public class OrderTags {
                 Globals.disconnect(connection);
             }
         }
+    }
+    
+    private static String getOrderIdPattern(String orderId) {
+        return orderId.substring(OrdersHelper.mainOrderIdLength).replaceFirst("(\\d+-)?(\\d+)!.*$", "$2");
     }
     
     private void addHistoryIdToTags(String controllerId, String orderId, HistoryOrderBean payload) {
@@ -241,7 +250,7 @@ public class OrderTags {
     private synchronized void addTagsToOrderbyAddOrderInstruction(String controllerId, String orderId) {
         SOSHibernateSession connection = null;
         try {
-            String orderIdPattern = orderId.substring(OrdersHelper.mainOrderIdLength, OrdersHelper.mainOrderIdLength + 19);
+            String orderIdPattern = getOrderIdPattern(orderId);
             String addOrderIndex = orderId.substring(OrdersHelper.mainOrderIdLength - 3, OrdersHelper.mainOrderIdLength - 1);
             connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
             DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
