@@ -54,11 +54,8 @@ public class InventorySearchDBLayerTest {
             e.printStackTrace();
             // throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -72,12 +69,70 @@ public class InventorySearchDBLayerTest {
             String search = null;
             List<String> folders = new ArrayList<>();
             List<String> tags = new ArrayList<>();
+            Boolean unDeployedUnReleaseObjects = null;
+            Boolean valid = null;
             // folders.add("/x");
             // folders.add("/ssh");
 
             RequestSearchAdvancedItem advanced = new RequestSearchAdvancedItem();
             // advanced.setJobCountFrom(Integer.valueOf(2));
-            advanced.setJobName("job");
+            advanced.setJobName("job2");
+            advanced.setJobNameExactMatch(true);
+            // advanced.setAgentName("agent");
+            // advanced.setJobCriticality(JobCriticality.NORMAL);
+            advanced.setJobResource(null);
+            advanced.setNoticeBoard(null);
+            advanced.setLock(null);
+            advanced.setArgumentName(null);
+            advanced.setArgumentValue(null);
+            // advanced.setFileOrderSource("dailyplan");
+            // advanced.setWorkflow("dailyplan");
+            advanced.setCalendar(null);
+            // advanced.setSchedule("dailyplan");
+            advanced.setJobScript("echo");
+
+            factory = createFactory();
+            session = factory.openStatelessSession();
+            InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+            session.beginTransaction();
+
+            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders,
+                    tags, unDeployedUnReleaseObjects, valid, advanced);
+
+            LOGGER.info("RESULT=" + items.size());
+            for (InventorySearchItem item : items) {
+                LOGGER.info(SOSString.toString(item));
+            }
+
+            session.commit();
+        } catch (Exception e) {
+            try {
+                session.rollback();
+            } catch (Throwable ex) {
+            }
+            e.printStackTrace();
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testAdvancedSearchDeployedOrReleasedConfigurations() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            String search = null;
+            List<String> folders = new ArrayList<>();
+            List<String> tags = new ArrayList<>();
+            // folders.add("/x");
+            // folders.add("/ssh");
+
+            RequestSearchAdvancedItem advanced = new RequestSearchAdvancedItem();
+            // advanced.setJobCountFrom(Integer.valueOf(2));
+            advanced.setJobName("job2");
             advanced.setJobNameExactMatch(true);
             // advanced.setAgentName("agent");
             // advanced.setJobCriticality(JobCriticality.NORMAL);
@@ -97,8 +152,6 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            // List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.FILEORDERSOURCE, search,
-            // folders, advanced);
             List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType.CALENDAR, search,
                     folders, tags, advanced, "js7.x");
             LOGGER.info("RESULT=" + items.size());
@@ -114,17 +167,14 @@ public class InventorySearchDBLayerTest {
             }
             e.printStackTrace();
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.oracle.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.mysql.xml"));
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.build();
         return factory;
