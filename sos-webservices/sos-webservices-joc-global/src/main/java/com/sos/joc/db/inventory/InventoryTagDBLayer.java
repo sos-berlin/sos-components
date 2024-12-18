@@ -409,8 +409,7 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("update ").append(DBLayer.DBITEM_INV_TAGGINGS);
-            sql.append(" set cid=:cid");
-            sql.append(" set name=:name");
+            sql.append(" set cid=:cid, name=:name");
             sql.append(" where name=:trashName and type=:type");
 
             Query<String> query = getSession().createQuery(sql.toString());
