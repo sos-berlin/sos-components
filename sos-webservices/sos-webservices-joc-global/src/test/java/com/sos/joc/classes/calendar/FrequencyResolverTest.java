@@ -36,7 +36,7 @@ public class FrequencyResolverTest {
         Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_every_daily.json"));
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolve(calendar, from, to);
+        Dates dates = fr.resolveCalendar(calendar, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -49,7 +49,7 @@ public class FrequencyResolverTest {
         Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_months_weekdays.json"));
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolve(calendar, from, to);
+        Dates dates = fr.resolveCalendar(calendar, from, to);
         LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
@@ -62,15 +62,15 @@ public class FrequencyResolverTest {
         Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_months_every.json"));
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolve(calendar, from, to);
+        Dates dates = fr.resolveCalendar(calendar, from, to);
         LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
     @Ignore
     @Test
     public void restrictionsTest() throws Exception {
-        String from = "2022-02-03";
-        String to = "2022-02-04";
+        String from = "2024-12-17";
+        String to = "2024-12-28";
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions.json"));
 
@@ -174,7 +174,7 @@ public class FrequencyResolverTest {
     @Ignore
     @Test
     public void restrictionsMonthsEveryTest() throws Exception {
-        String from = "2024-11-10";
+        String from = "2024-12-17";
         String to = "2025-12-31";
 
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));

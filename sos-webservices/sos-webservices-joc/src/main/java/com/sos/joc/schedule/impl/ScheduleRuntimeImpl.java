@@ -167,7 +167,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                         continue;
                     }
                     Calendar basedOn = Globals.objectMapper.readValue(nameContentMap.get(c.getCalendarName()), Calendar.class);
-                    nonWorkingDays.addAll(fr.resolve(basedOn, in.getDateFrom(), in.getDateTo()).getDates());
+                    nonWorkingDays.addAll(fr.resolveCalendar(basedOn, in.getDateFrom(), in.getDateTo()).getDates());
                 }
             }
         }
