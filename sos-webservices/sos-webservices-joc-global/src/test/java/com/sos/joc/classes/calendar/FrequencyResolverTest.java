@@ -30,8 +30,8 @@ public class FrequencyResolverTest {
     @Ignore
     @Test
     public void calendarEveryDailyTest() throws Exception {
-        String from = "2022-04-16";
-        String to = "2022-05-31";
+        String from = "2024-12-18";
+        String to = "2024-12-18";
 
         Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_every_daily.json"));
 
@@ -82,9 +82,9 @@ public class FrequencyResolverTest {
     @Ignore
     @Test
     public void restrictionsEveryDailyTest() throws Exception {
-        String from = "2022-02-03";
-        String to = "2022-05-04";
-        from = null;
+        String from = "2024-12-18";
+        String to = "2024-12-31";
+        // from = null;
         // to = null;
 
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
@@ -175,7 +175,7 @@ public class FrequencyResolverTest {
     @Test
     public void restrictionsMonthsEveryTest() throws Exception {
         String from = "2024-12-17";
-        String to = "2025-12-31";
+        String to = "2024-12-31";
 
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_months_every.json"));
