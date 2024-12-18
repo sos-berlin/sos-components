@@ -64,6 +64,7 @@
     <postgresql.version>42.7.4</postgresql.version>
     <sos.ojdbc8.version>19.25.0.0</sos.ojdbc8.version>
     <classmate.version>1.3.0</classmate.version>
+
     <com.sun.javax.mail.version>1.6.2</com.sun.javax.mail.version>
     <jersey.glassfish.version>3.1.6</jersey.glassfish.version>
     <io.vavr.version>0.10.4</io.vavr.version>
@@ -200,6 +201,7 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.21.0</version>
+
         </plugin>
         <plugin>
           <artifactId>maven-dependency-plugin</artifactId>
@@ -442,6 +444,7 @@
         <artifactId>jackson-dataformat-xml</artifactId>
         <version>${jackson.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
@@ -450,6 +453,7 @@
       <dependency>
         <groupId>javax.xml.bind</groupId>
         <artifactId>jaxb-api</artifactId>
+
         <version>${jaxb.api.version}</version>
       </dependency>
       <dependency>
@@ -610,6 +614,7 @@
     	<artifactId>jakarta.ws.rs-api</artifactId>
         <version>${jakarta.ws.rs-api.version}</version>
       </dependency>
+
       <dependency>
         <groupId>com.sun.mail</groupId>
         <artifactId>javax.mail</artifactId>
@@ -697,6 +702,7 @@
         <artifactId>javassist</artifactId>
         <version>${javassist.version}</version>
       </dependency>
+
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
@@ -723,6 +729,7 @@
         <artifactId>mariadb-java-client</artifactId>
         <version>${maria.db.driver.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-client</artifactId>
@@ -775,6 +782,7 @@
         <version>${log4j2.version}</version>
       </dependency>
       <dependency>
+
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk15to18</artifactId>  
         <version>${bouncycastle.version}</version>
@@ -929,6 +937,7 @@
         <artifactId>json-schema-validator</artifactId>
         <version>${json.schema.validator.version}</version>
       </dependency>
+
     </dependencies>
   </dependencyManagement>
 </project>
