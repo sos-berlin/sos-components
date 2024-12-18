@@ -458,7 +458,7 @@ public class DailyPlanHelper {
                 if (c == null) {
                     continue;
                 }
-                result.addAll(fr.resolve(c, dateFrom, dateTo).getDates());
+                result.addAll(fr.resolveCalendar(c, dateFrom, dateTo).getDates());
             }
         }
         return result;

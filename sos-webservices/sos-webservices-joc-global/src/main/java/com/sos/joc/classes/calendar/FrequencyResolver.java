@@ -68,9 +68,9 @@ public class FrequencyResolver {
     public FrequencyResolver() {
     }
 
-    public Dates resolve(CalendarDatesFilter calendarFilter) throws SOSMissingDataException, SOSInvalidDataException {
+    public Dates resolveCalendar(CalendarDatesFilter calendarFilter) throws SOSMissingDataException, SOSInvalidDataException {
         if (calendarFilter != null) {
-            return resolve(calendarFilter.getCalendar(), calendarFilter.getDateFrom(), calendarFilter.getDateTo());
+            return resolveCalendar(calendarFilter.getCalendar(), calendarFilter.getDateFrom(), calendarFilter.getDateTo());
         } else {
             Dates d = new Dates();
             d.setDates(new ArrayList<String>());
@@ -80,7 +80,7 @@ public class FrequencyResolver {
         }
     }
 
-    public Dates resolve(com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException,
+    public Dates resolveCalendar(com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
 
         if (LOGGER.isDebugEnabled()) {

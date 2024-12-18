@@ -85,7 +85,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
                 throw new JocMissingRequiredParameterException("undefined 'calendar'");
             }
 
-            return new FrequencyResolver().resolve(in);
+            return new FrequencyResolver().resolveCalendar(in);
         } finally {
             Globals.disconnect(session);
         }
