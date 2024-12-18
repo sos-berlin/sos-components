@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,11 +61,13 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
     private static DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
     private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
 
+    // temporary properties for testing - JOC-1980
     // true (new behavior) - create a preview per day in the date range, like the DailyPlan does
     // - TODO in some cases performance problems(next year view), e.g. Every 2nd day starting with day 01.12.2024 of Dec ...
     // -- because Every/Repetitions is calculated from a specific start day - so if start=2024.. there is more to calculate for 2030 than for 2025...
     // false (previous behavior) - create a preview for the entire date range with one call
-    private static final boolean DAILY_PLAN_MODE = false;
+    private static final boolean TMP_DAILY_PLAN_MODE = false;
+    private static final boolean TMP_DAILY_PLAN_MODE_PARALLEL = true;
 
     @Override
     public JOCDefaultResponse postScheduleRuntime(String accessToken, byte[] filterBytes) {
@@ -123,11 +126,25 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                         restrictions.setIncludes(c.getIncludes());
                         // restrictions.setExcludes(c.getExcludes());
                         Calendar basedOn = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
-                        if (DAILY_PLAN_MODE) {
-                            for (String asDailyPlanSingleDay : SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo())) {
-                                new FrequencyResolver().resolveRestrictions(basedOn, restrictions, asDailyPlanSingleDay, asDailyPlanSingleDay)
-                                        .getDates().stream().flatMap(date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone,
-                                                getJocError())).collect(Collectors.toCollection(() -> periods));
+                        if (TMP_DAILY_PLAN_MODE) {
+                            if (TMP_DAILY_PLAN_MODE_PARALLEL) {
+                                Set<Period> singleDatesPeriods = ConcurrentHashMap.newKeySet();
+                                SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo()).stream().parallel().forEach(asDailyPlanSingleDate -> {
+                                    try {
+                                        singleDatesPeriods.addAll(new FrequencyResolver().resolveRestrictions(basedOn, restrictions,
+                                                asDailyPlanSingleDate, asDailyPlanSingleDate).getDates().stream().flatMap(date -> getPeriods(c
+                                                        .getPeriods(), nonWorkingDays, date, timezone, getJocError())).collect(Collectors.toSet()));
+                                    } catch (Throwable e) {
+                                        LOGGER.info("[" + API_CALL + "][FrequencyResolver.resolveRestrictions]" + e, e);
+                                    }
+                                });
+                                periods.addAll(singleDatesPeriods);
+                            } else {
+                                for (String asDailyPlanSingleDate : SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo())) {
+                                    new FrequencyResolver().resolveRestrictions(basedOn, restrictions, asDailyPlanSingleDate, asDailyPlanSingleDate)
+                                            .getDates().stream().flatMap(date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone,
+                                                    getJocError())).collect(Collectors.toCollection(() -> periods));
+                                }
                             }
                         } else {
                             fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
