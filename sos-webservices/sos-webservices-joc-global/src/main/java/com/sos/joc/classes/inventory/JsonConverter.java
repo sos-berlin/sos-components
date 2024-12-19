@@ -546,10 +546,10 @@ public class JsonConverter {
         //      #2022-01-01#T12345678901-test|branchname of parent orderId -> test|branchname -> test
         // resp.
         //      #2022-01-01#T12345678901-2022010112345678901!-test|branchname of parent orderId -> test|branchname -> test
-        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%1$s') ++ '#D' ++ %2$s ++ uniqueOrderId('%3$s')"
-                + " ++ '-' ++ replaceAll(replaceAll($js7OrderId, '^(%4$s)-.*$', '$1'), '\\D', \"\")"
-                + " ++ replaceAll(replaceAll($js7OrderId, '^%4$s-([^!]+!-)?(.*)$', '$2'), '^([^|]+).*', '!-$1')";
-        sao.setOrderId(String.format(idPattern, timeZone, OrdersHelper.mainOrderIdControllerPattern, sAddOrderIndex + "-%05d", datetimePattern));
+        String idPattern = "uniqueOrderId('#' ++ now(format='yyyy-MM-dd', timezone='%1$s') ++ '#D' ++ %2$s ++ '%3$s'"
+                + " ++ replaceAll(replaceAll($js7OrderId, '^(%4$s)-.*$', '$1'), '\\D', \"\")"
+                + " ++ replaceAll(replaceAll($js7OrderId, '^%4$s-([^!]+!-)?(.*)$', '$2'), '^([^|]+).*', '!-$1'))";
+        sao.setOrderId(String.format(idPattern, timeZone, OrdersHelper.mainOrderIdControllerPattern, sAddOrderIndex + "-%05d-", datetimePattern));
 
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {
             sao.getArguments().getAdditionalProperties().replaceAll((k, v) -> quoteVariable(v));
