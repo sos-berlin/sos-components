@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
+import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;

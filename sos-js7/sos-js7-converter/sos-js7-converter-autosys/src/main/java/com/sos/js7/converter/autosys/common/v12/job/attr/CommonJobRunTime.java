@@ -3,6 +3,7 @@ package com.sos.js7.converter.autosys.common.v12.job.attr;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -212,6 +213,10 @@ public class CommonJobRunTime extends AJobAttributes {
         return dateConditions;
     }
 
+    public boolean hasRunWindow() {
+        return runWindow.getValue() != null;
+    }
+
     public boolean hasDateConditions() {
         return dateConditions.getValue() != null && dateConditions.getValue().booleanValue();
     }
@@ -243,32 +248,50 @@ public class CommonJobRunTime extends AJobAttributes {
     public class RunWindow {
 
         private final String from;
+        private final long fromAsSeconds;
         private final String to;
+        private final long toAsSeconds;
+
+        private final Long durationInSeconds;
 
         private RunWindow(String val) {
             String[] arr = JS7ConverterHelper.stringValue(val).split("-");
             this.from = arr[0].trim();
+            this.fromAsSeconds = SOSDate.getTimeAsSeconds(this.from);
             this.to = arr[1].trim();
+            this.toAsSeconds = SOSDate.getTimeAsSeconds(this.to);
+
+            this.durationInSeconds = Long.valueOf(SOSDate.getTimeIntervalInSeconds(this.fromAsSeconds, this.toAsSeconds));
         }
 
         public String getFrom() {
             return from;
         }
 
+        public long getFromAsSeconds() {
+            return fromAsSeconds;
+        }
+
         public String getTo() {
             return to;
         }
 
+        public long getToAsSeconds() {
+            return toAsSeconds;
+        }
+
+        public Long getDurationInSeconds() {
+            return durationInSeconds;
+        }
+
         @Override
         public String toString() {
-            List<String> l = new ArrayList<>();
-            if (from != null) {
-                l.add("from=" + from);
-            }
-            if (to != null) {
-                l.add("to=" + to);
-            }
-            return String.join(",", l);
+            StringBuilder sb = new StringBuilder();
+            sb.append("[from=").append(from);
+            sb.append(",to=").append(to);
+            sb.append(",durationInSeconds=").append(durationInSeconds);
+            sb.append("]");
+            return sb.toString();
         }
     }
 

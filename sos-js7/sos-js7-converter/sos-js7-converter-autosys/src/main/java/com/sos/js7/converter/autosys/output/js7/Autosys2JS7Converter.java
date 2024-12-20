@@ -19,19 +19,24 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
+import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
 import com.sos.js7.converter.autosys.input.AFileParser;
@@ -40,14 +45,17 @@ import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult
 import com.sos.js7.converter.autosys.input.JILJobParser;
 import com.sos.js7.converter.autosys.input.XMLJobParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
+import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.OutConditionHolder;
 import com.sos.js7.converter.autosys.output.js7.helper.AdditionalInstructionsHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.BoardHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.ConverterBOXJobs;
 import com.sos.js7.converter.autosys.output.js7.helper.ConverterStandaloneJobs;
 import com.sos.js7.converter.autosys.output.js7.helper.LockHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.PathResolver;
 import com.sos.js7.converter.autosys.output.js7.helper.Report;
 import com.sos.js7.converter.autosys.output.js7.helper.RetryHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.RunTimeHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.bean.Job2Condition;
 import com.sos.js7.converter.autosys.output.js7.helper.bean.Resource2Lock;
 import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobsHelper;
 import com.sos.js7.converter.autosys.report.AutosysReport;
@@ -292,9 +300,8 @@ public class Autosys2JS7Converter {
                 converterStandaloneJobs.convert(standaloneJobs, key);
                 break;
             case FW:
-                LOGGER.info(String.format("[%s][%s jobs=%s]not implemented yet", method, key, size));
                 for (ACommonJob j : value) {
-                    ConverterReport.INSTANCE.addAnalyzerRecord(j.getSource(), j.getName(), j.getJobType().getValue() + ":not implemented yet");
+                    c.convertStandaloneFW(result, (JobFW) j);
                 }
                 break;
             case BOX:
@@ -324,6 +331,96 @@ public class Autosys2JS7Converter {
         // AutosysReport.analyze(standaloneJobs, boxJobs);
         // return result;
         return new ConverterResult(result, standaloneJobs, boxJobs);
+    }
+
+    // generates a dummy workflow that creates a post-notice and a file order source
+    // - this allows multiple other workflows to be triggered from a single file job source
+    private WorkflowResult convertStandaloneFW(JS7ConverterResult result, JobFW jilJob) {
+        try {
+            OutConditionHolder h = analyzer.getConditionAnalyzer().getJobOUTConditions(jilJob);
+            if (h == null) {
+                LOGGER.info("[FW][" + jilJob.getName() + "]IGNORED BECAUSE NOT USED");
+                ConverterReport.INSTANCE.addAnalyzerRecord(jilJob.getSource(), jilJob.getName(), jilJob.getJobType().getValue()
+                        + "[standalone FW]IGNORED BECAUSE NOT USED");
+                return null;
+            }
+
+            Map<String, Job2Condition> jobsConditions = new HashMap<>();
+            h.getJobConditions().values().forEach(e -> {
+                e.values().forEach(c -> {
+                    String key = c.getKey();
+                    if (!jobsConditions.containsKey(key)) {
+                        jobsConditions.put(key, new Job2Condition(null, c));
+                    }
+                });
+            });
+            if (jobsConditions.size() == 0) {
+                LOGGER.info("[FW][" + jilJob.getName() + "]IGNORED BECAUSE NO JOBS FOUND");
+                ConverterReport.INSTANCE.addAnalyzerRecord(jilJob.getSource(), jilJob.getName(), jilJob.getJobType().getValue()
+                        + "[standalone FW]IGNORED BECAUSE NO JOBS FOUND");
+                return null;
+            }
+
+            String runTimeTimezone = jilJob.getRunTime().getTimezone().getValue();
+            // WORKFLOW only with a PostNotice
+            Workflow w = new Workflow();
+            w.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(jilJob.getDescription().getValue()));
+            w.setTimeZone(runTimeTimezone == null ? Autosys2JS7Converter.CONFIG.getWorkflowConfig().getDefaultTimeZone() : runTimeTimezone);
+
+            WorkflowResult wr = new WorkflowResult();
+            wr.setName(JS7ConverterHelper.getJS7ObjectName(jilJob.getName()));
+            wr.setPath(PathResolver.getJS7WorkflowPath(jilJob, wr.getName()));
+            wr.setTimezone(w.getTimeZone(), runTimeTimezone != null);
+
+            List<Instruction> in = new ArrayList<>();
+            PostNotices pn = BoardHelper.newPostNotices(analyzer, jilJob, jobsConditions.values().stream().collect(Collectors.toSet()));
+            in.add(pn);
+            w.setInstructions(in);
+            result.add(wr.getPath(), w);
+
+            // FILE ORDER SOURCE
+            convertFileOrderSources(result, Collections.singletonList(jilJob), wr, null);
+            return wr;
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[convertStandaloneFW][%s]%s", jilJob.getName(), e.toString()), e);
+            return null;
+        }
+
+    }
+
+    public void convertFileOrderSources(JS7ConverterResult result, List<ACommonJob> fileOrderSources, WorkflowResult wr, JS7Agent js7Agent) {
+        if (fileOrderSources.size() > 0) {
+            for (ACommonJob n : fileOrderSources) {
+                JobFW j = (JobFW) n;
+                if (SOSString.isEmpty(j.getWatchFile().getValue())) {
+                    continue;
+                }
+                Path p = Paths.get(j.getWatchFile().getValue());
+
+                String name = JS7ConverterHelper.getJS7ObjectName(j.getName());
+                FileOrderSource fos = new FileOrderSource();
+                fos.setWorkflowName(wr.getName());
+
+                JS7Agent fwA = getAgent(j);
+                if (fwA == null) {
+                    if (js7Agent != null) {
+                        fos.setAgentName(js7Agent.getJS7AgentName());
+                    }
+                } else {
+                    fos.setAgentName(fwA.getJS7AgentName());
+                }
+
+                fos.setTimeZone(wr.getTimezone());
+                fos.setDirectoryExpr(JS7ConverterHelper.quoteValue4JS7(p.getParent().toString().replaceAll("\\\\", "/")));
+                fos.setPattern(p.getFileName().toString());
+                Long delay = null;
+                if (j.getWatchInterval().getValue() != null) {
+                    delay = j.getWatchInterval().getValue();
+                }
+                fos.setDelay(delay);
+                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(wr.getPath(), name), fos);
+            }
+        }
     }
 
     private void convertBoards(JS7ConverterResult result) {
@@ -373,7 +470,7 @@ public class Autosys2JS7Converter {
         j.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(jilJob.getDescription().getValue()));
         j = setFromConfig(j);
 
-        JS7Agent js7Agent = getAgent(result, j, jilJob);
+        JS7Agent js7Agent = getAgent(jilJob);
         j = JS7AgentHelper.setAgent(j, js7Agent);
         j = setExecutable(j, jilJob, js7Agent.getPlatform());
         j = setJobOptions(j, jilJob);
@@ -403,7 +500,7 @@ public class Autosys2JS7Converter {
         return j;
     }
 
-    private JS7Agent getAgent(JS7ConverterResult result, Job j, JobCMD jilJob) {
+    public JS7Agent getAgent(ACommonMachineJob jilJob) {
         String machine = JS7ConverterHelper.getJS7ObjectName(jilJob.getMachine().getValue());
         if (machine != null && machine2js7Agent.containsKey(machine)) {
             return machine2js7Agent.get(machine);

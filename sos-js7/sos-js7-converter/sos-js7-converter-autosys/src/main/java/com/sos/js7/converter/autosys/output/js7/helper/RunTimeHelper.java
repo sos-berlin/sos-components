@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.calendar.Period;
@@ -27,6 +28,7 @@ import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.DailyPeriod;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobRunTime.RunWindow;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
@@ -75,15 +77,22 @@ public class RunTimeHelper {
         }
         calendar.setIncludes(includes);
 
+        RunWindow runWindow = wr.hasAutosysRunWindow() ? j.getRunTime().getRunWindow().getValue() : null;
         List<Period> periods = new ArrayList<>();
         if (j.getRunTime().isSingleStarts()) {
-            for (String time : j.getRunTime().getStartTimes().getValue()) {
+            List<String> times = j.getRunTime().getStartTimes().getValue();
+            if (runWindow != null) {
+                times = SOSDate.getFilteredTimesInRange(runWindow.getFromAsSeconds(), runWindow.getToAsSeconds(), j.getRunTime().getStartTimes()
+                        .getValue());
+            }
+            for (String time : times) {
                 Period p = new Period();
                 p.setSingleStart(time);
                 p.setWhenHoliday(WhenHolidayType.SUPPRESS);
                 periods.add(p);
             }
         } else if (j.getRunTime().isCyclic()) {
+            // not used - cyclic workflow generated instead
             if (config.getGenerateConfig().getCyclicOrders()) {
                 Period p = new Period();
                 p.setBegin(JS7ConverterHelper.toMins(j.getRunTime().getStartMins().getValue().get(0)));
@@ -98,10 +107,14 @@ public class RunTimeHelper {
             LOGGER.info("[periords]" + periods);
         }
 
-        // Runtime provides only Timezone for Example
+        // Runtime provides only TimeZone for Example
         if (periods.size() == 0) {
             Period p = new Period();
-            p.setSingleStart("00:00");
+            if (runWindow != null) {
+                p.setSingleStart(runWindow.getFrom());
+            } else {
+                p.setSingleStart("00:00");
+            }
             p.setWhenHoliday(WhenHolidayType.SUPPRESS);
             periods.add(p);
         }
@@ -138,6 +151,7 @@ public class RunTimeHelper {
         return name;
     }
 
+    @SuppressWarnings("unused")
     private static String getNonWorkingDayCalendarName(JS7ConverterConfig config, ACommonJob j) {
         String name = null;
         if (config.getScheduleConfig().getForcedNonWorkingDayCalendarName() != null) {
@@ -153,6 +167,7 @@ public class RunTimeHelper {
         return name;
     }
 
+    @SuppressWarnings("unused")
     public static Scheme toCyclicInstruction(WorkflowResult wr, ACommonJob j, BoardTryCatchHelper btch) {
         if (!convert2cyclic(j)) {
             return null;
@@ -173,7 +188,7 @@ public class RunTimeHelper {
         }
 
         Periodic p = new Periodic();
-        p.setPeriod(3_600L);
+        p.setPeriod(3_600L);// 1h
         // TODO
         if (j.getRunTime().getStartMins().getValue().size() == 60) {
             p.setOffsets(Collections.singletonList(60L));
@@ -182,15 +197,21 @@ public class RunTimeHelper {
         }
 
         DailyPeriod dp = new DailyPeriod();
-        dp.setSecondOfDay(0L);
-        dp.setDuration(86_400L);
+        if (wr.hasAutosysRunWindow()) {
+            RunWindow runWindow = j.getRunTime().getRunWindow().getValue();
+            dp.setSecondOfDay(Long.valueOf(runWindow.getFromAsSeconds()));
+            dp.setDuration(Long.valueOf(runWindow.getDurationInSeconds()));
+        } else {
+            dp.setSecondOfDay(0L);
+            dp.setDuration(86_400L);
+        }
 
         CycleSchedule cs = new CycleSchedule(Collections.singletonList(new Scheme(p, new AdmissionTimeScheme(Collections.singletonList(dp)))));
 
         if (btch != null) {
             if (btch.getTryPostNotices() != null) {
                 wr.addPostNotices(btch.getTryPostNotices());
-               
+
                 in.add(btch.getTryPostNotices());
                 btch.resetTryPostNotices();
             }

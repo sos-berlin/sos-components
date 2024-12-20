@@ -18,6 +18,7 @@ public class WorkflowResult {
     private String timezone;
     private boolean isAutosysTimezone;
     private boolean cycle = false;
+    private boolean autosysRunWindow = false;
     private List<PostNotices> postNotices;
 
     public WorkflowResult() {
@@ -59,6 +60,14 @@ public class WorkflowResult {
 
     public boolean isCycle() {
         return cycle;
+    }
+
+    public void setAutosysRunWindow(boolean val) {
+        autosysRunWindow = val;
+    }
+
+    public boolean hasAutosysRunWindow() {
+        return autosysRunWindow;
     }
 
     public void addPostNotices(PostNotices val) {

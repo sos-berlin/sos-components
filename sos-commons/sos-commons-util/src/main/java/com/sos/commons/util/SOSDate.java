@@ -11,10 +11,12 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -430,6 +432,58 @@ public class SOSDate {
         return dates;
     }
 
+    /** Examples(fromTime,toTime): <br/>
+     * - 04:00 to 23:00<br/>
+     * - 04:00 to 01:00<br/>
+     * 
+     * @param fromTime format: s, hh:mm:ss, hh:mm
+     * @param toTime format: s, hh:mm:ss, hh:mm
+     * @param times format: s, hh:mm:ss, hh:mm<br/>
+     * 
+     * @return filtered result */
+    public static List<String> getFilteredTimesInRange(String fromTime, String toTime, List<String> times) {
+        return getFilteredTimesInRange(getTimeAsSeconds(fromTime), getTimeAsSeconds(toTime), times);
+    }
+
+    /** @param fromSeconds - day seconds based from format s, hh:mm:ss, hh:mm
+     * @param toSeconds - day seconds based from format s, hh:mm:ss, hh:mm
+     * @param times
+     * @return */
+    public static List<String> getFilteredTimesInRange(long fromSeconds, long toSeconds, List<String> times) {
+        // from=00:00 to=00:00
+        if (fromSeconds == 0 && toSeconds == 0) {
+            return times;
+        }
+
+        boolean isOverMidnight = fromSeconds > toSeconds;// from=04:00 to=01:00
+        final long endOfDay = 86_400;// 24h in seconds
+
+        return times.stream().filter(time -> {
+            long timeSeconds = getTimeAsSeconds(time);
+            if (isOverMidnight) {
+                return (timeSeconds >= fromSeconds && timeSeconds < endOfDay) // before midnight
+                        || (timeSeconds >= 0 && timeSeconds <= toSeconds);  // after midnight
+            } else {
+                return timeSeconds >= fromSeconds && timeSeconds <= toSeconds;
+            }
+        }).collect(Collectors.toList());
+    }
+
+    public static long getTimeIntervalInSeconds(String fromTime, String toTime) {
+        return getTimeIntervalInSeconds(getTimeAsSeconds(fromTime), getTimeAsSeconds(toTime));
+    }
+
+    public static long getTimeIntervalInSeconds(long fromSeconds, long toSeconds) {
+        final long endOfDay = 86_400;
+        if (fromSeconds == toSeconds) {
+            return endOfDay;
+        } else if (fromSeconds < toSeconds) {
+            return toSeconds - fromSeconds;
+        } else {
+            return endOfDay - fromSeconds + toSeconds;
+        }
+    }
+
     public static void main(String[] args) {
         try {
             Date d = new Date();
@@ -443,6 +497,10 @@ public class SOSDate {
             System.out.println(SOSDate.getDurationOfSeconds(100_000));
             System.out.println(SOSDate.add(new Date(), 3, ChronoUnit.DAYS));
             System.out.println(SOSDate.add(new Date(), -3, ChronoUnit.DAYS));
+
+            List<String> times = Arrays.asList("00:02", "04:01", "04:30", "05:00", "05:02", "23:00", "23:01");
+            System.out.println(SOSDate.getFilteredTimesInRange("05:00", "23:00", times));
+            System.out.println(SOSDate.getFilteredTimesInRange("05:00", "04:01", times));
         } catch (Exception e) {
             System.err.println("..error: " + e.toString());
         }

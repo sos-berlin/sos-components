@@ -72,12 +72,12 @@ public class BoardHelper {
         val = val.replace("()", "");
         val = val.replace("( && )", "");
         val = val.replace("( || )", "");
-        
+
         val = val.replace("( || '", "('");
         val = val.replace("' || )", "')");
         val = val.replace("( && '", "('");
         val = val.replace("' && )", "')");
-        
+
         val = val.trim();
         if (SOSString.isEmpty(val)) {
             return null;
@@ -258,8 +258,6 @@ public class BoardHelper {
         if (h == null) {
             return null;
         }
-
-        LOGGER.info("D=" + h);
 
         Set<Condition> s = new HashSet<>();
         for (Map.Entry<String, Map<String, Condition>> me : h.getJobConditions().entrySet()) {

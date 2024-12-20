@@ -77,6 +77,7 @@ public class ConverterStandaloneJobs {
         wr.setName(JS7ConverterHelper.getJS7ObjectName(jilJob.getName()));
         wr.setPath(PathResolver.getJS7WorkflowPath(jilJob, wr.getName()));
         wr.setTimezone(w.getTimeZone(), runTimeTimezone != null);
+        wr.setAutosysRunWindow(jilJob.hasRunTime() && jilJob.getRunTime().hasRunWindow());
         // LOGGER.info("[convertStandalone]" + wr.getPath());
 
         // WORKFLOW JOBS

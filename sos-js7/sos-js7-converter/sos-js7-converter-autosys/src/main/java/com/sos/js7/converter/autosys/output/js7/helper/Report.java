@@ -863,8 +863,8 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_RUNTIME_RUN_WINDOW);
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.hasRunTime() && j.getRunTime().getRunWindow()
-                .getValue() != null).collect(Collectors.toList());
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.hasRunTime() && j.getRunTime().hasRunWindow()).collect(
+                Collectors.toList());
 
         if (jobs.size() == 0) {
             return;

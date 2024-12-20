@@ -660,7 +660,7 @@ public class JS7ConverterHelper {
             b.setExpectOrderToNoticeId("'" + boardName + "'");
             b.setPostOrderToNoticeId(b.getExpectOrderToNoticeId());
         }
-        return b;
+        return adjustBoard(b);
     }
 
     public static String getDefaultBoarderLifeTime() {
@@ -673,6 +673,12 @@ public class JS7ConverterHelper {
         b.setEndOfLife(endOfLife);
         b.setExpectOrderToNoticeId(orderToNoticeId);
         b.setPostOrderToNoticeId(b.getExpectOrderToNoticeId());
+        return adjustBoard(b);
+    }
+
+    private static Board adjustBoard(Board b) {
+        // b.setVersion(null);
+        // b.setBoardType(null);
         return b;
     }
 

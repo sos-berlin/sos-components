@@ -1,7 +1,5 @@
 package com.sos.js7.converter.autosys.output.js7.helper;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Finish;
@@ -127,6 +124,7 @@ public class ConverterBOXJobs {
         wr.setName(JS7ConverterHelper.getJS7ObjectName(box.getName()));
         wr.setPath(PathResolver.getJS7WorkflowPath(box, wr.getName()));
         wr.setTimezone(w.getTimeZone(), boxRunTimeTimezone != null);
+        wr.setAutosysRunWindow(box.hasRunTime() && box.getRunTime().hasRunWindow());
         // LOGGER.info("[convertBoxWorkflow]" + wr.getPath());
 
         // WORKFLOW JOBS
@@ -300,7 +298,7 @@ public class ConverterBOXJobs {
                 String agentName = w.getJobs().getAdditionalProperties().entrySet().iterator().next().getValue().getAgentName();
                 JS7Agent a = new JS7Agent();
                 a.setJS7AgentName(agentName);
-                convertFileOrderSources(result, fileWatchers, wr, a);
+                converter.convertFileOrderSources(result, fileWatchers, wr, a);
             } catch (Throwable e) {
                 LOGGER.error("[convertBoxWorkflow][box=" + wr.getName() + "][convertFileOrderSources]" + e.toString(), e);
                 ConverterReport.INSTANCE.addErrorRecord(wr.getPath(), "[convertBoxWorkflow][box=" + wr.getName() + "]convertFileOrderSources", e);
@@ -473,33 +471,6 @@ public class ConverterBOXJobs {
             w.setOrderPreparation(new Requirements(ps, false));
         }
         return w;
-    }
-
-    private void convertFileOrderSources(JS7ConverterResult result, List<ACommonJob> fileOrderSources, WorkflowResult wr, JS7Agent js7Agent) {
-        if (fileOrderSources.size() > 0) {
-            for (ACommonJob n : fileOrderSources) {
-                JobFW j = (JobFW) n;
-                if (SOSString.isEmpty(j.getWatchFile().getValue())) {
-                    continue;
-                }
-
-                Path p = Paths.get(j.getWatchFile().getValue());
-
-                String name = JS7ConverterHelper.getJS7ObjectName(j.getName());
-                FileOrderSource fos = new FileOrderSource();
-                fos.setWorkflowName(wr.getName());
-                fos.setAgentName(js7Agent.getJS7AgentName());
-                fos.setTimeZone(wr.getTimezone());
-                fos.setDirectoryExpr(JS7ConverterHelper.quoteValue4JS7(p.getParent().toString().replaceAll("\\\\", "/")));
-                fos.setPattern(p.getFileName().toString());
-                Long delay = null;
-                if (j.getWatchInterval().getValue() != null) {
-                    delay = j.getWatchInterval().getValue();
-                }
-                fos.setDelay(delay);
-                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(wr.getPath(), name), fos);
-            }
-        }
     }
 
 }
