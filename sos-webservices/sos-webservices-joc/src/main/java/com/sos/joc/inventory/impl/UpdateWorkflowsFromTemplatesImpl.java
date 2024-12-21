@@ -69,6 +69,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
+            Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             
             List<DBItemInventoryConfiguration> dbWorkflows = null;

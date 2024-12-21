@@ -25,7 +25,7 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
     
     @Override
     public JOCDefaultResponse postUpdateDependencies(String xAccessToken) {
-        SOSHibernateSession hibernateSession = null;
+        SOSHibernateSession session = null;
         boolean permitted = false;
         try {
             initLogging(API_CALL, "".getBytes(), xAccessToken);
@@ -33,9 +33,8 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
             if (!permitted) {
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
-            final SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(xAccessToken);
-            hibernateSession = session;
-            InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
+            session = Globals.createSosHibernateStatelessConnection(xAccessToken);
+            InventoryDBLayer dblayer = new InventoryDBLayer(session);
             List<DBItemInventoryConfiguration> allConfigs = dblayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
             
             DependencyResolver.updateDependencies(session, allConfigs);
@@ -47,7 +46,7 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(hibernateSession);
+            Globals.disconnect(session);
         }
     }
 

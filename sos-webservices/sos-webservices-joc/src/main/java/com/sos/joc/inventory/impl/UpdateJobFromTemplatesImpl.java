@@ -64,6 +64,7 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
+            Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getWorkflowPath(), ConfigurationType.WORKFLOW,

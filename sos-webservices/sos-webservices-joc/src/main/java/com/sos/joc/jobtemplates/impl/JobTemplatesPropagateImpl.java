@@ -76,6 +76,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             session.setAutoCommit(false);
+            Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             

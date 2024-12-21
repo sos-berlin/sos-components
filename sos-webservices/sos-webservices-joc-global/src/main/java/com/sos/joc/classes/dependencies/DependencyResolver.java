@@ -19,6 +19,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -84,6 +86,8 @@ public class DependencyResolver {
     public static final String JOBTEMPLATE_SEARCH = "jobTemplate";
     public static final String INCLUDESCRIPT_SEARCH = "scripts";
     public static final String SCRIPT_SEARCH = "script";
+    private static final String threadNamePrefix = "Thread-DepResolver-";
+    private static final AtomicInteger threadNameSuffix = new AtomicInteger();
 
     public static final List<Integer> dependencyTypes = Collections.unmodifiableList(new ArrayList<Integer>() {
         private static final long serialVersionUID = 1L;
@@ -664,7 +668,7 @@ public class DependencyResolver {
             if(!scheduleCalendars.isEmpty()) {
                 for(String cal : scheduleCalendars) {
                     results = dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
-                    results.addAll(dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
+                    //results.addAll(dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
                     if(!results.isEmpty()) {
                         item.getReferences().addAll(results);
                     }
@@ -1020,29 +1024,34 @@ public class DependencyResolver {
     public static void updateDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         // this method is in use (JocInventory update and insert methods)
-        boolean ownTransaction = false;
-        if (!session.isAutoCommit() && !session.isTransactionOpened()) {
-            session.beginTransaction();
-            ownTransaction = true;
-        }
-        insertOrRenewDependencies(session, inventoryDbItem);
-        if(ownTransaction) {
-            session.commit();
-        }
+        
+        new Thread(() -> {
+            int i = 0;
+            if (session != null) {
+                //wait until session from insert/update inventoryDbItem is disconnected.
+                while (session.getCurrentSession() != null && i < 120) {
+                    //LOGGER.info(session.getIdentifier() + " is alive");
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(500);
+                    } catch (InterruptedException e) {
+                        //
+                    }
+                    i++;
+                }
+                try {
+                    insertOrRenewDependencies(inventoryDbItem);
+                } catch (Exception e) {
+                    //TODO use ProblemHelper
+                    LOGGER.error("", e);
+                }
+            }
+        }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
+        
     }
     
     public static void updateDependencies(SOSHibernateSession session, List<DBItemInventoryConfiguration> allCfgs)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
-        // this method is in use
-        boolean ownTransaction = false;
-        if (!session.isAutoCommit() && !session.isTransactionOpened()) {
-            session.beginTransaction();
-            ownTransaction = true;
-        }
         insertOrRenewDependencies(session, allCfgs);
-        if(ownTransaction) {
-            session.commit();
-        }
     }
     
     /**
@@ -1053,14 +1062,20 @@ public class DependencyResolver {
      * @throws JsonMappingException
      * @throws JsonProcessingException
      */
-    public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
+    public static void insertOrRenewDependencies(DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         // this method is in use (JocInventory update and insert methods)
-        ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
-        resolveReferences(references, session);
-        DBLayerDependencies layer = new DBLayerDependencies(session);
-        // store new dependencies
-        layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("DependencyResolver");
+            ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
+            resolveReferences(references, session);
+            DBLayerDependencies layer = new DBLayerDependencies(session);
+            // store new dependencies
+            layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 
     /**

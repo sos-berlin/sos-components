@@ -1249,6 +1249,9 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public DBItemSearchWorkflow getSearchWorkflow(Long inventoryId, String hash) throws DBConnectionRefusedException, DBInvalidDataException {
+        if (inventoryId == null) {
+            return null;
+        }
         try {
             boolean isDraft = SOSString.isEmpty(hash);
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" ");
