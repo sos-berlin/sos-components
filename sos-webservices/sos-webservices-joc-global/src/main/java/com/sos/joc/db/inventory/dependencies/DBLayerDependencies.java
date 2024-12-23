@@ -128,14 +128,15 @@ public class DBLayerDependencies extends DBLayer {
             throws SOSHibernateException {
         if(dependencies != null) {
             deleteDependencies(item);
-            if(dependencies != null && !dependencies.isEmpty()) {
-                dependencies.stream().filter(dep -> dep.getInvId().equals(item.getId())).forEach(dependency -> {
-                    try {
-                        getSession().save(dependency);
-                    } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                    }
-                });
+            if (dependencies != null && !dependencies.isEmpty()) {
+                dependencies.stream().filter(dep -> dep.getInvId().equals(item.getId()) || dep.getInvDependencyId().equals(item.getId())).forEach(
+                        dependency -> {
+                            try {
+                                getSession().save(dependency);
+                            } catch (SOSHibernateException e) {
+                                throw new JocSosHibernateException(e);
+                            }
+                        });
             }
         }
     }
