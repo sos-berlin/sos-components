@@ -102,11 +102,11 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
 
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
                 final List<String> nonWorkingDays = getNonWorkingDays(dbLayer, in);
-
                 List<DBItemInventoryReleasedConfiguration> workingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getCalendars().stream().map(
                         AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList()));
+                Globals.disconnect(session);
+                session = null;
 
                 SortedSet<Period> periods = new TreeSet<>(Comparator.comparing(p -> p.getSingleStart() == null ? p.getBegin() : p.getSingleStart()));
 
@@ -162,6 +162,8 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
         }
     }
 
