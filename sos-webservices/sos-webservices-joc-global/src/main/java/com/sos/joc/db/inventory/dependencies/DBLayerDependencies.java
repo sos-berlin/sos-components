@@ -129,7 +129,7 @@ public class DBLayerDependencies extends DBLayer {
         if(dependencies != null) {
             deleteDependencies(item);
             if(dependencies != null && !dependencies.isEmpty()) {
-                dependencies.forEach(dependency -> {
+                dependencies.stream().filter(dep -> dep.getInvId().equals(item.getId())).forEach(dependency -> {
                     try {
                         getSession().save(dependency);
                     } catch (SOSHibernateException e) {
