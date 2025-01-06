@@ -66,7 +66,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
     // - TODO in some cases performance problems(next year view), e.g. Every 2nd day starting with day 01.12.2024 of Dec ...
     // -- because Every/Repetitions is calculated from a specific start day - so if start=2024.. there is more to calculate for 2030 than for 2025...
     // false (previous behavior) - create a preview for the entire date range with one call
-    private static final boolean TMP_DAILY_PLAN_MODE = false;
+    private static final boolean TMP_DAILY_PLAN_MODE = true;
     private static final boolean TMP_DAILY_PLAN_MODE_PARALLEL = true;
 
     @Override
