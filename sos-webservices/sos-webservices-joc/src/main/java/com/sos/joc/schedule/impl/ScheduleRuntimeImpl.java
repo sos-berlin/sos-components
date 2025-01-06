@@ -88,7 +88,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
             if (in.getCalendars() != null && !in.getCalendars().isEmpty()) {
 
                 if (in.getTimeZone() == null || in.getTimeZone().isEmpty()) {
-                    in.setTimeZone("Etc/UTC");
+                    in.setTimeZone(SOSDate.TIMEZONE_UTC);
                 }
                 final ZoneId timezone = ZoneId.of(in.getTimeZone());
 

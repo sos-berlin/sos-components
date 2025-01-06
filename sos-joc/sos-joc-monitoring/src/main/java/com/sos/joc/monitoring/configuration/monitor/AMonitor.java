@@ -8,6 +8,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
@@ -25,7 +26,6 @@ public abstract class AMonitor extends AElement {
     private static final String ELEMENT_NAME_MESSAGE_REF = "MessageRef";
     private static final String ATTRIBUTE_NAME_NAME = "name";
     private static final String ATTRIBUTE_NAME_TIME_ZONE = "time_zone";
-    private static final String DEFAULT_TIME_ZONE = "Etc/UTC";
 
     private final String notificationId;
     private final String refElementName;
@@ -117,7 +117,7 @@ public abstract class AMonitor extends AElement {
             TimeZone timeZone = TimeZone.getTimeZone(tz);
             if (timeZone.getID().equals("GMT") && !tz.toUpperCase().contains("GMT")) {
                 LOGGER.warn(String.format("[monitor][config][%s]The given time_zone=%s cannot be understood. Use default=%s", tzPath, tz,
-                        DEFAULT_TIME_ZONE));
+                        SOSDate.TIMEZONE_UTC));
             } else {
                 this.timeZone = timeZone;
             }
@@ -132,7 +132,7 @@ public abstract class AMonitor extends AElement {
     }
 
     public String getTimeZoneValue() {
-        return timeZone == null ? DEFAULT_TIME_ZONE : timeZone.getID();
+        return timeZone == null ? SOSDate.TIMEZONE_UTC : timeZone.getID();
     }
 
     protected Element getRefElement() {

@@ -32,6 +32,7 @@ public class SOSDate {
     public static final String DATETIME_FORMAT = new String(DATE_FORMAT + " " + TIME_FORMAT);
     public static final String DATETIME_FORMAT_WITH_ZONE_OFFSET = new String(DATE_FORMAT + "'T'" + TIME_FORMAT + "Z");// 2022-04-07T16:37:35+0200
 
+    public static final String TIMEZONE_UTC = "Etc/UTC";
     private static final boolean LENIENT = false;
 
     // returns Date from String

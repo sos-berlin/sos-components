@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
@@ -26,8 +27,7 @@ public class HistoryUtil {
 
     private static final Pattern PATTERN_CHARACTERS_TO_REPLACE = Pattern.compile("[\\u0000-\\u0008]");
 
-    private static final String DEFAULT_TIME_ZONE = "Etc/UTC";
-    private static final String TIME_ZONE_GMT = "Etc/GMT";
+    private static final String TIMEZONE_GMT = "Etc/GMT";
 
     public static String tryRemoveSpecialCharacters(String val) {
         if (SOSString.isEmpty(val)) {
@@ -38,13 +38,13 @@ public class HistoryUtil {
 
     public static String getTimeZone(String caller, String timeZone) {
         if (SOSString.isEmpty(timeZone)) {
-            LOGGER.info(String.format("[%s]TimeZone is empty. Set to default=%s", caller, DEFAULT_TIME_ZONE));
-            return DEFAULT_TIME_ZONE;
+            LOGGER.info(String.format("[%s]TimeZone is empty. Set to default=%s", caller, SOSDate.TIMEZONE_UTC));
+            return SOSDate.TIMEZONE_UTC;
         }
         // java TimeZone.getTimeZone - ... the specified TimeZone, or the GMT zone if the given ID cannot be understood
         if (timeZone.toUpperCase().equals("GMT")) {
-            LOGGER.info(String.format("[%s]TimeZone=%s. Set to %s", caller, timeZone, TIME_ZONE_GMT));
-            return TIME_ZONE_GMT;
+            LOGGER.info(String.format("[%s]TimeZone=%s. Set to %s", caller, timeZone, TIMEZONE_GMT));
+            return TIMEZONE_GMT;
         }
         return timeZone;
     }

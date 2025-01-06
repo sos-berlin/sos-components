@@ -39,6 +39,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.controller.model.order.ExpectedNotice;
 import com.sos.controller.model.order.OrderCycleState;
 import com.sos.controller.model.order.OrderItem;
@@ -323,27 +324,27 @@ public class OrdersHelper {
         }
         return getGroupedState(o.state().getClass());
     }
-    
+
     public static boolean isFresh(JOrder order) {
         Order<Order.State> o = order.asScala();
         return OrderStateText.SCHEDULED.equals(getGroupedState(o.state().getClass()));
     }
-    
+
     public static boolean isSuspendible(JOrder order) {
         Order<Order.State> o = order.asScala();
-        //return o.isSuspendible();
+        // return o.isSuspendible();
         if (o.isSuspended() || isTerminated(o) || isFailed(o)) {
             return false;
         }
         return true;
     }
-    
+
     public static boolean isResumable(JOrder order) {
         return isResumable(order.asScala());
     }
-    
+
     public static boolean isResumable(Order<Order.State> order) {
-//        LOGGER.info("isResumable? " + o.isResumable());
+        // LOGGER.info("isResumable? " + o.isResumable());
         if (isCancellingOrResuming(order.mark()) || isSuspending(order.mark())) {
             return false;
         }
@@ -352,54 +353,54 @@ public class OrdersHelper {
         }
         return order.isSuspended() || isFailed(order);// || isSuspending(o.mark());
     }
-    
+
     private static boolean isResumable(JOrder order, boolean disrupted) {
         if (disrupted) {
             return false;
         }
         Order<Order.State> o = order.asScala();
-//        LOGGER.info("isResumable? " + o.isResumable());
+        // LOGGER.info("isResumable? " + o.isResumable());
         if (isCancellingOrResuming(o.mark()) || isSuspending(o.mark())) {
             return false;
         }
         return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
     }
-    
+
     public static boolean isContinuable(JOrder order) {
         Order<Order.State> o = order.asScala();
         return o.isGoCommandable() && !o.isSuspended();
     }
-    
+
     public static boolean isContinuableAfterSuspending(JOrder order) {
         Order<Order.State> o = order.asScala();
         if (o.state() instanceof Order.Fresh$ && o.maybeDelayedUntil().isDefined()) {
-           return false; 
+            return false;
         }
         return o.isGoCommandable() && !o.isSuspended();
     }
-    
+
     private static boolean isTerminated(Order<Order.State> o) {
         return ((o.state() instanceof Order.Finished$) || (o.state() instanceof Order.Cancelled$));
     }
-    
+
     private static boolean isFailed(Order<Order.State> o) {
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
     }
-    
+
     private static boolean isSuspending(Option<js7.data.order.OrderMark> opt) {
         if (opt.nonEmpty()) {
             return (opt.get() instanceof Suspending);
         }
         return false;
     }
-    
+
     private static boolean isCancellingOrResuming(Option<js7.data.order.OrderMark> opt) {
         if (opt.nonEmpty()) {
             return (opt.get() instanceof Cancelling) || (opt.get() instanceof Resuming);
         }
         return false;
     }
-    
+
     private static boolean isDisrupted(Order<Order.State> o) {
         List<js7.data.order.HistoricOutcome> outcomes = JavaConverters.asJava(o.historicOutcomes().toList());
         if (outcomes != null && !outcomes.isEmpty()) {
@@ -407,12 +408,12 @@ public class OrdersHelper {
         }
         return false;
     }
-    
+
     private static boolean isRetryState(JOrder order) {
         Order.State state = order.asScala().state();
         return ((state instanceof Order.DelayingRetry) || (state instanceof Order.DelayedAfterError));
     }
-    
+
     public static boolean isNotFailed(JOrder order) {
         return !OrderStateText.FAILED.equals(getGroupedState(order.asScala().state().getClass()));
     }
@@ -445,7 +446,7 @@ public class OrdersHelper {
         oState.setSeverity(severityByGroupedStates.get(groupedState));
         return oState;
     }
-    
+
     public static OrderState getState(String state, Boolean isSuspended) {
         return getState(state, isSuspended, null);
     }
@@ -513,10 +514,10 @@ public class OrdersHelper {
         o.setOrderId(oItem.getId());
         o.setHasChildOrders(null);
         boolean isChildOrder = oItem.getId().contains("|");
-//        List<js7.data.order.HistoricOutcome> hhh = JavaConverters.asJava(jOrder.asScala().historicOutcomes().toList());
-//        if (hhh != null && !hhh.isEmpty()) {
-//            boolean isDisrupted = hhh.get(hhh.size() - 1).outcome().show().contains("Disrupted");
-//        }
+        // List<js7.data.order.HistoricOutcome> hhh = JavaConverters.asJava(jOrder.asScala().historicOutcomes().toList());
+        // if (hhh != null && !hhh.isEmpty()) {
+        // boolean isDisrupted = hhh.get(hhh.size() - 1).outcome().show().contains("Disrupted");
+        // }
         boolean isDisrupted = false;
         boolean isInRetryInstruction = isInRetryInstruction(jOrder, controllerState);
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
@@ -530,7 +531,7 @@ public class OrdersHelper {
             o.setHistoricOutcome(null);
             o.setLastOutcome(null);
         }
-        
+
         Either<Problem, AgentPath> opt = jOrder.attached();
         if (opt.isRight()) {
             o.setAgentId(opt.get().string());
@@ -539,19 +540,19 @@ public class OrdersHelper {
         // o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         JPosition origPos = JPosition.apply(jOrder.asScala().position());
         String jsonPos = origPos.toJson().replaceAll("\"(try|catch|cycle)\\+?[^\"]*", "\"$1");
-        if (isInRetryInstruction) {// || (oItem.getIsSuspended() && isCaught)) { 
-            //change catch position -> try position in a retry or after suspend-reset in a retry
+        if (isInRetryInstruction) {// || (oItem.getIsSuspended() && isCaught)) {
+            // change catch position -> try position in a retry or after suspend-reset in a retry
             jsonPos = jsonPos.replaceFirst("\"catch(\"\\s*,\\s*\\d+\\s*])", "\"try$1");
         }
         JPosition pos = JPosition.fromJson(jsonPos).get();
         o.setPosition(pos.toList());
         o.setPositionString(pos.toString());
-        
+
         o.setEndPositions(oItem.getStopPositions());
         o.setCycleState(oItem.getState().getCycleState());
         o.setExpectedNotices(getStillExpectedNotices(jOrder.id(), oItem, controllerState));
         int positionsSize = o.getPosition().size();
-        
+
         if (isInRetryInstruction || isRetryState(jOrder)) {
             OrderRetryState rs = new OrderRetryState();
             rs.setNext(oItem.getState().getUntil());
@@ -577,7 +578,7 @@ public class OrdersHelper {
             if (subAgentId.nonEmpty()) {
                 String sId = subAgentId.get().string();
                 if (o.getAgentId() != null && sId.equals(o.getAgentId())) {
-                   sId = sId.replaceFirst("-1$", ""); 
+                    sId = sId.replaceFirst("-1$", "");
                 }
                 o.setSubagentId(sId);
             }
@@ -597,15 +598,15 @@ public class OrdersHelper {
             orderIsInImplicitEnd(jOrder, controllerState).ifPresent(b -> o.setPositionIsImplicitEnd(b ? true : null));
         }
         Long scheduledFor = getScheduledForMillis(jOrder, zoneId);
-//        if ("Fresh".equals(oItem.getState().getTYPE()) || "Ready".equals(oItem.getState().getTYPE())) {
-//            Optional<Obstacle> obstacleOpt = getObstacle(OrderId.of(oItem.getId()), controllerState);
-//            if (obstacleOpt.isPresent()) {
-//                o.setState(getState("Ready", oItem.getIsSuspended(), obstacleOpt.get().getType()));
-//            }
-//        } else 
+        // if ("Fresh".equals(oItem.getState().getTYPE()) || "Ready".equals(oItem.getState().getTYPE())) {
+        // Optional<Obstacle> obstacleOpt = getObstacle(OrderId.of(oItem.getId()), controllerState);
+        // if (obstacleOpt.isPresent()) {
+        // o.setState(getState("Ready", oItem.getIsSuspended(), obstacleOpt.get().getType()));
+        // }
+        // } else
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
             if (blockedButWaitingForAdmissionOrderIds != null && blockedButWaitingForAdmissionOrderIds.contains(jOrder.id())) {
-                //o.setState(getState("Ready", oItem.getIsSuspended(), ObstacleType.WaitingForAdmission));
+                // o.setState(getState("Ready", oItem.getIsSuspended(), ObstacleType.WaitingForAdmission));
                 o.setState(getState("Processed", oItem.getIsSuspended(), ObstacleType.WaitingForAdmission));
             } else {
                 Optional<Obstacle> obstacleOpt = getObstacle(OrderId.of(oItem.getId()), controllerState);
@@ -665,20 +666,20 @@ public class OrdersHelper {
         if (isContinuable(jOrder)) {
             o.setIsContinuable(true);
         }
-//        if (controllerState != null) {
-//            o.setTags(OrderTags.getTags(controllerState.asScala().controllerId().string(), o.getOrderId()));
-//        }
+        // if (controllerState != null) {
+        // o.setTags(OrderTags.getTags(controllerState.asScala().controllerId().string(), o.getOrderId()));
+        // }
         if (orderTags != null && !orderTags.isEmpty()) {
             o.setTags(orderTags.get(getParentOrderId(o.getOrderId())));
         }
         return o;
     }
-    
+
     private static boolean isInRetryInstruction(JOrder jOrder, JControllerState controllerState) {
         return js7.data.workflow.instructions.Retry.class.isAssignableFrom(controllerState.asScala().instruction(jOrder.asScala().workflowPosition())
                 .getClass());
     }
-    
+
     private static JPosition moveChildOrderPosToImplicitEnd(JPosition pos, JOrder o, JControllerState controllerState) {
         JPosition p = pos;
         if (controllerState != null && o != null && o.id().string().contains("|")) { // is childOrder
@@ -708,7 +709,7 @@ public class OrdersHelper {
         }
         return p;
     }
-    
+
     private static Optional<String> orderPositionToLabel(JOrder order, JControllerState controllerState) {
         if (controllerState == null || order == null) {
             return Optional.empty();
@@ -716,7 +717,7 @@ public class OrdersHelper {
         return OptionConverters.toJava(controllerState.asScala().workflowPositionToLabel(order.asScala().workflowPosition()).map(
                 OptionConverters::toJava).toOption()).orElse(Optional.empty()).map(Label::string);
     }
-    
+
     private static List<ExpectedNotice> getStillExpectedNotices(OrderId orderId, OrderItem oItem, JControllerState controllerState) {
         if ("ExpectingNotices".equals(oItem.getState().getTYPE())) {
             if (controllerState != null) {
@@ -753,7 +754,7 @@ public class OrdersHelper {
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
     }
-    
+
     public static Requirements getRequirements(JWorkflowId jWorkflowId, String controllerId, DeployedConfigurationDBLayer dbLayer)
             throws JsonMappingException, JsonProcessingException {
         return getRequirements(jWorkflowId, controllerId, dbLayer, false);
@@ -763,18 +764,19 @@ public class OrdersHelper {
             throws JsonMappingException, JsonProcessingException {
         return getRequirements(jWorkflowId.path().string(), jWorkflowId.versionId().string(), controllerId, dbLayer, withFinals);
     }
-    
+
     public static Requirements getRequirements(JOrder jOrder, String controllerId, DeployedConfigurationDBLayer dbLayer) throws JsonMappingException,
             JsonProcessingException {
         return getRequirements(jOrder.workflowId(), controllerId, dbLayer, false);
     }
-    
+
     public static Requirements getRequirements(JOrder jOrder, String controllerId, DeployedConfigurationDBLayer dbLayer, boolean withFinals)
             throws JsonMappingException, JsonProcessingException {
         return getRequirements(jOrder.workflowId(), controllerId, dbLayer, withFinals);
     }
-    
-    private static Requirements getRequirements(String workflowName, String controllerId) throws JsonParseException, JsonMappingException, IOException {
+
+    private static Requirements getRequirements(String workflowName, String controllerId) throws JsonParseException, JsonMappingException,
+            IOException {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("getOrderPreparation");
@@ -783,7 +785,7 @@ public class OrdersHelper {
             Globals.disconnect(connection);
         }
     }
-    
+
     private static Requirements getRequirements(String workflowName, String versionId, String controllerId, DeployedConfigurationDBLayer dbLayer,
             boolean withFinals) throws JsonMappingException, JsonProcessingException {
         DeployedContent lastContent = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowName, versionId);
@@ -829,7 +831,7 @@ public class OrdersHelper {
         }
         return variables;
     }
-    
+
     public static Variables checkArgumentsWithAllowedDollarInValues(Variables arguments, Requirements orderRequirements)
             throws JocMissingRequiredParameterException, JocConfigurationException {
         return checkArguments(arguments, orderRequirements, ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc()), true);
@@ -880,7 +882,7 @@ public class OrdersHelper {
                 }
                 continue;
             }
-            if (param.getValue().getDefault() == null && args.get(param.getKey()) ==  null) { // required
+            if (param.getValue().getDefault() == null && args.get(param.getKey()) == null) { // required
                 throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is missing but required");
             }
             if (args.containsKey(param.getKey())) {
@@ -889,7 +891,7 @@ public class OrdersHelper {
                     vars.removeAdditionalProperty(param.getKey());
                     continue;
                 }
-                
+
                 switch (param.getValue().getType()) {
                 case String:
                     if ((curArg instanceof String) == false) {
@@ -899,7 +901,7 @@ public class OrdersHelper {
                         if (!allowEmptyValues && strArg.isEmpty() && param.getValue().getDefault() == null) {
                             throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is empty but required");
                         }
-                        
+
                         try {
                             StringSizeSanitizer.test("variable '" + param.getKey() + "'", strArg);
                         } catch (IllegalArgumentException e1) {
@@ -915,7 +917,7 @@ public class OrdersHelper {
                                 vars.setAdditionalProperty(param.getKey(), Boolean.TRUE);
                             } else if ("false".equals(strArg)) {
                                 vars.setAdditionalProperty(param.getKey(), Boolean.FALSE);
-                            } else if (allowDollarInValue && strArg.contains("$")) { 
+                            } else if (allowDollarInValue && strArg.contains("$")) {
                                 // only relevant for addOrder instruction
                                 Validator.validateExpression("Variable '" + param.getKey() + "': ", strArg);
                             } else {
@@ -975,8 +977,9 @@ public class OrdersHelper {
     }
 
     private static List<Map<String, Object>> checkListArguments(List<Map<String, Object>> listVariables, ListParameters listParameters,
-            String listKey, boolean allowEmptyValues, boolean allowDollarInValue) throws JocMissingRequiredParameterException, JocConfigurationException {
-        
+            String listKey, boolean allowEmptyValues, boolean allowDollarInValue) throws JocMissingRequiredParameterException,
+            JocConfigurationException {
+
         final Map<String, ListParameter> listParams = (listParameters != null) ? listParameters.getAdditionalProperties() : Collections.emptyMap();
         if (listVariables.isEmpty() && !listParams.isEmpty()) {
             Set<String> listKeys = listParams.keySet();
@@ -988,13 +991,14 @@ public class OrdersHelper {
                     + "' are missing but declared in the workflow");
         }
         AtomicInteger index = new AtomicInteger();
-        listVariables.forEach(listVariable -> checkObjectArgumentOfList(listVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, index.getAndIncrement()));
+        listVariables.forEach(listVariable -> checkObjectArgumentOfList(listVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, index
+                .getAndIncrement()));
         return listVariables;
     }
-    
-    private static Map<String, Object> checkObjectArgument(Map<String, Object> mapVariable, ListParameters listParameters,
-            String listKey, boolean allowEmptyValues, boolean allowDollarInValue) throws JocMissingRequiredParameterException, JocConfigurationException {
-        
+
+    private static Map<String, Object> checkObjectArgument(Map<String, Object> mapVariable, ListParameters listParameters, String listKey,
+            boolean allowEmptyValues, boolean allowDollarInValue) throws JocMissingRequiredParameterException, JocConfigurationException {
+
         final Map<String, ListParameter> listParams = (listParameters != null) ? listParameters.getAdditionalProperties() : Collections.emptyMap();
         if (mapVariable.isEmpty() && !listParams.isEmpty()) {
             Set<String> listKeys = listParams.keySet();
@@ -1008,19 +1012,20 @@ public class OrdersHelper {
         checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue);
         return mapVariable;
     }
-    
-    private static Map<String, Object> checkObjectArgumentOfList(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
-            boolean allowEmptyValues, boolean allowDollarInValue, int index) {
+
+    private static Map<String, Object> checkObjectArgumentOfList(Map<String, Object> mapVariable, Map<String, ListParameter> listParams,
+            String listKey, boolean allowEmptyValues, boolean allowDollarInValue, int index) {
         return checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, "list[" + index + "]");
     }
-    
+
     private static Map<String, Object> checkObjectArgument(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
             boolean allowEmptyValues, boolean allowDollarInValue) {
         return checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, "map");
     }
-    
+
     private static Map<String, Object> checkObjectArgument(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
-            boolean allowEmptyValues, boolean allowDollarInValue, String listOrMap) throws JocMissingRequiredParameterException, JocConfigurationException {
+            boolean allowEmptyValues, boolean allowDollarInValue, String listOrMap) throws JocMissingRequiredParameterException,
+            JocConfigurationException {
         boolean invalid = false;
         Set<String> listKeys = mapVariable.keySet().stream().filter(arg -> !listParams.containsKey(arg)).collect(Collectors.toSet());
         if (!listKeys.isEmpty()) {
@@ -1028,14 +1033,14 @@ public class OrdersHelper {
                 throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' isn't declared in the workflow",
                         listKeys.iterator().next(), listOrMap, listKey));
             }
-            throw new JocMissingRequiredParameterException(String.format("Keys '%s' of the %s variable '%s' aren't declared in the workflow",
-                    listKeys.toString(), listOrMap, listKey));
+            throw new JocMissingRequiredParameterException(String.format("Keys '%s' of the %s variable '%s' aren't declared in the workflow", listKeys
+                    .toString(), listOrMap, listKey));
         }
         listKeys = listParams.keySet().stream().filter(key -> !mapVariable.containsKey(key)).collect(Collectors.toSet());
         if (!listKeys.isEmpty()) {
             if (listKeys.size() == 1) {
-                throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' is missing but declared in the workflow",
-                        listKeys.iterator().next(), listOrMap, listKey));
+                throw new JocMissingRequiredParameterException(String.format(
+                        "Key '%s' of the %s variable '%s' is missing but declared in the workflow", listKeys.iterator().next(), listOrMap, listKey));
             }
             throw new JocMissingRequiredParameterException(String.format("Keys '%s' of the %s variable '%s' are missing but declared in the workflow",
                     listKeys.toString(), listOrMap, listKey));
@@ -1061,8 +1066,8 @@ public class OrdersHelper {
             if (p.getValue().getType().equals(ListParameterType.String) && !allowEmptyValues) {
                 if ((curListArg instanceof String) && ((String) curListArg).isEmpty()) {
                     if (p.getValue().getDefault() == null) { // required? TODO later only if it is nullable
-                        throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' is missing but required",
-                                p.getKey(), listOrMap, listKey));
+                        throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' is missing but required", p
+                                .getKey(), listOrMap, listKey));
                     } else {
                         mapVariable.put(p.getKey(), p.getValue().getDefault());
                     }
@@ -1102,8 +1107,7 @@ public class OrdersHelper {
                             mapVariable.put(p.getKey(), Boolean.FALSE);
                         } else if (allowDollarInValue && strArg.contains("$")) {
                             // only relevant for addOrder instruction
-                            Validator.validateExpression(String.format("Key '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey),
-                                    strArg);
+                            Validator.validateExpression(String.format("Key '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey), strArg);
                         } else {
                             invalid = true;
                         }
@@ -1132,13 +1136,13 @@ public class OrdersHelper {
                 break;
             }
             if (invalid) {
-                throw new JocConfigurationException(String.format("Key '%s' of %s variable '%s': Wrong data type %s (%s is expected).", p
-                        .getKey(), listOrMap, listKey, curListArg.getClass().getSimpleName(), p.getValue().getType().value()));
+                throw new JocConfigurationException(String.format("Key '%s' of %s variable '%s': Wrong data type %s (%s is expected).", p.getKey(),
+                        listOrMap, listKey, curListArg.getClass().getSimpleName(), p.getValue().getType().value()));
             }
         }
         return mapVariable;
     }
-    
+
     public static Optional<Set<String>> getNotFreshOrders(Collection<String> orderIds, JControllerState currentState) {
         Function1<Order<Order.State>, Object> notFreshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
                 .not(JOrderPredicates.byOrderState(Order.Fresh$.class)));
@@ -1149,35 +1153,34 @@ public class OrdersHelper {
         }
         return Optional.empty();
     }
-    
+
     public static Stream<String> getWorkflowNamesOfFreshOrders(Collection<String> orderIds, JControllerState currentState) {
-        Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()),
-                JOrderPredicates.byOrderState(Order.Fresh$.class));
-        return currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(
-                WorkflowPath::string).distinct();
+        Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
+                .byOrderState(Order.Fresh$.class));
+        return currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).distinct();
     }
-    
-//    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
-//            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, ZoneId zoneId,
-//            SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
-//            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-//            ExecutionException {
-//
-//        Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
-//        if (temporaryOrderIds.isEmpty()) {
-//            return result;
-//        }
-//        JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
-//        JControllerState currentState = proxy.currentState();
-//        return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
-//                zoneId, folderPermissions);
-//    }
-    
+
+    // public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
+    // DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, ZoneId zoneId,
+    // SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+    // DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+    // ExecutionException {
+    //
+    // Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
+    // if (temporaryOrderIds.isEmpty()) {
+    // return result;
+    // }
+    // JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
+    // JControllerState currentState = proxy.currentState();
+    // return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
+    // zoneId, folderPermissions);
+    // }
+
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
-        DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
-        JControllerState currentState, ZoneId zoneId, Map<String, List<Object>> labelMap, Set<BlockPosition> availableBlockPositions, 
-        SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, 
-        JocConfigurationException, ExecutionException {
+            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
+            JControllerState currentState, ZoneId zoneId, Map<String, List<Object>> labelMap, Set<BlockPosition> availableBlockPositions,
+            SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            JocConfigurationException, ExecutionException {
 
         Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
         if (temporaryOrderIds.isEmpty()) {
@@ -1186,7 +1189,7 @@ public class OrdersHelper {
         final String controllerId = dailyplanModifyOrder.getControllerId();
         Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-        
+
         // JOC-1453 consider labels
         final List<Object> startPosition = getPosition(dailyplanModifyOrder.getStartPosition(), labelMap);
         final List<List<Object>> endPositions = getPositions(dailyplanModifyOrder.getEndPositions(), labelMap);
@@ -1197,7 +1200,7 @@ public class OrdersHelper {
         final boolean variablesAreRemoved = dailyplanModifyOrder.getRemoveVariables() != null;
         final Optional<Long> secondsFromCurDate = JobSchedulerDate.getSecondsOfRelativeCurDate(dailyplanModifyOrder.getScheduledFor());
         Map<String, Requirements> cachedRequirements = new HashMap<>(1);
-        
+
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
             Either<Err419, FreshOrder> either = null;
             try {
@@ -1209,8 +1212,8 @@ public class OrdersHelper {
                 if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
                     throw new JocFolderPermissionsException(workflowPath);
                 }
-                
-                //Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
+
+                // Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                 if (variablesAreModified || variablesAreRemoved) {
                     if (!cachedRequirements.containsKey(workflowName)) {
                         cachedRequirements.put(workflowName, getRequirements(workflowName, controllerId));
@@ -1250,30 +1253,29 @@ public class OrdersHelper {
                 if (!scheduledFor.isPresent()) {
                     scheduledFor = Optional.of(now);
                 }
-                
+
                 Optional<JPositionOrLabel> startPos = Optional.empty();
                 Set<JPositionOrLabel> endPoss = Collections.emptySet();
                 JBranchPath jBrachPath = null;
-                
+
                 if (dailyplanModifyOrder.getBlockPosition() != null) {
-                    
+
                     BlockPosition blockPosition = getBlockPosition(dailyplanModifyOrder.getBlockPosition(), workflowName, availableBlockPositions);
 
-                    //check start-/endpositions inside block
+                    // check start-/endpositions inside block
                     startPos = OrdersHelper.getStartPositionInBlock(startPosition, blockPosition);
                     endPoss = OrdersHelper.getEndPositionInBlock(endPositions, blockPosition);
-                    
+
                     jBrachPath = OrdersHelper.getJBranchPath(blockPosition);
-                    
+
                 } else {
                     // modify start/end positions
                     Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
 
                     startPos = getStartPosition(startPosition, reachablePositions, order.workflowPosition().position());
-                    endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala()
-                            .stopPositions()));
+                    endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala().stopPositions()));
                 }
-                
+
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, jBrachPath, startPos, endPoss,
                         forceJobAdmission, zoneId);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
@@ -1304,45 +1306,45 @@ public class OrdersHelper {
                         ProblemHelper.postProblemEventIfExist(either2, accessToken, jocError, controllerId);
                         if (either2.isRight()) {
                             // TODO check if really all orders are cancelled. Only then the same orderId can be used fro addOrders(...)
-                            
-//                            try {
-//                                for (int i = 0; i < 10; i++) {
-//                                    try {
-//                                        TimeUnit.SECONDS.sleep(1L);
-//                                        if (i < 9 && !proxy.currentState().orderIds().stream().anyMatch(o -> freshOrders.keySet().contains(o))) {
-//                                            // all orders are cancelled
-//                                            break;
-//                                        }
-//                                        if (i == 9) {
-//                                            Set<OrderId> oIds = proxy.currentState().orderIds();
-//                                            oIds.retainAll(freshOrders.keySet());
-//                                            if (oIds.isEmpty()) {
-//                                                // all orders are cancelled
-//                                                break;
-//                                            }
-//                                            // addOrders not possible for retained oIds because not cancelled
-//                                            // throw Problem
-//                                            if (!oIds.isEmpty()) {
-//                                                oIds.forEach(o -> freshOrders.remove(o));
-//                                                Either<Problem, Void> e = Either.left(Problem.pure("The Orders " + oIds.toString()
-//                                                        + " cannot be modified because they could not be deleted before within 10 seconds."));
-//                                                ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
-//                                            }
-//                                        }
-//                                    } catch (Exception e) {
-//                                        //
-//                                    }
-//                                }
-//                            } catch (Exception e) {
-//                                //
-//                            }
-                            
+
+                            // try {
+                            // for (int i = 0; i < 10; i++) {
+                            // try {
+                            // TimeUnit.SECONDS.sleep(1L);
+                            // if (i < 9 && !proxy.currentState().orderIds().stream().anyMatch(o -> freshOrders.keySet().contains(o))) {
+                            // // all orders are cancelled
+                            // break;
+                            // }
+                            // if (i == 9) {
+                            // Set<OrderId> oIds = proxy.currentState().orderIds();
+                            // oIds.retainAll(freshOrders.keySet());
+                            // if (oIds.isEmpty()) {
+                            // // all orders are cancelled
+                            // break;
+                            // }
+                            // // addOrders not possible for retained oIds because not cancelled
+                            // // throw Problem
+                            // if (!oIds.isEmpty()) {
+                            // oIds.forEach(o -> freshOrders.remove(o));
+                            // Either<Problem, Void> e = Either.left(Problem.pure("The Orders " + oIds.toString()
+                            // + " cannot be modified because they could not be deleted before within 10 seconds."));
+                            // ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
+                            // }
+                            // }
+                            // } catch (Exception e) {
+                            // //
+                            // }
+                            // }
+                            // } catch (Exception e) {
+                            // //
+                            // }
+
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
                                 ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
-                                    
-                                    updateTags(controllerId, freshOrders).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
-                                            either5, accessToken, jocError, controllerId));
+
+                                    updateTags(controllerId, freshOrders).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(either5,
+                                            accessToken, jocError, controllerId));
                                     storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either6 -> ProblemHelper.postExceptionEventIfExist(
                                             either6, accessToken, jocError, controllerId));
                                 }
@@ -1361,7 +1363,7 @@ public class OrdersHelper {
         }
         return result;
     }
-    
+
     private static boolean isDateWithoutTime(String datetime) {
         return datetime == null ? false : datetime.matches("\\d{4}-\\d{2}-\\d{2}");
     }
@@ -1387,14 +1389,13 @@ public class OrdersHelper {
             zoneId = getDailyPlanTimeZone();
         }
         return getUniqueOrderId(ZonedDateTime.of(LocalDateTime.now(zoneId), ZoneId.systemDefault()));
-        //return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
+        // return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
     }
-    
+
     public static String getUniqueOrderId(ZonedDateTime zonedDateTime) {
         int n = no.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x + 1);
-        return Long.valueOf((zonedDateTime.toInstant().toEpochMilli() * 100) + (n % 100))
-                .toString().substring(4);
-        //return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
+        return Long.valueOf((zonedDateTime.toInstant().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
+        // return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
     }
 
     public static String generateNewFromOldOrderId(String oldOrderId, String newDailyPlanDate, ZoneId zoneId) {
@@ -1402,7 +1403,7 @@ public class OrdersHelper {
         // #2021-10-25#C1234567890-00012-12-dailyplan_shedule_cyclic
         return generateNewFromOldOrderId(getWithNewDateFromOldOrderId(oldOrderId, newDailyPlanDate), zoneId);
     }
-    
+
     public static String getWithNewDateFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
         return "#" + newDailyPlanDate + oldOrderId.substring(11);
     }
@@ -1454,10 +1455,10 @@ public class OrdersHelper {
         Map<String, Value> arguments = new HashMap<>();
         if (vars != null) {
             vars.forEach((key, val) -> {
-//                if (val == null) {
-//                    //MissingValue;
-//                    arguments.put(key, (Value) val);
-//                } else 
+                // if (val == null) {
+                // //MissingValue;
+                // arguments.put(key, (Value) val);
+                // } else
                 if (val instanceof String) {
                     arguments.put(key, StringValue.of((String) val));
                 } else if (val instanceof Boolean) {
@@ -1485,7 +1486,7 @@ public class OrdersHelper {
     // public static scala.collection.immutable.Map<String, Value> toScalaImmutableMap(Map<String, Value> jmap) {
     // return scala.collection.immutable.Map.from(scala.jdk.CollectionConverters.MapHasAsScala(jmap).asScala());
     // }
-    
+
     public static Variables scalaValuedArgumentsToVariables(Map<String, Value> args) {
         Variables variables = new Variables();
         if (args != null) {
@@ -1513,11 +1514,11 @@ public class OrdersHelper {
         }
         return variables;
     }
-    
+
     public static CompletableFuture<Either<Exception, Void>> storeTags(String controllerId, Map<OrderV, Set<GroupedTag>> orderTags) {
         return CompletableFuture.supplyAsync(() -> OrderTags.addAdhocOrderTags(controllerId, orderTags));
     }
-    
+
     public static CompletableFuture<Either<Exception, Void>> updateTags(String controllerId, Map<OrderId, JFreshOrder> freshOrders) {
         return CompletableFuture.supplyAsync(() -> OrderTags.updateTagsOfOrders(controllerId, freshOrders));
     }
@@ -1543,7 +1544,7 @@ public class OrdersHelper {
         return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(jOrder.workflowId().path().string()), jOrder.id()
                 .string(), controllerId)), auditlogId);
     }
-    
+
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(String orderId, String workflowName, Long auditlogId,
             String controllerId) {
         return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(workflowName), orderId, controllerId)),
@@ -1603,12 +1604,12 @@ public class OrdersHelper {
     public static String getCyclicOrderIdMainPart(String orderId) {
         return orderId.substring(0, mainOrderIdLength);
     }
-    
+
     // alias
     public static String getOrderIdMainPart(String orderId) {
         return getCyclicOrderIdMainPart(orderId);
     }
-    
+
     public static String getParentOrderId(String orderId) {
         int pipePosition = orderId.indexOf("|");
         if (pipePosition > -1) {
@@ -1642,23 +1643,22 @@ public class OrdersHelper {
         Set<OrderId> ids = getWaitingForAdmissionOrderIds(blockedOrders.stream().map(JOrder::id).collect(Collectors.toSet()), controllerState);
         return blockedOrders.parallelStream().filter(o -> ids.contains(o.id())).collect(Collectors.toConcurrentMap(JOrder::id, Function.identity()));
     }
-    
+
     public static Map<OrderId, Obstacle> getWaitingOrderIds(Collection<OrderId> orderIds, JControllerState controllerState) {
         if (!orderIds.isEmpty()) {
-            Either<Problem, Map<OrderId, Set<JOrderObstacle>>> obstaclesE = controllerState.ordersToObstacles(orderIds, controllerState
-                    .instant());
+            Either<Problem, Map<OrderId, Set<JOrderObstacle>>> obstaclesE = controllerState.ordersToObstacles(orderIds, controllerState.instant());
             if (obstaclesE.isRight()) {
                 Function<Map.Entry<OrderId, Set<JOrderObstacle>>, Obstacle> obstacleMapper = e -> mapObstacle(e.getValue().iterator().next());
                 Map<OrderId, Set<JOrderObstacle>> obstacles = obstaclesE.get();
                 // Attention: It could be that removeIf -> java.lang.UnsupportedOperationException
-                return obstacles.entrySet().stream().peek(e -> e.getValue().removeIf(obstacle -> (obstacle instanceof JOrderObstacle.WaitingForOtherTime)
-                        || (obstacle instanceof JOrderObstacle.WaitingForTime))).filter(e -> !e.getValue().isEmpty()).collect(Collectors.toMap(
-                                Map.Entry::getKey, obstacleMapper));
+                return obstacles.entrySet().stream().peek(e -> e.getValue().removeIf(
+                        obstacle -> (obstacle instanceof JOrderObstacle.WaitingForOtherTime) || (obstacle instanceof JOrderObstacle.WaitingForTime)))
+                        .filter(e -> !e.getValue().isEmpty()).collect(Collectors.toMap(Map.Entry::getKey, obstacleMapper));
             }
         }
         return Collections.emptyMap();
     }
-    
+
     public static Optional<Obstacle> getObstacle(OrderId orderId, JControllerState controllerState) {
         Either<Problem, Set<JOrderObstacle>> obstaclesE = controllerState.orderToObstacles(orderId, controllerState.instant());
         if (obstaclesE.isRight()) {
@@ -1672,7 +1672,7 @@ public class OrdersHelper {
         }
         return Optional.empty();
     }
-    
+
     public static Obstacle mapObstacle(JOrderObstacle obstacle) {
         Obstacle ob = new Obstacle();
         if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {
@@ -1689,7 +1689,7 @@ public class OrdersHelper {
         }
         return ob;
     }
-    
+
     public static Set<String> getChildOrders(JControllerState currentState) {
         return currentState.orderIds().stream().map(OrderId::string).filter(s -> s.contains("|")).collect(Collectors.toSet());
     }
@@ -1700,7 +1700,7 @@ public class OrdersHelper {
         }
         return Optional.of(orderIsInImplicitEnd(o.asScala().workflowPosition(), controllerState));
     }
-    
+
     private static boolean orderIsInImplicitEnd(WorkflowPosition wPos, JControllerState controllerState) {
         return controllerState.asScala().instruction(wPos) instanceof ImplicitEnd;
     }
@@ -1712,9 +1712,9 @@ public class OrdersHelper {
         }
         return instant.toEpochMilli();
     }
-    
+
     public static Instant getScheduledForMillis(String orderId, ZoneId zoneId) {
-        //reflect DailyPlan timezone
+        // reflect DailyPlan timezone
         try {
             Matcher m = orderIdPattern.matcher(orderId);
             if (m.find()) {
@@ -1753,7 +1753,7 @@ public class OrdersHelper {
             return getScheduledForMillis(order.id().string(), zoneId, defaultMillis);
         }
     }
-    
+
     public static Instant getScheduledForInstant(JOrder order) {
         return getScheduledForInstant(order, null);
     }
@@ -1769,7 +1769,7 @@ public class OrdersHelper {
     public static ToLongFunction<JOrder> getCompareScheduledFor(ZoneId zoneId, long surveyDateMillis) {
         return o -> getScheduledForMillis(o, zoneId, surveyDateMillis);
     }
-    
+
     public static List<Object> stringPositionToList(String pos) {
         if (pos == null || pos.isEmpty()) {
             return null;
@@ -1790,11 +1790,11 @@ public class OrdersHelper {
         }
         return posList;
     }
-    
+
     @SuppressWarnings("unchecked")
     public static List<Object> getPosition(Object pos, Map<String, List<Object>> labelMap) {
         if (labelMap == null) {
-            labelMap = Collections.emptyMap(); 
+            labelMap = Collections.emptyMap();
         }
         if (pos != null) {
             if (pos instanceof String) {
@@ -1809,7 +1809,7 @@ public class OrdersHelper {
         }
         return null;
     }
-    
+
     public static List<List<Object>> getPositions(List<Object> poss, Map<String, List<Object>> labelMap) {
         List<List<Object>> positions = null;
         if (poss != null) {
@@ -1818,12 +1818,12 @@ public class OrdersHelper {
         }
         return positions;
     }
-    
+
     public static Optional<JPositionOrLabel> getStartPosition(Object pos, Map<String, List<Object>> labelMap, Set<String> reachablePositions) {
         List<Object> startPosition = getPosition(pos, labelMap);
         return getStartPosition(startPosition, reachablePositions, null);
     }
-    
+
     public static Optional<JPositionOrLabel> getStartPosition(List<Object> pos, Set<String> reachablePositions) {
         return getStartPosition(pos, reachablePositions, null);
     }
@@ -1846,17 +1846,18 @@ public class OrdersHelper {
         }
         return posOpt;
     }
-    
+
     public static Set<JPositionOrLabel> getEndPosition(List<Object> poss, Map<String, List<Object>> labelMap, Set<String> reachablePositions) {
         List<List<Object>> endPositions = getPositions(poss, labelMap);
         return getEndPositions(endPositions, reachablePositions, Collections.emptySet());
     }
-    
+
     public static Set<JPositionOrLabel> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions) {
         return getEndPositions(poss, reachablePositions, Collections.emptySet());
     }
 
-    public static Set<JPositionOrLabel> getEndPositions(List<List<Object>> poss, Set<String> reachablePositions, Set<PositionOrLabel> defaultPositions) {
+    public static Set<JPositionOrLabel> getEndPositions(List<List<Object>> poss, Set<String> reachablePositions,
+            Set<PositionOrLabel> defaultPositions) {
         Set<JPositionOrLabel> posOpt = Collections.emptySet();
         if (poss != null && !poss.isEmpty()) {
             posOpt = new HashSet<>();
@@ -1864,11 +1865,11 @@ public class OrdersHelper {
                 Either<Problem, JPosition> posE = JPosition.fromList(pos);
                 ProblemHelper.throwProblemIfExist(posE);
                 // endpositions are arbitrary or not?
-//                if (reachablePositions.contains(posE.get().toString())) {
-                    posOpt.add(posE.get());
-//                } else {
-//                    throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
-//                }
+                // if (reachablePositions.contains(posE.get().toString())) {
+                posOpt.add(posE.get());
+                // } else {
+                // throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
+                // }
             }
         } else {
             if (!defaultPositions.isEmpty()) {
@@ -1878,7 +1879,7 @@ public class OrdersHelper {
         }
         return posOpt;
     }
-    
+
     public static boolean endPositionBeforeStartPosition(JPosition start, JPosition end) {
         List<Object> startPos = start.toList();
         List<Object> endPos = end.toList();
@@ -1894,7 +1895,7 @@ public class OrdersHelper {
         }
         return false;
     }
-    
+
     public static ZoneId getDailyPlanTimeZone() {
         ConfigurationEntry timeZoneEntry = Globals.getConfigurationGlobalsDailyPlan().getTimeZone();
         String timeZone = timeZoneEntry.getValue();
@@ -1904,20 +1905,20 @@ public class OrdersHelper {
         try {
             return ZoneId.of(timeZone);
         } catch (Exception e) {
-            LOGGER.warn("DailyPlan timezone is invalid. Etc/UTC is used as fallback.", e);
-            return ZoneId.of("Etc/UTC");
+            LOGGER.warn("DailyPlan timezone is invalid. " + SOSDate.TIMEZONE_UTC + " is used as fallback.", e);
+            return ZoneId.of(SOSDate.TIMEZONE_UTC);
         }
     }
 
     public static JBranchPath getJBranchPath(BlockPosition pos) {
         Either<Problem, JBranchPath> eBranchPath = JBranchPath.fromList(pos.getPosition());
         if (eBranchPath.isLeft()) {
-            throw new JocBadRequestException("The block position '" + pos.getPosition().toString() + "' has wrong syntax: " + eBranchPath
-                    .getLeft().message());
+            throw new JocBadRequestException("The block position '" + pos.getPosition().toString() + "' has wrong syntax: " + eBranchPath.getLeft()
+                    .message());
         }
         return eBranchPath.get();
     }
-    
+
     public static BlockPosition getBlockPosition(Object blockPosition, String workflowName, Set<BlockPosition> availableBlockPositions) {
         if (blockPosition == null) {
             return null;
@@ -1941,8 +1942,7 @@ public class OrdersHelper {
             listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getPosition().equals(listBlockPos)).findAny();
             if (!listBlockPosOpt.isPresent()) {
                 workflowName = workflowName == null ? "" : "'" + workflowName + "' ";
-                throw new JocBadRequestException("Workflow " + workflowName + "doesn't contain the block position '" + listBlockPos.toString()
-                        + "'");
+                throw new JocBadRequestException("Workflow " + workflowName + "doesn't contain the block position '" + listBlockPos.toString() + "'");
             }
         }
         return listBlockPosOpt.get();
@@ -1952,17 +1952,17 @@ public class OrdersHelper {
         Optional<JPositionOrLabel> posOpt = getStartPosition(pos, labelMap, null);
         return getStartPositionInBlock(posOpt, blockPosition);
     }
-    
+
     public static Optional<JPositionOrLabel> getStartPositionInBlock(List<Object> pos, BlockPosition blockPosition) {
         Optional<JPositionOrLabel> posOpt = getStartPosition(pos, null);
         return getStartPositionInBlock(posOpt, blockPosition);
     }
-    
+
     private static Optional<JPositionOrLabel> getStartPositionInBlock(Optional<JPositionOrLabel> posOpt, BlockPosition blockPosition) {
         if (posOpt.isPresent() && blockPosition != null) {
             if (!posOpt.get().toString().startsWith(blockPosition.getPositionString() + ":")) {
-                throw new JocBadRequestException("Invalid start position '" + posOpt.get().toString() + "': It has to be inside the block '" + blockPosition
-                        .getPosition().toString() + "'.");
+                throw new JocBadRequestException("Invalid start position '" + posOpt.get().toString() + "': It has to be inside the block '"
+                        + blockPosition.getPosition().toString() + "'.");
             }
             if (blockPosition.getPositions() != null && !blockPosition.getPositions().stream().map(
                     com.sos.joc.model.order.Position::getPositionString).anyMatch(s -> s.equals(posOpt.get().toString()))) {
@@ -1973,17 +1973,17 @@ public class OrdersHelper {
         }
         return posOpt;
     }
-    
+
     public static Set<JPositionOrLabel> getEndPositionInBlock(List<Object> poss, Map<String, List<Object>> labelMap, BlockPosition blockPosition) {
         Set<JPositionOrLabel> endPoss = getEndPosition(poss, labelMap, null);
         return getEndPositionInBlock(endPoss, blockPosition);
     }
-    
+
     public static Set<JPositionOrLabel> getEndPositionInBlock(List<List<Object>> poss, BlockPosition blockPosition) {
         Set<JPositionOrLabel> endPoss = getEndPosition(poss, null);
         return getEndPositionInBlock(endPoss, blockPosition);
     }
-    
+
     private static Set<JPositionOrLabel> getEndPositionInBlock(Set<JPositionOrLabel> endPoss, BlockPosition blockPosition) {
         if (endPoss != null && blockPosition != null) {
             endPoss.forEach(pos -> {

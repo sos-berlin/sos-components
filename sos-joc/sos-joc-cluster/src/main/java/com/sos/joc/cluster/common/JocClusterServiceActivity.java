@@ -5,11 +5,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.model.cluster.common.state.JocClusterServiceActivityState;
 
 public class JocClusterServiceActivity {
 
-    private static final ZoneId ZONE_ID = ZoneId.of("Etc/UTC");
+    private static final ZoneId ZONE_ID = ZoneId.of(SOSDate.TIMEZONE_UTC);
 
     private static long RELAX = 10;// seconds
 

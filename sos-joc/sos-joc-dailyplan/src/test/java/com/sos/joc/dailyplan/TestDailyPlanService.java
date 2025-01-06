@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -34,7 +35,7 @@ public class TestDailyPlanService {
 
     @BeforeClass
     public static void setup() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
+        TimeZone.setDefault(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
     }
 
     @Test

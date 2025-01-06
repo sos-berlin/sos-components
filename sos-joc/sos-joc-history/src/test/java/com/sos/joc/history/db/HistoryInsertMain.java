@@ -108,7 +108,7 @@ public class HistoryInsertMain {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
+            TimeZone.setDefault(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
 
             factory = createFactory(hibernateConfigurationFile);
             session = factory.openStatelessSession("history");

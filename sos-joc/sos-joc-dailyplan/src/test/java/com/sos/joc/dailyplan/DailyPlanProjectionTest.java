@@ -6,16 +6,16 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 
 public class DailyPlanProjectionTest {
 
     @BeforeClass
     public static void setup() {
-        TimeZone.setDefault(TimeZone.getTimeZone(DailyPlanHelper.UTC));
+        TimeZone.setDefault(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
     }
 
     @Ignore

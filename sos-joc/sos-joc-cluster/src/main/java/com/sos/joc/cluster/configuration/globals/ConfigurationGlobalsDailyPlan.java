@@ -1,12 +1,13 @@
 package com.sos.joc.cluster.configuration.globals;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 
 public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
 
-    private ConfigurationEntry timeZone = new ConfigurationEntry("time_zone", "Etc/UTC", GlobalSettingsSectionValueType.TIMEZONE);
+    private ConfigurationEntry timeZone = new ConfigurationEntry("time_zone", SOSDate.TIMEZONE_UTC, GlobalSettingsSectionValueType.TIMEZONE);
     private ConfigurationEntry periodBegin = new ConfigurationEntry("period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry startTime = new ConfigurationEntry("start_time", "", GlobalSettingsSectionValueType.TIME);
 

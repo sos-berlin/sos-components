@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
@@ -68,7 +69,7 @@ public class MonitoringDBLayerTest {
     @Test
     public void testControllers() throws Exception {
 
-        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
+        TimeZone.setDefault(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;

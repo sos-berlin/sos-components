@@ -234,7 +234,7 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     public static ZonedDateTime getZonedDateTimeUTCMinusMinutes(ZonedDateTime datetime, long minutes) {
-        return datetime.withZoneSameInstant(ZoneId.of("Etc/UTC")).minusMinutes(minutes);
+        return datetime.withZoneSameInstant(ZoneId.of(SOSDate.TIMEZONE_UTC)).minusMinutes(minutes);
     }
 
     public static String toString(Date date) {

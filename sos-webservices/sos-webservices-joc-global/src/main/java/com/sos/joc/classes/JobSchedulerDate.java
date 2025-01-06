@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 
 public class JobSchedulerDate {
@@ -327,7 +328,7 @@ public class JobSchedulerDate {
     
     
     public static Instant convertUTCDate(String dateWithoutTime, Instant utcDateTime, String timezone) {
-        ZoneId utcZoneId = ZoneId.of("Etc/UTC");
+        ZoneId utcZoneId = ZoneId.of(SOSDate.TIMEZONE_UTC);
         ZoneId zoneId = timezone == null ? utcZoneId : ZoneId.of(timezone);
         LocalDate localDate = LocalDateTime.ofInstant(Instant.parse(dateWithoutTime + "T00:00:00Z"), utcZoneId).toLocalDate();
         LocalTime localTime = LocalDateTime.ofInstant(utcDateTime, utcZoneId).atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalTime();

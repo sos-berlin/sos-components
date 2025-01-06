@@ -1,5 +1,7 @@
 package com.sos.js7.converter.commons.config.items;
 
+import com.sos.commons.util.SOSDate;
+
 public class ScheduleConfig extends AConfigItem {
 
     private static final String CONFIG_KEY = "scheduleConfig";
@@ -9,7 +11,7 @@ public class ScheduleConfig extends AConfigItem {
     private String defaultWorkingDayCalendarName = "AnyDays";
     private String defaultNonWorkingDayCalendarName = "AnyDays";
 
-    private String defaultTimeZone = "Etc/UTC";
+    private String defaultTimeZone = SOSDate.TIMEZONE_UTC;
     private Boolean planOrders;
     private Boolean submitOrders;
 

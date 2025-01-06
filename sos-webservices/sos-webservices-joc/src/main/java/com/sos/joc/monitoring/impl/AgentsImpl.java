@@ -46,8 +46,6 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentsImpl.class);
 
-    private static final String DEFAULT_TIMEZONE = "Etc/UTC";
-
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
@@ -81,8 +79,8 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
 
             AgentsAnswer answer = new AgentsAnswer();
             // dateFrom, dateTo - already UTC time , use UTC instead of in.getTimeZone()
-            Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), DEFAULT_TIMEZONE);
-            Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), DEFAULT_TIMEZONE);
+            Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), SOSDate.TIMEZONE_UTC);
+            Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), SOSDate.TIMEZONE_UTC);
             if (dateFrom != null) {
                 if (dateFrom.getTime() > new Date().getTime()) {
                     answer.setDeliveryDate(new Date());
@@ -117,11 +115,11 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
     protected Map<String, Map<String, List<DBItemHistoryAgent>>> getHistoryAgents(MonitoringDBLayer dbLayer,
             Map<String, Set<String>> historyTimeZones, Set<String> allowedControllers, Date dateFrom, Date dateTo) throws Exception {
         Map<String, Map<String, List<DBItemHistoryAgent>>> map = new HashMap<>();
-            ScrollableResults<DBItemHistoryAgent> sr = null;
+        ScrollableResults<DBItemHistoryAgent> sr = null;
         try {
             sr = dbLayer.getAgentsWithPrevAndLast(allowedControllers, dateFrom, dateTo);
             while (sr.next()) {
-                    DBItemHistoryAgent item = sr.get();
+                DBItemHistoryAgent item = sr.get();
                 if (item.getControllerId() != null && item.getTimezone() != null) {
                     Set<String> timezones = historyTimeZones.getOrDefault(item.getControllerId(), new HashSet<>());
                     timezones.add(item.getTimezone());
@@ -148,7 +146,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
     private String getDefaultTimeZone(Map<String, Set<String>> historyTimeZones, String controllerId) {
         Set<String> timeZones = historyTimeZones.get(controllerId);
         if (timeZones == null || timeZones.size() == 0) {
-            return DEFAULT_TIMEZONE;
+            return SOSDate.TIMEZONE_UTC;
         } else {
             return timeZones.iterator().next();
         }

@@ -448,7 +448,7 @@ public class DailyPlanProjections {
 
             for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
                 if (assignedCalendar.getTimeZone() == null) {
-                    assignedCalendar.setTimeZone(DailyPlanHelper.UTC);
+                    assignedCalendar.setTimeZone(SOSDate.TIMEZONE_UTC);
                 }
                 final ZoneId timezone = ZoneId.of(assignedCalendar.getTimeZone());
 

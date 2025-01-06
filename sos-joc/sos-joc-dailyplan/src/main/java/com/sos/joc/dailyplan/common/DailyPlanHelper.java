@@ -43,12 +43,10 @@ public class DailyPlanHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanHelper.class);
 
-    public static final String UTC = "Etc/UTC";
-
     public static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
 
     public static Date getDailyPlanDateAsDate(Long startTime) {
-        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
+        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
         calendar.setTime(new Date(startTime));
         return calendar.getTime();
     }
@@ -75,14 +73,14 @@ public class DailyPlanHelper {
     }
 
     public static java.util.Calendar getUTCCalendarNow() {
-        return getCalendar(null, UTC);
+        return getCalendar(null, SOSDate.TIMEZONE_UTC);
     }
 
     public static java.util.Calendar getNextDateUTCCalendar(Date date) {
         if (date == null) {
             return null;
         }
-        java.util.Calendar cal = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
+        java.util.Calendar cal = java.util.Calendar.getInstance(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
         cal.setTime(date);
         cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
         return cal;

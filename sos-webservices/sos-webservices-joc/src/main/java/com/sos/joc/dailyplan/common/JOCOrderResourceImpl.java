@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
@@ -44,7 +45,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     public static DailyPlanSettings getDailyPlanSettings() {
         DailyPlanSettings settings = new DailyPlanSettings();
         if (Globals.getConfigurationGlobals() == null) {// TODO to remove
-            settings.setTimeZone("Etc/UTC");
+            settings.setTimeZone(SOSDate.TIMEZONE_UTC);
             settings.setPeriodBegin("00:00");
             settings.setDayAheadPlan(7);
             settings.setDayAheadSubmit(3);

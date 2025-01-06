@@ -1,10 +1,12 @@
 package com.sos.js7.converter.commons.config.items;
 
+import com.sos.commons.util.SOSDate;
+
 public class WorkflowConfig extends AConfigItem {
 
     private static final String CONFIG_KEY = "workflowConfig";
 
-    private String defaultTimeZone = "Etc/UTC";
+    private String defaultTimeZone = SOSDate.TIMEZONE_UTC;
 
     public WorkflowConfig() {
         super(CONFIG_KEY);

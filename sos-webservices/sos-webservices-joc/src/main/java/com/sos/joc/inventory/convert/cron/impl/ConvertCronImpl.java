@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.lock.Lock;
@@ -275,7 +276,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             List<DBItemJocConfiguration> confs = confDbLayer.getJocConfigurationList(confFilter, 1);
             jsonReader = Json.createReader(new StringReader(confs.get(0).getConfigurationItem()));
             JsonObject json = jsonReader.readObject();
-            timezone = json.getString("zone", "Etc/UTC");
+            timezone = json.getString("zone", SOSDate.TIMEZONE_UTC);
         } catch(Exception e) {
             confFilter.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             try {
@@ -283,7 +284,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
                 jsonReader.close();
                 jsonReader = Json.createReader(new StringReader(confs.get(0).getConfigurationItem()));
                 JsonObject json = jsonReader.readObject();
-                timezone = json.getString("zone", "Etc/UTC");
+                timezone = json.getString("zone", SOSDate.TIMEZONE_UTC);
             } catch(Exception ex) {
                 LOGGER.warn("could not determine timezone from profile");
             } finally {

@@ -33,7 +33,7 @@ public class TestPeriodResolver {
 
     @BeforeClass
     public static void setup() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
+        TimeZone.setDefault(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
     }
 
     @Ignore
@@ -44,7 +44,7 @@ public class TestPeriodResolver {
         period.setBegin("12:00");
         period.setEnd("15:00");
         period.setRepeat("10:00");
-        resolver.addStartTimes(period, "2020-01-01", "UTC");
+        resolver.addStartTimes(period, "2020-01-01", SOSDate.TIMEZONE_UTC);
 
         Map<Long, Period> l = resolver.getStartTimes("2020-01-01", "2020-01-01", "Europe/Berlin");
         assertEquals("testAddStartTimes", 18, l.size());
@@ -84,13 +84,13 @@ public class TestPeriodResolver {
     public void testDayIsInPlanPeriodSingleStart() throws Exception {
         String dailyPlanDate = SOSDate.getDateAsString(SOSDate.add(new Date(), 1, ChronoUnit.DAYS));
 
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("00:00:00"));
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("05:00:00"));
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("20:00:00"));
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("23:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("00:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("05:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("20:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("23:00:00"));
 
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "03:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("00:00:00"));
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "03:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("23:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "03:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("00:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "03:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("23:00:00"));
 
         executeTestDayIsInPlanSinglestart("America/Chicago", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("00:00:00"));
         executeTestDayIsInPlanSinglestart("America/Chicago", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("23:00:00"));
@@ -98,8 +98,8 @@ public class TestPeriodResolver {
         executeTestDayIsInPlanSinglestart("Europe/Berlin", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("00:00:00"));
         executeTestDayIsInPlanSinglestart("Europe/Berlin", "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("23:00:00"));
 
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "00:00:00", dailyPlanDate, "Europe/Berlin", Arrays.asList("00:00:00"));
-        executeTestDayIsInPlanSinglestart("Etc/UTC", "00:00:00", dailyPlanDate, "Europe/Berlin", Arrays.asList("23:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "Europe/Berlin", Arrays.asList("00:00:00"));
+        executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "Europe/Berlin", Arrays.asList("23:00:00"));
 
         executeTestDayIsInPlanSinglestart("Asia/Kolkata", "00:00:00", dailyPlanDate, "Europe/Berlin", Arrays.asList("00:00:00"));
         executeTestDayIsInPlanSinglestart("Asia/Kolkata", "00:00:00", dailyPlanDate, "Europe/Berlin", Arrays.asList("23:00:00"));
@@ -129,8 +129,8 @@ public class TestPeriodResolver {
     public void testDayIsInPlanPeriodRepeat() throws Exception {
         String dailyPlanDate = SOSDate.getDateAsString(SOSDate.add(new Date(), 1, ChronoUnit.DAYS));
 
-        executeTestDayIsInPlanRepeat("Etc/UTC", "03:00:00", dailyPlanDate, "America/Chicago", Arrays.asList(new TestPeriodRepeat("00:00:00",
-                "24:00:00", "01:00:00"), new TestPeriodRepeat("00:30:00", "24:00:00", "01:00:00")));
+        executeTestDayIsInPlanRepeat(SOSDate.TIMEZONE_UTC, "03:00:00", dailyPlanDate, "America/Chicago", Arrays.asList(new TestPeriodRepeat(
+                "00:00:00", "24:00:00", "01:00:00"), new TestPeriodRepeat("00:30:00", "24:00:00", "01:00:00")));
 
     }
 
