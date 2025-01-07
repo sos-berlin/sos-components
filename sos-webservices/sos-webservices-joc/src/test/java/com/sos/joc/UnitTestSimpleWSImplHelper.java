@@ -171,7 +171,7 @@ public class UnitTestSimpleWSImplHelper {
     }
 
     public CompletableFuture<JOCDefaultResponse> post(String methodName, StringBuilder filter) throws Exception {
-        return post(methodName, filter);
+        return post(methodName, filter == null ? null : filter.toString());
     }
 
     public CompletableFuture<JOCDefaultResponse> post(String methodName, String filter) throws Exception {
