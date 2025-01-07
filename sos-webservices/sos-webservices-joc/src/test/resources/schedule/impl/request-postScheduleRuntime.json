@@ -1,0 +1,26 @@
+{
+	"dateFrom": "2025-01-07",
+	"dateTo": "2025-01-07",
+	"timeZone": "Europe/Berlin",
+	"nonWorkingDayCalendars": [],
+	"calendars": [
+		{
+			"calendarName": "AllDays",
+			"periods": [
+				{
+					"singleStart": "10:00:00",
+					"whenHoliday": "SUPPRESS"
+				}
+			],
+			"includes": {
+				"repetitions": [
+					{
+						"from": "2025-01-01",
+						"repetition": "DAILY",
+						"step": 2
+					}
+				]
+			}
+		}
+	]
+}
