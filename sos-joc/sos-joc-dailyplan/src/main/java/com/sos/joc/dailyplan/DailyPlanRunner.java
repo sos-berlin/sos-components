@@ -92,7 +92,6 @@ public class DailyPlanRunner extends TimerTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRunner.class);
     private static final String IDENTIFIER = DailyPlanRunner.class.getSimpleName();
-    private static final String UTC = "UTC";
 
     private AtomicLong lastActivityStart = new AtomicLong(0);
     private AtomicLong lastActivityEnd = new AtomicLong(0);
@@ -848,10 +847,8 @@ public class DailyPlanRunner extends TimerTask {
             submissionForDate = SOSDate.getDateAsString(submission.getSubmissionForDate());
         }
 
-        // tmpUseOnlyActDate=true (introduced for optimization with JOC-1647)
+        // introduced for optimization with JOC-1647
         // instead of 2 days (current and next day), only the current dailyPlanDate is used for the calendar/frequency resolver calculation
-        // should be removed after the test
-        boolean tmpUseOnlyActDate = true;
         for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
             Schedule schedule = dailyPlanSchedule.getSchedule();
             String logPrefix = String.format("%s[schedule=%s]", lp, schedule.getPath());
@@ -867,7 +864,7 @@ public class DailyPlanRunner extends TimerTask {
 
                 for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
                     if (assignedCalendar.getTimeZone() == null) {
-                        assignedCalendar.setTimeZone(UTC);
+                        assignedCalendar.setTimeZone(SOSDate.TIMEZONE_UTC);
                     }
 
                     String actDateAsString = SOSDate.getDateAsString(actDate);
@@ -910,11 +907,7 @@ public class DailyPlanRunner extends TimerTask {
                         }
                     }
                     calendar.setFrom(actDateAsString);
-                    if (tmpUseOnlyActDate) {
-                        calendar.setTo(actDateAsString);
-                    } else {
-                        calendar.setTo(nextDateAsString);
-                    }
+                    calendar.setTo(actDateAsString);
 
                     Calendar restrictions = new Calendar();
                     restrictions.setIncludes(assignedCalendar.getIncludes());
@@ -927,13 +920,8 @@ public class DailyPlanRunner extends TimerTask {
                     List<String> frequencyResolverDates = null;
                     try {
                         PeriodResolver periodResolver = null;
-                        if (tmpUseOnlyActDate) {
-                            frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
-                                    actDateAsString).getDates();
-                        } else {
-                            frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
-                                    nextDateAsString).getDates();
-                        }
+                        frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString, actDateAsString)
+                                .getDates();
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][FrequencyResolver]dates=%s", logPrefix, assignedCalendar
                                     .getCalendarName(), String.join(",", frequencyResolverDates)));
