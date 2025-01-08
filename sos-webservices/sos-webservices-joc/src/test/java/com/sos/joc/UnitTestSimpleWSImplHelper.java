@@ -12,10 +12,12 @@ import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctc.wstx.shaded.msv_core.datatype.xsd.datetime.TimeZone;
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountsList;
 import com.sos.auth.sosintern.SOSInternAuthSession;
 import com.sos.auth.sosintern.classes.SOSInternAuthSubject;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -60,6 +62,7 @@ public class UnitTestSimpleWSImplHelper {
     }
 
     public UnitTestSimpleWSImplHelper(JOCResourceImpl instance, Path propertiesFile, Path hibernateConfigurationFile) throws Exception {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
         this.instance = instance;
         this.clazz = instance.getClass();
         this.propertiesFile = propertiesFile;
