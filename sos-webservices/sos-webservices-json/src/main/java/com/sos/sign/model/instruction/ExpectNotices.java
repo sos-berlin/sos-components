@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.instruction.WhenNotAnnouced;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -18,7 +19,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "boardPaths"
+    "boardPaths",
+    "whenNotAnnounced"
 })
 public class ExpectNotices
     extends Instruction
@@ -34,7 +36,15 @@ public class ExpectNotices
         "noticeBoardNames"
     })
     private String boardPaths;
-    
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    private WhenNotAnnouced whenNotAnnounced = WhenNotAnnouced.fromValue("Wait");
+
     /**
      * No args constructor for use in serialization
      * 
@@ -71,14 +81,36 @@ public class ExpectNotices
         this.boardPaths = boardPaths;
     }
 
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    public WhenNotAnnouced getWhenNotAnnounced() {
+        return whenNotAnnounced;
+    }
+
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    public void setWhenNotAnnounced(WhenNotAnnouced whenNotAnnounced) {
+        this.whenNotAnnounced = whenNotAnnounced;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("boardPaths", boardPaths).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("boardPaths", boardPaths).append("whenNotAnnounced", whenNotAnnounced).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(boardPaths).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(whenNotAnnounced).append(boardPaths).toHashCode();
     }
 
     @Override
@@ -90,7 +122,7 @@ public class ExpectNotices
             return false;
         }
         ExpectNotices rhs = ((ExpectNotices) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(boardPaths, rhs.boardPaths).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(whenNotAnnounced, rhs.whenNotAnnounced).append(boardPaths, rhs.boardPaths).isEquals();
     }
 
 }

@@ -18,7 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "noticeBoardNames"
+    "noticeBoardNames",
+    "whenNotAnnounced"
 })
 public class ExpectNotices
     extends Instruction
@@ -34,7 +35,15 @@ public class ExpectNotices
         "boardPaths"
     })
     private String noticeBoardNames;
-    
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    private WhenNotAnnouced whenNotAnnounced = WhenNotAnnouced.fromValue("Wait");
+
     /**
      * No args constructor for use in serialization
      * 
@@ -71,14 +80,36 @@ public class ExpectNotices
         this.noticeBoardNames = noticeBoardNames;
     }
 
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    public WhenNotAnnouced getWhenNotAnnounced() {
+        return whenNotAnnounced;
+    }
+
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    public void setWhenNotAnnounced(WhenNotAnnouced whenNotAnnounced) {
+        this.whenNotAnnounced = whenNotAnnounced;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("noticeBoardNames", noticeBoardNames).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("noticeBoardNames", noticeBoardNames).append("whenNotAnnounced", whenNotAnnounced).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(noticeBoardNames).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(noticeBoardNames).append(whenNotAnnounced).toHashCode();
     }
 
     @Override
@@ -90,7 +121,7 @@ public class ExpectNotices
             return false;
         }
         ExpectNotices rhs = ((ExpectNotices) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(noticeBoardNames, rhs.noticeBoardNames).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(noticeBoardNames, rhs.noticeBoardNames).append(whenNotAnnounced, rhs.whenNotAnnounced).isEquals();
     }
 
 }

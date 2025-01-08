@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.instruction.WhenNotAnnouced;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -19,7 +20,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "boardPaths",
-    "subworkflow"
+    "subworkflow",
+    "whenNotAnnounced"
 })
 public class ConsumeNotices
     extends Instruction
@@ -44,7 +46,15 @@ public class ConsumeNotices
      */
     @JsonProperty("subworkflow")
     private Instructions subworkflow;
-    
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    private WhenNotAnnouced whenNotAnnounced = WhenNotAnnouced.fromValue("Wait");
+
     /**
      * No args constructor for use in serialization
      * 
@@ -107,14 +117,36 @@ public class ConsumeNotices
         this.subworkflow = subworkflow;
     }
 
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    public WhenNotAnnouced getWhenNotAnnounced() {
+        return whenNotAnnounced;
+    }
+
+    /**
+     * WhenNotAnnouced Enum
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("whenNotAnnounced")
+    public void setWhenNotAnnounced(WhenNotAnnouced whenNotAnnounced) {
+        this.whenNotAnnounced = whenNotAnnounced;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("boardPaths", boardPaths).append("subworkflow", subworkflow).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("boardPaths", boardPaths).append("subworkflow", subworkflow).append("whenNotAnnounced", whenNotAnnounced).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(boardPaths).append(subworkflow).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(boardPaths).append(subworkflow).append(whenNotAnnounced).toHashCode();
     }
 
     @Override
@@ -126,7 +158,7 @@ public class ConsumeNotices
             return false;
         }
         ConsumeNotices rhs = ((ConsumeNotices) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(boardPaths, rhs.boardPaths).append(subworkflow, rhs.subworkflow).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(boardPaths, rhs.boardPaths).append(subworkflow, rhs.subworkflow).append(whenNotAnnounced, rhs.whenNotAnnounced).isEquals();
     }
 
 }
