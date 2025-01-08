@@ -12,7 +12,6 @@ import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ctc.wstx.shaded.msv_core.datatype.xsd.datetime.TimeZone;
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountsList;
 import com.sos.auth.sosintern.SOSInternAuthSession;
