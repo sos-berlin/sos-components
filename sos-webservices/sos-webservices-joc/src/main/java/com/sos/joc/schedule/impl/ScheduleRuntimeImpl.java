@@ -1,15 +1,14 @@
 package com.sos.joc.schedule.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,21 +23,18 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
+import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
@@ -55,19 +51,11 @@ import jakarta.ws.rs.Path;
 @Path("schedule")
 public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRuntimeResource {
 
-    private static final String API_CALL = "./schedule/runtime";
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduleRuntimeImpl.class);
-    private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-    private static DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
-    private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
+    private static final String API_CALL = "./schedule/runtime";
 
-    // temporary properties for testing - JOC-1980
-    // true (new behavior) - create a preview per day in the date range, like the DailyPlan does
-    // - TODO in some cases performance problems(next year view), e.g. Every 2nd day starting with day 01.12.2024 of Dec ...
-    // -- because Every/Repetitions is calculated from a specific start day - so if start=2024.. there is more to calculate for 2030 than for 2025...
-    // false (previous behavior) - create a preview for the entire date range with one call
-    private static final boolean TMP_DAILY_PLAN_MODE = true;
-    private static final boolean TMP_DAILY_PLAN_MODE_PARALLEL = true;
+    private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
 
     @Override
     public JOCDefaultResponse postScheduleRuntime(String accessToken, byte[] filterBytes) {
@@ -85,8 +73,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
             RunTime entity = new RunTime();
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            if (in.getCalendars() != null && !in.getCalendars().isEmpty()) {
-
+            if (!SOSCollection.isEmpty(in.getCalendars())) {
                 if (in.getTimeZone() == null || in.getTimeZone().isEmpty()) {
                     in.setTimeZone(SOSDate.TIMEZONE_UTC);
                 }
@@ -102,7 +89,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
 
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-                final List<String> nonWorkingDays = getNonWorkingDays(dbLayer, in);
+                final List<Calendar> nonWorkingDayCalendars = DailyPlanHelper.getNonWorkingDayCalendars(dbLayer, in.getNonWorkingDayCalendars());
                 List<DBItemInventoryReleasedConfiguration> workingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getCalendars().stream().map(
                         AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList()));
                 Globals.disconnect(session);
@@ -126,31 +113,25 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                         restrictions.setIncludes(c.getIncludes());
                         // restrictions.setExcludes(c.getExcludes());
                         Calendar basedOn = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
-                        if (TMP_DAILY_PLAN_MODE) {
-                            if (TMP_DAILY_PLAN_MODE_PARALLEL) {
-                                Set<Period> singleDatesPeriods = ConcurrentHashMap.newKeySet();
-                                SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo()).stream().parallel().forEach(asDailyPlanSingleDate -> {
-                                    try {
-                                        singleDatesPeriods.addAll(new FrequencyResolver().resolveRestrictions(basedOn, restrictions,
-                                                asDailyPlanSingleDate, asDailyPlanSingleDate).getDates().stream().flatMap(date -> getPeriods(c
-                                                        .getPeriods(), nonWorkingDays, date, timezone, getJocError())).collect(Collectors.toSet()));
-                                    } catch (Throwable e) {
-                                        LOGGER.info("[" + API_CALL + "][FrequencyResolver.resolveRestrictions]" + e, e);
-                                    }
-                                });
-                                periods.addAll(singleDatesPeriods);
-                            } else {
-                                for (String asDailyPlanSingleDate : SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo())) {
-                                    new FrequencyResolver().resolveRestrictions(basedOn, restrictions, asDailyPlanSingleDate, asDailyPlanSingleDate)
-                                            .getDates().stream().flatMap(date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone,
-                                                    getJocError())).collect(Collectors.toCollection(() -> periods));
-                                }
+                        Set<Period> singleDatesPeriods = ConcurrentHashMap.newKeySet();
+                        SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo()).stream().parallel().forEach(asDailyPlanSingleDate -> {
+                            try {
+                                List<String> workingDates = new FrequencyResolver().resolveRestrictions(basedOn, restrictions, asDailyPlanSingleDate,
+                                        asDailyPlanSingleDate).getDates();
+
+                                List<String> nonWorkingDates = new ArrayList<>();
+                                Set<String> workingDatesExtendedWithNonWorkingPrevNext = new HashSet<>();
+
+                                DailyPlanHelper.applyAdjustmentForNonWorkingDates(c, nonWorkingDayCalendars, asDailyPlanSingleDate, workingDates,
+                                        nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
+                                singleDatesPeriods.addAll(workingDates.stream().flatMap(date -> getSingleDatePeriods(date, c.getPeriods(),
+                                        nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext, timezone, getJocError())).collect(Collectors
+                                                .toSet()));
+                            } catch (Throwable e) {
+                                LOGGER.info("[" + API_CALL + "][" + asDailyPlanSingleDate + "]" + e, e);
                             }
-                        } else {
-                            fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
-                                    date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone, getJocError())).collect(Collectors
-                                            .toCollection(() -> periods));
-                        }
+                        });
+                        periods.addAll(singleDatesPeriods);
                     }
                 }
                 entity.setPeriods(new ArrayList<>(periods));
@@ -167,97 +148,32 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
         }
     }
 
-    private List<String> getNonWorkingDays(InventoryDBLayer dbLayer, ScheduleDatesFilter in) throws SOSHibernateException, JsonParseException,
-            JsonMappingException, IOException, SOSMissingDataException, SOSInvalidDataException {
-        FrequencyResolver fr = new FrequencyResolver();
-        List<String> nonWorkingDays = new ArrayList<>();
-
-        if (in.getNonWorkingDayCalendars() != null && !in.getNonWorkingDayCalendars().isEmpty()) {
-            List<DBItemInventoryReleasedConfiguration> nonWorkingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getNonWorkingDayCalendars()
-                    .stream().map(AssignedNonWorkingDayCalendars::getCalendarName).distinct().collect(Collectors.toList()));
-
-            if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
-
-                Map<String, String> nameContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(
-                        DBItemInventoryReleasedConfiguration::getName, DBItemInventoryReleasedConfiguration::getContent));
-
-                for (AssignedNonWorkingDayCalendars c : in.getNonWorkingDayCalendars()) {
-                    if (!nameContentMap.containsKey(c.getCalendarName())) {
-                        continue;
-                    }
-                    Calendar basedOn = Globals.objectMapper.readValue(nameContentMap.get(c.getCalendarName()), Calendar.class);
-                    nonWorkingDays.addAll(fr.resolveCalendar(basedOn, in.getDateFrom(), in.getDateTo()).getDates());
-                }
-            }
-        }
-        return nonWorkingDays;
-    }
-
-    private static Stream<Period> getPeriods(List<Period> periods, List<String> holidays, String date, ZoneId timezone, JocError jocError) {
+    private static Stream<Period> getSingleDatePeriods(String date, List<Period> periods, List<String> nonWorkingDates,
+            Set<String> workingDatesExtendedWithNonWorkingPrevNext, ZoneId timezone, JocError jocError) {
         if (periods == null) {
             return Stream.empty();
         }
-        return periods.stream().map(p -> getPeriod(p, holidays, date, timezone, jocError)).filter(Objects::nonNull);
+        return periods.stream().map(p -> getSingleDatePeriod(date, p, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext, timezone,
+                jocError)).filter(Objects::nonNull);
     }
 
-    private static Period getPeriod(Period period, List<String> holidays, String date, ZoneId timezone, JocError jocError) {
-        Period p = new Period();
-
-        if (holidays.contains(date)) {
-            if (period.getWhenHoliday() != null) {
-                switch (period.getWhenHoliday()) {
-                case SUPPRESS:
-                    return null;
-                case NEXTNONWORKINGDAY:
-                    try {
-                        java.util.Calendar dateCal = FrequencyResolver.getCalendarFromString(date);
-                        dateCal.add(java.util.Calendar.DATE, 1);
-                        date = dateFormatter.format(dateCal.toInstant());
-                        while (holidays.contains(date)) {
-                            dateCal.add(java.util.Calendar.DATE, 1);
-                            date = dateFormatter.format(dateCal.toInstant());
-                        }
-                    } catch (SOSInvalidDataException e) {
-                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                            LOGGER.info(jocError.printMetaInfo());
-                            jocError.clearMetaInfo();
-                        }
-                        LOGGER.error(String.format("[%s] %s", period.toString(), e.toString()));
-                        return null;
-                    }
-                    break;
-                case PREVIOUSNONWORKINGDAY:
-                    try {
-                        java.util.Calendar dateCal = FrequencyResolver.getCalendarFromString(date);
-                        dateCal.add(java.util.Calendar.DATE, -1);
-                        date = dateFormatter.format(dateCal.toInstant());
-                        while (holidays.contains(date)) {
-                            dateCal.add(java.util.Calendar.DATE, -1);
-                            date = dateFormatter.format(dateCal.toInstant());
-                        }
-                    } catch (SOSInvalidDataException e) {
-                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                            LOGGER.info(jocError.printMetaInfo());
-                            jocError.clearMetaInfo();
-                        }
-                        LOGGER.error(String.format("[%s] %s", period.toString(), e.toString()));
-                        return null;
-                    }
-                    break;
-                case IGNORE:
-                    break;
-                }
-            } else {
-                return null;
+    private static Period getSingleDatePeriod(String date, Period period, List<String> nonWorkingDates,
+            Set<String> workingDatesExtendedWithNonWorkingPrevNext, ZoneId timezone, JocError jocError) {
+        Period p = DailyPlanHelper.resolveSingleDatePeriod(date, period, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
+        if (p == null) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[getSingleDatePeriod][" + date + "][skip]" + SOSString.toString(period, true));
             }
+            return null;
         }
 
+        // TODO JOC-1980 - should be normalized bei PeriodResolver
         if (period.getSingleStart() != null) {
             p.setSingleStart(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T" + normalizeTime(period.getSingleStart()),
                     dateTimeFormatter), timezone)));
             return p;
         }
-        if (period.getRepeat() != null && !period.getRepeat().isEmpty()) {
+        if (!SOSString.isEmpty(period.getRepeat())) {
             p.setRepeat(period.getRepeat());
             String begin = period.getBegin();
             if (begin == null || begin.isEmpty()) {

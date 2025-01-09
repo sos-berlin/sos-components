@@ -1,26 +1,28 @@
 {
-	"dateFrom": "2025-01-07",
-	"dateTo": "2025-01-07",
 	"timeZone": "Europe/Berlin",
-	"nonWorkingDayCalendars": [],
+	"dateFrom": "2025-01-12",
+	"dateTo": "2025-01-12",
 	"calendars": [
 		{
-			"calendarName": "AllDays",
+			"calendarName": "dailyplan_wd_mo-fr",
 			"periods": [
 				{
 					"singleStart": "10:00:00",
+					"whenHoliday": "NEXTNONWORKINGDAY"
+				},
+				{
+					"singleStart": "11:00:00",
 					"whenHoliday": "SUPPRESS"
+				},
+				{
+					"singleStart": "12:00:00"
 				}
-			],
-			"includes": {
-				"repetitions": [
-					{
-						"from": "2025-01-01",
-						"repetition": "DAILY",
-						"step": 2
-					}
-				]
-			}
+			]
+		}
+	],
+	"nonWorkingDayCalendars": [
+		{
+			"calendarName": "dailyplan_nwd"
 		}
 	]
 }

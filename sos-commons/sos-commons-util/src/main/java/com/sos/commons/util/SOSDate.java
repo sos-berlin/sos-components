@@ -417,12 +417,12 @@ public class SOSDate {
         return getTimeAsSeconds(val) * 1_000;
     }
 
-    /** @param startIsoLocalDate text string such as 2024-12-11
-     * @param endIsoLocalDate text string such as 2024-12-01
+    /** @param startDateISO text string such as 2024-12-11
+     * @param endDateISO text string such as 2024-12-01
      * @return */
-    public static List<String> getDatesInRange(String startIsoLocalDate, String endIsoLocalDate) {
-        LocalDate start = LocalDate.parse(startIsoLocalDate);
-        LocalDate end = LocalDate.parse(endIsoLocalDate);
+    public static List<String> getDatesInRange(String startDateISO, String endDateISO) {
+        LocalDate start = LocalDate.parse(startDateISO);
+        LocalDate end = LocalDate.parse(endDateISO);
 
         List<String> dates = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
@@ -431,6 +431,18 @@ public class SOSDate {
             start = start.plusDays(1);
         }
         return dates;
+    }
+
+    /** @param dateISO text string such as 2025-01-01
+     * @return text string such as 2025-01-02 */
+    public static String getNextDate(String dateISO) {
+        return LocalDate.parse(dateISO).plusDays(1).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+    }
+
+    /** @param dateISO text string such as 2025-01-01
+     * @return text string such as 2024-31-12 */
+    public static String getPreviousDate(String dateISO) {
+        return LocalDate.parse(dateISO).minusDays(1).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
     }
 
     /** Examples(fromTime,toTime): <br/>
