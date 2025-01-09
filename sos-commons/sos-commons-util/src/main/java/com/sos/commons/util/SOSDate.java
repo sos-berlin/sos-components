@@ -440,7 +440,7 @@ public class SOSDate {
     }
 
     /** @param dateISO text string such as 2025-01-01
-     * @return text string such as 2024-31-12 */
+     * @return text string such as 2024-12-31 */
     public static String getPreviousDate(String dateISO) {
         return LocalDate.parse(dateISO).minusDays(1).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
     }
