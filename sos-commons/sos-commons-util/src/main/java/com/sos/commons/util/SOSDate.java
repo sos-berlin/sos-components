@@ -446,14 +446,16 @@ public class SOSDate {
     }
 
     /** Examples(fromTime,toTime): <br/>
-     * - 04:00 to 23:00<br/>
-     * - 04:00 to 01:00<br/>
+     * - 04:00 to 23:00, times=00:00,01:00,02:00,03:00,04:00,05:00,07:00,23:01<br/>
+     * -- return 04:00,05:00,07:00<br/>
+     * - 04:00 to 02:00, times=00:00,01:00,02:00,03:00,04:00,05:00,07:00,23:01<br/>
+     * -- return 00:00,01:00,02:00,04:00,05:00,07:00,23:01<br/>
      * 
      * @param fromTime format: s, hh:mm:ss, hh:mm
      * @param toTime format: s, hh:mm:ss, hh:mm
      * @param times format: s, hh:mm:ss, hh:mm<br/>
      * 
-     * @return filtered result */
+     * @return times in the fromTime-toTime range */
     public static List<String> getFilteredTimesInRange(String fromTime, String toTime, List<String> times) {
         return getFilteredTimesInRange(getTimeAsSeconds(fromTime), getTimeAsSeconds(toTime), times);
     }
