@@ -261,7 +261,7 @@ public class CommonJobRunTime extends AJobAttributes {
             this.to = arr[1].trim();
             this.toAsSeconds = SOSDate.getTimeAsSeconds(this.to);
 
-            this.durationInSeconds = Long.valueOf(SOSDate.getTimeIntervalInSeconds(this.fromAsSeconds, this.toAsSeconds));
+            this.durationInSeconds = Long.valueOf(SOSDate.getDaySpanInSeconds(this.fromAsSeconds, this.toAsSeconds));
         }
 
         public String getFrom() {

@@ -448,6 +448,7 @@ public class SOSDate {
     /** Examples(fromTime,toTime): <br/>
      * - 04:00 to 23:00, times=00:00,01:00,02:00,03:00,04:00,05:00,07:00,23:01<br/>
      * -- return 04:00,05:00,07:00<br/>
+     * Supports intervals that cross midnight, e.g.<br/>
      * - 04:00 to 02:00, times=00:00,01:00,02:00,03:00,04:00,05:00,07:00,23:01<br/>
      * -- return 00:00,01:00,02:00,04:00,05:00,07:00,23:01<br/>
      * 
@@ -484,11 +485,17 @@ public class SOSDate {
         }).collect(Collectors.toList());
     }
 
-    public static long getTimeIntervalInSeconds(String fromTime, String toTime) {
-        return getTimeIntervalInSeconds(getTimeAsSeconds(fromTime), getTimeAsSeconds(toTime));
+    /** Returns the time span in seconds between two time points within a day.<br/>
+     * Supports intervals that cross midnight, e.g., from 23:00:00 to 01:00:00.
+     *
+     * @param fromTime The start time (e.g., 23:00:00).
+     * @param toTime The end time (e.g., 01:00:00).
+     * @return The time span in seconds. */
+    public static long getDaySpanInSeconds(String fromTime, String toTime) {
+        return getDaySpanInSeconds(getTimeAsSeconds(fromTime), getTimeAsSeconds(toTime));
     }
 
-    public static long getTimeIntervalInSeconds(long fromSeconds, long toSeconds) {
+    public static long getDaySpanInSeconds(long fromSeconds, long toSeconds) {
         final long endOfDay = 86_400;
         if (fromSeconds == toSeconds) {
             return endOfDay;
