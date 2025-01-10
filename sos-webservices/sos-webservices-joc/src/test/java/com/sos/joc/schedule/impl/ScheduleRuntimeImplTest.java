@@ -22,7 +22,7 @@ public class ScheduleRuntimeImplTest {
 
             // for (int i = 0; i < 2; i++) { // Multithreading
             // h.post("postScheduleRuntime", "{}");
-            h.post("postScheduleRuntime", Paths.get("src/test/resources/schedule/impl/request-postScheduleRuntime.json"));
+            h.post("postScheduleRuntime", Paths.get("src/test/resources/ws/schedule/impl/request-ScheduleRuntimeImpl-postScheduleRuntime.json"));
             // }
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);

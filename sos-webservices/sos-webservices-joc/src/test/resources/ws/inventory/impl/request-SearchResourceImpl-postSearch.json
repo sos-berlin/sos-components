@@ -1,0 +1,6 @@
+{
+	"advanced": {
+		"jobScript": "saprepost"
+	},
+	"returnType": "WORKFLOW"
+}

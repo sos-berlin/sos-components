@@ -190,11 +190,18 @@ public class UnitTestSimpleWSImplHelper {
                 String accessToken = mockRootLogin();
                 Method method = clazz.getDeclaredMethod(methodName, String.class, byte[].class);
                 method.setAccessible(true);
-                // Globals.objectMapper.writeValueAsBytes(filter)
                 JOCDefaultResponse r = (JOCDefaultResponse) method.invoke(instance, accessToken, filter);
                 Object entity = r.getEntity();
-                // LOGGER.info("[RESPONSE][ENTITY]" + SOSString.toString(entity, true));
-                LOGGER.info("[RESPONSE]" + (entity == null ? "" : Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity)));
+                String answer = "";
+                if (entity != null) {
+                    if (entity instanceof byte[]) {
+                        answer = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(Globals.objectMapper.readValue(
+                                (byte[]) entity, Object.class));
+                    } else {
+                        answer = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity);
+                    }
+                }
+                LOGGER.info("[RESPONSE]" + answer);
                 return r;
             } catch (Throwable e) {
                 throw new RuntimeException("[post][" + methodName + "]" + e, e);
