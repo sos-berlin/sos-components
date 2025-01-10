@@ -17,6 +17,7 @@ public class SearchResourceImplTest {
     @Test
     public void testPostSearch() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new SearchResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.oracle-12c.xml");
         try {
             h.init();
 

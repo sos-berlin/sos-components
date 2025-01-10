@@ -48,7 +48,7 @@ public class UnitTestSimpleWSImplHelper {
     private final JOCResourceImpl instance;
 
     private final Path propertiesFile;
-    private final Path hibernateConfigurationFile;
+    private Path hibernateConfigurationFile;
 
     private List<CompletableFuture<JOCDefaultResponse>> futures = new ArrayList<>();
 
@@ -195,11 +195,9 @@ public class UnitTestSimpleWSImplHelper {
                 String answer = "";
                 if (entity != null) {
                     if (entity instanceof byte[]) {
-                        answer = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(Globals.objectMapper.readValue(
-                                (byte[]) entity, Object.class));
-                    } else {
-                        answer = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity);
+                        entity = Globals.objectMapper.readValue((byte[]) entity, Object.class);
                     }
+                    answer = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity);
                 }
                 LOGGER.info("[RESPONSE]" + answer);
                 return r;
@@ -218,4 +216,11 @@ public class UnitTestSimpleWSImplHelper {
         }
     }
 
+    public void setHibernateConfigurationFile(Path val) {
+        hibernateConfigurationFile = val;
+    }
+
+    public void setHibernateConfigurationFileFromWebservicesGlobal(String fileName) {
+        hibernateConfigurationFile = Paths.get("../sos-webservices-joc-global/src/test/resources/hibernate/" + fileName);
+    }
 }
