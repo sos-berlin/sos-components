@@ -170,13 +170,8 @@ public class ExportUtils {
                 if (filter.getShallowCopy().getOnlyValidObjects()) {
                     allDraftItems = allDraftItems.stream().filter(item -> item.getValid()).filter(Objects::nonNull).collect(Collectors.toSet());
                 }
-                allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).forEach(
-                        item -> {
-                            ConfigurationObject cfg = PublishUtils.getConfigurationObjectFromDBItem(item);
-                            if (!allObjects.contains(cfg)) {
-                                allObjects.add(cfg);
-                            }
-                        });
+                allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).map(
+                        PublishUtils::getConfigurationObjectFromDBItem).forEach(cfg -> allObjects.add(cfg));
             }
         }
         return allObjects;
@@ -364,6 +359,7 @@ public class ExportUtils {
     private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemDeploymentHistory item) {
         try {
             ConfigurationObject configurationObject = new ConfigurationObject();
+            configurationObject.setId(item.getInventoryConfigurationId());
             configurationObject.setPath(item.getPath());
             configurationObject.setName(item.getName());
             configurationObject.setObjectType(ConfigurationType.fromValue(item.getType()));
@@ -531,11 +527,13 @@ public class ExportUtils {
                             }
                         }
                     }
-                    if (tags != null && tags.getTags() != null && !tags.getTags().isEmpty()) {
-                        ZipEntry tagEntry = new ZipEntry(TAGS_ENTRY_NAME);
-                        zipOut.putNextEntry(tagEntry);
-                        zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(tags));
-                        zipOut.closeEntry();
+                    if (tags != null) {
+                        if ((tags.getTags() != null && !tags.getTags().isEmpty()) || (tags.getJobTags() != null && !tags.getJobTags().isEmpty())) {
+                            ZipEntry tagEntry = new ZipEntry(TAGS_ENTRY_NAME);
+                            zipOut.putNextEntry(tagEntry);
+                            zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(tags));
+                            zipOut.closeEntry();
+                        }
                     }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, null);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
@@ -921,24 +919,23 @@ public class ExportUtils {
         
         for (ConfigurationObject deployable : deployables) {
             
-            ExportedTaggedObject references = new ExportedTaggedObject();
-            references.setName(JocInventory.pathToName(deployable.getPath()));
-            references.setType(deployable.getObjectType().value());
+            ExportedTaggedObject reference = new ExportedTaggedObject();
+            reference.setName(JocInventory.pathToName(deployable.getPath()));
+            reference.setType(deployable.getObjectType().value());
             ExportedJobTagItems jti = getJobTags(deployable, dbJobTagLayer);
             if (jti != null) {
                 ExportedJobTagItem job = new ExportedJobTagItem();
                 job.setJobs(jti);
-                job.setName(references.getName());
+                job.setName(reference.getName());
                 jobTags.add(job);
             }
             
             tagDbLayer.getTagsWithGroupsAndOrdering(deployable.getId()).forEach(tag -> {
-                tags.putIfAbsent(tag.toString(), new ExportedTagItem());
-                ExportedTagItem tagItem = tags.get(tag.toString());
+                ExportedTagItem tagItem = tags.getOrDefault(tag.toString(), new ExportedTagItem());
                 tagItem.setName(tag.toString());
                 tagItem.setOrdering(tag.getOrdering());
-                tagItem.getUsedBy().add(references);
-                tags.putIfAbsent(tag.toString(), tagItem);
+                tagItem.getUsedBy().add(reference);
+                tags.put(tag.toString(), tagItem);
             });
         }
         
