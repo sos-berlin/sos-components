@@ -5,12 +5,14 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -21,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SOSHibernateTest;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonCaseSensitivity;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonOperator;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSPath;
@@ -274,6 +278,130 @@ public class SOSHibernateJsonTest {
 
         } catch (Exception e) {
             throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testCLOB() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = SOSHibernateTest.createFactory();
+            session = factory.openStatelessSession();
+
+            StringBuilder hql = new StringBuilder("select jobsScripts from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" ");
+            hql.append("where id=41");
+
+            Query<String> query = session.createQuery(hql);
+            String result = session.getSingleResult(query);
+            LOGGER.info("[RESULT]" + result);
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testCLOBJSONOracleNative() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.oracle-12c.xml");
+
+            factory = SOSHibernateTest.createFactory(hibernateFile);
+            session = factory.openStatelessSession();
+
+            String sql = "select JOBS_SCRIPTS from " + DBLayer.TABLE_SEARCH_WORKFLOWS + " ";
+
+            int test = 1;
+            String where = "where JSON_EXISTS(JOBS_SCRIPTS, '$.scripts')";
+            List<String> result = session.getResultListNativeQuery(sql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            test++;
+            where = "where JSON_EXISTS(JOBS_SCRIPTS, '$.scriptsX')";
+            result = session.getResultListNativeQuery(sql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            test++;
+            // see below for case-insensitive
+            where = "where JSON_EXISTS(JOBS_SCRIPTS, '$.scripts[*]?(@ like \"%saprepost%\")')";
+            result = session.getResultListNativeQuery(sql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            test++;
+            where = "where JSON_EXISTS(JOBS_SCRIPTS, '$.scripts?(@ like \"%saprepost%\")')";
+            result = session.getResultListNativeQuery(sql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            LOGGER.info("------------------------------------------------");
+            sql = "select CONTENT from " + DBLayer.TABLE_INV_CONFIGURATIONS + " where TYPE=7 ";// schedule
+
+            test++;
+            // exact
+            where = "and JSON_EXISTS(JSON_CONTENT, '$.workflowNames?(@ == \"www\")')";
+            result = session.getResultListNativeQuery(sql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            test++;
+            // case-insensitive upper/lower() + value upper/lower
+            where = "and JSON_EXISTS(upper(JSON_CONTENT), '$.WORKFLOWNAMES?(@ == \"WWW\")')";
+            result = session.getResultListNativeQuery(sql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            test++;
+            // case-insensitive
+            where = "and JSON_EXISTS(upper(JSON_CONTENT), '$.VERSION?(@ == \"1.7.3\")')";
+            result = session.getResultListNativeQuery(sql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            test++;
+            // case-insensitive
+            where = "and JSON_EXISTS(JSON_CONTENT, '$.version?(@ like $V1)' PASSING :param as \"V1\")";
+            NativeQuery<Object[]> nq = session.createNativeQuery(sql + where);
+            session.setParameter(nq, "param", "1.7.3");
+            List<Map<String, String>> r = session.getResultListAsStringMaps(nq);
+            LOGGER.info("[" + test + "][RESULT]" + r.size());
+
+            LOGGER.info("------------------------------------------------");
+            String hql = "select content from " + DBLayer.DBITEM_INV_CONFIGURATIONS + " where type=7 ";// schedule
+
+            test++;
+            // exact
+            String f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames");
+
+            where = "and " + f;
+            result = session.getResultList(hql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            test++;
+            // exact
+            f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames", JsonOperator.LIKE, "%www%", JsonCaseSensitivity.SENSITIVE);
+
+            where = "and " + f;
+            result = session.getResultList(hql + where);
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+            f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames", JsonOperator.LIKE, ":param");
+            where = "and " + f;
+            Query<String> q = session.createQuery(hql + where);
+            session.setParameter(q, "param", "%ww%");
+            result = session.getResultList(q);
+
+            LOGGER.info("[" + test + "][RESULT]" + result.size());
+
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
         } finally {
             if (factory != null) {
                 factory.close(session);

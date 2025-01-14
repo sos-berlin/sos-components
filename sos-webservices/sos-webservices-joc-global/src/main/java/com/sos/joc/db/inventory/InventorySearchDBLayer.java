@@ -16,6 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonCaseSensitivity;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonOperator;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.util.SOSString;
@@ -378,6 +381,12 @@ public class InventorySearchDBLayer extends DBLayer {
         boolean searchInFolders = searchInFolders(folders);
         boolean onlyUnDeployedUnReleaseObjects = unDeployedUnReleaseObjects == Boolean.TRUE;
         boolean searchInTags = tags != null && !tags.isEmpty();
+        boolean isOracle = getSession().getFactory().dbmsIsOracle();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[getAdvancedSearchInventoryConfigurations][isReleasable=%s][onlyUnDeployedUnReleaseObjects=%s]advanced=%s",
+                    isReleasable, onlyUnDeployedUnReleaseObjects, SOSString.toString(advanced, true)));
+        }
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
@@ -525,23 +534,25 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("and sw.jobsCount <= :jobCountTo ");
             }
 
-            jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobCriticality = setHQLAndGetParameterValue(isOracle, hql, advanced.getJobCriticality());
+            agentName = setHQLAndGetParameterValue(isOracle, hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             if (jobNameExactMatch) {
-                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValueExactMatch(isOracle, hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
             } else {
-                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValue(isOracle, hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             }
-            jobResource = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
-            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
-            jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
-            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
-            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
-            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
-            argumentName = setHQLAndGetArgNames(hql, advanced.getArgumentName());
-            argumentValue = setHQLAndGetArgValues(hql, advanced.getArgumentValue());
+            jobResource = setHQLAndGetParameterValue(isOracle, hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
+            jobScript = setHQLAndGetParameterValue(isOracle, hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+            includeScript = setHQLAndGetParameterValue(isOracle, hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts",
+                    "$.scripts");
+            jobTemplate = setHQLAndGetParameterValue(isOracle, hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
+            noticeBoard = setHQLAndGetParameterValue(isOracle, hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
+                    "$.noticeBoardNames");
+            lock = setHQLAndGetParameterValue(isOracle, hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(isOracle, hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(isOracle, hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
+            argumentName = setHQLAndGetArgNames(isOracle, hql, advanced.getArgumentName());
+            argumentValue = setHQLAndGetArgValues(isOracle, hql, advanced.getArgumentValue());
             break;
         case FILEORDERSOURCE:
         case SCHEDULE:
@@ -770,21 +781,23 @@ public class InventorySearchDBLayer extends DBLayer {
                 jobCountTo = advanced.getJobCountTo();
                 hql.append("and sw.jobsCount <= :jobCountTo ");
             }
-            jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobCriticality = setHQLAndGetParameterValue(isOracle, hql, advanced.getJobCriticality());
+            agentName = setHQLAndGetParameterValue(isOracle, hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             if (jobNameExactMatch) {
-                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValueExactMatch(isOracle, hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
             } else {
-                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValue(isOracle, hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             }
-            jobResource = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
-            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
-            jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
-            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
-            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
-            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
+            jobResource = setHQLAndGetParameterValue(isOracle, hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
+            jobScript = setHQLAndGetParameterValue(isOracle, hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+            includeScript = setHQLAndGetParameterValue(isOracle, hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts",
+                    "$.scripts");
+            jobTemplate = setHQLAndGetParameterValue(isOracle, hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
+            noticeBoard = setHQLAndGetParameterValue(isOracle, hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
+                    "$.noticeBoardNames");
+            lock = setHQLAndGetParameterValue(isOracle, hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(isOracle, hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(isOracle, hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
@@ -794,7 +807,7 @@ public class InventorySearchDBLayer extends DBLayer {
         default:
             break;
         }
-        hql.append("group by mt.id,mt.path,mt.type,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
+        hql.append(" group by mt.id,mt.path,mt.type,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
@@ -839,7 +852,11 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (jobName != null) {
             if (jobNameExactMatch) {
-                query.setParameter("jobName", '%' + jobName + '%');
+                if (isOracle) {
+                    query.setParameter("jobName", jobName);
+                } else {
+                    query.setParameter("jobName", '%' + jobName + '%');
+                }
             } else {
                 query.setParameter("jobName", '%' + jobName.toLowerCase() + '%');
             }
@@ -877,7 +894,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (argumentValue != null) {
             query.setParameter("argumentValue", '%' + argumentValue.toLowerCase() + '%');
         }
-        if (isWorkflowType && jobNameExactMatch && !SOSString.isEmpty(jobNameForExactMatch)) {
+        if (!isOracle && isWorkflowType && jobNameExactMatch && !SOSString.isEmpty(jobNameForExactMatch)) {
             return checkJobNameExactMatch(getSession().getResultList(query), false, jobNameForExactMatch);
         } else {
             return getSession().getResultList(query);
@@ -888,7 +905,13 @@ public class InventorySearchDBLayer extends DBLayer {
     private List<InventorySearchItem> checkJobNameExactMatch(List<InventorySearchItem> workflows, boolean deployedOrReleased, String jobName)
             throws SOSHibernateException {
         if (workflows == null || workflows.size() == 0) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[checkJobNameExactMatch][skip]");
+            }
             return workflows;
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[checkJobNameExactMatch][deployedOrReleased=" + deployedOrReleased + "]jobName=" + jobName);
         }
         List<InventorySearchItem> result = new ArrayList<>();
         for (InventorySearchItem item : workflows) {
@@ -921,6 +944,12 @@ public class InventorySearchDBLayer extends DBLayer {
         boolean isReleasable = isReleasable(type);
         boolean searchInFolders = searchInFolders(folders);
         boolean searchInTags = tags != null && !tags.isEmpty();
+        boolean isOracle = getSession().getFactory().dbmsIsOracle();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[getAdvancedSearchDeployedOrReleasedConfigurations][isReleasable=%s]advanced=%s", isReleasable, SOSString
+                    .toString(advanced, true)));
+        }
 
         StringBuilder hql = new StringBuilder("select ");
         if (isReleasable) {
@@ -1084,23 +1113,25 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("and sw.jobsCount <= :jobCountTo ");
             }
 
-            jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobCriticality = setHQLAndGetParameterValue(isOracle, hql, advanced.getJobCriticality());
+            agentName = setHQLAndGetParameterValue(isOracle, hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             if (jobNameExactMatch) {
-                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValueExactMatch(isOracle, hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
             } else {
-                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValue(isOracle, hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             }
-            jobResource = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
-            jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
-            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
-            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
-            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
-            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
-            argumentName = setHQLAndGetArgNames(hql, advanced.getArgumentName());
-            argumentValue = setHQLAndGetArgValues(hql, advanced.getArgumentValue());
+            jobResource = setHQLAndGetParameterValue(isOracle, hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
+            jobTemplate = setHQLAndGetParameterValue(isOracle, hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
+            jobScript = setHQLAndGetParameterValue(isOracle, hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+            includeScript = setHQLAndGetParameterValue(isOracle, hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts",
+                    "$.scripts");
+            noticeBoard = setHQLAndGetParameterValue(isOracle, hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
+                    "$.noticeBoardNames");
+            lock = setHQLAndGetParameterValue(isOracle, hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(isOracle, hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(isOracle, hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
+            argumentName = setHQLAndGetArgNames(isOracle, hql, advanced.getArgumentName());
+            argumentValue = setHQLAndGetArgValues(isOracle, hql, advanced.getArgumentValue());
             break;
         case FILEORDERSOURCE:
         case SCHEDULE:
@@ -1356,21 +1387,23 @@ public class InventorySearchDBLayer extends DBLayer {
                 jobCountTo = advanced.getJobCountTo();
                 hql.append("and sw.jobsCount <= :jobCountTo ");
             }
-            jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobCriticality = setHQLAndGetParameterValue(isOracle, hql, advanced.getJobCriticality());
+            agentName = setHQLAndGetParameterValue(isOracle, hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             if (jobNameExactMatch) {
-                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValueExactMatch(isOracle, hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
             } else {
-                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+                jobName = setHQLAndGetParameterValue(isOracle, hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             }
-            jobResource = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
-            jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
-            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
-            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
-            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
-            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
+            jobResource = setHQLAndGetParameterValue(isOracle, hql, "and", "jobResources", advanced.getJobResource(), "sw.jobs", "$.jobResources");
+            jobTemplate = setHQLAndGetParameterValue(isOracle, hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
+            jobScript = setHQLAndGetParameterValue(isOracle, hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
+            includeScript = setHQLAndGetParameterValue(isOracle, hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts",
+                    "$.scripts");
+            noticeBoard = setHQLAndGetParameterValue(isOracle, hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
+                    "$.noticeBoardNames");
+            lock = setHQLAndGetParameterValue(isOracle, hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(isOracle, hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(isOracle, hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
@@ -1434,7 +1467,11 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (jobName != null) {
             if (jobNameExactMatch) {
-                query.setParameter("jobName", '%' + jobName + '%');
+                if (isOracle) {
+                    query.setParameter("jobName", jobName);
+                } else {
+                    query.setParameter("jobName", '%' + jobName + '%');
+                }
             } else {
                 query.setParameter("jobName", '%' + jobName.toLowerCase() + '%');
             }
@@ -1472,87 +1509,129 @@ public class InventorySearchDBLayer extends DBLayer {
         if (argumentValue != null) {
             query.setParameter("argumentValue", '%' + argumentValue.toLowerCase() + '%');
         }
-        if (isWorkflowType && jobNameExactMatch && !SOSString.isEmpty(jobNameForExactMatch)) {
+        if (!isOracle && isWorkflowType && jobNameExactMatch && !SOSString.isEmpty(jobNameForExactMatch)) {
             return checkJobNameExactMatch(getSession().getResultList(query), true, jobNameForExactMatch);
         } else {
             return getSession().getResultList(query);
         }
     }
 
-    private String setHQLAndGetParameterValue(StringBuilder hql, JobCriticality criticality) {
+    private String setHQLAndGetParameterValue(boolean isOracle, StringBuilder hql, JobCriticality criticality) {
         String result = null;
         if (criticality != null) {
-            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.criticalities");
-            hql.append("and lower(").append(jsonFunc).append(") ");
-            // TODO check ..
-            if (criticality.equals(JobCriticality.NORMAL)) {
-                hql.append("is null ");
-            } else {
+            boolean isNormalCriticality = JobCriticality.NORMAL.equals(criticality);
+            if (!isNormalCriticality) {
                 result = criticality.value();
-                hql.append("like :jobCriticality ");
+            }
+            if (isOracle) {
+                if (isNormalCriticality) {
+                    // NOT JSON_EXISTS...
+                    hql.append(" not ").append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities")).append(" ");
+                } else {
+                    hql.append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonOperator.LIKE, ":jobCriticality",
+                            JsonCaseSensitivity.INSENSITIVE));
+                }
+            } else {
+                String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.criticalities");
+                hql.append("and lower(").append(jsonFunc).append(") ");
+                // TODO check ..
+                if (isNormalCriticality) {
+                    hql.append("is null ");
+                } else {
+                    hql.append("like :jobCriticality ");
+                }
             }
         }
         return result;
     }
 
-    private String setHQLAndGetArgNames(StringBuilder hql, String paramValue) {
+    private String setHQLAndGetArgNames(boolean isOracle, StringBuilder hql, String paramValue) {
         String result = null;
         if (!SOSString.isEmpty(paramValue)) {
             hql.append("and (");
-            result = setHQLAndGetParameterValue(hql, null, "argumentName", paramValue, "sw.args", "$.orderPreparationParamNames");
-            setHQLAndGetParameterValue(hql, "or", "argumentName", paramValue, "sw.args", "$.jobArgNames");
-            setHQLAndGetParameterValue(hql, "or", "argumentName", paramValue, "sw.instructionsArgs", "$.jobArgNames");
+            result = setHQLAndGetParameterValue(isOracle, hql, null, "argumentName", paramValue, "sw.args", "$.orderPreparationParamNames");
+            setHQLAndGetParameterValue(isOracle, hql, "or", "argumentName", paramValue, "sw.args", "$.jobArgNames");
+            setHQLAndGetParameterValue(isOracle, hql, "or", "argumentName", paramValue, "sw.instructionsArgs", "$.jobArgNames");
             hql.append(")");
         }
         return result;
     }
 
-    private String setHQLAndGetArgValues(StringBuilder hql, String paramValue) {
+    private String setHQLAndGetArgValues(boolean isOracle, StringBuilder hql, String paramValue) {
         String result = null;
         if (!SOSString.isEmpty(paramValue)) {
             hql.append("and (");
-            result = setHQLAndGetParameterValue(hql, null, "argumentValue", paramValue, "sw.args", "$.orderPreparationParamValues");
-            setHQLAndGetParameterValue(hql, "or", "argumentValue", paramValue, "sw.args", "$.jobArgValues");
-            setHQLAndGetParameterValue(hql, "or", "argumentValue", paramValue, "sw.instructionsArgs", "$.jobArgValues");
+            result = setHQLAndGetParameterValue(isOracle, hql, null, "argumentValue", paramValue, "sw.args", "$.orderPreparationParamValues");
+            setHQLAndGetParameterValue(isOracle, hql, "or", "argumentValue", paramValue, "sw.args", "$.jobArgValues");
+            setHQLAndGetParameterValue(isOracle, hql, "or", "argumentValue", paramValue, "sw.instructionsArgs", "$.jobArgValues");
             hql.append(")");
         }
         return result;
     }
 
-    private String setHQLAndGetParameterValueExactMatch(StringBuilder hql, String operator, String paramName, String paramValue, String columnName,
-            String jsonAttribute) {
+    private String setHQLAndGetParameterValueExactMatch(boolean isOracle, StringBuilder hql, String operator, String paramName, String paramValue,
+            String columnName, String jsonAttribute) {
         String result = null;
         if (!SOSString.isEmpty(paramValue)) {
-            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
-            // hql.append("and ").append(SOSHibernateRegexp.getFunction(jsonFunc, ":jobName")).append(" ");
             if (!SOSString.isEmpty(operator)) {
                 hql.append(operator).append(" ");// and,or ..
             }
-            hql.append(jsonFunc).append(" ");
-            if (paramValue.equals(FIND_ALL)) {
-                hql.append("is not null ");
+            boolean findAll = FIND_ALL.equals(paramValue);
+            if (!findAll) {
+                if (isOracle) {
+                    result = SOSString.trim(paramValue, "%");
+                } else {
+                    result = "\"" + paramValue + "\"";
+                }
+            }
+
+            if (isOracle) {
+                if (findAll) {
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute)).append(" ");
+                } else {
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonOperator.EQUALS, ":" + paramName,
+                            JsonCaseSensitivity.SENSITIVE));
+                }
             } else {
-                result = "\"" + paramValue + "\"";
-                hql.append("like :").append(paramName).append(" ");
+                String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
+                hql.append(jsonFunc).append(" ");
+                if (findAll) {
+                    hql.append("is not null ");
+                } else {
+                    hql.append("like :").append(paramName).append(" ");
+                }
             }
         }
         return result;
     }
 
-    private String setHQLAndGetParameterValue(StringBuilder hql, String operator, String paramName, String paramValue, String columnName,
-            String jsonAttribute) {
+    private String setHQLAndGetParameterValue(boolean isOracle, StringBuilder hql, String operator, String paramName, String paramValue,
+            String columnName, String jsonAttribute) {
         String result = null;
         if (!SOSString.isEmpty(paramValue)) {
             if (!SOSString.isEmpty(operator)) {
                 hql.append(operator).append(" ");// and,or ..
             }
-            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
-            hql.append("lower(").append(jsonFunc).append(") ");
-            if (paramValue.equals(FIND_ALL)) {
-                hql.append("is not null ");
-            } else {
+            boolean findAll = FIND_ALL.equals(paramValue);
+            if (!findAll) {
                 result = paramValue;
-                hql.append("like :").append(paramName).append(" ");
+            }
+
+            if (isOracle) {
+                if (findAll) {
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute)).append(" ");
+                } else {
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonOperator.LIKE, ":" + paramName,
+                            JsonCaseSensitivity.INSENSITIVE));
+                }
+            } else {
+                String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
+                hql.append("lower(").append(jsonFunc).append(") ");
+                if (findAll) {
+                    hql.append("is not null ");
+                } else {
+                    hql.append("like :").append(paramName).append(" ");
+                }
             }
         }
         return result;

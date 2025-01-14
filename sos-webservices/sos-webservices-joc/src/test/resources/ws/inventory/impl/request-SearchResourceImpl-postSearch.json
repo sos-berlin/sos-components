@@ -1,6 +1,9 @@
 {
 	"advanced": {
-		"jobScript": "saprepost"
+		"jobScript": "$RESA_FILEDROP",
+		"jobName": "ziprtlog_trickle",
+		"jobNameExactMatch": true
 	},
+	"deployedOrReleased": false,
 	"returnType": "WORKFLOW"
 }

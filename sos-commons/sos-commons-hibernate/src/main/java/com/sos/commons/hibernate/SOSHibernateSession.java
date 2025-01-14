@@ -473,6 +473,14 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
         return q;
     }
 
+    public <T> void setParameter(Query<T> query, String parameter, Object argument) throws SOSHibernateException {
+        try {
+            query.setParameter(parameter, argument);
+        } catch (IllegalArgumentException e) {
+            throw new SOSHibernateQueryException(e, query);
+        }
+    }
+
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateObjectOperationException */
     public void delete(Object item) throws SOSHibernateException {
         if (item == null) {

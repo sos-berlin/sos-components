@@ -10,7 +10,7 @@
 
 		<property name="hibernate.boot.allow_jdbc_metadata_access">true</property>
 
-		<property name="hibernate.show_sql">false</property>
+		<property name="hibernate.show_sql">true</property>
 		<property name="hibernate.format_sql">true</property>
 
 		<property name="hibernate.sos.show_configuration_properties">false</property>

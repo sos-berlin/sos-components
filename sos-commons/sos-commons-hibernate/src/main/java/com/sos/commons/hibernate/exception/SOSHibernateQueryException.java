@@ -1,8 +1,8 @@
 package com.sos.commons.hibernate.exception;
 
-import jakarta.persistence.PersistenceException;
-
 import org.hibernate.query.Query;
+
+import jakarta.persistence.PersistenceException;
 
 /** can occurs if Query/NativeQuery methods are called */
 public class SOSHibernateQueryException extends SOSHibernateException {
@@ -13,6 +13,10 @@ public class SOSHibernateQueryException extends SOSHibernateException {
         super(cause, stmt);
     }
 
+    public SOSHibernateQueryException(IllegalArgumentException cause, Query<?> query) {
+        super(cause, query);
+    }
+    
     public SOSHibernateQueryException(IllegalStateException cause, Query<?> query) {
         super(cause, query);
     }

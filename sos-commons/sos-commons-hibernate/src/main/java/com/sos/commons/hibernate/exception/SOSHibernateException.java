@@ -43,6 +43,30 @@ public class SOSHibernateException extends SOSException {
         statement = stmt;
     }
 
+    public SOSHibernateException(IllegalArgumentException cause, Query<?> query) {
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof SyntaxException) {
+                SyntaxException je = (SyntaxException) e;
+                initCause(je);
+                message = je.getMessage();
+                statement = je.getQueryString();
+                // to avoid double printing of the HQL statement, remove the HQL statement from the message if it is included
+                if (message != null && statement != null) {
+                    message = message.replace("[" + statement + "]", "");
+                }
+                return;
+            }
+            e = e.getCause();
+        }
+        initCause(cause);
+        message = cause.getMessage();
+        if (query != null) {
+            statement = query.getQueryString();
+            parameters = SOSHibernate.getQueryParametersAsString(query);
+        }
+    }
+
     public SOSHibernateException(IllegalStateException cause) {
         if (cause.getCause() == null) {
             initCause(cause);
