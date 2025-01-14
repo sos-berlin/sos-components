@@ -1,5 +1,6 @@
 package com.sos.joc.agents.impl;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,39 +55,38 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
             InventorySubagentClustersDBLayer subagentClusterDbLayer = new InventorySubagentClustersDBLayer(hibernateSession);
             
             Set<Agent> agents = new HashSet<Agent>();
-            for (String agentId : filter.getAgentIds()) {
-                DBItemInventoryAgentInstance agentInstance = agentInstanceDbLayer.getAgentInstance(agentId);
-                List<DBItemInventorySubAgentInstance> subagents = agentInstanceDbLayer.getSubAgentInstancesByAgentId(agentId);
-                if(agentInstance != null) {
-                    Agent agent = new Agent();
-                    if (subagents != null && !subagents.isEmpty()) {
-                        // agent cluster with subagents
-                        ClusterAgent clAgent = createClusterAgent(agentInstance, subagents, agentInstanceDbLayer);
-                        agent.setAgentCluster(clAgent);
-                        List<DBItemInventorySubAgentCluster> subagentClusterInstances = 
-                                subagentClusterDbLayer.getSubagentClustersByAgentId(clAgent.getAgentId());
-                        if(!subagentClusterInstances.isEmpty()) {
-                            List<DBItemInventorySubAgentClusterMember> subagentClusterMemberInstances = 
-                                subagentClusterDbLayer.getSubagentClusterMembers(
-                                    subagentClusterInstances.stream().map(DBItemInventorySubAgentCluster::getSubAgentClusterId)
-                                        .collect(Collectors.toList()), clAgent.getControllerId());
-                            subagentClusterInstances.forEach(subagentClusterInstance -> 
-                                agent.getSubagentClusters().add(createSubagentCluster(
-                                        subagentClusterInstance, subagentClusterMemberInstances, clAgent.getControllerId())));
+            agentInstanceDbLayer.getAgentInstances(filter.getAgentIds()).stream().sorted(Comparator.comparingInt(
+                    DBItemInventoryAgentInstance::getOrdering)).forEachOrdered(agentInstance -> {
+                        List<DBItemInventorySubAgentInstance> subagents = agentInstanceDbLayer.getSubAgentInstancesByAgentId(agentInstance
+                                .getAgentId());
+                        Agent agent = new Agent();
+                        if (subagents != null && !subagents.isEmpty()) {
+                            // agent cluster with subagents
+                            ClusterAgent clAgent = createClusterAgent(agentInstance, subagents, agentInstanceDbLayer);
+                            agent.setAgentCluster(clAgent);
+
+                            List<DBItemInventorySubAgentCluster> subagentClusterInstances = subagentClusterDbLayer.getSubagentClustersByAgentId(
+                                    agentInstance.getAgentId());
+                            if (!subagentClusterInstances.isEmpty()) {
+                                List<DBItemInventorySubAgentClusterMember> subagentClusterMemberInstances = subagentClusterDbLayer
+                                        .getSubagentClusterMembers(subagentClusterInstances.stream().map(
+                                                DBItemInventorySubAgentCluster::getSubAgentClusterId).collect(Collectors.toList()), agentInstance
+                                                        .getControllerId());
+                                subagentClusterInstances.stream().sorted(Comparator.comparingInt(DBItemInventorySubAgentCluster::getOrdering))
+                                        .forEachOrdered(sac -> agent.getSubagentClusters().add(createSubagentCluster(sac,
+                                                subagentClusterMemberInstances, agentInstance.getControllerId())));
+                            }
+                        } else {
+                            com.sos.joc.model.agent.Agent standalone = createStandaloneAgent(agentInstance, agentInstanceDbLayer);
+                            agent.setStandaloneAgent(standalone);
                         }
-                    } else {
-                        com.sos.joc.model.agent.Agent standalone = createStandaloneAgent(agentInstance, agentInstanceDbLayer);
-                        agent.setStandaloneAgent(standalone);
-                    }
-                    agents.add(agent);
-                }
-            }
+                        agents.add(agent);
+                    });
             if (ArchiveFormat.ZIP.equals(filter.getExportFile().getFormat())) {
                 stream = ExportUtils.writeAgentExportZipFile(agents);
             } else {
                 stream = ExportUtils.writeAgentExportTarGzipFile(agents);
             }
-            // TODO Auto-generated method stub
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -109,18 +109,18 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         clAgent.setDeployed(agentInstance.getDeployed());
         clAgent.setDisabled(agentInstance.getDisabled());
         clAgent.setHidden(agentInstance.getHidden());
-        clAgent.setOrdering(agentInstance.getOrdering());
+        clAgent.setOrdering(null);
         clAgent.setSyncState(null);
         clAgent.setTitle(agentInstance.getTitle());
         clAgent.setUrl(agentInstance.getUri());
         clAgent.setVersion(agentInstance.getVersion());
-        subagents.stream().forEach(subagent -> {
+        subagents.stream().sorted(Comparator.comparingInt(DBItemInventorySubAgentInstance::getOrdering)).forEachOrdered(subagent -> {
             SubAgent subAgent = new SubAgent();
             subAgent.setAgentId(agentInstance.getAgentId());
             subAgent.setDeployed(subagent.getDeployed());
             subAgent.setDisabled(subagent.getDisabled());
             subAgent.setIsDirector(subagent.getDirectorAsEnum());
-            subAgent.setOrdering(subagent.getOrdering());
+            subAgent.setOrdering(null);
             subAgent.setSubagentId(subagent.getSubAgentId());
             subAgent.setSyncState(null);
             subAgent.setTitle(subagent.getTitle());
@@ -128,7 +128,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
             subAgent.setVersion(subagent.getVersion());
             // Ask Olli
             subAgent.setWithGenerateSubagentCluster(null);
-            clAgent.getSubagents().add(subAgent); 
+            clAgent.getSubagents().add(subAgent);
         });
         return clAgent;
     }
@@ -144,7 +144,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         standalone.setDeployed(agentInstance.getDeployed());
         standalone.setDisabled(agentInstance.getDisabled());
         standalone.setHidden(agentInstance.getHidden());
-        standalone.setOrdering(agentInstance.getOrdering());
+        standalone.setOrdering(null);
         standalone.setSyncState(null);
         standalone.setTitle(agentInstance.getTitle());
         standalone.setVersion(agentInstance.getVersion());
@@ -158,7 +158,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         subagentCluster.setAgentId(subagentClusterInstance.getAgentId());
         subagentCluster.setControllerId(controllerId);
         subagentCluster.setDeployed(subagentClusterInstance.getDeployed());
-        subagentCluster.setOrdering(subagentClusterInstance.getOrdering());
+        subagentCluster.setOrdering(null);
         subagentCluster.setSubagentClusterId(subagentClusterInstance.getSubAgentClusterId());
         subagentCluster.setSubagentIds(subagentClusterMemberInstances.stream()
                 .filter(member -> member.getSubAgentClusterId().equals(subagentClusterInstance.getSubAgentClusterId()))

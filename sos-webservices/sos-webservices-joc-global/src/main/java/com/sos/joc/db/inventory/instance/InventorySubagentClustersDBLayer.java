@@ -506,17 +506,23 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
         return result;
     }
     
-    public List<DBItemInventorySubAgentCluster> getSubagentClustersByAgentId(String agentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder();
-        hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS);
-        hql.append(" where agentId = :agentId");
-        Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
-        query.setParameter("agentId", agentId);
-        List<DBItemInventorySubAgentCluster> result = getSession().getResultList(query);
-        if(result == null) {
-            return Collections.emptyList();
-        } else {
-            return result;
+    public List<DBItemInventorySubAgentCluster> getSubagentClustersByAgentId(String agentId) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_INV_SUBAGENT_CLUSTERS);
+            hql.append(" where agentId = :agentId");
+            Query<DBItemInventorySubAgentCluster> query = getSession().createQuery(hql.toString());
+            query.setParameter("agentId", agentId);
+            List<DBItemInventorySubAgentCluster> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            } else {
+                return result;
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
         }
     }
     
