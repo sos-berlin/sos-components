@@ -921,7 +921,6 @@ public class SOSServicePermissionIam {
             Globals.jocTimeZone = TimeZone.getDefault();
             Globals.setProperties();
 
-            Globals.setProperties();
             Globals.iamSessionTimeout = SOSAuthHelper.getSecondsFromString(Globals.getConfigurationGlobalsIdentityService().getIdleSessionTimeout()
                     .getValue());
             if (sosLoginParameters.basicAuthorizationHeaderIsEmpty()) {

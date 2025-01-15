@@ -615,9 +615,11 @@ public class SOSAuthHelper {
     }
 
     public static boolean containsPrivateUseArea(String s) {
-        ArrayList<Character.UnicodeBlock> privateUseArea = new ArrayList<>();
-        privateUseArea.add(Character.UnicodeBlock.SUPPLEMENTARY_PRIVATE_USE_AREA_A);
-        privateUseArea.add(Character.UnicodeBlock.SUPPLEMENTARY_PRIVATE_USE_AREA_B);
+        if (s == null) {
+            return false;
+        }
+        List<Character.UnicodeBlock> privateUseArea = Arrays.asList(Character.UnicodeBlock.SUPPLEMENTARY_PRIVATE_USE_AREA_A,
+                Character.UnicodeBlock.SUPPLEMENTARY_PRIVATE_USE_AREA_B);
         for (char currentChar : s.toCharArray()) {
             Character.UnicodeBlock unicodeBlock = Character.UnicodeBlock.of(currentChar);
             if (privateUseArea.contains(unicodeBlock)) {
