@@ -163,6 +163,7 @@ public class JocInventory {
                     put(InstructionType.STICKY_SUBAGENT, "classpath:/raml/inventory/schemas/instruction/stickySubagent-schema.json");
                     put(InstructionType.OPTIONS, "classpath:/raml/inventory/schemas/instruction/options-schema.json");
                     put(InstructionType.BREAK, "classpath:/raml/inventory/schemas/instruction/break-schema.json");
+                    put(InstructionType.SLEEP, "classpath:/raml/inventory/schemas/instruction/sleep-schema.json");
                 }
             });
     

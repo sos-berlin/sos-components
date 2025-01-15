@@ -51,6 +51,7 @@ import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.Prompt;
+import com.sos.inventory.model.instruction.Sleep;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -927,7 +928,7 @@ public class Validator {
                     break;
                 case PROMPT:
                     Prompt prompt = inst.cast();
-                    validateExpression("$." + instPosition + "question:", prompt.getQuestion());
+                    validateExpression("$." + instPosition + "question: ", prompt.getQuestion());
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
@@ -1039,6 +1040,10 @@ public class Validator {
                         validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
                                 invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     }
+                    break;
+                case SLEEP:
+                    Sleep sleep = inst.cast();
+                    validateExpression("$." + instPosition + "duration: ", sleep.getDuration());
                     break;
                 default:
                     break;
@@ -1221,7 +1226,7 @@ public class Validator {
                     break;
                 case PROMPT:
                     Prompt prompt = inst.cast();
-                    validateExpression("$." + instPosition + "question:", prompt.getQuestion());
+                    validateExpression("$." + instPosition + "question: ", prompt.getQuestion());
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
@@ -1333,6 +1338,10 @@ public class Validator {
                         validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
                                 invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
                     }
+                    break;
+                case SLEEP:
+                    Sleep sleep = inst.cast();
+                    validateExpression("$." + instPosition + "duration: ", sleep.getDuration());
                     break;
                 default:
                     break;
