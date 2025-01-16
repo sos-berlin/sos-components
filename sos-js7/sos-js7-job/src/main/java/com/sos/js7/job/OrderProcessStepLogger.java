@@ -5,11 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.js7.job.JobArguments.LogLevel;
 
 import js7.launcher.forjava.internal.BlockingInternalJob;
 
-public class OrderProcessStepLogger {
+public class OrderProcessStepLogger implements ISOSLogger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderProcessStepLogger.class);
 
@@ -33,6 +34,7 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public void info(final Object msg) {
         String m = getMessage(LogLevel.INFO, msg);
         if (step == null) {
@@ -42,6 +44,7 @@ public class OrderProcessStepLogger {
         step.out().println(m);
     }
 
+    @Override
     public void info(final String format, final Object... args) {
         if (args.length == 0) {
             info(format);
@@ -50,6 +53,7 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public void debug(final Object msg) {
         if (!isDebugEnabled) {
             return;
@@ -62,6 +66,7 @@ public class OrderProcessStepLogger {
         step.out().println(m);
     }
 
+    @Override
     public void debug(final String format, final Object... args) {
         if (!isDebugEnabled) {
             return;
@@ -73,6 +78,7 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public void trace(final Object msg) {
         if (!isTraceEnabled) {
             return;
@@ -85,6 +91,7 @@ public class OrderProcessStepLogger {
         step.out().println(m);
     }
 
+    @Override
     public void trace(final String format, final Object... args) {
         if (!isTraceEnabled) {
             return;
@@ -96,6 +103,7 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public void warn(final Object msg) {
         String m = getMessage(LogLevel.WARN, msg);
         if (step == null) {
@@ -105,6 +113,7 @@ public class OrderProcessStepLogger {
         step.out().println(m);
     }
 
+    @Override
     public void warn(final String format, final Object... args) {
         if (args.length == 0) {
             warn(format);
@@ -113,6 +122,7 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public void warn(final String msg, Throwable e) {
         warn(warn2String(msg, e));
     }
@@ -125,6 +135,7 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public void error(final Object msg) {
         String m = getMessage(LogLevel.ERROR, msg);
         if (step == null) {
@@ -134,6 +145,7 @@ public class OrderProcessStepLogger {
         step.err().println(m);
     }
 
+    @Override
     public void error(final String format, final Object... args) {
         if (args.length == 0) {
             error(format);
@@ -142,10 +154,12 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public void error(final String msg, Throwable e) {
         error(throwable2String(msg, e));
     }
 
+    @Override
     public void error(Throwable e) {
         error(throwable2String(null, e));
     }
@@ -198,10 +212,12 @@ public class OrderProcessStepLogger {
         }
     }
 
+    @Override
     public boolean isDebugEnabled() {
         return isDebugEnabled;
     }
 
+    @Override
     public boolean isTraceEnabled() {
         return isTraceEnabled;
     }

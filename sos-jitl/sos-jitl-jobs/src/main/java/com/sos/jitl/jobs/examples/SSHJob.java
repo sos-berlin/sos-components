@@ -14,13 +14,10 @@ public class SSHJob extends Job<SSHJobArguments> {
     @Override
     public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(CredentialStoreArguments.class));
+        SSHProvider provider = new SSHProvider(step.getLogger(), providerArgs, step.getIncludedArguments(CredentialStoreArguments.class));
         step.addCancelableResource(provider);
         try {
-            step.getLogger().info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             provider.connect();
-            step.getLogger().info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
-                    .getServerInfo().toString());
 
             if (!step.getDeclaredArguments().getCommand().isEmpty()) {
                 executeCommand(provider, step);
@@ -40,7 +37,6 @@ public class SSHJob extends Job<SSHJobArguments> {
         } finally {
             if (provider != null) {
                 provider.disconnect();
-                step.getLogger().info("[disconnected]%s:%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             }
         }
     }

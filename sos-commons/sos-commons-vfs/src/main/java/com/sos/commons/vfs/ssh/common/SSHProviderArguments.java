@@ -16,6 +16,11 @@ public class SSHProviderArguments extends AProviderArguments {
         PASSWORD, PUBLICKEY, KEYBOARD_INTERACTIVE
     }
 
+    // TODO add JSCH or ...
+    public enum SSHProviderType {
+        SSHJ
+    }
+
     private SOSArgument<Integer> port = new SOSArgument<Integer>("port", true, 22);
 
     // Authentication
@@ -41,6 +46,9 @@ public class SSHProviderArguments extends AProviderArguments {
     private SOSArgument<Boolean> simulateShell = new SOSArgument<Boolean>("simulate_shell", false, false);
 
     private SOSArgument<Charset> remoteCharset = new SOSArgument<Charset>("remote_charset", false, Charset.forName("UTF-8"));
+
+    // "ssh_provider" - YADE 1 compatibility
+    private SOSArgument<SSHProviderType> sshProviderType = new SOSArgument<SSHProviderType>("ssh_provider", false, SSHProviderType.SSHJ);
 
     public SSHProviderArguments() {
         getProtocol().setDefaultValue(Protocol.SFTP);
@@ -109,5 +117,9 @@ public class SSHProviderArguments extends AProviderArguments {
 
     public SOSArgument<Charset> getRemoteCharset() {
         return remoteCharset;
+    }
+
+    public SOSArgument<SSHProviderType> getSSHProviderType() {
+        return sshProviderType;
     }
 }

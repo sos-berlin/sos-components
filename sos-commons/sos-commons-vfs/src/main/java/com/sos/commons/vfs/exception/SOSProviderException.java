@@ -13,4 +13,13 @@ public class SOSProviderException extends SOSException {
     public SOSProviderException(String msg) {
         super(msg);
     }
+
+    public SOSProviderException(Throwable cause) {
+        initCause(cause);
+    }
+
+    public SOSProviderException(String msg, Throwable cause) {
+        super(msg);
+        initCause(cause);
+    }
 }

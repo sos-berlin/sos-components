@@ -1,15 +1,16 @@
-package com.sos.commons.vfs.ssh.common;
+package com.sos.commons.vfs.ssh.sshj;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import net.schmizz.sshj.userauth.password.PasswordFinder;
 import net.schmizz.sshj.userauth.password.Resource;
 
-public class SSHProviderUtil {
+public class SSHJProviderUtil {
 
     public static KeyProvider getKeyProviderFromKeepass(SSHClient sshClient, SSHProviderArguments args) throws Exception {
         SOSKeePassDatabase kd = (SOSKeePassDatabase) args.getKeepassDatabase();

@@ -42,7 +42,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
 
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(CredentialStoreArguments.class));
+        SSHProvider provider = new SSHProvider(step.getLogger(), providerArgs, step.getIncludedArguments(CredentialStoreArguments.class));
         step.addCancelableResource(provider);
 
         SSHJobArguments jobArgs = step.getDeclaredArguments();
@@ -59,10 +59,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         SOSCommandResult result = null;
         /** steps - read agent environment variables - export some of them - execute command, script, remote script - set return values */
         try {
-            logger.info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             provider.connect();
-            logger.info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
-                    .getServerInfo().toString());
             isWindowsShell = provider.getServerInfo().hasWindowsShell();
             delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
             if (jobArgs.getCommandDelimiter().isDirty()) {
@@ -184,7 +181,6 @@ public class SSHJob extends Job<SSHJobArguments> {
                 deleteTempFiles(jobArgs, provider, tempFilesToDelete, isWindowsShell, logger);
                 provider.disconnect();
                 deleteLocalTempFiles(localTempFilesToDelete, logger);
-                logger.info("[disconnected]%s:%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             }
             if (result != null) {
                 SSHJobUtil.checkStdErr(result.getStdErr(), jobArgs, logger);

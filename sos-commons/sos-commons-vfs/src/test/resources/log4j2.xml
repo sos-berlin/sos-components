@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
 	<Appenders>
+		<Console name="MDCConsole" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%X{F}:%X{L}) - %m%n" />
+		</Console>
 		<!-- Appender for root logger -->
-		<Console name="stdout" target="SYSTEM_OUT">
+		<Console name="DefaultConsole" target="SYSTEM_OUT">
 			<PatternLayout
 				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%F:%L) - %m%n" />
 		</Console>
 	</Appenders>
 
 	<Loggers>
-		<!-- root logger with console appender. All other loggers inherit from 
-			this logger. -->
+		<Logger name="com.sos.commons.util.common.logger"
+			additivity="false">
+			<AppenderRef ref="MDCConsole" />
+		</Logger>
+
 		<Root level="info">
-			<AppenderRef ref="stdout" />
+			<AppenderRef ref="DefaultConsole" />
 		</Root>
 
 		<Logger name="net" level="trace" />

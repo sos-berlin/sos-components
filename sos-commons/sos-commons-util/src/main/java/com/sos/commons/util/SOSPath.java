@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
@@ -335,21 +336,21 @@ public class SOSPath {
         return result;
     }
 
-    public static void renameTo(final Path source, final Path dest) throws IOException {
-        LOGGER.debug("..trying to move File " + source.toString() + " to " + dest.toString());
-        if (!Files.exists(dest)) {
+    public static void renameTo(final Path source, final Path target) throws IOException {
+        LOGGER.debug("..trying to move File " + source.toString() + " to " + target.toString());
+        if (!Files.exists(target)) {
             try {
-                Files.move(source, dest, StandardCopyOption.ATOMIC_MOVE);
+                Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException e) {
-                Files.move(source, dest);
+                Files.move(source, target);
             }
         } else {
-            Files.move(source, dest, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
-    public static void renameTo(final String source, final String dest) throws IOException {
-        renameTo(Paths.get(source), Paths.get(dest));
+    public static void renameTo(final String source, final String target) throws IOException {
+        renameTo(SOSPath.toAbsolutePath(source), SOSPath.toAbsolutePath(target));
     }
 
     public static String subFileMask(final String filespec, final String substitute) throws IOException {
@@ -394,6 +395,65 @@ public class SOSPath {
     public static Path toAbsolutePath(String file) {
         Path p = Paths.get(file);
         return p.isAbsolute() ? p : p.toAbsolutePath();
+    }
+
+    public static boolean isRegularFile(String path) throws Exception {
+        return isRegularFile(toAbsolutePath(path));
+    }
+
+    public static boolean isRegularFile(Path path) throws Exception {
+        return Files.isRegularFile(path);
+    }
+
+    public static boolean isDirectory(String path) throws Exception {
+        return isDirectory(toAbsolutePath(path));
+    }
+
+    public static boolean isDirectory(Path path) throws Exception {
+        return Files.isDirectory(path);
+    }
+
+    public static Long getSize(String path) throws Exception {
+        return getSize(toAbsolutePath(path));
+    }
+
+    /** Determines the size of a file or directory.<br/>
+     * Does not test the existence of the path.
+     * 
+     * @param path
+     * @return
+     * @throws Exception */
+    public static long getSize(Path path) throws Exception {
+        if (isRegularFile(path)) {
+            return Files.size(path);
+        }
+        if (isDirectory(path)) {
+            return Files.walk(path).filter(Files::isRegularFile).mapToLong(p -> {
+                try {
+                    return Files.size(p);
+                } catch (Throwable e) {
+                    return 0L;
+                }
+            }).sum();
+        }
+        return 0L;
+    }
+
+    public static long getLastModifiedMillis(String path) throws Exception {
+        return getLastModifiedMillis(toAbsolutePath(path));
+    }
+
+    public static long getLastModifiedMillis(Path path) throws Exception {
+        // nio should be used, as more modern ones and the File API do not provide the correct time in some cases...
+        return Files.getLastModifiedTime(path).to(TimeUnit.MILLISECONDS);
+    }
+
+    public static void setLastModifiedFromMillis(String path, long milliseconds) throws Exception {
+        setLastModifiedFromMillis(toAbsolutePath(path), milliseconds);
+    }
+
+    public static void setLastModifiedFromMillis(Path path, long milliseconds) throws Exception {
+        Files.setLastModifiedTime(path, FileTime.fromMillis(milliseconds));
     }
 
     public static boolean endsWithNewLine(Path file) throws IOException {
