@@ -1457,7 +1457,15 @@ public class ImportUtils {
         try {
             JsonValidator.validate(bytes, URI.create(jsonSchema));
         } catch (SOSJsonSchemaException e) {
-            throw new JocBadRequestException("Invalid JSON in " + filename + ": " + e.getMessage());
+            //JOC-1984 - ignore minimum error for ordering
+            if (!e.getErrors().isEmpty()) {
+                e.getErrors().removeIf(vm -> vm.getSchemaPath().equals("#/properties/ordering/minimum"));
+                if (!e.getErrors().isEmpty()) {
+                    throw new JocBadRequestException("Invalid JSON in " + filename + ": " + e.getMessageFromErrors());
+                }
+            } else {
+                throw new JocBadRequestException("Invalid JSON in " + filename + ": " + e.getMessage());
+            }
         }
         Agent agent = Globals.objectMapper.readValue(bytes, Agent.class);
         String agentId = filename.replace(AGENT_FILE_EXTENSION, "");

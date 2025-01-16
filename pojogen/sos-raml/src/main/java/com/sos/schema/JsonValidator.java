@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -567,7 +566,7 @@ public class JsonValidator {
                 if (onlyFirstError) {
                     throw new SOSJsonSchemaException(errors.iterator().next().toString());
                 } else {
-                    throw new SOSJsonSchemaException(errors.stream().map(ValidationMessage::toString).collect(Collectors.joining(" or ")));
+                    throw new SOSJsonSchemaException(errors);
                 }
             }
         } catch (JsonParseException e) {
@@ -588,7 +587,7 @@ public class JsonValidator {
                 if (onlyFirstError) {
                     throw new SOSJsonSchemaException(errors.iterator().next().toString());
                 } else {
-                    throw new SOSJsonSchemaException(errors.stream().map(ValidationMessage::toString).collect(Collectors.joining(" or ")));
+                    throw new SOSJsonSchemaException(errors);
                 }
             }
         } catch (JsonParseException e) {
