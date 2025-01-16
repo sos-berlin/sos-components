@@ -95,6 +95,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumptionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSleeping;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
@@ -142,6 +143,7 @@ import com.sos.joc.model.history.order.notice.ConsumeNotices;
 import com.sos.joc.model.history.order.notice.ExpectNotices;
 import com.sos.joc.model.history.order.notice.PostNotice;
 import com.sos.joc.model.history.order.retry.Retrying;
+import com.sos.joc.model.history.order.sleep.Sleep;
 import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryModel {
@@ -529,6 +531,9 @@ public class HistoryModel {
                         break;
                     case OrderOrderAdded:
                         orderLogOrderAdded(dbLayer, (FatEventOrderOrderAdded) entry, EventType.OrderOrderAdded);
+                        break;
+                    case OrderSleeping:
+                        orderLog(dbLayer, (FatEventOrderSleeping) entry, EventType.OrderSleeping);
                         break;
                     case EventWithProblem:
                         try {
@@ -2175,6 +2180,14 @@ public class HistoryModel {
                 ole.setRetrying(r);
             } catch (Throwable e) {
                 LOGGER.info(String.format("[createOrderLogEntry][OrderRetrying][delayedUntil=%s]%s", le.getDelayedUntil(), e.toString()));
+            }
+        } else if (le.getSleepUntil() != null) {
+            Sleep s = new Sleep();
+            try {
+                s.setUntil(getDateAsString(le.getSleepUntil(), controllerTimezone));
+                ole.setSleep(s);
+            } catch (Throwable e) {
+                LOGGER.info(String.format("[createOrderLogEntry][OrderSleeping][until=%s]%s", le.getSleepUntil(), e.toString()));
             }
         } else if (le.getCaught() != null) {
             ole.setCaught(le.getCaught());

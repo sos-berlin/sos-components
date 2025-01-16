@@ -20,6 +20,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSleeping;
 import com.sos.joc.history.controller.proxy.fatevent.FatInstruction;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
 import com.sos.joc.history.controller.proxy.fatevent.FatPosition;
@@ -59,6 +60,7 @@ public class LogEntry {
     private List<OrderLock> orderLocks;
     private AFatEventOrderNotice orderNotice;
     private Date delayedUntil;
+    private Date sleepUntil;
     private Caught caught;
     private FatEventOrderMoved orderMoved;
     private FatEventOrderAttached orderAttached;
@@ -118,6 +120,9 @@ public class LogEntry {
             break;
         case OrderOrderAdded:
             orderOrderAdded = (FatEventOrderOrderAdded) eo;
+            break;
+        case OrderSleeping:
+            sleepUntil = ((FatEventOrderSleeping) eo).getUntil();
             break;
         default:
             break;
@@ -435,6 +440,10 @@ public class LogEntry {
 
     public Date getDelayedUntil() {
         return delayedUntil;
+    }
+    
+    public Date getSleepUntil() {
+        return sleepUntil;
     }
 
     public Caught getCaught() {

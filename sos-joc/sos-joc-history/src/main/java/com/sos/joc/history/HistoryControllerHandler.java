@@ -80,6 +80,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumptionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSleeping;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
@@ -103,6 +104,7 @@ import js7.data.order.OrderEvent.OrderMoved;
 import js7.data.order.OrderEvent.OrderNoticesConsumed;
 import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderRetrying;
+import js7.data.order.OrderEvent.OrderSleeping;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderId;
@@ -787,6 +789,13 @@ public class HistoryControllerHandler {
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderOrderAdded(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), order.getOrderAddedInfo());
+                break;
+                
+            case OrderSleeping:
+                order = entry.getCheckedOrder();
+                OrderSleeping os = (OrderSleeping) entry.getEvent();
+                event = new FatEventOrderSleeping(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
+                        HistoryEventEntry.getDate(os.until()));
                 break;
 
             default:

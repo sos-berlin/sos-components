@@ -70,7 +70,9 @@ public class HistoryLogMapper {
             info.add(toString(entry.getResumed(), false));
         } else if (entry.getOrderAdded() != null) {
             info.add(getOrderAdded(entry.getOrderAdded()));
-        }
+        } else if (entry.getSleep() != null) {
+            info.add(getSleep(entry));
+        } 
         String s = info.stream().filter(e -> !SOSString.isEmpty(e)).collect(Collectors.joining(", "));
         return String.format("%s [%-8s [%-15s %s", entry.getControllerDatetime(), entry.getLogLevel() + "]", entry.getLogEvent().value() + "]", s);
     }
@@ -248,6 +250,20 @@ public class HistoryLogMapper {
             sb.append(")");
         } catch (Throwable e) {
             LOGGER.warn(String.format("[getOrderAdded]%s", e.toString()), e);
+        }
+        return sb.toString();
+    }
+    
+    private static String getSleep(OrderLogEntry entry) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            if (entry.getSleep().getUntil() != null) {
+                //sb.append("Sleep(");
+                sb.append("until=").append(entry.getSleep().getUntil());
+                //sb.append(")");
+            }
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[getSleep]%s", e.toString()), e);
         }
         return sb.toString();
     }
