@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -151,27 +152,28 @@ public class ExportUtils {
             Set<DBItemInventoryReleasedConfiguration> allReleasedItems = new HashSet<DBItemInventoryReleasedConfiguration>();
             Set<DBItemDeploymentHistory> allDeployedItems = new HashSet<DBItemDeploymentHistory>();
             Set<DBItemInventoryConfiguration> allDraftItems = new HashSet<DBItemInventoryConfiguration>();
-            final List<ConfigurationType> filterTypes = filter.getShallowCopy().getObjectTypes();
+            final Set<ConfigurationType> filterTypes = filter.getShallowCopy().getObjectTypes();
             final List<String> folderPaths = filter.getShallowCopy().getFolders();
             final boolean recursive = filter.getShallowCopy().getRecursive();
             if (!filter.getShallowCopy().getWithoutDeployed()) {
                 allDeployedItems.addAll(getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(folderPaths, recursive, null, dbLayer));
                 allDeployedItems.stream().filter(Objects::nonNull).filter(item -> filterTypes.contains(ConfigurationType.fromValue(item.getType())))
-                .forEach(item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                        .map(ExportUtils::getConfigurationObjectFromDBItem).forEach(item -> allObjects.add(item));
             }
-            if(!filter.getShallowCopy().getWithoutReleased()) {
+            if (!filter.getShallowCopy().getWithoutReleased()) {
                 allReleasedItems.addAll(getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(folderPaths, recursive, dbLayer));
                 allReleasedItems.stream().filter(Objects::nonNull).filter(item -> filterTypes.contains(ConfigurationType.fromValue(item.getType())))
-                    .forEach(item -> allObjects.add(PublishUtils.getConfigurationObjectFromDBItem(item)));
+                        .map(PublishUtils::getConfigurationObjectFromDBItem).forEach(item -> allObjects.add(item));
             }
             if (!filter.getShallowCopy().getWithoutDrafts()) {
                 allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
                 allDraftItems.addAll(getReleasableInventoryConfigurationsWithoutReleasedfromFolders(folderPaths, recursive, dbLayer));
+                Stream<DBItemInventoryConfiguration> allDraftItemsStream = allDraftItems.stream().filter(Objects::nonNull);
                 if (filter.getShallowCopy().getOnlyValidObjects()) {
-                    allDraftItems = allDraftItems.stream().filter(item -> item.getValid()).filter(Objects::nonNull).collect(Collectors.toSet());
+                    allDraftItemsStream.filter(DBItemInventoryConfiguration::getValid);
                 }
-                allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).map(
-                        PublishUtils::getConfigurationObjectFromDBItem).forEach(cfg -> allObjects.add(cfg));
+                allDraftItemsStream.filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).map(PublishUtils::getConfigurationObjectFromDBItem)
+                        .forEach(cfg -> allObjects.add(cfg));
             }
         }
         return allObjects;

@@ -1160,7 +1160,7 @@ public class DeploymentTestUtils {
         folders.add("/Examples.Unix");
         shallowCopy.setFolders(folders);
         shallowCopy.setRecursive(true);
-        List<ConfigurationType> types = new ArrayList<ConfigurationType>();
+        Set<ConfigurationType> types = new HashSet<ConfigurationType>();
         types.add(ConfigurationType.WORKFLOW);
         types.add(ConfigurationType.FILEORDERSOURCE);
         types.add(ConfigurationType.JOBRESOURCE);
