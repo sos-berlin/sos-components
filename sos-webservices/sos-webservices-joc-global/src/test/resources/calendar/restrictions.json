@@ -2,11 +2,14 @@
 	"includes": {
 		"monthdays": [
 			{
-				"days": [
-					3,5
+				"weeklyDays": [
+					{
+						"day": 6,
+						"weekOfMonth": 3
+					}
 				],
-				"from": "2022-01-01",
-				"to": "2032-12-31"
+				"from": "2024-12-11",
+				"to": "2024-12-31"
 			}
 		]
 	}
