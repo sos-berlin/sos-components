@@ -69,6 +69,9 @@ public class SOSPathUtil {
 
     /** Windows environment variables (e.g., %USERPROFILE%) */
     private static boolean isAbsolutePathWindowsEnvStyle(String normalizedPath) {
-        return normalizedPath.matches("^%[a-zA-Z_0-9.-]+%.*");
+        // \\p{L}: Matches any alphabetic character (from any language, including Chinese, Japanese, Cyrillic, etc.).
+        // \\p{N}: Matches any numeric character.
+        // _ and .
+        return normalizedPath.matches("^%[\\p{L}\\p{N}_.-]+%.*");
     }
 }
