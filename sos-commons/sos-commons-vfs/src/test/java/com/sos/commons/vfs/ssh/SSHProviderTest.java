@@ -45,9 +45,10 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -75,9 +76,10 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
@@ -107,8 +109,9 @@ public class SSHProviderTest {
         csArgs.setFile("/tmp/kdbx-p.kdbx");
         csArgs.setPassword("test");
         csArgs.setEntryPath("/server/SFTP/localhost");
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
@@ -135,9 +138,10 @@ public class SSHProviderTest {
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -162,9 +166,10 @@ public class SSHProviderTest {
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -190,9 +195,10 @@ public class SSHProviderTest {
 
         args.setProxy(PROXY);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -218,9 +224,10 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -252,9 +259,10 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "/home/sos/tmp_target.log");
@@ -299,9 +307,10 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "D://tmp_target.log");
@@ -346,9 +355,10 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
+        args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args, csArgs);
+        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             Map<String, String> envVars = new HashMap<>();

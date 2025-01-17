@@ -15,12 +15,12 @@
 		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-exception</artifactId>
+			<artifactId>sos-yade-commons</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-yade-commons</artifactId>
+			<artifactId>sos-commons-vfs</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

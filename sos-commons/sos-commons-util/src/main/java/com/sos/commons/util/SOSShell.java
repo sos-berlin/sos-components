@@ -181,6 +181,10 @@ public class SOSShell {
         return HOSTNAME;
     }
 
+    public static String getUsername() {
+        return System.getProperty("user.name");
+    }
+
     public static void printSystemInfos() {
         try {
             StringBuilder sb = new StringBuilder("[SYSTEM] ").append(OS_NAME);

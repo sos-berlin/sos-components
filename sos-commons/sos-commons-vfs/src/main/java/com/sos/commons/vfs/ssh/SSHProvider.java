@@ -1,10 +1,10 @@
 package com.sos.commons.vfs.ssh;
 
-import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.vfs.common.ProviderFile;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.commons.vfs.ssh.common.ASSHProvider;
@@ -16,18 +16,18 @@ public class SSHProvider extends ASSHProvider {
 
     private final ASSHProvider provider;
 
-    public SSHProvider(ISOSLogger logger, SSHProviderArguments args, CredentialStoreArguments csArgs) throws Exception {
-        provider = getProviderInstance(logger, args, csArgs);
+    public SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
+        provider = getProviderInstance(logger, args);
     }
 
-    private static ASSHProvider getProviderInstance(ISOSLogger logger, SSHProviderArguments args, CredentialStoreArguments csArgs) throws Exception {
+    private static ASSHProvider getProviderInstance(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
         // switch (args.getSSHProviderType().getValue()) {
         // case JSCH:
-        // new JschProvider(logger, args, csArgs);
+        // new JschProvider(logger, args);
         // default:
-        // new SSHJProvider(logger, args, csArgs);
+        // new SSHJProvider(logger, args);
         // }
-        return new SSHJProvider(logger, args, csArgs);
+        return new SSHJProvider(logger, args);
     }
 
     @Override
@@ -93,6 +93,16 @@ public class SSHProvider extends ASSHProvider {
     @Override
     public Long getLastModifiedMillis(String path) {
         return provider.getLastModifiedMillis(path);
+    }
+
+    @Override
+    public boolean isAbsolutePath(String path) {
+        return provider.isAbsolutePath(path);
+    }
+
+    @Override
+    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
+        return provider.getFileIfExists(path);
     }
 
     @Override

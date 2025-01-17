@@ -23,9 +23,10 @@ public class LocalProviderTest {
     @Test
     public void testExecuteCommand() throws Exception {
         LocalProviderArguments args = new LocalProviderArguments();
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null; // new CredentialStoreArguments();
 
-        LocalProvider p = new LocalProvider(new SOSSlf4jLogger(), args, csArgs);
+        args.setCredentialStore(csArgs);
+        LocalProvider p = new LocalProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             SOSCommandResult result = p.executeCommand("ls -la /var/opt/apache-archiva/data/repositories");
@@ -49,9 +50,10 @@ public class LocalProviderTest {
     @Test
     public void testOperationsWindows() throws Exception {
         LocalProviderArguments args = new LocalProviderArguments();
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
 
-        LocalProvider p = new LocalProvider(new SOSSlf4jLogger(), args, csArgs);
+        args.setCredentialStore(csArgs);
+        LocalProvider p = new LocalProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "D://tmp_target.log");
@@ -89,9 +91,10 @@ public class LocalProviderTest {
     @Test
     public void testEnvs() throws Exception {
         LocalProviderArguments args = new LocalProviderArguments();
-        CredentialStoreArguments csArgs = new CredentialStoreArguments();
+        CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
 
-        LocalProvider p = new LocalProvider(new SOSSlf4jLogger(), args, csArgs);
+        args.setCredentialStore(csArgs);
+        LocalProvider p = new LocalProvider(new SOSSlf4jLogger(), args);
         try {
             p.connect();
             Map<String, String> envVars = new HashMap<>();

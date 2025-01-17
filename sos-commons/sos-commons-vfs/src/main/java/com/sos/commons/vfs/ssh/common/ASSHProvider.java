@@ -3,12 +3,16 @@ package com.sos.commons.vfs.ssh.common;
 import java.util.List;
 
 import com.google.common.base.Joiner;
-import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.common.SOSEnv;
+import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.CredentialStoreResolver;
 import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exception.SOSProviderInitializationException;
 
 public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
 
@@ -18,18 +22,16 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     private SSHServerInfo serverInfo;
     private String serverVersion;
 
-    public ASSHProvider() {
-        super(null, null, null);
+    /** Layer for instantiating a Real Provider: SSHJ or ... */
+    public ASSHProvider() throws SOSProviderInitializationException {
+        super(null, null);
         mainInfo = null;
     }
 
-    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args, CredentialStoreArguments csArgs) throws Exception {
-        super(logger, args, csArgs);
-        if (csArgs != null) {
-            if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
-                CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
-            }
-        }
+    /** Real Provider */
+    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
+        super(logger, args);
+        resolveCredentialStore();
         mainInfo = String.format("%s:%s", getArguments().getHost().getDisplayValue(), getArguments().getPort().getDisplayValue());
     }
 
@@ -38,6 +40,26 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     public abstract void put(String source, String target) throws SOSProviderException;
 
     public abstract void get(String source, String target) throws SOSProviderException;
+
+    @Override
+    public boolean isAbsolutePath(String path) {
+        return SOSPathUtil.isAbsolutePathFileSystemStyle(path);
+    }
+
+    @Override
+    public SOSCommandResult executeCommand(String command) {
+        return executeCommand(command, null, null);
+    }
+
+    @Override
+    public SOSCommandResult executeCommand(String command, SOSTimeout timeout) {
+        return executeCommand(command, timeout, null);
+    }
+
+    @Override
+    public SOSCommandResult executeCommand(String command, SOSEnv env) {
+        return executeCommand(command, null, env);
+    }
 
     public SSHServerInfo getServerInfo() {
         if (serverInfo == null) {
@@ -55,11 +77,11 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     public String getConnectMsg() {
-        return String.format("[connect]%s ...", mainInfo);
+        return String.format("%s[connect]%s ...", getTypeInfo(), mainInfo);
     }
 
     public String getConnectedMsg(List<String> additionalInfos) {
-        String r = String.format("[connected][%s]", mainInfo);
+        String r = String.format("%s[connected][%s]", getTypeInfo(), mainInfo);
         if (SOSCollection.isEmpty(additionalInfos)) {
             if (serverInfo != null) {
                 r += serverInfo.toString();
@@ -74,7 +96,17 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     public String getDisconnectedMsg() {
-        return String.format("[disconnected]%s", mainInfo);
+        return String.format("%s[disconnected]%s", getTypeInfo(), mainInfo);
+    }
+
+    private void resolveCredentialStore() throws SOSProviderInitializationException {
+        try {
+            if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
+                CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+            }
+        } catch (Throwable e) {
+            throw new SOSProviderInitializationException(e);
+        }
     }
 
 }

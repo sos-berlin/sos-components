@@ -140,15 +140,16 @@ public abstract class AProviderArguments extends ASOSArguments {
         keepassAttachmentPropertyName.setValue(val);
     }
 
-    protected void setCredentialStore(CredentialStoreArguments val) {
+    public void setCredentialStore(CredentialStoreArguments val) {
         credentialStore = val;
+    }
+
+    public CredentialStoreArguments getCredentialStore() {
+        return credentialStore;
     }
 
     public int asMs(SOSArgument<Integer> arg) {
         return arg.getValue() == null ? 0 : arg.getValue() * 1_000;
     }
 
-    public CredentialStoreArguments getCredentialStore() {
-        return credentialStore;
-    }
 }

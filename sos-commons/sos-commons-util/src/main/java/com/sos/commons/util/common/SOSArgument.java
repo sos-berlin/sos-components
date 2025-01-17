@@ -1,5 +1,6 @@
 package com.sos.commons.util.common;
 
+import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
 
@@ -111,19 +112,23 @@ public class SOSArgument<T> {
             return true;
         }
         if (value instanceof String) {
-            return value.toString().length() == 0;
+            return ((String) value).isEmpty();
         }
         if (value instanceof List) {
-            return ((List<?>) value).size() == 0;
+            return ((List<?>) value).isEmpty();
         }
         if (value instanceof Map) {
-            return ((Map<?, ?>) value).size() == 0;
+            return ((Map<?, ?>) value).isEmpty();
         }
         if (value.getClass().isArray()) {
-            return ((Object[]) value).length == 0;
+            return Array.getLength(value) == 0;
         }
         // Boolean,Number,Path,URI,ENUM ...
         return false;
+    }
+
+    public boolean isTrue() {
+        return value != null && value instanceof Boolean && (Boolean) value;
     }
 
     @SuppressWarnings("unchecked")

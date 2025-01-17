@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.ssh.sshj;
 
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -14,20 +15,22 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Joiner;
-import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
+import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProviderArguments.Protocol;
+import com.sos.commons.vfs.common.ProviderFile;
 import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exception.SOSProviderInitializationException;
 import com.sos.commons.vfs.ssh.common.ASSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
@@ -48,6 +51,7 @@ import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.connection.channel.direct.Signal;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.FileMode;
+import net.schmizz.sshj.sftp.FileMode.Type;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.sftp.SFTPClient;
@@ -70,8 +74,8 @@ public class SSHJProvider extends ASSHProvider {
 
     private Map<String, Command> commands = new ConcurrentHashMap<>();
 
-    public SSHJProvider(ISOSLogger logger, SSHProviderArguments args, CredentialStoreArguments csArgs) throws Exception {
-        super(logger, args, csArgs);
+    public SSHJProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
+        super(logger, args);
     }
 
     @Override
@@ -112,7 +116,7 @@ public class SSHJProvider extends ASSHProvider {
             try {
                 sftpClient.close();
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[sftpClient]closed");
+                    getLogger().debug(getTypeInfo() + "[sftpClient]closed");
                 }
             } catch (IOException e) {
                 msg.add("[sftpClient]" + e.toString());
@@ -124,7 +128,7 @@ public class SSHJProvider extends ASSHProvider {
             try {
                 sshClient.close();
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[sshClient]closed");
+                    getLogger().debug(getTypeInfo() + "[sshClient]closed");
                 }
             } catch (IOException e) {
                 msg.add("[sftpClient]" + e.toString());
@@ -133,7 +137,7 @@ public class SSHJProvider extends ASSHProvider {
             }
         }
         if (msg.size() > 0) {
-            getLogger().info("[disconnect][onClose]" + Joiner.on(", ").join(msg));
+            getLogger().info(getTypeInfo() + "[disconnect][onClose]" + Joiner.on(", ").join(msg));
         }
         getLogger().info(getDisconnectedMsg());
     }
@@ -144,14 +148,14 @@ public class SSHJProvider extends ASSHProvider {
 
         try {
             if (getLogger().isTraceEnabled()) {
-                getLogger().trace("[createDirectory][%s]try to create...", path);
+                getLogger().trace("%s[createDirectory][%s]try to create...", getTypeInfo(), path);
             }
             sftpClient.mkdir(path);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[createDirectory][%s]created", path);
+                getLogger().debug("%s[createDirectory][%s]created", getTypeInfo(), path);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException("[createDirectory][" + path + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[createDirectory][" + path + "]", e);
         }
     }
 
@@ -161,14 +165,14 @@ public class SSHJProvider extends ASSHProvider {
 
         try {
             if (getLogger().isTraceEnabled()) {
-                getLogger().trace("[createDirectories][%s]try to create...", path);
+                getLogger().trace("%s[createDirectories][%s]try to create...", getTypeInfo(), path);
             }
             sftpClient.mkdirs(path);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[createDirectories][%s]created", path);
+                getLogger().debug("%s[createDirectories][%s]created", getTypeInfo(), path);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException("[createDirectories][" + path + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[createDirectories][" + path + "]", e);
         }
     }
 
@@ -187,13 +191,13 @@ public class SSHJProvider extends ASSHProvider {
             case DIRECTORY:
                 deleteDirectories(path);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[delete][directory][%s]deleted", path);
+                    getLogger().debug("%s[delete][directory][%s]deleted", getTypeInfo(), path);
                 }
                 break;
             case REGULAR:
                 sftpClient.rm(path);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[delete][regular][%s]deleted", path);
+                    getLogger().debug("%s[delete][regular][%s]deleted", getTypeInfo(), path);
                 }
                 break;
             // case SYMLINK:
@@ -201,7 +205,7 @@ public class SSHJProvider extends ASSHProvider {
                 break;
             }
         } catch (Throwable e) {
-            throw new SOSProviderException("[delete][" + path + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[delete][" + path + "]", e);
         }
     }
 
@@ -212,20 +216,20 @@ public class SSHJProvider extends ASSHProvider {
             try {
                 delete(path);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[deleteIfExists][%s]deleted", path);
+                    getLogger().debug("%s[deleteIfExists][%s]deleted", getTypeInfo(), path);
                 }
                 return true;
             } catch (SOSProviderException e) {
                 if (e.getCause() instanceof SOSNoSuchFileException) {
                     if (getLogger().isDebugEnabled()) {
-                        getLogger().debug("[deleteIfExists][%s]not exists", path);
+                        getLogger().debug("%s[deleteIfExists][%s]not exists", getTypeInfo(), path);
                     }
                     return false;
                 }
                 throw e;
             }
         } catch (Throwable e) {
-            throw new SOSProviderException("[deleteIfExists][" + path + "]", e.getCause());
+            throw new SOSProviderException(getTypeInfo() + "[deleteIfExists][" + path + "]", e.getCause());
         }
     }
 
@@ -257,10 +261,10 @@ public class SSHJProvider extends ASSHProvider {
             }
             sftpClient.rename(source, target);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[rename][source=%s][target=%s]renamed", source, target);
+                getLogger().debug("%s[rename][%s]->[%s]renamed", getTypeInfo(), source, target);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException("[rename][source=" + source + "][target=" + target + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[rename][" + source + "]->[" + target + "]", e);
         }
     }
 
@@ -272,16 +276,16 @@ public class SSHJProvider extends ASSHProvider {
             FileAttributes attr = sftpClient.stat(path);
             if (attr != null) {
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[exists][%s]true", path);
+                    getLogger().debug("%s[exists][%s]true", getTypeInfo(), path);
                 }
                 return true;
             }
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[exists][%s][false]attr=null", path);
+                getLogger().debug("%s[exists][%s][false]attr=null", getTypeInfo(), path);
             }
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[exists][%s][false]%s", path, e.toString());
+                getLogger().debug("%s[exists][%s][false]%s", getTypeInfo(), path, e.toString());
             }
         }
         return false;
@@ -290,6 +294,30 @@ public class SSHJProvider extends ASSHProvider {
     @Override
     public boolean isRegularFile(String path) {
         return is(path, FileMode.Type.REGULAR);
+    }
+
+    @Override
+    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
+        checkParam(path, "path");
+
+        ProviderFile f = null;
+        try {
+            FileAttributes attr = sftpClient.stat(path);
+            if (attr != null && isFileType(attr.getType())) {
+                f = new ProviderFile();
+                f.setSize(attr.getSize());
+                f.setName(SOSPathUtil.getFileName(path));
+                f.setFullName(path);
+            }
+        } catch (NoSuchFileException e) {
+        } catch (IOException e) {
+            throw new SOSProviderException(getTypeInfo() + "[" + path + "]]", e);
+        }
+        return f;
+    }
+
+    private boolean isFileType(Type t) {
+        return FileMode.Type.REGULAR.equals(t) || FileMode.Type.SYMLINK.equals(t);
     }
 
     @Override
@@ -306,16 +334,16 @@ public class SSHJProvider extends ASSHProvider {
             if (attr != null) {
                 Long result = Long.valueOf(attr.getSize());
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[getSize][%s]%s", path, result);
+                    getLogger().debug("%s[getSize][%s]%s", getTypeInfo(), path, result);
                 }
                 return result;
             }
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[getSize][%s][null]attr=null", path);
+                getLogger().debug("%s[getSize][%s][null]attr=null", getTypeInfo(), path);
             }
             return null;
         } catch (Throwable e) {
-            throw new SOSProviderException("[getSize][" + path + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[getSize][" + path + "]", e);
         }
     }
 
@@ -329,16 +357,16 @@ public class SSHJProvider extends ASSHProvider {
                 // getMtime is in seconds
                 Long result = Long.valueOf(attr.getMtime() * 1_000L);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[getLastModifiedMillis][%s]%s", path, result);
+                    getLogger().debug("%s[getLastModifiedMillis][%s]%s", getTypeInfo(), path, result);
                 }
                 return result;
             }
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[getLastModifiedMillis][%s][null]attr=null", path);
+                getLogger().debug("%s[getLastModifiedMillis][%s][null]attr=null", getTypeInfo(), path);
             }
             return null;
         } catch (Throwable e) {
-            getLogger().warn("[getLastModifiedMillis][%s]%s", path, e);
+            getLogger().warn("%s[getLastModifiedMillis][%s]%s", getTypeInfo(), path, e);
             return null;
         }
     }
@@ -347,7 +375,7 @@ public class SSHJProvider extends ASSHProvider {
     public boolean setLastModifiedFromMillis(String path, Long milliseconds) {
         if (!isValidModificationTime(milliseconds)) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[setLastModifiedFromMillis][%s][%s][false]not valid modification time", path, milliseconds);
+                getLogger().debug("%s[setLastModifiedFromMillis][%s][%s][false]not valid modification time", getTypeInfo(), path, milliseconds);
             }
             return false;
         }
@@ -361,16 +389,16 @@ public class SSHJProvider extends ASSHProvider {
                 FileAttributes newAttr = new FileAttributes.Builder().withAtimeMtime(attr.getAtime(), seconds).build();
                 sftpClient.setattr(path, newAttr);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("[setLastModifiedFromMillis][%s][seconds=%s]true", path, seconds);
+                    getLogger().debug("%s[setLastModifiedFromMillis][%s][seconds=%s]true", getTypeInfo(), path, seconds);
                 }
                 return true;
             }
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[setLastModifiedFromMillis][%s][%s][false]attr=null", path, milliseconds);
+                getLogger().debug("%s[setLastModifiedFromMillis][%s][%s][false]attr=null", getTypeInfo(), path, milliseconds);
             }
             return false;
         } catch (Throwable e) {
-            getLogger().warn("[setLastModifiedFromMillis][%s][%s]%s", path, milliseconds, e);
+            getLogger().warn("%s[setLastModifiedFromMillis][%s][%s]%s", getTypeInfo(), path, milliseconds, e);
             return false;
         }
     }
@@ -387,8 +415,11 @@ public class SSHJProvider extends ASSHProvider {
         put(source, target);
         try {
             sftpClient.chmod(target, perm);
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[put][%s][%s][chmod=%s]executed", getTypeInfo(), source, target, perm);
+            }
         } catch (Throwable e) {
-            throw new SOSProviderException("[put][source=" + source + "][target=" + target + "][perm=" + perm + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[put][" + source + "][" + target + "][perm=" + perm + "]", e);
         }
     }
 
@@ -399,8 +430,11 @@ public class SSHJProvider extends ASSHProvider {
         }
         try {
             sftpClient.put(new FileSystemFile(source), target);
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[put][%s][%s]executed", getTypeInfo(), source, target);
+            }
         } catch (Throwable e) {
-            throw new SOSProviderException("[put][source=" + source + "][target=" + target + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[put][" + source + "][" + target + "]", e);
         }
     }
 
@@ -411,24 +445,12 @@ public class SSHJProvider extends ASSHProvider {
         }
         try {
             sftpClient.get(sftpClient.canonicalize(source), new FileSystemFile(target));
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[get][%s][%s]executed", getTypeInfo(), source, target);
+            }
         } catch (Throwable e) {
-            throw new SOSProviderException("[get][source=" + source + "][target=" + target + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[get][" + source + "][" + target + "]", e);
         }
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command) {
-        return executeCommand(command, null, null);
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout) {
-        return executeCommand(command, timeout, null);
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSEnv env) {
-        return executeCommand(command, null, env);
     }
 
     @Override
@@ -729,7 +751,7 @@ public class SSHJProvider extends ASSHProvider {
             }
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("[is][%s][type=%s]%s", path, type, e.toString());
+                getLogger().debug("%s[is][%s][type=%s]%s", getTypeInfo(), path, type, e.toString());
             }
         }
         return false;

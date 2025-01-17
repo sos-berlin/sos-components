@@ -42,7 +42,10 @@ public class SSHJob extends Job<SSHJobArguments> {
     public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
 
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(step.getLogger(), providerArgs, step.getIncludedArguments(CredentialStoreArguments.class));
+        if (providerArgs != null) {
+            providerArgs.setCredentialStore(step.getIncludedArguments(CredentialStoreArguments.class));
+        }
+        SSHProvider provider = new SSHProvider(step.getLogger(), providerArgs);
         step.addCancelableResource(provider);
 
         SSHJobArguments jobArgs = step.getDeclaredArguments();
