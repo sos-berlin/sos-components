@@ -3,15 +3,15 @@ package com.sos.commons.util;
 /** Only String operations should used */
 public class SOSPathUtil {
 
-    public static String toUnixStylePath(String val) {
-        return val.replace('\\', '/');
+    public static String toUnixStylePath(String path) {
+        return SOSString.isEmpty(path) ? null : path.replace('\\', '/');
     }
 
     public static boolean isAbsolutePathWindowsStyle(String path) {
-        if (SOSString.isEmpty(path)) {
+        String np = toUnixStylePath(path);
+        if (np == null) {
             return false;
         }
-        String np = toUnixStylePath(path);
         return isAbsolutePathWindowsStandardStyle(np) || isAbsolutePathWindowsEnvStyle(np) || isAbsolutePathWindowsOpenSSHPathStyle(np);
     }
 
@@ -19,10 +19,10 @@ public class SOSPathUtil {
      * 2) Unix/Linux environment variables (e.g., $HOME)<br/>
      * 3) Unix/Linux home directory paths (starting with ~/) */
     public static boolean isAbsolutePathUnixStyle(String path) {
-        if (SOSString.isEmpty(path)) {
+        String np = toUnixStylePath(path);
+        if (np == null) {
             return false;
         }
-        String np = toUnixStylePath(path);
         return np.startsWith("/") || np.startsWith("$") || np.startsWith("~/");
     }
 
@@ -32,27 +32,27 @@ public class SOSPathUtil {
 
     /** URI paths (e.g., file:/, http:/, sftp:/...) */
     public static boolean isAbsolutePathURIStyle(String path) {
-        if (SOSString.isEmpty(path)) {
+        String np = toUnixStylePath(path);
+        if (np == null) {
             return false;
         }
-        String np = toUnixStylePath(path);
         return np.matches("^[a-zA-Z][a-zA-Z0-9+.-]*:/.+");
     }
 
     public static String getFileName(String path) {
-        if (path == null) {
+        String np = toUnixStylePath(path);
+        if (np == null) {
             return null;
         }
-        String np = path.replace('\\', '/');
         int li = np.lastIndexOf('/');
         return (li >= 0) ? np.substring(li + 1) : np;
     }
 
     public static String getUnixStyleParentPath(String path) {
-        if (SOSString.isEmpty(path)) {
+        String np = toUnixStylePath(path);
+        if (np == null) {
             return null;
         }
-        String np = path.replace('\\', '/');
         int li = np.lastIndexOf('/');
         return (li > 0) ? np.substring(0, li) : null;
     }
