@@ -17,7 +17,8 @@ public enum OrderWaitingReason {
     JOB_PROCESS_LIMIT_REACHED("JOB_PROCESS_LIMIT_REACHED"),
     AGENT_PROCESS_LIMIT_REACHED("AGENT_PROCESS_LIMIT_REACHED"),
     WORKFLOW_IS_SUSPENDED("WORKFLOW_IS_SUSPENDED"),
-    BETWEEN_CYCLES("BETWEEN_CYCLES");
+    BETWEEN_CYCLES("BETWEEN_CYCLES"),
+    SLEEPING("SLEEPING");
     private final String value;
     private final static Map<String, OrderWaitingReason> CONSTANTS = new HashMap<String, OrderWaitingReason>();
 

@@ -45,6 +45,7 @@ import com.sos.controller.model.order.OrderCycleState;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.order.OrderRetryState;
+import com.sos.controller.model.order.OrderSleepState;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
@@ -171,6 +172,7 @@ public class OrdersHelper {
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.BetweenCycles.class, OrderStateText.WAITING);
                     put(Order.Ready$.class, OrderStateText.WAITING);
+                    put(Order.Sleeping.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
@@ -202,6 +204,7 @@ public class OrdersHelper {
             put("WaitingForLock", OrderStateText.WAITING);
             put("BetweenCycles", OrderStateText.WAITING);
             put("Ready", OrderStateText.WAITING);
+            put("Sleeping", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);
@@ -236,6 +239,7 @@ public class OrdersHelper {
             put("JobProcessLimitReached", OrderWaitingReason.JOB_PROCESS_LIMIT_REACHED);
             put("AgentProcessLimitReached", OrderWaitingReason.AGENT_PROCESS_LIMIT_REACHED);
             put("WorkflowIsSuspended", OrderWaitingReason.WORKFLOW_IS_SUSPENDED);
+            put("Sleeping", OrderWaitingReason.SLEEPING);
         }
     });
 
@@ -572,6 +576,11 @@ public class OrdersHelper {
             if (outcomes != null && outcomes.size() > 1) { // ignore last outcome from catch instruction; always caught
                 o.setLastOutcome(outcomes.get(outcomes.size() - 2).getOutcome());
             }
+        }
+        if ("Sleeping".equals(oItem.getState().getTYPE())) {
+            OrderSleepState ss = new OrderSleepState();
+            ss.setUntil(oItem.getState().getUntil());
+            o.setSleepState(ss);
         }
         if ("Processing".equals(oItem.getState().getTYPE())) {
             Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
