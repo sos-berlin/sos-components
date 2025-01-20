@@ -110,7 +110,7 @@ public class OrderTags {
     @Subscribe({ HistoryOrderStarted.class })
     public void addHistoryIdToTags(HistoryOrderStarted evt) {
         if (!evt.getOrderId().contains("|")) { // not child order
-            LOGGER.trace("HistoryOrderStarted received: " + SOSString.toString(evt));
+            LOGGER.info("HistoryOrderStarted received: " + SOSString.toString(evt));
             addHistoryIdToTags(evt.getControllerId(), evt.getOrderId(), (HistoryOrderBean) evt.getPayload());
         }
     }
@@ -119,7 +119,7 @@ public class OrderTags {
     public void addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(AddOrderEvent evt) {
         boolean isChildOrder = evt.getOrderId().contains("|");
         if (!isChildOrder) {
-            LOGGER.trace("AddOrderEvent received: " + SOSString.toString(evt));
+            LOGGER.info("AddOrderEvent received: " + SOSString.toString(evt));
             addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(evt.getControllerId(), evt.getOrderId(), evt.getWorkflowName());
         }
     }
@@ -128,6 +128,7 @@ public class OrderTags {
     public void deleteTagsFromAddOrderInstruction(TerminateOrderEvent evt) {
         boolean isChildOrder = evt.getOrderId().contains("|");
         if (!isChildOrder) {
+            LOGGER.info("TerminateOrderEvent received: " + SOSString.toString(evt));
             deleteTagsFromAddOrderInstruction(evt.getControllerId(), evt.getOrderId());
         }
     }
@@ -154,6 +155,7 @@ public class OrderTags {
                 String orderIdPattern = getOrderIdPattern(orderId);
                 boolean allAddOrderOrdersAreTerminated = Proxy.of(controllerId).currentState().ordersBy(o -> o.id().string().contains(orderIdPattern
                         + "!")).count() == 0L;
+                LOGGER.info("deleteAddOrderTags -> orderIdPattern: " + orderIdPattern + " are terminated: " + allAddOrderOrdersAreTerminated);
                 if (allAddOrderOrdersAreTerminated) {
                     connection = Globals.createSosHibernateStatelessConnection("deleteAddOrderTags");
                     DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
@@ -194,6 +196,7 @@ public class OrderTags {
             Long orderIdPattern = Long.valueOf(OrdersHelper.getOrderIdMainPart(orderId).replaceAll("\\D", ""));
             dbAddOrderTagsItem.setOrderIdPattern(orderIdPattern);
             dbAddOrderTagsItem.setOrderTags(addOrderTags);
+            LOGGER.info("storeAddOrderTags: " + orderIdPattern + ", " + addOrderTags);
             
             connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
             DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
