@@ -533,7 +533,7 @@ public class HistoryModel {
                         orderLogOrderAdded(dbLayer, (FatEventOrderOrderAdded) entry, EventType.OrderOrderAdded);
                         break;
                     case OrderSleeping:
-                        orderLog(dbLayer, (FatEventOrderSleeping) entry, EventType.OrderSleeping);
+                        orderLog(dbLayer, (FatEventOrderSleeping) entry, EventType.OrderSleeping, OrderLogEntryLogLevel.MAIN);
                         break;
                     case EventWithProblem:
                         try {
@@ -1397,14 +1397,18 @@ public class HistoryModel {
         storeLog2File(le);
     }
 
-    private void orderLog(DBLayerHistory dbLayer, AFatEventOrderBase eo, EventType eventType) throws Exception {
+    private void orderLog(DBLayerHistory dbLayer, AFatEventOrderBase eo, EventType eventType, OrderLogEntryLogLevel logLevel) throws Exception {
         checkControllerTimezone(dbLayer);
 
         CachedOrder co = cacheHandler.getOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
 
-        LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, eventType, eo.getEventDatetime(), null);
+        LogEntry le = new LogEntry(logLevel, eventType, eo.getEventDatetime(), null);
         le.onOrderBase(co, eo);
         storeLog2File(le);
+    }
+    
+    private void orderLog(DBLayerHistory dbLayer, AFatEventOrderBase eo, EventType eventType) throws Exception {
+        orderLog(dbLayer, eo, eventType, OrderLogEntryLogLevel.DETAIL);
     }
 
     private void orderLogNotice(DBLayerHistory dbLayer, AFatEventOrderNotice eo, EventType eventType) throws Exception {
