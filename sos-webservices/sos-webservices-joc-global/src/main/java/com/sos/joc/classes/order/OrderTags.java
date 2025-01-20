@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -110,7 +112,9 @@ public class OrderTags {
     @Subscribe({ HistoryOrderStarted.class })
     public void addHistoryIdToTags(HistoryOrderStarted evt) {
         if (!evt.getOrderId().contains("|")) { // not child order
-            LOGGER.info("HistoryOrderStarted received: " + SOSString.toString(evt));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("HistoryOrderStarted received: " + SOSString.toString(evt));
+            }
             addHistoryIdToTags(evt.getControllerId(), evt.getOrderId(), (HistoryOrderBean) evt.getPayload());
         }
     }
@@ -119,7 +123,9 @@ public class OrderTags {
     public void addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(AddOrderEvent evt) {
         boolean isChildOrder = evt.getOrderId().contains("|");
         if (!isChildOrder) {
-            LOGGER.info("AddOrderEvent received: " + SOSString.toString(evt));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("AddOrderEvent received: " + SOSString.toString(evt));
+            }
             addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(evt.getControllerId(), evt.getOrderId(), evt.getWorkflowName());
         }
     }
@@ -128,7 +134,7 @@ public class OrderTags {
     public void deleteTagsFromAddOrderInstruction(TerminateOrderEvent evt) {
         boolean isChildOrder = evt.getOrderId().contains("|");
         if (!isChildOrder) {
-            LOGGER.info("TerminateOrderEvent received: " + SOSString.toString(evt));
+            //LOGGER.trace("TerminateOrderEvent received: " + SOSString.toString(evt));
             deleteTagsFromAddOrderInstruction(evt.getControllerId(), evt.getOrderId());
         }
     }
@@ -155,7 +161,7 @@ public class OrderTags {
                 String orderIdPattern = getOrderIdPattern(orderId);
                 boolean allAddOrderOrdersAreTerminated = Proxy.of(controllerId).currentState().ordersBy(o -> o.id().string().contains(orderIdPattern
                         + "!")).count() == 0L;
-                LOGGER.info("deleteAddOrderTags -> orderIdPattern: " + orderIdPattern + " are terminated: " + allAddOrderOrdersAreTerminated);
+                //LOGGER.info("deleteAddOrderTags -> orderIdPattern: " + orderIdPattern + " are terminated: " + allAddOrderOrdersAreTerminated);
                 if (allAddOrderOrdersAreTerminated) {
                     connection = Globals.createSosHibernateStatelessConnection("deleteAddOrderTags");
                     DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
@@ -196,7 +202,7 @@ public class OrderTags {
             Long orderIdPattern = Long.valueOf(OrdersHelper.getOrderIdMainPart(orderId).replaceAll("\\D", ""));
             dbAddOrderTagsItem.setOrderIdPattern(orderIdPattern);
             dbAddOrderTagsItem.setOrderTags(addOrderTags);
-            LOGGER.info("storeAddOrderTags: " + orderIdPattern + ", " + addOrderTags);
+            //LOGGER.info("storeAddOrderTags: " + orderIdPattern + ", " + addOrderTags);
             
             connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
             DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
@@ -250,23 +256,23 @@ public class OrderTags {
         }
     }
 
-    private synchronized void addTagsToOrderbyAddOrderInstruction(String controllerId, String orderId) {
+    private void addTagsToOrderbyAddOrderInstruction(String controllerId, String orderId) {
         SOSHibernateSession connection = null;
         try {
             String orderIdPattern = getOrderIdPattern(orderId);
             String addOrderIndex = orderId.substring(OrdersHelper.mainOrderIdLength - 3, OrdersHelper.mainOrderIdLength - 1);
             connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
-            DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
-            if (dbItem != null) {
-                Map<String, Set<String>> allTags = Globals.objectMapper.readValue(dbItem.getOrderTags(), typeRefAddOrderTags);
-                Set<String> orderTags = allTags.getOrDefault(addOrderIndex, Collections.emptySet());
-                if (!orderTags.isEmpty()) {
-                    connection.setAutoCommit(false);
-                    Globals.beginTransaction(connection);
-                    deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
-                    addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
-                    Globals.commit(connection);
-                }
+            DBItemInventoryAddOrderTag dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
+            //JOC-1933 sometimes addOrder Event of parent order comes around 10ms after the addAddOrder Event
+            if (dbItem == null) {
+                TimeUnit.MILLISECONDS.sleep(10);
+                // try again
+                dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
+            }
+            if (dbItem == null) {
+                TimeUnit.MILLISECONDS.sleep(10);
+                // try again once more
+                dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
             }
         } catch (Exception e) {
             Globals.rollback(connection);
@@ -274,6 +280,24 @@ public class OrderTags {
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private synchronized DBItemInventoryAddOrderTag addTagsToOrderbyAddOrderInstruction(SOSHibernateSession connection, String orderIdPattern,
+            String addOrderIndex, String controllerId, String orderId) throws NumberFormatException, SOSHibernateException, JsonMappingException,
+            JsonProcessingException {
+        DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
+        if (dbItem != null) {
+            Map<String, Set<String>> allTags = Globals.objectMapper.readValue(dbItem.getOrderTags(), typeRefAddOrderTags);
+            Set<String> orderTags = allTags.getOrDefault(addOrderIndex, Collections.emptySet());
+            if (!orderTags.isEmpty()) {
+                connection.setAutoCommit(false);
+                Globals.beginTransaction(connection);
+                deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
+                addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
+                Globals.commit(connection);
+            }
+        }
+        return dbItem;
     }
 
     public static Either<Exception, Void> addAdhocOrderTags(String controllerId, Map<OrderV, Set<GroupedTag>> oTags) {
