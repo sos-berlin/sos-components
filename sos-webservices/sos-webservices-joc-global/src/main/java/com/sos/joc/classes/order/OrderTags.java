@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -198,15 +197,15 @@ public class OrderTags {
         
         SOSHibernateSession connection = null;
         try {
-            DBItemInventoryAddOrderTag dbAddOrderTagsItem = new DBItemInventoryAddOrderTag();
             Long orderIdPattern = Long.valueOf(OrdersHelper.getOrderIdMainPart(orderId).replaceAll("\\D", ""));
-            dbAddOrderTagsItem.setOrderIdPattern(orderIdPattern);
-            dbAddOrderTagsItem.setOrderTags(addOrderTags);
             //LOGGER.info("storeAddOrderTags: " + orderIdPattern + ", " + addOrderTags);
             
             connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
             DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
             if (dbItem == null) { // else already exists
+                DBItemInventoryAddOrderTag dbAddOrderTagsItem = new DBItemInventoryAddOrderTag();
+                dbAddOrderTagsItem.setOrderIdPattern(orderIdPattern);
+                dbAddOrderTagsItem.setOrderTags(addOrderTags);
                 connection.save(dbAddOrderTagsItem);
             }
             
@@ -257,44 +256,54 @@ public class OrderTags {
     }
 
     private void addTagsToOrderbyAddOrderInstruction(String controllerId, String orderId) {
-        SOSHibernateSession connection = null;
         try {
             String orderIdPattern = getOrderIdPattern(orderId);
             String addOrderIndex = orderId.substring(OrdersHelper.mainOrderIdLength - 3, OrdersHelper.mainOrderIdLength - 1);
-            connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
-            DBItemInventoryAddOrderTag dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
-            //JOC-1933 sometimes addOrder event of parent order comes around 10ms after the addAddOrder of the generated order event 
-            //if addOrder instruction is first instruction
+            boolean stored = addTagsToOrderbyAddOrderInstruction(orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
+            // JOC-1933 sometimes addOrder event of parent order comes around 10ms after the addAddOrder of the generated order event
+            // if addOrder instruction is first instruction
             int attempt = 0;
-            while (attempt < 5 && dbItem == null) {
+            while (attempt < 10 && !stored) {
                 attempt++;
-                TimeUnit.MILLISECONDS.sleep(20);
-                dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                }
+                LOGGER.info("[storeAddOrderTags][" + orderId + "]: retry-attempt " + attempt);
+                stored = addTagsToOrderbyAddOrderInstruction(orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
             }
         } catch (Exception e) {
-            Globals.rollback(connection);
             LOGGER.error("[storeAddOrderTags][" + orderId + "]: " + e.toString(), e);
-        } finally {
-            Globals.disconnect(connection);
         }
     }
     
-    private synchronized DBItemInventoryAddOrderTag addTagsToOrderbyAddOrderInstruction(SOSHibernateSession connection, String orderIdPattern,
-            String addOrderIndex, String controllerId, String orderId) throws NumberFormatException, SOSHibernateException, JsonMappingException,
-            JsonProcessingException {
-        DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
-        if (dbItem != null) {
-            Map<String, Set<String>> allTags = Globals.objectMapper.readValue(dbItem.getOrderTags(), typeRefAddOrderTags);
-            Set<String> orderTags = allTags.getOrDefault(addOrderIndex, Collections.emptySet());
-            if (!orderTags.isEmpty()) {
-                connection.setAutoCommit(false);
-                Globals.beginTransaction(connection);
-                deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
-                addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
-                Globals.commit(connection);
+    private synchronized boolean addTagsToOrderbyAddOrderInstruction(String orderIdPattern, String addOrderIndex, String controllerId,
+            String orderId) throws Exception {
+        SOSHibernateSession connection = null;
+        boolean successful = false;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
+            DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
+            if (dbItem != null) {
+                Map<String, Set<String>> allTags = Globals.objectMapper.readValue(dbItem.getOrderTags(), typeRefAddOrderTags);
+                Set<String> orderTags = allTags.getOrDefault(addOrderIndex, Collections.emptySet());
+                if (!orderTags.isEmpty()) {
+                    connection.setAutoCommit(false);
+                    Globals.beginTransaction(connection);
+                    deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
+                    addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
+                    Globals.commit(connection);
+                    successful = true;
+                }
             }
+        } catch (Exception e) {
+            Globals.rollback(connection);
+            throw e;
+        } finally {
+            Globals.disconnect(connection);
         }
-        return dbItem;
+        return successful;
     }
 
     public static Either<Exception, Void> addAdhocOrderTags(String controllerId, Map<OrderV, Set<GroupedTag>> oTags) {
