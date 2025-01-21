@@ -263,15 +263,12 @@ public class OrderTags {
             String addOrderIndex = orderId.substring(OrdersHelper.mainOrderIdLength - 3, OrdersHelper.mainOrderIdLength - 1);
             connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
             DBItemInventoryAddOrderTag dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
-            //JOC-1933 sometimes addOrder Event of parent order comes around 10ms after the addAddOrder Event
-            if (dbItem == null) {
-                TimeUnit.MILLISECONDS.sleep(10);
-                // try again
-                dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
-            }
-            if (dbItem == null) {
-                TimeUnit.MILLISECONDS.sleep(10);
-                // try again once more
+            //JOC-1933 sometimes addOrder event of parent order comes around 10ms after the addAddOrder of the generated order event 
+            //if addOrder instruction is first instruction
+            int attempt = 0;
+            while (attempt < 5 && dbItem == null) {
+                attempt++;
+                TimeUnit.MILLISECONDS.sleep(20);
                 dbItem = addTagsToOrderbyAddOrderInstruction(connection, orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
             }
         } catch (Exception e) {
