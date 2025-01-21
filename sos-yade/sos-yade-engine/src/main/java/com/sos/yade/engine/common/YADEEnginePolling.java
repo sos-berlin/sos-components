@@ -104,7 +104,7 @@ public class YADEEnginePolling {
 
     private long getPollTimeout() {
         if (args.getPollTimeout().getValue() == null) {
-            return 0;
+            return 0L;
         } else {
             return args.getPollTimeout().getValue() * 60;
         }

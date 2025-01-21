@@ -262,7 +262,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
     @Override
     public boolean isAbsolutePath(String path) {
-        return SOSShell.IS_WINDOWS ? SOSPathUtil.isAbsolutePathWindowsStyle(path) : SOSPathUtil.isAbsolutePathUnixStyle(path);
+        return SOSPathUtil.isAbsolutePathFileSystemStyle(path);
     }
 
     @Override
