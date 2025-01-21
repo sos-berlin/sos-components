@@ -276,18 +276,10 @@ public class DailyPlanHelper {
     }
 
     public static String getCallerForLog(DailyPlanSettings settings) {
-        if (SOSString.isEmpty(settings.getCaller())) {
+        if (SOSCollection.isEmpty(settings.getCaller())) {
             return "";
         }
-        String c = "";
-        if (!settings.getCaller().startsWith("[")) {
-            c = "[";
-        }
-        c += settings.getCaller();
-        if (!settings.getCaller().endsWith("]")) {
-            c += "]";
-        }
-        return c;
+        return settings.getCaller().stream().map(item -> "[" + item + "]").collect(Collectors.joining());
     }
 
     public static String getStartTimeWithTimeZone(DailyPlanSettings settings, java.util.Calendar startCalendar) {

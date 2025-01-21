@@ -1664,7 +1664,7 @@ public class FrequencyResolver {
         Calendar to = getTo(repetition.getTo());
 
         if (isDebugEnabled) {
-            LOGGER.info(String.format("[%s][from=%s][to=%s][dateFromOrig=%s]fromDayIsMonthMaximumDay=%s", method, SOSDate.getDateTimeAsString(from),
+            LOGGER.debug(String.format("[%s][from=%s][to=%s][dateFromOrig=%s]fromDayIsMonthMaximumDay=%s", method, SOSDate.getDateTimeAsString(from),
                     SOSDate.getDateTimeAsString(to), SOSDate.getDateTimeAsString(dateFromOrig), fromDayIsMonthMaximumDay));
         }
 

@@ -1,5 +1,7 @@
 package com.sos.joc.dailyplan.common;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class DailyPlanSettings {
     private int daysAheadSubmit = 0;
     private int projectionsMonthAhead = 0;
 
-    private String caller;
+    private List<String> caller;
 
     public List<ControllerConfiguration> getControllers() {
         return controllers;
@@ -184,10 +186,27 @@ public class DailyPlanSettings {
     }
 
     public void setCaller(String val) {
-        caller = val;
+        caller = SOSString.isEmpty(val) ? null : Collections.singletonList(val);
     }
 
-    public String getCaller() {
+    public void setCaller(String parent, String child) {
+        if (!SOSString.isEmpty(parent)) {
+            caller = new ArrayList<>();
+            caller.add(parent);
+        }
+        if (!SOSString.isEmpty(child)) {
+            if (caller == null) {
+                caller = new ArrayList<>();
+            }
+            caller.add(child);
+        }
+    }
+
+    public void setCaller(List<String> elements) {
+        caller = elements;
+    }
+
+    public List<String> getCaller() {
         return caller;
     }
 

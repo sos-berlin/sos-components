@@ -103,13 +103,13 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
             ExecutionException {
-        return generateOrders(in, accessToken, withAudit, false);
+        return generateOrders(in, accessToken, withAudit, false, null);
     }
 
-    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit, boolean includeLate) throws SOSInvalidDataException,
-            SOSHibernateException, IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
-            JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException,
-            SOSMissingDataException, ParseException, ExecutionException {
+    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit, boolean includeLate, String parentCaller)
+            throws SOSInvalidDataException, SOSHibernateException, IOException, DBMissingDataException, DBConnectionRefusedException,
+            DBInvalidDataException, JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, SOSMissingDataException, ParseException, ExecutionException {
 
         String controllerId = in.getControllerId();
         if (!getControllerPermissions(controllerId, accessToken).getOrders().getCreate()) {
@@ -171,7 +171,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         settings.setPeriodBegin(getSettings().getPeriodBegin());
         settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(SOSDate.getDate(in.getDailyPlanDate()).getTime()));
         settings.setSubmissionTime(new Date());
-        settings.setCaller(IMPL_PATH);
+        settings.setCaller(parentCaller, IMPL_PATH);
 
         DailyPlanRunner runner = new DailyPlanRunner(settings);
         boolean onlyPlanOrderAutomatically = in.getIncludeNonAutoPlannedOrders() != Boolean.TRUE;
@@ -288,16 +288,16 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException, SOSHibernateException,
             SOSMissingDataException, IOException, ParseException, ExecutionException {
 
-        return generateOrders(requests, accessToken, withAudit, false);
+        return generateOrders(requests, accessToken, withAudit, false, null);
     }
 
-    public boolean generateOrders(List<GenerateRequest> requests, String accessToken, boolean withAudit, boolean includeLate)
+    public boolean generateOrders(List<GenerateRequest> requests, String accessToken, boolean withAudit, boolean includeLate, String parentCaller)
             throws DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException, SOSHibernateException,
             SOSMissingDataException, IOException, ParseException, ExecutionException {
         boolean successful = true;
         for (GenerateRequest req : requests) {
-            if (!generateOrders(req, accessToken, withAudit, includeLate)) {
+            if (!generateOrders(req, accessToken, withAudit, includeLate, parentCaller)) {
                 successful = false;
             }
         }
