@@ -62,7 +62,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             }
 
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
-            setSettings();
+            setSettings(IMPL_PATH);
 
             if (isDebugEnabled) {
                 // TODO LOGGER.debug("Reading the daily plan for day " + in.getFilter().getDailyPlanDate());

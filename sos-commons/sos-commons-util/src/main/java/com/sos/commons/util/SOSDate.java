@@ -159,14 +159,28 @@ public class SOSDate {
         }
     }
 
-    // TODO to remove ?
     public static String getDateWithTimeZoneAsString(Date date, String timeZone) throws SOSInvalidDataException {
         return format(date, DATE_FORMAT, SOSString.isEmpty(timeZone) ? null : TimeZone.getTimeZone(timeZone));
     }
 
-    // TODO to remove ?
+    public static String tryGetDateWithTimeZoneAsString(Date date, String timeZone) {
+        try {
+            return getDateWithTimeZoneAsString(date, timeZone);
+        } catch (SOSInvalidDataException e) {
+            return e.toString();
+        }
+    }
+
     public static String getDateTimeWithTimeZoneAsString(Date date, String timeZone) throws SOSInvalidDataException {
         return format(date, DATETIME_FORMAT, SOSString.isEmpty(timeZone) ? null : TimeZone.getTimeZone(timeZone));
+    }
+
+    public static String tryGetDateTimeWithTimeZoneAsString(Date date, String timeZone) {
+        try {
+            return getDateTimeWithTimeZoneAsString(date, timeZone);
+        } catch (SOSInvalidDataException e) {
+            return e.toString();
+        }
     }
 
     // returns String from Calendar

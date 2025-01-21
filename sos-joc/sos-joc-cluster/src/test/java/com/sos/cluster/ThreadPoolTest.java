@@ -117,7 +117,7 @@ public class ThreadPoolTest {
         waitFor(MAX_EXECUTION_TIME);
         LOGGER.info(String.format("[start][setStopper][%ss][activeCount=%s]poolSize=%s", MAX_EXECUTION_TIME, threadPool.getActiveCount(), threadPool
                 .getPoolSize()));
-        ThreadHelper.print(StartupMode.manual, "My Header");
+        ThreadHelper.print(StartupMode.run_now, "My Header");
         shutdown(threadPool);
         LOGGER.info(String.format("[end][setStopper][%ss]", MAX_EXECUTION_TIME));
     }

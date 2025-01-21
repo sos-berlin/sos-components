@@ -2,7 +2,6 @@ package com.sos.joc.dailyplan.common;
 
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -239,26 +238,60 @@ public class DailyPlanHelper {
         return c;
     }
 
-    public static String getStartTimeAsString(String timeZoneName, String dailyPlanStartTime, String periodBegin) {
-        java.util.Calendar startCalendar;
-        TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
-        java.util.Calendar now = java.util.Calendar.getInstance(timeZone);
+    public static java.util.Calendar getStartTimeCalendar(DailyPlanSettings settings) {
+        return getStartTimeCalendar(settings.getDailyPlanStartTime(), settings.getPeriodBegin(), settings.getTimeZone());
+    }
 
-        if (!"".equals(dailyPlanStartTime)) {
-            startCalendar = DailyPlanHelper.getCalendar(dailyPlanStartTime, timeZoneName);
+    private static java.util.Calendar getStartTimeCalendar(String startTime, String periodBegin, String timezone) {
+        java.util.Calendar cal = null;
+        if (!SOSString.isEmpty(startTime)) {
+            cal = DailyPlanHelper.getCalendar(startTime, timezone);
         } else {
-            startCalendar = DailyPlanHelper.getCalendar(periodBegin, timeZoneName);
-            startCalendar.add(java.util.Calendar.DATE, 1);
-            startCalendar.add(java.util.Calendar.MINUTE, -30);
+            cal = DailyPlanHelper.getCalendar(periodBegin, timezone);
+            cal.add(java.util.Calendar.DATE, 1);
+            cal.add(java.util.Calendar.MINUTE, -1 * DailyPlanSettings.DEFAULT_START_TIME_MINUTES_BEFORE_PRERIOD_BEGIN);
         }
-
-        if (startCalendar.before(now)) {
-            startCalendar.add(java.util.Calendar.DATE, 1);
+        java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(timezone));
+        if (cal.before(now)) {
+            cal.add(java.util.Calendar.DATE, 1);
         }
+        return cal;
+    }
 
-        SimpleDateFormat format = new SimpleDateFormat(SOSDate.DATETIME_FORMAT);
-        format.setTimeZone(timeZone);
-        return format.format(startCalendar.getTime());
+    public static String getNextStartMsg(DailyPlanSettings settings, java.util.Calendar startCalendar) {
+        return getNextStartMsg(settings, startCalendar, null);
+    }
+
+    public static String getNextStartMsg(DailyPlanSettings settings, java.util.Calendar startCalendar, String identifier) {
+        String identifierMsg = SOSString.isEmpty(identifier) ? "" : "[" + identifier + "]";
+        String msg = String.format("%s[%s][planned][%s %s]", identifierMsg, settings.getStartMode(), DailyPlanHelper.getStartTimeWithTimeZone(
+                settings, startCalendar), settings.getTimeZone());
+        if (settings.getDaysAheadPlan() > 0) {
+            return (String.format("%s[creating daily plan for %s days ahead, submitting for %s days ahead]%s", msg, settings.getDaysAheadPlan(),
+                    settings.getDaysAheadSubmit(), settings.toString()));
+        } else {
+            return (String.format("%s[skip][because creating daily plan for %s days ahead]%s", msg, settings.getDaysAheadPlan(), settings
+                    .toString()));
+        }
+    }
+
+    public static String getCallerForLog(DailyPlanSettings settings) {
+        if (SOSString.isEmpty(settings.getCaller())) {
+            return "";
+        }
+        String c = "";
+        if (!settings.getCaller().startsWith("[")) {
+            c = "[";
+        }
+        c += settings.getCaller();
+        if (!settings.getCaller().endsWith("]")) {
+            c += "]";
+        }
+        return c;
+    }
+
+    public static String getStartTimeWithTimeZone(DailyPlanSettings settings, java.util.Calendar startCalendar) {
+        return SOSDate.tryGetDateTimeWithTimeZoneAsString(startCalendar.getTime(), settings.getTimeZone());
     }
 
     public static String buildOrderId(String dailyPlanDate, Schedule schedule, OrderParameterisation orderParameterisation, Long startTime,

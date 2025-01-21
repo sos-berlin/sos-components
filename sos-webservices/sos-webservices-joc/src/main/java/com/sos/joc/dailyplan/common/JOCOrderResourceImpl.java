@@ -42,31 +42,32 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCOrderResourceImpl.class);
     private DailyPlanSettings settings;
 
-    public static DailyPlanSettings getDailyPlanSettings() {
+    public static DailyPlanSettings getDailyPlanSettings(String caller) {
         DailyPlanSettings settings = new DailyPlanSettings();
         if (Globals.getConfigurationGlobals() == null) {// TODO to remove
             settings.setTimeZone(SOSDate.TIMEZONE_UTC);
             settings.setPeriodBegin("00:00");
-            settings.setDayAheadPlan(7);
-            settings.setDayAheadSubmit(3);
-            settings.setProjectionsMonthsAhead(6);
+            settings.setDaysAheadPlan(7);
+            settings.setDaysAheadSubmit(3);
+            settings.setProjectionsMonthAhead(6);
             LOGGER.warn("Could not read settings. Using defaults");
         } else {
             AConfigurationSection section = Globals.getConfigurationGlobals().getConfigurationSection(DefaultSections.dailyplan);
             settings = new GlobalSettingsReader().getSettings(section);
         }
+        settings.setCaller(caller);
         return settings;
     }
 
-    public ZoneId getZoneId() {
+    public ZoneId getZoneId(String caller) {
         if (settings == null) {
-            setSettings();
+            setSettings(caller);
         }
         return ZoneId.of(settings.getTimeZone());
     }
 
-    protected void setSettings() {
-        this.settings = getDailyPlanSettings();
+    protected void setSettings(String caller) {
+        this.settings = getDailyPlanSettings(caller);
     }
 
     protected DailyPlanSettings getSettings() {

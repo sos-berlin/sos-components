@@ -15,6 +15,8 @@ public class DailyPlanSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSettings.class);
 
+    public static final int DEFAULT_START_TIME_MINUTES_BEFORE_PRERIOD_BEGIN = 30;
+
     private List<ControllerConfiguration> controllers;
     private StartupMode startMode;
 
@@ -22,18 +24,19 @@ public class DailyPlanSettings {
     private Date submissionTime;
 
     private String userAccount = "JS7";
-    private String timeZone = "UTC";
+    private String timeZone = SOSDate.TIMEZONE_UTC;
     private String periodBegin = "00:00";
     private String dailyPlanStartTime;
 
     private boolean periodBeginMidnight = true;
     private boolean overwrite = false;
     private boolean submit = true;
-    private boolean runNow = false;
 
-    private int dayAheadPlan = 0;
-    private int dayAheadSubmit = 0;
-    private int projectionsMonthsAhead = 0;
+    private int daysAheadPlan = 0;
+    private int daysAheadSubmit = 0;
+    private int projectionsMonthAhead = 0;
+
+    private String caller;
 
     public List<ControllerConfiguration> getControllers() {
         return controllers;
@@ -44,11 +47,18 @@ public class DailyPlanSettings {
     }
 
     public StartupMode getStartMode() {
+        if (startMode == null) {
+            startMode = StartupMode.run_now;
+        }
         return startMode;
     }
 
     public void setStartMode(StartupMode val) {
         startMode = val;
+    }
+
+    public boolean isRunNow() {
+        return StartupMode.run_now.equals(getStartMode());
     }
 
     public Date getDailyPlanDate() {
@@ -122,62 +132,81 @@ public class DailyPlanSettings {
         overwrite = val;
     }
 
-    public boolean isRunNow() {
-        return runNow;
+    public int getDaysAheadPlan() {
+        return daysAheadPlan;
     }
 
-    public void setRunNow(boolean val) {
-        runNow = val;
+    public void setDaysAheadPlan(int val) {
+        daysAheadPlan = val;
     }
 
-    public int getDayAheadPlan() {
-        return dayAheadPlan;
+    public int getDaysAheadSubmit() {
+        return daysAheadSubmit;
     }
 
-    public void setDayAheadPlan(int val) {
-        dayAheadPlan = val;
+    public void setDaysAheadSubmit(int val) {
+        daysAheadSubmit = val;
     }
 
-    public int getDayAheadSubmit() {
-        return dayAheadSubmit;
-    }
-
-    public void setDayAheadSubmit(int val) {
-        dayAheadSubmit = val;
-    }
-
-    public void setDayAheadSubmit(String val) {
+    public void setDaysAheadSubmit(String val) {
         try {
-            this.dayAheadSubmit = Integer.parseInt(val);
+            this.daysAheadSubmit = Integer.parseInt(val);
         } catch (NumberFormatException e) {
-            this.dayAheadSubmit = 0;
-            LOGGER.warn("Could not set setting for dayAheadSubmit: " + val);
+            this.daysAheadSubmit = 0;
+            LOGGER.warn("Could not set setting for daysAheadSubmit: " + val);
         }
     }
 
-    public void setDayAheadPlan(String val) {
+    public void setDaysAheadPlan(String val) {
         try {
-            this.dayAheadPlan = Integer.parseInt(val);
+            this.daysAheadPlan = Integer.parseInt(val);
         } catch (NumberFormatException e) {
-            this.dayAheadSubmit = 0;
-            LOGGER.warn("Could not set setting for dayAheadPlan: " + val);
+            this.daysAheadSubmit = 0;
+            LOGGER.warn("Could not set setting for daysAheadPlan: " + val);
         }
     }
 
-    public void setProjectionsMonthsAhead(int val) {
-        projectionsMonthsAhead = val;
+    public void setProjectionsMonthAhead(int val) {
+        projectionsMonthAhead = val;
     }
 
-    public void setProjectionsMonthsAhead(String val) {
+    public void setProjectionsMonthAhead(String val) {
         try {
-            this.projectionsMonthsAhead = Integer.parseInt(val);
+            this.projectionsMonthAhead = Integer.parseInt(val);
         } catch (NumberFormatException e) {
-            this.projectionsMonthsAhead = 6;
-            LOGGER.warn("Could not set setting for projectionsMonthsAhead: " + val);
+            this.projectionsMonthAhead = 6;
+            LOGGER.warn("Could not set setting for projectionsMonthAhead: " + val);
         }
     }
 
-    public int getProjectionsMonthsAhead() {
-        return projectionsMonthsAhead;
+    public int getProjectionsMonthAhead() {
+        return projectionsMonthAhead;
+    }
+
+    public void setCaller(String val) {
+        caller = val;
+    }
+
+    public String getCaller() {
+        return caller;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("time_zone=").append(timeZone);
+        if (!isRunNow()) {
+            sb.append(",period_begin=").append(periodBegin);
+            sb.append(",start_time=");
+            if (SOSString.isEmpty(dailyPlanStartTime)) {
+                sb.append("<").append(DEFAULT_START_TIME_MINUTES_BEFORE_PRERIOD_BEGIN).append("m before period_begin>");
+            } else {
+                sb.append(dailyPlanStartTime);
+            }
+        }
+        sb.append(",days_ahead_plan=").append(daysAheadPlan);
+        sb.append(",days_ahead_submit=").append(daysAheadSubmit);
+        sb.append(",projections_month_ahead=").append(projectionsMonthAhead);
+        return sb.toString();
     }
 }

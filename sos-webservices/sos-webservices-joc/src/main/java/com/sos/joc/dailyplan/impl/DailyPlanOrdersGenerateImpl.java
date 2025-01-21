@@ -100,16 +100,16 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     }
 
     public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit) throws SOSInvalidDataException, SOSHibernateException,
-    IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
-    DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
-    ExecutionException {
-        return generateOrders(in, accessToken, withAudit, false);
-    }
-
-    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit, boolean includeLate) throws SOSInvalidDataException, SOSHibernateException,
             IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
             ExecutionException {
+        return generateOrders(in, accessToken, withAudit, false);
+    }
+
+    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit, boolean includeLate) throws SOSInvalidDataException,
+            SOSHibernateException, IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
+            JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException,
+            SOSMissingDataException, ParseException, ExecutionException {
 
         String controllerId = in.getControllerId();
         if (!getControllerPermissions(controllerId, accessToken).getOrders().getCreate()) {
@@ -130,9 +130,9 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         if (in.getSchedulePaths() != null) {
             scheduleFolders = FolderPath.filterByUniqueFolder(in.getSchedulePaths().getFolders());
             // Plaster, um Schedulenamen statt Pfade zu akzeptieren
-            scheduleSingles = FolderPath.filterByFolders(scheduleFolders, getScheduleSinglePaths(
-                    in.getSchedulePaths().getSingles().stream().filter(item -> !item.startsWith("/")).collect(Collectors.toList())));
-            if(scheduleSingles == null) {
+            scheduleSingles = FolderPath.filterByFolders(scheduleFolders, getScheduleSinglePaths(in.getSchedulePaths().getSingles().stream().filter(
+                    item -> !item.startsWith("/")).collect(Collectors.toList())));
+            if (scheduleSingles == null) {
                 scheduleSingles = new HashSet<String>();
             }
             scheduleSingles.addAll(in.getSchedulePaths().getSingles().stream().filter(item -> item.startsWith("/")).collect(Collectors.toSet()));
@@ -161,7 +161,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         // log to service log file
         JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
 
-        setSettings();
+        setSettings(IMPL_PATH);// ???
 
         DailyPlanSettings settings = new DailyPlanSettings();
         settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
@@ -171,13 +171,14 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         settings.setPeriodBegin(getSettings().getPeriodBegin());
         settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(SOSDate.getDate(in.getDailyPlanDate()).getTime()));
         settings.setSubmissionTime(new Date());
+        settings.setCaller(IMPL_PATH);
 
         DailyPlanRunner runner = new DailyPlanRunner(settings);
         boolean onlyPlanOrderAutomatically = in.getIncludeNonAutoPlannedOrders() != Boolean.TRUE;
         Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
                 workflowSingles, permittedFolders, checkedFolders, onlyPlanOrderAutomatically);
 
-        Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, dailyPlanSchedules, in
+        Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.webservice, controllerId, dailyPlanSchedules, in
                 .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken, includeLate);
         JocClusterServiceLogger.clearAllLoggers();
 
@@ -194,7 +195,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
         return true;
     }
-    
+
     private List<String> getScheduleSinglePaths(List<String> scheduleSingles) throws SOSHibernateException {
         if (scheduleSingles == null || scheduleSingles.isEmpty()) {
             return null;
@@ -203,12 +204,13 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            return dbLayer.getReleasedConfigurationPaths(scheduleSingles.stream().map(JocInventory::pathToName).distinct().collect(Collectors.toList()), ConfigurationType.SCHEDULE);
+            return dbLayer.getReleasedConfigurationPaths(scheduleSingles.stream().map(JocInventory::pathToName).distinct().collect(Collectors
+                    .toList()), ConfigurationType.SCHEDULE);
         } finally {
             Globals.disconnect(session);
         }
     }
-    
+
     private List<String> getWorflowSinglePaths(List<String> workflowSingles) throws SOSHibernateException {
         if (workflowSingles == null) {
             return null;
@@ -285,14 +287,14 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException, SOSHibernateException,
             SOSMissingDataException, IOException, ParseException, ExecutionException {
-        
+
         return generateOrders(requests, accessToken, withAudit, false);
     }
 
     public boolean generateOrders(List<GenerateRequest> requests, String accessToken, boolean withAudit, boolean includeLate)
-            throws DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, 
-            DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException,
-            SOSHibernateException, SOSMissingDataException, IOException, ParseException, ExecutionException {
+            throws DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException, SOSHibernateException,
+            SOSMissingDataException, IOException, ParseException, ExecutionException {
         boolean successful = true;
         for (GenerateRequest req : requests) {
             if (!generateOrders(req, accessToken, withAudit, includeLate)) {
@@ -314,11 +316,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
     public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
             Boolean withSubmit, boolean forReleaseDeploy, List<String> allowedDailyPlanDates) throws ParseException, SOSHibernateException {
-        setSettings();
-        int planDaysAhead = getSettings().getDayAheadPlan();
-        int submitDaysAhead = getSettings().getDayAheadSubmit();
-        
-        if(forReleaseDeploy) {
+        setSettings(IMPL_PATH);
+        int planDaysAhead = getSettings().getDaysAheadPlan();
+        int submitDaysAhead = getSettings().getDaysAheadSubmit();
+
+        if (forReleaseDeploy) {
             planDaysAhead += 1;
             submitDaysAhead += 1;
         }
@@ -330,7 +332,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         if (instant.isBefore(now)) {
             instant = now;
         }
-        
+
         PathItem workflowsPathItem = new PathItem();
         PathItem schedulesPathItem = new PathItem();
         workflowsPathItem.setSingles(workflowPaths);
@@ -342,7 +344,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 continue;
             }
             String dailyPlanDate = sdf.format(Date.from(now));
-            
+
             GenerateRequest req = new GenerateRequest();
             req.setControllerId(controllerId);
             if (withSubmit) {
@@ -363,11 +365,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         }
         return generateRequests;
     }
-    
+
     public List<String> getAllowedDailyPlanDates(SOSHibernateSession session, String controllerId) throws SOSHibernateException {
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        return dbLayer.getSubmissionDates(controllerId, Date.from(Instant.now().minusSeconds(TimeUnit.DAYS.toSeconds(1)))).stream()
-                .map(d -> sdf.format(d)).collect(Collectors.toList());
+        return dbLayer.getSubmissionDates(controllerId, Date.from(Instant.now().minusSeconds(TimeUnit.DAYS.toSeconds(1)))).stream().map(d -> sdf
+                .format(d)).collect(Collectors.toList());
     }
 }

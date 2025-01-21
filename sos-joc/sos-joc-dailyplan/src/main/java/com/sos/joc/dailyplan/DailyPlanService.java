@@ -45,22 +45,14 @@ public class DailyPlanService extends AJocActiveMemberService {
             lastActivityStart = Instant.now();
 
             JocClusterServiceLogger.setLogger(IDENTIFIER);
-            LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
+            LOGGER.info(String.format("[%s][%s]start", getIdentifier(), mode));
 
-            DailyPlanSettings settings = getSettings(mode, controllers, serviceSettingsSection);
+            DailyPlanSettings settings = getSettings(StartupMode.automatic, controllers, serviceSettingsSection);
+            LOGGER.info(DailyPlanHelper.getNextStartMsg(settings, DailyPlanHelper.getStartTimeCalendar(settings), getIdentifier()));
 
-            String startTime = DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(), settings.getDailyPlanStartTime(), settings
-                    .getPeriodBegin());
-
-            if (settings.getDayAheadPlan() > 0) {
-                LOGGER.info(String.format("[%s][%s][planned][%s %s]creating daily plan for %s days ahead, submitting for %s days ahead",
-                        getIdentifier(), mode, startTime, settings.getTimeZone(), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
+            if (settings.getDaysAheadPlan() > 0) {
                 schedule(settings);
-            } else {
-                LOGGER.info(String.format("[%s][%s][planned][%s %s][skip]because creating daily plan for %s days ahead", getIdentifier(), mode,
-                        startTime, settings.getTimeZone(), settings.getDayAheadPlan()));
             }
-
             lastActivityEnd = Instant.now();
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
         } catch (Throwable e) {
@@ -74,7 +66,7 @@ public class DailyPlanService extends AJocActiveMemberService {
     @Override
     public synchronized JocClusterAnswer stop(StartupMode mode) {
         JocClusterServiceLogger.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s][%s] stop", getIdentifier(), mode));
+        LOGGER.info(String.format("[%s][%s]stop", getIdentifier(), mode));
         resetTimer();
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
@@ -92,9 +84,10 @@ public class DailyPlanService extends AJocActiveMemberService {
         lastActivityStart = Instant.now();
 
         try {
-            LOGGER.info(String.format("[%s][%s][runNow]...", getIdentifier(), mode));
+            String add = StartupMode.run_now.equals(mode) ? "" : "[runNow]";
+            LOGGER.info(String.format("[%s][%s]%s...", getIdentifier(), mode, add));
             DailyPlanSettings settings = getSettings(mode, controllers, serviceSettingsSection);
-            settings.setRunNow(true);
+            settings.setStartMode(StartupMode.run_now);
             schedule(settings);
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
@@ -165,9 +158,9 @@ public class DailyPlanService extends AJocActiveMemberService {
         settings.setTimeZone(dailyPlanGlobalSettings.getTimeZone());
         settings.setPeriodBegin(dailyPlanGlobalSettings.getPeriodBegin());
         settings.setDailyPlanStartTime(dailyPlanGlobalSettings.getDailyPlanStartTime());
-        settings.setDayAheadPlan(dailyPlanGlobalSettings.getDayAheadPlan());
-        settings.setDayAheadSubmit(dailyPlanGlobalSettings.getDayAheadSubmit());
-        settings.setProjectionsMonthsAhead(dailyPlanGlobalSettings.getProjectionsMonthsAhead());
+        settings.setDaysAheadPlan(dailyPlanGlobalSettings.getDaysAheadPlan());
+        settings.setDaysAheadSubmit(dailyPlanGlobalSettings.getDaysAheadSubmit());
+        settings.setProjectionsMonthAhead(dailyPlanGlobalSettings.getProjectionsMonthAhead());
 
         return settings;
     }

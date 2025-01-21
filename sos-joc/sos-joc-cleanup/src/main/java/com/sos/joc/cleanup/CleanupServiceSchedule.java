@@ -166,7 +166,7 @@ public class CleanupServiceSchedule {
             dbLayer.setSession(Globals.createSosHibernateStatelessConnection(service.getIdentifier()));
 
             switch (mode) {
-            case manual:
+            case run_now:
             case manual_restart:
             case settings_changed:
                 deleteJocVariable(method, dbLayer, mode);

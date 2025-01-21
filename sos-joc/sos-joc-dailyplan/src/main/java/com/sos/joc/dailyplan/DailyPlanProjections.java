@@ -28,7 +28,6 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.order.OrdersHelper;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
@@ -73,9 +72,10 @@ public class DailyPlanProjections {
     private String logPrefix;
 
     public void process(DailyPlanSettings settings) throws Exception {
-        logPrefix = String.format("[%s][projections]", settings.getStartMode() == null ? StartupMode.manual : settings.getStartMode());
-        if (settings.getProjectionsMonthsAhead() == 0) {
-            LOGGER.info(logPrefix + "[skip]getProjectionsMonthsAhead=0");
+        String add = DailyPlanHelper.getCallerForLog(settings);
+        logPrefix = String.format("[%s]%s[projections]", settings.getStartMode(), add);
+        if (settings.getProjectionsMonthAhead() == 0) {
+            LOGGER.info(logPrefix + "[skip]getProjectionsMonthAhead=0");
             return;
         }
         Instant start = Instant.now();
@@ -312,7 +312,7 @@ public class DailyPlanProjections {
                 // current implementation - calculates "from/to" from the current date
                 // alternative (not implemented) - calculates "from/to" from the last planned date (dpr.lastDate) if set
                 java.util.Calendar from = DailyPlanHelper.getUTCCalendarNow();
-                java.util.Calendar to = DailyPlanHelper.add2Clone(from, java.util.Calendar.MONTH, settings.getProjectionsMonthsAhead());
+                java.util.Calendar to = DailyPlanHelper.add2Clone(from, java.util.Calendar.MONTH, settings.getProjectionsMonthAhead());
 
                 int yearFrom = DailyPlanHelper.getYear(from);
                 int yearTo = DailyPlanHelper.getYear(to);

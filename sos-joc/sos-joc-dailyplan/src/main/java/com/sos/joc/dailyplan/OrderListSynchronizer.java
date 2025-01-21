@@ -34,6 +34,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.MainCyclicOrderKey;
 import com.sos.joc.dailyplan.common.OrderCounter;
@@ -60,15 +61,18 @@ public class OrderListSynchronizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
 
-    private DailyPlanSettings settings;
+    private final DailyPlanSettings settings;
+    private final Map<PlannedOrderKey, PlannedOrder> plannedOrders;
+    private final String callerForLog;
+
     private JocError jocError;
     private DBItemDailyPlanSubmission submission;
-    private Map<PlannedOrderKey, PlannedOrder> plannedOrders;
     private String accessToken;
 
     public OrderListSynchronizer(DailyPlanSettings settings) {
         this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
         this.settings = settings;
+        this.callerForLog = DailyPlanHelper.getCallerForLog(this.settings);
     }
 
     protected boolean add(StartupMode startupMode, PlannedOrder o, String controllerId, String dailyPlanDate) {
@@ -77,23 +81,22 @@ public class OrderListSynchronizer {
         }
         String workflow = null;
         String dateLog = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
+        final String lp = String.format("[%s]%s[%s]%s", startupMode, callerForLog, controllerId, dateLog);
         try {
             workflow = o.getWorkflowName();
             String wpath = WorkflowPaths.getPathOrNull(workflow);
             if (wpath == null) {
-                LOGGER.info(String.format("[%s][%s]%s[workflow=%s not deployed][skip]%s", startupMode, controllerId, dateLog, workflow, SOSString
-                        .toString(o)));
+                LOGGER.info(String.format("%s[workflow=%s not deployed][skip]%s", lp, workflow, SOSString.toString(o)));
                 return false;
             }
             PlannedOrderKey key = o.uniqueOrderKey();
             plannedOrders.put(key, o);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s]%s[added][key=%s]%s", startupMode, controllerId, dateLog, key, SOSString.toString(o)));
+                LOGGER.debug(String.format("%s[added][key=%s]%s", lp, key, SOSString.toString(o)));
             }
             return true;
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s]%s[workflow=%s][order %s]%s", startupMode, controllerId, dateLog, workflow, SOSString.toString(o), e
-                    .toString()), e);
+            LOGGER.error(String.format("%s[workflow=%s][order %s]%s", lp, workflow, SOSString.toString(o), e.toString()), e);
             return false;
         }
     }
@@ -142,6 +145,7 @@ public class OrderListSynchronizer {
         String method = "submitOrdersToController";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String logDailyPlanDate = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
+        final String lp = String.format("[%s]%s[%s][%s]%s", startupMode, callerForLog, method, controllerId, logDailyPlanDate);
         Set<PlannedOrder> orders = new HashSet<PlannedOrder>();
         for (PlannedOrder p : plannedOrders.values()) {
             if (p.isStoredInDb() && p.getSubmitOrderToControllerWhenPlanned()) {
@@ -149,8 +153,8 @@ public class OrderListSynchronizer {
             } else {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format(
-                            "[%s][%s][%s]%s[skip because planned order !p.isStoredInDb() or !p.getSchedule().getSubmitOrderToControllerWhenPlanned()]%s",
-                            startupMode, method, controllerId, logDailyPlanDate, SOSString.toString(p)));
+                            "%s[skip because planned order !p.isStoredInDb() or !p.getSchedule().getSubmitOrderToControllerWhenPlanned()]%s", lp,
+                            SOSString.toString(p)));
                 }
             }
         }
@@ -175,20 +179,17 @@ public class OrderListSynchronizer {
                 session = null;
 
                 Instant end = Instant.now();
-                LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders]history added=%s(%s)", startupMode, method, controllerId, logDailyPlanDate,
-                        orders.size(), plannedOrders.size(), inserted.size(), SOSDate.getDuration(start, end)));
+                LOGGER.info(String.format("%s[%s of %s orders]history added=%s(%s)", lp, orders.size(), plannedOrders.size(), inserted.size(), SOSDate
+                        .getDuration(start, end)));
 
                 if (orders.size() > 0) {
                     OrderApi.addOrdersToController(startupMode, controllerId, dailyPlanDate, orders, inserted, jocError, accessToken);
                 } else {
-                    LOGGER.info(String.format("[%s][%s][%s]%s[%s of %s orders][skip addOrdersToController]", startupMode, method, controllerId,
-                            logDailyPlanDate, orders.size(), plannedOrders.size()));
+                    LOGGER.info(String.format("%s[%s of %s orders][skip addOrdersToController]", lp, orders.size(), plannedOrders.size()));
                 }
 
             } catch (Exception e) {
-                LOGGER.info(String.format("[%s][%s]%s[%s of %s orders]history added=%s", method, controllerId, logDailyPlanDate, orders.size(),
-                        plannedOrders.size(), inserted.size()));
-
+                LOGGER.info(String.format("%s[%s of %s orders]history added=%s", lp, orders.size(), plannedOrders.size(), inserted.size()));
                 LOGGER.warn(e.toString(), e);
             }
         } finally {
@@ -196,7 +197,7 @@ public class OrderListSynchronizer {
         }
 
     }
-    
+
     public void substituteOrderIds() {
 
         ZoneId zoneId = ZoneId.of(settings.getTimeZone());
@@ -238,6 +239,9 @@ public class OrderListSynchronizer {
     private OrderCounter executeStore(StartupMode startupMode, String operation, String controllerId, String date, Map<String, Long> durations)
             throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
+        final String lp = String.format("[%s]%s[%s][%s][%s]", startupMode, callerForLog, operation, controllerId, date);
+
         SOSHibernateSession session = null;
         OrderCounter counter = new OrderCounter();
         try {
@@ -256,7 +260,7 @@ public class OrderListSynchronizer {
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
                         item = dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(zoneId), 0, 0);
-                        
+
                         if (plannedOrder.hasTags()) {
                             orderTags.put(item, plannedOrder.getTags());
                         }
@@ -266,8 +270,8 @@ public class OrderListSynchronizer {
                     } else {
                         counter.addStoreSkippedSingle();
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][store][%s][%s][single][skip][key=%s][isOverwrite=%s][item=%s]", startupMode,
-                                    controllerId, date, plannedOrder.uniqueOrderKey(), settings.isOverwrite(), SOSHibernate.toString(item)));
+                            LOGGER.debug(String.format("%s[store][single][skip][key=%s][isOverwrite=%s][item=%s]", lp, plannedOrder.uniqueOrderKey(),
+                                    settings.isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
                 } else {
@@ -286,8 +290,7 @@ public class OrderListSynchronizer {
                 int nr = 1;
                 String id = OrdersHelper.getUniqueOrderId(zoneId);
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][store][%s][%s][cyclic]size=%s, order id main part=%s, key=%s", startupMode, controllerId, date,
-                            size, id, entry.getKey()));
+                    LOGGER.debug(String.format("%s[store][cyclic]size=%s, order id main part=%s, key=%s", lp, size, id, entry.getKey()));
                 }
                 for (PlannedOrder plannedOrder : entry.getValue()) {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
@@ -298,7 +301,7 @@ public class OrderListSynchronizer {
                         if (plannedOrder.hasTags()) {
                             orderTags.put(item, plannedOrder.getTags());
                         }
-                        
+
                         nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredCyclicTotal();
@@ -306,13 +309,13 @@ public class OrderListSynchronizer {
                         counter.addStoreSkippedCyclicTotal();
 
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][store][%s][%s][cyclic][skip][%s][isOverwrite=%s][item=%s]", startupMode, controllerId,
-                                    date, plannedOrder.uniqueOrderKey(), settings.isOverwrite(), SOSHibernate.toString(item)));
+                            LOGGER.debug(String.format("%s[store][cyclic][skip][%s][isOverwrite=%s][item=%s]", lp, plannedOrder.uniqueOrderKey(),
+                                    settings.isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
                 }
             }
-            
+
             OrderTags.addDailyPlanOrderTags(controllerId, orderTags);
 
             if (!counter.hasStored() && submission != null && submission.getId() != null) {
@@ -327,7 +330,7 @@ public class OrderListSynchronizer {
             Globals.disconnect(session);
         }
 
-        LOGGER.info(String.format("[%s][%s][%s][%s][stored]%s", startupMode, operation, controllerId, date, counter));
+        LOGGER.info(String.format("%s[stored]%s", lp, counter));
         return counter;
     }
 
@@ -338,9 +341,9 @@ public class OrderListSynchronizer {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = "addPlannedOrderToControllerAndDB";
-
+        final String lp = String.format("[%s]%s[%s][%s][%s]", startupMode, callerForLog, method, controllerId, date);
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][%s][%s]overwrite orders=%s", startupMode, method, controllerId, date, settings.isOverwrite()));
+            LOGGER.debug(String.format("%soverwrite orders=%s", lp, settings.isOverwrite()));
         }
 
         if (settings.isOverwrite()) {
@@ -414,8 +417,7 @@ public class OrderListSynchronizer {
                             submitOrdersToController(startupMode, controllerId, date);
                         } else {
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][%s][%s][%s][skip]withSubmit=%s", startupMode, method, controllerId, date,
-                                        withSubmit));
+                                LOGGER.debug(String.format("%s[skip]withSubmit=%s", lp, withSubmit));
                             }
                         }
                     } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException
@@ -436,16 +438,16 @@ public class OrderListSynchronizer {
                 submitOrdersToController(startupMode, controllerId, date);
             } else {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s][%s][skip]withSubmit=%s", startupMode, method, controllerId, date, withSubmit));
+                    LOGGER.debug(String.format("%s[skip]withSubmit=%s", lp, withSubmit));
                 }
             }
         }
     }
-    
+
     public void storeAndSubmitPlannedOrder(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
             Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             DBMissingDataException, DBOpenSessionException, DBInvalidDataException, ExecutionException, JsonProcessingException, ParseException {
-        
+
         executeStore(startupMode, operation, controllerId, date, durations);
         if (withSubmit == null || withSubmit) {
             submitOrdersToController(startupMode, controllerId, date);

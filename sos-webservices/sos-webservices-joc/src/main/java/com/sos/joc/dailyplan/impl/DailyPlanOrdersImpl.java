@@ -68,7 +68,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
 
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-            setSettings();
+            setSettings(IMPL_PATH);
             if (isDebugEnabled) {
                 if (in.getDailyPlanDateTo() == null) {
                     LOGGER.debug("Reading the daily plan from the day " + in.getDailyPlanDateFrom());

@@ -113,7 +113,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         if (withAudit) {
             storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId();
         }
-        setSettings();
+        setSettings(IMPL_PATH);
         
         for (String controllerId : allowedControllers) {
             FilterDailyPlannedOrders filter = getOrderFilter("deleteOrdersFromPlan", controllerId, in, true, evalPermissions);
@@ -176,7 +176,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             boolean withAudit, boolean withEvent) throws SOSHibernateException, ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
-        setSettings();
+        setSettings(IMPL_PATH);
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, getSettings(), false,
                 IMPL_PATH);
         if (!ordersPerControllerIds.isEmpty()) {

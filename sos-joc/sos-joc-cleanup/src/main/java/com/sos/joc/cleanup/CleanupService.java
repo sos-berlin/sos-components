@@ -86,7 +86,7 @@ public class CleanupService extends AJocActiveMemberService {
                                 }
                                 if (runServiceNow.get()) { // runServiceNow was set by another thread
                                     runNow = true; // 1) set runNow for the next while iteration
-                                    startupMode = StartupMode.manual;
+                                    startupMode = StartupMode.run_now;
                                 }
                                 if (!runNow) {
                                     startupMode = StartupMode.automatic;

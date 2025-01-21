@@ -134,8 +134,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             // boolean someDailyPlanOrdersAreSubmitted = dailyPlanOrderItems.stream().anyMatch(DBItemDailyPlanOrder::getSubmitted);
             // boolean onlyStarttimeModifications = hasOnlyStarttimeModifications(in);
 
-            setSettings();
-            ZoneId zoneId = getZoneId();
+            setSettings(IMPL_PATH);
+            ZoneId zoneId = getZoneId(IMPL_PATH);
             OrderIdMap dailyPlanResult = null;
 
             if (!dailyPlanOrderItems.isEmpty()) {
@@ -586,7 +586,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             session.close();
             session = null;
 
-            runner.addPlannedOrderToControllerAndDB(in.getControllerId(), dailyplanDate, mainItem.getSubmitted(), synchronizer);
+            runner.addPlannedOrderToControllerAndDB(StartupMode.webservice, in.getControllerId(), dailyplanDate, mainItem.getSubmitted(),
+                    synchronizer);
 
             EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), oldDailyPlanDate));
             if (!oldDailyPlanDate.equals(submissionForDate)) {
@@ -709,7 +710,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             DailyPlanScheduleWorkflow w = new DailyPlanScheduleWorkflow(mainItem.getWorkflowName(), mainItem.getWorkflowPath(), null);
             DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(w));
 
-            return runner.calculateStartTimes(StartupMode.manual, in.getControllerId(), Arrays.asList(dailyPlanSchedule), dailyPlanDate,
+            return runner.calculateStartTimes(StartupMode.webservice, in.getControllerId(), Arrays.asList(dailyPlanSchedule), dailyPlanDate,
                     newSubmission, calendar.getId(), getJocError(), getAccessToken());
 
         } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException | ControllerConnectionRefusedException
@@ -832,7 +833,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             settings.setPeriodBegin(getSettings().getPeriodBegin());
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
-            runner.submitOrders(StartupMode.manual, items.get(0).getControllerId(), items, "", forceJobAdmission, getJocError(), getAccessToken());
+            runner.submitOrders(StartupMode.webservice, items.get(0).getControllerId(), items, "", forceJobAdmission, getJocError(),
+                    getAccessToken());
         }
     }
 

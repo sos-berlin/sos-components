@@ -993,7 +993,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     LOGGER.debug(String.format("[updateDailyPlan][orderIds=%s]%s", orderIds.size(), String.join(",", orderIds)));
                 }
 
-                DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings();
+                DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(API_CALL);
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 filter.setOrderIds(orderIds);

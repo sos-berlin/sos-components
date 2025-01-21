@@ -97,7 +97,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
-            int result = dbLayer.delete(StartupMode.manual, controllerId, in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in.getFilter()
+            int result = dbLayer.delete(StartupMode.webservice, controllerId, in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in.getFilter()
                     .getDateTo());
             Globals.commit(session);
             session.close();

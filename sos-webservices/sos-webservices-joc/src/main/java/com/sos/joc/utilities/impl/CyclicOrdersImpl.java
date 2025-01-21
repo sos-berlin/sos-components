@@ -38,7 +38,7 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
                 return response;
             }
 
-            setSettings();
+            setSettings(IMPL_PATH);
             OrderIds answer = new OrderIds();
             Set<String> mainParts = new HashSet<>();
             for (String orderId : in.getOrderIds()) {

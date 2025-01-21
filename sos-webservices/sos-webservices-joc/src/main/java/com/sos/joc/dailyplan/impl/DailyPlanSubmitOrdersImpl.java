@@ -103,7 +103,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
             ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
         DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
-        setSettings();
+        setSettings(IMPL_PATH);
         
         DailyPlanSettings settings = new DailyPlanSettings();
         settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
@@ -164,7 +164,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                     Globals.disconnect(session);
                 }
 
-                runner.submitOrders(StartupMode.manual, controllerId, items, null, getJocError(), accessToken);
+                runner.submitOrders(StartupMode.webservice, controllerId, items, null, getJocError(), accessToken);
 
                 Set<String> days = new HashSet<String>();
                 for (DBItemDailyPlanOrder item : items) {

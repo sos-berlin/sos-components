@@ -53,7 +53,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterServiceRun in = Globals.objectMapper.readValue(filterBytes, ClusterServiceRun.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
-                response = processAnswer(in.getType(), JocClusterService.getInstance().runServiceNow(in, StartupMode.manual));
+                response = processAnswer(in.getType(), JocClusterService.getInstance().runServiceNow(in, StartupMode.run_now));
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;

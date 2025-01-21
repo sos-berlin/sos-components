@@ -214,8 +214,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     currentState = proxy.currentState();
                 }
             }
-            setSettings();
-            ZoneId zoneId = getZoneId();
+            setSettings(IMPL_PATH);
+            ZoneId zoneId = getZoneId(IMPL_PATH);
             Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.TRUE), in, accessToken,
                     getJocError(), auditlog.getId(), proxy, currentState, zoneId, labelMap, blockPositions, folderPermissions);
             OrderIdMap dailyPlanResult = null;
@@ -1128,7 +1128,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         // can't returns result ...
                         // recreateCyclicOrder(in, newSubmission, mainItem, variable, auditlog);
                         try {
-                            runner.addPlannedOrderToControllerAndDB(in.getControllerId(), dailyplanDate, mainItem.getSubmitted(), synchronizer);
+                            runner.addPlannedOrderToControllerAndDB(StartupMode.webservice, in.getControllerId(), dailyplanDate, mainItem
+                                    .getSubmitted(), synchronizer);
                         } catch (Exception e) {
                             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), in.getControllerId());
                         }
@@ -1147,7 +1148,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                 // generate orders
                 // generatedOrders = recreateCyclicOrder(in, newSubmission, mainItem, variable, auditlog);
-                runner.addPlannedOrderToControllerAndDB(in.getControllerId(), dailyplanDate, mainItem.getSubmitted(), synchronizer);
+                runner.addPlannedOrderToControllerAndDB(StartupMode.webservice, in.getControllerId(), dailyplanDate, mainItem.getSubmitted(),
+                        synchronizer);
 
                 EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), oldDailyPlanDate));
                 if (!oldDailyPlanDate.equals(submissionForDate)) {
@@ -1273,7 +1275,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             DailyPlanScheduleWorkflow w = new DailyPlanScheduleWorkflow(mainItem.getWorkflowName(), mainItem.getWorkflowPath(), null);
             DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(w));
 
-            return runner.calculateStartTimes(StartupMode.manual, in.getControllerId(), Arrays.asList(dailyPlanSchedule), dailyPlanDate,
+            return runner.calculateStartTimes(StartupMode.webservice, in.getControllerId(), Arrays.asList(dailyPlanSchedule), dailyPlanDate,
                     newSubmission, calendar.getId(), getJocError(), getAccessToken());
 
         } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException | ControllerConnectionRefusedException
@@ -1396,7 +1398,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setPeriodBegin(getSettings().getPeriodBegin());
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
-            runner.submitOrders(StartupMode.manual, items.get(0).getControllerId(), items, "", forceJobAdmission, getJocError(), getAccessToken());
+            runner.submitOrders(StartupMode.webservice, items.get(0).getControllerId(), items, "", forceJobAdmission, getJocError(),
+                    getAccessToken());
         }
     }
 

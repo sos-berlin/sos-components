@@ -32,7 +32,7 @@ public class DailyPlanProjectionTest {
             // 2) in years: <n> years, <n> year, <n> y
 
             // years will be converted to months...
-            s.setProjectionsMonthsAhead(6);
+            s.setProjectionsMonthAhead(6);
 
             DailyPlanProjections p = new DailyPlanProjections();
             p.process(s);

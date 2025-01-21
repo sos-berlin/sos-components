@@ -26,7 +26,7 @@ public class JocClusterConfiguration {
     public static final String IDENTIFIER = ClusterServices.cluster.name();
 
     public enum StartupMode {
-        unknown, automatic, manual_restart, failover, manual_switchover, settings_changed, manual, controller_added, controller_updated, controller_removed;
+        unknown, automatic, manual_restart, failover, manual_switchover, settings_changed, webservice, run_now, controller_added, controller_updated, controller_removed;
     }
 
     private static final String ACTIVE_MEMBER_SERVICE_CLEANUP = "com.sos.joc.cleanup.CleanupService";
