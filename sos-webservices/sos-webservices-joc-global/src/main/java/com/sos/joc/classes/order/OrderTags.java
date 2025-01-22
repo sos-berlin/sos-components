@@ -276,7 +276,7 @@ public class OrderTags {
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                 }
-                LOGGER.info("[storeAddOrderTags][" + orderId + "]: retry-attempt " + attempt);
+                LOGGER.debug("[storeAddOrderTags][" + orderId + "]: retry-attempt " + attempt);
                 dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
             }
             
