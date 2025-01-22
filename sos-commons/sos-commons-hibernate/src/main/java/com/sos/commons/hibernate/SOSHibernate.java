@@ -115,6 +115,12 @@ public class SOSHibernate {
     /** ---- AvailableSettings ------------------------------------------------------------------------------- */
     /** hibernate.current_session_context_class - SOS default: jta */
     public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
+    /** hibernate.transaction.jta.platform - SOS default: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform<br/>
+     * - This is the default platform if none is set explicitly.<br/>
+     * - NoJtaPlatform configuration ensures that the standard JDBC driver transaction mechanism is used.<br/>
+     * -- Additionally, it avoids the Hibernate INFO message:<br/>
+     * --- "HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration" */
+    public static final String HIBERNATE_PROPERTY_JTA_PLATFORM = AvailableSettings.JTA_PLATFORM;
     /** hibernate.dialect_resolvers - SOS default: SOSHibernateDefaultDialectResolver.<br/>
      * see SOSHibernateFactory, SOSHibernateFinalPropertiesResolver */
     public static final String HIBERNATE_PROPERTY_DIALECT_RESOLVERS = AvailableSettings.DIALECT_RESOLVERS;
