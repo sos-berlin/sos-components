@@ -19,9 +19,7 @@ import jakarta.ws.rs.Path;
 
 @Path("inventory/deployment")
 public class DeployImpl extends ADeploy implements IDeploy {
-
-    private static final String API_CALL = "./inventory/deployment/deploy";
-
+    
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) {
         return postDeploy(xAccessToken, filter, false);

@@ -72,7 +72,7 @@ public class CleanupServiceSchedule {
         task.setStartMode(mode);
         setLogPrefix(mode);
         try {
-            LOGGER.info(String.format("%s[runNow=%s]%s", logPrefix, runNow, getService().getConfig().toString()));
+            LOGGER.info(String.format("%s%s", logPrefix, getService().getConfig().toString()));
             long delay = runNow ? computeRunNowDelay() : computeNextDelay(mode);
             if (delay > 0) {
                 long timeout = computeTimeout();
@@ -479,7 +479,7 @@ public class CleanupServiceSchedule {
         if (resultFuture != null) {
             resultFuture.cancel(false);// without interruption
             CleanupService.setServiceLogger();
-            LOGGER.info(String.format("%s[closeTasks][runNow=%s]previous schedule cancelled", logPrefix, runNow));
+            LOGGER.info(String.format("%s[closeTasks]previous schedule cancelled", logPrefix));
         }
         if (threadPool != null) {
             CleanupService.setServiceLogger();

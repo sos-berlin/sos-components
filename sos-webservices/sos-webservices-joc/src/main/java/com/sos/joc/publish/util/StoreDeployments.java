@@ -47,6 +47,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.impl.ADeploy;
 import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
@@ -203,7 +204,7 @@ public class StoreDeployments {
                                 controllerId, false, allowedDailyPlanDates));
                     }
                     if (!requests.isEmpty()) {
-                        boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, includeLate, "publish");
+                        boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, includeLate, ADeploy.API_CALL);
                         if (!successful) {
                             LOGGER.warn("generate orders failed due to missing permission.");
                         }

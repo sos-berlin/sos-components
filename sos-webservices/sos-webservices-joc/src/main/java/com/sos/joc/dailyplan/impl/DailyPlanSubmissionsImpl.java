@@ -13,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanSubmissions;
 import com.sos.joc.dailyplan.resource.IDailyPlanSubmissionsResource;
@@ -20,6 +21,7 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsRequest;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsResponse;
@@ -93,12 +95,15 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
                 return response;
             }
 
+            // log to service log file
+            JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
+
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
-            int result = dbLayer.delete(StartupMode.webservice, controllerId, in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in.getFilter()
-                    .getDateTo());
+            int result = dbLayer.delete(StartupMode.webservice,IMPL_PATH_DELETE, controllerId, in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in
+                    .getFilter().getDateTo());
             Globals.commit(session);
             session.close();
             session = null;
@@ -120,6 +125,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(session);
+            JocClusterServiceLogger.removeLogger(ClusterServices.dailyplan.name());
         }
     }
 

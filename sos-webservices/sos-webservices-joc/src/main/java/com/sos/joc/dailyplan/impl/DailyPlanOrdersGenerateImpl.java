@@ -25,6 +25,7 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -158,9 +159,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             }
         }
 
-        // log to service log file
-        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
-
         setSettings(IMPL_PATH);// ???
 
         DailyPlanSettings settings = new DailyPlanSettings();
@@ -178,6 +176,15 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
                 workflowSingles, permittedFolders, checkedFolders, onlyPlanOrderAutomatically);
 
+        if (SOSCollection.isEmpty(dailyPlanSchedules)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[skip]found 0 schedules");
+            }
+            return true;
+        }
+
+        // log to service log file
+        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
         Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.webservice, controllerId, dailyPlanSchedules, in
                 .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken, includeLate);
         JocClusterServiceLogger.clearAllLoggers();

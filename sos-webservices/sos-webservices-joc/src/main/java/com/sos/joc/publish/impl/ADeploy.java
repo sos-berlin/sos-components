@@ -61,6 +61,9 @@ import js7.base.problem.Problem;
 public abstract class ADeploy extends JOCResourceImpl {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ADeploy.class);
+    
+    public static final String API_CALL = "./inventory/deployment/deploy";
+
 
     public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession,
             DBItemJocAuditLog dbAuditlog, String account, JocSecurityLevel secLvl, String apiCall) throws Exception {

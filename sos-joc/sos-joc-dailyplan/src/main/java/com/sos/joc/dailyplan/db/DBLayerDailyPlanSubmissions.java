@@ -58,7 +58,9 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public int delete(StartupMode mode, String controllerId, String dateFor, String dateFrom, String dateTo) throws Exception {
+    public int delete(StartupMode mode, String caller, String controllerId, String dateFor, String dateFrom, String dateTo) throws Exception {
+        String lpDate = dateFor == null ? ("from=" + dateFrom + ",to=" + dateTo) : dateFor;
+        String lp = String.format("[%s][%s][Delete Daily Plan][%s][%s]", mode, caller, controllerId, lpDate);
         SubmissionsDeleteWhere where = new SubmissionsDeleteWhere(controllerId, dateFor, dateFrom, dateTo);
 
         Long countSubmitted = getCountSubmittedOrders(where);
@@ -66,11 +68,14 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         if (countSubmitted.equals(0L)) {
             deleteOrderTags(controllerId, where);
             result = deleteOrderVariables(where);
-            result += deleteOrders(where);
-            result += deleteSubmissions(where);
+            int orders = deleteOrders(where);
+            result += orders;
+            int submissions = deleteSubmissions(where);
+            result += submissions;
+
+            LOGGER.info(String.format("%s[deleted]submissions=%s(orders=%s)", lp, submissions, orders));
         } else {
-            LOGGER.info(String.format("[%s][delete daily plan][skip][%s][dateFor=%s]found %s submitted orders", mode, controllerId, dateFor,
-                    countSubmitted));
+            // LOGGER.info(String.format("%s[skip]found %s submitted orders", lp, countSubmitted));
         }
         return result;
     }
@@ -85,7 +90,7 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         Query<Long> query = getSession().createQuery(hql.toString());
         return getSession().getSingleResult(where.bindParams(query));
     }
-    
+
     private void deleteOrderTags(String controllerId, SubmissionsDeleteWhere where) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where controllerId=:controllerId ");

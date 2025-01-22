@@ -58,7 +58,7 @@ import reactor.core.publisher.Flux;
 public class OrderApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
-    
+
     @SuppressWarnings("unchecked")
     private static Optional<JPositionOrLabel> getPositionOrLabel(Object position, Map<String, List<Object>> labelToPositionMap) {
         if (position != null) {
@@ -67,16 +67,16 @@ public class OrderApi {
             } else if (position instanceof String) {
                 // TODO JOC-1453 consider labels
                 return getPosition(labelToPositionMap.get((String) position));
-                
-//                if (!label.isEmpty()) {
-//                    return Optional.of(JLabel.of(label));
-//                }
-//                return Optional.empty();
+
+                // if (!label.isEmpty()) {
+                // return Optional.of(JLabel.of(label));
+                // }
+                // return Optional.empty();
             }
         }
         return Optional.empty();
     }
-    
+
     private static Optional<JPositionOrLabel> getPosition(List<Object> pos) {
         if (pos != null && !pos.isEmpty()) {
             Either<Problem, JPosition> posE = JPosition.fromList(pos);
@@ -85,7 +85,7 @@ public class OrderApi {
         }
         return Optional.empty();
     }
-    
+
     @SuppressWarnings("unchecked")
     private static JBranchPath getBlockPosition(Object position, Map<String, List<Object>> labelToPositionMap) {
         if (position != null) {
@@ -97,7 +97,7 @@ public class OrderApi {
         }
         return JBranchPath.empty();
     }
-    
+
     private static JBranchPath getBlockPosition(List<Object> pos) {
         if (pos != null && !pos.isEmpty()) {
             Either<Problem, JBranchPath> posE = JBranchPath.fromList(pos);
@@ -129,7 +129,7 @@ public class OrderApi {
             // TODO blockPosition
             // labelToBlockPositionMap instead labelToPositionMap
             blockPosition = getBlockPosition(positions.getBlockPosition(), labelToPositionMap);
-            
+
         }
         Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
         boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
@@ -137,16 +137,17 @@ public class OrderApi {
                 blockPosition, startPosition, endPositions);
     }
 
-    public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate,
+    public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String callerForLog, String controllerId, String dailyPlanDate,
             Set<PlannedOrder> orders, List<DBItemDailyPlanHistory> items, JocError jocError, String accessToken)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
 
         // TODO JOC-1453 determine workflows from order and their possible positions
         // convert labels to positions
-        
+
         final String method = "addOrdersToController";
         String logDailyPlanDate = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
+        final String lp = String.format("[%s]%s[%s][%s]%s", startupMode, callerForLog, method, controllerId, logDailyPlanDate);
 
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
@@ -159,8 +160,7 @@ public class OrderApi {
         };
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][%s][%s]%s update submit state for history and order", startupMode, method, controllerId,
-                    logDailyPlanDate));
+            LOGGER.debug(String.format("%s update submit state for history and order", lp));
         }
         Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
                 Collectors.toSet()));
@@ -171,8 +171,7 @@ public class OrderApi {
             JControllerApi controllerApi = ControllerApi.of(controllerId);
             final Set<OrderId> set = map.keySet();
             String add = Proxies.isCoupled(controllerId) ? "" : "not ";
-            LOGGER.info(String.format("[%s][%s][%s]%s[%scoupled with proxy]start submitting %s orders ...", startupMode, method, controllerId,
-                    logDailyPlanDate, add, set.size()));
+            LOGGER.info(String.format("%s[%scoupled with proxy]start submitting %s orders ...", lp, add, set.size()));
 
             final boolean log2serviceFile = true; // !StartupMode.manual.equals(startupMode);
             final JControllerProxy proxy = Proxy.of(controllerId);
@@ -203,11 +202,10 @@ public class OrderApi {
                                 controllerId));
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("[%s][%s][%s]%s[submitted=%s][updated orders=%s(%s), history=%s(%s)]", startupMode, method,
-                                controllerId, logDailyPlanDate, set.size(), updateOrders, SOSDate.getDuration(start, updateOrdersEnd), updateHistory,
-                                SOSDate.getDuration(updateOrdersEnd, end)));
+                        LOGGER.info(String.format("%s[submitted=%s][updated db planned orders=%s(%s),history=%s(%s)]", lp, set.size(), updateOrders,
+                                SOSDate.getDuration(start, updateOrdersEnd), updateHistory, SOSDate.getDuration(updateOrdersEnd, end)));
                     } catch (Exception e) {
-                        // LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logDailyPlanDate, e.toString()), e);
+                        // LOGGER.error(String.format("%s %s", lp, e.toString()), e);
                         Globals.rollback(session);
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
                     } finally {
@@ -218,7 +216,7 @@ public class OrderApi {
                     SOSHibernateSession session = null;
                     try {
                         String msg = either.getLeft().toString();
-                        // LOGGER.error(String.format("[%s][%s][%s]%s[error]%s", startupMode, method, controllerId, logDailyPlanDate, msg));
+                        // LOGGER.error(String.format("%s[error]%s", lp, msg));
 
                         session = Globals.createSosHibernateStatelessConnection(method);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
@@ -232,12 +230,12 @@ public class OrderApi {
                         session = null;
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("[%s][%s][%s]%s[onError][rollback  submitted=false][updated history=%s(%s)]%s", startupMode, method,
-                                controllerId, logDailyPlanDate, updateHistory, SOSDate.getDuration(start, end), msg));
+                        LOGGER.info(String.format("%s[onError][rollback  submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate
+                                .getDuration(start, end), msg));
 
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                     } catch (Throwable e) {
-                        LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logDailyPlanDate, e.toString()), e);
+                        LOGGER.error(String.format("%s %s", lp, e.toString()), e);
                         Globals.rollback(session);
                     } finally {
                         Globals.disconnect(session);

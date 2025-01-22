@@ -158,7 +158,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                         .freshOnly()).thenApply(either -> {
                             if (either.isRight()) {
                                 try {
-                                    updateDailyPlan("updateDailyPlan", oIds, withEvent);
+                                    updateDailyPlan("cancelOrders", oIds, withEvent);
                                     if (withAudit) {
                                         OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, auditLogId, controllerId).thenAccept(either2 -> {
                                             if (withEvent) {
