@@ -110,7 +110,8 @@ public class OrderTags {
     
     @Subscribe({ HistoryOrderStarted.class })
     public void addHistoryIdToTags(HistoryOrderStarted evt) {
-        if (!evt.getOrderId().contains("|")) { // not child order
+        boolean isChildOrder = evt.getOrderId().contains("|");
+        if (!isChildOrder) {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("HistoryOrderStarted received: " + SOSString.toString(evt));
             }
@@ -256,54 +257,49 @@ public class OrderTags {
     }
 
     private void addTagsToOrderbyAddOrderInstruction(String controllerId, String orderId) {
+        SOSHibernateSession connection = null;
         try {
             String orderIdPattern = getOrderIdPattern(orderId);
             String addOrderIndex = orderId.substring(OrdersHelper.mainOrderIdLength - 3, OrdersHelper.mainOrderIdLength - 1);
-            boolean stored = addTagsToOrderbyAddOrderInstruction(orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
+            
+            connection = Globals.createSosHibernateStatelessConnection("addTagsByAddOrderInstruction");
+            connection.setAutoCommit(false);
+            
+            DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
             // JOC-1933 sometimes addOrder event of parent order comes around 10ms after the addAddOrder of the generated order event
             // if addOrder instruction is first instruction
             int attempt = 0;
-            while (attempt < 10 && !stored) {
+            while (attempt < 10 && dbItem == null) {
                 attempt++;
                 try {
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                 }
                 LOGGER.info("[storeAddOrderTags][" + orderId + "]: retry-attempt " + attempt);
-                stored = addTagsToOrderbyAddOrderInstruction(orderIdPattern, addOrderIndex, controllerId, orderIdPattern);
+                dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
             }
-        } catch (Exception e) {
-            LOGGER.error("[storeAddOrderTags][" + orderId + "]: " + e.toString(), e);
-        }
-    }
-    
-    private synchronized boolean addTagsToOrderbyAddOrderInstruction(String orderIdPattern, String addOrderIndex, String controllerId,
-            String orderId) throws Exception {
-        SOSHibernateSession connection = null;
-        boolean successful = false;
-        try {
-            connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
-            DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
+            
             if (dbItem != null) {
                 Map<String, Set<String>> allTags = Globals.objectMapper.readValue(dbItem.getOrderTags(), typeRefAddOrderTags);
                 Set<String> orderTags = allTags.getOrDefault(addOrderIndex, Collections.emptySet());
                 if (!orderTags.isEmpty()) {
-                    connection.setAutoCommit(false);
-                    Globals.beginTransaction(connection);
-                    deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
-                    addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
-                    Globals.commit(connection);
-                    successful = true;
+                    try {
+                        Globals.beginTransaction(connection);
+                        deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
+                        addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
+                        Globals.commit(connection);
+                    } catch (Exception e1) {
+                        Globals.rollback(connection);
+                        throw e1;
+                    }
                 }
             }
         } catch (Exception e) {
-            Globals.rollback(connection);
-            throw e;
+            LOGGER.error("[storeAddOrderTags][" + orderId + "]: " + e.toString(), e);
         } finally {
             Globals.disconnect(connection);
         }
-        return successful;
     }
 
     public static Either<Exception, Void> addAdhocOrderTags(String controllerId, Map<OrderV, Set<GroupedTag>> oTags) {
