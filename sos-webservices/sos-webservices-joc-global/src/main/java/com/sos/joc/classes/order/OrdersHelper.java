@@ -380,6 +380,9 @@ public class OrdersHelper {
         if (o.state() instanceof Order.Fresh$ && o.maybeDelayedUntil().isDefined()) {
             return false;
         }
+        if (o.state() instanceof Order.Sleeping) {
+            return false;
+        }
         return o.isGoCommandable() && !o.isSuspended();
     }
 
