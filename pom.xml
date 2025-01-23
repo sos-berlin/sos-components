@@ -89,7 +89,7 @@
     <jaxb.core.version>4.0.2</jaxb.core.version>
     <jaxb.api.version>2.4.0-b180830.0359</jaxb.api.version>
     <jwt.version>4.2.2</jwt.version>
-    <json.schema.validator.version>1.0.76</json.schema.validator.version>
+    <json.schema.validator.version>1.0.29</json.schema.validator.version>
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
   </properties>
 

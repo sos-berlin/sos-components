@@ -533,9 +533,9 @@ public class JsonValidator {
     public static JsonSchema getSchema(URI schemaUri, boolean failFast, boolean strict) {
         SchemaValidatorsConfig config = new SchemaValidatorsConfig();
         config.setTypeLoose(true);
-        if (failFast) {
-            config.setFailFast(true);
-        }
+        //if (failFast) {
+            config.setFailFast(failFast);
+        //}
         if (strict) {
             return FACTORY_V4_STRICT.getSchema(schemaUri, config);
         } else {

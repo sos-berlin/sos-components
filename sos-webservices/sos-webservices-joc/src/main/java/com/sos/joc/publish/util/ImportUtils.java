@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.networknt.schema.ValidatorTypeCode;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -1459,7 +1460,7 @@ public class ImportUtils {
         } catch (SOSJsonSchemaException e) {
             //JOC-1984 - ignore minimum error for ordering
             if (!e.getErrors().isEmpty()) {
-                e.getErrors().removeIf(vm -> vm.getSchemaPath().equals("#/properties/ordering/minimum"));
+                e.getErrors().removeIf(vm -> vm.getPath().endsWith("ordering") && vm.getCode().equals(ValidatorTypeCode.MINIMUM.getErrorCode()));
                 if (!e.getErrors().isEmpty()) {
                     throw new JocBadRequestException("Invalid JSON in " + filename + ": " + e.getMessageFromErrors());
                 }
