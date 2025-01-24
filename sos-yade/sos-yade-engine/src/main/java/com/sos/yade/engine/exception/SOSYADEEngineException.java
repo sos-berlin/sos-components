@@ -10,8 +10,12 @@ public class SOSYADEEngineException extends SOSException {
         super(msg);
     }
 
-    public SOSYADEEngineException(SOSException e) {
-        initCause(e);
+    public SOSYADEEngineException(String msg, Throwable e) {
+        super(msg, e);
+    }
+
+    public SOSYADEEngineException(Throwable e) {
+        super(e);
     }
 
 }

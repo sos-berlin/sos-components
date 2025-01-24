@@ -278,8 +278,6 @@ public class SSHProviderTest {
             // LOGGER.info("[SIZE]" + p.getSize("/home/sos"));
             // LOGGER.info("[SIZE]" + p.getSize("/home/sos/test.txt"));
 
-            LOGGER.info("[IS_FILE]" + p.isRegularFile("/home/sos"));
-            LOGGER.info("[IS_FILE]" + p.isRegularFile("/home/sos/test.txt"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("/home/sos"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("/home/sos/test.txt"));
 
@@ -326,8 +324,6 @@ public class SSHProviderTest {
             // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos"));
             // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos/test.txt"));
 
-            LOGGER.info("[IS_FILE]" + p.isRegularFile("D://tmp/sos"));
-            LOGGER.info("[IS_FILE]" + p.isRegularFile("D://tmp/sos/test.txt"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos/test.txt"));
 

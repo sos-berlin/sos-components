@@ -413,30 +413,12 @@ public class SOSPath {
         return Files.isDirectory(path);
     }
 
-    public static Long getSize(String path) throws Exception {
-        return getSize(toAbsolutePath(path));
+    public static long getFileSize(String path) throws Exception {
+        return getFileSize(toAbsolutePath(path));
     }
 
-    /** Determines the size of a file or directory.<br/>
-     * Does not test the existence of the path.
-     * 
-     * @param path
-     * @return
-     * @throws Exception */
-    public static long getSize(Path path) throws Exception {
-        if (isRegularFile(path)) {
-            return Files.size(path);
-        }
-        if (isDirectory(path)) {
-            return Files.walk(path).filter(Files::isRegularFile).mapToLong(p -> {
-                try {
-                    return Files.size(p);
-                } catch (Throwable e) {
-                    return 0L;
-                }
-            }).sum();
-        }
-        return 0L;
+    public static long getFileSize(Path path) throws Exception {
+        return Files.size(path);
     }
 
     public static long getLastModifiedMillis(String path) throws Exception {

@@ -1,9 +1,11 @@
 package com.sos.commons.vfs.ssh.sshj;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
@@ -17,14 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.base.Joiner;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
-import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProviderArguments.Protocol;
-import com.sos.commons.vfs.common.ProviderFile;
+import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
@@ -292,11 +293,6 @@ public class SSHJProvider extends ASSHProvider {
     }
 
     @Override
-    public boolean isRegularFile(String path) {
-        return is(path, FileMode.Type.REGULAR);
-    }
-
-    @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
         checkParam(path, "path");
 
@@ -304,16 +300,31 @@ public class SSHJProvider extends ASSHProvider {
         try {
             FileAttributes attr = sftpClient.stat(path);
             if (attr != null && isFileType(attr.getType())) {
-                f = new ProviderFile();
-                f.setSize(attr.getSize());
-                f.setName(SOSPathUtil.getFileName(path));
-                f.setFullName(path);
+                f = createProviderFile(path, attr.getSize(), getFileLastModifiedMillis(attr));
             }
         } catch (NoSuchFileException e) {
         } catch (IOException e) {
             throw new SOSProviderException(getTypeInfo() + "[" + path + "]]", e);
         }
         return f;
+    }
+
+    @Override
+    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
+        try {
+            FileAttributes attr = sftpClient.stat(file.getFullPath());
+            if (attr != null && isFileType(attr.getType())) {
+                file.setSize(attr.getSize());
+                file.setLastModifiedMillis(getFileLastModifiedMillis(attr));
+            } else {
+                // file = null; ???
+            }
+        } catch (NoSuchFileException e) {
+            file = null;
+        } catch (IOException e) {
+            throw new SOSProviderException(getTypeInfo() + "[" + file.getFullPath() + "]]", e);
+        }
+        return file;
     }
 
     private boolean isFileType(Type t) {
@@ -326,7 +337,7 @@ public class SSHJProvider extends ASSHProvider {
     }
 
     @Override
-    public Long getSize(String path) throws SOSProviderException {
+    public long getFileSize(String path) throws SOSProviderException {
         checkBeforeOperation(path, "path");
 
         try {
@@ -341,41 +352,45 @@ public class SSHJProvider extends ASSHProvider {
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug("%s[getSize][%s][null]attr=null", getTypeInfo(), path);
             }
-            return null;
+            return DEFAULT_FILE_ATTR_VALUE;
         } catch (Throwable e) {
             throw new SOSProviderException(getTypeInfo() + "[getSize][" + path + "]", e);
         }
     }
 
     @Override
-    public Long getLastModifiedMillis(String path) {
+    public long getFileLastModifiedMillis(String path) {
         try {
             checkBeforeOperation(path, "path");
 
             FileAttributes attr = sftpClient.stat(path);
             if (attr != null) {
-                // getMtime is in seconds
-                Long result = Long.valueOf(attr.getMtime() * 1_000L);
+                long result = getFileLastModifiedMillis(attr);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[getLastModifiedMillis][%s]%s", getTypeInfo(), path, result);
+                    getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getTypeInfo(), path, result);
                 }
                 return result;
             }
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getLastModifiedMillis][%s][null]attr=null", getTypeInfo(), path);
+                getLogger().debug("%s[getFileLastModifiedMillis][%s][null]attr=null", getTypeInfo(), path);
             }
-            return null;
+            return DEFAULT_FILE_ATTR_VALUE;
         } catch (Throwable e) {
-            getLogger().warn("%s[getLastModifiedMillis][%s]%s", getTypeInfo(), path, e);
-            return null;
+            getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getTypeInfo(), path, e);
+            return DEFAULT_FILE_ATTR_VALUE;
         }
     }
 
+    private long getFileLastModifiedMillis(FileAttributes attr) {
+        // getMtime is in seconds
+        return attr.getMtime() * 1_000L;
+    }
+
     @Override
-    public boolean setLastModifiedFromMillis(String path, Long milliseconds) {
+    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
         if (!isValidModificationTime(milliseconds)) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setLastModifiedFromMillis][%s][%s][false]not valid modification time", getTypeInfo(), path, milliseconds);
+                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getTypeInfo(), path, milliseconds);
             }
             return false;
         }
@@ -389,16 +404,16 @@ public class SSHJProvider extends ASSHProvider {
                 FileAttributes newAttr = new FileAttributes.Builder().withAtimeMtime(attr.getAtime(), seconds).build();
                 sftpClient.setattr(path, newAttr);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[setLastModifiedFromMillis][%s][seconds=%s]true", getTypeInfo(), path, seconds);
+                    getLogger().debug("%s[setFileLastModifiedFromMillis][%s][seconds=%s]true", getTypeInfo(), path, seconds);
                 }
                 return true;
             }
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setLastModifiedFromMillis][%s][%s][false]attr=null", getTypeInfo(), path, milliseconds);
+                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]attr=null", getTypeInfo(), path, milliseconds);
             }
             return false;
         } catch (Throwable e) {
-            getLogger().warn("%s[setLastModifiedFromMillis][%s][%s]%s", getTypeInfo(), path, milliseconds, e);
+            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getTypeInfo(), path, milliseconds, e);
             return false;
         }
     }

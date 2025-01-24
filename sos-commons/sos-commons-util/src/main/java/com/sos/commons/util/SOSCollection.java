@@ -27,4 +27,8 @@ public class SOSCollection {
     public static <K, V> boolean isEmpty(Map<K, V> c) {
         return c == null || c.isEmpty();
     }
+
+    public static boolean isEmpty(Object[] c) {
+        return c == null || c.length == 0;
+    }
 }

@@ -15,11 +15,10 @@ public class SOSProviderException extends SOSException {
     }
 
     public SOSProviderException(Throwable cause) {
-        initCause(cause);
+        super(cause);
     }
 
     public SOSProviderException(String msg, Throwable cause) {
-        super(msg);
-        initCause(cause);
+        super(msg, cause);
     }
 }
