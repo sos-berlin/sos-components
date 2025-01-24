@@ -34,13 +34,17 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 import js7.data.board.BoardPath;
+import js7.data.board.Notice;
 import js7.data.board.NoticeId;
+import js7.data.board.NoticeKey;
 import js7.data.board.NoticePlace;
 import js7.data.controller.ControllerCommand;
+import js7.data.plan.PlanId;
 import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.proxy.javaapi.JControllerProxy;
 import scala.collection.JavaConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 @Path("notices")
 public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify {
@@ -79,8 +83,8 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                 if (proxy.currentState().pathToBoard().get(board) == null) {
                     throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Board '" + board.string() + "'");
                 }
-                proxy.api().executeCommand(JControllerCommand.batch(in.getNoticeIds().stream().map(NoticeId::of).map(
-                        n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply).collect(Collectors.toList()))).thenAccept(
+                proxy.api().executeCommand(JControllerCommand.batch(in.getNoticeIds().stream().map(n -> NoticeId.of(PlanId.Global(), board, NoticeKey.of(n))).map(
+                        ControllerCommand.DeleteNotice::new).map(JControllerCommand::apply).collect(Collectors.toList()))).thenAccept(
                                 e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
 
@@ -132,7 +136,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                 
                 if (!map.get(Boolean.TRUE).isEmpty()) {
                     Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
-                    NoticeId notice = NoticeId.of(in.getNoticeId());
+                    NoticeKey notice = NoticeKey.of(in.getNoticeId());
 
                     proxy.api().executeCommand(JControllerCommand.batch(map.getOrDefault(Boolean.TRUE, Collections.emptyList()).stream().map(
                             b -> JControllerCommand.postNotice(b, notice, endOfLife)).collect(Collectors.toList()))).thenAccept(e -> ProblemHelper
@@ -182,7 +186,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                     return workflows.isEmpty() || workflows.contains(o.getJOrder().workflowId().path().string());
                 };
                 proxy.api().executeCommand(JControllerCommand.batch(expectingOrdersStream.filter(filterWorkflow).map(o -> JControllerCommand
-                        .postNotice(o.getBoard(), NoticeId.of(o.getNoticeId()), endOfLife)).distinct().collect(Collectors.toList()))).thenAccept(
+                        .postNotice(o.getBoard(), NoticeKey.of(o.getNoticeId()), endOfLife)).distinct().collect(Collectors.toList()))).thenAccept(
                                 e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             
@@ -232,7 +236,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                     .flatMap(notice -> {
                         if (notice.getNoticeIds() == null || notice.getNoticeIds().isEmpty()) {
                             Stream<NoticePlace> nps = JavaConverters.asJava(boards.get(BoardPath.of(notice.getNoticeBoardPath())).asScala()
-                                    .idToNotice()).values().stream();
+                                    .toNoticePlace()).values().stream();
                             switch (action) {
                             case DELETE: // only posted notices
                                 nps = nps.filter(isPostedNotice);
@@ -241,23 +245,35 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                                 nps = nps.filter(isPostedNotice.negate());
                                 break;
                             }
-                            return nps.map(NoticePlace::noticeId).map(n -> getActionCommand(notice.getNoticeBoardPath(), n, endOfLife, action));
+                            return nps.map(NoticePlace::notice).map(OptionConverters::toJava).filter(Optional::isPresent).map(Optional::get).map(
+                                    Notice::id).map(n -> getActionCommand(n, endOfLife, action));
                         } else {
-                            return notice.getNoticeIds().stream().map(NoticeId::of).map(n -> getActionCommand(notice.getNoticeBoardPath(), n,
+                            return notice.getNoticeIds().stream().map(NoticeKey::of).map(n -> getActionCommand(notice.getNoticeBoardPath(), n,
                                     endOfLife, action));
                         }
-                    })
-                    .collect(Collectors.toList())));
+                    }).collect(Collectors.toList())));
         }
         return Optional.empty();
     }
     
-    private JControllerCommand getActionCommand(String boardName, NoticeId noticeId, Optional<Instant> endOfLife, Action action) {
+//    private JControllerCommand getActionCommand(BoardNoticeKey boardNoticeKey, Optional<Instant> endOfLife, Action action) {
+//        return getActionCommand(boardNoticeKey.boardPath(), boardNoticeKey.noticeKey(), endOfLife, action);
+//    }
+    
+    private JControllerCommand getActionCommand(String boardName, NoticeKey noticeKey, Optional<Instant> endOfLife, Action action) {
+        return getActionCommand(BoardPath.of(boardName), noticeKey, endOfLife, action);
+    }
+    
+    private JControllerCommand getActionCommand(BoardPath boardName, NoticeKey noticeKey, Optional<Instant> endOfLife, Action action) {
+        return getActionCommand(NoticeId.of(PlanId.Global(), boardName, noticeKey), endOfLife, action);
+    }
+    
+    private JControllerCommand getActionCommand(NoticeId noticeId, Optional<Instant> endOfLife, Action action) {
         switch (action) {
         case DELETE:
-            return JControllerCommand.apply(new ControllerCommand.DeleteNotice(BoardPath.of(boardName), noticeId));
+            return JControllerCommand.apply(new ControllerCommand.DeleteNotice(noticeId));
         default: //case POST:
-            return JControllerCommand.postNotice(BoardPath.of(boardName), noticeId, endOfLife);
+            return JControllerCommand.postNotice(noticeId.boardPath(), noticeId.noticeKey(), endOfLife);
         }
     }
 

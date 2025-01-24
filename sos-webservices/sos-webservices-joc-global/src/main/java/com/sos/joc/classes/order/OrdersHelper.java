@@ -733,8 +733,8 @@ public class OrdersHelper {
     private static List<ExpectedNotice> getStillExpectedNotices(OrderId orderId, OrderItem oItem, JControllerState controllerState) {
         if ("ExpectingNotices".equals(oItem.getState().getTYPE())) {
             if (controllerState != null) {
-                return controllerState.orderToStillExpectedNotices(orderId).stream().map(n -> new ExpectedNotice(n.boardPath().string(), n.noticeId()
-                        .noticeKey().string())).collect(Collectors.toList());
+                return controllerState.orderToStillExpectedNotices(orderId).stream().map(n -> new ExpectedNotice(n.boardPath().string(),
+                        n.noticeKey().string())).collect(Collectors.toList());
             } else {
                 return oItem.getState().getExpected();
             }

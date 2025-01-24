@@ -39,6 +39,7 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderV;
 
 import js7.data.board.BoardPath;
 import js7.data.board.BoardState;
@@ -57,19 +58,11 @@ public class BoardHelper {
 
     public static Board getCompactBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, Integer> numOfExpectings)
             throws Exception {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
+
+        final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
+
         Board item = init(dc);
-
-        JBoardState jBoardState = null;
-        if (controllerState != null) {
-            stateText = SyncStateText.NOT_IN_SYNC;
-            jBoardState = controllerState.pathToBoardState().get(BoardPath.of(dc.getName()));
-            if (jBoardState != null) {
-                stateText = SyncStateText.IN_SYNC;
-            }
-        }
-
-        item.setState(SyncStateHelper.getState(stateText));
+        item.setState(SyncStateHelper.getState(getSyncStateText(controllerState, jBoardState)));
         item.setNumOfExpectingOrders(numOfExpectings.values().stream().mapToInt(Integer::intValue).sum());
         int numOfNotices = numOfExpectings.keySet().size();
         if (jBoardState != null) {
@@ -83,24 +76,24 @@ public class BoardHelper {
     
     public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, List<JOrder>> expectings,
             Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId, long surveyDateMillis, SOSHibernateSession session) throws Exception {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
+
+        final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
+
         Board item = init(dc);
-
-        JBoardState jBoardState = null;
-        if (controllerState != null) {
-            stateText = SyncStateText.NOT_IN_SYNC;
-            jBoardState = controllerState.pathToBoardState().get(BoardPath.of(dc.getName()));
-            if (jBoardState != null) {
-                stateText = SyncStateText.IN_SYNC;
-            }
-        }
-
-        item.setState(SyncStateHelper.getState(stateText));
+        item.setState(SyncStateHelper.getState(getSyncStateText(controllerState, jBoardState)));
         item.setNumOfExpectingOrders(expectings.values().stream().mapToInt(List::size).sum());
 
         ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
         List<Notice> notices = new ArrayList<>();
         boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
+        
+        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
+            try {
+                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
+            } catch (Exception e) {
+                return null;
+            }
+        };
 
         expectings.forEach((noticeId, jOrders) -> {
             Notice notice = new Notice();
@@ -108,21 +101,9 @@ public class BoardHelper {
             notice.setEndOfLife(null);
             if (limit > -1) {
                 notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
-                        .map(o -> {
-                            try {
-                                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
-                            } catch (Exception e) {
-                                return null;
-                            }
-                        }).filter(Objects::nonNull).collect(Collectors.toList()));
+                        .map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
             } else {
-                notice.setExpectingOrders(jOrders.stream().map(o -> {
-                    try {
-                        return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
-                    } catch (Exception e) {
-                        return null;
-                    }
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
+                notice.setExpectingOrders(jOrders.stream().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
             }
             notice.setState(getState(NoticeStateText.EXPECTED));
             notices.add(notice);
@@ -134,24 +115,23 @@ public class BoardHelper {
 
         if (jBoardState != null) {
             final BoardState bs = jBoardState.asScala();
+            LOGGER.info("Board: " + jBoardState.board().toJson());
+            
+            //jBoardState.idToNotice(NoticeId.of("")).get().asScala().isAnnounced()
 
             JavaConverters.asJava(bs.notices()).forEach(n -> {
                 Notice notice = new Notice();
                 notice.setId(n.id().noticeKey().string());
+//                String planKey = n.id().planId().planKey().string();
+//                String planTemplateId = n.id().planId().planSchemaId().string();
+//                Boolean isAnnounced = jBoardState.idToNotice(n.id()).map(JNoticePlace::asScala).map(NoticePlace::isAnnounced).orElse(false);
+//                LOGGER.info("NoticeId: " + notice.getId() + ", PlanKey: " + planKey + ", PlanTemplateId: " + planTemplateId + ", IsAnnounced: "
+//                        + isAnnounced.toString());
                 if (n.endOfLife().isDefined()) {
                     notice.setEndOfLife(Date.from(Instant.ofEpochMilli(n.endOfLife().get().toEpochMilli())));
                 }
                 notice.setState(getState(NoticeStateText.POSTED));
                 notice.setExpectingOrders(null);
-                // Set<OrderId> orderIds = JavaConverters.asJava(bs.expectingOrders(n.id()));
-                // notice.setExpectingOrders(controllerState.ordersBy(o -> orderIds.contains(o.id())).parallel().map(o -> {
-                // try {
-                // // TODO remove final Parameters
-                // return OrdersHelper.mapJOrderToOrderV(o, true, permittedFolders, null, null, null);
-                // } catch (Exception e) {
-                // return null;
-                // }
-                // }).filter(Objects::nonNull).collect(Collectors.toList()));
                 notices.add(notice);
             });
         }
@@ -159,6 +139,24 @@ public class BoardHelper {
         item.setNotices(notices);
         item.setNumOfNotices(notices.size());
         return item;
+    }
+    
+    private static JBoardState getJBoardState(JControllerState controllerState, String boardName) {
+        if (controllerState != null) {
+            return controllerState.pathToBoardState().get(BoardPath.of(boardName));
+        }
+        return null;
+    }
+    
+    private static SyncStateText getSyncStateText(JControllerState controllerState, JBoardState jBoardState) {
+        SyncStateText stateText = SyncStateText.UNKNOWN;
+        if (controllerState != null) {
+            stateText = SyncStateText.NOT_IN_SYNC;
+            if (jBoardState != null) {
+                stateText = SyncStateText.IN_SYNC;
+            }
+        }
+        return stateText;
     }
     
     public static ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
@@ -197,12 +195,9 @@ public class BoardHelper {
         if (controllerState == null || boardPaths == null || boardPaths.isEmpty()) {
             return Stream.empty();
         }
-        Function<JOrder, Stream<ExpectingOrder>> mapper = order -> {
-            return controllerState.orderToStillExpectedNotices(order.id()).stream().filter(e -> boardPaths.contains(e.boardPath().string())).map(
-                    e -> new ExpectingOrder(order, e));
-            // return JavaConverters.asJava(((Order.ExpectingNotices) order.asScala().state()).expected()).stream().filter(e -> boardPaths.contains(e
-            // .boardPath().string())).map(e -> new ExpectingOrder(order, e.boardPath(), e.noticeId()));
-        };
+        Function<JOrder, Stream<ExpectingOrder>> mapper = order -> controllerState.orderToStillExpectedNotices(order.id()).stream().filter(
+                e -> boardPaths.contains(e.boardPath().string())).map(e -> new ExpectingOrder(order, e));
+        
         if (permittedFolders == null || permittedFolders.isEmpty()) {
             return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel().flatMap(mapper).filter(
                     Objects::nonNull);

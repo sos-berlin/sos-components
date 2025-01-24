@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.board.PlanSchemas;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
@@ -200,13 +201,14 @@ public class ProxyContext {
 //        }
 //    }
     
-    private void reDeployAgentsAndCalendar() {
-        //LOGGER.info(toString() + ": Redeploy Agents and Calendar if necessary");
+    private void reDeployAgentsAndCalendarAndPlanSchemas() {
+        //LOGGER.info(toString() + ": Redeploy Agents, Calendar and Plan schemas if necessary");
         proxyFuture.thenAcceptAsync(p -> {
             SOSHibernateSession sosHibernateSession = null;
             try {
                 JControllerState currentState = p.currentState();
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p.api(), currentState, toString());
+                //PlanSchemas.updatePlanSchemas(p.api(), currentState, toString());
                 
                 Map<AgentPath, JAgentRef> controllerKnownAgents = currentState.pathToAgentRef();
                 Map<SubagentId, JSubagentItem> controllerKnownSubagents = currentState.idToSubagentItem();
@@ -270,7 +272,7 @@ public class ProxyContext {
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
         }
-        reDeployAgentsAndCalendar();
+        reDeployAgentsAndCalendarAndPlanSchemas();
 //        checkCluster();
     }
 

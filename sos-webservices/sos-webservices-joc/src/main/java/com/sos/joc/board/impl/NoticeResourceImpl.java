@@ -5,8 +5,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
 
-import jakarta.ws.rs.Path;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.Globals;
@@ -24,9 +22,12 @@ import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoa
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
+import jakarta.ws.rs.Path;
 import js7.data.board.BoardPath;
 import js7.data.board.NoticeId;
+import js7.data.board.NoticeKey;
 import js7.data.controller.ControllerCommand;
+import js7.data.plan.PlanId;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.proxy.javaapi.JControllerApi;
 
@@ -81,13 +82,13 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
 
         JControllerApi controllerApi = ControllerApi.of(controllerId);
         BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));
-        NoticeId notice = NoticeId.of(filter.getNoticeId());
+        NoticeKey noticeKey = NoticeKey.of(filter.getNoticeId());
         Instant now = Instant.now();
 
         switch (action) {
         case DELETE:
-            controllerApi.executeCommand(JControllerCommand.apply(new ControllerCommand.DeleteNotice(board, notice))).thenAccept(e -> ProblemHelper
-                    .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+            controllerApi.executeCommand(JControllerCommand.apply(new ControllerCommand.DeleteNotice(NoticeId.of(PlanId.Global(), board, noticeKey))))
+                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             break;
 
         case POST:
@@ -100,7 +101,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
                     endOfLife = Optional.of(endOfLifeInstant);
                 }
             }
-            controllerApi.postNotice(board, notice, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
+            controllerApi.postNotice(board, noticeKey, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
                     controllerId));
             break;
         }

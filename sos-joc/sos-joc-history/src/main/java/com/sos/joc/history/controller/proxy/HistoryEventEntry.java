@@ -33,7 +33,7 @@ import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
-import js7.data.board.Notice;
+import js7.data.board.NoticeId;
 import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.event.Event;
@@ -77,7 +77,6 @@ import js7.data_for_java.lock.JLockState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrder.Forked;
 import js7.data_for_java.order.JOrderEvent;
-import js7.data_for_java.order.JOrderEvent.JExpectedNotice;
 import js7.data_for_java.order.JOrderEvent.JOrderFailed;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
 import js7.data_for_java.order.JOrderObstacle;
@@ -498,12 +497,12 @@ public class HistoryEventEntry {
         public List<FatExpectNotice> getExpectNotices() throws Exception {
             // OrderNoticesExpected ev = (OrderNoticesExpected) event;
             // List<JExpectedNotice> l = JavaConverters.asJava(ev.expected()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
-            List<JExpectedNotice> l = state.orderToStillExpectedNotices(order.id());
+            List<NoticeId> l = state.orderToStillExpectedNotices(order.id());
 
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
-                for (JExpectedNotice en : l) {
-                    r.add(new FatExpectNotice(en.noticeId(), en.boardPath().string()));
+                for (NoticeId en : l) {
+                    r.add(new FatExpectNotice(en, en.boardPath().string()));
                 }
             }
             return r;
@@ -511,11 +510,11 @@ public class HistoryEventEntry {
 
         public List<FatExpectNotice> getConsumingNotices() throws Exception {
             OrderNoticesConsumptionStarted ev = (OrderNoticesConsumptionStarted) event;
-            List<JExpectedNotice> l = JavaConverters.asJava(ev.consumptions()).stream().map(e -> new JExpectedNotice(e)).collect(Collectors.toList());
+            List<NoticeId> l = JavaConverters.asJava(ev.noticeIds());
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
-                for (JExpectedNotice en : l) {
-                    r.add(new FatExpectNotice(en.noticeId(), en.boardPath().string()));
+                for (NoticeId en : l) {
+                    r.add(new FatExpectNotice(en, en.boardPath().string()));
                 }
             }
             return r;
@@ -523,9 +522,9 @@ public class HistoryEventEntry {
 
         public FatPostNotice getPostNotice() {
             if (event instanceof OrderNoticePosted) {
-                Notice n = ((OrderNoticePosted) event).notice();
-                if (n != null) {
-                    return new FatPostNotice(n);
+                OrderNoticePosted ev = (OrderNoticePosted) event;
+                if (ev.noticeId() != null) {
+                    return new FatPostNotice(ev.noticeId(), ev.endOfLife());
                 }
             }
             return null;

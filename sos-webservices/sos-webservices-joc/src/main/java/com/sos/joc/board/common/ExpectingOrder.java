@@ -3,7 +3,6 @@ package com.sos.joc.board.common;
 import js7.data.board.BoardPath;
 import js7.data.board.NoticeId;
 import js7.data_for_java.order.JOrder;
-import js7.data_for_java.order.JOrderEvent.JExpectedNotice;
 
 
 public class ExpectingOrder {
@@ -28,10 +27,10 @@ public class ExpectingOrder {
         this.noticeId = noticeId;
     }
     
-    public ExpectingOrder(JOrder jOrder, JExpectedNotice notice) {
+    public ExpectingOrder(JOrder jOrder, NoticeId notice) {
         this.jOrder = jOrder;
         this.boardPath = notice.boardPath();
-        this.noticeId = notice.noticeId();
+        this.noticeId = notice;
     }
     
     public JOrder getJOrder() {

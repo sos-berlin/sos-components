@@ -17,11 +17,11 @@ public class FatPostNotice {
     private String boardPath;
     private Date endOfLife;
 
-    public FatPostNotice(Notice notice) {
+    public FatPostNotice(NoticeId notice, Option<Timestamp> endOfLife) {
         if (notice != null) {
-            setNoticeId(notice.id());
+            setNoticeId(notice);
             setBoardPath(notice.boardPath());
-            setEndOfLife(notice.endOfLife());
+            setEndOfLife(endOfLife);
         }
     }
 

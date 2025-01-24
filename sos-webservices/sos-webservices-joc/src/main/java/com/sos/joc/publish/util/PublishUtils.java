@@ -1769,7 +1769,7 @@ public abstract class PublishUtils {
     }
     
     private static JPlannableBoard getJPlannableBoard(Board board) {
-        return JPlannableBoard.of(BoardPath.of(board.getPath()));
+        return JPlannableBoard.of(BoardPath.of(board.getPath()), JPlannableBoard.defaultToNoticeKey(), JPlannableBoard.defaultToNoticeKey());
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
