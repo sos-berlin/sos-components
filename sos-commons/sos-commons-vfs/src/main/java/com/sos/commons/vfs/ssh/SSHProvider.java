@@ -4,7 +4,7 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.ProviderFile;
+import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.commons.vfs.ssh.common.ASSHProvider;
@@ -76,28 +76,18 @@ public class SSHProvider extends ASSHProvider {
     }
 
     @Override
-    public boolean isRegularFile(String path) {
-        return provider.isRegularFile(path);
-    }
-
-    @Override
     public boolean isDirectory(String path) {
         return provider.isDirectory(path);
     }
 
     @Override
-    public Long getSize(String path) throws SOSProviderException {
-        return provider.getSize(path);
+    public long getFileSize(String path) throws SOSProviderException {
+        return provider.getFileSize(path);
     }
 
     @Override
-    public Long getLastModifiedMillis(String path) {
-        return provider.getLastModifiedMillis(path);
-    }
-
-    @Override
-    public boolean isAbsolutePath(String path) {
-        return provider.isAbsolutePath(path);
+    public long getFileLastModifiedMillis(String path) {
+        return provider.getFileLastModifiedMillis(path);
     }
 
     @Override
@@ -106,23 +96,13 @@ public class SSHProvider extends ASSHProvider {
     }
 
     @Override
-    public boolean setLastModifiedFromMillis(String path, Long milliseconds) {
-        return provider.setLastModifiedFromMillis(path, milliseconds);
+    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
+        return provider.rereadFileIfExists(file);
     }
 
     @Override
-    public SOSCommandResult executeCommand(String command) {
-        return provider.executeCommand(command);
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout) {
-        return provider.executeCommand(command, timeout);
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSEnv env) {
-        return provider.executeCommand(command, env);
+    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
+        return provider.setFileLastModifiedFromMillis(path, milliseconds);
     }
 
     @Override

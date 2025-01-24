@@ -1,8 +1,13 @@
 package com.sos.commons.vfs.common;
 
+import java.util.List;
+import java.util.function.Function;
+
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.common.file.ProviderFileBuilder;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
 
@@ -67,35 +72,31 @@ public interface IProvider {
     /** Tests whether a file/directory exists. **/
     public boolean exists(String path);
 
-    /** Tests whether a file is a regular file.
-     * 
-     * @param path
-     * @return */
-    public boolean isRegularFile(String path);
-
-    /** Regular or Symbolic link file
-     * 
-     * @param path
-     * @return
-     * @throws SOSProviderException */
-    public ProviderFile getFileIfExists(String path) throws SOSProviderException;
-
     public boolean isDirectory(String path);
 
-    /** Determines the size of a file or directory.
-     * 
-     * @param path
-     * @return
-     * @throws SOSProviderException */
-    public Long getSize(String path) throws SOSProviderException;
+    public boolean isAbsolutePath(String path);
 
-    /** Returns the modification time in milliseconds or NULL<br/>
+    public String getDirectoryPathWithoutTrailingSeparator(String path);
+
+    public String getDirectoryPathWithTrailingSeparator(String path);
+
+    public ProviderFile getFileIfExists(String path) throws SOSProviderException;
+    
+    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException;
+
+    public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> creator);
+
+    public List<ProviderFile> selectFiles(String path) throws SOSProviderException;
+
+    public long getFileSize(String path) throws SOSProviderException;
+
+    /** Returns the modification time in milliseconds or -1<br/>
      * (the time cannot be evaluated, e.g. because the file does not exist, ...)<br/>
      * Does not throw exceptions, but should report errors at warning level</br>
      * 
      * @param path
      * @return */
-    public Long getLastModifiedMillis(String path);
+    public long getFileLastModifiedMillis(String path);
 
     /** Sets modification time from milliseconds.<br/>
      * Does not throw exceptions, but should report errors at warning level</br>
@@ -103,9 +104,7 @@ public interface IProvider {
      * @param path
      * @param milliseconds
      * @return */
-    public boolean setLastModifiedFromMillis(String path, Long milliseconds);
-
-    public boolean isAbsolutePath(String path);
+    public boolean setFileLastModifiedFromMillis(String path, long milliseconds);
 
     public SOSCommandResult executeCommand(String command);
 

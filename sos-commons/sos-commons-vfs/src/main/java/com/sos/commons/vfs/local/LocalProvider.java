@@ -5,7 +5,9 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
@@ -15,7 +17,7 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
-import com.sos.commons.vfs.common.ProviderFile;
+import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.commons.vfs.exception.SOSProviderInitializationException;
@@ -149,24 +151,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     @Override
-    public boolean isRegularFile(String path) {
-        try {
-            checkParam(path, "path"); // here because should not throw any errors
-
-            boolean result = SOSPath.isRegularFile(path);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[isRegularFile][%s]%s", getTypeInfo(), path, result);
-            }
-            return result;
-        } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[isRegularFile][%s][false]%s", getTypeInfo(), path, e.toString());
-            }
-            return false;
-        }
-    }
-
-    @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
         checkParam(path, "path");
 
@@ -176,16 +160,35 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
             if (attr.isRegularFile() || attr.isSymbolicLink()) {
-                f = new ProviderFile();
-                f.setSize(attr.size());
-                f.setName(p.getFileName().toString());
-                f.setFullName(p.toString());
+                f = createProviderFile(p.toString(), attr.size(), getFileLastModifiedMillis(attr));
             }
         } catch (NoSuchFileException e) {
         } catch (IOException e) {
             throw new SOSProviderException(getTypeInfo() + "[" + path + "]]", e);
         }
         return f;
+    }
+
+    @Override
+    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
+        try {
+            BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getFullPath()), BasicFileAttributes.class);
+            if (attr.isRegularFile() || attr.isSymbolicLink()) {
+                file.setSize(attr.size());
+                file.setLastModifiedMillis(getFileLastModifiedMillis(attr));
+            } else {
+                // file = null; ???
+            }
+        } catch (NoSuchFileException e) {
+            file = null;
+        } catch (IOException e) {
+            throw new SOSProviderException(getTypeInfo() + "[" + file.getFullPath() + "]]", e);
+        }
+        return file;
+    }
+
+    private long getFileLastModifiedMillis(BasicFileAttributes attr) {
+        return attr.lastModifiedTime().to(TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -207,41 +210,41 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     @Override
-    public Long getSize(String path) throws SOSProviderException {
+    public long getFileSize(String path) throws SOSProviderException {
         checkParam(path, "path");
 
         try {
-            long result = SOSPath.getSize(path);
+            long result = SOSPath.getFileSize(path);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getSize][%s]%s", getTypeInfo(), path, result);
+                getLogger().debug("%s[getFileSize][%s]%s", getTypeInfo(), path, result);
             }
-            return Long.valueOf(result);
+            return result;
         } catch (Throwable e) {
-            throw new SOSProviderException(getTypeInfo() + "[getSize][" + path + "]", e);
+            throw new SOSProviderException(getTypeInfo() + "[getFileSize][" + path + "]", e);
         }
     }
 
     @Override
-    public Long getLastModifiedMillis(String path) {
+    public long getFileLastModifiedMillis(String path) {
         try {
             checkParam(path, "path");
 
             long result = SOSPath.getLastModifiedMillis(path);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getLastModifiedMillis][%s]%s", getTypeInfo(), path, result);
+                getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getTypeInfo(), path, result);
             }
-            return Long.valueOf(result);
+            return result;
         } catch (Throwable e) {
-            getLogger().warn("%s[getLastModifiedMillis][%s]%s", getTypeInfo(), path, e);
-            return null;
+            getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getTypeInfo(), path, e);
+            return DEFAULT_FILE_ATTR_VALUE;
         }
     }
 
     @Override
-    public boolean setLastModifiedFromMillis(String path, Long milliseconds) {
+    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
         if (!isValidModificationTime(milliseconds)) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setLastModifiedFromMillis][%s][%s][false]not valid modification time", getTypeInfo(), path, milliseconds);
+                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getTypeInfo(), path, milliseconds);
             }
             return false;
         }
@@ -249,13 +252,13 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             checkParam(path, "path");
 
-            SOSPath.setLastModifiedFromMillis(path, milliseconds.longValue());
+            SOSPath.setLastModifiedFromMillis(path, milliseconds);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setLastModifiedFromMillis][%s][%s][false]attr=null", getTypeInfo(), path, milliseconds);
+                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]attr=null", getTypeInfo(), path, milliseconds);
             }
             return true;
         } catch (Throwable e) {
-            getLogger().warn("%s[setLastModifiedFromMillis][%s][%s]%s", getTypeInfo(), path, milliseconds, e);
+            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getTypeInfo(), path, milliseconds, e);
             return false;
         }
     }
@@ -263,21 +266,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     @Override
     public boolean isAbsolutePath(String path) {
         return SOSPathUtil.isAbsolutePathFileSystemStyle(path);
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command) {
-        return SOSShell.executeCommand(command);
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout) {
-        return SOSShell.executeCommand(command, timeout);
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSEnv env) {
-        return SOSShell.executeCommand(command, env);
     }
 
     @Override
