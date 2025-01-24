@@ -17,15 +17,11 @@ import com.sos.yade.engine.exception.SOSYADEEngineSourceZeroByteFilesException;
 
 public class YADEEngine {
 
-    private final ISOSLogger logger;
-    private final YADEArguments args;
-
-    public YADEEngine(ISOSLogger logger, YADEArguments args) {
-        this.logger = logger;
-        this.args = args;
+    public YADEEngine() {
+        // TODO
     }
 
-    public void execute() throws Exception {
+    public void execute(ISOSLogger logger, YADEArguments args) throws Exception {
         IProvider sourceProvider = null;
         IProvider targetProvider = null;
 
@@ -114,7 +110,7 @@ public class YADEEngine {
 
             // executePostTransferCommandsFinal(exception);
         } catch (Throwable t) {
-            logger.error(t.toString());
+            // logger.error(t.toString());
         }
     }
 
