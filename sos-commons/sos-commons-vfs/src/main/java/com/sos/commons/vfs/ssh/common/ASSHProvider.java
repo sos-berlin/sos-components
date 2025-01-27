@@ -59,11 +59,11 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     public String getConnectMsg() {
-        return String.format("%s[connect]%s ...", getTypeInfo(), mainInfo);
+        return String.format("%s[connect]%s ...", getLogPrefix(), mainInfo);
     }
 
     public String getConnectedMsg(List<String> additionalInfos) {
-        String r = String.format("%s[connected][%s]", getTypeInfo(), mainInfo);
+        String r = String.format("%s[connected][%s]", getLogPrefix(), mainInfo);
         if (SOSCollection.isEmpty(additionalInfos)) {
             if (serverInfo != null) {
                 r += serverInfo.toString();
@@ -78,7 +78,7 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     public String getDisconnectedMsg() {
-        return String.format("%s[disconnected]%s", getTypeInfo(), mainInfo);
+        return String.format("%s[disconnected]%s", getLogPrefix(), mainInfo);
     }
 
     private void resolveCredentialStore() throws SOSProviderInitializationException {

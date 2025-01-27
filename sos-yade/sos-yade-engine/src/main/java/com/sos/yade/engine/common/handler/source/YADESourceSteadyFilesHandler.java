@@ -7,32 +7,33 @@ import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.YADEEngineHelper;
+import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineSourceSteadyFilesException;
 
-public class YADEEngineSourceSteadyFilesHandler {
+public class YADESourceSteadyFilesHandler {
 
-    public static boolean checkFilesSteady(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args,
-            List<ProviderFile> sourceFiles) throws SOSYADEEngineSourceSteadyFilesException {
+    public static boolean checkFilesSteady(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args, List<ProviderFile> sourceFiles)
+            throws SOSYADEEngineSourceSteadyFilesException {
         if (!args.checkSteadyState()) {
             return true;
         }
         if (SOSCollection.isEmpty(sourceFiles)) {
             return true;
         }
-        logger.info("[start]checkFilesSteady");
+        String lp = sourceProvider.getContext().getLogPrefix();
+        logger.info("%s[start]checkFilesSteady", lp);
         boolean steady = true;
         int total = args.getCheckSteadyCount().getValue().intValue();
-        long interval = YADEEngineHelper.getIntervalInSeconds(args.getCheckSteadyStateInterval(), 1);
+        long interval = YADEHelper.getIntervalInSeconds(args.getCheckSteadyStateInterval(), 1);
 
         ml: for (int i = 0; i < total; i++) {
             steady = true;
 
             String position = String.format("%sof%s", i + 1, total);
-            logger.info(String.format("[%s][wait]%ss...", position, interval));
-            YADEEngineHelper.waitFor(interval);
+            logger.info(String.format("%s[%s][wait]%ss...", lp, position, interval));
+            YADEHelper.waitFor(interval);
 
             l: for (ProviderFile sourceFile : sourceFiles) {
                 if (!checkSourceFileSteady(sourceProvider, sourceFile)) {
@@ -41,8 +42,8 @@ public class YADEEngineSourceSteadyFilesHandler {
                 }
             }
             if (steady) {
-                logger.info("[%s][all files seem steady]extra waiting %ss for late comers.", position, interval);
-                YADEEngineHelper.waitFor(interval);
+                logger.info("%s[%s][all files seem steady]extra waiting %ss for late comers.", lp, position, interval);
+                YADEHelper.waitFor(interval);
                 nl: for (ProviderFile sourceFile : sourceFiles) {
                     if (!checkSourceFileSteady(sourceProvider, sourceFile)) {
                         steady = false;
@@ -51,7 +52,7 @@ public class YADEEngineSourceSteadyFilesHandler {
                 }
             }
             if (steady) {
-                logger.info("[%s][break]all files are steady.", position);
+                logger.info("%s[%s][break]all files are steady.", lp, position);
                 break ml;
             }
         }

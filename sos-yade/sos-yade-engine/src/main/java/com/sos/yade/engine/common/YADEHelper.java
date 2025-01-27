@@ -24,13 +24,16 @@ import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.yade.engine.common.arguments.YADEArguments;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.common.arguments.YADETargetArguments;
+import com.sos.yade.engine.exception.SOSYADEEngineConnectionException;
 import com.sos.yade.engine.exception.SOSYADEEngineException;
+import com.sos.yade.engine.exception.SOSYADEEngineSourceConnectionException;
+import com.sos.yade.engine.exception.SOSYADEEngineTargetConnectionException;
 
-public class YADEEngineHelper {
+public class YADEHelper {
 
     public static void checkArguments(YADEArguments args) throws SOSYADEEngineException {
         if (args == null) {
-            throw new SOSYADEEngineException(new SOSMissingDataException("TransferArguments"));
+            throw new SOSYADEEngineException(new SOSMissingDataException("YADEArguments"));
         }
         if (args.getOperation().getValue() == null) {
             throw new SOSYADEEngineException(new SOSMissingDataException(args.getOperation().getName()));
@@ -38,15 +41,44 @@ public class YADEEngineHelper {
     }
 
     public static IProvider getProvider(ISOSLogger logger, YADEArguments args, boolean isSource) throws SOSYADEEngineException {
-        IProvider p = null;
+        IProvider provider = null;
         if (isSource) {
-            p = getProvider(logger, args.getSource().getProvider());
+            provider = getProvider(logger, args.getSource().getProvider());
         } else {
             if (needTargetProvider(args)) {
-                p = getProvider(logger, args.getTarget().getProvider());
+                provider = getProvider(logger, args.getTarget().getProvider());
             }
         }
-        return p;
+        setProviderContext(provider, isSource);
+        return provider;
+    }
+
+    private static void setProviderContext(IProvider provider, boolean isSource) {
+        if (provider == null) {
+            return;
+        }
+        provider.setContext(new YADEProviderContext(isSource));
+    }
+
+    public static void throwConnectionException(IProvider provider, Throwable ex) throws SOSYADEEngineConnectionException {
+        SOSYADEEngineConnectionException yex = getConnectionException(provider, ex);
+        if (yex != null) {
+            throw yex;
+        }
+    }
+
+    public static SOSYADEEngineConnectionException getConnectionException(IProvider provider, Throwable ex) {
+        if (provider == null) {
+            return null;
+        }
+        YADEProviderContext c = (YADEProviderContext) provider.getContext();
+        if (c == null) {
+            return null;
+        }
+        if (c.isSource()) {
+            return new SOSYADEEngineSourceConnectionException(ex);
+        }
+        return new SOSYADEEngineTargetConnectionException(ex);
     }
 
     // public static List<String> getSourceSingleFiles(ISOSLogger logger, YADEArguments args, IProvider source, String sourceDir, boolean isPolling) {
@@ -121,6 +153,9 @@ public class YADEEngineHelper {
     }
 
     public static void waitFor(long interval) {
+        if (interval <= 0) {
+            return;
+        }
         try {
             TimeUnit.SECONDS.sleep(interval);
         } catch (InterruptedException e) {
@@ -187,6 +222,10 @@ public class YADEEngineHelper {
             return false;
         case UNKNOWN:
             throw new SOSYADEEngineException(new SOSInvalidDataException(args.getOperation().getName() + "=" + args.getOperation().getValue()));
+        // case COPY:
+        // case MOVE:
+        // case COPYFROMINTERNET:
+        // case COPYTOINTERNET:
         default:
             return true;
         }

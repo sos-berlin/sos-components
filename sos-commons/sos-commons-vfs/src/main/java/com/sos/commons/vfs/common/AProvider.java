@@ -26,8 +26,8 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     // Default providerFileCreator function creates a standard ProviderFile using the builder
     private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build();
-    private Boolean typeSource;
-    private String typeInfo;
+    // source/target type - logging - is not set if only one provider is used (e.g. SSH JITL Job)
+    private AProviderContext context;
 
     public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
         this.logger = logger;
@@ -48,6 +48,20 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
      * @return */
     public ProviderFile createProviderFile(String fullPath, long size, long lastModifiedMillis) {
         return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
+    }
+
+    @Override
+    public void setContext(AProviderContext val) {
+        context = val;
+    }
+
+    @Override
+    public AProviderContext getContext() {
+        return context;
+    }
+
+    public String getLogPrefix() {
+        return context == null ? "" : context.getLogPrefix();
     }
 
     @Override
@@ -104,24 +118,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public A getArguments() {
         return arguments;
-    }
-
-    public Boolean typeSource() {
-        return typeSource;
-    }
-
-    public void typeSource(Boolean val) {
-        typeSource = val;
-        if (val != null) {
-            typeInfo = typeSource ? "[source]" : "[target]";
-        }
-    }
-
-    public String getTypeInfo() {
-        if (typeInfo == null) {
-            typeInfo = "";
-        }
-        return typeInfo;
     }
 
     public static String millis2string(int val) {

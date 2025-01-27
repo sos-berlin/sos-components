@@ -1,7 +1,6 @@
 package com.sos.yade.engine.common.handler.source;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +8,11 @@ import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.engine.common.YADEDirectory;
-import com.sos.yade.engine.common.YADEEngineHelper;
+import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineSourcePollingException;
 
-public class YADEEngineSourcePollingHandler {
+public class YADESourcePollingHandler {
 
     private enum PollingMethod {
         Timeout, ServerDuration, Forever
@@ -23,7 +22,6 @@ public class YADEEngineSourcePollingHandler {
 
     private static final int POLLING_MAX_RETRIES_ON_CONNECTION_ERROR = 1_000;
     private static final int WAIT_SECONDS_ON_CONNECTION_ERROR = 10;
-    private static final int WAIT_SECONDS_ON_TRANSFER_ERROR = 30;
 
     private final boolean enabled;
 
@@ -37,8 +35,9 @@ public class YADEEngineSourcePollingHandler {
     private long timeout;
     private long serverDuration;
     private long totalFilesCount;
+    private boolean firstCycle;
 
-    public YADEEngineSourcePollingHandler(YADESourceArguments args) {
+    public YADESourcePollingHandler(YADESourceArguments args) {
         this.enabled = args.poolTimeoutEnabled();
         if (this.enabled) {
             // this.logger = logger;
@@ -56,6 +55,9 @@ public class YADEEngineSourcePollingHandler {
                         + "=true, but source_dir is not set");
             }
             start = Instant.now();
+            firstCycle = true;
+        } else {
+            firstCycle = false;
         }
 
         List<ProviderFile> result = new ArrayList<>();
@@ -66,7 +68,7 @@ public class YADEEngineSourcePollingHandler {
         long currentPollingTime = 0;
 
         boolean shouldSelectFiles = false;
-        String lp = "[source][polling]";
+        String lp = sourceProvider.getContext().getLogPrefix() + "[polling]";
 
         pl: while (true) {
             if (currentPollingTime == 0) {
@@ -123,7 +125,7 @@ public class YADEEngineSourcePollingHandler {
             if (logger.isDebugEnabled()) {
                 logger.debug("[wait]%s seconds...", interval);
             }
-            YADEEngineHelper.waitFor(interval);
+            YADEHelper.waitFor(interval);
             currentPollingTime += interval;
 
             // TODO ???? YADE 1...
@@ -142,12 +144,10 @@ public class YADEEngineSourcePollingHandler {
         return result;
     }
 
-    public boolean startNextPollingCycle(ISOSLogger logger, boolean hasError) {
+    public boolean startNextPollingCycle(ISOSLogger logger) {
         if (!isPollingServer() || isPollingServerDurationElapsed(logger)) {
             return false;
         }
-        // YADEEngineHelper.printSummary(logger, args);
-        // sendNotifications
         return true;
     }
 
@@ -155,25 +155,24 @@ public class YADEEngineSourcePollingHandler {
     private void ensureConnected(ISOSLogger logger, IProvider sourceProvider, String lp, long currentPollingTime)
             throws SOSYADEEngineSourcePollingException {
         try {
-            boolean run = true;
             int count = 0;
-            while (run) {
+            while (true) {
                 count++;
                 try {
                     sourceProvider.ensureConnected();
-                    run = false;
+                    return;
                 } catch (Throwable e) {
                     if (PollingMethod.Forever.equals(method)) {
                         if (count >= POLLING_MAX_RETRIES_ON_CONNECTION_ERROR) {
                             throw new SOSYADEEngineSourcePollingException(String.format("Maximum reconnect retries(%s) reached",
-                                    POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), e);
+                                    POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), YADEHelper.getConnectionException(sourceProvider, e));
                         }
                     } else {
                         long currentTime = System.currentTimeMillis() / 1_000;
                         long pollingTime = PollingMethod.ServerDuration.equals(method) ? start.getEpochSecond() : currentPollingTime;
                         long duration = currentTime - pollingTime;
                         if (duration >= getPollTimeout()) {
-                            throw new SOSYADEEngineSourcePollingException(e);
+                            throw new SOSYADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceProvider, e));
                         }
                     }
 
@@ -185,22 +184,22 @@ public class YADEEngineSourcePollingHandler {
                         // JobSchedulerException.LastErrorMessage = "";
                     }
                     logger.warn(error);
-                    YADEEngineHelper.waitFor(WAIT_SECONDS_ON_CONNECTION_ERROR);
+                    YADEHelper.waitFor(WAIT_SECONDS_ON_CONNECTION_ERROR);
                 }
             }
         } catch (Throwable e) {
-            throw new SOSYADEEngineSourcePollingException(e);
+            throw new SOSYADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceProvider, e));
         }
     }
 
     private void init() {
-        interval = YADEEngineHelper.getIntervalInSeconds(args.getPolling().getPollInterval(), DEFAULT_POLL_INTERVAL);
+        interval = YADEHelper.getIntervalInSeconds(args.getPolling().getPollInterval(), DEFAULT_POLL_INTERVAL);
         timeout = getPollTimeout();
 
         if (isPollingServer()) {
             if (args.getPolling().getPollingServerDuration().getValue() != null && !args.getPolling().getPollingServerPollForever().isTrue()) {
                 method = PollingMethod.ServerDuration;
-                serverDuration = YADEEngineHelper.getIntervalInSeconds(args.getPolling().getPollingServerDuration(), DEFAULT_POLL_INTERVAL);
+                serverDuration = YADEHelper.getIntervalInSeconds(args.getPolling().getPollingServerDuration(), DEFAULT_POLL_INTERVAL);
             } else {
                 method = PollingMethod.Forever;
             }
@@ -227,6 +226,10 @@ public class YADEEngineSourcePollingHandler {
 
     public boolean isPollingServer() {
         return enabled ? args.getPolling().getPollingServer().isTrue() : false;
+    }
+
+    public boolean isFirstCycle() {
+        return firstCycle;
     }
 
     private boolean isServerDuration() {

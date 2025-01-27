@@ -1,7 +1,7 @@
 package com.sos.yade.engine.common.arguments;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.yade.engine.common.handler.source.YADEEngineSourcePollingHandler;
+import com.sos.yade.engine.common.handler.source.YADESourcePollingHandler;
 
 public class YADEPollingArguments {
 
@@ -12,7 +12,7 @@ public class YADEPollingArguments {
     private SOSArgument<String> pollingServerDuration = new SOSArgument<>("polling_server_duration", false);
     // seconds
     private SOSArgument<String> pollInterval = new SOSArgument<>("poll_interval", false, String.valueOf(
-            YADEEngineSourcePollingHandler.DEFAULT_POLL_INTERVAL));
+            YADESourcePollingHandler.DEFAULT_POLL_INTERVAL));
     // private SOSArgument<String> pollingDuration = new SOSArgument<>("pollingduration", false);// ??? is used - can be set in schema
 
     private SOSArgument<Boolean> pollingWait4SourceFolder = new SOSArgument<>("polling_wait_4_source_folder", false, Boolean.valueOf(false));

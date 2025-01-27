@@ -39,13 +39,13 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         } catch (UnknownHostException e) {
             getArguments().getHost().setValue("UNKNOWN_HOST");
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[connect]%s", getTypeInfo(), e.toString());
+                getLogger().debug("%s[connect]%s", getLogPrefix(), e.toString());
             }
         }
         getArguments().getUser().setValue(SOSShell.getUsername());
 
         if (getLogger().isDebugEnabled()) {
-            getLogger().debug("%s[connected]%s", getTypeInfo(), getMainInfo());
+            getLogger().debug("%s[connected]%s", getLogPrefix(), getMainInfo());
         }
     }
 
@@ -57,7 +57,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     @Override
     public void disconnect() {
         if (getLogger().isDebugEnabled()) {
-            getLogger().debug("%s[disconnected]%s", getTypeInfo(), getMainInfo());
+            getLogger().debug("%s[disconnected]%s", getLogPrefix(), getMainInfo());
         }
     }
 
@@ -67,14 +67,14 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
         try {
             if (getLogger().isTraceEnabled()) {
-                getLogger().trace("%s[createDirectory][%s]try to create...", getTypeInfo(), path);
+                getLogger().trace("%s[createDirectory][%s]try to create...", getLogPrefix(), path);
             }
             Files.createDirectory(SOSPath.toAbsolutePath(path));
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[createDirectory][%s]created", getTypeInfo(), path);
+                getLogger().debug("%s[createDirectory][%s]created", getLogPrefix(), path);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getTypeInfo() + "[createDirectory][" + path + "]", e);
+            throw new SOSProviderException(getLogPrefix() + "[createDirectory][" + path + "]", e);
         }
     }
 
@@ -84,14 +84,14 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
         try {
             if (getLogger().isTraceEnabled()) {
-                getLogger().trace("%s[createDirectories][%s]try to create...", getTypeInfo(), path);
+                getLogger().trace("%s[createDirectories][%s]try to create...", getLogPrefix(), path);
             }
             Files.createDirectories(SOSPath.toAbsolutePath(path));
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[createDirectories][%s]created", getTypeInfo(), path);
+                getLogger().debug("%s[createDirectories][%s]created", getLogPrefix(), path);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getTypeInfo() + "[createDirectories][" + path + "]", e);
+            throw new SOSProviderException(getLogPrefix() + "[createDirectories][" + path + "]", e);
         }
     }
 
@@ -102,7 +102,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             SOSPath.delete(SOSPath.toAbsolutePath(path));
         } catch (Throwable e) {
-            throw new SOSProviderException(getTypeInfo() + "[delete][" + path + "]", e);
+            throw new SOSProviderException(getLogPrefix() + "[delete][" + path + "]", e);
         }
     }
 
@@ -113,7 +113,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             return SOSPath.deleteIfExists(SOSPath.toAbsolutePath(path));
         } catch (Throwable e) {
-            throw new SOSProviderException(getTypeInfo() + "[deleteIfExists][" + path + "]", e);
+            throw new SOSProviderException(getLogPrefix() + "[deleteIfExists][" + path + "]", e);
         }
     }
 
@@ -125,10 +125,10 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             SOSPath.renameTo(source, target);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[rename][source=%s][newpath=%s]renamed", getTypeInfo(), source, target);
+                getLogger().debug("%s[rename][source=%s][newpath=%s]renamed", getLogPrefix(), source, target);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getTypeInfo() + "[rename][source=" + source + "][target=" + target + "]", e);
+            throw new SOSProviderException(getLogPrefix() + "[rename][source=" + source + "][target=" + target + "]", e);
         }
     }
 
@@ -139,12 +139,12 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
             boolean result = Files.exists(SOSPath.toAbsolutePath(path));
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists][%s]%s", getTypeInfo(), path, result);
+                getLogger().debug("%s[exists][%s]%s", getLogPrefix(), path, result);
             }
             return result;
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists][%s][false]%s", getTypeInfo(), path, e.toString());
+                getLogger().debug("%s[exists][%s][false]%s", getLogPrefix(), path, e.toString());
             }
             return false;
         }
@@ -164,7 +164,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             }
         } catch (NoSuchFileException e) {
         } catch (IOException e) {
-            throw new SOSProviderException(getTypeInfo() + "[" + path + "]]", e);
+            throw new SOSProviderException(getLogPrefix() + "[" + path + "]]", e);
         }
         return f;
     }
@@ -182,7 +182,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         } catch (NoSuchFileException e) {
             file = null;
         } catch (IOException e) {
-            throw new SOSProviderException(getTypeInfo() + "[" + file.getFullPath() + "]]", e);
+            throw new SOSProviderException(getLogPrefix() + "[" + file.getFullPath() + "]]", e);
         }
         return file;
     }
@@ -198,12 +198,12 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
             boolean result = SOSPath.isDirectory(path);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[isDirectory][%s]%s", getTypeInfo(), path, result);
+                getLogger().debug("%s[isDirectory][%s]%s", getLogPrefix(), path, result);
             }
             return result;
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[isDirectory][%s][false]%s", getTypeInfo(), path, e.toString());
+                getLogger().debug("%s[isDirectory][%s][false]%s", getLogPrefix(), path, e.toString());
             }
             return false;
         }
@@ -216,11 +216,11 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             long result = SOSPath.getFileSize(path);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getFileSize][%s]%s", getTypeInfo(), path, result);
+                getLogger().debug("%s[getFileSize][%s]%s", getLogPrefix(), path, result);
             }
             return result;
         } catch (Throwable e) {
-            throw new SOSProviderException(getTypeInfo() + "[getFileSize][" + path + "]", e);
+            throw new SOSProviderException(getLogPrefix() + "[getFileSize][" + path + "]", e);
         }
     }
 
@@ -231,11 +231,11 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
             long result = SOSPath.getLastModifiedMillis(path);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getTypeInfo(), path, result);
+                getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, result);
             }
             return result;
         } catch (Throwable e) {
-            getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getTypeInfo(), path, e);
+            getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, e);
             return DEFAULT_FILE_ATTR_VALUE;
         }
     }
@@ -244,7 +244,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
         if (!isValidModificationTime(milliseconds)) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getTypeInfo(), path, milliseconds);
+                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getLogPrefix(), path, milliseconds);
             }
             return false;
         }
@@ -254,11 +254,11 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
             SOSPath.setLastModifiedFromMillis(path, milliseconds);
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]attr=null", getTypeInfo(), path, milliseconds);
+                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]attr=null", getLogPrefix(), path, milliseconds);
             }
             return true;
         } catch (Throwable e) {
-            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getTypeInfo(), path, milliseconds, e);
+            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getLogPrefix(), path, milliseconds, e);
             return false;
         }
     }

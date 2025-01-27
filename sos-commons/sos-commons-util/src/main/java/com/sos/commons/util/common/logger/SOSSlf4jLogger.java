@@ -35,7 +35,7 @@ public class SOSSlf4jLogger implements ISOSLogger {
         try {
             setMDC();
             if (args.length > 0) {
-                LOGGER.info(format, args);
+                LOGGER.info(String.format(format, args));
             } else {
                 LOGGER.info(format);
             }
@@ -67,7 +67,7 @@ public class SOSSlf4jLogger implements ISOSLogger {
         try {
             setMDC();
             if (args.length > 0) {
-                LOGGER.debug(format, args);
+                LOGGER.debug(String.format(format, args));
             } else {
                 LOGGER.debug(format);
             }
@@ -99,7 +99,7 @@ public class SOSSlf4jLogger implements ISOSLogger {
         try {
             setMDC();
             if (args.length > 0) {
-                LOGGER.trace(format, args);
+                LOGGER.trace(String.format(format, args));
             } else {
                 LOGGER.trace(format);
             }
@@ -123,7 +123,7 @@ public class SOSSlf4jLogger implements ISOSLogger {
         try {
             setMDC();
             if (args.length > 0) {
-                LOGGER.warn(format, args);
+                LOGGER.warn(String.format(format, args));
             } else {
                 LOGGER.warn(format);
             }
@@ -157,7 +157,7 @@ public class SOSSlf4jLogger implements ISOSLogger {
         try {
             setMDC();
             if (args.length > 0) {
-                LOGGER.error(format, args);
+                LOGGER.error(String.format(format, args));
             } else {
                 LOGGER.error(format);
             }

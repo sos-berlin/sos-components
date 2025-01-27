@@ -81,7 +81,7 @@ public interface IProvider {
     public String getDirectoryPathWithTrailingSeparator(String path);
 
     public ProviderFile getFileIfExists(String path) throws SOSProviderException;
-    
+
     public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException;
 
     public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> creator);
@@ -105,6 +105,11 @@ public interface IProvider {
      * @param milliseconds
      * @return */
     public boolean setFileLastModifiedFromMillis(String path, long milliseconds);
+
+    /** Context e.g. for YADE to determinate Source/Target */
+    public void setContext(AProviderContext context);
+
+    public AProviderContext getContext();
 
     public SOSCommandResult executeCommand(String command);
 

@@ -5,14 +5,16 @@ import java.util.List;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.engine.common.YADEDirectory;
-import com.sos.yade.engine.common.YADEEngineHelper;
+import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.arguments.YADEArguments;
-import com.sos.yade.engine.common.handler.source.YADEEngineSourcePollingHandler;
-import com.sos.yade.engine.common.handler.source.YADEEngineSourceSteadyFilesHandler;
-import com.sos.yade.engine.common.handler.source.YADEEngineSourceZeroByteFilesHandler;
+import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.common.handler.YADECommandsHandler;
+import com.sos.yade.engine.common.handler.source.YADESourcePollingHandler;
+import com.sos.yade.engine.common.handler.source.YADESourceSteadyFilesHandler;
+import com.sos.yade.engine.common.handler.source.YADESourceZeroByteFilesHandler;
+import com.sos.yade.engine.exception.SOSYADEEngineConnectionException;
 import com.sos.yade.engine.exception.SOSYADEEngineSourceZeroByteFilesException;
 
 public class YADEEngine {
@@ -21,113 +23,167 @@ public class YADEEngine {
         // TODO
     }
 
+    // static ???
     public void execute(ISOSLogger logger, YADEArguments args) throws Exception {
         IProvider sourceProvider = null;
         IProvider targetProvider = null;
 
+        YADEDirectory sourceDir = null;
+        YADEDirectory targetDir = null;
+
+        Throwable exception = null;
         try {
             /** 1) print transfer configuration */
-            YADEEngineHelper.printBanner(logger, args);
+            YADEHelper.printBanner(logger, args);
 
             /** 2) check/initialize configuration */
-            YADEEngineHelper.checkArguments(args);
-            YADEEngineHelper.setConfiguredSystemProperties(logger, args);
+            YADEHelper.checkArguments(args);
+            YADEHelper.setConfiguredSystemProperties(logger, args);
 
-            // initialize providers
-            sourceProvider = YADEEngineHelper.getProvider(logger, args, true);
-            targetProvider = YADEEngineHelper.getProvider(logger, args, false);
-
-            // source handlers
-            YADEEngineSourcePollingHandler sourcePolling = new YADEEngineSourcePollingHandler(args.getSource());
-            YADEEngineSourceZeroByteFilesHandler sourceZeroBytes = new YADEEngineSourceZeroByteFilesHandler();
+            // source/target initialize providers
+            sourceProvider = YADEHelper.getProvider(logger, args, true);
+            targetProvider = YADEHelper.getProvider(logger, args, false);
 
             // source/target normalized directories
-            YADEDirectory sourceDir = YADEEngineHelper.getYADEDirectory(sourceProvider, args.getSource());
-            YADEDirectory targetDir = YADEEngineHelper.getYADEDirectory(targetProvider, args.getTarget());
+            sourceDir = YADEHelper.getYADEDirectory(sourceProvider, args.getSource());
+            targetDir = YADEHelper.getYADEDirectory(targetProvider, args.getTarget());
+
+            // source handlers
+            YADESourcePollingHandler sourcePolling = new YADESourcePollingHandler(args.getSource());
+            YADESourceZeroByteFilesHandler sourceZeroBytes = new YADESourceZeroByteFilesHandler();
 
             // set YADE specific ProviderFile
             sourceProvider.setProviderFileCreator(builder -> new YADEProviderFile(builder.getFullPath(), builder.getSize(), builder
                     .getLastModifiedMillis(), args.getSource().checkSteadyState()));
 
             /** 3) connect source provider */
-            connect(sourceProvider);
+            connect(logger, sourceProvider, args.getSource());
+
+            /** 4) source provider execute commands before operation */
+            YADECommandsHandler.executeBeforeOperation(logger, sourceProvider, args.getSource());
 
             if (sourcePolling.enabled()) {
                 pl: while (true) {
-                    /** 4) select files on source */
+                    /** 5) select files on source */
                     List<ProviderFile> sourceFiles = sourcePolling.selectFiles(logger, sourceProvider, sourceDir);
 
-                    /** 5) check source files steady */
-                    if (!YADEEngineSourceSteadyFilesHandler.checkFilesSteady(logger, sourceProvider, args.getSource(), sourceFiles)) {
+                    /** 6) check source files steady */
+                    if (!YADESourceSteadyFilesHandler.checkFilesSteady(logger, sourceProvider, args.getSource(), sourceFiles)) {
                         break pl;
                     }
 
-                    /** 6) handleZeroByteFiles on source - NOT throw exception */
+                    /** 7) handleZeroByteFiles on source - NOT throw exception */
                     boolean shouldExecuteOperation = true;
                     try {
-                        sourceFiles = sourceZeroBytes.filter(logger, args.getSource(), sourceFiles);
+                        sourceFiles = sourceZeroBytes.filter(logger, sourceProvider, args.getSource(), sourceFiles);
                     } catch (SOSYADEEngineSourceZeroByteFilesException e) {
-                        logger.error("[%s]%s", sourcePolling.getMethod(), e.toString());
+                        logger.error("%s[%s]%s", sourceProvider.getContext().getLogPrefix(), sourcePolling.getMethod(), e.toString());
                         shouldExecuteOperation = false;
                     }
 
                     if (shouldExecuteOperation) {
-                        /** 7) connect target provider */
-                        connect(targetProvider);
-                
-                        /** 8) transfer */
+                        /** 8) connect target provider */
+                        connect(logger, targetProvider, args.getTarget());
+
+                        // YADE 1 handling - execute before operation commands only once - is it OK????
+                        if (sourcePolling.isFirstCycle()) {
+                            /** 9) target provider execute commands before operation */
+                            YADECommandsHandler.executeBeforeOperation(logger, targetProvider, args.getTarget());
+                        }
+
+                        /** 10) transfer */
                         // -- handle operations: GetList etc
+
+                        /** 11) execute commands after operation on success */
+                        try {
+                            YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceProvider, args.getSource(), sourceDir);
+                            YADECommandsHandler.executeAfterOperationOnSuccess(logger, targetProvider, args.getTarget(), targetDir);
+                        } catch (Throwable e) {
+                            logger.error("%s[%s]%s", sourceProvider.getContext().getLogPrefix(), sourcePolling.getMethod(), e.toString());
+                        }
                     }
 
                     disconnect(targetProvider);
-                    if (!sourcePolling.startNextPollingCycle(logger, !shouldExecuteOperation)) {
+                    if (!sourcePolling.startNextPollingCycle(logger)) {
                         break pl;
                     }
+
+                    // sendNotifications
+                    YADEHelper.printSummary(logger, args);
                 }
             } else {
-                /** 4) select files on source */
+                /** 5) select files on source */
                 List<ProviderFile> sourceFiles = sourceProvider.selectFiles("");
 
-                /** 5) check source files steady */
-                if (YADEEngineSourceSteadyFilesHandler.checkFilesSteady(logger, sourceProvider, args.getSource(), sourceFiles)) {
+                /** 6) check source files steady */
+                if (YADESourceSteadyFilesHandler.checkFilesSteady(logger, sourceProvider, args.getSource(), sourceFiles)) {
 
-                    /** 6) handleZeroByteFiles on source - throws exception */
-                    sourceFiles = sourceZeroBytes.filter(logger, args.getSource(), sourceFiles);
+                    /** 7) handleZeroByteFiles on source - throws exception */
+                    sourceFiles = sourceZeroBytes.filter(logger, sourceProvider, args.getSource(), sourceFiles);
 
-                    /** 7) connect target provider */
-                    connect(targetProvider);
+                    /** 8) connect target provider */
+                    connect(logger, targetProvider, args.getTarget());
 
-                    /** 8) transfer */
+                    /** 9) target provider execute commands before operation */
+                    YADECommandsHandler.executeBeforeOperation(logger, targetProvider, args.getTarget());
+
+                    /** 10) transfer */
                     // -- handle operations: GetList etc
+
+                    /** 11) execute commands after operation on success */
+                    YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceProvider, args.getSource(), sourceDir);
+                    YADECommandsHandler.executeAfterOperationOnSuccess(logger, targetProvider, args.getTarget(), targetDir);
                 }
             }
-            /** 9) disconnect */
-            disconnect(sourceProvider, targetProvider);
-            sourceProvider = null;
-            targetProvider = null;
+
         } catch (Throwable e) {
+            /** execute commands after operation on error */
+            YADECommandsHandler.executeAfterOperationOnError(logger, sourceProvider, args.getSource(), sourceDir, e);
+            YADECommandsHandler.executeAfterOperationOnError(logger, targetProvider, args.getTarget(), targetDir, e);
+
+            exception = e;
             throw e;
         } finally {
-            disconnect(sourceProvider, targetProvider);// if exception
-            // 10 - print summary
-            YADEEngineHelper.printSummary(logger, args);
+            /** execute commands after operation final */
+            YADECommandsHandler.executeAfterOperationFinal(logger, sourceProvider, args.getSource(), sourceDir, exception);
+            YADECommandsHandler.executeAfterOperationFinal(logger, targetProvider, args.getTarget(), targetDir, exception);
+
+            disconnect(sourceProvider, targetProvider);
+
+            // sendNotifications
+            YADEHelper.printSummary(logger, args);
         }
     }
 
-    private void executePostTransferCommandsFinal(IProvider sourceTrovider, IProvider targetProvider, Throwable e) {
-        try {
-            // if(target != null && target.po)
-
-            // executePostTransferCommandsFinal(exception);
-        } catch (Throwable t) {
-            // logger.error(t.toString());
+    // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
+    private static void connect(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args) throws SOSYADEEngineConnectionException {
+        if (provider == null) {
+            return;
         }
-    }
 
-    private void connect(IProvider... providers) throws SOSProviderException {
-        for (IProvider p : providers) {
-            if (p != null) {
-                p.connect();
+        // without retry
+        if (!args.retryOnConnectionError()) {
+            try {
+                provider.connect();
+            } catch (Throwable e) {
+                YADEHelper.throwConnectionException(provider, e);
+            }
+            return;
+        }
+
+        // with retry
+        int maxRetries = args.getConnectionErrorRetryCountMax().getValue().intValue();
+        long retryInterval = YADEHelper.getIntervalInSeconds(args.getConnectionErrorRetryInterval(), 0);
+        for (int retryCounter = 0; retryCounter <= maxRetries; retryCounter++) {
+            try {
+                provider.connect();
+                return;
+            } catch (Throwable e) {
+                if (retryCounter == maxRetries) {
+                    YADEHelper.throwConnectionException(provider, e);
+                }
+                logger.info("%s[retry=%s in %ss]%s", provider.getContext().getLogPrefix(), retryCounter + 1, retryInterval, e.toString(), e);
+                YADEHelper.waitFor(retryInterval);
             }
         }
     }
@@ -136,7 +192,7 @@ public class YADEEngine {
      * 
      * @param source
      * @param target */
-    private void disconnect(IProvider... providers) {
+    private static void disconnect(IProvider... providers) {
         for (IProvider p : providers) {
             if (p != null) {
                 p.disconnect();
