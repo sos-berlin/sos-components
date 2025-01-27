@@ -1769,7 +1769,11 @@ public abstract class PublishUtils {
     }
     
     private static JPlannableBoard getJPlannableBoard(Board board) {
-        return JPlannableBoard.of(BoardPath.of(board.getPath()), JPlannableBoard.defaultToNoticeKey(), JPlannableBoard.defaultToNoticeKey());
+        //compiler ERROR
+        //return JPlannableBoard.of(BoardPath.of(board.getPath()), JPlannableBoard.defaultToNoticeKey(), JPlannableBoard.defaultToNoticeKey());
+        //quick fix without testing
+        JExpression ex = JExpression.fromString(JPlannableBoard.defaultToNoticeKey().toString());
+        return JPlannableBoard.of(BoardPath.of(board.getPath()), ex, ex);
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
