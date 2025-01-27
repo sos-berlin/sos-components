@@ -21,14 +21,14 @@ public class YADEEngineSourcePollingHandler {
 
     public static final long DEFAULT_POLL_INTERVAL = 60L;// seconds
 
-    private static final int POLL_FOREVER_MAX_RETRIES_ON_CONNECTION_ERROR = 1_000;
+    private static final int POLLING_MAX_RETRIES_ON_CONNECTION_ERROR = 1_000;
     private static final int WAIT_SECONDS_ON_CONNECTION_ERROR = 10;
     private static final int WAIT_SECONDS_ON_TRANSFER_ERROR = 30;
 
     private final boolean enabled;
 
-    private ISOSLogger logger;
-    private IProvider source;
+    // private ISOSLogger logger;
+    // private IProvider source;
     private YADESourceArguments args;
     private PollingMethod method;
 
@@ -36,19 +36,20 @@ public class YADEEngineSourcePollingHandler {
     private long interval;
     private long timeout;
     private long serverDuration;
-    private long totalFiles;
+    private long totalFilesCount;
 
-    public YADEEngineSourcePollingHandler(ISOSLogger logger, IProvider source, YADESourceArguments args) {
+    public YADEEngineSourcePollingHandler(YADESourceArguments args) {
         this.enabled = args.poolTimeoutEnabled();
         if (this.enabled) {
-            this.logger = logger;
-            this.source = source;
+            // this.logger = logger;
+            // this.source = source;
             this.args = args;
             init();
         }
     }
 
-    public List<ProviderFile> selectFiles(YADEDirectory sourceDir) throws SOSYADEEngineSourcePollingException {
+    public List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, YADEDirectory sourceDir)
+            throws SOSYADEEngineSourcePollingException {
         if (start == null) {
             if (args.getPolling().getPollingWait4SourceFolder().getValue() && sourceDir == null) {
                 throw new SOSYADEEngineSourcePollingException(args.getPolling().getPollingWait4SourceFolder().getName()
@@ -60,30 +61,32 @@ public class YADEEngineSourcePollingHandler {
         List<ProviderFile> result = new ArrayList<>();
 
         boolean singleFilesSpecified = args.singleFilesSpecified();
+        int currentFilesCount = 0;
+        int filesCount = 0;// TODO unclear ...
         long currentPollingTime = 0;
 
         boolean shouldSelectFiles = false;
-        String logPrefix = "[source][polling]";
+        String lp = "[source][polling]";
 
         pl: while (true) {
             if (currentPollingTime == 0) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("%s[start]%s s...", logPrefix, timeout);
+                    logger.debug("%s[start]%s s...", lp, timeout);
                 }
             }
             if (currentPollingTime > timeout) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("%s[end]%s s", logPrefix, timeout);
+                    logger.debug("%s[end]%s s", lp, timeout);
                 }
                 break pl;
             }
 
             if (!shouldSelectFiles && args.getPolling().getPollingWait4SourceFolder().getValue()) {
                 // sourceDir!=null is already checked on method begin
-                if (source.exists(sourceDir.getPath())) {
+                if (sourceProvider.exists(sourceDir.getPath())) {
                     shouldSelectFiles = true;
                 } else {
-                    logger.info("[%s[%s]Source directory not found. Wait for the directory due to polling mode...", logPrefix, sourceDir);
+                    logger.info("[%s[%s]Source directory not found. Wait for the directory due to polling mode...", lp, sourceDir);
                     shouldSelectFiles = false;
                 }
             } else {
@@ -91,11 +94,30 @@ public class YADEEngineSourcePollingHandler {
             }
 
             if (shouldSelectFiles) {
-                if (singleFilesSpecified) {
+                try {
+                    if (singleFilesSpecified) {
 
-                } else {
+                    } else {
 
+                    }
+                    currentFilesCount = result.size();
+                } catch (Throwable e) {
+                    logger.error("%s[selectFiles]%s", lp, e.toString());
                 }
+
+                if (args.getPolling().pollMinFiles()) {
+                    int pollMinFiles = args.getPolling().getPollMinFiles().getValue();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("%s[pollMinFiles=%s][currentFilesCount=%s]", lp, pollMinFiles, currentFilesCount);
+                    }
+
+                    // if ((pollMinFiles == 0 && filesCount > 0) || (pollMinFiles > 0 && filesCount >= pollMinFiles)) {
+                    if (currentFilesCount >= Math.max(1, pollMinFiles)) {
+                        logger.debug("%s[pollMinFiles]break", lp);
+                        break pl;
+                    }
+                }
+
             }
 
             if (logger.isDebugEnabled()) {
@@ -103,49 +125,67 @@ public class YADEEngineSourcePollingHandler {
             }
             YADEEngineHelper.waitFor(interval);
             currentPollingTime += interval;
-            // if (filesCount >= currentFilesCount && filesCount != 0) {
-            // if (args.getWaitingForLateComers().isTrue()) {
-            // args.getWaitingForLateComers().setValue(Boolean.valueOf(true));
-            // } else {
-            // break pl;
-            // }
-            // }
 
-            // ensureConnected();
+            // TODO ???? YADE 1...
+            if (filesCount >= currentFilesCount && filesCount != 0) {
+                if (args.getPolling().getWaitingForLateComers().isTrue()) {
+                    args.getPolling().getWaitingForLateComers().setValue(Boolean.valueOf(false));
+                } else {
+                    break pl;
+                }
+            }
+
+            ensureConnected(logger, sourceProvider, lp, currentPollingTime);
         }
 
+        totalFilesCount += result.size();
         return result;
     }
 
-    public boolean startNextPollingCycle(int filesProcessed, boolean hasError) {
-        totalFiles += filesProcessed; // set total in all cases
-
-        if (!isPollingServer() || isPollingServerDurationElapsed()) {
+    public boolean startNextPollingCycle(ISOSLogger logger, boolean hasError) {
+        if (!isPollingServer() || isPollingServerDurationElapsed(logger)) {
             return false;
         }
-
         // YADEEngineHelper.printSummary(logger, args);
         // sendNotifications
-
         return true;
     }
 
-    private void ensureConnected(long pollingServerStartTime, long currentPollingTime) throws SOSYADEEngineSourcePollingException {
+    // TODO - from YADE 1 - optimize...
+    private void ensureConnected(ISOSLogger logger, IProvider sourceProvider, String lp, long currentPollingTime)
+            throws SOSYADEEngineSourcePollingException {
         try {
             boolean run = true;
             int count = 0;
             while (run) {
                 count++;
                 try {
-                    source.ensureConnected();
+                    sourceProvider.ensureConnected();
                     run = false;
                 } catch (Throwable e) {
                     if (PollingMethod.Forever.equals(method)) {
-                        if (count >= POLL_FOREVER_MAX_RETRIES_ON_CONNECTION_ERROR) {
+                        if (count >= POLLING_MAX_RETRIES_ON_CONNECTION_ERROR) {
                             throw new SOSYADEEngineSourcePollingException(String.format("Maximum reconnect retries(%s) reached",
-                                    POLL_FOREVER_MAX_RETRIES_ON_CONNECTION_ERROR), e);
+                                    POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), e);
+                        }
+                    } else {
+                        long currentTime = System.currentTimeMillis() / 1_000;
+                        long pollingTime = PollingMethod.ServerDuration.equals(method) ? start.getEpochSecond() : currentPollingTime;
+                        long duration = currentTime - pollingTime;
+                        if (duration >= getPollTimeout()) {
+                            throw new SOSYADEEngineSourcePollingException(e);
                         }
                     }
+
+                    String error = String.format("%s[reconnect][exception occured, wait %ss and try again (%s of %s)]%s", lp,
+                            WAIT_SECONDS_ON_CONNECTION_ERROR, count, POLLING_MAX_RETRIES_ON_CONNECTION_ERROR, e.toString());
+                    if (count % 100 == 1) {
+                        // JobSchedulerException.LastErrorMessage = error;
+                        // doProcessMail(enuMailClasses.MailOnError);
+                        // JobSchedulerException.LastErrorMessage = "";
+                    }
+                    logger.warn(error);
+                    YADEEngineHelper.waitFor(WAIT_SECONDS_ON_CONNECTION_ERROR);
                 }
             }
         } catch (Throwable e) {
@@ -193,7 +233,7 @@ public class YADEEngineSourcePollingHandler {
         return PollingMethod.ServerDuration.equals(method);
     }
 
-    public boolean isPollingServerDurationElapsed() {
+    private boolean isPollingServerDurationElapsed(ISOSLogger logger) {
         if (!enabled || !isServerDuration()) {
             return false;
         }

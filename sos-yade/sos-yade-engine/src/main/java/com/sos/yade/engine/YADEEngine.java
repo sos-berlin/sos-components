@@ -26,40 +26,43 @@ public class YADEEngine {
         IProvider targetProvider = null;
 
         try {
-            // 1 - print transfer configuration
+            /** 1) print transfer configuration */
             YADEEngineHelper.printBanner(logger, args);
 
-            // 2 - check/initialize configuration
+            /** 2) check/initialize configuration */
             YADEEngineHelper.checkArguments(args);
             YADEEngineHelper.setConfiguredSystemProperties(logger, args);
 
+            // initialize providers
             sourceProvider = YADEEngineHelper.getProvider(logger, args, true);
             targetProvider = YADEEngineHelper.getProvider(logger, args, false);
 
             // source handlers
-            YADEEngineSourcePollingHandler sourcePolling = new YADEEngineSourcePollingHandler(logger, sourceProvider, args.getSource());
+            YADEEngineSourcePollingHandler sourcePolling = new YADEEngineSourcePollingHandler(args.getSource());
             YADEEngineSourceZeroByteFilesHandler sourceZeroBytes = new YADEEngineSourceZeroByteFilesHandler();
 
-            // directories
+            // source/target normalized directories
             YADEDirectory sourceDir = YADEEngineHelper.getYADEDirectory(sourceProvider, args.getSource());
             YADEDirectory targetDir = YADEEngineHelper.getYADEDirectory(targetProvider, args.getTarget());
 
-            // custom YADE ProviderFile
+            // set YADE specific ProviderFile
             sourceProvider.setProviderFileCreator(builder -> new YADEProviderFile(builder.getFullPath(), builder.getSize(), builder
                     .getLastModifiedMillis(), args.getSource().checkSteadyState()));
 
-            // 3 - connect source provider
+            /** 3) connect source provider */
             connect(sourceProvider);
 
             if (sourcePolling.enabled()) {
                 pl: while (true) {
-                    // 4 - select files on source
-                    List<ProviderFile> sourceFiles = sourcePolling.selectFiles(sourceDir);
-                    // 5 - check source files steady
+                    /** 4) select files on source */
+                    List<ProviderFile> sourceFiles = sourcePolling.selectFiles(logger, sourceProvider, sourceDir);
+
+                    /** 5) check source files steady */
                     if (!YADEEngineSourceSteadyFilesHandler.checkFilesSteady(logger, sourceProvider, args.getSource(), sourceFiles)) {
                         break pl;
                     }
-                    // 6 - handleZeroByteFiles on source - NOT throw exception
+
+                    /** 6) handleZeroByteFiles on source - NOT throw exception */
                     boolean shouldExecuteOperation = true;
                     try {
                         sourceFiles = sourceZeroBytes.filter(logger, args.getSource(), sourceFiles);
@@ -67,31 +70,38 @@ public class YADEEngine {
                         logger.error("[%s]%s", sourcePolling.getMethod(), e.toString());
                         shouldExecuteOperation = false;
                     }
+
                     if (shouldExecuteOperation) {
-                        // 7 - connect target provider
+                        /** 7) connect target provider */
                         connect(targetProvider);
-                        // 8 - transfer
+                
+                        /** 8) transfer */
                         // -- handle operations: GetList etc
                     }
+
                     disconnect(targetProvider);
-                    if (!sourcePolling.startNextPollingCycle(sourceFiles.size(), !shouldExecuteOperation)) {
+                    if (!sourcePolling.startNextPollingCycle(logger, !shouldExecuteOperation)) {
                         break pl;
                     }
                 }
             } else {
-                // 4 - select files on source
+                /** 4) select files on source */
                 List<ProviderFile> sourceFiles = sourceProvider.selectFiles("");
-                // 5 - check source files steady
+
+                /** 5) check source files steady */
                 if (YADEEngineSourceSteadyFilesHandler.checkFilesSteady(logger, sourceProvider, args.getSource(), sourceFiles)) {
-                    // 6 - handleZeroByteFiles on source - throws exception
+
+                    /** 6) handleZeroByteFiles on source - throws exception */
                     sourceFiles = sourceZeroBytes.filter(logger, args.getSource(), sourceFiles);
-                    // 7 - connect target provider
+
+                    /** 7) connect target provider */
                     connect(targetProvider);
-                    // 8 - transfer
+
+                    /** 8) transfer */
                     // -- handle operations: GetList etc
                 }
             }
-            // 9 - disconnect
+            /** 9) disconnect */
             disconnect(sourceProvider, targetProvider);
             sourceProvider = null;
             targetProvider = null;
@@ -99,7 +109,7 @@ public class YADEEngine {
             throw e;
         } finally {
             disconnect(sourceProvider, targetProvider);// if exception
-            // 5 - print summary
+            // 10 - print summary
             YADEEngineHelper.printSummary(logger, args);
         }
     }

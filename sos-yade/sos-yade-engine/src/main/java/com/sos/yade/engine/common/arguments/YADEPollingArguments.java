@@ -18,10 +18,14 @@ public class YADEPollingArguments {
     private SOSArgument<Boolean> pollingWait4SourceFolder = new SOSArgument<>("polling_wait_4_source_folder", false, Boolean.valueOf(false));
     private SOSArgument<Boolean> waitingForLateComers = new SOSArgument<>("waiting_for_late_comers", false, Boolean.valueOf(false));
 
-    private SOSArgument<Integer> pollMinfiles = new SOSArgument<>("poll_minfiles", false);
+    private SOSArgument<Integer> pollMinFiles = new SOSArgument<>("poll_minfiles", false);
     // minutes
     private SOSArgument<Integer> pollTimeout = new SOSArgument<>("poll_timeout", false);
     // declared by not used with YADE 1: polling_end_at, pollKeepConnection
+
+    public boolean pollMinFiles() {
+        return pollMinFiles.getValue() != null;
+    }
 
     public SOSArgument<Boolean> getPollingServer() {
         return pollingServer;
@@ -47,8 +51,8 @@ public class YADEPollingArguments {
         return waitingForLateComers;
     }
 
-    public SOSArgument<Integer> getPollMinfiles() {
-        return pollMinfiles;
+    public SOSArgument<Integer> getPollMinFiles() {
+        return pollMinFiles;
     }
 
     public SOSArgument<Integer> getPollTimeout() {
