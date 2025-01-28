@@ -24,6 +24,7 @@ import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProviderArguments.Protocol;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
@@ -288,6 +289,63 @@ public class SSHJProvider extends ASSHProvider {
             }
         }
         return false;
+    }
+
+    @Override
+    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
+        selection = ProviderFileSelection.createIfNull(selection);
+
+        String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
+        List<ProviderFile> result = new ArrayList<>();
+        try {
+            int counterAdded = 0;
+            result.addAll(selectFiles(selection, directory, counterAdded));
+        } catch (SOSProviderException e) {
+            throw e;
+        }
+
+        return result;
+    }
+
+    // possible recursion
+    private List<ProviderFile> selectFiles(ProviderFileSelection selection, String directoryPath, int counterAdded) throws SOSProviderException {
+        List<ProviderFile> recursiveResult = new ArrayList<>();
+        try {
+            List<RemoteResourceInfo> subDirInfos = sftpClient.ls(directoryPath);
+            for (RemoteResourceInfo subResource : subDirInfos) {
+                if (selection.maxFilesExceeded(counterAdded)) {
+                    return recursiveResult;
+                }
+                processRemoteResource(selection, subResource, counterAdded, recursiveResult);
+            }
+        } catch (Throwable e) {
+            throw new SOSProviderException(e);
+        }
+        return recursiveResult;
+    }
+
+    private void processRemoteResource(ProviderFileSelection selection, RemoteResourceInfo resource, int counterAdded, List<ProviderFile> result)
+            throws SOSProviderException {
+        if (resource.isDirectory()) {
+            if (selection.getConfig().isRecursive()) {
+                if (selection.checkDirectory(resource.getPath())) {
+                    List<ProviderFile> recursiveFiles = selectFiles(selection, resource.getPath(), counterAdded);
+                    result.addAll(recursiveFiles);
+                }
+            }
+        } else {
+            FileAttributes attr = resource.getAttributes();
+            if (attr != null && isFileType(attr.getType())) {
+                String fileName = resource.getName();
+                if (selection.checkFileName(fileName)) {
+                    ProviderFile file = createProviderFile(resource.getPath(), attr.getSize(), getFileLastModifiedMillis(attr));
+                    if (selection.checkProviderFile(file)) {
+                        counterAdded++;
+                        result.add(file);
+                    }
+                }
+            }
+        }
     }
 
     @Override

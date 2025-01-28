@@ -62,7 +62,6 @@ public class YADESourcePollingHandler {
 
         List<ProviderFile> result = new ArrayList<>();
 
-        boolean singleFilesSpecified = args.singleFilesSpecified();
         int currentFilesCount = 0;
         int filesCount = 0;// TODO unclear ...
         long currentPollingTime = 0;
@@ -97,11 +96,7 @@ public class YADESourcePollingHandler {
 
             if (shouldSelectFiles) {
                 try {
-                    if (singleFilesSpecified) {
-
-                    } else {
-
-                    }
+                    result = YADESourceFilesSelector.selectFiles(logger, sourceProvider, args, sourceDir, true);
                     currentFilesCount = result.size();
                 } catch (Throwable e) {
                     logger.error("%s[selectFiles]%s", lp, e.toString());

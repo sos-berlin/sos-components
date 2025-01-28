@@ -81,6 +81,20 @@ public class YADEHelper {
         return new SOSYADEEngineTargetConnectionException(ex);
     }
 
+    public static boolean isConnectionException(Throwable cause) {
+        if (cause == null) {
+            return false;
+        }
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof SOSYADEEngineConnectionException) {
+                return true;
+            }
+            e = e.getCause();
+        }
+        return false;
+    }
+
     // public static List<String> getSourceSingleFiles(ISOSLogger logger, YADEArguments args, IProvider source, String sourceDir, boolean isPolling) {
     // List<String> entries = new ArrayList<>();
     // if (!args.getFilePath().isEmpty()) {
@@ -98,14 +112,14 @@ public class YADEHelper {
         if (args == null) {
             return null;
         }
-        return getYADEDirectory(provider, args.getSourceDir());
+        return getYADEDirectory(provider, args.getDirectory());
     }
 
     public static YADEDirectory getYADEDirectory(IProvider provider, YADETargetArguments args) {
         if (args == null) {
             return null;
         }
-        return getYADEDirectory(provider, args.getTargetDir());
+        return getYADEDirectory(provider, args.getDirectory());
     }
 
     private static YADEDirectory getYADEDirectory(IProvider provider, SOSArgument<String> arg) {

@@ -41,21 +41,11 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<Boolean> overwriteFiles = new SOSArgument<>("overwrite_files", false, Boolean.valueOf(true));
 
     private SOSArgument<Boolean> transactional = new SOSArgument<>("transactional", false, Boolean.valueOf(false));
-    private SOSArgument<Boolean> recursive = new SOSArgument<>("recursive", false, Boolean.valueOf(false));
     private SOSArgument<Boolean> appendFiles = new SOSArgument<>("append_files", false, Boolean.valueOf(false));
     private SOSArgument<Boolean> removeFiles = new SOSArgument<>("remove_files", false, Boolean.valueOf(false));
 
     // YADE 1 used in code but not defined in schema...
     // private SOSArgument<Boolean> skipTransfer = new SOSArgument<>("skip_transfer", false, Boolean.valueOf(false));
-
-    // TODO time
-    private SOSArgument<String> maxFileAge = new SOSArgument<>("max_file_age", false);
-    private SOSArgument<String> minFileAge = new SOSArgument<>("min_file_age", false);
-
-    private SOSArgument<Long> maxFileSize = new SOSArgument<>("max_file_size", false);
-    private SOSArgument<Long> minFileSize = new SOSArgument<>("min_file_size", false);
-
-    private SOSArgument<Integer> maxFiles = new SOSArgument<>("max_files", false);
 
     private SOSArgument<String> atomicPrefix = new SOSArgument<>("atomic_prefix", false);
     private SOSArgument<String> atomicSuffix = new SOSArgument<>("atomic_suffix", false);
@@ -153,10 +143,6 @@ public class YADEArguments extends ASOSArguments {
         return overwriteFiles;
     }
 
-    public SOSArgument<Boolean> getRecursive() {
-        return recursive;
-    }
-
     public SOSArgument<Boolean> getAppendFiles() {
         return appendFiles;
     }
@@ -167,26 +153,6 @@ public class YADEArguments extends ASOSArguments {
 
     public SOSArgument<Boolean> getTransactional() {
         return transactional;
-    }
-
-    public SOSArgument<String> getMaxFileAge() {
-        return maxFileAge;
-    }
-
-    public SOSArgument<String> getMinFileAge() {
-        return minFileAge;
-    }
-
-    public SOSArgument<Long> getMaxFileSize() {
-        return maxFileSize;
-    }
-
-    public SOSArgument<Long> getMinFileSize() {
-        return minFileSize;
-    }
-
-    public SOSArgument<Integer> getMaxFiles() {
-        return maxFiles;
     }
 
     public SOSArgument<String> getAtomicPrefix() {

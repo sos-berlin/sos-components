@@ -11,6 +11,7 @@ import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.arguments.YADEArguments;
 import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.common.handler.YADECommandsHandler;
+import com.sos.yade.engine.common.handler.source.YADESourceFilesSelector;
 import com.sos.yade.engine.common.handler.source.YADESourcePollingHandler;
 import com.sos.yade.engine.common.handler.source.YADESourceSteadyFilesHandler;
 import com.sos.yade.engine.common.handler.source.YADESourceZeroByteFilesHandler;
@@ -97,9 +98,13 @@ public class YADEEngine {
                         /** 11) execute commands after operation on success */
                         try {
                             YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceProvider, args.getSource(), sourceDir);
-                            YADECommandsHandler.executeAfterOperationOnSuccess(logger, targetProvider, args.getTarget(), targetDir);
                         } catch (Throwable e) {
                             logger.error("%s[%s]%s", sourceProvider.getContext().getLogPrefix(), sourcePolling.getMethod(), e.toString());
+                        }
+                        try {
+                            YADECommandsHandler.executeAfterOperationOnSuccess(logger, targetProvider, args.getTarget(), targetDir);
+                        } catch (Throwable e) {
+                            logger.error("%s[%s]%s", targetProvider.getContext().getLogPrefix(), sourcePolling.getMethod(), e.toString());
                         }
                     }
 
@@ -113,7 +118,7 @@ public class YADEEngine {
                 }
             } else {
                 /** 5) select files on source */
-                List<ProviderFile> sourceFiles = sourceProvider.selectFiles("");
+                List<ProviderFile> sourceFiles = YADESourceFilesSelector.selectFiles(logger, sourceProvider, args.getSource(), sourceDir, false);
 
                 /** 6) check source files steady */
                 if (YADESourceSteadyFilesHandler.checkFilesSteady(logger, sourceProvider, args.getSource(), sourceFiles)) {

@@ -8,6 +8,7 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.ProviderFileBuilder;
+import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
 
@@ -86,7 +87,7 @@ public interface IProvider {
 
     public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> creator);
 
-    public List<ProviderFile> selectFiles(String path) throws SOSProviderException;
+    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException;
 
     public long getFileSize(String path) throws SOSProviderException;
 

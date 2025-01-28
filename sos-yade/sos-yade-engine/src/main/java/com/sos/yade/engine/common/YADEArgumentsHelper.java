@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.SOSArgument;
 
 public class YADEArgumentsHelper {
 
@@ -13,5 +14,12 @@ public class YADEArgumentsHelper {
             return null;
         }
         return Stream.of(val.split(listValueDelimiter)).filter(e -> !SOSString.isEmpty(e)).collect(Collectors.toList());
+    }
+
+    public static String toString(SOSArgument<List<String>> arg, String listValueDelimiter) {
+        if (arg == null || arg.getValue() == null) {
+            return null;
+        }
+        return String.join(listValueDelimiter, arg.getValue());
     }
 }
