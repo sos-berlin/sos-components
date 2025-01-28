@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.YADEDirectory;
 import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineSourcePollingException;
@@ -47,7 +47,7 @@ public class YADESourcePollingHandler {
         }
     }
 
-    public List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, YADEDirectory sourceDir)
+    public List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, ProviderDirectoryPath sourceDir)
             throws SOSYADEEngineSourcePollingException {
         if (start == null) {
             if (args.getPolling().getPollingWait4SourceFolder().getValue() && sourceDir == null) {

@@ -6,6 +6,7 @@ import java.util.function.Function;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.ProviderFileBuilder;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
@@ -77,9 +78,7 @@ public interface IProvider {
 
     public boolean isAbsolutePath(String path);
 
-    public String getDirectoryPathWithoutTrailingSeparator(String path);
-
-    public String getDirectoryPathWithTrailingSeparator(String path);
+    public ProviderDirectoryPath getDirectoryPath(String path);
 
     public ProviderFile getFileIfExists(String path) throws SOSProviderException;
 
@@ -89,7 +88,7 @@ public interface IProvider {
 
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException;
 
-    public long getFileSize(String path) throws SOSProviderException;
+    // public long getFileSize(String path) throws SOSProviderException;
 
     /** Returns the modification time in milliseconds or -1<br/>
      * (the time cannot be evaluated, e.g. because the file does not exist, ...)<br/>
@@ -97,7 +96,7 @@ public interface IProvider {
      * 
      * @param path
      * @return */
-    public long getFileLastModifiedMillis(String path);
+    // public long getFileLastModifiedMillis(String path);
 
     /** Sets modification time from milliseconds.<br/>
      * Does not throw exceptions, but should report errors at warning level</br>

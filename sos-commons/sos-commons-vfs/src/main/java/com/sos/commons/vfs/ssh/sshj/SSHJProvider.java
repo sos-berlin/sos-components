@@ -392,50 +392,50 @@ public class SSHJProvider extends ASSHProvider {
         return is(path, FileMode.Type.DIRECTORY);
     }
 
-    @Override
-    public long getFileSize(String path) throws SOSProviderException {
-        checkBeforeOperation(path, "path");
+    // @Override
+    // public long getFileSize(String path) throws SOSProviderException {
+    // checkBeforeOperation(path, "path");
 
-        try {
-            FileAttributes attr = sftpClient.stat(path);
-            if (attr != null) {
-                Long result = Long.valueOf(attr.getSize());
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[getSize][%s]%s", getLogPrefix(), path, result);
-                }
-                return result;
-            }
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getSize][%s][null]attr=null", getLogPrefix(), path);
-            }
-            return DEFAULT_FILE_ATTR_VALUE;
-        } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[getSize][" + path + "]", e);
-        }
-    }
+    // try {
+    // FileAttributes attr = sftpClient.stat(path);
+    // if (attr != null) {
+    // Long result = Long.valueOf(attr.getSize());
+    // if (getLogger().isDebugEnabled()) {
+    // getLogger().debug("%s[getSize][%s]%s", getLogPrefix(), path, result);
+    // }
+    // return result;
+    // }
+    // if (getLogger().isDebugEnabled()) {
+    // getLogger().debug("%s[getSize][%s][null]attr=null", getLogPrefix(), path);
+    // }
+    // return DEFAULT_FILE_ATTR_VALUE;
+    // } catch (Throwable e) {
+    // throw new SOSProviderException(getLogPrefix() + "[getSize][" + path + "]", e);
+    // }
+    // }
 
-    @Override
-    public long getFileLastModifiedMillis(String path) {
-        try {
-            checkBeforeOperation(path, "path");
+    // @Override
+    // public long getFileLastModifiedMillis(String path) {
+    // try {
+    // checkBeforeOperation(path, "path");
 
-            FileAttributes attr = sftpClient.stat(path);
-            if (attr != null) {
-                long result = getFileLastModifiedMillis(attr);
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, result);
-                }
-                return result;
-            }
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getFileLastModifiedMillis][%s][null]attr=null", getLogPrefix(), path);
-            }
-            return DEFAULT_FILE_ATTR_VALUE;
-        } catch (Throwable e) {
-            getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, e);
-            return DEFAULT_FILE_ATTR_VALUE;
-        }
-    }
+    // FileAttributes attr = sftpClient.stat(path);
+    // if (attr != null) {
+    // long result = getFileLastModifiedMillis(attr);
+    // if (getLogger().isDebugEnabled()) {
+    // getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, result);
+    // }
+    // return result;
+    // }
+    // if (getLogger().isDebugEnabled()) {
+    // getLogger().debug("%s[getFileLastModifiedMillis][%s][null]attr=null", getLogPrefix(), path);
+    // }
+    // return DEFAULT_FILE_ATTR_VALUE;
+    // } catch (Throwable e) {
+    // getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, e);
+    // return DEFAULT_FILE_ATTR_VALUE;
+    // }
+    // }
 
     private long getFileLastModifiedMillis(FileAttributes attr) {
         // getMtime is in seconds

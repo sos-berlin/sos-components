@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.YADEDirectory;
 import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.arguments.YADEArguments;
@@ -29,8 +29,8 @@ public class YADEEngine {
         IProvider sourceProvider = null;
         IProvider targetProvider = null;
 
-        YADEDirectory sourceDir = null;
-        YADEDirectory targetDir = null;
+        ProviderDirectoryPath sourceDir = null;
+        ProviderDirectoryPath targetDir = null;
 
         Throwable exception = null;
         try {
@@ -46,8 +46,8 @@ public class YADEEngine {
             targetProvider = YADEHelper.getProvider(logger, args, false);
 
             // source/target normalized directories
-            sourceDir = YADEHelper.getYADEDirectory(sourceProvider, args.getSource());
-            targetDir = YADEHelper.getYADEDirectory(targetProvider, args.getTarget());
+            sourceDir = sourceProvider.getDirectoryPath(args.getSource().getDirectory().getValue());
+            targetDir = targetProvider == null ? null : targetProvider.getDirectoryPath(args.getTarget().getDirectory().getValue());
 
             // source handlers
             YADESourcePollingHandler sourcePolling = new YADESourcePollingHandler(args.getSource());

@@ -12,55 +12,66 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.YADEDirectory;
+import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineSourceFilesSelectorException;
 
 public class YADESourceFilesSelector {
 
-    public static List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args, YADEDirectory sourceDirectory,
-            boolean polling) throws SOSYADEEngineSourceFilesSelectorException {
+    public static List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args,
+            ProviderDirectoryPath sourceDirectory, boolean polling) throws SOSYADEEngineSourceFilesSelectorException {
 
-        int maxFiles = args.getMaxFiles().getValue() == null ? -1 : args.getMaxFiles().getValue().intValue();
-        // TODO max/min file size currently not supported by the configuration/schema
-        // convert to bytes
-        long maxFileSize = args.getMaxFileSize().getValue() == null ? -1L : args.getMaxFileSize().getValue().longValue();
-        long minFileSize = args.getMinFileSize().getValue() == null ? -1L : args.getMinFileSize().getValue().longValue();
-
-        List<ProviderFile> result;
         if (args.singleFilesSpecified()) {
-            result = selectSingleFiles(logger, sourceProvider, args, sourceDirectory, polling, maxFiles, maxFileSize, minFileSize);
+            return selectSingleFiles(logger, sourceProvider, args, sourceDirectory, polling);
         } else {
-            result = selectFiles(logger, sourceProvider, args, sourceDirectory, polling, maxFiles, maxFileSize, minFileSize);
+            return selectFiles(logger, sourceProvider, args, sourceDirectory);
         }
-
-        return result;
     }
 
     private static List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args,
-            YADEDirectory sourceDirectory, boolean polling, int maxFiles, long maxFileSize, long minFileSize)
-            throws SOSYADEEngineSourceFilesSelectorException {
+            ProviderDirectoryPath sourceDirectory) throws SOSYADEEngineSourceFilesSelectorException {
 
         // TODO HTTP Provider
         // if(sourceProvider instanceof HTTPProvider) {
         // throw new SOSYADEEngineSourceFilesSelectorException("a file spec selection is not supported with http(s) protocol");
         // }
 
+        ProviderFileSelectionConfig.Builder builder = new ProviderFileSelectionConfig.Builder();
         // case sensitive
-        Pattern filePattern = Pattern.compile(args.getFileSpec().getValue(), 0);
-        Pattern excludedDirectoriesPattern = SOSString.isEmpty(args.getExcludedDirectories().getValue()) ? null : Pattern.compile(args
-                .getExcludedDirectories().getValue(), 0);
-        boolean recursive = args.getRecursive().getValue() == null ? false : args.getRecursive().getValue().booleanValue();
+        builder.fileNamePattern(Pattern.compile(args.getFileSpec().getValue(), 0));
+        if (!SOSString.isEmpty(args.getExcludedDirectories().getValue())) {
+            // case sensitive
+            builder.excludedDirectoriesPattern(Pattern.compile(args.getExcludedDirectories().getValue(), 0));
+        }
+        builder.recursive(args.getRecursive().getValue() == null ? false : args.getRecursive().getValue().booleanValue());
+        if (args.getMaxFiles().getValue() != null) {
+            builder.maxFiles(args.getMaxFiles().getValue().intValue());
+        }
+        if (args.getMaxFileSize().getValue() != null) {
+            builder.maxFileSize(args.getMaxFileSize().getValue().intValue());
+        }
+        if (args.getMinFileSize().getValue() != null) {
+            builder.minFileSize(args.getMinFileSize().getValue().intValue());
+        }
 
-        // sourceProvider.selectFiles("");
-
-        return null;
+        try {
+            return sourceProvider.selectFiles(new ProviderFileSelection(builder.build()));
+        } catch (Throwable e) {
+            throw new SOSYADEEngineSourceFilesSelectorException(e);
+        }
     }
 
     private static List<ProviderFile> selectSingleFiles(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args,
-            YADEDirectory sourceDirectory, boolean polling, int maxFiles, long maxFileSize, long minFileSize)
-            throws SOSYADEEngineSourceFilesSelectorException {
+            ProviderDirectoryPath sourceDirectory, boolean polling) throws SOSYADEEngineSourceFilesSelectorException {
+
+        int maxFiles = args.getMaxFiles().getValue() == null ? -1 : args.getMaxFiles().getValue().intValue();
+        // TODO max/min file size currently not supported by the configuration/schema
+        // convert to bytes
+        long maxFileSize = args.getMaxFileSize().getValue() == null ? -1L : args.getMaxFileSize().getValue().longValue();
+        long minFileSize = args.getMinFileSize().getValue() == null ? -1L : args.getMinFileSize().getValue().longValue();
 
         String lp = sourceProvider.getContext().getLogPrefix() + "[selectSingleFiles]";
         List<String> singleFiles = null;

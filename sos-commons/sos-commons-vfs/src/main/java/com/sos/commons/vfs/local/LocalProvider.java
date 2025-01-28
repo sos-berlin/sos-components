@@ -17,14 +17,15 @@ import java.util.concurrent.TimeUnit;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.commons.vfs.exception.SOSProviderInitializationException;
@@ -37,6 +38,20 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         if (getArguments().getCredentialStore() != null) {
             // e.g. see SSHProvider
         }
+    }
+
+    @Override
+    public boolean isAbsolutePath(String path) {
+        return SOSPathUtil.isAbsolutePathFileSystemStyle(path);
+    }
+
+    @Override
+    public ProviderDirectoryPath getDirectoryPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return null;
+        }
+        return new ProviderDirectoryPath(SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(path), SOSPathUtil
+                .getUnixStyleDirectoryWithTrailingSeparator(path));
     }
 
     @Override
@@ -346,36 +361,36 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         }
     }
 
-    @Override
-    public long getFileSize(String path) throws SOSProviderException {
-        checkParam(path, "path");
+    // @Override
+    // public long getFileSize(String path) throws SOSProviderException {
+    // checkParam(path, "path");
 
-        try {
-            long result = SOSPath.getFileSize(path);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getFileSize][%s]%s", getLogPrefix(), path, result);
-            }
-            return result;
-        } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[getFileSize][" + path + "]", e);
-        }
-    }
+    // try {
+    // long result = SOSPath.getFileSize(path);
+    // if (getLogger().isDebugEnabled()) {
+    // getLogger().debug("%s[getFileSize][%s]%s", getLogPrefix(), path, result);
+    // }
+    // return result;
+    // } catch (Throwable e) {
+    // throw new SOSProviderException(getLogPrefix() + "[getFileSize][" + path + "]", e);
+    // }
+    // }
 
-    @Override
-    public long getFileLastModifiedMillis(String path) {
-        try {
-            checkParam(path, "path");
+    // @Override
+    // public long getFileLastModifiedMillis(String path) {
+    // try {
+    // checkParam(path, "path");
 
-            long result = SOSPath.getLastModifiedMillis(path);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, result);
-            }
-            return result;
-        } catch (Throwable e) {
-            getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, e);
-            return DEFAULT_FILE_ATTR_VALUE;
-        }
-    }
+    // long result = SOSPath.getLastModifiedMillis(path);
+    // if (getLogger().isDebugEnabled()) {
+    // getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, result);
+    // }
+    // return result;
+    // } catch (Throwable e) {
+    // getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, e);
+    // return DEFAULT_FILE_ATTR_VALUE;
+    // }
+    // }
 
     @Override
     public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
@@ -398,11 +413,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getLogPrefix(), path, milliseconds, e);
             return false;
         }
-    }
-
-    @Override
-    public boolean isAbsolutePath(String path) {
-        return SOSPathUtil.isAbsolutePathFileSystemStyle(path);
     }
 
     @Override

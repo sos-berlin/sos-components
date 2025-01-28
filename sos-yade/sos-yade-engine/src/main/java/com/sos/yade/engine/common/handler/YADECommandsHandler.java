@@ -6,8 +6,8 @@ import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.yade.engine.common.YADEArgumentsHelper;
-import com.sos.yade.engine.common.YADEDirectory;
 import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineCommandException;
@@ -40,8 +40,8 @@ public class YADECommandsHandler {
         }
     }
 
-    public static void executeAfterOperationOnSuccess(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args, YADEDirectory directory)
-            throws SOSYADEEngineCommandException {
+    public static void executeAfterOperationOnSuccess(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args,
+            ProviderDirectoryPath directory) throws SOSYADEEngineCommandException {
         if (provider == null || !args.commandsAfterOperationOnSuccess()) {
             return;
         }
@@ -49,8 +49,8 @@ public class YADECommandsHandler {
                 .getCommandDelimiter(), directory, null);
     }
 
-    public static void executeAfterOperationOnError(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args, YADEDirectory directory,
-            Throwable exception) {
+    public static void executeAfterOperationOnError(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args,
+            ProviderDirectoryPath directory, Throwable exception) {
         if (provider == null || !args.commandsAfterOperationOnError()) {
             return;
         }
@@ -62,8 +62,8 @@ public class YADECommandsHandler {
         }
     }
 
-    public static void executeAfterOperationFinal(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args, YADEDirectory directory,
-            Throwable exception) {
+    public static void executeAfterOperationFinal(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args,
+            ProviderDirectoryPath directory, Throwable exception) {
         if (provider == null || !args.commandsAfterOperationFinal()) {
             return;
         }
@@ -76,7 +76,7 @@ public class YADECommandsHandler {
     }
 
     private static void executeAfterOperationCommands(ISOSLogger logger, IProvider provider, SOSArgument<List<String>> arg,
-            SOSArgument<String> commandDelimiter, YADEDirectory directory, Throwable exception) throws SOSYADEEngineCommandException {
+            SOSArgument<String> commandDelimiter, ProviderDirectoryPath directory, Throwable exception) throws SOSYADEEngineCommandException {
 
         String lp = provider.getContext().getLogPrefix();
         String an = arg.getName();

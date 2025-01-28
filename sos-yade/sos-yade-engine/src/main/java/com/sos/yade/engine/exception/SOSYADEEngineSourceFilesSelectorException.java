@@ -11,4 +11,8 @@ public class SOSYADEEngineSourceFilesSelectorException extends SOSYADEEngineExce
     public SOSYADEEngineSourceFilesSelectorException(String msg, Throwable cause) {
         super(msg, cause);
     }
+
+    public SOSYADEEngineSourceFilesSelectorException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -1,16 +1,13 @@
-package com.sos.yade.engine.common;
+package com.sos.commons.vfs.common.file;
 
-import com.sos.commons.vfs.common.IProvider;
-
-public class YADEDirectory {
+public class ProviderDirectoryPath {
 
     private final String path;
     private final String pathWithTrailingSeparator;
 
-    // TODO check if starts like WindowsOpenSSH /C:/....
-    public YADEDirectory(IProvider provider, String path) {
-        this.path = provider.getDirectoryPathWithoutTrailingSeparator(path);
-        this.pathWithTrailingSeparator = provider.getDirectoryPathWithTrailingSeparator(path);
+    public ProviderDirectoryPath(String pathWithoutTrailingSeparator, String pathWithTrailingSeparator) {
+        this.path = pathWithoutTrailingSeparator;
+        this.pathWithTrailingSeparator = pathWithTrailingSeparator;
     }
 
     /** @return path without trailing separator or null */
@@ -27,7 +24,7 @@ public class YADEDirectory {
      * 
      * @param other
      * @return */
-    public boolean equalsIgnoreCase(YADEDirectory other) {
+    public boolean equalsIgnoreCase(ProviderDirectoryPath other) {
         if (other == null) {
             return false;
         }
@@ -49,7 +46,7 @@ public class YADEDirectory {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        YADEDirectory other = (YADEDirectory) obj;
+        ProviderDirectoryPath other = (ProviderDirectoryPath) obj;
         return this.path.equals(other.path);
     }
 
@@ -57,5 +54,4 @@ public class YADEDirectory {
     public String toString() {
         return path;
     }
-
 }

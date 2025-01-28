@@ -83,15 +83,15 @@ public class SSHProvider extends ASSHProvider {
         return provider.isDirectory(path);
     }
 
-    @Override
-    public long getFileSize(String path) throws SOSProviderException {
-        return provider.getFileSize(path);
-    }
+    // @Override
+    // public long getFileSize(String path) throws SOSProviderException {
+    // return provider.getFileSize(path);
+    // }
 
-    @Override
-    public long getFileLastModifiedMillis(String path) {
-        return provider.getFileLastModifiedMillis(path);
-    }
+    // @Override
+    // public long getFileLastModifiedMillis(String path) {
+    // return provider.getFileLastModifiedMillis(path);
+    // }
 
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {

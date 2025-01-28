@@ -72,24 +72,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
-    @Override
-    public String getDirectoryPathWithoutTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixStylePath(path);
-        if (p == null) {
-            return null;
-        }
-        return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
-    }
-
-    @Override
-    public String getDirectoryPathWithTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixStylePath(path);
-        if (p == null) {
-            return null;
-        }
-        return path.endsWith("/") ? path : path + "/";
-    }
-
     /** Provider (non-YADE) method */
     public List<ProviderFile> selectFiles(String directory) throws SOSProviderException {
         return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));

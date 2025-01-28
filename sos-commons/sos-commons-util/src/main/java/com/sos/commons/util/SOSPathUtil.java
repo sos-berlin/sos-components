@@ -71,6 +71,22 @@ public class SOSPathUtil {
         return (li > 0) ? np.substring(0, li) : null;
     }
 
+    public static String getUnixStyleDirectoryWithoutTrailingSeparator(String path) {
+        String p = SOSPathUtil.toUnixStylePath(path);
+        if (p == null) {
+            return null;
+        }
+        return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+    }
+
+    public static String getUnixStyleDirectoryWithTrailingSeparator(String path) {
+        String p = SOSPathUtil.toUnixStylePath(path);
+        if (p == null) {
+            return null;
+        }
+        return path.endsWith("/") ? path : path + "/";
+    }
+
     /** Windows OpenSSH-style paths (/C:/...) */
     private static boolean isAbsolutePathWindowsOpenSSHPathStyle(String unixStylePath) {
         return unixStylePath.matches("^/[a-zA-Z]:/.*");
