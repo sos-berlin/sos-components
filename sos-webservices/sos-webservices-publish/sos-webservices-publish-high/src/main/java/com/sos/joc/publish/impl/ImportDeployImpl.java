@@ -323,6 +323,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s), %5$d JobResource(s) and %6$d Board(s).",
                     controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources, countBoards));
             JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
+            JocInventory.postDeployHistoryEvent(deployedObjects);
         }
 //        boolean verified = false;
         boolean selfIssued = false;

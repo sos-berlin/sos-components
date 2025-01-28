@@ -780,7 +780,6 @@ public abstract class PublishUtils {
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
-                JocInventory.postDeployHistoryEvent(newDeployedObject);
                 DBItemDepSignatures signature = entry.getValue();
                 if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
@@ -863,7 +862,7 @@ public abstract class PublishUtils {
             cloneDepHistoryItemsToNewEntries(deployedWithSignature, dbLayerDeploy);
     }
     
-    public static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
+    protected static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
             String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
         try {
             if (depHistoryItem.getId() != null) {
@@ -899,7 +898,6 @@ public abstract class PublishUtils {
                 } else {
                     dbLayerDeploy.getSession().update(depHistoryItem);
                 }
-                JocInventory.postDeployHistoryEvent(depHistoryItem);
                 if (depSignatureItem != null) {
                     depSignatureItem.setDepHistoryId(depHistoryItem.getId());
                     dbLayerDeploy.getSession().save(depSignatureItem);
@@ -914,46 +912,47 @@ public abstract class PublishUtils {
         return depHistoryItem;
     }
 
-    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
-            String controllerId, Date deploymentDate, Long auditlogId) {
-        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
-        for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
-            if (deployed.getId() != null) {
-                DBItemDepSignatures signature = deployedWithSignature.get(deployed);
-                deployedObjects.add(cloneDepHistoryItemsToNewEntry(deployed, signature, account, dbLayerDeploy, commitId, controllerId,
-                        deploymentDate, auditlogId));
-            }
-        }
-        return deployedObjects;
-    }
+//    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
+//            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+//            String controllerId, Date deploymentDate, Long auditlogId) {
+//        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+//        for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
+//            if (deployed.getId() != null) {
+//                DBItemDepSignatures signature = deployedWithSignature.get(deployed);
+//                deployedObjects.add(cloneDepHistoryItemsToNewEntry(deployed, signature, account, dbLayerDeploy, commitId, controllerId,
+//                        deploymentDate, auditlogId));
+//                JocInventory.postDeployHistoryEvent(deployed);
+//            }
+//        }
+//        return deployedObjects;
+//    }
 
-    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(List<DBItemDeploymentHistory> redeployedItems, String account,
-            DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate) {
-        Set<DBItemDeploymentHistory> deployedObjects;
-        try {
-            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
-            deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            for (DBItemDeploymentHistory redeployed : redeployedItems) {
-                redeployed.setId(null);
-                redeployed.setAccount(account);
-                redeployed.setControllerId(controllerId);
-                redeployed.setControllerInstanceId(controllerInstance.getId());
-                redeployed.setDeploymentDate(deploymentDate);
-                redeployed.setOperation(OperationType.UPDATE.value());
-                redeployed.setState(DeploymentState.DEPLOYED.value());
-                if (redeployed.getSignedContent() == null || redeployed.getSignedContent().isEmpty()) {
-                    redeployed.setSignedContent(".");
-                }
-                dbLayerDeploy.getSession().save(redeployed);
-                JocInventory.postDeployHistoryEvent(redeployed);
-                deployedObjects.add(redeployed);
-            }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-        return deployedObjects;
-    }
+//    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(List<DBItemDeploymentHistory> redeployedItems, String account,
+//            DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate) {
+//        Set<DBItemDeploymentHistory> deployedObjects;
+//        try {
+//            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
+//            deployedObjects = new HashSet<DBItemDeploymentHistory>();
+//            for (DBItemDeploymentHistory redeployed : redeployedItems) {
+//                redeployed.setId(null);
+//                redeployed.setAccount(account);
+//                redeployed.setControllerId(controllerId);
+//                redeployed.setControllerInstanceId(controllerInstance.getId());
+//                redeployed.setDeploymentDate(deploymentDate);
+//                redeployed.setOperation(OperationType.UPDATE.value());
+//                redeployed.setState(DeploymentState.DEPLOYED.value());
+//                if (redeployed.getSignedContent() == null || redeployed.getSignedContent().isEmpty()) {
+//                    redeployed.setSignedContent(".");
+//                }
+//                dbLayerDeploy.getSession().save(redeployed);
+//                JocInventory.postDeployHistoryEvent(redeployed);
+//                deployedObjects.add(redeployed);
+//            }
+//        } catch (SOSHibernateException e) {
+//            throw new JocSosHibernateException(e);
+//        }
+//        return deployedObjects;
+//    }
 
     public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(Collection<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId,
             String commitIdforFileOrderSource, boolean withTrash, String account, Long auditLogId) {
@@ -993,7 +992,6 @@ public abstract class PublishUtils {
                     }
                     dbLayer.getSession().save(newEntry);
                     deletedObjects.add(newEntry);
-                    JocInventory.postDeployHistoryEventWhenDeleted(newEntry);
                     if (withTrash) {
                         DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
                         if (orig != null) {
@@ -1001,6 +999,7 @@ public abstract class PublishUtils {
                         }
                     }
                 }
+                JocInventory.postDeployHistoryEventWhenDeleted(deletedObjects);
             }
 
         } catch (SOSHibernateException e) {
@@ -1793,29 +1792,6 @@ public abstract class PublishUtils {
         fileOrderSource.setTimeZone(null);
         return String.format(idPattern, timeZone);
     }
-
-//    public static void postDeployHistoryEvent(DBItemDeploymentHistory dbItem) {
-//        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
-//            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-//                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
-//        } else if (DeployType.JOBRESOURCE.intValue() == dbItem.getType()) {
-//            EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-//                    .getPath(), ConfigurationType.JOBRESOURCE.intValue()));
-//        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
-//            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-//                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
-//        }
-//    }
-//    
-//    public static void postDeployHistoryEventWhenDeleted(DBItemDeploymentHistory dbItem) {
-//        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
-//            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-//                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
-//        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
-//            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-//                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
-//        }
-//    }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,
             String commitId, Long auditLogId, Map<String, String> releasedScripts) {

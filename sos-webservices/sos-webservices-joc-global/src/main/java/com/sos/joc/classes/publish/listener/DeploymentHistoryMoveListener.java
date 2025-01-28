@@ -65,7 +65,7 @@ public class DeploymentHistoryMoveListener {
             for(DBItemDeploymentHistory latest : deployments) {
                 session.save(latest);
             }
-            deployments.stream().forEach(item -> JocInventory.postDeployHistoryEvent(item));
+            JocInventory.postDeployHistoryEvent(deployments);
             List<DBItemDailyPlanOrder> ordersToUpdate = new ArrayList<DBItemDailyPlanOrder>();
             DBItemInventoryReleasedConfiguration released = null;
             DBLayerDailyPlan dbLayerDP = new DBLayerDailyPlan(session);

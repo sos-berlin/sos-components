@@ -145,14 +145,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
                 // TODO post JocInventory::postJobTaggingEvent
             }
-            // post events for updating workflows and fileordersources
+            // post events for updating workflows and fileordersources cunsomed by WorkflowRefs
             if (allDeployments != null) {
-                allDeployments.stream().filter(dbItem -> DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()).map(
-                        DBItemDeploymentHistory::getControllerId).distinct().map(controllerId -> new DeployHistoryFileOrdersSourceEvent(controllerId))
-                        .forEach(evt -> EventBus.getInstance().post(evt));
-                allDeployments.stream().filter(dbItem -> DeployType.WORKFLOW.intValue() == dbItem.getType()).map(
-                        DBItemDeploymentHistory::getControllerId).distinct().map(controllerId -> new DeployHistoryWorkflowEvent(controllerId))
-                        .forEach(evt -> EventBus.getInstance().post(evt));
+                JocInventory.postDeployHistoryEventWhenDeleted(allDeployments);
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

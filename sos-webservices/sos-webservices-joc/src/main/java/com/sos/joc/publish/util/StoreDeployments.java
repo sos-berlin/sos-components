@@ -110,7 +110,6 @@ public class StoreDeployments {
                         item.setState(DeploymentState.DEPLOYED.value());
                         item.setAuditlogId(signedItemsSpec.getAuditlogId());
                         dbLayer.getSession().save(item);
-                        JocInventory.postDeployHistoryEvent(item);
                         if (signature != null) {
                             signature.setDepHistoryId(item.getId());
                             dbLayer.getSession().save(signature);
@@ -149,6 +148,7 @@ public class StoreDeployments {
                         "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s), %5$d JobResource(s) and %6$d Board(s).",
                         controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources, countBoards));
                 JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
+                JocInventory.postDeployHistoryEvent(deployedObjects);
             }
         } catch (Exception e) {
             // LOGGER.error(e.getMessage(), e);
@@ -239,7 +239,6 @@ public class StoreDeployments {
             optimistic.setErrorMessage(message);
             optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
             dbLayer.getSession().update(optimistic);
-            JocInventory.postDeployHistoryEventWhenDeleted(optimistic);
             // update related inventory configuration to deployed=false
             DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
             if (cfg != null) {
@@ -247,6 +246,7 @@ public class StoreDeployments {
                 dbLayer.getSession().update(cfg);
             }
         }
+        JocInventory.postDeployHistoryEventWhenDeleted(optimisticEntries);
     }
 
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,

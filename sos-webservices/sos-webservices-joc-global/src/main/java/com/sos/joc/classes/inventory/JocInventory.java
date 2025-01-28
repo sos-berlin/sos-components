@@ -75,6 +75,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.deploy.DeployHistoryFileOrdersSourceEvent;
 import com.sos.joc.event.bean.deploy.DeployHistoryJobResourceEvent;
 import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
+import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowPathEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryFolderEvent;
 import com.sos.joc.event.bean.inventory.InventoryJobTagEvent;
@@ -1582,26 +1583,52 @@ public class JocInventory {
         return workflows;
     }
 
-    public static void postDeployHistoryEvent(DBItemDeploymentHistory dbItem) {
-        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
-        } else if (DeployType.JOBRESOURCE.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.JOBRESOURCE.intValue()));
-        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
+    public static void postDeployHistoryEvent(Collection<DBItemDeploymentHistory> dbItems) {
+        if (dbItems != null) {
+            EnumSet<DeployType> eSet = EnumSet.of(DeployType.WORKFLOW, DeployType.JOBRESOURCE, DeployType.FILEORDERSOURCE);
+            Map<Integer, List<DBItemDeploymentHistory>> items = dbItems.stream().filter(item -> eSet.contains(item.getTypeAsEnum())).collect(
+                    Collectors.groupingBy(DBItemDeploymentHistory::getType));
+
+            if (items.containsKey(DeployType.WORKFLOW.intValue())) {
+                Set<String> controllerIds = new HashSet<>();
+                items.get(DeployType.WORKFLOW.intValue()).forEach(dbItem -> {
+                    controllerIds.add(dbItem.getControllerId());
+                    // Consumer: WorkflowPaths
+                    EventBus.getInstance().post(new DeployHistoryWorkflowPathEvent(dbItem.getName(), dbItem.getPath()));
+                });
+                // Consumer: WorkflowRefs
+                controllerIds.stream().map(DeployHistoryWorkflowEvent::new).forEach(EventBus.getInstance()::post);
+            }
+
+            if (items.containsKey(DeployType.JOBRESOURCE.intValue())) {
+                items.get(DeployType.JOBRESOURCE.intValue()).forEach(dbItem -> {
+                    // Consumer: SystemMonitoringModel
+                    EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(),
+                            dbItem.getPath(), ConfigurationType.JOBRESOURCE.intValue()));
+                });
+            }
+
+            if (items.containsKey(DeployType.FILEORDERSOURCE.intValue())) {
+                // Consumer: WorkflowRefs
+                items.get(DeployType.FILEORDERSOURCE.intValue()).stream().map(DBItemDeploymentHistory::getControllerId).distinct().map(
+                        DeployHistoryFileOrdersSourceEvent::new).forEach(EventBus.getInstance()::post);
+            }
         }
     }
     
-    public static void postDeployHistoryEventWhenDeleted(DBItemDeploymentHistory dbItem) {
-        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
-        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
+    public static void postDeployHistoryEventWhenDeleted(Collection<DBItemDeploymentHistory> dbItems) {
+        if (dbItems != null) {
+            EnumSet<DeployType> eSet = EnumSet.of(DeployType.WORKFLOW, DeployType.FILEORDERSOURCE);
+            Map<Integer, Set<String>> items = dbItems.stream().filter(item -> eSet.contains(item.getTypeAsEnum())).collect(Collectors.groupingBy(
+                    DBItemDeploymentHistory::getType, Collectors.mapping(DBItemDeploymentHistory::getControllerId, Collectors.toSet())));
+
+            // Consumer: WorkflowRefs
+            items.getOrDefault(DeployType.WORKFLOW.intValue(), Collections.emptySet()).stream().map(DeployHistoryWorkflowEvent::new).forEach(EventBus
+                    .getInstance()::post);
+            // Consumer: WorkflowRefs
+            items.getOrDefault(DeployType.FILEORDERSOURCE.intValue(), Collections.emptySet()).stream().map(DeployHistoryFileOrdersSourceEvent::new)
+                    .forEach(EventBus.getInstance()::post);
         }
     }
+    
 }

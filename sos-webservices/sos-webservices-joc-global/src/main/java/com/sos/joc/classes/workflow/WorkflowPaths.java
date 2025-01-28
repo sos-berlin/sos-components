@@ -19,8 +19,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
-import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
-//import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowPathEvent;
 
 import js7.data_for_java.workflow.JWorkflowId;
 
@@ -41,8 +40,8 @@ public class WorkflowPaths {
         return instance;
     }
 
-    @Subscribe({ DeployHistoryWorkflowEvent.class })
-    public void updateMap(DeployHistoryWorkflowEvent evt) {
+    @Subscribe({ DeployHistoryWorkflowPathEvent.class })
+    public void updateMap(DeployHistoryWorkflowPathEvent evt) {
         if (evt.getName() != null) {
             namePathMap.put(evt.getName(), evt.getPath());
         }
