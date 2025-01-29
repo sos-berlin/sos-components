@@ -410,6 +410,14 @@ public class SOSPath {
         return p.isAbsolute() ? p : p.toAbsolutePath();
     }
 
+    public static Path toAbsoluteNormalizedPath(String file) {
+        return toAbsoluteNormalizedPath(Paths.get(file));
+    }
+
+    public static Path toAbsoluteNormalizedPath(Path path) {
+        return path.isAbsolute() ? path.normalize() : path.toAbsolutePath().normalize();
+    }
+
     public static boolean isRegularFile(String path) throws Exception {
         return isRegularFile(toAbsolutePath(path));
     }

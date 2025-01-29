@@ -34,7 +34,7 @@ public class ProviderFile {
             size = AProvider.DEFAULT_FILE_ATTR_VALUE;
             lastModifiedMillis = AProvider.DEFAULT_FILE_ATTR_VALUE;
         } else {
-            fullPath = SOSPathUtil.toUnixStylePath(val);
+            fullPath = SOSPathUtil.toUnixPath(val);
             name = SOSPathUtil.getFileName(this.fullPath);
         }
     }

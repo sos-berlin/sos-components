@@ -54,8 +54,8 @@ public class SSHProvider extends ASSHProvider {
     }
 
     @Override
-    public void createDirectories(String path) throws SOSProviderException {
-        provider.createDirectories(path);
+    public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException {
+        return provider.createDirectoriesIfNotExist(path);
     }
 
     @Override

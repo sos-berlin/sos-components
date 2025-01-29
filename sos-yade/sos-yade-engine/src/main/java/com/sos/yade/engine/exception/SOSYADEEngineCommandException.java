@@ -4,7 +4,7 @@ import com.sos.commons.util.common.SOSCommandResult;
 
 public class SOSYADEEngineCommandException extends SOSYADEEngineException {
 
-    private static final long serialVersionUID = 2369285779503834825L;
+    private static final long serialVersionUID = 1L;
 
     public SOSYADEEngineCommandException(String msg, SOSCommandResult result) {
         super(msg + result.toString());

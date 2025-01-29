@@ -9,21 +9,29 @@ public class ProviderFileSelectionConfig {
 
     private final Pattern fileNamePattern;
     private final Pattern excludedDirectoriesPattern;
-    private final String excludedFileNameEnd;// TODO Pattern extensions
+    private final String excludedFileExtension;// TODO Pattern extensions
 
     private final int maxFiles;
     private final long maxFileSize;
     private final long minFileSize;
+
+    private final boolean filterByMaxFiles;
+    private final boolean filterByMaxFileSize;
+    private final boolean filterByMinFileSize;
 
     private ProviderFileSelectionConfig(Builder builder) {
         this.directory = builder.directory;
         this.recursive = builder.recursive;
         this.fileNamePattern = builder.fileNamePattern;
         this.excludedDirectoriesPattern = builder.excludedDirectoriesPattern;
-        this.excludedFileNameEnd = builder.excludedFileNameEnd;
+        this.excludedFileExtension = builder.excludedFileExtension;
         this.maxFiles = builder.maxFiles;
         this.maxFileSize = builder.maxFileSize;
         this.minFileSize = builder.minFileSize;
+
+        this.filterByMaxFiles = this.maxFiles > -1; // YADE 1: > 0
+        this.filterByMaxFileSize = this.maxFileSize > -1;
+        this.filterByMinFileSize = this.minFileSize > -1;
     }
 
     public static class Builder {
@@ -33,7 +41,7 @@ public class ProviderFileSelectionConfig {
 
         private Pattern fileNamePattern;
         private Pattern excludedDirectoriesPattern;
-        private String excludedFileNameEnd;
+        private String excludedFileExtension;
 
         private int maxFiles = -1;
         private long maxFileSize = -1L;
@@ -59,8 +67,8 @@ public class ProviderFileSelectionConfig {
             return this;
         }
 
-        public Builder excludedFileNameEnd(String val) {
-            this.excludedFileNameEnd = val;
+        public Builder excludedFileExtension(String val) {
+            this.excludedFileExtension = val;
             return this;
         }
 
@@ -100,19 +108,31 @@ public class ProviderFileSelectionConfig {
         return excludedDirectoriesPattern;
     }
 
-    public String getExcludedFileNameEnd() {
-        return excludedFileNameEnd;
+    public String getExcludedFileExtension() {
+        return excludedFileExtension;
     }
 
     public int getMaxFiles() {
         return maxFiles;
     }
 
+    public boolean isFilterByMaxFilesEnabled() {
+        return filterByMaxFiles;
+    }
+
     public long getMaxFileSize() {
         return maxFileSize;
     }
 
+    public boolean isFilterByMaxFileSizeEnabled() {
+        return filterByMaxFileSize;
+    }
+
     public long getMinFileSize() {
         return minFileSize;
+    }
+
+    public boolean isFilterByMinFileSizeEnabled() {
+        return filterByMinFileSize;
     }
 }

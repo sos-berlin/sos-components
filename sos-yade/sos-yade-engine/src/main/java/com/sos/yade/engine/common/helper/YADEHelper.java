@@ -1,27 +1,22 @@
-package com.sos.yade.engine.common;
+package com.sos.yade.engine.common.helper;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.AProviderArguments;
-import com.sos.commons.vfs.common.AProviderArguments.Protocol;
 import com.sos.commons.vfs.common.IProvider;
-import com.sos.commons.vfs.exception.SOSProviderException;
-import com.sos.commons.vfs.local.LocalProvider;
-import com.sos.commons.vfs.local.common.LocalProviderArguments;
-import com.sos.commons.vfs.ssh.SSHProvider;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.yade.engine.common.YADEProviderContext;
 import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.arguments.YADEClientArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineConnectionException;
 import com.sos.yade.engine.exception.SOSYADEEngineException;
 import com.sos.yade.engine.exception.SOSYADEEngineSourceConnectionException;
@@ -29,6 +24,10 @@ import com.sos.yade.engine.exception.SOSYADEEngineTargetConnectionException;
 
 public class YADEHelper {
 
+    /** Check on Start
+     * 
+     * @param args
+     * @throws SOSYADEEngineException */
     public static void checkArguments(YADEArguments args) throws SOSYADEEngineException {
         if (args == null) {
             throw new SOSYADEEngineException(new SOSMissingDataException("YADEArguments"));
@@ -38,24 +37,31 @@ public class YADEHelper {
         }
     }
 
-    public static IProvider getProvider(ISOSLogger logger, YADEArguments args, boolean isSource) throws SOSYADEEngineException {
-        IProvider provider = null;
-        if (isSource) {
-            provider = getProvider(logger, args.getSource().getProvider());
-        } else {
-            if (needTargetProvider(args)) {
-                provider = getProvider(logger, args.getTarget().getProvider());
+    /** Check before execute Operation
+     * 
+     * @param sourceProvider
+     * @param args
+     * @param sourceFiles
+     * @return
+     * @throws Exception */
+    public static int checkSourceFiles(IProvider sourceProvider, YADEArguments args, List<ProviderFile> sourceFiles) throws Exception {
+        int size = sourceFiles == null ? 0 : sourceFiles.size();
+
+        if (size == 0 && args.getSource().getForceFiles().getValue()) {
+            throw new Exception(String.format("%s[%s=true]No files found", sourceProvider.getContext().getLogPrefix(), args.getSource()
+                    .getForceFiles().getName()));
+        }
+
+        // ResultSet
+        SOSComparisonOperator op = args.getClient().getRaiseErrorIfResultSetIs().getValue();
+        if (op != null) {
+            int expectedSize = args.getClient().getExpectedSizeOfResultSet().getValue();
+            if (op.compare(size, expectedSize)) {
+                throw new Exception(String.format("%s[files found=%s][RaiseErrorIfResultSetIs]%s %s", sourceProvider.getContext().getLogPrefix(),
+                        size, op, expectedSize));
             }
         }
-        setProviderContext(provider, isSource);
-        return provider;
-    }
-
-    private static void setProviderContext(IProvider provider, boolean isSource) {
-        if (provider == null) {
-            return;
-        }
-        provider.setContext(new YADEProviderContext(isSource));
+        return size;
     }
 
     public static void throwConnectionException(IProvider provider, Throwable ex) throws SOSYADEEngineConnectionException {
@@ -114,7 +120,7 @@ public class YADEHelper {
         logger.info("[printSummary]...");
     }
 
-    public static void setConfiguredSystemProperties(ISOSLogger logger, YADEArguments args) {
+    public static void setConfiguredSystemProperties(ISOSLogger logger, YADEClientArguments args) {
         if (SOSCollection.isEmpty(args.getSystemPropertyFiles().getValue())) {
             return;
         }
@@ -150,75 +156,6 @@ public class YADEHelper {
         try {
             TimeUnit.SECONDS.sleep(interval);
         } catch (InterruptedException e) {
-        }
-    }
-
-    public static long getIntervalInSeconds(SOSArgument<String> arg, long defaultValue) {
-        try {
-            return SOSDate.resolveAge("s", arg.getValue()).longValue();
-        } catch (Throwable e) {
-            return defaultValue;
-        }
-    }
-
-    private static IProvider getProvider(ISOSLogger logger, AProviderArguments args) throws SOSYADEEngineException {
-        if (args == null) {
-            throw new SOSYADEEngineException(new SOSMissingDataException("YADEProviderArguments"));
-        }
-
-        SOSArgument<Protocol> protocol = args.getProtocol();
-        if (protocol.getValue() == null) {
-            throw new SOSYADEEngineException(new SOSMissingDataException(protocol.getName()));
-        }
-        IProvider p = null;
-        try {
-            switch (protocol.getValue()) {
-            case FTP:
-            case FTPS:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
-            // break;
-            case HTTP:
-            case HTTPS:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
-            // break;
-            case LOCAL:
-                p = new LocalProvider(logger, (LocalProviderArguments) args);
-                break;
-            case SFTP:
-            case SSH:
-                p = new SSHProvider(logger, (SSHProviderArguments) args);
-                break;
-            case SMB:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
-            // break;
-            case WEBDAV:
-            case WEBDAVS:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
-            // break;
-            case UNKNOWN:
-            default:
-                throw new SOSYADEEngineException(new SOSInvalidDataException(protocol.getName() + "=" + protocol.getValue()));
-            }
-        } catch (SOSProviderException e) {
-            throw new SOSYADEEngineException(e);
-        }
-        return p;
-    }
-
-    private static boolean needTargetProvider(YADEArguments args) throws SOSYADEEngineException {
-        switch (args.getOperation().getValue()) {
-        case GETLIST:
-        case REMOVE:
-        case RENAME:
-            return false;
-        case UNKNOWN:
-            throw new SOSYADEEngineException(new SOSInvalidDataException(args.getOperation().getName() + "=" + args.getOperation().getValue()));
-        // case COPY:
-        // case MOVE:
-        // case COPYFROMINTERNET:
-        // case COPYTOINTERNET:
-        default:
-            return true;
         }
     }
 

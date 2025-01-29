@@ -1,10 +1,12 @@
 package com.sos.yade.engine.common;
 
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.yade.commons.Yade.TransferEntryState;
 
 public class YADEProviderFile extends ProviderFile {
 
     private Steady steady = null;
+    private TransferEntryState state = null;
 
     public YADEProviderFile(String fullPath, long size, long lastModifiedMillis, boolean checkSteady) {
         super(fullPath, size, lastModifiedMillis);
@@ -15,6 +17,22 @@ public class YADEProviderFile extends ProviderFile {
 
     public Steady getSteady() {
         return steady;
+    }
+
+    public void resetSteady() {
+        steady = null;
+    }
+
+    public TransferEntryState getState() {
+        return state;
+    }
+
+    public void setState(TransferEntryState val) {
+        state = val;
+    }
+
+    public boolean transferred() {// succeeded?
+        return TransferEntryState.TRANSFERRED.equals(state);
     }
 
     public class Steady {

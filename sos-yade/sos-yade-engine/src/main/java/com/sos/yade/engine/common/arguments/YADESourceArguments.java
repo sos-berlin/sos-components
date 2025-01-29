@@ -14,14 +14,17 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     }
 
     /** - Polling Arguments ------- */
-    private YADEPollingArguments polling;
+    private YADESourcePollingArguments polling;
 
     /** - File Selection Arguments ------- */
+    // YADE 1 - checks after transfer. why???? ....
+    private SOSArgument<Boolean> forceFiles = new SOSArgument<>("force_files", false, Boolean.valueOf(true));
     // String because can be URI etc
     private SOSArgument<String> directory = new SOSArgument<>("source_dir", false);
     // RegExp
     private SOSArgument<String> excludedDirectories = new SOSArgument<>("source_excluded_directories", false);
     private SOSArgument<Boolean> recursive = new SOSArgument<>("recursive", false, Boolean.valueOf(false));
+
     // single files
     private SOSArgument<List<String>> filePath = new SOSArgument<>("file_path", false);
     private SOSArgument<Path> fileList = new SOSArgument<>("file_list_name", false);
@@ -40,35 +43,48 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     private SOSArgument<String> checkSteadyStateInterval = new SOSArgument<>("check_steady_state_interval", false, null);
     private SOSArgument<Integer> checkSteadyCount = new SOSArgument<>("check_steady_count", false, Integer.valueOf(10));
 
+    /** - Integrity Hash ------- */
+    // YADE-1
+    // private SOSArgument<Boolean> checkIntegrityHash = new SOSArgument<>("check_integrity_hash", false, Boolean.valueOf(false));
+    // private SOSArgument<String> integrityHashType = new SOSArgument<>("integrity_hash_type", false, "md5");
+    private SOSArgument<String> integrityHashType = new SOSArgument<>("integrity_hash_type", false);
+
     /** - Zero Byte files handling ------- */
     private SOSArgument<ZeroByteTransfer> zeroByteTransfer = new SOSArgument<>("zero_byte_transfer", false, ZeroByteTransfer.YES);
 
-    public boolean singleFilesSpecified() {
-        return enableFilePath() || enableFileList();
+    /** - Remove files ------- */
+    private SOSArgument<Boolean> removeFiles = new SOSArgument<>("remove_files", false, Boolean.valueOf(false));
+
+    public boolean isSingleFilesSpecified() {
+        return isFilePathEnabled() || isFileListEnabled();
     }
 
-    public boolean enableFilePath() {
+    public boolean isFilePathEnabled() {
         return !SOSCollection.isEmpty(filePath.getValue());
     }
 
-    public boolean enableFileList() {
+    public boolean isFileListEnabled() {
         return fileList.getValue() != null;
     }
 
-    public boolean checkSteadyState() {
+    public boolean isCheckSteadyStateEnabled() {
         return SOSString.isEmpty(checkSteadyStateInterval.getValue());
     }
 
-    public boolean poolTimeoutEnabled() {
+    public boolean isPoolTimeoutEnabled() {
         return polling != null && polling.getPollTimeout().getValue() != null;
     }
 
-    public YADEPollingArguments getPolling() {
+    public YADESourcePollingArguments getPolling() {
         return polling;
     }
 
-    public void setPolling(YADEPollingArguments val) {
+    public void setPolling(YADESourcePollingArguments val) {
         polling = val;
+    }
+
+    public SOSArgument<Boolean> getForceFiles() {
+        return forceFiles;
     }
 
     public SOSArgument<String> getDirectory() {
@@ -117,5 +133,13 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getRecursive() {
         return recursive;
+    }
+
+    public SOSArgument<String> getIntegrityHashType() {
+        return integrityHashType;
+    }
+
+    public SOSArgument<Boolean> getRemoveFiles() {
+        return removeFiles;
     }
 }

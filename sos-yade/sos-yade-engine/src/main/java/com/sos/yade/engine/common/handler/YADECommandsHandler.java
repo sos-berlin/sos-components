@@ -7,9 +7,9 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
-import com.sos.yade.engine.common.YADEArgumentsHelper;
-import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.common.helper.YADEArgumentsHelper;
+import com.sos.yade.engine.common.helper.YADEHelper;
 import com.sos.yade.engine.exception.SOSYADEEngineCommandException;
 
 public class YADECommandsHandler {
@@ -21,7 +21,7 @@ public class YADECommandsHandler {
     // -- Operation related ------------------------------
     public static void executeBeforeOperation(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args)
             throws SOSYADEEngineCommandException {
-        if (provider == null || !args.commandsBeforeOperation()) {
+        if (provider == null || !args.isCommandsBeforeOperationEnabled()) {
             return;
         }
         SOSArgument<List<String>> arg = args.getCommands().getCommandsBeforeOperation();
@@ -42,7 +42,7 @@ public class YADECommandsHandler {
 
     public static void executeAfterOperationOnSuccess(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args,
             ProviderDirectoryPath directory) throws SOSYADEEngineCommandException {
-        if (provider == null || !args.commandsAfterOperationOnSuccess()) {
+        if (provider == null || !args.isCommandsAfterOperationOnSuccessEnabled()) {
             return;
         }
         executeAfterOperationCommands(logger, provider, args.getCommands().getCommandsAfterOperationOnSuccess(), args.getCommands()
@@ -51,7 +51,7 @@ public class YADECommandsHandler {
 
     public static void executeAfterOperationOnError(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args,
             ProviderDirectoryPath directory, Throwable exception) {
-        if (provider == null || !args.commandsAfterOperationOnError()) {
+        if (provider == null || !args.isCommandsAfterOperationOnErrorEnabled()) {
             return;
         }
         try {
@@ -64,7 +64,7 @@ public class YADECommandsHandler {
 
     public static void executeAfterOperationFinal(ISOSLogger logger, IProvider provider, YADESourceTargetArguments args,
             ProviderDirectoryPath directory, Throwable exception) {
-        if (provider == null || !args.commandsAfterOperationFinal()) {
+        if (provider == null || !args.isCommandsAfterOperationFinalEnabled()) {
             return;
         }
         try {

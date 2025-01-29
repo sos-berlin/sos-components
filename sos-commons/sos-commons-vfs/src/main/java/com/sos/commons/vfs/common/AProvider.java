@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
@@ -123,25 +122,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public static boolean isValidModificationTime(long milliseconds) {
         return milliseconds > 0;
-    }
-
-    @SuppressWarnings("unused")
-    private static boolean isAbsolutePathStyle(final String path) {
-        if (SOSString.isEmpty(path)) {
-            return false;
-        }
-
-        String np = SOSPathUtil.toUnixStylePath(path);
-        if (SOSPathUtil.isAbsolutePathWindowsStyle(np)) {
-            return true;
-        }
-        if (SOSPathUtil.isAbsolutePathUnixStyle(np)) {
-            return true;
-        }
-        if (SOSPathUtil.isAbsolutePathURIStyle(np)) {
-            return true;
-        }
-        return false;
     }
 
 }

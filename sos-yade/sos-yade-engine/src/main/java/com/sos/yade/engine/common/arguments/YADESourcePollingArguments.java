@@ -3,7 +3,7 @@ package com.sos.yade.engine.common.arguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.yade.engine.common.handler.source.YADESourcePollingHandler;
 
-public class YADEPollingArguments {
+public class YADESourcePollingArguments {
 
     /** - Polling ------- */
     private SOSArgument<Boolean> pollingServer = new SOSArgument<>("polling_server", false, Boolean.valueOf(false));
@@ -23,7 +23,7 @@ public class YADEPollingArguments {
     private SOSArgument<Integer> pollTimeout = new SOSArgument<>("poll_timeout", false);
     // declared by not used with YADE 1: polling_end_at, pollKeepConnection
 
-    public boolean pollMinFiles() {
+    public boolean isPollMinFilesEnabled() {
         return pollMinFiles.getValue() != null;
     }
 

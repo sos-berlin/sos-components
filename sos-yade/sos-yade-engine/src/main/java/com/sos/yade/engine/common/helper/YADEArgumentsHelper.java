@@ -1,9 +1,10 @@
-package com.sos.yade.engine.common;
+package com.sos.yade.engine.common.helper;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 
@@ -21,5 +22,13 @@ public class YADEArgumentsHelper {
             return null;
         }
         return String.join(listValueDelimiter, arg.getValue());
+    }
+    
+    public static long getIntervalInSeconds(SOSArgument<String> arg, long defaultValue) {
+        try {
+            return SOSDate.resolveAge("s", arg.getValue()).longValue();
+        } catch (Throwable e) {
+            return defaultValue;
+        }
     }
 }

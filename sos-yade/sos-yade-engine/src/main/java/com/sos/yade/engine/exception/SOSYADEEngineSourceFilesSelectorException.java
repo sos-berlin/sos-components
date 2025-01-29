@@ -2,7 +2,7 @@ package com.sos.yade.engine.exception;
 
 public class SOSYADEEngineSourceFilesSelectorException extends SOSYADEEngineException {
 
-    private static final long serialVersionUID = 2369285779503834825L;
+    private static final long serialVersionUID = 1L;
 
     public SOSYADEEngineSourceFilesSelectorException(String msg) {
         super(msg);

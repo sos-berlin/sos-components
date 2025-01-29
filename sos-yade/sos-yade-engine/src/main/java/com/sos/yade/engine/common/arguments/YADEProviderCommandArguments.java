@@ -3,7 +3,7 @@ package com.sos.yade.engine.common.arguments;
 import java.util.List;
 
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.yade.engine.common.YADEArgumentsHelper;
+import com.sos.yade.engine.common.helper.YADEArgumentsHelper;
 
 public class YADEProviderCommandArguments {
 

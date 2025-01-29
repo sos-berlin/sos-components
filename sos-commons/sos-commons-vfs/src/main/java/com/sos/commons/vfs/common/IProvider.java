@@ -36,8 +36,9 @@ public interface IProvider {
      * Unlike the {@link createDirectory} method, an exception is not thrown if the directory could not be created because it already exists.
      * 
      * @param path
+     * @return false - already exist, true - created
      * @throws SOSProviderException */
-    public void createDirectories(String path) throws SOSProviderException;
+    public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException;
 
     /** Deletes a file/directory.
      *

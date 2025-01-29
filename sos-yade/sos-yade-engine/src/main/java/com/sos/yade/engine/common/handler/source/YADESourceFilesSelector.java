@@ -24,7 +24,7 @@ public class YADESourceFilesSelector {
     public static List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args,
             ProviderDirectoryPath sourceDirectory, boolean polling) throws SOSYADEEngineSourceFilesSelectorException {
 
-        if (args.singleFilesSpecified()) {
+        if (args.isSingleFilesSpecified()) {
             return selectSingleFiles(logger, sourceProvider, args, sourceDirectory, polling);
         } else {
             return selectFiles(logger, sourceProvider, args, sourceDirectory);
@@ -46,6 +46,10 @@ public class YADESourceFilesSelector {
             // case sensitive
             builder.excludedDirectoriesPattern(Pattern.compile(args.getExcludedDirectories().getValue(), 0));
         }
+        if (!SOSString.isEmpty(args.getIntegrityHashType().getValue())) {
+            builder.excludedFileExtension("." + args.getIntegrityHashType().getValue());
+        }
+
         builder.recursive(args.getRecursive().getValue() == null ? false : args.getRecursive().getValue().booleanValue());
         if (args.getMaxFiles().getValue() != null) {
             builder.maxFiles(args.getMaxFiles().getValue().intValue());
@@ -76,10 +80,10 @@ public class YADESourceFilesSelector {
         String lp = sourceProvider.getContext().getLogPrefix() + "[selectSingleFiles]";
         List<String> singleFiles = null;
         SOSArgument<?> arg = null;
-        if (args.enableFilePath()) {
+        if (args.isFilePathEnabled()) {
             arg = args.getFilePath();
             singleFiles = args.getFilePath().getValue();
-        } else if (args.enableFileList()) {
+        } else if (args.isFileListEnabled()) {
             arg = args.getFileList();
             if (!Files.exists(args.getFileList().getValue())) {
                 throw new SOSYADEEngineSourceFilesSelectorException(String.format("%s[%s=%s]doesn't exist", lp, args.getFileList().getName(), args

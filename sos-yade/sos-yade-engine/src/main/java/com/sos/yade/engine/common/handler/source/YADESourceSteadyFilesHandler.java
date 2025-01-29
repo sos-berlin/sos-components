@@ -7,16 +7,17 @@ import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.helper.YADEArgumentsHelper;
+import com.sos.yade.engine.common.helper.YADEHelper;
 import com.sos.yade.engine.exception.SOSYADEEngineSourceSteadyFilesException;
 
 public class YADESourceSteadyFilesHandler {
 
     public static boolean checkFilesSteady(ISOSLogger logger, IProvider sourceProvider, YADESourceArguments args, List<ProviderFile> sourceFiles)
             throws SOSYADEEngineSourceSteadyFilesException {
-        if (!args.checkSteadyState()) {
+        if (!args.isCheckSteadyStateEnabled()) {
             return true;
         }
         if (SOSCollection.isEmpty(sourceFiles)) {
@@ -26,7 +27,7 @@ public class YADESourceSteadyFilesHandler {
         logger.info("%s[start]checkFilesSteady", lp);
         boolean steady = true;
         int total = args.getCheckSteadyCount().getValue().intValue();
-        long interval = YADEHelper.getIntervalInSeconds(args.getCheckSteadyStateInterval(), 1);
+        long interval = YADEArgumentsHelper.getIntervalInSeconds(args.getCheckSteadyStateInterval(), 1);
 
         ml: for (int i = 0; i < total; i++) {
             steady = true;

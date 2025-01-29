@@ -11,23 +11,23 @@ public class YADESourceTargetArguments {
     private SOSArgument<Integer> connectionErrorRetryCountMax = new SOSArgument<>("connection_error_retry_count_max", false);
     private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("connection_error_retry_interval", false, "0s");
 
-    public boolean retryOnConnectionError() {
+    public boolean isRetryOnConnectionErrorEnabled() {
         return connectionErrorRetryCountMax.getValue() != null && connectionErrorRetryCountMax.getValue().intValue() > 0;
     }
 
-    public boolean commandsBeforeOperation() {
+    public boolean isCommandsBeforeOperationEnabled() {
         return commands != null && !commands.getCommandsBeforeOperation().isEmpty();
     }
 
-    public boolean commandsAfterOperationOnSuccess() {
+    public boolean isCommandsAfterOperationOnSuccessEnabled() {
         return commands != null && !commands.getCommandsAfterOperationOnSuccess().isEmpty();
     }
 
-    public boolean commandsAfterOperationOnError() {
+    public boolean isCommandsAfterOperationOnErrorEnabled() {
         return commands != null && !commands.getCommandsAfterOperationOnError().isEmpty();
     }
 
-    public boolean commandsAfterOperationFinal() {
+    public boolean isCommandsAfterOperationFinalEnabled() {
         return commands != null && !commands.getCommandsAfterOperationFinal().isEmpty();
     }
 

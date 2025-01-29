@@ -1,51 +1,109 @@
 package com.sos.commons.util;
 
-/** Only String operations should used */
+/** Only String operations should be used, without nio Path(see REGEXP_ABSOLUTE_WINDOWS_OPENSSH_PATH) */
 public class SOSPathUtil {
 
-    public static String toUnixStylePath(String path) {
+    /** 1) URI */
+    /** URI paths (e.g., file:/, http:/, sftp:/...) */
+    private static final String REGEXP_ABSOLUTE_URI_PATH = "^[a-zA-Z][a-zA-Z0-9+.-]*:/.+";
+
+    /** 2) UNIX */
+    /** - Unix absolute paths (starting with /)<br/>
+     * - Unix environment variables (e.g., $HOME)<br/>
+     * - Unix home directory paths (starting with ~/) */
+    private static final String REGEXP_ABSOLUTE_UNIX_PATH = "^(\\/|\\$|~\\/).*";
+
+    /** 3) WINDOWS */
+    /** C:/tmp, C:\\tmp */
+    private static final String REGEXP_ABSOLUTE_WINDOWS_STANDARD_PATH = "^[a-zA-Z]:[\\\\/].*";
+    /** Windows environment variables (e.g., %USERPROFILE%)<br/>
+     * - \\p{L}: Matches any alphabetic character (from any language, including Chinese, Japanese, Cyrillic, etc.)<br/>
+     * - \\p{N}: Matches any numeric character<br/>
+     * - _ and . */
+    private static final String REGEXP_ABSOLUTE_WINDOWS_ENV_PATH = "^%[\\p{L}\\p{N}_.-]+%.*";
+    /** Windows OpenSSH-Style paths: <br/>
+     * - /C:/MyPath...<br/>
+     * -- \\C:\MyPath is technically possible but very atypical - ignore this<br/>
+     * -- /C:\\MyPath is technically possible but very atypical - ignore this */
+    private static final String REGEXP_ABSOLUTE_WINDOWS_OPENSSH_PATH = "^/[a-zA-Z]:/.*";
+    /** \\server\folder<br/>
+     * -- //server/folder is technically possible but very atypical - ignore this */
+    private static final String REGEXP_ABSOLUTE_WINDOWS_UNC_PATH = "^\\\\[a-zA-Z0-9._-]+\\\\[a-zA-Z0-9._-]+(\\\\[a-zA-Z0-9._-]+)*$";
+    /** Combined Windows Path RegExp */
+    private static final String REGEX_ABSOLUTE_WINDOWS_PATH = REGEXP_ABSOLUTE_WINDOWS_STANDARD_PATH + "|" + REGEXP_ABSOLUTE_WINDOWS_ENV_PATH + "|"
+            + REGEXP_ABSOLUTE_WINDOWS_OPENSSH_PATH + "|" + REGEXP_ABSOLUTE_WINDOWS_UNC_PATH;
+
+    /** 4) FILESYSTEM */
+    /** Unix and Windows */
+    private static final String REGEX_ABSOLUTE_FILESYSTEM_PATH = REGEXP_ABSOLUTE_UNIX_PATH + "|" + REGEX_ABSOLUTE_WINDOWS_PATH;
+
+    public static String toUnixPath(String path) {
         return SOSString.isEmpty(path) ? null : path.replace('\\', '/');
     }
 
-    public static String toWindowsStylePath(String path) {
+    public static String toWindowsPath(String path) {
         return SOSString.isEmpty(path) ? null : path.replace('/', '\\');
     }
 
-    public static boolean isAbsolutePathWindowsStyle(String path) {
-        String np = toUnixStylePath(path);
+    public static boolean isAbsoluteWindowsPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return false;
+        }
+        return path.matches(REGEX_ABSOLUTE_WINDOWS_PATH);
+    }
+
+    public static boolean isAbsoluteUnixPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return false;
+        }
+        return path.matches(REGEXP_ABSOLUTE_UNIX_PATH);
+    }
+
+    public static boolean isAbsoluteFileSystemPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return false;
+        }
+        return path.matches(REGEX_ABSOLUTE_FILESYSTEM_PATH);
+    }
+
+    public static boolean isAbsoluteURIPath(String path) {
+        String np = toUnixPath(path);
         if (np == null) {
             return false;
         }
-        return isAbsolutePathWindowsStandardStyle(np) || isAbsolutePathWindowsEnvStyle(np) || isAbsolutePathWindowsOpenSSHPathStyle(np)
-                || isAbsolutePathWindowsUNCStyle(np);
+        return np.matches(REGEXP_ABSOLUTE_URI_PATH);
     }
 
-    /** 1) Unix/Linux absolute paths (starting with /)<br/>
-     * 2) Unix/Linux environment variables (e.g., $HOME)<br/>
-     * 3) Unix/Linux home directory paths (starting with ~/) */
-    public static boolean isAbsolutePathUnixStyle(String path) {
-        String np = toUnixStylePath(path);
-        if (np == null) {
+    public static boolean isAbsoluteWindowsOpenSSHPath(String path) {
+        if (SOSString.isEmpty(path)) {
             return false;
         }
-        return np.startsWith("/") || np.startsWith("$") || np.startsWith("~/");
+        return path.matches(REGEXP_ABSOLUTE_WINDOWS_OPENSSH_PATH);
     }
 
-    public static boolean isAbsolutePathFileSystemStyle(String path) {
-        return isAbsolutePathUnixStyle(path) || isAbsolutePathWindowsStyle(path);
-    }
-
-    /** URI paths (e.g., file:/, http:/, sftp:/...) */
-    public static boolean isAbsolutePathURIStyle(String path) {
-        String np = toUnixStylePath(path);
-        if (np == null) {
+    public static boolean isAbsoluteWindowsStandardPath(String path) {
+        if (SOSString.isEmpty(path)) {
             return false;
         }
-        return np.matches("^[a-zA-Z][a-zA-Z0-9+.-]*:/.+");
+        return path.matches(REGEXP_ABSOLUTE_WINDOWS_STANDARD_PATH);
+    }
+
+    public static boolean isAbsoluteWindowsEnvPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return false;
+        }
+        return path.matches(REGEXP_ABSOLUTE_WINDOWS_ENV_PATH);
+    }
+
+    public static boolean isAbsoluteWindowsUNCPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return false;
+        }
+        return path.matches(REGEXP_ABSOLUTE_WINDOWS_UNC_PATH);
     }
 
     public static String getFileName(String path) {
-        String np = toUnixStylePath(path);
+        String np = toUnixPath(path);
         if (np == null) {
             return null;
         }
@@ -54,7 +112,7 @@ public class SOSPathUtil {
     }
 
     public static String getUnixStyleParentPath(String path) {
-        String np = toUnixStylePath(path);
+        String np = toUnixPath(path);
         if (np == null) {
             return null;
         }
@@ -63,7 +121,7 @@ public class SOSPathUtil {
     }
 
     public static String getWindowsStyleParentPath(String path) {
-        String np = toWindowsStylePath(path);
+        String np = toWindowsPath(path);
         if (np == null) {
             return null;
         }
@@ -72,7 +130,7 @@ public class SOSPathUtil {
     }
 
     public static String getUnixStyleDirectoryWithoutTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixStylePath(path);
+        String p = SOSPathUtil.toUnixPath(path);
         if (p == null) {
             return null;
         }
@@ -80,35 +138,11 @@ public class SOSPathUtil {
     }
 
     public static String getUnixStyleDirectoryWithTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixStylePath(path);
+        String p = SOSPathUtil.toUnixPath(path);
         if (p == null) {
             return null;
         }
         return path.endsWith("/") ? path : path + "/";
-    }
-
-    /** Windows OpenSSH-style paths (/C:/...) */
-    private static boolean isAbsolutePathWindowsOpenSSHPathStyle(String unixStylePath) {
-        return unixStylePath.matches("^/[a-zA-Z]:/.*");
-    }
-
-    /** Standard Windows-style paths (C:/... */
-    private static boolean isAbsolutePathWindowsStandardStyle(String unixStylePath) {
-        return unixStylePath.matches("^[a-zA-Z]:/.*");
-    }
-
-    /** Windows environment variables (e.g., %USERPROFILE%) */
-    private static boolean isAbsolutePathWindowsEnvStyle(String unixStylePath) {
-        // \\p{L}: Matches any alphabetic character (from any language, including Chinese, Japanese, Cyrillic, etc.).
-        // \\p{N}: Matches any numeric character.
-        // _ and .
-        return unixStylePath.matches("^%[\\p{L}\\p{N}_.-]+%.*");
-    }
-
-    /** Original: \\server\folder<br/>
-     * unixStylePath: //server/folder */
-    private static boolean isAbsolutePathWindowsUNCStyle(String unixStylePath) {
-        return unixStylePath.matches("^//[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)*");
     }
 
 }

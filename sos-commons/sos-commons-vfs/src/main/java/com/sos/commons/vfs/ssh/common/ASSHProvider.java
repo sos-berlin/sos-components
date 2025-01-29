@@ -42,7 +42,7 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
 
     @Override
     public boolean isAbsolutePath(String path) {
-        return SOSPathUtil.isAbsolutePathFileSystemStyle(path);
+        return SOSPathUtil.isAbsoluteFileSystemPath(path);
     }
 
     @Override

@@ -18,12 +18,13 @@ public class ProviderFileSelection {
     }
 
     public boolean maxFilesExceeded(int currentSize) {
-        return config.getMaxFiles() > 0 && currentSize >= config.getMaxFiles();
+        return config.isFilterByMaxFilesEnabled() && currentSize >= config.getMaxFiles();
     }
 
+    // TODO pattern and SOSPathUtil.toUnixStylePath ???
     public boolean checkDirectory(String filePath) {
         if (config.getExcludedDirectoriesPattern() != null) {
-            if (config.getExcludedDirectoriesPattern().matcher(SOSPathUtil.toUnixStylePath(filePath)).find()) {
+            if (config.getExcludedDirectoriesPattern().matcher(SOSPathUtil.toUnixPath(filePath)).find()) {
                 return false;
             }
         }
@@ -31,7 +32,7 @@ public class ProviderFileSelection {
     }
 
     public boolean checkFileName(String fileName) {
-        if (config.getExcludedFileNameEnd() != null && fileName.endsWith(config.getExcludedFileNameEnd())) {
+        if (config.getExcludedFileExtension() != null && fileName.endsWith(config.getExcludedFileExtension())) {
             return false;
         }
         if (config.getFileNamePattern() != null && !config.getFileNamePattern().matcher(fileName).find()) {
@@ -41,10 +42,10 @@ public class ProviderFileSelection {
     }
 
     public boolean checkProviderFile(ProviderFile file) {
-        if (config.getMaxFileSize() > -1L && file.getSize() > config.getMaxFileSize()) {
+        if (config.isFilterByMaxFileSizeEnabled() && file.getSize() > config.getMaxFileSize()) {
             return false;
         }
-        if (config.getMinFileSize() > -1 && file.getSize() < config.getMinFileSize()) {
+        if (config.isFilterByMinFileSizeEnabled() && file.getSize() < config.getMinFileSize()) {
             return false;
         }
         return true;

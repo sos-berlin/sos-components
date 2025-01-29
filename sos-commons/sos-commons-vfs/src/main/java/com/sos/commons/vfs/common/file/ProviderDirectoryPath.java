@@ -1,9 +1,20 @@
 package com.sos.commons.vfs.common.file;
 
+import java.nio.file.Path;
+
+import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSPathUtil;
+
 public class ProviderDirectoryPath {
 
     private final String path;
     private final String pathWithTrailingSeparator;
+
+    public ProviderDirectoryPath(Path path) {
+        String p = SOSPath.toAbsoluteNormalizedPath(path).toString();
+        this.path = SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(p);
+        this.pathWithTrailingSeparator = SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(p);
+    }
 
     public ProviderDirectoryPath(String pathWithoutTrailingSeparator, String pathWithTrailingSeparator) {
         this.path = pathWithoutTrailingSeparator;
