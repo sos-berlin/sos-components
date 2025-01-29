@@ -1,6 +1,5 @@
 package com.sos.commons.vfs.common;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -13,6 +12,8 @@ import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.ProviderFileBuilder;
+import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.commons.vfs.exception.SOSProviderInitializationException;
@@ -71,30 +72,9 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
-    @Override
-    public String getDirectoryPathWithoutTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixStylePath(path);
-        if (p == null) {
-            return null;
-        }
-        return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
-    }
-
-    @Override
-    public String getDirectoryPathWithTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixStylePath(path);
-        if (p == null) {
-            return null;
-        }
-        return path.endsWith("/") ? path : path + "/";
-    }
-
-    @Override
-    public List<ProviderFile> selectFiles(String path) throws SOSProviderException {
-        List<ProviderFile> result = new ArrayList<>();
-
-        result.add(createProviderFile(path, 1, 1));
-        return result;
+    /** Provider (non-YADE) method */
+    public List<ProviderFile> selectFiles(String directory) throws SOSProviderException {
+        return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
     }
 
     @Override

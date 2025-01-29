@@ -336,6 +336,19 @@ public class SOSPath {
         return result;
     }
 
+    public static List<String> readFileNonEmptyLines(Path path) throws IOException {
+        return readFileNonEmptyLines(path, StandardCharsets.UTF_8);
+    }
+
+    public static List<String> readFileNonEmptyLines(Path path, Charset charset) throws IOException {
+        if (charset == null) {
+            charset = StandardCharsets.UTF_8;
+        }
+        try (Stream<String> lines = Files.lines(path, charset)) {
+            return lines.filter(line -> !line.trim().isEmpty()).collect(Collectors.toList());
+        }
+    }
+
     public static void renameTo(final Path source, final Path target) throws IOException {
         LOGGER.debug("..trying to move File " + source.toString() + " to " + target.toString());
         if (!Files.exists(target)) {

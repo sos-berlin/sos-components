@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.IProvider;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.YADEDirectory;
 import com.sos.yade.engine.common.YADEHelper;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineSourcePollingException;
@@ -47,7 +47,7 @@ public class YADESourcePollingHandler {
         }
     }
 
-    public List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, YADEDirectory sourceDir)
+    public List<ProviderFile> selectFiles(ISOSLogger logger, IProvider sourceProvider, ProviderDirectoryPath sourceDir)
             throws SOSYADEEngineSourcePollingException {
         if (start == null) {
             if (args.getPolling().getPollingWait4SourceFolder().getValue() && sourceDir == null) {
@@ -62,7 +62,6 @@ public class YADESourcePollingHandler {
 
         List<ProviderFile> result = new ArrayList<>();
 
-        boolean singleFilesSpecified = args.singleFilesSpecified();
         int currentFilesCount = 0;
         int filesCount = 0;// TODO unclear ...
         long currentPollingTime = 0;
@@ -97,11 +96,7 @@ public class YADESourcePollingHandler {
 
             if (shouldSelectFiles) {
                 try {
-                    if (singleFilesSpecified) {
-
-                    } else {
-
-                    }
+                    result = YADESourceFilesSelector.selectFiles(logger, sourceProvider, args, sourceDir, true);
                     currentFilesCount = result.size();
                 } catch (Throwable e) {
                     logger.error("%s[selectFiles]%s", lp, e.toString());

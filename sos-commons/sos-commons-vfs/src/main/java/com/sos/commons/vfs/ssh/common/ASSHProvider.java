@@ -5,9 +5,11 @@ import java.util.List;
 import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.CredentialStoreResolver;
+import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.commons.vfs.exception.SOSProviderInitializationException;
 
@@ -41,6 +43,15 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     @Override
     public boolean isAbsolutePath(String path) {
         return SOSPathUtil.isAbsolutePathFileSystemStyle(path);
+    }
+
+    @Override
+    public ProviderDirectoryPath getDirectoryPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return null;
+        }
+        return new ProviderDirectoryPath(SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(path), SOSPathUtil
+                .getUnixStyleDirectoryWithTrailingSeparator(path));
     }
 
     public SSHServerInfo getServerInfo() {

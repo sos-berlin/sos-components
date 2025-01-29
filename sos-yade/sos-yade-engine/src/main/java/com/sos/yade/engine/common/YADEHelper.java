@@ -22,8 +22,6 @@ import com.sos.commons.vfs.local.common.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.yade.engine.common.arguments.YADEArguments;
-import com.sos.yade.engine.common.arguments.YADESourceArguments;
-import com.sos.yade.engine.common.arguments.YADETargetArguments;
 import com.sos.yade.engine.exception.SOSYADEEngineConnectionException;
 import com.sos.yade.engine.exception.SOSYADEEngineException;
 import com.sos.yade.engine.exception.SOSYADEEngineSourceConnectionException;
@@ -81,6 +79,20 @@ public class YADEHelper {
         return new SOSYADEEngineTargetConnectionException(ex);
     }
 
+    public static boolean isConnectionException(Throwable cause) {
+        if (cause == null) {
+            return false;
+        }
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof SOSYADEEngineConnectionException) {
+                return true;
+            }
+            e = e.getCause();
+        }
+        return false;
+    }
+
     // public static List<String> getSourceSingleFiles(ISOSLogger logger, YADEArguments args, IProvider source, String sourceDir, boolean isPolling) {
     // List<String> entries = new ArrayList<>();
     // if (!args.getFilePath().isEmpty()) {
@@ -93,27 +105,6 @@ public class YADEHelper {
     //
     // return entries;
     // }
-
-    public static YADEDirectory getYADEDirectory(IProvider provider, YADESourceArguments args) {
-        if (args == null) {
-            return null;
-        }
-        return getYADEDirectory(provider, args.getSourceDir());
-    }
-
-    public static YADEDirectory getYADEDirectory(IProvider provider, YADETargetArguments args) {
-        if (args == null) {
-            return null;
-        }
-        return getYADEDirectory(provider, args.getTargetDir());
-    }
-
-    private static YADEDirectory getYADEDirectory(IProvider provider, SOSArgument<String> arg) {
-        if (provider == null || SOSString.isEmpty(arg.getValue())) {
-            return null;
-        }
-        return new YADEDirectory(provider, arg.getValue());
-    }
 
     public static void printBanner(ISOSLogger logger, YADEArguments args) {
         logger.info("[printBanner]...");
