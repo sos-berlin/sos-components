@@ -68,10 +68,6 @@ public class YADEEngine {
             YADESourcePollingHandler sourcePolling = new YADESourcePollingHandler(sourceDelegator);
             YADESourceZeroByteFilesHandler sourceZeroBytes = new YADESourceZeroByteFilesHandler();
 
-            // set YADE specific ProviderFile
-            sourceDelegator.getProvider().setProviderFileCreator(builder -> new YADEProviderFile(builder.getFullPath(), builder.getSize(), builder
-                    .getLastModifiedMillis(), args.getSource().isCheckSteadyStateEnabled()));
-
             /** 3) connect source provider */
             YADEDelegatorHelper.connect(logger, sourceDelegator);
 

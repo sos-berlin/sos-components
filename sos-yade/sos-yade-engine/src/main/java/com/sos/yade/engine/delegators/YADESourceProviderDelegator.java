@@ -13,6 +13,8 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
     public YADESourceProviderDelegator(IProvider provider, YADESourceArguments args) {
         super(provider, args);
         directory = provider.getDirectoryPath(args.getDirectory().getValue());
+
+        // set YADE specific ProviderContext
         provider.setContext(new AProviderContext() {
 
             @Override
@@ -20,6 +22,10 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
                 return LOG_PREFIX;
             }
         });
+        // set YADE specific ProviderFile
+        provider.setProviderFileCreator(builder -> new YADEProviderFile(builder.getFullPath(), builder.getSize(), builder.getLastModifiedMillis(),
+                args.isCheckSteadyStateEnabled()));
+
     }
 
     @Override

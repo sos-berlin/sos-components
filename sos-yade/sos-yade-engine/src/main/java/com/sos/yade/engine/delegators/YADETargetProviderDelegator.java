@@ -13,6 +13,8 @@ public class YADETargetProviderDelegator extends AYADEProviderDelegator {
     public YADETargetProviderDelegator(IProvider provider, YADETargetArguments args) {
         super(provider, args);
         directory = provider.getDirectoryPath(args.getDirectory().getValue());
+
+        // set YADE specific ProviderContext
         provider.setContext(new AProviderContext() {
 
             @Override
