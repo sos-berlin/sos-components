@@ -23,6 +23,7 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
             }
         });
         // set YADE specific ProviderFile
+        // Not sets YADEProviderFile.index because it can be changes (e.g. because of zeroBytes relaxed handling)
         provider.setProviderFileCreator(builder -> new YADEProviderFile(builder.getFullPath(), builder.getSize(), builder.getLastModifiedMillis(),
                 args.isCheckSteadyStateEnabled()));
 

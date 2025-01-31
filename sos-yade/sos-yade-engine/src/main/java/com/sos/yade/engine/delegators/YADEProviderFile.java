@@ -7,6 +7,7 @@ public class YADEProviderFile extends ProviderFile {
 
     private Steady steady = null;
     private TransferEntryState state = null;
+    private int index;// in the list
 
     public YADEProviderFile(String fullPath, long size, long lastModifiedMillis, boolean checkSteady) {
         super(fullPath, size, lastModifiedMillis);
@@ -41,6 +42,22 @@ public class YADEProviderFile extends ProviderFile {
 
     public boolean transferred() {// succeeded?
         return TransferEntryState.TRANSFERRED.equals(state);
+    }
+
+    private void setIndex(int val) {
+        index = val;
+    }
+
+    public static void setIndex(ProviderFile file, int index) {
+        ((YADEProviderFile) file).setIndex(index);
+    }
+
+    private int getIndex() {
+        return index;
+    }
+
+    public static int getIndex(ProviderFile file) {
+        return ((YADEProviderFile) file).getIndex();
     }
 
     public class Steady {

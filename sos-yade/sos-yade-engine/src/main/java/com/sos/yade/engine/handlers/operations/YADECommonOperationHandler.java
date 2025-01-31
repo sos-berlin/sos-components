@@ -59,7 +59,7 @@ public class YADECommonOperationHandler {
                 return;
             }
             YADESourceOperationRemoveHandler.execute(operation, logger, sourceDelegator, sourceFiles, getTransactionalIgoredMessage(args)
-                    + getCommandAfterFileIgoredMessage(args.getSource().getCommands()));
+                    + getCommandsAfterFileIgoredMessage(args.getSource().getCommands()));
             // TODO after operation?
             createResultSetFileFromSourceFiles(null, args.getClient(), sourceFiles);
             break;
@@ -98,10 +98,10 @@ public class YADECommonOperationHandler {
     }
 
     // TODO set in BANNER
-    private static String getCommandAfterFileIgoredMessage(YADEProviderCommandArguments args) {
+    private static String getCommandsAfterFileIgoredMessage(YADEProviderCommandArguments args) {
         String msg = "";
-        if (args != null && !args.getCommandAfterFile().isEmpty()) {
-            msg = args.getCommandAfterFile().getName() + " ignored.";
+        if (args != null && !args.getCommandsAfterFile().isEmpty()) {
+            msg = args.getCommandsAfterFile().getName() + " ignored.";
         }
         return msg;
     }

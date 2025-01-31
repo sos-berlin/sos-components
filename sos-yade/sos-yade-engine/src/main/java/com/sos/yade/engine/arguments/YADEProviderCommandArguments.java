@@ -26,20 +26,22 @@ public class YADEProviderCommandArguments {
 
     // -- File related ------------------------------
     /** CommandBeforeFile include="PostPreProcessing-Variables" */
-    // TODO new name: command_before_file ??? support multiple commands
-    private SOSArgument<String> commandBeforeFile = new SOSArgument<>("pre_command", false);
+    // TODO new name: commands_before_file - YADE 1 support multiple commands but the name is pre_command instead of pre_commands
+    private SOSArgument<List<String>> commandsBeforeFile = new SOSArgument<>("pre_command", false);
     /** CommandBeforeFile YADE-471 */
     // TODO new name: ??? command_before_file_enable_for_skipped or
     // - "command_before_file_for_skipped"
-    private SOSArgument<String> commandBeforeFileEnableForSkipped = new SOSArgument<>("pre_command_enable_for_skipped_transfer", false);
+    private SOSArgument<Boolean> commandsBeforeFileEnableForSkipped = new SOSArgument<>("pre_command_enable_for_skipped_transfer", false, Boolean
+            .valueOf(false));
 
     /** CommandAfterFile include="PostPreProcessing-Variables" */
     // TODO new name: command_after_file ??? support multiple commands
-    private SOSArgument<String> commandAfterFile = new SOSArgument<>("post_command", false);
+    private SOSArgument<List<String>> commandsAfterFile = new SOSArgument<>("post_command", false);
     /** CommandAfterFile YADE-471 */
     // TODO new name: command_after_file_disable_for_skipped (like YADE1) or
     // - "command_after_file_for_skipped" - !!! opposite meaning than the current implementation...
-    private SOSArgument<String> commandAfterFileDisableForSkipped = new SOSArgument<>("post_command_disable_for_skipped_transfer", false);
+    private SOSArgument<Boolean> commandsAfterFileDisableForSkipped = new SOSArgument<>("post_command_disable_for_skipped_transfer", false, Boolean
+            .valueOf(false));
 
     public SOSArgument<String> getCommandDelimiter() {
         return commandDelimiter;
@@ -77,20 +79,20 @@ public class YADEProviderCommandArguments {
         commandsAfterOperationFinal.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
     }
 
-    public SOSArgument<String> getCommandBeforeFile() {
-        return commandBeforeFile;
+    public SOSArgument<List<String>> getCommandsBeforeFile() {
+        return commandsBeforeFile;
     }
 
-    public SOSArgument<String> getCommandBeforeFileEnableForSkipped() {
-        return commandBeforeFileEnableForSkipped;
+    public SOSArgument<Boolean> getCommandsBeforeFileEnableForSkipped() {
+        return commandsBeforeFileEnableForSkipped;
     }
 
-    public SOSArgument<String> getCommandAfterFile() {
-        return commandAfterFile;
+    public SOSArgument<List<String>> getCommandsAfterFile() {
+        return commandsAfterFile;
     }
 
-    public SOSArgument<String> getCommandAfterFileDisableForSkipped() {
-        return commandAfterFileDisableForSkipped;
+    public SOSArgument<Boolean> getCommandsAfterFileDisableForSkipped() {
+        return commandsAfterFileDisableForSkipped;
     }
 
 }

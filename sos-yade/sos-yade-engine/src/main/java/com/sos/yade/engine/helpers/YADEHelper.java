@@ -97,7 +97,7 @@ public class YADEHelper {
         logger.info("[printBanner]...");
     }
 
-    public static void printSummary(ISOSLogger logger, YADEArguments args) {
+    public static void printSummary(ISOSLogger logger, YADEArguments args, List<ProviderFile> files, Throwable exception) {
         logger.info("[printSummary]...");
     }
 
