@@ -2,6 +2,8 @@ package com.sos.yade.engine.handlers.commands;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +53,15 @@ import com.sos.commons.vfs.common.file.ProviderFile;
  */
 public class YADEFileCommandsVariablesResolver {
 
-    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\w+|\\$\\{\\w+\\}");
+    private static final Set<String> VAR_NAMES = new HashSet<>();
+
+    static {
+        // only ${...} variables - without $date & $time
+        VAR_NAMES.add("TargetDirFullName");
+        VAR_NAMES.add("SourceDirFullName");
+
+    }
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$(date|time)|\\$\\{(" + String.join("|", VAR_NAMES) + ")\\}");
 
     public static String resolve(ProviderDirectoryPath sourceDirectory, ProviderDirectoryPath targetDirectory, ProviderFile file, String command) {
         Matcher matcher = VARIABLE_PATTERN.matcher(command);
