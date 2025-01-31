@@ -118,7 +118,7 @@ public class JsonValidator {
             put("PostNotices", "board/postNotices-schema.json");
             put("PostExpectedNotices", "board/postExpectedNotices-schema.json");
             
-            put("com.sos.joc.model.plan.PlansFilter", "plan/planFilter-schema.json");
+            put("com.sos.joc.model.plan.PlansFilter", "plan/plansFilter-schema.json");
 
             put("WorkflowFilter", "workflow/workflowFilter-schema.json");
             put("WorkflowPathFilter", "workflow/workflowPathFilter-schema.json");
