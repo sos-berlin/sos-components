@@ -7,7 +7,6 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.delegators.IYADEProviderDelegator;
@@ -118,7 +117,7 @@ public class YADECommandsHandler {
             ProviderFile file) throws SOSYADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsBeforeFile().isEmpty()) {
-            if (!isSkipped(file) || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
+            if (!YADEProviderFile.isSkipped(file) || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
                 SOSArgument<List<String>> arg = args.getCommandsBeforeFile();
                 executeFileCommands(logger, sourceDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator == null ? null
                         : targetDelegator.getDirectory());
@@ -127,7 +126,7 @@ public class YADECommandsHandler {
         if (targetDelegator != null) {
             args = getArgs(targetDelegator);
             if (args != null && !args.getCommandsBeforeFile().isEmpty()) {
-                if (!isSkipped(file) || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
+                if (!YADEProviderFile.isSkipped(file) || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
                     SOSArgument<List<String>> arg = args.getCommandsBeforeFile();
                     executeFileCommands(logger, targetDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator.getDirectory());
                 }
@@ -139,7 +138,7 @@ public class YADECommandsHandler {
             ProviderFile file) throws SOSYADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsAfterFile().isEmpty()) {
-            if (!isSkipped(file) || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
+            if (!YADEProviderFile.isSkipped(file) || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
                 SOSArgument<List<String>> arg = args.getCommandsAfterFile();
                 executeFileCommands(logger, sourceDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator == null ? null
                         : targetDelegator.getDirectory());
@@ -148,7 +147,7 @@ public class YADECommandsHandler {
         if (targetDelegator != null) {
             args = getArgs(targetDelegator);
             if (args != null && !args.getCommandsAfterFile().isEmpty()) {
-                if (!isSkipped(file) || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
+                if (!YADEProviderFile.isSkipped(file) || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
                     SOSArgument<List<String>> arg = args.getCommandsAfterFile();
                     executeFileCommands(logger, targetDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator.getDirectory());
                 }
@@ -240,10 +239,6 @@ public class YADECommandsHandler {
             logger.info("%s%s[%s]%s", logPrefix, add, commandsArg.getName(), YADEArgumentsHelper.toString(commandsArg, commandDelimiterArg
                     .getValue()));
         }
-    }
-
-    private static boolean isSkipped(ProviderFile file) {
-        return TransferEntryState.SKIPPED.equals(YADEProviderFile.getState(file));
     }
 
     /** TODO getSource/getTarget ??? */

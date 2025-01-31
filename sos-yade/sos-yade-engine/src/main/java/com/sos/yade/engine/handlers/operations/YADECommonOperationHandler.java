@@ -149,7 +149,7 @@ public class YADECommonOperationHandler {
 
         files.stream().forEach(file -> {
             YADEProviderFile f = (YADEProviderFile) file;
-            if (f.transferred()) {
+            if (f.isTransferred()) {
                 try {
                     sourceDelegator.getProvider().delete(f.getFullPath());
                     logger.info("%s[nr=TODO][%s]deleted", sourceDelegator.getLogPrefix(), f.getFullPath());

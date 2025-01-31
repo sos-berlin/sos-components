@@ -102,13 +102,23 @@ public class SOSPathUtil {
         return path.matches(REGEXP_ABSOLUTE_WINDOWS_UNC_PATH);
     }
 
-    public static String getFileName(String path) {
+    public static String getName(String path) {
         String np = toUnixPath(path);
         if (np == null) {
             return null;
         }
         int li = np.lastIndexOf('/');
         return (li >= 0) ? np.substring(li + 1) : np;
+    }
+
+    public static String getParentPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        if (path.contains("\\")) {
+            return getWindowsStyleParentPath(path);
+        }
+        return getUnixStyleParentPath(path);
     }
 
     public static String getUnixStyleParentPath(String path) {
