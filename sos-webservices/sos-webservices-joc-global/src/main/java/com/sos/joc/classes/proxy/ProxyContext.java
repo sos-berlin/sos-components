@@ -208,7 +208,7 @@ public class ProxyContext {
             try {
                 JControllerState currentState = p.currentState();
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p.api(), currentState, toString());
-                //PlanSchemas.updatePlanSchemas(p.api(), currentState, toString());
+                PlanSchemas.updatePlanSchemas(p.api(), currentState, toString());
                 
                 Map<AgentPath, JAgentRef> controllerKnownAgents = currentState.pathToAgentRef();
                 Map<SubagentId, JSubagentItem> controllerKnownSubagents = currentState.idToSubagentItem();

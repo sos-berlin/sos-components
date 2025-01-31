@@ -13,12 +13,12 @@ import java.util.stream.Stream;
 
 import com.sos.joc.Globals;
 import com.sos.joc.board.common.BoardHelper;
-import com.sos.joc.board.common.ExpectingOrder;
 import com.sos.joc.board.resource.INoticesModify;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
@@ -186,7 +186,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                     return workflows.isEmpty() || workflows.contains(o.getJOrder().workflowId().path().string());
                 };
                 proxy.api().executeCommand(JControllerCommand.batch(expectingOrdersStream.filter(filterWorkflow).map(o -> JControllerCommand
-                        .postNotice(o.getBoard(), NoticeKey.of(o.getNoticeId()), endOfLife)).distinct().collect(Collectors.toList()))).thenAccept(
+                        .postNotice(o.getBoard(), NoticeKey.of(o.getNoticeKey()), endOfLife)).distinct().collect(Collectors.toList()))).thenAccept(
                                 e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             

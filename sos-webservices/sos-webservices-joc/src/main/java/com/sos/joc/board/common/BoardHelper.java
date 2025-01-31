@@ -1,7 +1,6 @@
 package com.sos.joc.board.common;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -32,6 +32,7 @@ import com.sos.controller.model.board.NoticeStateText;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
@@ -43,9 +44,15 @@ import com.sos.joc.model.order.OrderV;
 
 import js7.data.board.BoardPath;
 import js7.data.board.BoardState;
+import js7.data.board.NoticeId;
+import js7.data.board.NoticeKey;
+import js7.data.board.PlannedNoticeKey;
 import js7.data.order.Order;
+import js7.data.plan.PlanId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.board.JBoardState;
+import js7.data_for_java.board.JNotice;
+import js7.data_for_java.board.JNoticePlace;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
@@ -56,7 +63,7 @@ public class BoardHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BoardHelper.class);
 
-    public static Board getCompactBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, Integer> numOfExpectings)
+    public static Board getCompactBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<NoticeId, Integer> numOfExpectings)
             throws Exception {
 
         final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
@@ -74,7 +81,7 @@ public class BoardHelper {
         return item;
     }
     
-    public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, List<JOrder>> expectings,
+    public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<NoticeId, List<JOrder>> expectings,
             Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId, long surveyDateMillis, SOSHibernateSession session) throws Exception {
 
         final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
@@ -94,51 +101,66 @@ public class BoardHelper {
                 return null;
             }
         };
-
-        expectings.forEach((noticeId, jOrders) -> {
-            Notice notice = new Notice();
-            notice.setId(noticeId);
-            notice.setEndOfLife(null);
-            if (limit > -1) {
-                notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
-                        .map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
-            } else {
-                notice.setExpectingOrders(jOrders.stream().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
-            }
-            notice.setState(getState(NoticeStateText.EXPECTED));
-            notices.add(notice);
-            if (withWorkflowTagsDisplayed) {
-                notice.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, jOrders.stream().map(JOrder::workflowId).map(
-                        JWorkflowId::path).map(WorkflowPath::string)));
-            }
-        });
-
+        
         if (jBoardState != null) {
             final BoardState bs = jBoardState.asScala();
-            LOGGER.info("Board: " + jBoardState.board().toJson());
             
-            //jBoardState.idToNotice(NoticeId.of("")).get().asScala().isAnnounced()
-
-            JavaConverters.asJava(bs.notices()).forEach(n -> {
-                Notice notice = new Notice();
-                notice.setId(n.id().noticeKey().string());
-//                String planKey = n.id().planId().planKey().string();
-//                String planTemplateId = n.id().planId().planSchemaId().string();
-//                Boolean isAnnounced = jBoardState.idToNotice(n.id()).map(JNoticePlace::asScala).map(NoticePlace::isAnnounced).orElse(false);
-//                LOGGER.info("NoticeId: " + notice.getId() + ", PlanKey: " + planKey + ", PlanTemplateId: " + planTemplateId + ", IsAnnounced: "
-//                        + isAnnounced.toString());
-                if (n.endOfLife().isDefined()) {
-                    notice.setEndOfLife(Date.from(Instant.ofEpochMilli(n.endOfLife().get().toEpochMilli())));
+            //LOGGER.info(JavaConverters.asJava(bs.toNoticePlace()).toString());
+            JavaConverters.asJava(bs.toNoticePlace()).forEach((pnk, nplace) -> {
+                JNoticePlace np = JNoticePlace.apply(nplace);
+                boolean isNotExpected = np.expectingOrderIds().isEmpty();
+                if (isNotExpected) {
+                    Notice notice = new Notice();
+                    notice.setKey(pnk.noticeKey().string());
+                    notice.setId(pnk.toShortString());
+                    np.notice().flatMap(JNotice::endOfLife).map(Date::from).ifPresent(d -> notice.setEndOfLife(d));
+                    if (np.isAnnounced()) {
+                        notice.setState(getState(NoticeStateText.ANNOUNCED));
+                    } else {
+                        notice.setState(getState(NoticeStateText.POSTED));
+                    }
+                    notice.setExpectingOrders(null);
+                    notices.add(notice);
+                } else {
+                    NoticeId noticeId = NoticeId.of(pnk.planId(), jBoardState.path(), pnk.noticeKey());
+                    Notice notice = getExpectingOrder(noticeId, expectings.get(noticeId), limit, compareScheduleFor, mapJOrderToOrderV,
+                            withWorkflowTagsDisplayed, session);
+                    if (np.isAnnounced()) {
+                        notice.setState(getState(NoticeStateText.ANNOUNCED));
+                    }
+                    notices.add(notice);
                 }
-                notice.setState(getState(NoticeStateText.POSTED));
-                notice.setExpectingOrders(null);
-                notices.add(notice);
             });
         }
+        
+//        expectings.forEach((noticeId, jOrders) -> {
+//            Notice notice = getExpectingOrder(noticeId, jOrders, limit, compareScheduleFor, mapJOrderToOrderV, withWorkflowTagsDisplayed, session);
+//            notices.add(notice);
+//        });
 
         item.setNotices(notices);
         item.setNumOfNotices(notices.size());
         return item;
+    }
+    
+    private static Notice getExpectingOrder(NoticeId noticeId, List<JOrder> jOrders, Integer limit, ToLongFunction<JOrder> compareScheduleFor,
+            Function<JOrder, OrderV> mapJOrderToOrderV, boolean withWorkflowTagsDisplayed, SOSHibernateSession session) {
+        Notice notice = new Notice();
+        notice.setId(ExpectingOrder.getNoticeKey(noticeId));
+        notice.setKey(noticeId.noticeKey().string());
+        notice.setEndOfLife(null);
+        if (limit > -1) {
+            notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
+                    .map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+        } else {
+            notice.setExpectingOrders(jOrders.stream().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+        }
+        notice.setState(getState(NoticeStateText.EXPECTED));
+        if (withWorkflowTagsDisplayed) {
+            notice.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, jOrders.stream().map(JOrder::workflowId).map(
+                    JWorkflowId::path).map(WorkflowPath::string)));
+        }
+        return notice;
     }
     
     private static JBoardState getJBoardState(JControllerState controllerState, String boardName) {
@@ -159,23 +181,82 @@ public class BoardHelper {
         return stateText;
     }
     
-    public static ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
+    public static Board getPlannedBoard(JControllerState controllerState, DeployedContent dc, PlanId planId,
+            Map<NoticeKey, JNoticePlace> noticePlace, Set<Folder> permittedFolders, Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId,
+            long surveyDateMillis, SOSHibernateSession session) throws JsonParseException, JsonMappingException, IOException {
+
+        Board item = init(dc);
+        item.setNotices(noticePlace.entrySet().stream().map(e -> getNotice(controllerState, planId, e.getKey(), e.getValue(), permittedFolders,
+                zoneId)).collect(Collectors.toList()));
+        item.setNumOfNotices(item.getNotices().size());
+        // TODO item.setNumOfExpectingOrders(null);
+        return item;
+    }
+    
+    public static Notice getNotice(JControllerState controllerState, PlanId pId, NoticeKey nk, JNoticePlace np, Set<Folder> permittedFolders, ZoneId zoneId) {
+        return getNotice(controllerState, PlannedNoticeKey.apply(pId, nk), np, permittedFolders, zoneId);
+    }
+    
+    public static Notice getNotice(JControllerState controllerState, PlannedNoticeKey pnk, JNoticePlace np, Set<Folder> permittedFolders, ZoneId zoneId) {
+        Notice notice = new Notice();
+        boolean isAnnounced = np.isAnnounced();
+        notice.setKey(pnk.noticeKey().string());
+        notice.setId(pnk.toShortString());
+        
+        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
+            try { //TODO orderTags
+                Map<String, Set<String>> orderTags = null;
+                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
+            } catch (Exception e) {
+                return null;
+            }
+        };
+        Stream<JOrder> orders = OrdersHelper.getPermittedJOrdersFromOrderIds(np.expectingOrderIds(), permittedFolders, controllerState);
+        notice.setExpectingOrders(orders.map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+        notice.setWorkflowTagsPerWorkflow(null);
+        if (!notice.getExpectingOrders().isEmpty()) {
+            // TODO
+            // notice.setWorkflowTagsPerWorkflow();
+            notice.setState(getState(NoticeStateText.EXPECTED, isAnnounced));
+            notice.setEndOfLife(null);
+        } else {
+            notice.setExpectingOrders(null);
+            np.notice().flatMap(JNotice::endOfLife).map(Date::from).ifPresent(d -> notice.setEndOfLife(d));
+            notice.setState(getState(NoticeStateText.POSTED, isAnnounced));
+        }
+
+        return notice;
+    }
+    
+//    private static Function<JOrder, OrderV> getJOrderToOrderVmapper(JControllerState controllerState, ZoneId zoneId) {
+//        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
+//            try { //TODO orderTags
+//                Map<String, Set<String>> orderTags = null;
+//                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
+//            } catch (Exception e) {
+//                return null;
+//            }
+//        };
+//        return mapJOrderToOrderV;
+//    }
+    
+    public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
             Set<String> boardPaths, Set<Folder> permittedFolders) {
         return getExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
     }
     
-    public static ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> getExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
+    public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
         return expectingOrders.collect(Collectors.groupingByConcurrent(
                 ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(ExpectingOrder::getNoticeId, Collectors.mapping(
                         ExpectingOrder::getJOrder, Collectors.toList()))));
     }
 
-    public static ConcurrentMap<String, ConcurrentMap<String, Integer>> getNumOfExpectingOrders(JControllerState controllerState,
+    public static ConcurrentMap<String, ConcurrentMap<NoticeId, Integer>> getNumOfExpectingOrders(JControllerState controllerState,
             Set<String> boardPaths, Set<Folder> permittedFolders) {
         return getNumOfExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
     }
     
-    public static ConcurrentMap<String, ConcurrentMap<String, Integer>> getNumOfExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
+    public static ConcurrentMap<String, ConcurrentMap<NoticeId, Integer>> getNumOfExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
         return expectingOrders.collect(Collectors.groupingByConcurrent(ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(
                 ExpectingOrder::getNoticeId, Collectors.reducing(0, e -> 1, Integer::sum))));
     }
@@ -216,8 +297,18 @@ public class BoardHelper {
         return item;
     }
     
-    private static NoticeState getState(NoticeStateText state) {
+    public static NoticeState getState(NoticeStateText state) {
         NoticeState nState = new NoticeState();
+        nState.set_text(state);
+        nState.setSeverity(severities.get(state));
+        return nState;
+    }
+    
+    public static NoticeState getState(NoticeStateText state, boolean isAnnounced) {
+        NoticeState nState = new NoticeState();
+        if (isAnnounced) {
+            state = NoticeStateText.ANNOUNCED;
+        }
         nState.set_text(state);
         nState.setSeverity(severities.get(state));
         return nState;
@@ -230,9 +321,10 @@ public class BoardHelper {
         {
             put(NoticeStateText.POSTED, 6);
             put(NoticeStateText.EXPECTED, 8);
+            put(NoticeStateText.ANNOUNCED, 4);
         }
     });
-    
+
 //    private static <T> Collector<T, ?, List<T>> limitingList(int limit) {
 //        return Collector.of(ArrayList::new, (l, e) -> {
 //            if (l.size() < limit)

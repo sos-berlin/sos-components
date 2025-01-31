@@ -1,4 +1,4 @@
-package com.sos.joc.board.common;
+package com.sos.joc.classes.board;
 
 import js7.data.board.BoardPath;
 import js7.data.board.NoticeId;
@@ -45,8 +45,16 @@ public class ExpectingOrder {
         return boardPath;
     }
     
-    public String getNoticeId() {
-        return noticeId.noticeKey().string();
+    public NoticeId getNoticeId() {
+        return noticeId;
+    }
+    
+    public String getNoticeKey() {
+        return getNoticeKey(noticeId);
+    }
+    
+    public static String getNoticeKey(NoticeId nId) {
+        return nId.plannedNoticeKey().toShortString();
     }
     
 }

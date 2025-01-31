@@ -1768,10 +1768,7 @@ public abstract class PublishUtils {
     }
     
     private static JPlannableBoard getJPlannableBoard(Board board) {
-        //compiler ERROR
-        //return JPlannableBoard.of(BoardPath.of(board.getPath()), JPlannableBoard.defaultToNoticeKey(), JPlannableBoard.defaultToNoticeKey());
-        //quick fix without testing
-        JExpression ex = JExpression.fromString(JPlannableBoard.defaultToNoticeKey().toString());
+        JExpression ex = JExpression.fromString(""); //default empty
         return JPlannableBoard.of(BoardPath.of(board.getPath()), ex, ex);
     }
 

@@ -6,20 +6,24 @@ import js7.data.board.NoticeId;
 
 public class FatExpectNotice {
 
-    private final String noticeId;
-    private final String boardPath;
+    private final NoticeId noticeId;
 
-    public FatExpectNotice(NoticeId noticeId, String boardPath) {
-        this.noticeId = noticeId.noticeKey().string();
-        this.boardPath = boardPath;
+    public FatExpectNotice(NoticeId noticeId) {
+        this.noticeId = noticeId;
     }
 
     public String getNoticeId() {
-        return noticeId;
+        if (noticeId == null) {
+            return "";
+        }
+        return noticeId.plannedNoticeKey().toShortString();
     }
 
     public String getBoardPath() {
-        return boardPath;
+        if (noticeId == null) {
+            return "";
+        }
+        return noticeId.boardPath().string();
     }
 
     @Override

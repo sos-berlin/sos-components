@@ -240,7 +240,7 @@ public class Board
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(notices).append(path).append(numOfExpectingOrders).append(numOfNotices).append(state).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).toHashCode();
     }
 
     @Override
@@ -252,7 +252,7 @@ public class Board
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(notices, rhs.notices).append(path, rhs.path).append(numOfExpectingOrders, rhs.numOfExpectingOrders).append(numOfNotices, rhs.numOfNotices).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).isEquals();
     }
 
 }

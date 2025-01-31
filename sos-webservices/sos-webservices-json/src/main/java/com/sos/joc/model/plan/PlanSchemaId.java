@@ -1,26 +1,25 @@
 
-package com.sos.controller.model.board;
+package com.sos.joc.model.plan;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum NoticeStateText {
+public enum PlanSchemaId {
 
-    POSTED("POSTED"),
-    EXPECTED("EXPECTED"),
-    ANNOUNCED("ANNOUNCED");
+    Global("Global"),
+    DailyPlan("DailyPlan");
     private final String value;
-    private final static Map<String, NoticeStateText> CONSTANTS = new HashMap<String, NoticeStateText>();
+    private final static Map<String, PlanSchemaId> CONSTANTS = new HashMap<String, PlanSchemaId>();
 
     static {
-        for (NoticeStateText c: values()) {
+        for (PlanSchemaId c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private NoticeStateText(String value) {
+    private PlanSchemaId(String value) {
         this.value = value;
     }
 
@@ -35,8 +34,8 @@ public enum NoticeStateText {
     }
 
     @JsonCreator
-    public static NoticeStateText fromValue(String value) {
-        NoticeStateText constant = CONSTANTS.get(value);
+    public static PlanSchemaId fromValue(String value) {
+        PlanSchemaId constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

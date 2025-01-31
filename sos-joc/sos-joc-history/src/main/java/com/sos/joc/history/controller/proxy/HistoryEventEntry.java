@@ -501,9 +501,7 @@ public class HistoryEventEntry {
 
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
-                for (NoticeId en : l) {
-                    r.add(new FatExpectNotice(en, en.boardPath().string()));
-                }
+                r = l.stream().map(FatExpectNotice::new).collect(Collectors.toList());
             }
             return r;
         }
@@ -513,9 +511,7 @@ public class HistoryEventEntry {
             List<NoticeId> l = JavaConverters.asJava(ev.noticeIds());
             List<FatExpectNotice> r = new ArrayList<>();
             if (l != null && l.size() > 0) {
-                for (NoticeId en : l) {
-                    r.add(new FatExpectNotice(en, en.boardPath().string()));
-                }
+                r = l.stream().map(FatExpectNotice::new).collect(Collectors.toList());
             }
             return r;
         }

@@ -2,8 +2,11 @@ package com.sos.joc.classes.board;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -24,46 +27,58 @@ import reactor.core.publisher.Flux;
 public class PlanSchemas {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanSchemas.class);
-    private static final Map<String, Either<Problem, JExpression>> planSchemas = Collections.unmodifiableMap(new HashMap<String, Either<Problem, JExpression>>() {
+    private static final Map<PlanSchemaId, Either<Problem, JExpression>> planSchemas = Collections.unmodifiableMap(
+            new HashMap<PlanSchemaId, Either<Problem, JExpression>>() {
 
-        private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 1L;
 
-        {
-            put("DailyPlan", JExpression.parse("match($js7OrderId, '#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*', '$1') ?"));
-        }
-    });
+                {
+                    put(PlanSchemaId.of("DailyPlan"), JExpression.parse("match($js7OrderId, '#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*', '$1') ?"));
+                }
+            });
     
     
     // this method is called directly in onProxyCoupled
     public static void updatePlanSchemas(JControllerApi controllerApi, JControllerState currentState, String controller) {
-        // TODO check which schema already deployed! 
         try {
-            //currentState.pathToBoardState().get("").
-            controllerApi.updateItems(Flux.fromStream(getPlanSchemas().map(JUpdateItemOperation::addOrChangeSimple))).thenAccept(e -> {
-                if (e.isRight()) {
-                    LOGGER.info("Plan schemas " + planSchemas.keySet().toString() + " submitted to " + controller);
-                } else {
-                    LOGGER.error("Error at submitting plan schemas " + planSchemas.keySet().toString() + " to " + controller + ": " + ProblemHelper.getErrorMessage(e.getLeft()));
-                }
-            });
+            Map<Boolean, List<JPlanSchema>> planSchemasMap = getGroupedPlanSchemas(currentState);
+            if (planSchemasMap.containsKey(Boolean.FALSE)) { // new schemas
+                String schemaStr = planSchemasMap.get(Boolean.FALSE).size() == 1 ? "schema" : "schemas";
+                String newPlanSchemas = getPlanSchemasToString(planSchemasMap.get(Boolean.FALSE).stream().map(JPlanSchema::id));
+                controllerApi.updateItems(Flux.fromStream(planSchemasMap.get(Boolean.FALSE).stream().map(JUpdateItemOperation::addOrChangeSimple)))
+                        .thenAccept(e -> {
+                            if (e.isRight()) {
+                                LOGGER.info(String.format("Plan %s %s submitted to %s", schemaStr, newPlanSchemas, controller));
+                            } else {
+                                LOGGER.error(String.format("Error at submitting plan %s %s to %s: %s", schemaStr, newPlanSchemas, controller,
+                                        ProblemHelper.getErrorMessage(e.getLeft())));
+                            }
+                        });
+            }
+            if (planSchemasMap.containsKey(Boolean.TRUE)) { // already known schemas
+                String alreadyPlanSchemas = getPlanSchemasToString(planSchemasMap.get(Boolean.TRUE).stream().map(JPlanSchema::id));
+                String schemaStr = planSchemasMap.get(Boolean.TRUE).size() == 1 ? "schema" : "schemas";
+                LOGGER.info(String.format("Plan %s %s already submitted to %s", schemaStr, alreadyPlanSchemas, controller));
+            }
         } catch (Exception e) {
-            LOGGER.error("Error at submitting plan schemas " + planSchemas.keySet().toString() + " to " + controller, e);
+            String schemaStr = planSchemas.size() == 1 ? "schema" : "schemas";
+            LOGGER.error(String.format("Error at submitting plan %s %s to %s", schemaStr, getPlanSchemasToString(planSchemas.keySet().stream()),
+                    controller), e);
         }
     }
     
     private static Stream<JPlanSchema> getPlanSchemas() {
-        return planSchemas.entrySet().stream().filter(e -> e.getValue().isRight()).map(e -> JPlanSchema.of(new PlanSchemaId(e.getKey()), e.getValue()
+        return planSchemas.entrySet().stream().filter(e -> e.getValue().isRight()).map(e -> JPlanSchema.of(e.getKey(), e.getValue()
                 .get(), Optional.empty()));
     }
-
-//    private static Stream<JPlanSchema> getPlanSchemas(Set<String> schemas) {
-//        Stream<Map.Entry<String, Either<Problem, JExpression>>> stream = planSchemas.entrySet().stream();
-//        if (schemas != null) {
-//            stream = stream.filter(e -> schemas.contains(e.getKey()));
-//        }
-//        return stream.filter(e -> e.getValue().isRight()).map(e -> JPlanSchema.of(new PlanSchemaId(e.getKey()), e.getValue().get(), Optional
-//                .empty()));
-//    }
     
+    private static Map<Boolean, List<JPlanSchema>> getGroupedPlanSchemas(JControllerState currentState) {
+        Set<PlanSchemaId> knownPlanSchemaIds = currentState.idToPlanSchemaState().keySet();
+        return getPlanSchemas().collect(Collectors.groupingBy(sp -> knownPlanSchemaIds.contains(sp.id())));
+    }
+    
+    private static String getPlanSchemasToString(Stream<PlanSchemaId> psIds) {
+        return psIds.map(PlanSchemaId::string).collect(Collectors.joining("', '", "'", "'"));
+    }
 
 }

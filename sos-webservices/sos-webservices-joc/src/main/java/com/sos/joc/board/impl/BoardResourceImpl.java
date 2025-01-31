@@ -16,10 +16,10 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.board.common.BoardHelper;
-import com.sos.joc.board.common.ExpectingOrder;
 import com.sos.joc.board.resource.IBoardResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -30,6 +30,7 @@ import com.sos.joc.model.board.Board;
 import com.sos.joc.model.board.BoardFilter;
 import com.sos.schema.JsonValidator;
 
+import js7.data.board.NoticeId;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 
@@ -80,14 +81,14 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             checkFolderPermissions(dc.getPath());
             
             if (filter.getCompact() == Boolean.TRUE) {
-                ConcurrentMap<String, Integer> numOfExpectings = BoardHelper.getNumOfExpectingOrders(currentstate, Collections.singleton(dc
+                ConcurrentMap<NoticeId, Integer> numOfExpectings = BoardHelper.getNumOfExpectingOrders(currentstate, Collections.singleton(dc
                         .getName()), folderPermissions.getListOfFolders()).getOrDefault(dc.getName(), new ConcurrentHashMap<>());
                 answer.setNoticeBoard(BoardHelper.getCompactBoard(currentstate, dc, numOfExpectings));
             } else {
                 Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
                 List<ExpectingOrder> eos = BoardHelper.getExpectingOrdersStream(currentstate, Collections.singleton(dc.getName()), folderPermissions
                         .getListOfFolders()).collect(Collectors.toList());
-                ConcurrentMap<String, List<JOrder>> expectings = BoardHelper.getExpectingOrders(eos.stream()).getOrDefault(dc.getName(),
+                ConcurrentMap<NoticeId, List<JOrder>> expectings = BoardHelper.getExpectingOrders(eos.stream()).getOrDefault(dc.getName(),
                         new ConcurrentHashMap<>());
                 Map<String, Set<String>> orderTags = OrderTags.getTags(filter.getControllerId(), eos.stream().map(ExpectingOrder::getJOrder),
                         session);

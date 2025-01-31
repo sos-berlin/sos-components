@@ -56,10 +56,12 @@ import com.sos.inventory.model.workflow.ListParameters;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
@@ -734,7 +736,7 @@ public class OrdersHelper {
         if ("ExpectingNotices".equals(oItem.getState().getTYPE())) {
             if (controllerState != null) {
                 return controllerState.orderToStillExpectedNotices(orderId).stream().map(n -> new ExpectedNotice(n.boardPath().string(),
-                        n.noticeKey().string())).collect(Collectors.toList());
+                        ExpectingOrder.getNoticeKey(n))).collect(Collectors.toList());
             } else {
                 return oItem.getState().getExpected();
             }
@@ -2006,6 +2008,18 @@ public class OrdersHelper {
             });
         }
         return endPoss;
+    }
+    
+    public static Stream<JOrder> getJOrdersFromOrderIds(Collection<OrderId> orderids, JControllerState controllerState) {
+        return orderids.stream().map(o -> controllerState.idToOrder().get(o)).filter(Objects::nonNull);
+    }
+    
+    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Collection<OrderId> orderids, Set<Folder> permittedFolders, JControllerState controllerState) {
+        Stream<JOrder> orders = getJOrdersFromOrderIds(orderids, controllerState);
+        if (permittedFolders != null && !permittedFolders.isEmpty()) {
+            orders = orders.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
+        }
+        return orders;
     }
 
 }

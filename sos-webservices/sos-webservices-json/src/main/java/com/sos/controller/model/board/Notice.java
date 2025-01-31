@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
+    "key",
     "endOfLife",
     "expectingOrders",
     "workflowTagsPerWorkflow",
@@ -40,10 +41,18 @@ public class Notice {
     @JsonProperty("id")
     private String id;
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("key")
+    private String key;
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("endOfLife")
@@ -81,12 +90,14 @@ public class Notice {
      * @param workflowTagsPerWorkflow
      * @param id
      * @param state
+     * @param key
      * @param endOfLife
      * @param expectingOrders
      */
-    public Notice(String id, Date endOfLife, List<OrderV> expectingOrders, WorkflowTags workflowTagsPerWorkflow, NoticeState state) {
+    public Notice(String id, String key, Date endOfLife, List<OrderV> expectingOrders, WorkflowTags workflowTagsPerWorkflow, NoticeState state) {
         super();
         this.id = id;
+        this.key = key;
         this.endOfLife = endOfLife;
         this.expectingOrders = expectingOrders;
         this.workflowTagsPerWorkflow = workflowTagsPerWorkflow;
@@ -118,10 +129,33 @@ public class Notice {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("key")
+    public String getKey() {
+        return key;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("key")
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("endOfLife")
@@ -133,7 +167,6 @@ public class Notice {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("endOfLife")
@@ -197,12 +230,12 @@ public class Notice {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).append("workflowTagsPerWorkflow", workflowTagsPerWorkflow).append("state", state).toString();
+        return new ToStringBuilder(this).append("id", id).append("key", key).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).append("workflowTagsPerWorkflow", workflowTagsPerWorkflow).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowTagsPerWorkflow).append(id).append(state).append(endOfLife).append(expectingOrders).toHashCode();
+        return new HashCodeBuilder().append(id).toHashCode();
     }
 
     @Override
@@ -214,7 +247,7 @@ public class Notice {
             return false;
         }
         Notice rhs = ((Notice) other);
-        return new EqualsBuilder().append(workflowTagsPerWorkflow, rhs.workflowTagsPerWorkflow).append(id, rhs.id).append(state, rhs.state).append(endOfLife, rhs.endOfLife).append(expectingOrders, rhs.expectingOrders).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).isEquals();
     }
 
 }

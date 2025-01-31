@@ -6,34 +6,18 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 
 import js7.base.time.Timestamp;
-import js7.data.board.BoardPath;
-import js7.data.board.Notice;
 import js7.data.board.NoticeId;
 import scala.Option;
 
 public class FatPostNotice {
 
-    private String noticeId;
-    private String boardPath;
+    private NoticeId noticeId;
     private Date endOfLife;
 
     public FatPostNotice(NoticeId notice, Option<Timestamp> endOfLife) {
         if (notice != null) {
-            setNoticeId(notice);
-            setBoardPath(notice.boardPath());
+            noticeId = notice;
             setEndOfLife(endOfLife);
-        }
-    }
-
-    private void setNoticeId(NoticeId nId) {
-        if (nId != null) {
-            noticeId = nId.noticeKey().string();
-        }
-    }
-
-    private void setBoardPath(BoardPath bp) {
-        if (bp != null) {
-            boardPath = bp.string();
         }
     }
 
@@ -44,11 +28,17 @@ public class FatPostNotice {
     }
 
     public String getNoticeId() {
-        return noticeId;
+        if (noticeId == null) {
+            return "";
+        }
+        return noticeId.plannedNoticeKey().toShortString();
     }
 
     public String getBoardPath() {
-        return boardPath;
+        if (noticeId == null) {
+            return "";
+        }
+        return noticeId.boardPath().string();
     }
 
     public Date getEndOfLife() {
