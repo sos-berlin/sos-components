@@ -19,6 +19,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonCaseSensitivity;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonOperator;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonPathType;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.util.SOSString;
@@ -1526,10 +1527,10 @@ public class InventorySearchDBLayer extends DBLayer {
             if (isOracle) {
                 if (isNormalCriticality) {
                     // NOT JSON_EXISTS...
-                    hql.append(" not ").append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities")).append(" ");
+                    hql.append(" not ").append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonPathType.ARRAY)).append(" ");
                 } else {
-                    hql.append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonOperator.LIKE, ":jobCriticality",
-                            JsonCaseSensitivity.INSENSITIVE));
+                    hql.append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonPathType.ARRAY, JsonOperator.LIKE,
+                            ":jobCriticality", JsonCaseSensitivity.INSENSITIVE));
                 }
             } else {
                 String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.criticalities");
@@ -1587,9 +1588,9 @@ public class InventorySearchDBLayer extends DBLayer {
 
             if (isOracle) {
                 if (findAll) {
-                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute)).append(" ");
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonPathType.ARRAY)).append(" ");
                 } else {
-                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonOperator.EQUALS, ":" + paramName,
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonPathType.ARRAY, JsonOperator.EQUALS, ":" + paramName,
                             JsonCaseSensitivity.SENSITIVE));
                 }
             } else {
@@ -1619,9 +1620,9 @@ public class InventorySearchDBLayer extends DBLayer {
 
             if (isOracle) {
                 if (findAll) {
-                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute)).append(" ");
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonPathType.ARRAY)).append(" ");
                 } else {
-                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonOperator.LIKE, ":" + paramName,
+                    hql.append(SOSHibernateJsonExists.getFunction(columnName, jsonAttribute, JsonPathType.ARRAY, JsonOperator.LIKE, ":" + paramName,
                             JsonCaseSensitivity.INSENSITIVE));
                 }
             } else {

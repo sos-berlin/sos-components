@@ -25,6 +25,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SOSHibernateTest;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonCaseSensitivity;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonOperator;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonPathType;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSPath;
@@ -378,7 +379,7 @@ public class SOSHibernateJsonTest {
 
             test++;
             // exact
-            String f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames");
+            String f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames", JsonPathType.ARRAY);
 
             where = "and " + f;
             result = session.getResultList(hql + where);
@@ -386,13 +387,14 @@ public class SOSHibernateJsonTest {
 
             test++;
             // exact
-            f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames", JsonOperator.LIKE, "%www%", JsonCaseSensitivity.SENSITIVE);
+            f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames", JsonPathType.ARRAY, JsonOperator.LIKE, "%www%",
+                    JsonCaseSensitivity.SENSITIVE);
 
             where = "and " + f;
             result = session.getResultList(hql + where);
             LOGGER.info("[" + test + "][RESULT]" + result.size());
 
-            f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames", JsonOperator.LIKE, ":param");
+            f = SOSHibernateJsonExists.getFunction("jsonContent", "$.workflowNames", JsonPathType.ARRAY, JsonOperator.LIKE, ":param");
             where = "and " + f;
             Query<String> q = session.createQuery(hql + where);
             session.setParameter(q, "param", "%ww%");

@@ -23,6 +23,10 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
         EQUALS, NOT_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, LIKE;
     }
 
+    public enum JsonPathType {
+        OBJECT, ARRAY;
+    }
+
     public enum JsonCaseSensitivity {
         SENSITIVE, INSENSITIVE
     }
@@ -41,9 +45,10 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
      * 
      * @param jsonColumn
      * @param jsonPath
+     * @param jsonPathType type of the jsonPath container(ARRAY/OBJECT)
      * @return */
-    public static String getFunction(final String jsonColumn, final String jsonPath) {
-        return getFunction(jsonColumn, jsonPath, null, null, DEFAULT_CASE_SENSITIVITY);
+    public static String getFunction(final String jsonColumn, final String jsonPath, final JsonPathType jsonPathType) {
+        return getFunction(jsonColumn, jsonPath, jsonPathType, null, null, DEFAULT_CASE_SENSITIVITY);
     }
 
     /** - Currently only for Oracle<br/>
@@ -51,35 +56,40 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
      * 
      * @param jsonColumn
      * @param jsonPath
+     * @param jsonPathType type of the jsonPath container(ARRAY/OBJECT)
      * @param caseSensitivity
      * @return */
-    public static String getFunction(final String jsonColumn, final String jsonPath, final JsonCaseSensitivity caseSensitivity) {
-        return getFunction(jsonColumn, jsonPath, null, null, caseSensitivity);
-    }
-
-    /** - Currently only for Oracle<br/>
-     * TODO H2,MSSQL,MYSQL,PGSQL
-     * 
-     * @param jsonColumn
-     * @param jsonPath
-     * @param operator
-     * @param value
-     * @return */
-    public static String getFunction(final String jsonColumn, final String jsonPath, final JsonOperator operator, final Object value) {
-        return getFunction(jsonColumn, jsonPath, operator, value, DEFAULT_CASE_SENSITIVITY);
-    }
-
-    /** - Currently only for Oracle<br/>
-     * TODO H2,MSSQL,MYSQL,PGSQL
-     * 
-     * @param jsonColumn
-     * @param jsonPath
-     * @param operator
-     * @param value
-     * @param caseSensitivity
-     * @return */
-    public static String getFunction(final String jsonColumn, final String jsonPath, final JsonOperator operator, final Object value,
+    public static String getFunction(final String jsonColumn, final String jsonPath, final JsonPathType jsonPathType,
             final JsonCaseSensitivity caseSensitivity) {
+        return getFunction(jsonColumn, jsonPath, jsonPathType, null, null, caseSensitivity);
+    }
+
+    /** - Currently only for Oracle<br/>
+     * TODO H2,MSSQL,MYSQL,PGSQL
+     * 
+     * @param jsonColumn
+     * @param jsonPath
+     * @param jsonPathType type of the jsonPath container(ARRAY/OBJECT)
+     * @param operator
+     * @param value
+     * @return */
+    public static String getFunction(final String jsonColumn, final String jsonPath, final JsonPathType jsonPathType, final JsonOperator operator,
+            final Object value) {
+        return getFunction(jsonColumn, jsonPath, jsonPathType, operator, value, DEFAULT_CASE_SENSITIVITY);
+    }
+
+    /** - Currently only for Oracle<br/>
+     * TODO H2,MSSQL,MYSQL,PGSQL
+     * 
+     * @param jsonColumn
+     * @param jsonPath
+     * @param jsonPathType type of the jsonPath container(ARRAY/OBJECT)
+     * @param operator
+     * @param value
+     * @param caseSensitivity
+     * @return */
+    public static String getFunction(final String jsonColumn, final String jsonPath, final JsonPathType jsonPathType, final JsonOperator operator,
+            final Object value, final JsonCaseSensitivity caseSensitivity) {
         String val = null;
         String valShouldBeQuoted = null;
         String valAsQueryParameterName = null; // :my_param
@@ -99,8 +109,9 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
         }
         String op = operator == null ? null : "'" + operator.name() + "'";
         JsonCaseSensitivity cs = caseSensitivity == null ? DEFAULT_CASE_SENSITIVITY : caseSensitivity;
-        return new StringBuilder(NAME).append("('" + cs.name() + "',").append(jsonColumn).append(",'").append(jsonPath).append("',").append(op)
-                .append(",").append(val).append("," + valShouldBeQuoted + "," + valAsQueryParameterName + ")").toString();
+        return new StringBuilder(NAME).append("('" + cs.name() + "',").append(jsonColumn).append(",'").append(jsonPath).append("','").append(
+                jsonPathType.name()).append("',").append(op).append(",").append(val).append("," + valShouldBeQuoted + "," + valAsQueryParameterName
+                        + ")").toString();
     }
 
     @Override
@@ -113,12 +124,13 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
         boolean caseInsensitive = isCaseInsensitive(arguments.get(0));
         String jsonColumn = getColumn(arguments.get(1));
         String jsonPath = getLiteralValue(arguments.get(2));
-        JsonOperator operator = getOperator(arguments.get(3));
+        JsonPathType jsonPathType = getPathType(arguments.get(3));
+        JsonOperator operator = getOperator(arguments.get(4));
 
-        SqlAstNode valueNode = arguments.get(4);
+        SqlAstNode valueNode = arguments.get(5);
         String value = getLiteralValue(valueNode);
-        boolean valueShouldBeQuoted = quoteValue(arguments.get(5));
-        String valueAsQueryParameterName = getLiteralValue(arguments.get(6));// :my_param....
+        boolean valueShouldBeQuoted = quoteValue(arguments.get(6));
+        String valueAsQueryParameterName = getLiteralValue(arguments.get(7));// :my_param....
         String valueAsQueryParameterNameVarName = valueAsQueryParameterName == null ? null : "SOS_VAR_" + (valueAsQueryParameterName.substring(1))
                 .toUpperCase();
 
@@ -137,7 +149,12 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
                 sqlAppender.append(jsonColumn);
             }
             sqlAppender.append(",'");
-            sqlAppender.append(jsonPath);
+            if (JsonPathType.ARRAY.equals(jsonPathType)) {
+                sqlAppender.append(jsonPath + "[*]");
+            } else {
+                sqlAppender.append(jsonPath);
+            }
+
             if (operator != null && (value != null || valueAsQueryParameterName != null)) {
                 // JSON_EXISTS(JSON_CONTENT, '$.workflowNames?(@ == "My_Workflow")')";
                 // -- JSON_EXISTS(lower(JSON_CONTENT), '$.workflownames?(@ == "my_workflow")')";
@@ -198,6 +215,10 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
 
     private String getColumn(SqlAstNode arg) {
         return ((BasicValuedPathInterpretation<?>) arg).getColumnReference().getExpressionText();
+    }
+
+    private JsonPathType getPathType(SqlAstNode arg) {
+        return JsonPathType.valueOf(getLiteralValue(arg));
     }
 
     private JsonOperator getOperator(SqlAstNode arg) {
