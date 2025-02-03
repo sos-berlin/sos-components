@@ -14,7 +14,6 @@ import com.sos.yade.engine.handlers.operations.YADECommonOperationHandler;
 import com.sos.yade.engine.handlers.source.YADESourceFilesSelector;
 import com.sos.yade.engine.handlers.source.YADESourcePollingHandler;
 import com.sos.yade.engine.handlers.source.YADESourceSteadyFilesHandler;
-import com.sos.yade.engine.handlers.source.YADESourceZeroByteFilesHandler;
 import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.helpers.YADEDelegatorHelper;
 import com.sos.yade.engine.helpers.YADEHelper;
@@ -69,7 +68,6 @@ public class YADEEngine {
 
             // source handlers
             YADESourcePollingHandler sourcePolling = new YADESourcePollingHandler(sourceDelegator);
-            YADESourceZeroByteFilesHandler sourceZeroBytes = new YADESourceZeroByteFilesHandler();
 
             /** 3) connect source provider */
             YADEDelegatorHelper.connect(logger, sourceDelegator);
@@ -90,35 +88,32 @@ public class YADEEngine {
 
                     boolean shouldExecuteOperation = true;
                     try {
-                        /** 7) handleZeroByteFiles on source - throws exception */
-                        files = sourceZeroBytes.filter(logger, sourceDelegator, files);
-
-                        /** 8) check forceFiles, resultSet conditions - throws exception */
-                        YADEHelper.checkSourceFiles(sourceDelegator, args, files);
+                        /** 7) check zeroByteFiles, forceFiles, resultSet conditions - throws exception */
+                        files = YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, args, files);
                     } catch (SOSYADEEngineSourceZeroByteFilesException e) {
                         logger.error("%s[%s]%s", sourceDelegator.getLogPrefix(), sourcePolling.getMethod(), e.toString());
                         shouldExecuteOperation = false;
                     }
 
                     if (shouldExecuteOperation) {
-                        /** 9) connect target provider */
+                        /** 8) connect target provider */
                         YADEDelegatorHelper.connect(logger, targetDelegator);
 
                         if (sourcePolling.isFirstCycle()) {
-                            /** 10) target provider create directories before commands */
+                            /** 9) target provider create directories before commands */
                             YADEDelegatorHelper.createDirectoriesOnTarget(logger, targetDelegator);
 
                             // YADE 1 handling - execute before operation commands only once - is it OK????
-                            /** 11) target provider execute commands before operation */
+                            /** 10) target provider execute commands before operation */
                             YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
                         }
 
                         exception = null;
                         try {
-                            /** 12) execute operation: COPY,MOVE,REMOVE or GETLIST - throws exception */
+                            /** 11) execute operation: COPY,MOVE,REMOVE or GETLIST - throws exception */
                             YADECommonOperationHandler.execute(logger, args, sourceDelegator, files, targetDelegator);
 
-                            /** 13) execute commands after operation on success */
+                            /** 12) execute commands after operation on success */
                             try {
                                 YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
                             } catch (Throwable e) {
@@ -146,25 +141,22 @@ public class YADEEngine {
                 /** 6) check source files steady */
                 if (YADESourceSteadyFilesHandler.checkFilesSteady(logger, sourceDelegator, files)) {
 
-                    /** 7) handleZeroByteFiles on source - throws exception */
-                    files = sourceZeroBytes.filter(logger, sourceDelegator, files);
+                    /** 7) check zeroByteFiles, forceFiles, resultSet conditions - throws exception */
+                    files = YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, args, files);
 
-                    /** 8) check forceFiles, resultSet conditions - throws exception */
-                    YADEHelper.checkSourceFiles(sourceDelegator, args, files);
-
-                    /** 9) connect target provider - throws exception */
+                    /** 8) connect target provider - throws exception */
                     YADEDelegatorHelper.connect(logger, targetDelegator);
 
-                    /** 10) target provider create directories before commands */
+                    /** 9) target provider create directories before commands */
                     YADEDelegatorHelper.createDirectoriesOnTarget(logger, targetDelegator);
 
-                    /** 11) target provider execute commands before operation */
+                    /** 10) target provider execute commands before operation */
                     YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
-                    /** 12) execute operation: COPY,MOVE,REMOVE or GETLIST - throws exception */
+                    /** 11) execute operation: COPY,MOVE,REMOVE or GETLIST - throws exception */
                     YADECommonOperationHandler.execute(logger, args, sourceDelegator, files, targetDelegator);
 
-                    /** 13) execute commands after operation on success - throws exception */
+                    /** 12) execute commands after operation on success - throws exception */
                     YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
                 }
             }

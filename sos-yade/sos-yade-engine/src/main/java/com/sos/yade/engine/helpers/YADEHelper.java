@@ -8,7 +8,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
@@ -21,33 +20,6 @@ import com.sos.yade.engine.exceptions.SOSYADEEngineSourceConnectionException;
 import com.sos.yade.engine.exceptions.SOSYADEEngineTargetConnectionException;
 
 public class YADEHelper {
-
-    /** Check before execute Operation
-     * 
-     * @param sourceProvider
-     * @param args
-     * @param sourceFiles
-     * @return
-     * @throws Exception */
-    public static int checkSourceFiles(IYADEProviderDelegator sourceDelegator, YADEArguments args, List<ProviderFile> sourceFiles) throws Exception {
-        int size = sourceFiles == null ? 0 : sourceFiles.size();
-
-        if (size == 0 && args.getSource().getForceFiles().getValue()) {
-            throw new Exception(String.format("%s[%s=true]No files found", sourceDelegator.getLogPrefix(), args.getSource().getForceFiles()
-                    .getName()));
-        }
-
-        // ResultSet
-        SOSComparisonOperator op = args.getClient().getRaiseErrorIfResultSetIs().getValue();
-        if (op != null) {
-            int expectedSize = args.getClient().getExpectedSizeOfResultSet().getValue();
-            if (op.compare(size, expectedSize)) {
-                throw new Exception(String.format("%s[files found=%s][RaiseErrorIfResultSetIs]%s %s", sourceDelegator.getLogPrefix(), size, op,
-                        expectedSize));
-            }
-        }
-        return size;
-    }
 
     public static void throwConnectionException(IYADEProviderDelegator delegator, Throwable e) throws SOSYADEEngineConnectionException {
         SOSYADEEngineConnectionException ex = getConnectionException(delegator, e);

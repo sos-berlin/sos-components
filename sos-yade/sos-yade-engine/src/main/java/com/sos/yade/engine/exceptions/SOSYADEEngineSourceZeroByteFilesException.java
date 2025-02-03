@@ -1,6 +1,6 @@
 package com.sos.yade.engine.exceptions;
 
-public class SOSYADEEngineSourceZeroByteFilesException extends SOSYADEEngineException {
+public class SOSYADEEngineSourceZeroByteFilesException extends SOSYADEEngineSourceFilesSelectorException {
 
     private static final long serialVersionUID = 1L;
 
