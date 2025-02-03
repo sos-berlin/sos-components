@@ -8,12 +8,12 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.Globals;
+import com.sos.joc.board.common.BoardHelper;
 import com.sos.joc.board.resource.INoticeResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -23,11 +23,8 @@ import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 import jakarta.ws.rs.Path;
-import js7.data.board.BoardPath;
 import js7.data.board.NoticeId;
-import js7.data.board.NoticeKey;
 import js7.data.controller.ControllerCommand;
-import js7.data.plan.PlanId;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.proxy.javaapi.JControllerApi;
 
@@ -81,14 +78,15 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         storeAuditLog(filter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
         JControllerApi controllerApi = ControllerApi.of(controllerId);
-        BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));
-        NoticeKey noticeKey = NoticeKey.of(filter.getNoticeId());
+        //BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));
+        NoticeId noticeId = BoardHelper.getNoticeId(filter.getNoticeId(), filter.getNoticeBoardPath());
+        //NoticeKey.of(filter.getNoticeId()); //TODO relabel NoticeId -> Noticekey?
         Instant now = Instant.now();
-
+        
         switch (action) {
         case DELETE:
-            controllerApi.executeCommand(JControllerCommand.apply(new ControllerCommand.DeleteNotice(NoticeId.of(PlanId.Global(), board, noticeKey))))
-                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+            controllerApi.executeCommand(JControllerCommand.apply(new ControllerCommand.DeleteNotice(noticeId))).thenAccept(e -> ProblemHelper
+                    .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             break;
 
         case POST:
@@ -101,7 +99,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
                     endOfLife = Optional.of(endOfLifeInstant);
                 }
             }
-            controllerApi.postNotice(board, noticeKey, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
+            controllerApi.postNotice(noticeId, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
                     controllerId));
             break;
         }

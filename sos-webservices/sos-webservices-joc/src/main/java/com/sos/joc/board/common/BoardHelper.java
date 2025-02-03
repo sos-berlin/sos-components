@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -34,6 +33,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.common.SyncStateHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -41,6 +41,7 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
+import com.sos.joc.model.plan.PlanSchemaId;
 
 import js7.data.board.BoardPath;
 import js7.data.board.BoardState;
@@ -49,6 +50,7 @@ import js7.data.board.NoticeKey;
 import js7.data.board.PlannedNoticeKey;
 import js7.data.order.Order;
 import js7.data.plan.PlanId;
+import js7.data.plan.PlanKey;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.board.JNotice;
@@ -62,6 +64,8 @@ import scala.collection.JavaConverters;
 public class BoardHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BoardHelper.class);
+    private static final String NoticeIdSeparator = "╱";
+    private static final String EmptyNoticeKey = "—";
 
     public static Board getCompactBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<NoticeId, Integer> numOfExpectings)
             throws Exception {
@@ -211,6 +215,7 @@ public class BoardHelper {
                 return null;
             }
         };
+        
         Stream<JOrder> orders = OrdersHelper.getPermittedJOrdersFromOrderIds(np.expectingOrderIds(), permittedFolders, controllerState);
         notice.setExpectingOrders(orders.map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
         notice.setWorkflowTagsPerWorkflow(null);
@@ -227,18 +232,6 @@ public class BoardHelper {
 
         return notice;
     }
-    
-//    private static Function<JOrder, OrderV> getJOrderToOrderVmapper(JControllerState controllerState, ZoneId zoneId) {
-//        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
-//            try { //TODO orderTags
-//                Map<String, Set<String>> orderTags = null;
-//                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
-//            } catch (Exception e) {
-//                return null;
-//            }
-//        };
-//        return mapJOrderToOrderV;
-//    }
     
     public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
             Set<String> boardPaths, Set<Folder> permittedFolders) {
@@ -324,6 +317,21 @@ public class BoardHelper {
             put(NoticeStateText.ANNOUNCED, 4);
         }
     });
+    
+    public static NoticeId getNoticeId(String noticeIdStr, String boardPath) {
+        BoardPath bPath = BoardPath.of(JocInventory.pathToName(boardPath));
+        if (!noticeIdStr.contains(NoticeIdSeparator)) { // old noticeId for global boards
+            return NoticeId.of(PlanId.Global(), bPath, NoticeKey.of(noticeIdStr));
+        } else {
+            String[] noticeIdParts = noticeIdStr.split(NoticeIdSeparator);
+            // expect noticeIdParts.lenght == 3
+            PlanSchemaId pSchemaId = PlanSchemaId.fromValue(noticeIdParts[0]);
+            PlanId planId = PlanId.apply(js7.data.plan.PlanSchemaId.of(pSchemaId.value()), PlanKey.of(noticeIdParts[1]));
+            NoticeKey noticeKey = (noticeIdParts[2].equals(EmptyNoticeKey) || noticeIdParts[2].isEmpty()) ? NoticeKey.empty() : NoticeKey.of(
+                    noticeIdParts[2]);
+            return NoticeId.of(planId, bPath, noticeKey);
+        }
+    }
 
 //    private static <T> Collector<T, ?, List<T>> limitingList(int limit) {
 //        return Collector.of(ArrayList::new, (l, e) -> {

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.plan.Plan;
 import com.sos.joc.model.plan.PlanSchemaId;
 import com.sos.joc.model.plan.Plans;
@@ -40,10 +42,10 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 import js7.data.board.BoardPath;
-import js7.data.order.OrderId;
 import js7.data.plan.PlanId;
 import js7.data_for_java.board.JPlannedBoard;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 import js7.data_for_java.plan.JPlan;
 
 @Path("plans")
@@ -51,6 +53,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
 
     private static final String API_CALL = "./plans";
     private static final Logger LOGGER = LoggerFactory.getLogger(PlansResourceImpl.class);
+    private static final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
     @Override
     public JOCDefaultResponse postPlans(String accessToken, byte[] filterBytes) {
@@ -63,11 +66,10 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             if (response != null) {
                 return response;
             }
-            
             JControllerState currentState = Proxy.of(filter.getControllerId()).currentState();
             Plans entity = new Plans();
             entity.setSurveyDate(Date.from(currentState.instant()));
-            entity.setPlans(get(currentState.toPlan(), filter));
+            entity.setPlans(get(currentState, filter));
             
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
@@ -79,14 +81,52 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         }
     }
     
-    private com.sos.joc.model.plan.Plan getPlan(PlanId pId, JPlan jp) {
+    private com.sos.joc.model.plan.Plan getPlan(JControllerState currentState, PlanId pId, JPlan jp, PlansFilter filter) {
         Plan plan = new Plan();
+        boolean isClosed = jp.isClosed();
+        if (isClosed && filter.getOnlyOpenPlans()) {
+            return null;
+        }
+        if (!isClosed && filter.getOnlyClosedPlans()) {
+            return null;
+        }
+        plan.setClosed(isClosed);
+        
+        PlanSchemaId pSchemaId = PlanSchemaId.fromValue(pId.planSchemaId().string());
+        if (filter.getPlanSchemaIds() != null && !filter.getPlanSchemaIds().isEmpty() && !filter.getPlanSchemaIds().contains(pSchemaId)) {
+            return null;
+        }
+        
+        String plankey = pId.planKey() == null ? null : pId.planKey().string(); //is maybe null for global schema
+        // keys are ignored for global plan schema
+        if (filter.getPlanKeys() != null && !filter.getPlanKeys().isEmpty() && !PlanSchemaId.Global.equals(pSchemaId)) {
+            if (!filter.getPlanKeys().contains(plankey)) {
+                // looking for globs inside filter.getPlanKeys()
+                if (!filter.getPlanKeys().stream().filter(pk -> pk.contains("*") || pk.contains("?")).anyMatch(pk -> plankey.matches(pk.replace("*",
+                        ".*").replace("?", ".")))) {
+                    return null;
+                }
+            }
+        }
+        
         com.sos.joc.model.plan.PlanId planId = new com.sos.joc.model.plan.PlanId();
-        planId.setPlanSchemaId(PlanSchemaId.fromValue(pId.planSchemaId().string()));
-        planId.setPlanKey(pId.planKey() == null ? null : pId.planKey().string());
+        planId.setPlanSchemaId(pSchemaId);
+        planId.setPlanKey(plankey);
         plan.setPlanId(planId);
-        plan.setOrderIds(jp.orderIds().stream().map(OrderId::string).collect(Collectors.toList()));
-        plan.setClosed(jp.isClosed());
+        
+        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
+            try { //TODO orderTags
+                Map<String, Set<String>> orderTags = null;
+                return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, null, zoneId);
+            } catch (Exception e) {
+                return null;
+            }
+        };
+        
+        plan.setOrders(OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState).map(
+                mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+        plan.setNoticeBoards(getBoards(pId, jp.toPlannedBoard(), filter));
+        
         return plan;
     }
     
@@ -109,12 +149,9 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         }
     }
     
-    private List<Plan> get(Map<PlanId, JPlan> map, PlansFilter filter) throws Exception {
-        return map.entrySet().stream().map(e -> {
-            Plan plan = getPlan(e.getKey(), e.getValue());
-            plan.setNoticeBoards(getBoards(e.getKey(), e.getValue().toPlannedBoard(), filter));
-            return plan;
-        }).collect(Collectors.toList());
+    private List<Plan> get(JControllerState currentState, PlansFilter filter) throws Exception {
+        return currentState.toPlan().entrySet().stream().map(e -> getPlan(currentState, e.getKey(), e.getValue(), filter)).filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
     
 //    private void print(Map<PlanId, JPlan> map) {
@@ -177,7 +214,6 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             final JControllerState controllerState = BoardHelper.getCurrentState(controllerId);
             final long surveyDateMillis = controllerState != null ? controllerState.instant().toEpochMilli() : Instant.now().toEpochMilli();
             final Set<Folder> permittedFolders = withFolderFilter ? null : folders;
-            ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
             JocError jocError = getJocError();
             if (contents != null) {

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.board.Board;
+import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,7 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "planId",
-    "orderIds",
+    "orders",
     "closed",
     "noticeBoards"
 })
@@ -36,8 +37,8 @@ public class Plan {
      */
     @JsonProperty("planId")
     private PlanId planId;
-    @JsonProperty("orderIds")
-    private List<String> orderIds = new ArrayList<String>();
+    @JsonProperty("orders")
+    private List<OrderV> orders = new ArrayList<OrderV>();
     /**
      * 
      * (Required)
@@ -72,14 +73,14 @@ public class Plan {
         this.planId = planId;
     }
 
-    @JsonProperty("orderIds")
-    public List<String> getOrderIds() {
-        return orderIds;
+    @JsonProperty("orders")
+    public List<OrderV> getOrders() {
+        return orders;
     }
 
-    @JsonProperty("orderIds")
-    public void setOrderIds(List<String> orderIds) {
-        this.orderIds = orderIds;
+    @JsonProperty("orders")
+    public void setOrders(List<OrderV> orders) {
+        this.orders = orders;
     }
 
     /**
@@ -114,12 +115,12 @@ public class Plan {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("planId", planId).append("orderIds", orderIds).append("closed", closed).append("noticeBoards", noticeBoards).toString();
+        return new ToStringBuilder(this).append("planId", planId).append("orders", orders).append("closed", closed).append("noticeBoards", noticeBoards).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(closed).append(planId).append(orderIds).append(noticeBoards).toHashCode();
+        return new HashCodeBuilder().append(closed).append(planId).append(orders).append(noticeBoards).toHashCode();
     }
 
     @Override
@@ -131,7 +132,7 @@ public class Plan {
             return false;
         }
         Plan rhs = ((Plan) other);
-        return new EqualsBuilder().append(closed, rhs.closed).append(planId, rhs.planId).append(orderIds, rhs.orderIds).append(noticeBoards, rhs.noticeBoards).isEquals();
+        return new EqualsBuilder().append(closed, rhs.closed).append(planId, rhs.planId).append(orders, rhs.orders).append(noticeBoards, rhs.noticeBoards).isEquals();
     }
 
 }
