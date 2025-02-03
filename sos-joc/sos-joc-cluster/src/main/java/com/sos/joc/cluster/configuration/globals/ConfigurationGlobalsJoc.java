@@ -104,6 +104,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry numOfWOrkflowTagsDisplayed = new ConfigurationEntry("num_of_workflow_tags_displayed", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     
+    //name of the role for kiosk mode
+    private ConfigurationEntry kioskRole = new ConfigurationEntry("kiosk_role", "kiosk", GlobalSettingsSectionValueType.STRING);
+    
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -161,6 +164,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         reportJavaOptions.setOrdering(++index);
         numOfTagsDisplayedAsOrderId.setOrdering(++index);
         numOfWOrkflowTagsDisplayed.setOrdering(++index);
+        
+        kioskRole.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -311,7 +316,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         return allowEmptyArguments;
     }
 
-    
     public boolean getAllowUndeclaredVariables() {
         if(allowUndeclaredVariables.getValue() == null) {
             return allowUndeclaredVariables.getDefault().equalsIgnoreCase("true");
@@ -348,6 +352,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         } catch (Exception e) {
             return 0; // default
         }
+    }
+    
+    public ConfigurationEntry getKioskRole() {
+        return kioskRole;
     }
     
 }

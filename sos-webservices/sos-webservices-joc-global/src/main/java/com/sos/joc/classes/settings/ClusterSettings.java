@@ -118,6 +118,14 @@ public class ClusterSettings {
         return allowEmptyArguments != null && allowEmptyArguments.equalsIgnoreCase("true");
     }
     
+    public static String getKioskRole(ConfigurationGlobalsJoc settings) {
+        String pwd = settings.getKioskRole().getValue();
+        if (pwd == null || pwd.isEmpty()) {
+           return settings.getKioskRole().getDefault();
+        }
+        return pwd;
+    }
+    
     private static SuffixPrefix getSuffixPrefix(ConfigurationEntry suf, ConfigurationEntry pref) {
         String suffix = suf.getValue();
         String prefix = pref.getValue();

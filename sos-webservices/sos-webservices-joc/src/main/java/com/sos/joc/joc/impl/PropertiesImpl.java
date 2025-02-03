@@ -55,6 +55,8 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setAllowUndeclaredVariables(jocSettings.getAllowUndeclaredVariables());
             entity.setNumOfTagsDisplayedAsOrderId(jocSettings.getNumOfTagsDisplayedAsOrderId());
             entity.setNumOfWorkflowTagsDisplayed(jocSettings.getNumOfWorkflowTagsDisplayed());
+            entity.setKioskRole(ClusterSettings.getKioskRole(jocSettings));
+            
             
             ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
