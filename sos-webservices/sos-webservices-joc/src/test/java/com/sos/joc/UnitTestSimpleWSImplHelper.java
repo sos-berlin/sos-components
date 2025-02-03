@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +17,7 @@ import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountsList;
 import com.sos.auth.sosintern.SOSInternAuthSession;
 import com.sos.auth.sosintern.classes.SOSInternAuthSubject;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -23,8 +25,10 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
+import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
+import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 
 /** For testing web services in the IDE<br/>
@@ -117,6 +121,20 @@ public class UnitTestSimpleWSImplHelper {
         }
     }
 
+    private List<String> getControllersId() {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.getHibernateFactory().openStatelessSession("getControllersId");
+            Query<String> query = session.createQuery("select controllerId from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+            return session.getResultList(query);
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[getControllersId]%s", e.toString()), e);
+            return null;
+        } finally {
+            Globals.getHibernateFactory().close(session);
+        }
+    }
+
     private void initJOCProperties() {
         // JOC Properties
         if (propertiesFile == null) {
@@ -138,7 +156,7 @@ public class UnitTestSimpleWSImplHelper {
         Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", file.toAbsolutePath().toString());
     }
 
-    private String mockRootLogin() {
+    private String mockJOCLoginAsRoot() {
         Globals.jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
         Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
 
@@ -157,6 +175,9 @@ public class UnitTestSimpleWSImplHelper {
         s.setAccessToken(a.getAccessToken());
         s.touch();// avoid NPE
         a.setCurrentSubject(as);
+
+        mockRootJOCControllersPermissions(a);
+
         return a.getAccessToken();
     }
 
@@ -170,6 +191,35 @@ public class UnitTestSimpleWSImplHelper {
         jp.getNotification().setView(true);
         jp.getOthers().setView(true);
         jp.getReports().setView(true);
+    }
+
+    private void mockRootJOCControllersPermissions(SOSAuthCurrentAccount a) {
+        List<String> controllers = getControllersId();
+        for (String controllerId : controllers) {
+            ControllerPermissions p = a.getControllerPermissions(controllerId);
+
+            p.setView(true);
+            p.getAgents().setView(true);
+            p.getLocks().setView(true);
+            p.getLocks().setView(true);
+            p.getWorkflows().setView(true);
+
+            p.getDeployments().setView(true);
+            p.getDeployments().setDeploy(true);
+
+            p.getNoticeBoards().setView(true);
+            p.getNoticeBoards().setDelete(true);
+            p.getNoticeBoards().setPost(true);
+
+            p.getOrders().setView(true);
+            p.getOrders().setCancel(true);
+            p.getOrders().setConfirm(true);
+            p.getOrders().setCreate(true);
+            p.getOrders().setManagePositions(true);
+            p.getOrders().setModify(true);
+            p.getOrders().setResumeFailed(true);
+            p.getOrders().setSuspendResume(true);
+        }
     }
 
     public CompletableFuture<JOCDefaultResponse> post(String methodName, StringBuilder filter) throws Exception {
@@ -187,7 +237,7 @@ public class UnitTestSimpleWSImplHelper {
     private CompletableFuture<JOCDefaultResponse> post(String methodName, byte[] filter) throws Exception {
         CompletableFuture<JOCDefaultResponse> future = CompletableFuture.supplyAsync(() -> {
             try {
-                String accessToken = mockRootLogin();
+                String accessToken = mockJOCLoginAsRoot();
                 Method method = clazz.getDeclaredMethod(methodName, String.class, byte[].class);
                 method.setAccessible(true);
                 JOCDefaultResponse r = (JOCDefaultResponse) method.invoke(instance, accessToken, filter);
