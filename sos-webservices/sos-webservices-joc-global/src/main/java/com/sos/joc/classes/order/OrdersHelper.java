@@ -61,6 +61,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.board.BoardHelper;
 import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -736,7 +737,7 @@ public class OrdersHelper {
         if ("ExpectingNotices".equals(oItem.getState().getTYPE())) {
             if (controllerState != null) {
                 return controllerState.orderToStillExpectedNotices(orderId).stream().map(n -> new ExpectedNotice(n.boardPath().string(),
-                        ExpectingOrder.getNoticeKey(n))).collect(Collectors.toList());
+                        BoardHelper.getNoticeKeyShortString(n))).collect(Collectors.toList());
             } else {
                 return oItem.getState().getExpected();
             }

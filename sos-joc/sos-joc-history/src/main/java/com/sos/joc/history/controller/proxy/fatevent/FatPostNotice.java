@@ -3,6 +3,7 @@ package com.sos.joc.history.controller.proxy.fatevent;
 import java.util.Date;
 
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.board.BoardHelper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 
 import js7.base.time.Timestamp;
@@ -31,7 +32,7 @@ public class FatPostNotice {
         if (noticeId == null) {
             return "";
         }
-        return noticeId.plannedNoticeKey().toShortString();
+        return BoardHelper.getNoticeKeyShortString(noticeId);
     }
 
     public String getBoardPath() {

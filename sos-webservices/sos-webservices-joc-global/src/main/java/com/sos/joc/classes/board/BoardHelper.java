@@ -1,4 +1,4 @@
-package com.sos.joc.board.common;
+package com.sos.joc.classes.board;
 
 import java.io.IOException;
 import java.time.ZoneId;
@@ -31,7 +31,6 @@ import com.sos.controller.model.board.NoticeStateText;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -115,8 +114,8 @@ public class BoardHelper {
                 boolean isNotExpected = np.expectingOrderIds().isEmpty();
                 if (isNotExpected) {
                     Notice notice = new Notice();
-                    notice.setKey(pnk.noticeKey().string());
-                    notice.setId(pnk.toShortString());
+                    //notice.setKey(pnk.noticeKey().string());
+                    notice.setId(getNoticeKeyShortString(pnk));
                     np.notice().flatMap(JNotice::endOfLife).map(Date::from).ifPresent(d -> notice.setEndOfLife(d));
                     if (np.isAnnounced()) {
                         notice.setState(getState(NoticeStateText.ANNOUNCED));
@@ -150,8 +149,8 @@ public class BoardHelper {
     private static Notice getExpectingOrder(NoticeId noticeId, List<JOrder> jOrders, Integer limit, ToLongFunction<JOrder> compareScheduleFor,
             Function<JOrder, OrderV> mapJOrderToOrderV, boolean withWorkflowTagsDisplayed, SOSHibernateSession session) {
         Notice notice = new Notice();
-        notice.setId(ExpectingOrder.getNoticeKey(noticeId));
-        notice.setKey(noticeId.noticeKey().string());
+        notice.setId(BoardHelper.getNoticeKeyShortString(noticeId));
+        //notice.setKey(noticeId.noticeKey().string());
         notice.setEndOfLife(null);
         if (limit > -1) {
             notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
@@ -204,8 +203,8 @@ public class BoardHelper {
     public static Notice getNotice(JControllerState controllerState, PlannedNoticeKey pnk, JNoticePlace np, Set<Folder> permittedFolders, ZoneId zoneId) {
         Notice notice = new Notice();
         boolean isAnnounced = np.isAnnounced();
-        notice.setKey(pnk.noticeKey().string());
-        notice.setId(pnk.toShortString());
+        //notice.setKey(pnk.noticeKey().string());
+        notice.setId(getNoticeKeyShortString(pnk));
         
         Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
             try { //TODO orderTags
@@ -319,18 +318,40 @@ public class BoardHelper {
     });
     
     public static NoticeId getNoticeId(String noticeIdStr, String boardPath) {
+        
+        noticeIdStr = noticeIdStr.replace(NoticeIdSeparator, "/").replace(EmptyNoticeKey, "-").replaceAll("//+", "/");
         BoardPath bPath = BoardPath.of(JocInventory.pathToName(boardPath));
-        if (!noticeIdStr.contains(NoticeIdSeparator)) { // old noticeId for global boards
+        
+        if (!noticeIdStr.contains("/")) { // old noticeId for global boards
             return NoticeId.of(PlanId.Global(), bPath, NoticeKey.of(noticeIdStr));
         } else {
-            String[] noticeIdParts = noticeIdStr.split(NoticeIdSeparator);
-            // expect noticeIdParts.lenght == 3
+            String[] noticeIdParts = noticeIdStr.split("/");
             PlanSchemaId pSchemaId = PlanSchemaId.fromValue(noticeIdParts[0]);
-            PlanId planId = PlanId.apply(js7.data.plan.PlanSchemaId.of(pSchemaId.value()), PlanKey.of(noticeIdParts[1]));
-            NoticeKey noticeKey = (noticeIdParts[2].equals(EmptyNoticeKey) || noticeIdParts[2].isEmpty()) ? NoticeKey.empty() : NoticeKey.of(
-                    noticeIdParts[2]);
+            PlanId planId = PlanId.Global();
+            NoticeKey noticeKey = NoticeKey.empty();
+            if (pSchemaId.equals(PlanSchemaId.Global)) {
+                // expect noticeIdParts.lenght = 2
+                // nothing to do -> planId = PlanId.Global()
+                if (noticeIdParts.length > 1 && !noticeIdParts[1].isEmpty() && !noticeIdParts[1].equals("-")) {
+                    noticeKey = NoticeKey.of(noticeIdParts[1]);
+                }
+            } else {
+                // expect noticeIdParts.lenght == 3 (or 2 if NoticeKey is empty)
+                planId = PlanId.apply(js7.data.plan.PlanSchemaId.of(pSchemaId.value()), PlanKey.of(noticeIdParts[1]));
+                if (noticeIdParts.length > 2 && !noticeIdParts[2].isEmpty() && !noticeIdParts[2].equals("-")) {
+                    noticeKey = NoticeKey.of(noticeIdParts[2]);
+                }
+            }
             return NoticeId.of(planId, bPath, noticeKey);
         }
+    }
+    
+    public static String getNoticeKeyShortString(NoticeId nId) {
+        return getNoticeKeyShortString(nId.plannedNoticeKey());
+    }
+    
+    public static String getNoticeKeyShortString(PlannedNoticeKey pnk) {
+        return pnk.toShortString().replace(NoticeIdSeparator, "/").replace(EmptyNoticeKey, "-").replaceFirst("^Global/", "");
     }
 
 //    private static <T> Collector<T, ?, List<T>> limitingList(int limit) {

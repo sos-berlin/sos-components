@@ -1,6 +1,7 @@
 package com.sos.joc.history.controller.proxy.fatevent;
 
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.board.BoardHelper;
 
 import js7.data.board.NoticeId;
 
@@ -16,7 +17,7 @@ public class FatExpectNotice {
         if (noticeId == null) {
             return "";
         }
-        return noticeId.plannedNoticeKey().toShortString();
+        return BoardHelper.getNoticeKeyShortString(noticeId);
     }
 
     public String getBoardPath() {

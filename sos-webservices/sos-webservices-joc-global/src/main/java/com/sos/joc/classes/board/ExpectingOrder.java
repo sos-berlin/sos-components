@@ -50,11 +50,7 @@ public class ExpectingOrder {
     }
     
     public String getNoticeKey() {
-        return getNoticeKey(noticeId);
-    }
-    
-    public static String getNoticeKey(NoticeId nId) {
-        return nId.plannedNoticeKey().toShortString();
+        return BoardHelper.getNoticeKeyShortString(noticeId);
     }
     
 }

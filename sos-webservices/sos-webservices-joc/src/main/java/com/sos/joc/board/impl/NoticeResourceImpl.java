@@ -4,16 +4,17 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.Globals;
-import com.sos.joc.board.common.BoardHelper;
 import com.sos.joc.board.resource.INoticeResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.board.BoardHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -62,7 +63,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
     }
 
     private JOCDefaultResponse modifyNotice(String accessToken, byte[] filterBytes, Action action) throws JsonParseException,
-            JsonMappingException, JocException, IOException, SOSJsonSchemaException {
+            JsonMappingException, JocException, IOException, SOSJsonSchemaException, ExecutionException {
 
         initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, ModifyNotice.class);
@@ -82,6 +83,8 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         NoticeId noticeId = BoardHelper.getNoticeId(filter.getNoticeId(), filter.getNoticeBoardPath());
         //NoticeKey.of(filter.getNoticeId()); //TODO relabel NoticeId -> Noticekey?
         Instant now = Instant.now();
+        //JControllerProxy proxy = Proxy.of(controllerId);
+        //scala.collection.JavaConverters.asJava(proxy.currentState().asScala().allNoticeIds());
         
         switch (action) {
         case DELETE:
