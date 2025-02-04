@@ -15,15 +15,15 @@ import com.sos.yade.engine.helpers.YADEHelper;
 
 public class YADESourceSteadyFilesHandler {
 
-    public static boolean checkFilesSteady(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)
+    public static void checkFilesSteady(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)
             throws SOSYADEEngineSourceSteadyFilesException {
 
         YADESourceArguments args = sourceDelegator.getArgs();
         if (!args.isCheckSteadyStateEnabled()) {
-            return true;
+            return;
         }
         if (SOSCollection.isEmpty(sourceFiles)) {
-            return true;
+            return;
         }
         logger.info("%s[start]checkFilesSteady", sourceDelegator.getLogPrefix());
         boolean steady = true;
@@ -62,7 +62,6 @@ public class YADESourceSteadyFilesHandler {
             throw new SOSYADEEngineSourceSteadyFilesException("[not all files are steady][not steady]" + sourceFiles.stream().filter(
                     f -> !((YADEProviderFile) f).getSteady().isSteady()).map(f -> f.getFullPath()).collect(Collectors.joining(";")));
         }
-        return steady;
     }
 
     private static boolean checkSourceFileSteady(YADESourceProviderDelegator sourceDelegator, ProviderFile sourceFile)

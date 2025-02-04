@@ -28,20 +28,20 @@ public class YADESourceOperationRemoveHandler {
             logger.info("[%s]%s", operation, additionalHeadLineMessage);
         }
         int index = 0;
-        for (ProviderFile file : sourceFiles) {
-            index++;
-            YADEProviderFile.setIndex(file, index);
+        for (ProviderFile sourceFile : sourceFiles) {
+            YADEProviderFile file = (YADEProviderFile) sourceFile;
+            file.initForOperation(index++);
             try {
                 YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, file);
 
                 if (sourceDelegator.getProvider().deleteIfExists(file.getFullPath())) {
-                    logger.info("%s[%s][%s]deleted", sourceDelegator.getLogPrefix(), index, file.getFullPath());
+                    logger.info("%s[%s][%s]deleted", sourceDelegator.getLogPrefix(), file.getIndex(), file.getFullPath());
                 } else {
-                    logger.info("%s[%s][%s]not exists", sourceDelegator.getLogPrefix(), index, file.getFullPath());
+                    logger.info("%s[%s][%s]not exists", sourceDelegator.getLogPrefix(), file.getIndex(), file.getFullPath());
                 }
-                YADEProviderFile.setState(file, TransferEntryState.DELETED);
+                file.setState(TransferEntryState.DELETED);
             } catch (Throwable e) {
-                YADEProviderFile.setState(file, TransferEntryState.FAILED);
+                file.setState(TransferEntryState.FAILED);
                 throw new SOSYADEEngineOperationException(e);
             }
         }

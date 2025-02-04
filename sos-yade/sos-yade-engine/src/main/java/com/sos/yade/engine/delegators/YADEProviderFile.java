@@ -9,10 +9,10 @@ public class YADEProviderFile extends ProviderFile {
     private TransferEntryState state = null;
     private int index;// in the list
 
-    private String newFullPath;
+    private String newFullPath; // after possible rename etc
     private boolean newFullPathIsCurrentFullPath;
 
-    private YADEProviderFile target;
+    private YADETargetProviderFile target;
 
     public YADEProviderFile(String fullPath, long size, long lastModifiedMillis, boolean checkSteady) {
         super(fullPath, size, lastModifiedMillis);
@@ -25,56 +25,34 @@ public class YADEProviderFile extends ProviderFile {
         return steady;
     }
 
-    public void resetSteady() {
-        steady = null;
-    }
-
-    private TransferEntryState getState() {
+    public TransferEntryState getState() {
         return state;
     }
 
-    public static TransferEntryState getState(ProviderFile file) {
-        return ((YADEProviderFile) file).getState();
-    }
-
-    private void setState(TransferEntryState val) {
+    public void setState(TransferEntryState val) {
         state = val;
-    }
-
-    public static void setState(ProviderFile file, TransferEntryState state) {
-        ((YADEProviderFile) file).setState(state);
     }
 
     public boolean isTransferred() {// succeeded?
         return TransferEntryState.TRANSFERRED.equals(state);
     }
 
-    private boolean isSkipped() {
+    public boolean isSkipped() {
         return TransferEntryState.SKIPPED.equals(state);
     }
 
-    public static boolean isSkipped(ProviderFile file) {
-        return ((YADEProviderFile) file).isSkipped();
+    public void initForOperation(int index) {
+        this.index = index;
+        this.steady = null;
     }
 
-    private void setIndex(int val) {
-        index = val;
-    }
-
-    public static void setIndex(ProviderFile file, int index) {
-        ((YADEProviderFile) file).setIndex(index);
-    }
-
-    private int getIndex() {
+    public int getIndex() {
         return index;
     }
 
-    public static int getIndex(ProviderFile file) {
-        return ((YADEProviderFile) file).getIndex();
-    }
-
-    public void setNewFullPath(String val) {
-        newFullPath = val;
+    public void setNewName(String newName) {
+        int index = getFullPath().lastIndexOf(getName());
+        newFullPath = getFullPath().substring(0, index) + newName;
     }
 
     public String getNewFullPath() {
@@ -93,8 +71,13 @@ public class YADEProviderFile extends ProviderFile {
         return newFullPathIsCurrentFullPath;
     }
 
-    public YADEProviderFile getTarget() {
+    public YADETargetProviderFile getTarget() {
         return target;
+    }
+
+    public void initTargetFile(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator) {
+        // fullPath - relative from source dir to target dir ...
+        target = new YADETargetProviderFile(newFullPath, 0, 0, false);
     }
 
     public class Steady {

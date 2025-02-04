@@ -41,10 +41,24 @@ public class ProviderFileSelection {
         return true;
     }
 
-    public boolean checkProviderFile(ProviderFile file) {
+    public boolean checkProviderFileMinMaxSize(ProviderFile file) {
+        if (!checkProviderFileMaxSize(file)) {
+            return false;
+        }
+        if (!checkProviderFileMinSize(file)) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean checkProviderFileMaxSize(ProviderFile file) {
         if (config.isFilterByMaxFileSizeEnabled() && file.getSize() > config.getMaxFileSize()) {
             return false;
         }
+        return true;
+    }
+
+    public boolean checkProviderFileMinSize(ProviderFile file) {
         if (config.isFilterByMinFileSizeEnabled() && file.getSize() < config.getMinFileSize()) {
             return false;
         }

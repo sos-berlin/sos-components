@@ -213,7 +213,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                         String fileName = path.getFileName().toString();
                         if (selection.checkFileName(fileName)) {
                             ProviderFile file = createProviderFile(path);
-                            if (selection.checkProviderFile(file)) {
+                            if (selection.checkProviderFileMinMaxSize(file)) {
                                 counterAdded++;
                                 result.add(file);
                             }
@@ -252,7 +252,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                     String fileName = path.getFileName().toString();
                     if (selection.checkFileName(fileName)) {
                         ProviderFile file = createProviderFile(path);
-                        if (selection.checkProviderFile(file)) {
+                        if (selection.checkProviderFileMinMaxSize(file)) {
                             counterAdded++;
                             result.add(file);
                         }

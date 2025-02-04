@@ -35,8 +35,10 @@ public class YADECommonOperationHandler {
      * @param targetProvider
      * @param targetDir
      * @throws SOSYADEEngineOperationException */
-    public static void execute(ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles,
-            YADETargetProviderDelegator targetDelegator) throws SOSYADEEngineOperationException {
+
+    /** TODO not use "YADEArguments args" ... */
+    public static void execute(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
+            List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator) throws SOSYADEEngineOperationException {
 
         TransferOperation operation = args.getOperation().getValue();
         switch (operation) {
@@ -44,28 +46,28 @@ public class YADECommonOperationHandler {
         case MOVE:
             if (doNotPerformOperationDueToEmptyFiles(operation, logger, sourceFiles)) {
                 // TODO check YADE1 on 0 files ...
-                createResultSetFileFromSourceFiles(logger, args.getClient(), sourceFiles);
+                createResultSetFileFromSourceFiles(logger, clientArgs, sourceFiles);
                 return;
             }
 
             YADECopyOrMoveOperationHandler.execute(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles);
             // TODO after operation?
-            createResultSetFileFromSourceFiles(null, args.getClient(), sourceFiles);
+            createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
             break;
         case REMOVE:
             if (doNotPerformOperationDueToEmptyFiles(operation, logger, sourceFiles)) {
                 // TODO check YADE1 on 0 files ...
-                createResultSetFileFromSourceFiles(logger, args.getClient(), sourceFiles);
+                createResultSetFileFromSourceFiles(logger, clientArgs, sourceFiles);
                 return;
             }
             YADESourceOperationRemoveHandler.execute(operation, logger, sourceDelegator, sourceFiles, getTransactionalIgoredMessage(args)
-                    + getCommandsAfterFileIgoredMessage(args.getSource().getCommands()));
+                    + getCommandsAfterFileIgoredMessage(sourceDelegator.getArgs().getCommands()));
             // TODO after operation?
-            createResultSetFileFromSourceFiles(null, args.getClient(), sourceFiles);
+            createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
             break;
         case GETLIST: // Special processing without doNotPerformOperationDueToEmptyFiles() due to the assumption of 0 source files
             YADESourceOperationGetListHandler.execute(operation, logger, getTransactionalIgoredMessage(args));
-            createResultSetFileFromSourceFiles(logger, args.getClient(), sourceFiles);
+            createResultSetFileFromSourceFiles(logger, clientArgs, sourceFiles);
             break;
 
         // All others are documented here, but cannot be set when YADEEngine is used
@@ -91,9 +93,9 @@ public class YADECommonOperationHandler {
     // TODO should be placed in BANNER – also other arguments that are enabled/activated but ignored during a particular operation (e.g. replace, etc.).
     private static String getTransactionalIgoredMessage(YADEArguments args) {
         String msg = "";
-        if (args.getTransactional().isTrue()) {
-            msg = args.getTransactional().getName() + "=true ignored.";
-        }
+        // if (args.getTransactional().isTrue()) {
+        // msg = args.getTransactional().getName() + "=true ignored.";
+        // }
         return msg;
     }
 
@@ -141,6 +143,7 @@ public class YADECommonOperationHandler {
         }
     }
 
+    @SuppressWarnings("unused")
     private static void deleteSourceFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> files)
             throws SOSYADEEngineOperationException {
         if (!sourceDelegator.getArgs().getRemoveFiles().isTrue()) {

@@ -13,6 +13,7 @@ import com.sos.commons.vfs.local.common.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.yade.engine.arguments.YADEArguments;
+import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.arguments.YADETargetArguments;
 import com.sos.yade.engine.delegators.IYADEProviderDelegator;
@@ -24,16 +25,17 @@ import com.sos.yade.engine.exceptions.SOSYADEEngineException;
 public class YADEDelegatorHelper {
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADESourceProviderDelegator getSourceDelegator(ISOSLogger logger, YADEArguments args) throws SOSYADEEngineException {
-        return new YADESourceProviderDelegator(getProvider(logger, args.getSource().getProvider()), args.getSource());
+    public static YADESourceProviderDelegator getSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs) throws SOSYADEEngineException {
+        return new YADESourceProviderDelegator(getProvider(logger, sourceArgs.getProvider()), sourceArgs);
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADETargetProviderDelegator getTargetDelegator(ISOSLogger logger, YADEArguments args) throws SOSYADEEngineException {
+    public static YADETargetProviderDelegator getTargetDelegator(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs)
+            throws SOSYADEEngineException {
         if (!needTargetProvider(args)) {
             return null;
         }
-        return new YADETargetProviderDelegator(getProvider(logger, args.getTarget().getProvider()), args.getTarget());
+        return new YADETargetProviderDelegator(getProvider(logger, targetArgs.getProvider()), targetArgs);
     }
 
     public static void connect(ISOSLogger logger, IYADEProviderDelegator delegator) throws SOSYADEEngineConnectionException {

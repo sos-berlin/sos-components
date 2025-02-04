@@ -11,8 +11,16 @@ public class YADESourceTargetArguments {
     private SOSArgument<Integer> connectionErrorRetryCountMax = new SOSArgument<>("connection_error_retry_count_max", false);
     private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("connection_error_retry_interval", false, "0s");
 
+    /** - Replacing ------- */
+    private SOSArgument<String> replacement = new SOSArgument<>("replacement", false);
+    private SOSArgument<String> replacing = new SOSArgument<>("replacing", false);
+
     public boolean isRetryOnConnectionErrorEnabled() {
         return connectionErrorRetryCountMax.getValue() != null && connectionErrorRetryCountMax.getValue().intValue() > 0;
+    }
+
+    public boolean isReplacingEnabled() {
+        return !replacing.getValue().isEmpty() && !replacement.getValue().isEmpty();
     }
 
     public AProviderArguments getProvider() {
@@ -38,4 +46,13 @@ public class YADESourceTargetArguments {
     public SOSArgument<String> getConnectionErrorRetryInterval() {
         return connectionErrorRetryInterval;
     }
+
+    public SOSArgument<String> getReplacement() {
+        return replacement;
+    }
+
+    public SOSArgument<String> getReplacing() {
+        return replacing;
+    }
+
 }

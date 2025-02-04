@@ -95,49 +95,49 @@ public class YADEFileCommandsVariablesResolver {
 
         /** The name of a file on the target host */
         case "${TargetFileFullName}":
-            return file.getTarget() == null ? "" : getFullName(file.getTarget().getFullPath());
-        case "${TargetFileRelativeName}":// TODO
-            return file.getTarget() == null ? "" : getFullName(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFullPath(file.getTarget().getFullPath());
+        case "${TargetFileRelativeName}":
+            return file.getTarget() == null ? "" : getRelativePath(targetDirectory, file.getTarget().getFullPath());
         case "${TargetFileBaseName}":
             return file.getTarget() == null ? "" : getBaseName(file.getTarget().getFullPath());
         case "${TargetFileParentFullName}":
-            return file.getTarget() == null ? "" : getParentFullName(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getParentFullPath(file.getTarget().getFullPath());
         case "${TargetFileParentBaseName}":
             return file.getTarget() == null ? "" : getParentBaseName(file.getTarget().getFullPath());
 
         /** The name of a file on the target host during transfer (a file name can be prefixed or suffixed) */
         case "${TargetTransferFileFullName}":
-            return file.getTarget() == null ? "" : getFullName(file.getTarget().getNewFullPath());
-        case "${TargetTransferFileRelativeName}":// TODO
-            return file.getTarget() == null ? "" : getFullName(file.getTarget().getNewFullPath());
+            return file.getTarget() == null ? "" : getFullPath(file.getTarget().getNewFullPath());
+        case "${TargetTransferFileRelativeName}":
+            return file.getTarget() == null ? "" : getRelativePath(targetDirectory, file.getTarget().getNewFullPath());
         case "${TargetTransferFileBaseName}":
             return file.getTarget() == null ? "" : getBaseName(file.getTarget().getNewFullPath());
         case "${TargetTransferFileParentFullName}":
-            return file.getTarget() == null ? "" : getParentFullName(file.getTarget().getNewFullPath());
+            return file.getTarget() == null ? "" : getParentFullPath(file.getTarget().getNewFullPath());
         case "${TargetTransferFileParentBaseName}":
             return file.getTarget() == null ? "" : getParentBaseName(file.getTarget().getNewFullPath());
 
         /** The name of a file on the source host */
         case "${SourceFileFullName}":
-            return getFullName(file.getFullPath());
+            return getFullPath(file.getFullPath());
         case "${SourceFileRelativeName}":
-            return var;// TODO
+            return getRelativePath(sourceDirectory, file.getFullPath());
         case "${SourceFileBaseName}":
             return getBaseName(file.getFullPath());
         case "${SourceFileParentFullName}":
-            return getParentFullName(file.getFullPath());
+            return getParentFullPath(file.getFullPath());
         case "${SourceFileParentBaseName}":
             return getParentBaseName(file.getFullPath());
 
         /** The name of a file on the source host after Rename operation */
         case "${SourceFileRenamedFullName}":
-            return getFullName(file.getNewFullPath());
+            return getFullPath(file.getNewFullPath());
         case "${SourceFileRenamedRelativeName}":
-            return var;// TODO
+            return getRelativePath(sourceDirectory, file.getNewFullPath());
         case "${SourceFileRenamedBaseName}":
             return getBaseName(file.getNewFullPath());
         case "${SourceFileRenamedParentFullName}":
-            return getParentFullName(file.getNewFullPath());
+            return getParentFullPath(file.getNewFullPath());
         case "${SourceFileRenamedParentBaseName}":
             return getParentBaseName(file.getNewFullPath());
         default:
@@ -145,7 +145,21 @@ public class YADEFileCommandsVariablesResolver {
         }
     }
 
-    private static String getFullName(String fullPath) {
+    private static String getFullPath(String fullPath) {
+        return getOrDefault(fullPath);
+    }
+
+    // TODO check...
+    private static String getRelativePath(ProviderDirectoryPath directory, String fullPath) {
+        if (directory == null) {
+            return getBaseName(fullPath);
+        }
+        if (fullPath == null) {
+            return getOrDefault(fullPath);
+        }
+        if (fullPath.startsWith(directory.getPathWithTrailingSeparator())) {
+            return fullPath.substring(directory.getPathWithTrailingSeparator().length());
+        }
         return getOrDefault(fullPath);
     }
 
@@ -153,7 +167,7 @@ public class YADEFileCommandsVariablesResolver {
         return getOrDefault(SOSPathUtil.getName(fullPath));
     }
 
-    private static String getParentFullName(String fullPath) {
+    private static String getParentFullPath(String fullPath) {
         return getOrDefault(SOSPathUtil.getParentPath(fullPath));
     }
 

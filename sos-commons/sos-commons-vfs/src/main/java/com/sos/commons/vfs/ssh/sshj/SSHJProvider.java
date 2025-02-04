@@ -313,7 +313,7 @@ public class SSHJProvider extends ASSHProvider {
                 String fileName = resource.getName();
                 if (selection.checkFileName(fileName)) {
                     ProviderFile file = createProviderFile(resource.getPath(), attr.getSize(), getFileLastModifiedMillis(attr));
-                    if (selection.checkProviderFile(file)) {
+                    if (selection.checkProviderFileMinMaxSize(file)) {
                         counterAdded++;
                         result.add(file);
                     }

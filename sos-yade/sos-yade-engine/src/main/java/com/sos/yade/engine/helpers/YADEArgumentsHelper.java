@@ -8,7 +8,10 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.yade.engine.arguments.YADEArguments;
+import com.sos.yade.engine.arguments.YADESourceArguments;
+import com.sos.yade.engine.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.exceptions.SOSYADEEngineException;
 
 public class YADEArgumentsHelper {
@@ -17,12 +20,23 @@ public class YADEArgumentsHelper {
      * 
      * @param args
      * @throws SOSYADEEngineException */
-    public static void checkOnStart(YADEArguments args) throws SOSYADEEngineException {
+    public static void checkConfiguration(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs) throws SOSYADEEngineException {
         if (args == null) {
             throw new SOSYADEEngineException(new SOSMissingDataException("YADEArguments"));
         }
         if (args.getOperation().getValue() == null) {
             throw new SOSYADEEngineException(new SOSMissingDataException(args.getOperation().getName()));
+        }
+        sourceArguments(logger, sourceArgs);
+    }
+
+    private static void sourceArguments(ISOSLogger logger, YADESourceArguments args) {
+        if (ZeroByteTransfer.RELAXED.equals(args.getZeroByteTransfer().getValue())) {
+            if (args.getMinFileSize().getValue() == null || args.getMinFileSize().getValue().longValue() <= 0L) {
+                logger.info("minFileSize is set to 1 due to ZeroByteTransfer.RELAXED");
+
+                args.getMinFileSize().setValue(Long.valueOf(1L));
+            }
         }
     }
 

@@ -6,7 +6,6 @@ import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
-import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.engine.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.delegators.IYADEProviderDelegator;
@@ -108,16 +107,16 @@ public class YADECommandsHandler {
     }
 
     // -- File related ------------------------------
-    public static void executeBeforeFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, ProviderFile file)
+    public static void executeBeforeFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile file)
             throws SOSYADEEngineCommandException {
         executeBeforeFile(logger, sourceDelegator, null, file);
     }
 
     public static void executeBeforeFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADESourceProviderDelegator targetDelegator,
-            ProviderFile file) throws SOSYADEEngineCommandException {
+            YADEProviderFile file) throws SOSYADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsBeforeFile().isEmpty()) {
-            if (!YADEProviderFile.isSkipped(file) || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
+            if (!file.isSkipped() || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
                 SOSArgument<List<String>> arg = args.getCommandsBeforeFile();
                 executeFileCommands(logger, sourceDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator == null ? null
                         : targetDelegator.getDirectory());
@@ -126,7 +125,7 @@ public class YADECommandsHandler {
         if (targetDelegator != null) {
             args = getArgs(targetDelegator);
             if (args != null && !args.getCommandsBeforeFile().isEmpty()) {
-                if (!YADEProviderFile.isSkipped(file) || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
+                if (!file.isSkipped() || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
                     SOSArgument<List<String>> arg = args.getCommandsBeforeFile();
                     executeFileCommands(logger, targetDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator.getDirectory());
                 }
@@ -135,10 +134,10 @@ public class YADECommandsHandler {
     }
 
     public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADESourceProviderDelegator targetDelegator,
-            ProviderFile file) throws SOSYADEEngineCommandException {
+            YADEProviderFile file) throws SOSYADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsAfterFile().isEmpty()) {
-            if (!YADEProviderFile.isSkipped(file) || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
+            if (!file.isSkipped() || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
                 SOSArgument<List<String>> arg = args.getCommandsAfterFile();
                 executeFileCommands(logger, sourceDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator == null ? null
                         : targetDelegator.getDirectory());
@@ -147,7 +146,7 @@ public class YADECommandsHandler {
         if (targetDelegator != null) {
             args = getArgs(targetDelegator);
             if (args != null && !args.getCommandsAfterFile().isEmpty()) {
-                if (!YADEProviderFile.isSkipped(file) || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
+                if (!file.isSkipped() || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
                     SOSArgument<List<String>> arg = args.getCommandsAfterFile();
                     executeFileCommands(logger, targetDelegator, args, arg, file, sourceDelegator.getDirectory(), targetDelegator.getDirectory());
                 }
@@ -207,11 +206,11 @@ public class YADECommandsHandler {
 
     // TODO direc
     private static void executeFileCommands(ISOSLogger logger, IYADEProviderDelegator delegator, YADEProviderCommandArguments args,
-            SOSArgument<List<String>> arg, ProviderFile file, ProviderDirectoryPath sourceDirectory, ProviderDirectoryPath targetDirectory)
+            SOSArgument<List<String>> arg, YADEProviderFile file, ProviderDirectoryPath sourceDirectory, ProviderDirectoryPath targetDirectory)
             throws SOSYADEEngineCommandException {
         logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, args.getCommandDelimiter(), file);
 
-        String prefix = String.format("%s[%s][%s][%s]", delegator.getLogPrefix(), YADEProviderFile.getIndex(file), file.getFullPath(), arg.getName());
+        String prefix = String.format("%s[%s][%s][%s]", delegator.getLogPrefix(), file.getIndex(), file.getFullPath(), arg.getName());
         for (String c : arg.getValue()) {
             String command = YADEFileCommandsVariablesResolver.resolve(sourceDirectory, targetDirectory, file, c);
             String msg = prefix + "[" + command + "]";
@@ -230,11 +229,11 @@ public class YADECommandsHandler {
     }
 
     private static void logIfMultipleCommands(ISOSLogger logger, String logPrefix, SOSArgument<List<String>> commandsArg,
-            SOSArgument<String> commandDelimiterArg, ProviderFile file) {
+            SOSArgument<String> commandDelimiterArg, YADEProviderFile file) {
         if (commandsArg.getValue().size() > 1) {
             String add = "";
             if (file != null) {
-                add = String.format("[%s][%s]", YADEProviderFile.getIndex(file), file.getFullPath());
+                add = String.format("[%s][%s]", file.getIndex(), file.getFullPath());
             }
             logger.info("%s%s[%s]%s", logPrefix, add, commandsArg.getName(), YADEArgumentsHelper.toString(commandsArg, commandDelimiterArg
                     .getValue()));
