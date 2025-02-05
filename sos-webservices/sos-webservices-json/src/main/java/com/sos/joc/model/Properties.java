@@ -46,7 +46,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "licenseValidFrom",
     "licenseValidUntil",
     "licenseType",
-    "kioskRole"
+    "kioskRole",
+    "kioskViews"
 })
 public class Properties {
 
@@ -203,6 +204,13 @@ public class Properties {
      */
     @JsonProperty("kioskRole")
     private String kioskRole;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("kioskViews")
+    private KioskViewProperties kioskViews;
 
     /**
      * timestamp
@@ -648,14 +656,34 @@ public class Properties {
         this.kioskRole = kioskRole;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("kioskViews")
+    public KioskViewProperties getKioskViews() {
+        return kioskViews;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("kioskViews")
+    public void setKioskViews(KioskViewProperties kioskViews) {
+        this.kioskViews = kioskViews;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("displayFoldersInViews", displayFoldersInViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("allowEmptyArguments", allowEmptyArguments).append("allowUndeclaredVariables", allowUndeclaredVariables).append("numOfTagsDisplayedAsOrderId", numOfTagsDisplayedAsOrderId).append("numOfWorkflowTagsDisplayed", numOfWorkflowTagsDisplayed).append("clusterLicense", clusterLicense).append("licenseValidFrom", licenseValidFrom).append("licenseValidUntil", licenseValidUntil).append("licenseType", licenseType).append("kioskRole", kioskRole).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("displayFoldersInViews", displayFoldersInViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("allowEmptyArguments", allowEmptyArguments).append("allowUndeclaredVariables", allowUndeclaredVariables).append("numOfTagsDisplayedAsOrderId", numOfTagsDisplayedAsOrderId).append("numOfWorkflowTagsDisplayed", numOfWorkflowTagsDisplayed).append("clusterLicense", clusterLicense).append("licenseValidFrom", licenseValidFrom).append("licenseValidUntil", licenseValidUntil).append("licenseType", licenseType).append("kioskRole", kioskRole).append("kioskViews", kioskViews).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(licenseValidFrom).append(securityLevel).append(licenseType).append(apiVersion).append(_import).append(allowUndeclaredVariables).append(licenseValidUntil).append(copy).append(deliveryDate).append(numOfWorkflowTagsDisplayed).append(comments).append(restore).append(displayFoldersInViews).append(numOfTagsDisplayedAsOrderId).append(kioskRole).append(defaultProfileAccount).append(forceCommentsForAuditLog).append(allowEmptyArguments).append(welcomeGotIt).append(inventoryVersion).append(showViews).toHashCode();
+        return new HashCodeBuilder().append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(licenseValidFrom).append(securityLevel).append(licenseType).append(apiVersion).append(kioskViews).append(_import).append(allowUndeclaredVariables).append(licenseValidUntil).append(copy).append(deliveryDate).append(numOfWorkflowTagsDisplayed).append(comments).append(restore).append(displayFoldersInViews).append(numOfTagsDisplayedAsOrderId).append(kioskRole).append(defaultProfileAccount).append(forceCommentsForAuditLog).append(allowEmptyArguments).append(welcomeGotIt).append(inventoryVersion).append(showViews).toHashCode();
     }
 
     @Override
@@ -667,7 +695,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(licenseValidFrom, rhs.licenseValidFrom).append(securityLevel, rhs.securityLevel).append(licenseType, rhs.licenseType).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(allowUndeclaredVariables, rhs.allowUndeclaredVariables).append(licenseValidUntil, rhs.licenseValidUntil).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).append(numOfWorkflowTagsDisplayed, rhs.numOfWorkflowTagsDisplayed).append(comments, rhs.comments).append(restore, rhs.restore).append(displayFoldersInViews, rhs.displayFoldersInViews).append(numOfTagsDisplayedAsOrderId, rhs.numOfTagsDisplayedAsOrderId).append(kioskRole, rhs.kioskRole).append(defaultProfileAccount, rhs.defaultProfileAccount).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(allowEmptyArguments, rhs.allowEmptyArguments).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).isEquals();
+        return new EqualsBuilder().append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(licenseValidFrom, rhs.licenseValidFrom).append(securityLevel, rhs.securityLevel).append(licenseType, rhs.licenseType).append(apiVersion, rhs.apiVersion).append(kioskViews, rhs.kioskViews).append(_import, rhs._import).append(allowUndeclaredVariables, rhs.allowUndeclaredVariables).append(licenseValidUntil, rhs.licenseValidUntil).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).append(numOfWorkflowTagsDisplayed, rhs.numOfWorkflowTagsDisplayed).append(comments, rhs.comments).append(restore, rhs.restore).append(displayFoldersInViews, rhs.displayFoldersInViews).append(numOfTagsDisplayedAsOrderId, rhs.numOfTagsDisplayedAsOrderId).append(kioskRole, rhs.kioskRole).append(defaultProfileAccount, rhs.defaultProfileAccount).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(allowEmptyArguments, rhs.allowEmptyArguments).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).isEquals();
     }
 
 }

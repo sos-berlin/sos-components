@@ -12,6 +12,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsKiosk;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IPropertiesResource;
@@ -55,8 +56,10 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setAllowUndeclaredVariables(jocSettings.getAllowUndeclaredVariables());
             entity.setNumOfTagsDisplayedAsOrderId(jocSettings.getNumOfTagsDisplayedAsOrderId());
             entity.setNumOfWorkflowTagsDisplayed(jocSettings.getNumOfWorkflowTagsDisplayed());
-            entity.setKioskRole(ClusterSettings.getKioskRole(jocSettings));
             
+            ConfigurationGlobalsKiosk kioskSettings = Globals.getConfigurationGlobalsKiosk();
+            entity.setKioskRole(ClusterSettings.getKioskRole(kioskSettings));
+            entity.setKioskViews(ClusterSettings.getKioskViews(kioskSettings));
             
             ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
@@ -81,7 +84,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
                 entity.setLicenseType(LicenseType.OPENSOURCE);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

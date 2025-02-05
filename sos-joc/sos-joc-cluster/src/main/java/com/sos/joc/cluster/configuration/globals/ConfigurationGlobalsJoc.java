@@ -26,7 +26,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private static final List<String> AUDIT_LOG_COMMENTS = Arrays.asList("System maintenance", "Repeat execution", "Business requirement",
             "Restart failed execution", "Re-instantiate stopped object", "Temporary stop", "Change of Controller object",
             "Rerun with parameter changes", "Change of external dependency", "Application deployment and upgrade");
-
+    
     private ConfigurationEntry forceCommentsForAuditLog = new ConfigurationEntry("force_comments_for_audit_log", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry commentsForAuditLog = new ConfigurationEntry("comments_for_audit_log", String.join(";", AUDIT_LOG_COMMENTS),
@@ -104,9 +104,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry numOfWOrkflowTagsDisplayed = new ConfigurationEntry("num_of_workflow_tags_displayed", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     
-    //name of the role for kiosk mode
-    private ConfigurationEntry kioskRole = new ConfigurationEntry("kiosk_role", "kiosk", GlobalSettingsSectionValueType.STRING);
-    
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -164,8 +161,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         reportJavaOptions.setOrdering(++index);
         numOfTagsDisplayedAsOrderId.setOrdering(++index);
         numOfWOrkflowTagsDisplayed.setOrdering(++index);
-        
-        kioskRole.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -352,10 +347,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         } catch (Exception e) {
             return 0; // default
         }
-    }
-    
-    public ConfigurationEntry getKioskRole() {
-        return kioskRole;
     }
     
 }

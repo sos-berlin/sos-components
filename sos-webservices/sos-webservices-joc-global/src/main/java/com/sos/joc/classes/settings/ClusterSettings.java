@@ -2,6 +2,7 @@ package com.sos.joc.classes.settings;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,8 +14,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.ShowViewName;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsKiosk;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
+import com.sos.joc.model.KioskViewProperties;
 import com.sos.joc.model.ShowViewProperties;
 import com.sos.joc.model.SuffixPrefix;
 
@@ -118,12 +121,38 @@ public class ClusterSettings {
         return allowEmptyArguments != null && allowEmptyArguments.equalsIgnoreCase("true");
     }
     
-    public static String getKioskRole(ConfigurationGlobalsJoc settings) {
-        String pwd = settings.getKioskRole().getValue();
-        if (pwd == null || pwd.isEmpty()) {
+    public static String getKioskRole(ConfigurationGlobalsKiosk settings) {
+        String role = settings.getKioskRole().getValue();
+        if (role == null || role.isEmpty()) {
            return settings.getKioskRole().getDefault();
         }
-        return pwd;
+        return role;
+    }
+
+    public static KioskViewProperties getKioskViews(ConfigurationGlobalsKiosk kioskSettings) {
+        KioskViewProperties props = new KioskViewProperties();
+
+        kioskSettings.getKioskViews().entrySet().stream().sorted(Comparator.comparingInt(e -> e.getValue().getOrdering())).forEachOrdered(e -> {
+            ConfigurationEntry conf = e.getValue();
+            if (conf.getValue() == null || conf.getValue().isBlank()) {
+                conf.setValue(conf.getDefault());
+            }
+            Integer duration = 0;
+            try {
+                duration = Integer.valueOf(conf.getValue());
+            } catch (NumberFormatException ex) {
+                duration = 0;
+            }
+            // duration between 1s and 10s is not accepted. Values for 0s and 11s or higher are accepted.
+            if (duration < 11 && duration > 0) {
+                duration = 11;
+            }
+            if (duration > 0) {
+                props.setAdditionalProperty(e.getKey(), duration);
+            }
+        });
+
+        return props;
     }
     
     private static SuffixPrefix getSuffixPrefix(ConfigurationEntry suf, ConfigurationEntry pref) {
