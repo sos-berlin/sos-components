@@ -145,7 +145,7 @@
 								<exclude>dailyplan/projections/**/*.json</exclude>
 								<exclude>tag/**/*.json</exclude>
 								<exclude>reporting/*.json</exclude>
-								<exclude>joc/properties.json</exclude>
+								<exclude>joc/properties-schema.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -199,7 +199,7 @@
 								<include>dailyplan/projections/**/*.json</include>
 								<include>tag/**/*.json</include>
 								<include>reporting/*.json</include>
-								<include>joc/properties.json</include>
+								<include>joc/properties-schema.json</include>
 							</includes>
 						</configuration>
 						<goals>
