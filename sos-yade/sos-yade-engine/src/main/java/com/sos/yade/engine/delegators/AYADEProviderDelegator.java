@@ -35,9 +35,9 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return directory;
     }
 
-    //public String getPathSeparator() {
-    //    return pathSeparator;
-    //}
+    public String getPathSeparator() {
+        return pathSeparator;
+    }
 
     public String normalizePath(String path) {
         return pathSeparator.equals("/") ? SOSPathUtil.toUnixPath(path) : SOSPathUtil.toWindowsPath(path);

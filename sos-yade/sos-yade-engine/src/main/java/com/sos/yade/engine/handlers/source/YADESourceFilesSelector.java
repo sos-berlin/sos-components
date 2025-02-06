@@ -26,7 +26,7 @@ public class YADESourceFilesSelector {
 
     public static List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, boolean polling)
             throws SOSYADEEngineSourceFilesSelectorException {
-        if (sourceDelegator.getArgs().isSingleFilesSpecified()) {
+        if (sourceDelegator.getArgs().isSingleFilesSelection()) {
             return selectSingleFiles(logger, sourceDelegator, createProviderFileSelection(sourceDelegator, true), polling);
         } else {
             return selectFiles(sourceDelegator, createProviderFileSelection(sourceDelegator, false));

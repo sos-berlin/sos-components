@@ -111,16 +111,24 @@ public class SOSPathUtil {
         return (li >= 0) ? np.substring(li + 1) : np;
     }
 
+    /** Returns parent path without trailing separator
+     * 
+     * @param path
+     * @return */
     public static String getParentPath(String path) {
         if (path == null) {
             return null;
         }
-        if (path.contains("\\")) {
-            return getWindowsStyleParentPath(path);
+        if (path.contains("/")) {
+            return getUnixStyleParentPath(path);
         }
-        return getUnixStyleParentPath(path);
+        return getWindowsStyleParentPath(path);
     }
 
+    /** Returns parent path without trailing separator
+     * 
+     * @param path
+     * @return */
     public static String getUnixStyleParentPath(String path) {
         String np = toUnixPath(path);
         if (np == null) {
@@ -130,6 +138,10 @@ public class SOSPathUtil {
         return (li > 0) ? np.substring(0, li) : null;
     }
 
+    /** Returns parent path without trailing separator
+     * 
+     * @param path
+     * @return */
     public static String getWindowsStyleParentPath(String path) {
         String np = toWindowsPath(path);
         if (np == null) {

@@ -88,17 +88,17 @@ public class YADEDelegatorHelper {
             return;
         }
         YADETargetArguments args = (YADETargetArguments) targetDelegator.getArgs();
-        if (!args.getMakeDirs().isTrue()) {
+        if (!args.getCreateDirectories().isTrue()) {
             return;
         }
         try {
             IProvider provider = targetDelegator.getProvider();
             if (provider.createDirectoriesIfNotExist(targetDelegator.getDirectory().getPath())) {
-                logger.info("%s[%s=true][%s]created", targetDelegator.getLogPrefix(), args.getMakeDirs().getName(), targetDelegator.getDirectory()
-                        .getPath());
-            } else {
-                logger.info("%s[%s=true][%s][skip]already exists", targetDelegator.getLogPrefix(), args.getMakeDirs().getName(), targetDelegator
+                logger.info("%s[%s=true][%s]created", targetDelegator.getLogPrefix(), args.getCreateDirectories().getName(), targetDelegator
                         .getDirectory().getPath());
+            } else {
+                logger.info("%s[%s=true][%s][skip]already exists", targetDelegator.getLogPrefix(), args.getCreateDirectories().getName(),
+                        targetDelegator.getDirectory().getPath());
             }
         } catch (SOSProviderException e) {
             throw new SOSYADEEngineException(e);

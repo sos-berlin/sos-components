@@ -1,8 +1,12 @@
 package com.sos.yade.engine.delegators;
 
+import java.util.Optional;
+
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
+import com.sos.yade.engine.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.handlers.operations.YADECopyOrMoveOperationTargetFilesConfig;
+import com.sos.yade.engine.helpers.YADEReplacingHelper;
 
 public class YADEProviderFile extends ProviderFile {
 
@@ -10,10 +14,10 @@ public class YADEProviderFile extends ProviderFile {
     private TransferEntryState state = null;
     private int index;// in the list
 
-    private String newFullPath; // after possible rename etc
-    private boolean newFullPathIsCurrentFullPath;
+    private String finalFullPath; // after possible rename etc
+    private boolean finalFullPathIsCurrentFullPath;
 
-    private YADETargetProviderFile target;
+    private YADEProviderFile target;
 
     public YADEProviderFile(String fullPath, long size, long lastModifiedMillis, boolean checkSteady) {
         super(fullPath, size, lastModifiedMillis);
@@ -57,28 +61,36 @@ public class YADEProviderFile extends ProviderFile {
         return index;
     }
 
-    public void setNewName(String newName) {
-        int index = getFullPath().lastIndexOf(getName());
-        newFullPath = getFullPath().substring(0, index) + newName;
+    public void setFinalName(String newName) {
+        finalFullPath = getFullPath(newName);
     }
 
-    public String getNewFullPath() {
-        return newFullPath;
+    public String getFullPath(String newName) {
+        int index = getFullPath().lastIndexOf(getName());
+        return getFullPath().substring(0, index) + newName;
+    }
+
+    public Optional<String> getNewFileNameIfDifferent(YADESourceTargetArguments args) {
+        return YADEReplacingHelper.getNewFileNameIfDifferent(getName(), args.getReplacing().getValue(), args.getReplacement().getValue());
+    }
+
+    public String getFinalFullPath() {
+        return finalFullPath;
     }
 
     public String getCurrentFullPath() {
-        return newFullPathIsCurrentFullPath ? newFullPath : getFullPath();
+        return finalFullPathIsCurrentFullPath ? finalFullPath : getFullPath();
     }
 
     public void confirmFullPathChange() {
-        newFullPathIsCurrentFullPath = true;
+        finalFullPathIsCurrentFullPath = true;
     }
 
     public boolean isFullPathChanged() {
-        return newFullPathIsCurrentFullPath;
+        return finalFullPathIsCurrentFullPath;
     }
 
-    public YADETargetProviderFile getTarget() {
+    public YADEProviderFile getTarget() {
         return target;
     }
 

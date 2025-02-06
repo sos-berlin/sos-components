@@ -3,8 +3,6 @@ package com.sos.yade.engine.arguments;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 
 public class YADESourceArguments extends YADESourceTargetArguments {
@@ -54,12 +52,12 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     // YADE1 - not needed? due to MOVE operation
     // private SOSArgument<Boolean> removeFiles = new SOSArgument<>("remove_files", false, Boolean.valueOf(false));
 
-    public boolean isSingleFilesSpecified() {
+    public boolean isSingleFilesSelection() {
         return isFilePathEnabled() || isFileListEnabled();
     }
 
     public boolean isFilePathEnabled() {
-        return !SOSCollection.isEmpty(filePath.getValue());
+        return !filePath.isEmpty();
     }
 
     public boolean isFileListEnabled() {
@@ -67,7 +65,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     }
 
     public boolean isCheckSteadyStateEnabled() {
-        return SOSString.isEmpty(checkSteadyStateInterval.getValue());
+        return !checkSteadyStateInterval.isEmpty();
     }
 
     public boolean isPoolTimeoutEnabled() {

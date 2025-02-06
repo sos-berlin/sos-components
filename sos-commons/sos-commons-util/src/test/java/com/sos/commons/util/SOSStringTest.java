@@ -92,4 +92,12 @@ public class SOSStringTest {
         LOGGER.info(String.format("[result]%s", result));
     }
 
+    @Ignore
+    @Test
+    public void testTrimStart() throws Exception {
+        String input = "\\\\\\tttt\\";
+        String result = SOSString.trimStart(input, "\\");
+        LOGGER.info(String.format("[result]%s", result));
+    }
+
 }

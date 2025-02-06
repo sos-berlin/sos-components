@@ -4,8 +4,8 @@ import com.sos.commons.util.common.SOSArgument;
 
 public class YADETargetArguments extends YADESourceTargetArguments {
 
-    // Create missing Directory on Target
-    private SOSArgument<Boolean> makeDirs = new SOSArgument<>("make_dirs", false, Boolean.valueOf(true));
+    // Create missing directories on Target
+    private SOSArgument<Boolean> createDirectories = new SOSArgument<>("make_dirs", false, Boolean.valueOf(true));
 
     /** - Transfer options ------- */
     private SOSArgument<Boolean> checkSize = new SOSArgument<>("check_size", false, Boolean.valueOf(true));
@@ -36,8 +36,8 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     // YADE JS7 checks this argument (YADE1 default: .gz)
     private SOSArgument<String> compressedFileExtension = new SOSArgument<>("compressed_file_extension", false);
 
-    public SOSArgument<Boolean> getMakeDirs() {
-        return makeDirs;
+    public SOSArgument<Boolean> getCreateDirectories() {
+        return createDirectories;
     }
 
     public SOSArgument<Boolean> getKeepModificationDate() {

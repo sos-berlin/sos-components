@@ -2,6 +2,7 @@ package com.sos.yade.engine.helpers;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,13 +13,11 @@ public class YADEReplacingHelper {
     private static final String VAR_DATE_PREFIX = "[date:";
     private static final String VAR_FILENAME_PREFIX = "[filename:";
 
-    public static boolean setNewFileName(YADEProviderFile file, String regex, String replacement) {
-        String fileName = file.getName();
-
+    public static Optional<String> getNewFileNameIfDifferent(String fileName, String regex, String replacement) {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(fileName);
         if (!matcher.find()) {
-            return false;
+            return Optional.empty();
         }
 
         String newName;
@@ -39,10 +38,9 @@ public class YADEReplacingHelper {
             newName = result.toString();
         }
         if (newName.equals(fileName)) {
-            return false;
+            return Optional.empty();
         } else {
-            file.setNewName(newName);
-            return true;
+            return Optional.of(newName);
         }
     }
 
@@ -78,8 +76,8 @@ public class YADEReplacingHelper {
             // replacement = "[date:yyyy-MM-dd-HH-mm-ss];BB;1.txt";
             // replacement = "[filename:uppercase]";
 
-            setNewFileName(file, regex, replacement);
-            System.out.println("RESULT:" + file.getNewFullPath());
+            Optional<String> newName = getNewFileNameIfDifferent(file.getName(), regex, replacement);
+            System.out.println("RESULT:" + newName.isPresent());
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -302,6 +302,22 @@ public class SOSString {
         return val;
     }
 
+    public static String trimStart(String input, String... trimChars) {
+        if (isEmpty(input) || trimChars.length == 0) {
+            return input;
+        }
+        String val = input;
+        for (String trim : trimChars) {
+            if (SOSString.isEmpty(trim)) {
+                continue;
+            }
+            while (val.startsWith(trim)) {
+                val = val.substring(trim.length()).trim();
+            }
+        }
+        return val;
+    }
+
     public static String remove4ByteCharacters(String val) {
         if (isEmpty(val)) {
             return val;
