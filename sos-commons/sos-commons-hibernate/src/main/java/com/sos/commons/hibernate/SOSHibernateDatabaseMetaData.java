@@ -129,7 +129,7 @@ public class SOSHibernateDatabaseMetaData {
             private Json(int majorVersion, int minorVersion) {
                 if (majorVersion >= 12) {
                     if (majorVersion == 12) {
-                        // e.g. in 12.1.0.20, JSON_EXISTS has limited functionality and does not include the advanced filtering features introduced in 12.2.x
+                        // e.g. 12.1.0.2.0: JSON_EXISTS has limited functionality and does not include the advanced filtering features introduced in 12.2.x
                         if (minorVersion <= 1) {
                             fallbackToRegex = true;
                         }
