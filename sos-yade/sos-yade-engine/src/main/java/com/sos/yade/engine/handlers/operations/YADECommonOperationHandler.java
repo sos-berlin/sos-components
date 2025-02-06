@@ -146,9 +146,9 @@ public class YADECommonOperationHandler {
     @SuppressWarnings("unused")
     private static void deleteSourceFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> files)
             throws SOSYADEEngineOperationException {
-        if (!sourceDelegator.getArgs().getRemoveFiles().isTrue()) {
-            return;
-        }
+        // if (!sourceDelegator.getArgs().getRemoveFiles().isTrue()) {
+        // return;
+        // }
 
         files.stream().forEach(file -> {
             YADEProviderFile f = (YADEProviderFile) file;

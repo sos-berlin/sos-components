@@ -7,16 +7,19 @@ import com.sos.commons.util.SOSPathUtil;
 
 public class ProviderDirectoryPath {
 
+    private final String pathSeparator;
     private final String path;
     private final String pathWithTrailingSeparator;
 
     public ProviderDirectoryPath(Path path) {
-        String p = SOSPath.toAbsoluteNormalizedPath(path).toString();
-        this.path = SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(p);
-        this.pathWithTrailingSeparator = SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(p);
+        String normalizedPath = SOSPath.toAbsoluteNormalizedPath(path).toString();
+        this.pathSeparator = getPathSeparator(normalizedPath);
+        this.path = getPath(normalizedPath);
+        this.pathWithTrailingSeparator = getPathWithTrailingSeparator(normalizedPath);
     }
 
     public ProviderDirectoryPath(String pathWithoutTrailingSeparator, String pathWithTrailingSeparator) {
+        this.pathSeparator = getPathSeparator(pathWithTrailingSeparator);
         this.path = pathWithoutTrailingSeparator;
         this.pathWithTrailingSeparator = pathWithTrailingSeparator;
     }
@@ -29,6 +32,10 @@ public class ProviderDirectoryPath {
     /** @return path with trailing separator or null */
     public String getPathWithTrailingSeparator() {
         return pathWithTrailingSeparator;
+    }
+
+    public String getPathSeparator() {
+        return pathSeparator;
     }
 
     /** Case-insensitive
@@ -64,5 +71,28 @@ public class ProviderDirectoryPath {
     @Override
     public String toString() {
         return path;
+    }
+
+    private String getPathSeparator(String path) {
+        if (path == null) {
+            return "/";
+        }
+        return path.contains("/") ? "/" : "\\";
+    }
+
+    private String getPath(String path) {
+        if (path == null) {
+            return "/";
+        }
+        return pathSeparator.equals("/") ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(path) : SOSPathUtil
+                .getWindowsStyleDirectoryWithoutTrailingSeparator(path);
+    }
+
+    private String getPathWithTrailingSeparator(String path) {
+        if (path == null) {
+            return "/";
+        }
+        return pathSeparator.equals("/") ? SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(path) : SOSPathUtil
+                .getWindowsStyleDirectoryWithTrailingSeparator(path);
     }
 }

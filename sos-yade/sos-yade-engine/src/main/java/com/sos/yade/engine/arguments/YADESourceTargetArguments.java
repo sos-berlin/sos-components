@@ -8,6 +8,9 @@ public class YADESourceTargetArguments {
     private AProviderArguments provider;
     private YADEProviderCommandArguments commands;
 
+    // TODO source_dir/target_dir
+    private SOSArgument<String> directory = new SOSArgument<>("dir", false);
+
     private SOSArgument<Integer> connectionErrorRetryCountMax = new SOSArgument<>("connection_error_retry_count_max", false);
     private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("connection_error_retry_interval", false, "0s");
 
@@ -37,6 +40,10 @@ public class YADESourceTargetArguments {
 
     public void setCommands(YADEProviderCommandArguments val) {
         commands = val;
+    }
+
+    public SOSArgument<String> getDirectory() {
+        return directory;
     }
 
     public SOSArgument<Integer> getConnectionErrorRetryCountMax() {

@@ -4,7 +4,6 @@ import com.sos.commons.util.common.SOSArgument;
 
 public class YADETargetArguments extends YADESourceTargetArguments {
 
-    private SOSArgument<String> directory = new SOSArgument<>("target_dir", false);
     // Create missing Directory on Target
     private SOSArgument<Boolean> makeDirs = new SOSArgument<>("make_dirs", false, Boolean.valueOf(true));
 
@@ -21,18 +20,21 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     private SOSArgument<String> atomicSuffix = new SOSArgument<>("atomic_suffix", false);
 
     /** - Cumulate files ------- */
-    private SOSArgument<Boolean> cumulateFiles = new SOSArgument<>("cumulate_files", false, Boolean.valueOf(false));
+    // YADE1 checks this argument
+    // private SOSArgument<Boolean> cumulateFiles = new SOSArgument<>("cumulate_files", false, Boolean.valueOf(false));
+    // YADE JS7 checks this argument
+    // Name of file into which all files hat to be cumulated
     private SOSArgument<String> cumulativeFileName = new SOSArgument<>("cumulative_filename", false);
+    // Text which has to replaced between cumulated files
     private SOSArgument<String> cumulativeFileSeparator = new SOSArgument<>("cumulative_file_separator", false);
+    // Delete cumulative file before starting transfer
     private SOSArgument<Boolean> cumulativeFileDelete = new SOSArgument<>("cumulative_file_delete", false, Boolean.valueOf(false));
 
     /** - Compressing ------- */
-    private SOSArgument<Boolean> compressFiles = new SOSArgument<>("compress_files", false, Boolean.valueOf(false));
-    private SOSArgument<String> compressedFileExtension = new SOSArgument<>("compressed_file_extension", false, ".gz");
-
-    public SOSArgument<String> getDirectory() {
-        return directory;
-    }
+    // YADE1 checks this argument
+    // private SOSArgument<Boolean> compressFiles = new SOSArgument<>("compress_files", false, Boolean.valueOf(false));
+    // YADE JS7 checks this argument (YADE1 default: .gz)
+    private SOSArgument<String> compressedFileExtension = new SOSArgument<>("compressed_file_extension", false);
 
     public SOSArgument<Boolean> getMakeDirs() {
         return makeDirs;
@@ -50,10 +52,6 @@ public class YADETargetArguments extends YADESourceTargetArguments {
         return atomicSuffix;
     }
 
-    public SOSArgument<Boolean> getCumulateFiles() {
-        return cumulateFiles;
-    }
-
     public SOSArgument<String> getCumulativeFileName() {
         return cumulativeFileName;
     }
@@ -64,10 +62,6 @@ public class YADETargetArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getCumulativeFileDelete() {
         return cumulativeFileDelete;
-    }
-
-    public SOSArgument<Boolean> getCompressFiles() {
-        return compressFiles;
     }
 
     public SOSArgument<String> getCompressedFileExtension() {

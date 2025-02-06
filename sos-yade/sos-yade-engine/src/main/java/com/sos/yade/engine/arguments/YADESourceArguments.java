@@ -19,8 +19,6 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     /** - File Selection Arguments ------- */
     // YADE 1 - checks after transfer. why???? ....
     private SOSArgument<Boolean> forceFiles = new SOSArgument<>("force_files", false, Boolean.valueOf(true));
-    // String because can be URI etc
-    private SOSArgument<String> directory = new SOSArgument<>("source_dir", false);
     // RegExp
     private SOSArgument<String> excludedDirectories = new SOSArgument<>("source_excluded_directories", false);
     private SOSArgument<Boolean> recursive = new SOSArgument<>("recursive", false, Boolean.valueOf(false));
@@ -53,7 +51,8 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     private SOSArgument<ZeroByteTransfer> zeroByteTransfer = new SOSArgument<>("zero_byte_transfer", false, ZeroByteTransfer.YES);
 
     /** - Remove files ------- */
-    private SOSArgument<Boolean> removeFiles = new SOSArgument<>("remove_files", false, Boolean.valueOf(false));
+    // YADE1 - not needed? due to MOVE operation
+    // private SOSArgument<Boolean> removeFiles = new SOSArgument<>("remove_files", false, Boolean.valueOf(false));
 
     public boolean isSingleFilesSpecified() {
         return isFilePathEnabled() || isFileListEnabled();
@@ -85,10 +84,6 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getForceFiles() {
         return forceFiles;
-    }
-
-    public SOSArgument<String> getDirectory() {
-        return directory;
     }
 
     public SOSArgument<String> getExcludedDirectories() {
@@ -139,7 +134,4 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         return integrityHashType;
     }
 
-    public SOSArgument<Boolean> getRemoveFiles() {
-        return removeFiles;
-    }
 }

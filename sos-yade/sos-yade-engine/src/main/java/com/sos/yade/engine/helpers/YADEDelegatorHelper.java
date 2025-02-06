@@ -83,7 +83,7 @@ public class YADEDelegatorHelper {
         }
     }
 
-    public static void createDirectoriesOnTarget(ISOSLogger logger, IYADEProviderDelegator targetDelegator) throws SOSYADEEngineException {
+    public static void createDirectoriesOnTarget(ISOSLogger logger, YADETargetProviderDelegator targetDelegator) throws SOSYADEEngineException {
         if (targetDelegator == null || targetDelegator.getDirectory() == null || targetDelegator.getArgs() == null) {
             return;
         }

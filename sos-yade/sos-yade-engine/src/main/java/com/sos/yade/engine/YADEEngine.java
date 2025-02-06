@@ -196,7 +196,8 @@ public class YADEEngine {
     }
 
     private void onFinally(ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> files, Throwable exception, boolean disconnectSource) {
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> files, Throwable exception, boolean disconnectSource)
+            throws SOSYADEEngineException {
         /** Source/Target: execute commands after operation final */
         YADECommandsResult r = YADECommandsHandler.executeAfterOperationFinal(logger, sourceDelegator, targetDelegator, exception);
         // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
@@ -210,6 +211,14 @@ public class YADEEngine {
 
         // sendNotifications
         YADEHelper.printSummary(logger, args, files, exception);
+
+        // disconnectSource means - YADE execution(one-time operation or polling) is completed
+        if (exception != null && disconnectSource) {
+            if (exception instanceof SOSYADEEngineException) {
+                throw (SOSYADEEngineException) exception;
+            }
+            throw new SOSYADEEngineException(exception);
+        }
     }
 
 }

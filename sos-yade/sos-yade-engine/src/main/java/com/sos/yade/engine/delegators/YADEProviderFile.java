@@ -2,6 +2,7 @@ package com.sos.yade.engine.delegators;
 
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
+import com.sos.yade.engine.handlers.operations.YADECopyOrMoveOperationTargetFilesConfig;
 
 public class YADEProviderFile extends ProviderFile {
 
@@ -46,6 +47,12 @@ public class YADEProviderFile extends ProviderFile {
         this.steady = null;
     }
 
+    public void initForOperation(int index, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
+            YADECopyOrMoveOperationTargetFilesConfig targetFilesConfig) {
+        initForOperation(index);
+        target = targetDelegator.newYADETargetProviderFile(sourceDelegator, this, targetFilesConfig);
+    }
+
     public int getIndex() {
         return index;
     }
@@ -73,11 +80,6 @@ public class YADEProviderFile extends ProviderFile {
 
     public YADETargetProviderFile getTarget() {
         return target;
-    }
-
-    public void initTargetFile(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator) {
-        // fullPath - relative from source dir to target dir ...
-        target = new YADETargetProviderFile(newFullPath, 0, 0, false);
     }
 
     public class Steady {

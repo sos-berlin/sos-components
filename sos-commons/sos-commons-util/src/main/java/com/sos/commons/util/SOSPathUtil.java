@@ -140,19 +140,33 @@ public class SOSPathUtil {
     }
 
     public static String getUnixStyleDirectoryWithoutTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixPath(path);
-        if (p == null) {
+        return getDirectoryWithoutTrailingSeparator(SOSPathUtil.toUnixPath(path), "/");
+    }
+
+    public static String getWindowsStyleDirectoryWithoutTrailingSeparator(String path) {
+        return getDirectoryWithoutTrailingSeparator(SOSPathUtil.toWindowsPath(path), "\\");
+    }
+
+    private static String getDirectoryWithoutTrailingSeparator(String path, String pathSeparator) {
+        if (path == null) {
             return null;
         }
-        return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        return path.endsWith(pathSeparator) ? path.substring(0, path.length() - 1) : path;
     }
 
     public static String getUnixStyleDirectoryWithTrailingSeparator(String path) {
-        String p = SOSPathUtil.toUnixPath(path);
-        if (p == null) {
+        return getDirectoryWithTrailingSeparator(SOSPathUtil.toUnixPath(path), "/");
+    }
+
+    public static String getWindowsStyleDirectoryWithTrailingSeparator(String path) {
+        return getDirectoryWithTrailingSeparator(SOSPathUtil.toWindowsPath(path), "\\");
+    }
+
+    private static String getDirectoryWithTrailingSeparator(String path, String pathSeparator) {
+        if (path == null) {
             return null;
         }
-        return path.endsWith("/") ? path : path + "/";
+        return path.endsWith(pathSeparator) ? path : path + pathSeparator;
     }
 
 }

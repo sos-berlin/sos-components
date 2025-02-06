@@ -19,22 +19,30 @@ public class YADECopyOrMoveOperationHandler {
     public static void execute(TransferOperation operation, ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws SOSYADEEngineOperationException {
         if (targetDelegator == null) {
-            throw new SOSYADEEngineOperationException(new SOSMissingDataException("Target Provider"));
+            throw new SOSYADEEngineOperationException(new SOSMissingDataException("TargetDelegator"));
         }
 
-        // TODO
         YADESourceArguments sourceArgs = sourceDelegator.getArgs();
+        boolean isSourceReplacingEnabled = TransferOperation.COPY.equals(operation) && sourceArgs.isReplacingEnabled();
+
+        YADECopyOrMoveOperationTargetFilesConfig targetFilesConfig = new YADECopyOrMoveOperationTargetFilesConfig(targetDelegator);
+        if (targetFilesConfig.deleteCumulativeFile()) {
+            try {
+                targetDelegator.getProvider().deleteIfExists(targetFilesConfig.getCumulativeFileFullPath());
+            } catch (Throwable e) {
+                throw new SOSYADEEngineOperationException(e);
+            }
+        }
+
         int index = 0;
         for (ProviderFile sourceFile : sourceFiles) {
             YADEProviderFile file = (YADEProviderFile) sourceFile;
-            file.initForOperation(index++);
+            file.initForOperation(index++, sourceDelegator, targetDelegator, targetFilesConfig);
 
-            if (TransferOperation.COPY.equals(operation)) {
-                if (!sourceArgs.isReplacingEnabled()) {
-                    YADEReplacingHelper.setNewFileName(file, sourceArgs.getReplacing().getValue(), sourceArgs.getReplacement().getValue());
-                }
+            if (isSourceReplacingEnabled) {
+                YADEReplacingHelper.setNewFileName(file, sourceArgs.getReplacing().getValue(), sourceArgs.getReplacement().getValue());
             }
-            file.initTargetFile(sourceDelegator, targetDelegator);
+
         }
     }
 
