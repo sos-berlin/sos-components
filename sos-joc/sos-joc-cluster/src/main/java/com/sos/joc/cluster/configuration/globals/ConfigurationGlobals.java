@@ -30,12 +30,12 @@ public class ConfigurationGlobals {
         defaults = new GlobalSettings();
         addDefaultSection(DefaultSections.dailyplan, 0);
         addDefaultSection(DefaultSections.cleanup, 1);
-        addDefaultSection(DefaultSections.joc, 2);
-        addDefaultSection(DefaultSections.user, 3);
-        addDefaultSection(DefaultSections.git, 4);
-        addDefaultSection(DefaultSections.lognotification, 5);
-        addDefaultSection(DefaultSections.identityService, 6);
-        addDefaultSection(DefaultSections.kiosk, 7);
+        addDefaultSection(DefaultSections.identityService, 2);
+        addDefaultSection(DefaultSections.lognotification, 3);
+        addDefaultSection(DefaultSections.joc, 4);
+        addDefaultSection(DefaultSections.git, 5);
+        addDefaultSection(DefaultSections.kiosk, 6);
+        addDefaultSection(DefaultSections.user, 7);
     }
 
     public void setConfigurationValues(GlobalSettings values) {
