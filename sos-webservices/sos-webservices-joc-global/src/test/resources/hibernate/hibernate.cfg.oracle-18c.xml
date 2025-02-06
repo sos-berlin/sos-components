@@ -8,7 +8,7 @@
   	<property name="jakarta.persistence.jdbc.user">enc:BCVBVeq3eIUJfGCLNOCGu7nPPLPBD0M1jCJlkV1zRghICwpZfdLoRjHiCB6s821oSXKgTESRqTC6SjatXI6sMgxz4kNIdpVAAoAS3IZ6MI+O138yQw/GRO+yANGzRH8EAFkKOtjpqN6tScoe6QOC1GNiLP3U H3Cmh1+g8IJM+zc3FG9sWw== b04NjhnzAOoWfyJFD9zjaw==</property>
   	<property name="jakarta.persistence.jdbc.password">enc:BCVBVeq3eIUJfGCLNOCGu7nPPLPBD0M1jCJlkV1zRghICwpZfdLoRjHiCB6s821oSXKgTESRqTC6SjatXI6sMgxz4kNIdpVAAoAS3IZ6MI+O138yQw/GRO+yANGzRH8EAFkKOtjpqN6tScoe6QOC1GNiLP3U H3Cmh1+g8IJM+zc3FG9sWw== b04NjhnzAOoWfyJFD9zjaw==</property>
   	
-  	<property name="hibernate.show_sql">false</property>
+  	<property name="hibernate.show_sql">true</property>
   	<property name="hibernate.format_sql">true</property>
   
   	<!-- Hikari Connection Pool -->

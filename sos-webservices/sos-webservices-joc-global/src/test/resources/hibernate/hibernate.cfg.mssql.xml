@@ -8,7 +8,7 @@
 		<property name="jakarta.persistence.jdbc.user">jobscheduler</property>
 		<property name="jakarta.persistence.jdbc.password">jobscheduler</property>
 
-		<property name="hibernate.show_sql">false</property>
+		<property name="hibernate.show_sql">true</property>
 		<property name="hibernate.format_sql">true</property>
 		
 		<property name="hibernate.sos.show_configuration_properties">false</property>

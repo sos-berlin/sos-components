@@ -287,9 +287,7 @@ public class SOSString {
         if (isEmpty(input) || trimChars.length == 0) {
             return input;
         }
-        // String regex = "^[" + trimChars + "]+|[" + trimChars + "]+$";
-        // input = input.replaceAll(regex, "");
-        String val = input.trim();
+        String val = input;
         for (String trim : trimChars) {
             if (SOSString.isEmpty(trim)) {
                 continue;
@@ -301,7 +299,7 @@ public class SOSString {
                 val = val.substring(0, val.length() - trim.length()).trim();
             }
         }
-        return val.trim();
+        return val;
     }
 
     public static String remove4ByteCharacters(String val) {

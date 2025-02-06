@@ -10,7 +10,7 @@
 		<property name="hibernate.connection.username">scheduler</property>
 		<property name="hibernate.connection.password">scheduler</property>
 
-		<property name="hibernate.show_sql">false</property>
+		<property name="hibernate.show_sql">true</property>
 		<property name="hibernate.format_sql">true</property>
 
 

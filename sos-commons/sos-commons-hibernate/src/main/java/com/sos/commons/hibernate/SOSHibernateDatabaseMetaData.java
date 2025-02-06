@@ -11,15 +11,6 @@ public class SOSHibernateDatabaseMetaData {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateDatabaseMetaData.class);
 
-    /** Used with JSON_QUERY to retrieve JSON result longer than 4000 characters<br/>
-     * - If such case is not handled separately, Oracle will return null in this case,<br/>
-     * -- because JSON_QUERY uses the return type VARCHAR2(4000) by default<br/>
-     * TODO introduction of ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_NCLOB<br/>
-     * - 18c - ORA-40449 invalid data type for return value<br/>
-     * - 21c - accepts RETURNING NCLOB - from which version is RETURNING NCLOB supported?<br/>
-     */
-    private static final int ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB = 18;
-
     private final Dbms dbms;
 
     /** can be null/0
@@ -29,8 +20,8 @@ public class SOSHibernateDatabaseMetaData {
     private String productVersion;
     private int majorVersion;
     private int minorVersion;
-    private boolean supportJsonReturningClob;
     private boolean metaDataAvailable;
+    private Oracle oracle = null;
 
     protected SOSHibernateDatabaseMetaData(Dbms dbms) {
         this(dbms, null);
@@ -39,7 +30,7 @@ public class SOSHibernateDatabaseMetaData {
     public SOSHibernateDatabaseMetaData(Dbms dbms, DatabaseMetaData metaData) {
         this.dbms = dbms;
         setMetaData(metaData);
-        setSupportJsonReturningClob();
+        setJsonSupport();
     }
 
     private void setMetaData(DatabaseMetaData metaData) {
@@ -59,14 +50,9 @@ public class SOSHibernateDatabaseMetaData {
         }
     }
 
-    private void setSupportJsonReturningClob() {
-        supportJsonReturningClob = true;
-
+    private void setJsonSupport() {
         if (dbms.equals(Dbms.ORACLE)) {
-            supportJsonReturningClob = false;
-            if (majorVersion >= ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB) {
-                supportJsonReturningClob = true;
-            }
+            oracle = new Oracle();
         }
     }
 
@@ -90,10 +76,6 @@ public class SOSHibernateDatabaseMetaData {
         return minorVersion;
     }
 
-    public boolean supportJsonReturningClob() {
-        return supportJsonReturningClob;
-    }
-
     public boolean metaDataAvailable() {
         return metaDataAvailable;
     }
@@ -106,10 +88,68 @@ public class SOSHibernateDatabaseMetaData {
         sb.append(",minorVersion=").append(minorVersion);
         sb.append(",productName=").append(productName);
         sb.append(",productVersion=").append(productVersion);
-        if (Dbms.ORACLE.equals(dbms)) {
-            sb.append(",supportJsonReturningClob=").append(supportJsonReturningClob);
+        if (oracle != null) {
+            sb.append(",[json]");
+            sb.append("returningClobEnabled=").append(oracle.json.returningClobEnabled);
+            sb.append(",fallbackToRegex=").append(oracle.json.fallbackToRegex);
         }
         return sb.toString();
+    }
+
+    public Oracle getOracle() {
+        return oracle;
+    }
+
+    public class Oracle {
+
+        private Json json = null;
+
+        private Oracle() {
+            json = new Json(majorVersion, minorVersion);
+        }
+
+        public Json getJson() {
+            return json;
+        }
+
+        public class Json {
+
+            /** Used with JSON_QUERY to retrieve JSON result longer than 4000 characters<br/>
+             * - If such case is not handled separately, Oracle will return null in this case,<br/>
+             * -- because JSON_QUERY uses the return type VARCHAR2(4000) by default<br/>
+             * TODO introduction of ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_NCLOB<br/>
+             * - 18c - ORA-40449 invalid data type for return value<br/>
+             * - 21c - accepts RETURNING NCLOB - from which version is RETURNING NCLOB supported?<br/>
+             */
+            private static final int ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB = 18;
+
+            private boolean returningClobEnabled;
+            private boolean fallbackToRegex;
+
+            private Json(int majorVersion, int minorVersion) {
+                if (majorVersion >= 12) {
+                    if (majorVersion == 12) {
+                        // e.g. in 12.1.0.20, JSON_EXISTS has limited functionality and does not include the advanced filtering features introduced in 12.2.x
+                        if (minorVersion <= 1) {
+                            fallbackToRegex = true;
+                        }
+                    } else {
+                        if (majorVersion >= ORACLE_MIN_VERSION_SUPPORT_JSON_RETURNING_CLOB) {
+                            returningClobEnabled = true;
+                        }
+                    }
+                }
+            }
+
+            public boolean returningClobEnabled() {
+                return returningClobEnabled;
+            }
+
+            public boolean fallbackToRegex() {
+                return fallbackToRegex;
+            }
+
+        }
     }
 
 }

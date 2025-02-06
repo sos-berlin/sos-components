@@ -107,7 +107,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 arguments.get(1).accept(translator);
                 sqlAppender.append(",");
                 arguments.get(2).accept(translator);
-                if (this.factory.getDatabaseMetaData().supportJsonReturningClob()) {
+                if (this.factory.getDatabaseMetaData().getOracle().getJson().returningClobEnabled()) {
                     // RETURNING NCLOB:
                     // - 18c-ORA-40449 invalid data type for return value
                     // - 21c-OK - TODO from which version is RETURNING NCLOB supported?

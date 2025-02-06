@@ -14,11 +14,14 @@ import org.hibernate.type.StandardBasicTypes;
 
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.util.SOSString;
 
 public class SOSHibernateJsonExists extends StandardSQLFunction {
 
     public static final String NAME = "SOS_JSON_EXISTS";
 
+    // TODO full list: EQUALS, NOT_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, LIKE;
+    // the full list is already supported for Oracle JSON_EXISTS but not for Oracle REGEXP_LIKE
     public enum JsonOperator {
         EQUALS, NOT_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, LIKE;
     }
@@ -38,6 +41,28 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
     public SOSHibernateJsonExists(SOSHibernateFactory factory) {
         super(NAME, StandardBasicTypes.BOOLEAN);
         this.factory = factory;
+    }
+
+    // TODO limited to 1 path piece
+    public static String getOracleRegExExactSearch(String jsonPath, String search) {
+        String jp = jsonPath.substring(2);// $.names -> names
+        return "\"" + jp + "\":\\s*\\[.*\"" + patternQuote(search) + "\".*\\]";
+    }
+
+    public static String getOracleRegExLikeSearch(String jsonPath, String search) {
+        String jp = jsonPath.substring(2);// $.names -> names
+        return "\"" + jp + "\":\\s*\\[.*\".*" + patternQuote(SOSString.trim(search, "%")) + ".*\".*\\]";
+    }
+
+    // Patter.quote quoted to much ...
+    private static String patternQuote(String val) {
+        // " - because json
+        String[] specialChars = { "\"", "\\", "^", "$", ".", "|", "?", "*", "+", "(", ")", "[", "]", "{", "}" };
+        // return Arrays.stream(specialChars).reduce(val, (result, ch) -> result.replace(ch, "\\" + ch));
+        for (String ch : specialChars) {
+            val = val.replace(ch, "\\" + ch);
+        }
+        return val;
     }
 
     /** - Currently only for Oracle<br/>
@@ -136,48 +161,96 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
 
         switch (this.factory.getDbms()) {
         case ORACLE:
-            // JSON_EXISTS(JSON_CONTENT, '$.workflowNames')
-            // JSON_EXISTS(lower(JSON_CONTENT), '$.workflownames')
-            sqlAppender.append("JSON_EXISTS(");
-            if (caseInsensitive) {
-                jsonPath = jsonPath.toLowerCase();
-                if (value != null) {
-                    value = value.toLowerCase();
-                }
-                sqlAppender.append("lower(" + jsonColumn + ")");
-            } else {
-                sqlAppender.append(jsonColumn);
-            }
-            sqlAppender.append(",'");
-            if (JsonPathType.ARRAY.equals(jsonPathType)) {
-                sqlAppender.append(jsonPath + "[*]");
-            } else {
-                sqlAppender.append(jsonPath);
-            }
+            boolean useJsonExists = true;
+            if (this.factory.getDatabaseMetaData().getOracle().getJson().fallbackToRegex()) {
+                if (operator != null && (value != null || valueAsQueryParameterName != null)) {
+                    useJsonExists = false;
+                    if (JsonOperator.NOT_EQUALS.equals(operator)) {
+                        sqlAppender.append("NOT ");
+                    }
+                    sqlAppender.append("REGEXP_LIKE(");
+                    if (caseInsensitive) {
+                        sqlAppender.append("lower(" + jsonColumn + ")");
+                    } else {
+                        sqlAppender.append(jsonColumn);
+                    }
+                    sqlAppender.append(",");
 
-            if (operator != null && (value != null || valueAsQueryParameterName != null)) {
-                // JSON_EXISTS(JSON_CONTENT, '$.workflowNames?(@ == "My_Workflow")')";
-                // -- JSON_EXISTS(lower(JSON_CONTENT), '$.workflownames?(@ == "my_workflow")')";
-                // JSON_EXISTS(JSON_CONTENT, '$.workflowNames?(@ like "%My_Workflow%")')";
-                // -- JSON_EXISTS(lower(JSON_CONTENT), '$.workflownames?(@ like "%my_workflow%")')";
-                sqlAppender.append("?(@");
-                sqlAppender.append(" " + renderOperator(Dbms.ORACLE, operator));
-                if (value == null) {
-                    sqlAppender.append(" $" + valueAsQueryParameterNameVarName);
+                    switch (operator) {
+                    case EQUALS:
+                        if (value == null) {
+                            valueNode.accept(translator);
+                        } else {
+                            sqlAppender.append(getOracleRegExExactSearch(jsonPath, value));
+                        }
+                        break;
+                    case LIKE:
+                        if (value == null) {
+                            valueNode.accept(translator);
+                        } else {
+                            sqlAppender.append(getOracleRegExLikeSearch(jsonPath, value));
+                        }
+                        break;
+                    case GREATER_THAN:
+                        break;
+                    case GREATER_THAN_OR_EQUALS:
+                        break;
+                    case LESS_THAN:
+                        break;
+                    case LESS_THAN_OR_EQUALS:
+                        break;
+                    case NOT_EQUALS:
+                        break;
+                    default:
+                        break;
+                    }
+                    sqlAppender.append(")");
+                }
+            }
+            if (useJsonExists) {
+                // JSON_EXISTS(JSON_CONTENT, '$.workflowNames')
+                // JSON_EXISTS(lower(JSON_CONTENT), '$.workflownames')
+                sqlAppender.append("JSON_EXISTS(");
+                if (caseInsensitive) {
+                    jsonPath = jsonPath.toLowerCase();
+                    if (value != null) {
+                        value = value.toLowerCase();
+                    }
+                    sqlAppender.append("lower(" + jsonColumn + ")");
                 } else {
-                    sqlAppender.append(" " + quote(value, valueShouldBeQuoted));
+                    sqlAppender.append(jsonColumn);
+                }
+                sqlAppender.append(",'");
+                if (JsonPathType.ARRAY.equals(jsonPathType)) {
+                    sqlAppender.append(jsonPath + "[*]");
+                } else {
+                    sqlAppender.append(jsonPath);
+                }
+
+                if (operator != null && (value != null || valueAsQueryParameterName != null)) {
+                    // JSON_EXISTS(JSON_CONTENT, '$.workflowNames?(@ == "My_Workflow")')";
+                    // -- JSON_EXISTS(lower(JSON_CONTENT), '$.workflownames?(@ == "my_workflow")')";
+                    // JSON_EXISTS(JSON_CONTENT, '$.workflowNames?(@ like "%My_Workflow%")')";
+                    // -- JSON_EXISTS(lower(JSON_CONTENT), '$.workflownames?(@ like "%my_workflow%")')";
+                    sqlAppender.append("?(@");
+                    sqlAppender.append(" " + renderOperator(Dbms.ORACLE, operator));
+                    if (value == null) {
+                        sqlAppender.append(" $" + valueAsQueryParameterNameVarName);
+                    } else {
+                        sqlAppender.append(" " + quote(value, valueShouldBeQuoted));
+                    }
+                    sqlAppender.append(")");
+                }
+                sqlAppender.append("'");
+                if (valueAsQueryParameterName != null) {
+                    // JSON_EXISTS(lower(dic1_0."JSON_CONTENT"), '$.workflownames?(@ like $SOS_VAR_PARAM)' PASSING ? AS "SOS_VAR_PARAM")
+                    // -- PASSING ? is :my_param (i.e., parameter name specified in the query)
+                    sqlAppender.append(" PASSING ");
+                    valueNode.accept(translator);
+                    sqlAppender.append(" AS \"" + valueAsQueryParameterNameVarName + "\"");
                 }
                 sqlAppender.append(")");
             }
-            sqlAppender.append("'");
-            if (valueAsQueryParameterName != null) {
-                // JSON_EXISTS(lower(dic1_0."JSON_CONTENT"), '$.workflownames?(@ like $SOS_VAR_PARAM)' PASSING ? AS "SOS_VAR_PARAM")
-                // -- PASSING ? is :my_param (i.e., parameter name specified in the query)
-                sqlAppender.append(" PASSING ");
-                valueNode.accept(translator);
-                sqlAppender.append(" AS \"" + valueAsQueryParameterNameVarName + "\"");
-            }
-            sqlAppender.append(")");
             break;
         default:
             throw new IllegalArgumentException("[" + this.factory.getDbms() + "][" + NAME + "]not implemented yet");
