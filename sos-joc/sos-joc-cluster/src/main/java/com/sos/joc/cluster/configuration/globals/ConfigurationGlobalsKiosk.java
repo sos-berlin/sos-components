@@ -36,8 +36,6 @@ public class ConfigurationGlobalsKiosk extends AConfigurationSection {
         }
     }
     
-    //private Map<String, ConfigurationEntry> showViewEntries = new HashMap<>();
-
     //name of the role for kiosk mode
     private ConfigurationEntry kioskRole = new ConfigurationEntry("kiosk_role", "kiosk", GlobalSettingsSectionValueType.STRING);
     @SuppressWarnings("unused")
@@ -50,14 +48,12 @@ public class ConfigurationGlobalsKiosk extends AConfigurationSection {
     private ConfigurationEntry view4 = Views.historyTasks.value();
     @SuppressWarnings("unused")
     private ConfigurationEntry view5 = Views.historyOrders.value();
-    //private ConfigurationEntry monitorOrderNotification = new ConfigurationEntry("show_view_monitor_order_notification", "15", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
 
     public ConfigurationGlobalsKiosk() {
         AtomicInteger index = new AtomicInteger(0);
         kioskRole.setOrdering(index.getAndIncrement());
         EnumSet.allOf(Views.class).forEach(e -> e.value().setOrdering(index.getAndIncrement()));
-        //showViewEntries.values().forEach(v -> v.setOrdering(index.getAndIncrement()));
     }
     
     public ConfigurationEntry getKioskRole() {
@@ -67,24 +63,5 @@ public class ConfigurationGlobalsKiosk extends AConfigurationSection {
     public Map<String, ConfigurationEntry> getKioskViews() {
         return EnumSet.allOf(Views.class).stream().collect(Collectors.toMap(Views::name, Views::value));
     }
-    
-//    private ConfigurationEntry showViewEntry(String key, Integer durationDefault) {
-//        String camelCaseKey = toCamelCase(key);
-//        showViewEntries.put(camelCaseKey, new ConfigurationEntry(VIEW_KEY_PREFIX + key, durationDefault + "", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER));
-//        return showViewEntries.get(camelCaseKey);
-//    }
-
-//    private static String toCamelCase(String s) {
-//        String[] parts = s.split("_");
-//        String camelCaseString = "";
-//        for (String part : parts) {
-//            camelCaseString = camelCaseString + toProperCase(part);
-//        }
-//        return camelCaseString;
-//    }
-//
-//    private static String toProperCase(String s) {
-//        return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
-//    }
     
 }
