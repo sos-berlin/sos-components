@@ -15,13 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.board.Board;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.board.BoardHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -37,11 +38,13 @@ import com.sos.joc.model.plan.Plan;
 import com.sos.joc.model.plan.PlanSchemaId;
 import com.sos.joc.model.plan.Plans;
 import com.sos.joc.model.plan.PlansFilter;
+import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.joc.plan.resource.IPlansResource;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 import js7.data.board.BoardPath;
+import js7.data.order.OrderId;
 import js7.data.plan.PlanId;
 import js7.data_for_java.board.JPlannedBoard;
 import js7.data_for_java.controller.JControllerState;
@@ -54,6 +57,8 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
     private static final String API_CALL = "./plans";
     private static final Logger LOGGER = LoggerFactory.getLogger(PlansResourceImpl.class);
     private static final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
+    private SOSHibernateSession session = null;
+    private JControllerState currentState = null;
 
     @Override
     public JOCDefaultResponse postPlans(String accessToken, byte[] filterBytes) {
@@ -66,10 +71,11 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             if (response != null) {
                 return response;
             }
-            JControllerState currentState = Proxy.of(filter.getControllerId()).currentState();
+            currentState = Proxy.of(filter.getControllerId()).currentState();
             Plans entity = new Plans();
             entity.setSurveyDate(Date.from(currentState.instant()));
-            entity.setPlans(get(currentState, filter));
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            entity.setPlans(get(filter));
             
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
@@ -78,10 +84,12 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
         }
     }
     
-    private com.sos.joc.model.plan.Plan getPlan(JControllerState currentState, PlanId pId, JPlan jp, PlansFilter filter) {
+    private com.sos.joc.model.plan.Plan getPlan(PlanId pId, JPlan jp, PlansFilter filter) {
         Plan plan = new Plan();
         boolean isClosed = jp.isClosed();
         if (isClosed && filter.getOnlyOpenPlans()) {
@@ -114,23 +122,42 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         planId.setPlanKey(plankey);
         plan.setPlanId(planId);
         
+        Map<String, Set<String>> orderTags = getOrderTags(filter.getControllerId(), jp);
+        
         Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
-            try { //TODO orderTags
-                Map<String, Set<String>> orderTags = null;
+            try {
                 return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, null, zoneId);
             } catch (Exception e) {
                 return null;
             }
         };
         
-        plan.setOrders(OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState).map(
-                mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
-        plan.setNoticeBoards(getBoards(pId, jp.toPlannedBoard(), filter));
+        Map<String, OrderV> orders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState).map(
+                mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
+        
+        plan.setOrders(orders.values());
+//        plan.setOrders(OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState).map(
+//                mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+        plan.setNoticeBoards(getBoards(pId, jp.toPlannedBoard(), filter, orders));
         
         return plan;
     }
     
-    private List<Board> getBoards(PlanId planId, Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter) {
+    private Map<String, Set<String>> getOrderTags(String controllerId, JPlan jp) {
+        Map<String, Set<String>> orderTags = null;
+        try {
+            orderTags = OrderTags.getTagsByOrderIds(controllerId, jp.orderIds().stream().map(OrderId::string), session);
+        } catch (SOSHibernateException e) {
+            if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                LOGGER.info(getJocError().printMetaInfo());
+                getJocError().clearMetaInfo();
+            }
+            LOGGER.error("", e);
+        }
+        return orderTags;
+    }
+    
+    private List<Board> getBoards(PlanId planId, Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<String, OrderV> orders) {
         try {
             List<String> boardPaths = jBoards.keySet().stream().map(BoardPath::string).collect(Collectors.toList());
             if (boardPaths.isEmpty()) {
@@ -141,17 +168,15 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             bFilter.setControllerId(filter.getControllerId());
             bFilter.setNoticeBoardPaths(boardPaths);
             
-            List<Board> boards = getBoards(bFilter, planId, jBoards);
-            
-            return boards;
+            return getBoards(bFilter, planId, jBoards, orders);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
     
-    private List<Plan> get(JControllerState currentState, PlansFilter filter) throws Exception {
-        return currentState.toPlan().entrySet().stream().map(e -> getPlan(currentState, e.getKey(), e.getValue(), filter)).filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    private List<Plan> get(PlansFilter filter) throws Exception {
+        return currentState.toPlan().entrySet().stream().map(e -> getPlan(e.getKey(), e.getValue(), filter)).filter(Objects::nonNull).collect(
+                Collectors.toList());
     }
     
 //    private void print(Map<PlanId, JPlan> map) {
@@ -179,9 +204,10 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
 //                    });
 //                });
 //    }
+    
 
-    private List<Board> getBoards(BoardsFilter filter, PlanId planId, Map<BoardPath, JPlannedBoard> jBoards) throws Exception {
-        SOSHibernateSession session = null;
+    private List<Board> getBoards(BoardsFilter filter, PlanId planId, Map<BoardPath, JPlannedBoard> jBoards, Map<String, OrderV> orders)
+            throws Exception {
         try {
             String controllerId = filter.getControllerId();
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
@@ -195,7 +221,6 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             boolean withFolderFilter = filter.getFolders() != null && !filter.getFolders().isEmpty();
             final Set<Folder> folders = addPermittedFolder(filter.getFolders());
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             List<DeployedContent> contents = null;
             if (paths != null && !paths.isEmpty()) {
@@ -211,24 +236,21 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
             
-            final JControllerState controllerState = BoardHelper.getCurrentState(controllerId);
-            final long surveyDateMillis = controllerState != null ? controllerState.instant().toEpochMilli() : Instant.now().toEpochMilli();
             final Set<Folder> permittedFolders = withFolderFilter ? null : folders;
             
             JocError jocError = getJocError();
             if (contents != null) {
                 
-                Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
-                //TODO Map<String, Set<String>> orderTags = OrderTags.getTags(controllerId, eos.stream().map(ExpectingOrder::getJOrder), session);
-                Map<String, Set<String>> orderTags = null;
+                PlannedBoards plB = new PlannedBoards(planId, jBoards, orders);
+                
+                //Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
 
                 return contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
                         }
-                        return BoardHelper.getPlannedBoard(controllerState, dc, planId, jBoards.get(BoardPath.of(dc.getName())).toNoticePlace(),
-                                folders, orderTags, limit, zoneId, surveyDateMillis, dbLayer.getSession());
+                        return plB.getPlannedBoard(dc);
                     } catch (Throwable e) {
                         if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                             LOGGER.info(jocError.printMetaInfo());
@@ -243,8 +265,6 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             return Collections.emptyList();
         } catch (Throwable e) {
             throw e;
-        } finally {
-            Globals.disconnect(session);
         }
 
     }

@@ -2,10 +2,12 @@
 package com.sos.joc.model.plan;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.board.Board;
 import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -38,7 +40,8 @@ public class Plan {
     @JsonProperty("planId")
     private PlanId planId;
     @JsonProperty("orders")
-    private List<OrderV> orders = new ArrayList<OrderV>();
+    @JsonDeserialize(as = java.util.HashSet.class)
+    private Collection<OrderV> orders = null;
     /**
      * 
      * (Required)
@@ -74,12 +77,12 @@ public class Plan {
     }
 
     @JsonProperty("orders")
-    public List<OrderV> getOrders() {
+    public Collection<OrderV> getOrders() {
         return orders;
     }
 
     @JsonProperty("orders")
-    public void setOrders(List<OrderV> orders) {
+    public void setOrders(Collection<OrderV> orders) {
         this.orders = orders;
     }
 

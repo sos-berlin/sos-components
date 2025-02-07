@@ -184,54 +184,6 @@ public class BoardHelper {
         return stateText;
     }
     
-    public static Board getPlannedBoard(JControllerState controllerState, DeployedContent dc, PlanId planId,
-            Map<NoticeKey, JNoticePlace> noticePlace, Set<Folder> permittedFolders, Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId,
-            long surveyDateMillis, SOSHibernateSession session) throws JsonParseException, JsonMappingException, IOException {
-
-        Board item = init(dc);
-        item.setNotices(noticePlace.entrySet().stream().map(e -> getNotice(controllerState, planId, e.getKey(), e.getValue(), permittedFolders,
-                zoneId)).collect(Collectors.toList()));
-        item.setNumOfNotices(item.getNotices().size());
-        // TODO item.setNumOfExpectingOrders(null);
-        return item;
-    }
-    
-    public static Notice getNotice(JControllerState controllerState, PlanId pId, NoticeKey nk, JNoticePlace np, Set<Folder> permittedFolders, ZoneId zoneId) {
-        return getNotice(controllerState, PlannedNoticeKey.apply(pId, nk), np, permittedFolders, zoneId);
-    }
-    
-    public static Notice getNotice(JControllerState controllerState, PlannedNoticeKey pnk, JNoticePlace np, Set<Folder> permittedFolders, ZoneId zoneId) {
-        Notice notice = new Notice();
-        boolean isAnnounced = np.isAnnounced();
-        //notice.setKey(pnk.noticeKey().string());
-        notice.setId(getNoticeKeyShortString(pnk));
-        
-        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
-            try { //TODO orderTags
-                Map<String, Set<String>> orderTags = null;
-                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
-            } catch (Exception e) {
-                return null;
-            }
-        };
-        
-        Stream<JOrder> orders = OrdersHelper.getPermittedJOrdersFromOrderIds(np.expectingOrderIds(), permittedFolders, controllerState);
-        notice.setExpectingOrders(orders.map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
-        notice.setWorkflowTagsPerWorkflow(null);
-        if (!notice.getExpectingOrders().isEmpty()) {
-            // TODO
-            // notice.setWorkflowTagsPerWorkflow();
-            notice.setState(getState(NoticeStateText.EXPECTED, isAnnounced));
-            notice.setEndOfLife(null);
-        } else {
-            notice.setExpectingOrders(null);
-            np.notice().flatMap(JNotice::endOfLife).map(Date::from).ifPresent(d -> notice.setEndOfLife(d));
-            notice.setState(getState(NoticeStateText.POSTED, isAnnounced));
-        }
-
-        return notice;
-    }
-    
     public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
             Set<String> boardPaths, Set<Folder> permittedFolders) {
         return getExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
@@ -281,7 +233,7 @@ public class BoardHelper {
                 permittedFolders)).map(Map.Entry::getValue).flatMap(List::stream).flatMap(mapper).filter(Objects::nonNull);
     }
     
-    private static Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
+    public static Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
         Board item = Globals.objectMapper.readValue(dc.getContent(), Board.class);
         item.setPath(dc.getPath());
         item.setVersionDate(dc.getCreated());
