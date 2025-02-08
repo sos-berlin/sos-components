@@ -1,10 +1,13 @@
 package com.sos.joc.db.history;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import org.hibernate.annotations.Proxy;
 
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -51,6 +54,10 @@ public class DBItemHistoryOrderTag extends DBItem {
     @Column(name = "[START_TIME]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date startTime;
+    
+    @Column(name = "[DAILY_PLAN_DATE]", nullable = true)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dailyPlanDate;
     
     @Transient
     private String groupName;
@@ -103,6 +110,13 @@ public class DBItemHistoryOrderTag extends DBItem {
 
     public void setOrderId(String val) {
         orderId = val;
+        if (orderId != null) {
+            try {
+                dailyPlanDate = SOSDate.getDate(orderId.substring(1, 11));
+            } catch (SOSInvalidDataException e) {
+                dailyPlanDate = null;
+            }
+        }
     }
 
     public String getTagName() {
@@ -141,6 +155,10 @@ public class DBItemHistoryOrderTag extends DBItem {
 
     public void setStartTime(Date val) {
         startTime = val;
+    }
+    
+    public Date getDailyPlanDate() {
+        return dailyPlanDate;
     }
     
     @Transient
