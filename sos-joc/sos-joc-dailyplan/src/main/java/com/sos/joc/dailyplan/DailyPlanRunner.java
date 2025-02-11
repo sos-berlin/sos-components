@@ -309,7 +309,8 @@ public class DailyPlanRunner extends TimerTask {
         }
 
         String caller = DailyPlanHelper.getCallerForLog(settings);
-        String lp = String.format("[%s]%s[%s][%s][%s]", startupMode, caller, controllerId, dailyPlanDate);
+        String lp = String.format("[%s]%s[%s][%s]", startupMode, caller, controllerId, dailyPlanDate);
+        
 
         // with using everyday Calendar
         OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, submission,
