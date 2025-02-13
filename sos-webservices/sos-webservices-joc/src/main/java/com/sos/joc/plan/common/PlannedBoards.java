@@ -88,7 +88,7 @@ public class PlannedBoards {
 
         item.setNumOfExpectingOrders(numOfExpectingOrders);
         if (!compact) {
-            item.setNotices(notices);
+            item.setNotices(notices); // TODO sort by scheduledFor?
             item.setNumOfNotices(notices.size());
         } else {
             item.setNumOfNotices(numOfNotices);
