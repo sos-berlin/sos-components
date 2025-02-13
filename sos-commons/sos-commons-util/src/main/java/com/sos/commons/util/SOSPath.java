@@ -23,11 +23,13 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -651,6 +653,34 @@ public class SOSPath {
                 writer.write(newLine);
             }
         }
+    }
+
+    /** Selects top-level paths from a collection of paths.<br />
+     * A path is considered "top-level" if it is not a sub-path of any other path in the collection.<br/>
+     * For example, given the paths: /tmp/x/1, /tmp/x/1/1, /tmp/x/2, /var/1<br/>
+     * The top-level paths are: /tmp/x and /var/1<br/>
+     * 
+     * @param paths
+     * @return a sorted set of top-level paths as {@link Path} objects */
+    public static Set<Path> selectTopLevelPaths(final Collection<Path> paths) {
+        if (SOSCollection.isEmpty(paths)) {
+            return new TreeSet<>();
+        }
+        return SOSPathUtil.selectTopLevelPaths(paths, 'x').stream().map(Path::of).collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    /** Selects the deepest level paths from a collection of path.<br/>
+     * A path is considered "deepest level" if no other path in the collection starts with it.<br/>
+     * For example, given the paths: /tmp/x, /tmp/x/1, /tmp/x/1/1, /tmp/x/2, /var/1<br/>
+     * The deepest level paths are: /tmp/x/1/1, /tmp/x/2 and /var/1.
+     * 
+     * @param paths
+     * @return a sorted set of deepest level paths as {@link Path} objects */
+    public static Set<Path> selectDeepestLevelPaths(final Collection<Path> paths) {
+        if (SOSCollection.isEmpty(paths)) {
+            return new TreeSet<>();
+        }
+        return SOSPathUtil.selectDeepestLevelPaths(paths, 'x').stream().map(Path::of).collect(Collectors.toCollection(TreeSet::new));
     }
 
     public class SOSPathResult {

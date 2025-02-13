@@ -15,27 +15,27 @@ import com.sos.yade.engine.arguments.YADEArguments;
 import com.sos.yade.engine.arguments.YADEClientArguments;
 import com.sos.yade.engine.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineConnectionException;
-import com.sos.yade.engine.exceptions.SOSYADEEngineSourceConnectionException;
-import com.sos.yade.engine.exceptions.SOSYADEEngineTargetConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetConnectionException;
 
 public class YADEHelper {
 
-    public static void throwConnectionException(IYADEProviderDelegator delegator, Throwable e) throws SOSYADEEngineConnectionException {
-        SOSYADEEngineConnectionException ex = getConnectionException(delegator, e);
+    public static void throwConnectionException(IYADEProviderDelegator delegator, Throwable e) throws YADEEngineConnectionException {
+        YADEEngineConnectionException ex = getConnectionException(delegator, e);
         if (ex != null) {
             throw ex;
         }
     }
 
-    public static SOSYADEEngineConnectionException getConnectionException(IYADEProviderDelegator delegator, Throwable ex) {
+    public static YADEEngineConnectionException getConnectionException(IYADEProviderDelegator delegator, Throwable ex) {
         if (delegator == null) {
             return null;
         }
         if (delegator instanceof YADESourceProviderDelegator) {
-            return new SOSYADEEngineSourceConnectionException(ex);
+            return new YADEEngineSourceConnectionException(ex);
         }
-        return new SOSYADEEngineTargetConnectionException(ex);
+        return new YADEEngineTargetConnectionException(ex);
     }
 
     public static boolean isConnectionException(Throwable cause) {
@@ -44,7 +44,7 @@ public class YADEHelper {
         }
         Throwable e = cause;
         while (e != null) {
-            if (e instanceof SOSYADEEngineConnectionException) {
+            if (e instanceof YADEEngineConnectionException) {
                 return true;
             }
             e = e.getCause();

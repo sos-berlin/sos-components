@@ -1,5 +1,8 @@
 package com.sos.commons.vfs.common;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -38,7 +41,11 @@ public interface IProvider {
      * @param path
      * @return false - already exist, true - created
      * @throws SOSProviderException */
+    // used
     public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException;
+
+    // used
+    public boolean createDirectoriesIfNotExist(Collection<String> paths) throws SOSProviderException;
 
     /** Deletes a file/directory.
      *
@@ -89,7 +96,7 @@ public interface IProvider {
 
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException;
 
-    // public long getFileSize(String path) throws SOSProviderException;
+    public String getFileContentIfExists(String path) throws SOSProviderException;
 
     /** Returns the modification time in milliseconds or -1<br/>
      * (the time cannot be evaluated, e.g. because the file does not exist, ...)<br/>
@@ -106,6 +113,10 @@ public interface IProvider {
      * @param milliseconds
      * @return */
     public boolean setFileLastModifiedFromMillis(String path, long milliseconds);
+
+    public InputStream getInputStream(String path) throws SOSProviderException;
+
+    public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException;
 
     /** Context e.g. for YADE to determinate Source/Target */
     public void setContext(AProviderContext context);

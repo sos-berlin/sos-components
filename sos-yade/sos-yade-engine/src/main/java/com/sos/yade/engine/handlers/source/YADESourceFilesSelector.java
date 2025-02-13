@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.logger.ISOSLogger;
@@ -19,22 +20,27 @@ import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
 import com.sos.yade.engine.arguments.YADEClientArguments;
 import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineSourceFilesSelectorException;
-import com.sos.yade.engine.exceptions.SOSYADEEngineSourceZeroByteFilesException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceFilesSelectorException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceZeroByteFilesException;
 
 public class YADESourceFilesSelector {
 
-    public static List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, boolean polling)
-            throws SOSYADEEngineSourceFilesSelectorException {
+    public static List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, String excludedFileExtension)
+            throws YADEEngineSourceFilesSelectorException {
+        return selectFiles(logger, sourceDelegator, excludedFileExtension, false);
+    }
+
+    public static List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, String excludedFileExtension,
+            boolean polling) throws YADEEngineSourceFilesSelectorException {
         if (sourceDelegator.getArgs().isSingleFilesSelection()) {
-            return selectSingleFiles(logger, sourceDelegator, createProviderFileSelection(sourceDelegator, true), polling);
+            return selectSingleFiles(logger, sourceDelegator, createProviderFileSelection(sourceDelegator, null, true), polling);
         } else {
-            return selectFiles(sourceDelegator, createProviderFileSelection(sourceDelegator, false));
+            return selectFiles(sourceDelegator, createProviderFileSelection(sourceDelegator, excludedFileExtension, false));
         }
     }
 
     private static List<ProviderFile> selectFiles(YADESourceProviderDelegator sourceDelegator, ProviderFileSelection selection)
-            throws SOSYADEEngineSourceFilesSelectorException {
+            throws YADEEngineSourceFilesSelectorException {
 
         // TODO HTTP Provider
         // if(sourceProvider instanceof HTTPProvider) {
@@ -43,39 +49,40 @@ public class YADESourceFilesSelector {
         try {
             return sourceDelegator.getProvider().selectFiles(selection);
         } catch (Throwable e) {
-            throw new SOSYADEEngineSourceFilesSelectorException(e);
+            throw new YADEEngineSourceFilesSelectorException(e);
         }
     }
 
-    private static ProviderFileSelection createProviderFileSelection(YADESourceProviderDelegator sourceDelegator, boolean singleFiles) {
-        YADESourceArguments args = sourceDelegator.getArgs();
+    private static ProviderFileSelection createProviderFileSelection(YADESourceProviderDelegator sourceDelegator, String excludedFileExtension,
+            boolean singleFiles) {
+        YADESourceArguments sourceArgs = sourceDelegator.getArgs();
         ProviderFileSelectionConfig.Builder builder = new ProviderFileSelectionConfig.Builder();
         if (!singleFiles) {
             // case sensitive
-            builder.fileNamePattern(Pattern.compile(args.getFileSpec().getValue(), 0));
-            if (!SOSString.isEmpty(args.getExcludedDirectories().getValue())) {
+            builder.fileNamePattern(Pattern.compile(sourceArgs.getFileSpec().getValue(), 0));
+            if (!SOSString.isEmpty(sourceArgs.getExcludedDirectories().getValue())) {
                 // case sensitive
-                builder.excludedDirectoriesPattern(Pattern.compile(args.getExcludedDirectories().getValue(), 0));
+                builder.excludedDirectoriesPattern(Pattern.compile(sourceArgs.getExcludedDirectories().getValue(), 0));
             }
-            if (!SOSString.isEmpty(args.getIntegrityHashType().getValue())) {
-                builder.excludedFileExtension("." + args.getIntegrityHashType().getValue());
+            if (!SOSString.isEmpty(excludedFileExtension)) {
+                builder.excludedFileExtension(excludedFileExtension.startsWith(".") ? excludedFileExtension : ("." + excludedFileExtension));
             }
-            builder.recursive(args.getRecursive().getValue() == null ? false : args.getRecursive().getValue().booleanValue());
+            builder.recursive(sourceArgs.getRecursive().getValue() == null ? false : sourceArgs.getRecursive().getValue().booleanValue());
         }
-        if (args.getMaxFiles().getValue() != null) {
-            builder.maxFiles(args.getMaxFiles().getValue().intValue());
+        if (sourceArgs.getMaxFiles().getValue() != null) {
+            builder.maxFiles(sourceArgs.getMaxFiles().getValue().intValue());
         }
-        if (args.getMaxFileSize().getValue() != null) {
-            builder.maxFileSize(args.getMaxFileSize().getValue().longValue());
+        if (sourceArgs.getMaxFileSize().getValue() != null) {
+            builder.maxFileSize(sourceArgs.getMaxFileSize().getValue().longValue());
         }
-        if (args.getMinFileSize().getValue() != null) {
-            builder.minFileSize(args.getMinFileSize().getValue().longValue());
+        if (sourceArgs.getMinFileSize().getValue() != null) {
+            builder.minFileSize(sourceArgs.getMinFileSize().getValue().longValue());
         }
         return new ProviderFileSelection(builder.build());
     }
 
     private static List<ProviderFile> selectSingleFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
-            ProviderFileSelection selection, boolean polling) throws SOSYADEEngineSourceFilesSelectorException {
+            ProviderFileSelection selection, boolean polling) throws YADEEngineSourceFilesSelectorException {
 
         YADESourceArguments args = sourceDelegator.getArgs();
 
@@ -88,14 +95,14 @@ public class YADESourceFilesSelector {
         } else if (args.isFileListEnabled()) {
             arg = args.getFileList();
             if (!Files.exists(args.getFileList().getValue())) {
-                throw new SOSYADEEngineSourceFilesSelectorException(String.format("%s[%s=%s]doesn't exist", lp, args.getFileList().getName(), args
+                throw new YADEEngineSourceFilesSelectorException(String.format("%s[%s=%s]doesn't exist", lp, args.getFileList().getName(), args
                         .getFileList().getValue()));
             }
             try {
                 singleFiles = SOSPath.readFileNonEmptyLines(args.getFileList().getValue());
             } catch (IOException e) {
-                throw new SOSYADEEngineSourceFilesSelectorException(String.format("%s[%s=%s]error reading from file", lp, args.getFileList()
-                        .getName(), args.getFileList().getValue()), e);
+                throw new YADEEngineSourceFilesSelectorException(String.format("%s[%s=%s]error reading from file", lp, args.getFileList().getName(),
+                        args.getFileList().getValue()), e);
             }
         }
         if (SOSCollection.isEmpty(singleFiles)) {
@@ -103,7 +110,7 @@ public class YADESourceFilesSelector {
             return List.of();
         }
 
-        String dir = sourceDelegator.getDirectory() == null ? null : sourceDelegator.getDirectory().getPathWithTrailingSeparator();
+        String sourceDirectory = sourceDelegator.getDirectory() == null ? null : sourceDelegator.getDirectory().getPath();
         List<ProviderFile> result = new ArrayList<>();
         int counterAdded = 0;
         int counter = 0;
@@ -115,31 +122,34 @@ public class YADESourceFilesSelector {
                 continue l;
             }
             String path = singleFile;
-            if (dir != null && !sourceDelegator.getProvider().isAbsolutePath(singleFile)) {
-                path = dir + singleFile;
+            if (sourceDirectory != null) {
+                if (!sourceDelegator.getProvider().isAbsolutePath(singleFile)) {
+                    path = SOSPathUtil.appendPath(sourceDirectory, singleFile, sourceDelegator.getPathSeparator());
+                }
             }
-            String clp = String.format("%s[%s][%s]", lp, counter, path);
-            ProviderFile pf = null;
+
+            String logPrefix = String.format("%s[%s][%s]", lp, counter, path);
+            ProviderFile file = null;
             try {
-                pf = sourceDelegator.getProvider().getFileIfExists(path);
+                file = sourceDelegator.getProvider().getFileIfExists(path);
             } catch (Throwable e) {
-                throw new SOSYADEEngineSourceFilesSelectorException(clp, e);
+                throw new YADEEngineSourceFilesSelectorException(logPrefix, e);
             }
-            if (pf == null) {
+            if (file == null) {
                 if (polling) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug(clp + "not found");
+                        logger.debug(logPrefix + "not found");
                     }
                 } else {
-                    logger.info(clp + "not found");
+                    logger.info(logPrefix + "not found");
                 }
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug(clp + "found");
+                    logger.debug(logPrefix + "found");
                 }
-                if (addSingleFile(logger, clp, pf, selection, polling)) {
+                if (addSingleFile(logger, logPrefix, file, selection, polling)) {
                     counterAdded++;
-                    result.add(pf);
+                    result.add(file);
                 }
             }
         }
@@ -171,13 +181,13 @@ public class YADESourceFilesSelector {
     }
 
     public static void checkSelectionResult(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEClientArguments clientArgs,
-            List<ProviderFile> sourceFiles) throws SOSYADEEngineSourceFilesSelectorException {
+            List<ProviderFile> sourceFiles) throws YADEEngineSourceFilesSelectorException {
         checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
         checkFileListSize(sourceDelegator, clientArgs, sourceFiles);
     }
 
     private static void checkZeroByteFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)
-            throws SOSYADEEngineSourceZeroByteFilesException {
+            throws YADEEngineSourceZeroByteFilesException {
         if (SOSCollection.isEmpty(sourceFiles)) {
             return;
         }
@@ -196,7 +206,7 @@ public class YADESourceFilesSelector {
                     logger.info("%s[%s][TransferZeroByteFiles=NO][%s]Bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
                     i++;
                 }
-                throw new SOSYADEEngineSourceZeroByteFilesException(String.format(
+                throw new YADEEngineSourceZeroByteFilesException(String.format(
                         "[TransferZeroByteFiles=NO]All %s files have zero byte size, transfer aborted", zeroSizeFiles.size()));
             }
             break;
@@ -212,7 +222,7 @@ public class YADESourceFilesSelector {
                     logger.info("%s[%s][TransferZeroByteFiles=STRICT][%s]Bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
                     i++;
                 }
-                throw new SOSYADEEngineSourceZeroByteFilesException(String.format("[TransferZeroByteFiles=STRICT]%s zero byte size file(s) detected",
+                throw new YADEEngineSourceZeroByteFilesException(String.format("[TransferZeroByteFiles=STRICT]%s zero byte size file(s) detected",
                         zeroSizeFiles.size()));
             }
             break;
@@ -235,11 +245,11 @@ public class YADESourceFilesSelector {
     }
 
     private static int checkFileListSize(YADESourceProviderDelegator sourceDelegator, YADEClientArguments clientArgs, List<ProviderFile> sourceFiles)
-            throws SOSYADEEngineSourceFilesSelectorException {
+            throws YADEEngineSourceFilesSelectorException {
         int size = sourceFiles == null ? 0 : sourceFiles.size();
 
         if (size == 0 && sourceDelegator.getArgs().getForceFiles().getValue()) {
-            throw new SOSYADEEngineSourceFilesSelectorException(String.format("%s[%s=true]No files found", sourceDelegator.getLogPrefix(),
+            throw new YADEEngineSourceFilesSelectorException(String.format("%s[%s=true]No files found", sourceDelegator.getLogPrefix(),
                     sourceDelegator.getArgs().getForceFiles().getName()));
         }
 
@@ -248,7 +258,7 @@ public class YADESourceFilesSelector {
         if (op != null) {
             int expectedSize = clientArgs.getExpectedSizeOfResultSet().getValue();
             if (op.compare(size, expectedSize)) {
-                throw new SOSYADEEngineSourceFilesSelectorException(String.format("%s[files found=%s][RaiseErrorIfResultSetIs]%s %s", sourceDelegator
+                throw new YADEEngineSourceFilesSelectorException(String.format("%s[files found=%s][RaiseErrorIfResultSetIs]%s %s", sourceDelegator
                         .getLogPrefix(), size, op, expectedSize));
             }
         }

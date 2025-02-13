@@ -293,10 +293,10 @@ public class SOSString {
                 continue;
             }
             while (val.startsWith(trim)) {
-                val = val.substring(trim.length()).trim();
+                val = val.substring(trim.length());
             }
             while (val.endsWith(trim)) {
-                val = val.substring(0, val.length() - trim.length()).trim();
+                val = val.substring(0, val.length() - trim.length());
             }
         }
         return val;
@@ -312,7 +312,23 @@ public class SOSString {
                 continue;
             }
             while (val.startsWith(trim)) {
-                val = val.substring(trim.length()).trim();
+                val = val.substring(trim.length());
+            }
+        }
+        return val;
+    }
+
+    public static String trimEnd(String input, String... trimChars) {
+        if (isEmpty(input) || trimChars.length == 0) {
+            return input;
+        }
+        String val = input;
+        for (String trim : trimChars) {
+            if (SOSString.isEmpty(trim)) {
+                continue;
+            }
+            while (val.endsWith(trim)) {
+                val = val.substring(0, val.length() - trim.length());
             }
         }
         return val;

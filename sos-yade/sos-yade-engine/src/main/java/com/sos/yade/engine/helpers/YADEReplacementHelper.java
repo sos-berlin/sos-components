@@ -6,14 +6,17 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sos.yade.engine.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.delegators.YADEFileNameInfo;
 import com.sos.yade.engine.delegators.YADEProviderFile;
 
-public class YADEReplacingHelper {
+public class YADEReplacementHelper {
 
     private static final String VAR_DATE_PREFIX = "[date:";
     private static final String VAR_FILENAME_PREFIX = "[filename:";
 
-    public static Optional<String> getNewFileNameIfDifferent(String fileName, String regex, String replacement) {
+    public static Optional<YADEFileNameInfo> getReplacementResultIfDifferent(AYADEProviderDelegator delegator, String fileName, String regex,
+            String replacement) {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(fileName);
         if (!matcher.find()) {
@@ -40,7 +43,7 @@ public class YADEReplacingHelper {
         if (newName.equals(fileName)) {
             return Optional.empty();
         } else {
-            return Optional.of(newName);
+            return Optional.of(new YADEFileNameInfo(delegator, newName));
         }
     }
 
@@ -68,7 +71,7 @@ public class YADEReplacingHelper {
 
     public static void main(String[] args) {
         try {
-            YADEProviderFile file = new YADEProviderFile("/tmp/1abc12def123.TXT", 0, 0, false);
+            YADEProviderFile file = new YADEProviderFile("/tmp/1abc12def123.TXT", 0, 0, null, false);
             String regex = "(1)abc(12)def(.*)";
             String replacement = "A;BB;CCC";
 
@@ -76,8 +79,8 @@ public class YADEReplacingHelper {
             // replacement = "[date:yyyy-MM-dd-HH-mm-ss];BB;1.txt";
             // replacement = "[filename:uppercase]";
 
-            Optional<String> newName = getNewFileNameIfDifferent(file.getName(), regex, replacement);
-            System.out.println("RESULT:" + newName.isPresent());
+            Optional<YADEFileNameInfo> result = getReplacementResultIfDifferent(null, file.getName(), regex, replacement);
+            System.out.println("RESULT:" + result.isPresent());
         } catch (Exception e) {
             e.printStackTrace();
         }

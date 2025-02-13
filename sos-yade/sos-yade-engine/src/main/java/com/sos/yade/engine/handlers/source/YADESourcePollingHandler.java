@@ -10,7 +10,7 @@ import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.arguments.YADESourcePollingArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineSourcePollingException;
+import com.sos.yade.engine.exceptions.YADEEngineSourcePollingException;
 import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.helpers.YADEHelper;
 
@@ -49,22 +49,13 @@ public class YADESourcePollingHandler {
         }
     }
 
-    public void checkConfiguration(YADESourceProviderDelegator sourceDelegator) throws SOSYADEEngineSourcePollingException {
-        if (!enabled) {
-            return;
-        }
-        if (args.getPolling().getPollingWait4SourceFolder().getValue() && sourceDelegator.getDirectory() == null) {
-            throw new SOSYADEEngineSourcePollingException(args.getPolling().getPollingWait4SourceFolder().getName()
-                    + "=true, but source_dir is not set");
-        }
-    }
-
     public void incrementCycleCounter() {
         cycleCounter++;
         this.logPrefix = mainLogPrefix + "[cycle=" + cycleCounter + "]";
     }
 
-    public List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator) throws SOSYADEEngineSourcePollingException {
+    public List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, String excludedFileExtension)
+            throws YADEEngineSourcePollingException {
 
         ProviderDirectoryPath sourceDir = sourceDelegator.getDirectory();
 
@@ -105,7 +96,7 @@ public class YADESourcePollingHandler {
                 try {
                     ensureConnected(logger, sourceDelegator, currentPollingTime);
 
-                    result = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, true);
+                    result = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, excludedFileExtension, true);
                     currentFilesCount = result.size();
                 } catch (Throwable e) {
                     logger.error("%s[selectFiles]%s", logPrefix, e.toString());
@@ -152,13 +143,13 @@ public class YADESourcePollingHandler {
         return true;
     }
 
-    public void ensureConnected(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator) throws SOSYADEEngineSourcePollingException {
+    public void ensureConnected(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator) throws YADEEngineSourcePollingException {
         ensureConnected(logger, sourceDelegator, 0L);
     }
 
     // TODO - from YADE 1 - optimize...
     private void ensureConnected(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, long currentPollingTime)
-            throws SOSYADEEngineSourcePollingException {
+            throws YADEEngineSourcePollingException {
         try {
             int count = 0;
             while (true) {
@@ -169,7 +160,7 @@ public class YADESourcePollingHandler {
                 } catch (Throwable e) {
                     if (PollingMethod.Forever.equals(method)) {
                         if (count >= POLLING_MAX_RETRIES_ON_CONNECTION_ERROR) {
-                            throw new SOSYADEEngineSourcePollingException(String.format("Maximum reconnect retries(%s) reached",
+                            throw new YADEEngineSourcePollingException(String.format("Maximum reconnect retries(%s) reached",
                                     POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), YADEHelper.getConnectionException(sourceDelegator, e));
                         }
                     } else {
@@ -177,7 +168,7 @@ public class YADESourcePollingHandler {
                         long pollingTime = PollingMethod.ServerDuration.equals(method) ? start.getEpochSecond() : currentPollingTime;
                         long duration = currentTime - pollingTime;
                         if (duration >= getPollTimeout()) {
-                            throw new SOSYADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceDelegator, e));
+                            throw new YADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceDelegator, e));
                         }
                     }
 
@@ -193,7 +184,7 @@ public class YADESourcePollingHandler {
                 }
             }
         } catch (Throwable e) {
-            throw new SOSYADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceDelegator, e));
+            throw new YADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceDelegator, e));
         }
     }
 

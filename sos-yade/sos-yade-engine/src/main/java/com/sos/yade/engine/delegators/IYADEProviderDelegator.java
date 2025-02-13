@@ -12,5 +12,7 @@ public interface IYADEProviderDelegator {
 
     public ProviderDirectoryPath getDirectory();
 
+    public String getIdentifier();
+
     public String getLogPrefix();
 }

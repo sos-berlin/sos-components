@@ -7,19 +7,19 @@ import com.sos.commons.util.SOSPathUtil;
 
 public class ProviderDirectoryPath {
 
-    private final String pathSeparator;
+    private final char pathSeparator;
     private final String path;
     private final String pathWithTrailingSeparator;
 
     public ProviderDirectoryPath(Path path) {
         String normalizedPath = SOSPath.toAbsoluteNormalizedPath(path).toString();
-        this.pathSeparator = getPathSeparator(normalizedPath);
+        this.pathSeparator = SOSPathUtil.getPathSeparator(normalizedPath);
         this.path = getPath(normalizedPath);
         this.pathWithTrailingSeparator = getPathWithTrailingSeparator(normalizedPath);
     }
 
     public ProviderDirectoryPath(String pathWithoutTrailingSeparator, String pathWithTrailingSeparator) {
-        this.pathSeparator = getPathSeparator(pathWithTrailingSeparator);
+        this.pathSeparator = SOSPathUtil.getPathSeparator(pathWithTrailingSeparator);
         this.path = pathWithoutTrailingSeparator;
         this.pathWithTrailingSeparator = pathWithTrailingSeparator;
     }
@@ -34,7 +34,7 @@ public class ProviderDirectoryPath {
         return pathWithTrailingSeparator;
     }
 
-    public String getPathSeparator() {
+    public char getPathSeparator() {
         return pathSeparator;
     }
 
@@ -73,18 +73,11 @@ public class ProviderDirectoryPath {
         return path;
     }
 
-    private String getPathSeparator(String path) {
-        if (path == null) {
-            return "/";
-        }
-        return path.contains("/") ? "/" : "\\";
-    }
-
     private String getPath(String path) {
         if (path == null) {
             return "/";
         }
-        return pathSeparator.equals("/") ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(path) : SOSPathUtil
+        return SOSPathUtil.isUnixStylePathSeparator(pathSeparator) ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(path) : SOSPathUtil
                 .getWindowsStyleDirectoryWithoutTrailingSeparator(path);
     }
 
@@ -92,7 +85,7 @@ public class ProviderDirectoryPath {
         if (path == null) {
             return "/";
         }
-        return pathSeparator.equals("/") ? SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(path) : SOSPathUtil
+        return SOSPathUtil.isUnixStylePathSeparator(pathSeparator) ? SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(path) : SOSPathUtil
                 .getWindowsStyleDirectoryWithTrailingSeparator(path);
     }
 }

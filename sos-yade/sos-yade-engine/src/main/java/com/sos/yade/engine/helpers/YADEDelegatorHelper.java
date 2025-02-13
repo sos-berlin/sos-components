@@ -19,26 +19,27 @@ import com.sos.yade.engine.arguments.YADETargetArguments;
 import com.sos.yade.engine.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineConnectionException;
-import com.sos.yade.engine.exceptions.SOSYADEEngineException;
+import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEDelegatorHelper {
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADESourceProviderDelegator getSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs) throws SOSYADEEngineException {
+    public static YADESourceProviderDelegator getSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs)
+            throws YADEEngineInitializationException {
         return new YADESourceProviderDelegator(getProvider(logger, sourceArgs.getProvider()), sourceArgs);
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
     public static YADETargetProviderDelegator getTargetDelegator(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs)
-            throws SOSYADEEngineException {
+            throws YADEEngineInitializationException {
         if (!needTargetProvider(args)) {
             return null;
         }
         return new YADETargetProviderDelegator(getProvider(logger, targetArgs.getProvider()), targetArgs);
     }
 
-    public static void connect(ISOSLogger logger, IYADEProviderDelegator delegator) throws SOSYADEEngineConnectionException {
+    public static void ensureConnected(ISOSLogger logger, IYADEProviderDelegator delegator) throws YADEEngineConnectionException {
         if (delegator == null) {
             return;
         }
@@ -47,7 +48,7 @@ public class YADEDelegatorHelper {
         // without retry
         if (!args.isRetryOnConnectionErrorEnabled()) {
             try {
-                delegator.getProvider().connect();
+                delegator.getProvider().ensureConnected();
             } catch (Throwable e) {
                 YADEHelper.throwConnectionException(delegator, e);
             }
@@ -59,7 +60,7 @@ public class YADEDelegatorHelper {
         long retryInterval = YADEArgumentsHelper.getIntervalInSeconds(args.getConnectionErrorRetryInterval(), 0);
         for (int retryCounter = 0; retryCounter <= maxRetries; retryCounter++) {
             try {
-                delegator.getProvider().connect();
+                delegator.getProvider().ensureConnected();
                 return;
             } catch (Throwable e) {
                 if (retryCounter == maxRetries) {
@@ -83,47 +84,25 @@ public class YADEDelegatorHelper {
         }
     }
 
-    public static void createDirectoriesOnTarget(ISOSLogger logger, YADETargetProviderDelegator targetDelegator) throws SOSYADEEngineException {
-        if (targetDelegator == null || targetDelegator.getDirectory() == null || targetDelegator.getArgs() == null) {
-            return;
-        }
-        YADETargetArguments args = (YADETargetArguments) targetDelegator.getArgs();
-        if (!args.getCreateDirectories().isTrue()) {
-            return;
-        }
-        try {
-            IProvider provider = targetDelegator.getProvider();
-            if (provider.createDirectoriesIfNotExist(targetDelegator.getDirectory().getPath())) {
-                logger.info("%s[%s=true][%s]created", targetDelegator.getLogPrefix(), args.getCreateDirectories().getName(), targetDelegator
-                        .getDirectory().getPath());
-            } else {
-                logger.info("%s[%s=true][%s][skip]already exists", targetDelegator.getLogPrefix(), args.getCreateDirectories().getName(),
-                        targetDelegator.getDirectory().getPath());
-            }
-        } catch (SOSProviderException e) {
-            throw new SOSYADEEngineException(e);
-        }
-    }
-
-    private static IProvider getProvider(ISOSLogger logger, AProviderArguments args) throws SOSYADEEngineException {
+    private static IProvider getProvider(ISOSLogger logger, AProviderArguments args) throws YADEEngineInitializationException {
         if (args == null) {
-            throw new SOSYADEEngineException(new SOSMissingDataException("YADEProviderArguments"));
+            throw new YADEEngineInitializationException(new SOSMissingDataException("YADEProviderArguments"));
         }
 
         SOSArgument<Protocol> protocol = args.getProtocol();
         if (protocol.getValue() == null) {
-            throw new SOSYADEEngineException(new SOSMissingDataException(protocol.getName()));
+            throw new YADEEngineInitializationException(new SOSMissingDataException(protocol.getName()));
         }
         IProvider p = null;
         try {
             switch (protocol.getValue()) {
             case FTP:
             case FTPS:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
+                throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
             // break;
             case HTTP:
             case HTTPS:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
+                throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
             // break;
             case LOCAL:
                 p = new LocalProvider(logger, (LocalProviderArguments) args);
@@ -133,30 +112,31 @@ public class YADEDelegatorHelper {
                 p = new SSHProvider(logger, (SSHProviderArguments) args);
                 break;
             case SMB:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
+                throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
             // break;
             case WEBDAV:
             case WEBDAVS:
-                throw new SOSYADEEngineException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
+                throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
             // break;
             case UNKNOWN:
             default:
-                throw new SOSYADEEngineException(new SOSInvalidDataException(protocol.getName() + "=" + protocol.getValue()));
+                throw new YADEEngineInitializationException(new SOSInvalidDataException(protocol.getName() + "=" + protocol.getValue()));
             }
         } catch (SOSProviderException e) {
-            throw new SOSYADEEngineException(e);
+            throw new YADEEngineInitializationException(e);
         }
         return p;
     }
 
-    private static boolean needTargetProvider(YADEArguments args) throws SOSYADEEngineException {
+    private static boolean needTargetProvider(YADEArguments args) throws YADEEngineInitializationException {
         switch (args.getOperation().getValue()) {
         case GETLIST:
         case REMOVE:
         case RENAME:
             return false;
         case UNKNOWN:
-            throw new SOSYADEEngineException(new SOSInvalidDataException(args.getOperation().getName() + "=" + args.getOperation().getValue()));
+            throw new YADEEngineInitializationException(new SOSInvalidDataException(args.getOperation().getName() + "=" + args.getOperation()
+                    .getValue()));
         // case COPY:
         // case MOVE:
         // case COPYFROMINTERNET:

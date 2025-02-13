@@ -36,6 +36,10 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     // YADE JS7 checks this argument (YADE1 default: .gz)
     private SOSArgument<String> compressedFileExtension = new SOSArgument<>("compressed_file_extension", false);
 
+    /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments ------- */
+    // argument name is based on XML schema definition
+    private SOSArgument<Boolean> createIntegrityHashFile = new SOSArgument<>("create_security_hash_file", false, Boolean.valueOf(false));
+
     public SOSArgument<Boolean> getCreateDirectories() {
         return createDirectories;
     }
@@ -82,6 +86,10 @@ public class YADETargetArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getTransactional() {
         return transactional;
+    }
+
+    public SOSArgument<Boolean> getCreateIntegrityHashFile() {
+        return createIntegrityHashFile;
     }
 
 }

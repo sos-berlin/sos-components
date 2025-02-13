@@ -2,12 +2,11 @@ package com.sos.yade.engine.arguments;
 
 import java.nio.file.Path;
 
-import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.yade.commons.Yade.TransferOperation;
 
 // TODO Jump as separated Include JumpTransferArguments when DMZ
-public class YADEArguments extends ASOSArguments {
+public class YADEArguments {
 
     /** - Fragment ------- */
     private SOSArgument<Path> settings = new SOSArgument<>("settings", false);
@@ -21,7 +20,14 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<String> returnValues = new SOSArgument<>("return-values", false);
 
     /** - Transfer adjustments ------- */
-    private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(4_096));
+    private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(8 * 1_024));
+
+    /** - Integrity Hash ------- */
+    // YADE-1
+    // Same algorithm for Source and Target - currently only md5 is supported
+    // Source -> CheckIntegrityHash, Target -> CreateIntegrityHashFile
+    // argument name is based on XML schema definition
+    private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("security_hash_type", false, "md5");
 
     // YADE 1 used in code but not defined in schema...
     // private SOSArgument<Boolean> skipTransfer = new SOSArgument<>("skip_transfer", false, Boolean.valueOf(false));
@@ -44,6 +50,10 @@ public class YADEArguments extends ASOSArguments {
 
     public SOSArgument<Integer> getBufferSize() {
         return bufferSize;
+    }
+
+    public SOSArgument<String> getIntegrityHashAlgorithm() {
+        return integrityHashAlgorithm;
     }
 
 }

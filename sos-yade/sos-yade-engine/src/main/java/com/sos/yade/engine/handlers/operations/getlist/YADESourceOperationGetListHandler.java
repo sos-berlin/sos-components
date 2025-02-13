@@ -1,8 +1,8 @@
-package com.sos.yade.engine.handlers.operations;
+package com.sos.yade.engine.handlers.operations.getlist;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.exceptions.SOSYADEEngineOperationException;
+import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 
 public class YADESourceOperationGetListHandler {
 
@@ -12,8 +12,8 @@ public class YADESourceOperationGetListHandler {
      * @param operation
      * @param additionalHeadLineMessage - TODO to remove. should be placed in BANNER
      * @throws SOSYADEEngineOperationException */
-    protected static void execute(TransferOperation operation, ISOSLogger logger, String additionalHeadLineMessage)
-            throws SOSYADEEngineOperationException {
+    public static void execute(TransferOperation operation, ISOSLogger logger, String additionalHeadLineMessage)
+            throws YADEEngineOperationException {
         logger.info("[%s]No transfer will be done. %s", operation, additionalHeadLineMessage);
     }
 }

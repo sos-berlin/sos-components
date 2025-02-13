@@ -66,7 +66,7 @@ public class SOSGzip {
             while ((len = fis.read(buffer)) > 0) {
                 gos.write(buffer, 0, len);
             }
-            gos.close();
+            gos.finish();
 
             result.addFile(source);
             result.setCompressed(bos.toByteArray());
@@ -75,6 +75,17 @@ public class SOSGzip {
             throw e;
         }
         return result;
+    }
+
+    public static byte[] compressBytes(byte[] data, int len) throws Exception {
+        if (data == null) {
+            return null;
+        }
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(len); GZIPOutputStream gos = new GZIPOutputStream(bos)) {
+            gos.write(data, 0, len);
+            // gos.finish();
+            return bos.toByteArray();
+        }
     }
 
     /** GZIP TAR compressing without empty folders

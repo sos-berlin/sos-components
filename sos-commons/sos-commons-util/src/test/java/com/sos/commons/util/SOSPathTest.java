@@ -33,11 +33,12 @@ public class SOSPathTest {
 
     @Ignore
     @Test
-    public void testFile() throws Exception {
+    public void test() throws Exception {
         Path source = Paths.get("./src/test/resources/log4j2.xml");
         LOGGER.info("[" + source + "]size=" + SOSPath.getFileSize(source));
         LOGGER.info("[" + source.getParent() + "]size=" + SOSPath.getFileSize(source.getParent()));
         LOGGER.info("basename=" + SOSPath.getBasename(source));
         LOGGER.info("withoutExtension=" + SOSPath.getFileNameWithoutExtension(source));
     }
+
 }

@@ -39,18 +39,16 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     private SOSArgument<String> checkSteadyStateInterval = new SOSArgument<>("check_steady_state_interval", false, null);
     private SOSArgument<Integer> checkSteadyCount = new SOSArgument<>("check_steady_count", false, Integer.valueOf(10));
 
-    /** - Integrity Hash ------- */
-    // YADE-1
-    // private SOSArgument<Boolean> checkIntegrityHash = new SOSArgument<>("check_integrity_hash", false, Boolean.valueOf(false));
-    // private SOSArgument<String> integrityHashType = new SOSArgument<>("integrity_hash_type", false, "md5");
-    private SOSArgument<String> integrityHashType = new SOSArgument<>("integrity_hash_type", false);
-
     /** - Zero Byte files handling ------- */
     private SOSArgument<ZeroByteTransfer> zeroByteTransfer = new SOSArgument<>("zero_byte_transfer", false, ZeroByteTransfer.YES);
 
     /** - Remove files ------- */
     // YADE1 - not needed? due to MOVE operation
     // private SOSArgument<Boolean> removeFiles = new SOSArgument<>("remove_files", false, Boolean.valueOf(false));
+
+    /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments ------- */
+    // argument name is based on XML schema definition
+    private SOSArgument<Boolean> checkIntegrityHash = new SOSArgument<>("check_security_hash", false, Boolean.valueOf(false));
 
     public boolean isSingleFilesSelection() {
         return isFilePathEnabled() || isFileListEnabled();
@@ -128,8 +126,8 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         return recursive;
     }
 
-    public SOSArgument<String> getIntegrityHashType() {
-        return integrityHashType;
+    public SOSArgument<Boolean> getCheckIntegrityHash() {
+        return checkIntegrityHash;
     }
 
 }

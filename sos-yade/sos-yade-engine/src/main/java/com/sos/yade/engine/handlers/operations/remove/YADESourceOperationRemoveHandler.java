@@ -1,4 +1,4 @@
-package com.sos.yade.engine.handlers.operations;
+package com.sos.yade.engine.handlers.operations.remove;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.delegators.YADEProviderFile;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineOperationException;
+import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
 
 public class YADESourceOperationRemoveHandler {
@@ -22,15 +22,15 @@ public class YADESourceOperationRemoveHandler {
      * @param sourceFiles
      * @param additionalHeadLineMessage - TODO to remove. should be placed in BANNER
      * @throws SOSYADEEngineOperationException */
-    protected static void execute(TransferOperation operation, ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
-            List<ProviderFile> sourceFiles, String additionalHeadLineMessage) throws SOSYADEEngineOperationException {
+    public static void execute(TransferOperation operation, ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
+            List<ProviderFile> sourceFiles, String additionalHeadLineMessage) throws YADEEngineOperationException {
         if (!SOSString.isEmpty(additionalHeadLineMessage)) {
             logger.info("[%s]%s", operation, additionalHeadLineMessage);
         }
         int index = 0;
         for (ProviderFile sourceFile : sourceFiles) {
             YADEProviderFile file = (YADEProviderFile) sourceFile;
-            file.initForOperation(index++);
+            file.init(index++);
             try {
                 YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, file);
 
@@ -42,7 +42,7 @@ public class YADESourceOperationRemoveHandler {
                 file.setState(TransferEntryState.DELETED);
             } catch (Throwable e) {
                 file.setState(TransferEntryState.FAILED);
-                throw new SOSYADEEngineOperationException(e);
+                throw new YADEEngineOperationException(e);
             }
         }
 

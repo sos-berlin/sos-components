@@ -22,7 +22,7 @@ public class YADESourceTargetArguments {
         return connectionErrorRetryCountMax.getValue() != null && connectionErrorRetryCountMax.getValue().intValue() > 0;
     }
 
-    public boolean isReplacingEnabled() {
+    public boolean isReplacementEnabled() {
         return !replacing.getValue().isEmpty() && !replacement.getValue().isEmpty();
     }
 

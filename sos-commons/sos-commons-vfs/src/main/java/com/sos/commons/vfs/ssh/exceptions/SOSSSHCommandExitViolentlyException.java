@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.ssh.exception;
+package com.sos.commons.vfs.ssh.exceptions;
 
 import com.sos.commons.vfs.exception.SOSProviderException;
 

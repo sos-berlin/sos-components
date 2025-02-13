@@ -78,7 +78,7 @@ public class SOSGzipTest {
             LOGGER.info("[compress][end]" + r.toString());
 
             LOGGER.info(SOSShell.getJVMInfos());
-            LOGGER.info("[writeResult]start");
+            LOGGER.info("[writeResult][start]" + targetTarGz.toAbsolutePath());
             Files.write(targetTarGz, r.getCompressed(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             LOGGER.info("[writeResult]end");
 

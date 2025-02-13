@@ -1,6 +1,8 @@
 package com.sos.commons.vfs.local;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
@@ -9,6 +11,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +84,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         checkParam(path, "path");
 
         try {
-            Files.createDirectory(SOSPath.toAbsolutePath(path));
+            Files.createDirectory(getPath(path));
         } catch (Throwable e) {
             throw new SOSProviderException(getLogPrefix() + "[createDirectory][" + path + "]", e);
         }
@@ -92,8 +95,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         checkParam(path, "path");
 
         try {
-            Path p = SOSPath.toAbsolutePath(path);
-            if (Files.exists(p)) {
+            Path p = getPath(path);
+            if (exists(p)) {
                 return false;
             }
             Files.createDirectories(p);
@@ -108,7 +111,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         checkParam(path, "path");
 
         try {
-            SOSPath.delete(SOSPath.toAbsolutePath(path));
+            SOSPath.delete(getPath(path));
         } catch (Throwable e) {
             throw new SOSProviderException(getLogPrefix() + "[delete][" + path + "]", e);
         }
@@ -119,7 +122,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         checkParam(path, "path");
 
         try {
-            return SOSPath.deleteIfExists(SOSPath.toAbsolutePath(path));
+            return SOSPath.deleteIfExists(getPath(path));
         } catch (Throwable e) {
             throw new SOSProviderException(getLogPrefix() + "[deleteIfExists][" + path + "]", e);
         }
@@ -142,7 +145,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             checkParam(path, "path"); // here because should not throw any errors
 
-            return Files.exists(SOSPath.toAbsolutePath(path));
+            return exists(getPath(path));
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug("%s[exists][%s][false]%s", getLogPrefix(), path, e.toString());
@@ -163,6 +166,151 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             result = selectFilesNonRecursive(selection, directory);
         }
         return result;
+    }
+
+    @Override
+    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
+        checkParam(path, "path");
+
+        Path p = getPath(path);
+        ProviderFile file = null;
+        try {
+            BasicFileAttributes attr = readFileAttributes(p);
+            if (attr != null) {
+                file = createProviderFile(p.toString(), attr.size(), getFileLastModifiedMillis(attr));
+            }
+        } catch (NoSuchFileException e) {
+        } catch (IOException e) {
+            throw new SOSProviderException(getLogPrefix() + "[" + path + "]]", e);
+        }
+        return file;
+    }
+
+    @Override
+    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
+        try {
+            BasicFileAttributes attr = readFileAttributes(Paths.get(file.getFullPath()));
+            if (attr != null) {
+                file.setSize(attr.size());
+                file.setLastModifiedMillis(getFileLastModifiedMillis(attr));
+            } else {
+                // file = null; ???
+            }
+        } catch (NoSuchFileException e) {
+            file = null;
+        } catch (IOException e) {
+            throw new SOSProviderException(getLogPrefix() + "[" + file.getFullPath() + "]]", e);
+        }
+        return file;
+    }
+
+    @Override
+    public boolean isDirectory(String path) {
+        try {
+            checkParam(path, "path"); // here because should not throw any errors
+
+            return SOSPath.isDirectory(path);
+        } catch (Throwable e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[isDirectory][%s][false]%s", getLogPrefix(), path, e.toString());
+            }
+            return false;
+        }
+    }
+
+    @Override
+    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
+        if (!isValidModificationTime(milliseconds)) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getLogPrefix(), path, milliseconds);
+            }
+            return false;
+        }
+
+        try {
+            checkParam(path, "path");
+
+            SOSPath.setLastModifiedFromMillis(path, milliseconds);
+            return true;
+        } catch (Throwable e) {
+            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getLogPrefix(), path, milliseconds, e);
+            return false;
+        }
+    }
+
+    @Override
+    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
+        return SOSShell.executeCommand(command, timeout, env);
+    }
+
+    @Override
+    public SOSCommandResult cancelCommands() {
+        return new SOSCommandResult("nop");
+    }
+
+    @Override
+    public InputStream getInputStream(String path) throws SOSProviderException {
+        try {
+            return Files.newInputStream(getPath(path));
+        } catch (Throwable e) {
+            throw new SOSProviderException(e);
+        }
+    }
+
+    @Override
+    public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
+        try {
+            Path p = getPath(path);
+            if (append) {
+                return Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            } else {
+                return Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            }
+        } catch (Throwable e) {
+            throw new SOSProviderException(e);
+        }
+    }
+
+    @Override
+    public String getFileContentIfExists(String path) throws SOSProviderException {
+        try {
+            Path p = getPath(path);
+            if (!exists(p)) {
+                return null;
+            }
+            return SOSPath.readFile(p);
+        } catch (IOException e) {
+            throw new SOSProviderException(e);
+        }
+    }
+
+    private Path getPath(String path) {
+        return SOSPath.toAbsoluteNormalizedPath(path);
+    }
+
+    private boolean exists(Path path) {
+        return Files.exists(path);
+    }
+
+    private ProviderFile createProviderFile(Path path) throws IOException {
+        Path np = path.toAbsolutePath().normalize();
+        BasicFileAttributes attr = readFileAttributes(np);
+        if (attr == null) {
+            return null;
+        }
+        return createProviderFile(np.toString(), attr.size(), getFileLastModifiedMillis(attr));
+    }
+
+    private BasicFileAttributes readFileAttributes(Path path) throws IOException {
+        BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+        if (attr.isRegularFile() || attr.isSymbolicLink()) {
+            return attr;
+        }
+        return null;
+    }
+
+    private long getFileLastModifiedMillis(BasicFileAttributes attr) {
+        return attr.lastModifiedTime().to(TimeUnit.MILLISECONDS);
     }
 
     private List<ProviderFile> selectFilesRecursive(ProviderFileSelection selection, Path directory) throws SOSProviderException {
@@ -264,142 +412,5 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         }
         return result;
     }
-
-    @Override
-    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        checkParam(path, "path");
-
-        Path p = SOSPath.toAbsolutePath(path);
-
-        ProviderFile file = null;
-        try {
-            BasicFileAttributes attr = readFileAttributes(p);
-            if (attr != null) {
-                file = createProviderFile(p.toString(), attr.size(), getFileLastModifiedMillis(attr));
-            }
-        } catch (NoSuchFileException e) {
-        } catch (IOException e) {
-            throw new SOSProviderException(getLogPrefix() + "[" + path + "]]", e);
-        }
-        return file;
-    }
-
-    @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
-        try {
-            BasicFileAttributes attr = readFileAttributes(Paths.get(file.getFullPath()));
-            if (attr != null) {
-                file.setSize(attr.size());
-                file.setLastModifiedMillis(getFileLastModifiedMillis(attr));
-            } else {
-                // file = null; ???
-            }
-        } catch (NoSuchFileException e) {
-            file = null;
-        } catch (IOException e) {
-            throw new SOSProviderException(getLogPrefix() + "[" + file.getFullPath() + "]]", e);
-        }
-        return file;
-    }
-
-    private ProviderFile createProviderFile(Path path) throws IOException {
-        Path np = path.toAbsolutePath().normalize();
-        BasicFileAttributes attr = readFileAttributes(np);
-        if (attr == null) {
-            return null;
-        }
-        return createProviderFile(np.toString(), attr.size(), getFileLastModifiedMillis(attr));
-    }
-
-    private BasicFileAttributes readFileAttributes(Path path) throws IOException {
-        BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-        if (attr.isRegularFile() || attr.isSymbolicLink()) {
-            return attr;
-        }
-        return null;
-    }
-
-    private long getFileLastModifiedMillis(BasicFileAttributes attr) {
-        return attr.lastModifiedTime().to(TimeUnit.MILLISECONDS);
-    }
-
-    @Override
-    public boolean isDirectory(String path) {
-        try {
-            checkParam(path, "path"); // here because should not throw any errors
-
-            return SOSPath.isDirectory(path);
-        } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[isDirectory][%s][false]%s", getLogPrefix(), path, e.toString());
-            }
-            return false;
-        }
-    }
-
-    // @Override
-    // public long getFileSize(String path) throws SOSProviderException {
-    // checkParam(path, "path");
-
-    // try {
-    // long result = SOSPath.getFileSize(path);
-    // if (getLogger().isDebugEnabled()) {
-    // getLogger().debug("%s[getFileSize][%s]%s", getLogPrefix(), path, result);
-    // }
-    // return result;
-    // } catch (Throwable e) {
-    // throw new SOSProviderException(getLogPrefix() + "[getFileSize][" + path + "]", e);
-    // }
-    // }
-
-    // @Override
-    // public long getFileLastModifiedMillis(String path) {
-    // try {
-    // checkParam(path, "path");
-
-    // long result = SOSPath.getLastModifiedMillis(path);
-    // if (getLogger().isDebugEnabled()) {
-    // getLogger().debug("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, result);
-    // }
-    // return result;
-    // } catch (Throwable e) {
-    // getLogger().warn("%s[getFileLastModifiedMillis][%s]%s", getLogPrefix(), path, e);
-    // return DEFAULT_FILE_ATTR_VALUE;
-    // }
-    // }
-
-    @Override
-    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
-        if (!isValidModificationTime(milliseconds)) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getLogPrefix(), path, milliseconds);
-            }
-            return false;
-        }
-
-        try {
-            checkParam(path, "path");
-
-            SOSPath.setLastModifiedFromMillis(path, milliseconds);
-            return true;
-        } catch (Throwable e) {
-            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getLogPrefix(), path, milliseconds, e);
-            return false;
-        }
-    }
-
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        return SOSShell.executeCommand(command, timeout, env);
-    }
-
-    @Override
-    public SOSCommandResult cancelCommands() {
-        return new SOSCommandResult("nop");
-    }
-
-    // private String getMainInfo() {
-    // return getArguments().getUser().getDisplayValue() + "@" + getArguments().getHost().getDisplayValue();
-    // }
 
 }

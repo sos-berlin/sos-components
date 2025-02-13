@@ -1,5 +1,7 @@
 package com.sos.commons.vfs.ssh;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import com.sos.commons.util.common.SOSCommandResult;
@@ -83,16 +85,6 @@ public class SSHProvider extends ASSHProvider {
         return provider.isDirectory(path);
     }
 
-    // @Override
-    // public long getFileSize(String path) throws SOSProviderException {
-    // return provider.getFileSize(path);
-    // }
-
-    // @Override
-    // public long getFileLastModifiedMillis(String path) {
-    // return provider.getFileLastModifiedMillis(path);
-    // }
-
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
         return provider.selectFiles(selection);
@@ -138,6 +130,21 @@ public class SSHProvider extends ASSHProvider {
 
     public void get(String source, String target) throws SOSProviderException {
         provider.get(source, target);
+    }
+
+    @Override
+    public InputStream getInputStream(String path) throws SOSProviderException {
+        return provider.getInputStream(path);
+    }
+
+    @Override
+    public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
+        return provider.getOutputStream(path, append);
+    }
+
+    @Override
+    public String getFileContentIfExists(String path) throws SOSProviderException {
+        return provider.getFileContentIfExists(path);
     }
 
 }

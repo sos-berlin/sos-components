@@ -12,7 +12,7 @@ import com.sos.yade.engine.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.delegators.YADEProviderFile;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineCommandException;
+import com.sos.yade.engine.exceptions.YADEEngineCommandException;
 import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.helpers.YADEHelper;
 
@@ -23,7 +23,7 @@ public class YADECommandsHandler {
     private static final boolean THROW_ERROR_ON_STDERR = false;
 
     // -- Operation related ------------------------------
-    public static void executeBeforeOperation(ISOSLogger logger, IYADEProviderDelegator delegator) throws SOSYADEEngineCommandException {
+    public static void executeBeforeOperation(ISOSLogger logger, IYADEProviderDelegator delegator) throws YADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(delegator);
         if (args == null || args.getCommandsBeforeOperation().isEmpty()) {
             return;
@@ -36,14 +36,14 @@ public class YADECommandsHandler {
             logger.info("%s[%s]%s", delegator.getLogPrefix(), an, command);
             SOSCommandResult result = delegator.getProvider().executeCommand(command);
             if (result.hasError(THROW_ERROR_ON_STDERR)) {
-                throw new SOSYADEEngineCommandException(String.format("%s[%s]", delegator.getLogPrefix(), an), result);
+                throw new YADEEngineCommandException(String.format("%s[%s]", delegator.getLogPrefix(), an), result);
             }
             logger.info("%s[%s]%s", delegator.getLogPrefix(), an, result.toString());
         }
     }
 
     public static void executeAfterOperationOnSuccess(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator) throws SOSYADEEngineCommandException {
+            YADETargetProviderDelegator targetDelegator) throws YADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsAfterOperationOnSuccess().isEmpty()) {
             executeAfterOperationCommands(logger, sourceDelegator, args, args.getCommandsAfterOperationOnSuccess(), null);
@@ -64,7 +64,7 @@ public class YADECommandsHandler {
         if (args != null && !args.getCommandsAfterOperationOnError().isEmpty()) {
             try {
                 executeAfterOperationCommands(logger, sourceDelegator, args, args.getCommandsAfterOperationOnError(), exception);
-            } catch (SOSYADEEngineCommandException e) {
+            } catch (YADEEngineCommandException e) {
                 r.source = e;
             }
         }
@@ -73,7 +73,7 @@ public class YADECommandsHandler {
             if (args != null && !args.getCommandsAfterOperationOnError().isEmpty()) {
                 try {
                     executeAfterOperationCommands(logger, targetDelegator, args, args.getCommandsAfterOperationOnError(), exception);
-                } catch (SOSYADEEngineCommandException e) {
+                } catch (YADEEngineCommandException e) {
                     r.target = e;
                 }
             }
@@ -89,7 +89,7 @@ public class YADECommandsHandler {
         if (args != null && !args.getCommandsAfterOperationFinal().isEmpty()) {
             try {
                 executeAfterOperationCommands(logger, sourceDelegator, args, args.getCommandsAfterOperationFinal(), exception);
-            } catch (SOSYADEEngineCommandException e) {
+            } catch (YADEEngineCommandException e) {
                 r.source = e;
             }
         }
@@ -98,7 +98,7 @@ public class YADECommandsHandler {
             if (args != null && !args.getCommandsAfterOperationFinal().isEmpty()) {
                 try {
                     executeAfterOperationCommands(logger, targetDelegator, args, args.getCommandsAfterOperationFinal(), exception);
-                } catch (SOSYADEEngineCommandException e) {
+                } catch (YADEEngineCommandException e) {
                     r.target = e;
                 }
             }
@@ -108,12 +108,12 @@ public class YADECommandsHandler {
 
     // -- File related ------------------------------
     public static void executeBeforeFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile file)
-            throws SOSYADEEngineCommandException {
+            throws YADEEngineCommandException {
         executeBeforeFile(logger, sourceDelegator, null, file);
     }
 
-    public static void executeBeforeFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADESourceProviderDelegator targetDelegator,
-            YADEProviderFile file) throws SOSYADEEngineCommandException {
+    public static void executeBeforeFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
+            YADEProviderFile file) throws YADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsBeforeFile().isEmpty()) {
             if (!file.isSkipped() || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
@@ -133,8 +133,8 @@ public class YADECommandsHandler {
         }
     }
 
-    public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADESourceProviderDelegator targetDelegator,
-            YADEProviderFile file) throws SOSYADEEngineCommandException {
+    public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
+            YADEProviderFile file) throws YADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsAfterFile().isEmpty()) {
             if (!file.isSkipped() || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
@@ -164,7 +164,7 @@ public class YADECommandsHandler {
     }
 
     private static void executeAfterOperationCommands(ISOSLogger logger, IYADEProviderDelegator delegator, YADEProviderCommandArguments args,
-            SOSArgument<List<String>> arg, Throwable exception) throws SOSYADEEngineCommandException {
+            SOSArgument<List<String>> arg, Throwable exception) throws YADEEngineCommandException {
 
         String an = arg.getName();
         // e.g. target connection exception, but provider is source...
@@ -190,14 +190,14 @@ public class YADECommandsHandler {
                             logger.info("%s[%s][%s][skip]Directory does not exist", delegator.getLogPrefix(), an, command);
                         }
                     } catch (Throwable e) {
-                        throw new SOSYADEEngineCommandException(String.format("%s[%s][%s]%s", delegator.getLogPrefix(), an, command, directory
+                        throw new YADEEngineCommandException(String.format("%s[%s][%s]%s", delegator.getLogPrefix(), an, command, directory
                                 .getPath()), e);
                     }
                 }
             } else {
                 SOSCommandResult result = delegator.getProvider().executeCommand(command);
                 if (result.hasError(THROW_ERROR_ON_STDERR)) {
-                    throw new SOSYADEEngineCommandException(String.format("%s[%s]", delegator.getLogPrefix(), an), result);
+                    throw new YADEEngineCommandException(String.format("%s[%s]", delegator.getLogPrefix(), an), result);
                 }
                 logger.info("%s[%s]%s", delegator.getLogPrefix(), an, result.toString());
             }
@@ -207,7 +207,7 @@ public class YADECommandsHandler {
     // TODO direc
     private static void executeFileCommands(ISOSLogger logger, IYADEProviderDelegator delegator, YADEProviderCommandArguments args,
             SOSArgument<List<String>> arg, YADEProviderFile file, ProviderDirectoryPath sourceDirectory, ProviderDirectoryPath targetDirectory)
-            throws SOSYADEEngineCommandException {
+            throws YADEEngineCommandException {
         logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, args.getCommandDelimiter(), file);
 
         String prefix = String.format("%s[%s][%s][%s]", delegator.getLogPrefix(), file.getIndex(), file.getFullPath(), arg.getName());
@@ -217,7 +217,7 @@ public class YADECommandsHandler {
             logger.info(msg);
             SOSCommandResult result = delegator.getProvider().executeCommand(command);
             if (result.hasError(THROW_ERROR_ON_STDERR)) {
-                throw new SOSYADEEngineCommandException(msg, result);
+                throw new YADEEngineCommandException(msg, result);
             }
             logger.info("%s%s", msg, result.toString());
         }
@@ -243,8 +243,8 @@ public class YADECommandsHandler {
     /** TODO getSource/getTarget ??? */
     public class YADECommandsResult {
 
-        SOSYADEEngineCommandException source;
-        SOSYADEEngineCommandException target;
+        YADEEngineCommandException source;
+        YADEEngineCommandException target;
 
         private static YADECommandsResult createInstance() {
             return new YADECommandsHandler().new YADECommandsResult();
@@ -260,13 +260,13 @@ public class YADECommandsHandler {
             logIfErrorOnErrorLevel(logger, target);
         }
 
-        private void logIfErrorOnInfoLevel(ISOSLogger logger, SOSYADEEngineCommandException error) {
+        private void logIfErrorOnInfoLevel(ISOSLogger logger, YADEEngineCommandException error) {
             if (error != null) {
                 logger.info(error);
             }
         }
 
-        private void logIfErrorOnErrorLevel(ISOSLogger logger, SOSYADEEngineCommandException error) {
+        private void logIfErrorOnErrorLevel(ISOSLogger logger, YADEEngineCommandException error) {
             if (error != null) {
                 logger.error(error);
             }

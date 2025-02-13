@@ -15,9 +15,12 @@ import com.sos.yade.engine.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.delegators.YADEProviderFile;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineOperationException;
+import com.sos.yade.engine.exceptions.YADEEngineOperationException;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationHandler;
+import com.sos.yade.engine.handlers.operations.getlist.YADESourceOperationGetListHandler;
+import com.sos.yade.engine.handlers.operations.remove.YADESourceOperationRemoveHandler;
 
-public class YADECommonOperationHandler {
+public class YADEOperationHandler {
 
     private static String NEW_LINE = "\n"; // System.lineSeparator();
 
@@ -38,7 +41,7 @@ public class YADECommonOperationHandler {
 
     /** TODO not use "YADEArguments args" ... */
     public static void execute(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
-            List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator) throws SOSYADEEngineOperationException {
+            List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator) throws YADEEngineOperationException {
 
         TransferOperation operation = args.getOperation().getValue();
         switch (operation) {
@@ -50,7 +53,7 @@ public class YADECommonOperationHandler {
                 return;
             }
 
-            YADECopyOrMoveOperationHandler.execute(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles);
+            YADECopyMoveOperationHandler.execute(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles);
             // TODO after operation?
             createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
             break;
@@ -115,7 +118,7 @@ public class YADECommonOperationHandler {
      * @param sourceFiles
      * @throws SOSYADEEngineOperationException */
     private static void createResultSetFileFromSourceFiles(ISOSLogger logger, YADEClientArguments args, List<ProviderFile> sourceFiles)
-            throws SOSYADEEngineOperationException {
+            throws YADEEngineOperationException {
         Path resultSetFile = args.getResultListFile().getValue();
         if (resultSetFile == null) {
             if (logger != null) {
@@ -139,13 +142,13 @@ public class YADECommonOperationHandler {
             SOSPath.overwrite(resultSetFile, sb.toString());
             // SOSPath.append(resultSetFile, sb.toString());
         } catch (Throwable e) {
-            throw new SOSYADEEngineOperationException(e);
+            throw new YADEEngineOperationException(e);
         }
     }
 
     @SuppressWarnings("unused")
     private static void deleteSourceFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> files)
-            throws SOSYADEEngineOperationException {
+            throws YADEEngineOperationException {
         // if (!sourceDelegator.getArgs().getRemoveFiles().isTrue()) {
         // return;
         // }

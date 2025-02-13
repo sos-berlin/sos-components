@@ -6,7 +6,10 @@ import com.sos.yade.engine.arguments.YADESourceArguments;
 
 public class YADESourceProviderDelegator extends AYADEProviderDelegator {
 
-    private final static String LOG_PREFIX = "[Source]";
+    private final static String IDENTIFIER = "Source";
+    private final static String LOG_PREFIX = "[" + IDENTIFIER + "]";
+
+    private final YADEDirectoryMapper directoryMapper;
 
     public YADESourceProviderDelegator(IProvider provider, YADESourceArguments args) {
         super(provider, args);
@@ -19,11 +22,19 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
                 return LOG_PREFIX;
             }
         });
+        directoryMapper = new YADEDirectoryMapper();
+        // if (getDirectory() != null) {
+        // directories.addSourceDirectory(getDirectory().getPath());
+        // }
         // set YADE specific ProviderFile
         // Not sets YADEProviderFile.index because it can be changes (e.g. because of zeroBytes relaxed handling)
         provider.setProviderFileCreator(builder -> new YADEProviderFile(builder.getFullPath(), builder.getSize(), builder.getLastModifiedMillis(),
-                args.isCheckSteadyStateEnabled()));
+                directoryMapper, args.isCheckSteadyStateEnabled()));
 
+    }
+
+    public YADEDirectoryMapper getDirectoryMapper() {
+        return directoryMapper;
     }
 
     @Override
@@ -32,8 +43,12 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
     }
 
     @Override
+    public String getIdentifier() {
+        return IDENTIFIER;
+    }
+
+    @Override
     public String getLogPrefix() {
         return LOG_PREFIX;
     }
-
 }

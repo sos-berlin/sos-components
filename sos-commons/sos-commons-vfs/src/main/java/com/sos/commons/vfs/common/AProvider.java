@@ -1,9 +1,11 @@
 package com.sos.commons.vfs.common;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
 import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
@@ -40,6 +42,10 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         providerFileCreator = val;
     }
 
+    public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {
+        return providerFileCreator;
+    }
+
     /** Method to create a ProviderFile by using the providerFileCreator function
      * 
      * @param fullPath
@@ -47,6 +53,11 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
      * @param lastModifiedMillis
      * @return */
     public ProviderFile createProviderFile(String fullPath, long size, long lastModifiedMillis) {
+        return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
+    }
+
+    public static ProviderFile createProviderFile(Function<ProviderFileBuilder, ProviderFile> providerFileCreator, String fullPath, long size,
+            long lastModifiedMillis) {
         return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
     }
 
@@ -69,6 +80,20 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         if (!isConnected()) {
             connect();
         }
+    }
+
+    @Override
+    public boolean createDirectoriesIfNotExist(Collection<String> paths) throws SOSProviderException {
+        if (SOSCollection.isEmpty(paths)) {
+            return false;
+        }
+        boolean result = false;
+        for (String path : paths) {
+            if (createDirectoriesIfNotExist(path)) {
+                result = true;
+            }
+        }
+        return result;
     }
 
     /** Provider (non-YADE) method */

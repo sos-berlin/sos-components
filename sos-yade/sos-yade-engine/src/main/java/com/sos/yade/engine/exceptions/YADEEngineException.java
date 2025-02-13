@@ -2,19 +2,19 @@ package com.sos.yade.engine.exceptions;
 
 import com.sos.commons.exception.SOSException;
 
-public class SOSYADEEngineException extends SOSException {
+public class YADEEngineException extends SOSException {
 
     private static final long serialVersionUID = 1L;
 
-    public SOSYADEEngineException(String msg) {
+    public YADEEngineException(String msg) {
         super(msg);
     }
 
-    public SOSYADEEngineException(String msg, Throwable e) {
+    public YADEEngineException(String msg, Throwable e) {
         super(msg, e);
     }
 
-    public SOSYADEEngineException(Throwable e) {
+    public YADEEngineException(Throwable e) {
         super(e);
     }
 

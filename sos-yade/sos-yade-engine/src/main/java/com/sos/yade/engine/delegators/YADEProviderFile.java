@@ -1,29 +1,45 @@
 package com.sos.yade.engine.delegators;
 
+import java.security.MessageDigest;
 import java.util.Optional;
 
+import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
-import com.sos.yade.engine.arguments.YADESourceTargetArguments;
-import com.sos.yade.engine.handlers.operations.YADECopyOrMoveOperationTargetFilesConfig;
-import com.sos.yade.engine.helpers.YADEReplacingHelper;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationConfig;
+import com.sos.yade.engine.helpers.YADEReplacementHelper;
 
 public class YADEProviderFile extends ProviderFile {
 
     private Steady steady = null;
     private TransferEntryState state = null;
-    private int index;// in the list
+    /** file transfer position in the entire files list */
+    private int index;
 
-    private String finalFullPath; // after possible rename etc
-    private boolean finalFullPathIsCurrentFullPath;
+    /** parent directory without trailing separator */
+    private String parentFullPath;
 
-    private YADEProviderFile target;
+    /** after possible rename etc. */
+    private String finalFullPath;
 
-    public YADEProviderFile(String fullPath, long size, long lastModifiedMillis, boolean checkSteady) {
+    private YADETargetProviderFile target;
+
+    private String checksum;
+
+    public YADEProviderFile(String fullPath, long size, long lastModifiedMillis, YADEDirectoryMapper directoryMapper, boolean checkSteady) {
         super(fullPath, size, lastModifiedMillis);
+        parentFullPath = SOSPathUtil.getParentPath(getFullPath());
+        if (directoryMapper != null) {
+            directoryMapper.addSourceFileDirectory(parentFullPath);
+        }
         if (checkSteady) {
             steady = new Steady(getSize());
         }
+    }
+
+    public String getParentFullPath() {
+        return parentFullPath;
     }
 
     public Steady getSteady() {
@@ -43,55 +59,149 @@ public class YADEProviderFile extends ProviderFile {
     }
 
     public boolean isSkipped() {
-        return TransferEntryState.SKIPPED.equals(state);
+        return TransferEntryState.SKIPPED.equals(state) || TransferEntryState.NOT_OVERWRITTEN.equals(state);
     }
 
-    public void initForOperation(int index) {
+    /** Operations: Remove(without target) and Copy/Move(with target) */
+    public void init(int index) {
         this.index = index;
         this.steady = null;
     }
 
-    public void initForOperation(int index, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
-            YADECopyOrMoveOperationTargetFilesConfig targetFilesConfig) {
-        initForOperation(index);
-        target = targetDelegator.newYADETargetProviderFile(sourceDelegator, this, targetFilesConfig);
+    /** Operations: Copy/Move(with target) */
+    public void initTarget(YADECopyMoveOperationConfig config, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, int index) throws SOSProviderException {
+        init(index);
+        initTarget(config, sourceDelegator, targetDelegator);
+    }
+
+    private void initTarget(YADECopyMoveOperationConfig config, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
+        if (config.getTarget().getCumulate() != null) {
+            target = null;
+            return;
+        }
+        YADEFileNameInfo fileNameInfo = getTargetFinalFilePathInfo(config, targetDelegator);
+
+        /** finalFileName: the final name of the file after transfer (compressed/replaced name...) */
+        String finalFileName = fileNameInfo.getName();
+
+        /** transferFileName: file name during transfer - same path as finalFileName but can contains the atomic prefix/suffix */
+        String transferFileName = finalFileName;
+        if (config.getTarget().getAtomic() != null) {
+            transferFileName = config.getTarget().getAtomic().getPrefix() + finalFileName + config.getTarget().getAtomic().getSuffix();
+        }
+        String targetDirectory;
+        if (fileNameInfo.isAbsolutePath()) {// name replaced to an absolute path
+            targetDirectory = fileNameInfo.getParent();
+        } else {
+            targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(config, targetDelegator, this, fileNameInfo.getParent());
+        }
+
+        String transferFileFullPath = SOSPathUtil.appendPath(targetDirectory, transferFileName, targetDelegator.getPathSeparator());
+        target = new YADETargetProviderFile(transferFileFullPath);
+        if (config.getTarget().getAtomic() != null) {
+            /** the final name of the file after transfer */
+            target.setFinalName(finalFileName);
+        }
+    }
+
+    /** Returns the final name of the file after transfer<br/>
+     * May contains a path separator and have a different path than the original path if target replacement is enabled
+     * 
+     * @param sourceFile
+     * @param config
+     * @return the final name of the file after transfer */
+    private YADEFileNameInfo getTargetFinalFilePathInfo(YADECopyMoveOperationConfig config, YADETargetProviderDelegator targetDelegator) {
+        // 1) Source name
+        String fileName = getName();
+        // 2) Compressed name
+        if (config.getTarget().getCompress() != null) {
+            fileName = fileName + config.getTarget().getCompress().getFileExtension();
+        }
+        // 3) Replaced name
+        YADEFileNameInfo info = null;
+        // Note: possible replacement setting is disabled when cumulative file enabled
+        if (config.getTarget().isReplacementEnabled()) {
+            Optional<YADEFileNameInfo> newFileNameInfo = getReplacementResultIfDifferent(targetDelegator, fileName);
+            if (newFileNameInfo.isPresent()) {
+                info = newFileNameInfo.get();
+            }
+        }
+        if (info == null) {
+            info = new YADEFileNameInfo(targetDelegator, fileName);
+        }
+        return info;
     }
 
     public int getIndex() {
         return index;
     }
 
+    public void setFinalName(YADEFileNameInfo newNameInfo) {
+        if (newNameInfo.isAbsolutePath()) {
+            finalFullPath = SOSPathUtil.appendPath(newNameInfo.getParent(), newNameInfo.getName());
+        } else {
+            finalFullPath = parentFullPath;
+            if (newNameInfo.needsParent()) {
+                finalFullPath = SOSPathUtil.appendPath(finalFullPath, newNameInfo.getParent());
+            }
+            finalFullPath = SOSPathUtil.appendPath(finalFullPath, newNameInfo.getName());
+        }
+    }
+
+    public boolean needsRename() {
+        return finalFullPath != null && !finalFullPath.equalsIgnoreCase(getFullPath());
+    }
+
     public void setFinalName(String newName) {
-        finalFullPath = getFullPath(newName);
+        finalFullPath = SOSPathUtil.appendPath(parentFullPath, newName);
     }
 
-    public String getFullPath(String newName) {
-        int index = getFullPath().lastIndexOf(getName());
-        return getFullPath().substring(0, index) + newName;
+    public Optional<YADEFileNameInfo> getReplacementResultIfDifferent(AYADEProviderDelegator delegator) {
+        return getReplacementResultIfDifferent(delegator, getName());
     }
 
-    public Optional<String> getNewFileNameIfDifferent(YADESourceTargetArguments args) {
-        return YADEReplacingHelper.getNewFileNameIfDifferent(getName(), args.getReplacing().getValue(), args.getReplacement().getValue());
+    public Optional<YADEFileNameInfo> getReplacementResultIfDifferent(AYADEProviderDelegator delegator, String fileName) {
+        return YADEReplacementHelper.getReplacementResultIfDifferent(delegator, getName(), delegator.getArgs().getReplacing().getValue(), delegator
+                .getArgs().getReplacement().getValue());
     }
 
     public String getFinalFullPath() {
-        return finalFullPath;
+        return finalFullPath == null ? getFullPath() : finalFullPath;
     }
 
-    public String getCurrentFullPath() {
-        return finalFullPathIsCurrentFullPath ? finalFullPath : getFullPath();
+    public String getFinalFullPathParent() {
+        return finalFullPath == null ? parentFullPath : SOSPathUtil.getParentPath(finalFullPath);
     }
 
-    public void confirmFullPathChange() {
-        finalFullPathIsCurrentFullPath = true;
-    }
-
-    public boolean isFullPathChanged() {
-        return finalFullPathIsCurrentFullPath;
-    }
-
-    public YADEProviderFile getTarget() {
+    public YADETargetProviderFile getTarget() {
         return target;
+    }
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(String val) {
+        checksum = val;
+    }
+
+    public void setChecksum(MessageDigest digest) {
+        if (digest == null) {
+            checksum = null;
+            return;
+        }
+        // byte[] toHexString
+        byte[] b = digest.digest();
+        char[] hexChar = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+        int length = b.length * 2;
+        StringBuilder sb = new StringBuilder(length);
+        for (byte element : b) {
+            sb.append(hexChar[(element & 0xf0) >>> 4]);
+            sb.append(hexChar[element & 0x0f]);
+        }
+        checksum = sb.toString();
     }
 
     public class Steady {

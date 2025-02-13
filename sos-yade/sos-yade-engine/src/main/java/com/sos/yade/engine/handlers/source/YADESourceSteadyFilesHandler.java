@@ -9,14 +9,14 @@ import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.delegators.YADEProviderFile;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.exceptions.SOSYADEEngineSourceSteadyFilesException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceSteadyFilesException;
 import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.helpers.YADEHelper;
 
 public class YADESourceSteadyFilesHandler {
 
     public static void checkFilesSteady(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)
-            throws SOSYADEEngineSourceSteadyFilesException {
+            throws YADEEngineSourceSteadyFilesException {
 
         YADESourceArguments args = sourceDelegator.getArgs();
         if (!args.isCheckSteadyStateEnabled()) {
@@ -59,13 +59,13 @@ public class YADESourceSteadyFilesHandler {
             }
         }
         if (!steady) {
-            throw new SOSYADEEngineSourceSteadyFilesException("[not all files are steady][not steady]" + sourceFiles.stream().filter(
+            throw new YADEEngineSourceSteadyFilesException("[not all files are steady][not steady]" + sourceFiles.stream().filter(
                     f -> !((YADEProviderFile) f).getSteady().isSteady()).map(f -> f.getFullPath()).collect(Collectors.joining(";")));
         }
     }
 
     private static boolean checkSourceFileSteady(YADESourceProviderDelegator sourceDelegator, ProviderFile sourceFile)
-            throws SOSYADEEngineSourceSteadyFilesException {
+            throws YADEEngineSourceSteadyFilesException {
         YADEProviderFile yf = (YADEProviderFile) sourceFile;
         if (yf.getSteady().isSteady()) {
             return true;
@@ -74,16 +74,16 @@ public class YADESourceSteadyFilesHandler {
             String path = sourceFile.getFullPath();
             sourceFile = sourceDelegator.getProvider().rereadFileIfExists(sourceFile);
             if (sourceFile == null) {
-                throw new SOSYADEEngineSourceSteadyFilesException("[" + path + "]not found");
+                throw new YADEEngineSourceSteadyFilesException("[" + path + "]not found");
             }
             yf = (YADEProviderFile) sourceFile;
             yf.getSteady().checkIfSteady();
 
             return yf.getSteady().isSteady();
-        } catch (SOSYADEEngineSourceSteadyFilesException e) {
+        } catch (YADEEngineSourceSteadyFilesException e) {
             throw e;
         } catch (Throwable e) {
-            throw new SOSYADEEngineSourceSteadyFilesException(e);
+            throw new YADEEngineSourceSteadyFilesException(e);
         }
     }
 
