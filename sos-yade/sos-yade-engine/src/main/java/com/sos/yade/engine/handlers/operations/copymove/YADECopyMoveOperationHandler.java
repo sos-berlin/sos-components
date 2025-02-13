@@ -206,7 +206,7 @@ public class YADECopyMoveOperationHandler {
                 }
             }
         }
-        finalizeTargetFileSize(targetDelegator, targetFile, isCompressTarget, isCumulateTarget);
+        finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, isCompressTarget, isCumulateTarget);
 
         targetFile.setState(TransferEntryState.TRANSFERRED);
         logger.info("[%s][transferred][%s=%s][%s=%s][Bytes=%s]%s", sourceFile.getIndex(), sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
@@ -279,19 +279,19 @@ public class YADECopyMoveOperationHandler {
         }
     }
 
-    private static void finalizeTargetFileSize(YADETargetProviderDelegator delegator, YADETargetProviderFile file, boolean isCompress,
-            boolean isCumulate) throws Exception {
+    private static void finalizeTargetFileSize(YADETargetProviderDelegator delegator, YADEProviderFile sourceFile, YADETargetProviderFile targetFile,
+            boolean isCompress, boolean isCumulate) throws Exception {
         if (isCompress) {// the file size check is suppressed by compress but we read the file size for logging and serialization
             if (!isCumulate) {
-                String filePath = file.getFullPath();
-                file = (YADETargetProviderFile) delegator.getProvider().rereadFileIfExists(file);
-                if (file == null) {
+                String filePath = targetFile.getFullPath();
+                targetFile = (YADETargetProviderFile) delegator.getProvider().rereadFileIfExists(targetFile);
+                if (targetFile == null) {
+                    // ???? sourceFile.resetTarget();
                     throw new YADEEngineTransferFileException(new SOSNoSuchFileException(filePath, null));
                 }
             }
         } else {
-            // if isCumulate -
-            file.finalizeFileSize();
+            targetFile.finalizeFileSize();
         }
     }
 

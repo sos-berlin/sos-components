@@ -75,6 +75,10 @@ public class YADEProviderFile extends ProviderFile {
         initTarget(config, sourceDelegator, targetDelegator);
     }
 
+    public void resetTarget() {
+        target = null;
+    }
+
     private void initTarget(YADECopyMoveOperationConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
         if (config.getTarget().getCumulate() != null) {
