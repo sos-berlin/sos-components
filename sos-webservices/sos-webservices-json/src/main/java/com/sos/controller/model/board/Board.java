@@ -3,17 +3,16 @@ package com.sos.controller.model.board;
 
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.inventory.model.board.BoardType;
+import com.sos.inventory.model.deploy.DeployType;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -29,6 +28,7 @@ import com.sos.inventory.model.board.BoardType;
     "state",
     "numOfNotices",
     "numOfExpectingOrders",
+    "numOfAnnouncements",
     "notices"
 })
 public class Board
@@ -77,6 +77,14 @@ public class Board
      */
     @JsonProperty("numOfExpectingOrders")
     private Integer numOfExpectingOrders;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfAnnouncements")
+    private Integer numOfAnnouncements;
     @JsonProperty("notices")
     private List<Notice> notices = null;
 
@@ -102,14 +110,16 @@ public class Board
      * @param postOrderToNoticeId
      * @param state
      * @param documentationName
+     * @param numOfAnnouncements
      */
-    public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfExpectingOrders, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
+    public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfExpectingOrders, Integer numOfAnnouncements, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
         super(boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
         this.numOfNotices = numOfNotices;
         this.numOfExpectingOrders = numOfExpectingOrders;
+        this.numOfAnnouncements = numOfAnnouncements;
         this.notices = notices;
     }
 
@@ -223,6 +233,28 @@ public class Board
         this.numOfExpectingOrders = numOfExpectingOrders;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfAnnouncements")
+    public Integer getNumOfAnnouncements() {
+        return numOfAnnouncements;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfAnnouncements")
+    public void setNumOfAnnouncements(Integer numOfAnnouncements) {
+        this.numOfAnnouncements = numOfAnnouncements;
+    }
+
     @JsonProperty("notices")
     public List<Notice> getNotices() {
         return notices;
@@ -235,7 +267,7 @@ public class Board
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("numOfNotices", numOfNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("notices", notices).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("numOfNotices", numOfNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("numOfAnnouncements", numOfAnnouncements).append("notices", notices).toString();
     }
 
     @Override

@@ -107,13 +107,14 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             }
             
             Boards answer = new Boards();
-            Date now = Date.from(Instant.now());
+            Instant surveyInstant = Instant.now();
+            Date now = Date.from(surveyInstant);
             answer.setSurveyDate(now);
             final JControllerState controllerState = BoardHelper.getCurrentState(controllerId);
             if (controllerState != null) {
-                answer.setSurveyDate(Date.from(controllerState.instant()));
+                surveyInstant = controllerState.instant();
+                answer.setSurveyDate(Date.from(surveyInstant));
             }
-            final long surveyDateMillis = controllerState != null ? controllerState.instant().toEpochMilli() : Instant.now().toEpochMilli();
             final Set<Folder> permittedFolders = withFolderFilter ? null : folders;
             ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
@@ -128,13 +129,13 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                     
                     Set<OrderId> eos = jBoards.values().stream().flatMap(Collection::stream).map(JPlannedBoard::toNoticePlace).map(Map::values)
                             .flatMap(Collection::stream).map(JNoticePlace::expectingOrderIds).flatMap(Collection::stream).collect(Collectors.toSet());
-                    //List<JOrder> eos = BoardHelper.getAllExpectingOrdersStream(controllerState, folders).collect(Collectors.toList());
 
                     Map<String, Set<String>> orderTags = OrderTags.getTagsByOrderIds(controllerId, eos.stream().map(OrderId::string), session);
-
+                    final long surveyDateMillis = surveyInstant.toEpochMilli();
+                            
                     Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                         try {
-                            return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
+                            return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, surveyDateMillis, zoneId);
                         } catch (Exception e) {
                             return null;
                         }
@@ -142,12 +143,9 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
 
                     orders = OrdersHelper.getPermittedJOrdersFromOrderIds(eos, permittedFolders, controllerState).map(mapJOrderToOrderV).filter(
                             Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
-                    
-//                    orders = eos.stream().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toMap(
-//                            OrderV::getOrderId, Function.identity()));
                 }
                 
-                PlannedBoards plB = new PlannedBoards(jBoards, orders, filter.getCompact() == Boolean.TRUE, controllerState);
+                PlannedBoards plB = new PlannedBoards(jBoards, orders, filter.getCompact() == Boolean.TRUE, filter.getLimit(), controllerState);
                 
                 answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
@@ -164,51 +162,6 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                         return null;
                     }
                 }).filter(Objects::nonNull).collect(Collectors.toList()));
-                
-//                Set<String> boardNames = contents.stream().map(DeployedContent::getName).collect(Collectors.toSet());
-//                if (filter.getCompact() == Boolean.TRUE) {
-//                    ConcurrentMap<String, ConcurrentMap<NoticeId, Integer>> numOfExpectings = BoardHelper.getNumOfExpectingOrders(controllerState,
-//                            boardNames, folders);
-//                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
-//                        try {
-//                            if (dc.getContent() == null || dc.getContent().isEmpty()) {
-//                                throw new DBMissingDataException("doesn't exist");
-//                            }
-//                            return BoardHelper.getCompactBoard(controllerState, dc, numOfExpectings.getOrDefault(dc.getName(),
-//                                    new ConcurrentHashMap<>()));
-//                        } catch (Throwable e) {
-//                            if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-//                                LOGGER.info(jocError.printMetaInfo());
-//                                jocError.clearMetaInfo();
-//                            }
-//                            LOGGER.error(String.format("[%s] %s", dc.getPath(), e.toString()));
-//                            return null;
-//                        }
-//                    }).filter(Objects::nonNull).collect(Collectors.toList()));
-//                } else {
-//                    Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
-//                    List<ExpectingOrder> eos = BoardHelper.getExpectingOrdersStream(controllerState, boardNames, folders).collect(Collectors
-//                            .toList());
-//                    ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> expectings = BoardHelper.getExpectingOrders(eos.stream());
-//                    Map<String, Set<String>> orderTags = OrderTags.getTags(controllerId, eos.stream().map(ExpectingOrder::getJOrder), session);
-//
-//                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
-//                        try {
-//                            if (dc.getContent() == null || dc.getContent().isEmpty()) {
-//                                throw new DBMissingDataException("doesn't exist");
-//                            }
-//                            return BoardHelper.getBoard(controllerState, dc, expectings.getOrDefault(dc.getName(), new ConcurrentHashMap<>()),
-//                                    orderTags, limit, zoneId, surveyDateMillis, dbLayer.getSession());
-//                        } catch (Throwable e) {
-//                            if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-//                                LOGGER.info(jocError.printMetaInfo());
-//                                jocError.clearMetaInfo();
-//                            }
-//                            LOGGER.error(String.format("[%s] %s", dc.getPath(), e.toString()));
-//                            return null;
-//                        }
-//                    }).filter(Objects::nonNull).collect(Collectors.toList()));
-//                }
             }
             answer.setDeliveryDate(now);
             return answer;

@@ -131,10 +131,11 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             plan.setNumOfOrders(jOrders.mapToInt(o -> 1).sum());
         } else {
             Map<String, Set<String>> orderTags = getOrderTags(filter.getControllerId(), jp);
+            Long surveyDateMillis = currentState.instant().toEpochMilli();
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
-                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, null, zoneId);
+                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
                 } catch (Exception e) {
                     return null;
                 }
@@ -167,14 +168,21 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
     
     private List<Board> getBoards(Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<String, OrderV> orders) {
         try {
-            List<String> boardPaths = jBoards.keySet().stream().map(BoardPath::string).collect(Collectors.toList());
-            if (boardPaths.isEmpty()) {
+            
+            Stream<String> availableBoardNames = jBoards.keySet().stream().map(BoardPath::string);
+            if (filter.getNoticeBoardPaths() != null && !filter.getNoticeBoardPaths().isEmpty()) {
+                Set<String> requestedBoardNames = filter.getNoticeBoardPaths().stream().map(JocInventory::pathToName).collect(Collectors.toSet());
+                availableBoardNames.filter(bp -> requestedBoardNames.contains(bp));
+            }
+            List<String> boardNames = availableBoardNames.collect(Collectors.toList()); 
+            if (boardNames.isEmpty()) {
                 return null;
             }
             
             BoardsFilter bFilter = new BoardsFilter();
             bFilter.setControllerId(filter.getControllerId());
-            bFilter.setNoticeBoardPaths(boardPaths);
+            bFilter.setNoticeBoardPaths(boardNames);
+            bFilter.setLimit(filter.getLimit());
             
             return getBoards(bFilter, jBoards, orders, Boolean.TRUE == filter.getCompact());
         } catch (Exception e) {
@@ -249,11 +257,8 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             JocError jocError = getJocError();
             if (contents != null) {
                 
-                PlannedBoards plB = new PlannedBoards(jBoards, orders, compact);
+                PlannedBoards plB = new PlannedBoards(jBoards, orders, compact, filter.getLimit());
                 
-                // TODO introduce limit?
-                //Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
-
                 return contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {

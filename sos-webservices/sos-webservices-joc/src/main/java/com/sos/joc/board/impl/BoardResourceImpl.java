@@ -70,9 +70,9 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
         try {
             Board answer = new Board();
             String controllerId = filter.getControllerId();
-            answer.setSurveyDate(Date.from(Instant.now()));
+            Instant surveyInstant = Instant.now();
+            answer.setSurveyDate(Date.from(surveyInstant));
             final JControllerState currentState = BoardHelper.getCurrentState(controllerId);
-            long surveyDateMillis = Instant.now().toEpochMilli();
             List<JPlannedBoard> pbs = Collections.emptyList();
             
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -86,9 +86,8 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             
             BoardPath boardPath = BoardPath.of(dc.getName());
             if (currentState != null) {
-                Instant surveyInstant = currentState.instant();
+                surveyInstant = currentState.instant();
                 answer.setSurveyDate(Date.from(surveyInstant));
-                surveyDateMillis = surveyInstant.toEpochMilli();
                 pbs = currentState.toPlan().values().stream().map(JPlan::toPlannedBoard).map(m -> m.get(boardPath)).filter(Objects::nonNull).collect(
                         Collectors.toList());
             }
@@ -102,10 +101,11 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                         JNoticePlace::expectingOrderIds).flatMap(Collection::stream).collect(Collectors.toSet());
 
                 Map<String, Set<String>> orderTags = OrderTags.getTagsByOrderIds(controllerId, eos.stream().map(OrderId::string), session);
-
+                long surveyDateMillis = surveyInstant.toEpochMilli();
+                
                 Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                     try {
-                        return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, null, zoneId);
+                        return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
                     } catch (Exception e) {
                         return null;
                     }
@@ -115,25 +115,9 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                         .filter(Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
             }
             
-            PlannedBoards plB = new PlannedBoards(Collections.singletonMap(boardPath, pbs), orders, filter.getCompact() == Boolean.TRUE,
-                    currentState);
+            PlannedBoards plB = new PlannedBoards(Collections.singletonMap(boardPath, pbs), orders, filter.getCompact() == Boolean.TRUE, filter
+                    .getLimit(), currentState);
             answer.setNoticeBoard(plB.getPlannedBoard(dc));
-            
-//            if (filter.getCompact() == Boolean.TRUE) {
-//                ConcurrentMap<NoticeId, Integer> numOfExpectings = BoardHelper.getNumOfExpectingOrders(currentState, Collections.singleton(BoardPath
-//                        .of(dc.getName())), folderPermissions.getListOfFolders()).getOrDefault(dc.getName(), new ConcurrentHashMap<>());
-//                answer.setNoticeBoard(BoardHelper.getCompactBoard(currentState, dc, numOfExpectings));
-//            } else {
-//                Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
-//                List<ExpectingOrder> eos = BoardHelper.getExpectingOrdersStream(currentState, Collections.singleton(BoardPath.of(dc.getName())),
-//                        folderPermissions.getListOfFolders()).collect(Collectors.toList());
-//                ConcurrentMap<NoticeId, List<JOrder>> expectings = BoardHelper.getExpectingOrders(eos.stream()).getOrDefault(dc.getName(),
-//                        new ConcurrentHashMap<>());
-//                Map<String, Set<String>> orderTags = OrderTags.getTags(filter.getControllerId(), eos.stream().map(ExpectingOrder::getJOrder),
-//                        session);
-//                answer.setNoticeBoard(BoardHelper.getBoard(currentState, dc, expectings, orderTags, limit, OrdersHelper.getDailyPlanTimeZone(),
-//                        surveyDateMillis, session));
-//            }
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;
         } catch (Throwable e) {

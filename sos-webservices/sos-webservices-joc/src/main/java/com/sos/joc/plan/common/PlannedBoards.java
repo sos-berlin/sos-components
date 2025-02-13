@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -34,26 +36,30 @@ import js7.data_for_java.controller.JControllerState;
 
 public class PlannedBoards {
 
+    private final static int limitOrdersDefault = 10000;
     private final Map<BoardPath, ?> jBoards;
     private final Map<String, OrderV> orders;
     private final boolean compact;
     private final JControllerState controllerState;
     private final boolean withSysncState;
+    private final Integer limitOrders;
 
-    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<String, OrderV> orders, boolean compact, JControllerState controllerState) {
+    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<String, OrderV> orders, boolean compact, Integer limit, JControllerState controllerState) {
         this.jBoards = jBoards;
         this.orders = orders;
         this.compact = compact;
         this.controllerState = controllerState;
         this.withSysncState = true;
+        this.limitOrders = limit == null ? limitOrdersDefault : limit;
     }
     
-    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<String, OrderV> orders, boolean compact) {
+    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<String, OrderV> orders, boolean compact, Integer limit) {
         this.jBoards = jBoards;
         this.orders = orders;
         this.compact = compact;
         this.controllerState = null;
         this.withSysncState = false;
+        this.limitOrders = limit == null ? limitOrdersDefault : limit;
     }
     
     @SuppressWarnings("unchecked")
@@ -73,23 +79,26 @@ public class PlannedBoards {
     private Board getPlannedBoard(Board item, Collection<JPlannedBoard> pbs) throws JsonParseException, JsonMappingException, IOException {
 
         int numOfExpectingOrders = 0;
+        int numOfAnnouncements = 0;
         int numOfNotices = 0;
         List<Notice> notices = new ArrayList<>();
         for (JPlannedBoard pb : pbs) {
-            PlanId planid = pb.id().planId();
+            numOfAnnouncements += pb.toNoticePlace().values().stream().mapToInt(this::getNumOfAnnouncements).sum();
             numOfExpectingOrders += pb.toNoticePlace().values().stream().mapToInt(this::getNumOfExpectingOrders).sum();
             if (compact) {
                 numOfNotices += pb.toNoticePlace().values().stream().mapToInt(this::getNumOfNotices).sum();
             } else {
+                PlanId planid = pb.id().planId();
                 notices.addAll(pb.toNoticePlace().entrySet().stream().flatMap(e -> getNotices(planid, e.getKey(), e.getValue()).stream()).collect(
                         Collectors.toList()));
             }
         }
 
         item.setNumOfExpectingOrders(numOfExpectingOrders);
+        item.setNumOfAnnouncements(numOfAnnouncements);
         if (!compact) {
-            item.setNotices(notices); // TODO sort by scheduledFor?
-            item.setNumOfNotices(notices.size());
+            item.setNotices(notices);
+            item.setNumOfNotices(notices.size() - numOfAnnouncements);
         } else {
             item.setNumOfNotices(numOfNotices);
         }
@@ -124,8 +133,11 @@ public class PlannedBoards {
         Notice notice = new Notice();
         notice.setId(noticeKeyShortString);
         if (!np.expectingOrderIds().isEmpty()) {
-            notice.setExpectingOrders(np.expectingOrderIds().stream().map(OrderId::string).map(this.orders::get).filter(Objects::nonNull).collect(
-                    Collectors.toList()));
+            Stream<OrderV> expectingOrders = np.expectingOrderIds().stream().map(OrderId::string).map(this.orders::get).filter(Objects::nonNull);
+            if (limitOrders > -1 && np.expectingOrderIds().size() > limitOrders) {
+                expectingOrders = expectingOrders.sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders.longValue());
+            }
+            notice.setExpectingOrders(expectingOrders.collect(Collectors.toList()));
             // TODO notice.setWorkflowTagsPerWorkflow();
         }
         notice.setState(BoardHelper.getState(NoticeStateText.EXPECTED, np.isAnnounced()));
@@ -133,11 +145,11 @@ public class PlannedBoards {
     }
     
     private int getNumOfNotices(JNoticePlace np) {
-        int count = np.isAnnounced() ? 1 : 0;
-        if (np.notice().isPresent()) {
-            count++; 
-        }
-        return count;
+        return np.notice().isPresent() ? 1 : 0;
+    }
+    
+    private int getNumOfAnnouncements(JNoticePlace np) {
+        return np.isAnnounced() ? 1 : 0;
     }
     
     private int getNumOfExpectingOrders(JNoticePlace np) {
@@ -157,6 +169,7 @@ public class PlannedBoards {
     
     private Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
         Board item = Globals.objectMapper.readValue(dc.getContent(), Board.class);
+        item.setTYPE(null);
         item.setPath(dc.getPath());
         item.setVersionDate(dc.getCreated());
         item.setVersion(null);
