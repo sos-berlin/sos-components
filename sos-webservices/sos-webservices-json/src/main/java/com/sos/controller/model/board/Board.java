@@ -27,8 +27,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "versionDate",
     "state",
     "numOfNotices",
-    "numOfExpectingOrders",
     "numOfAnnouncements",
+    "numOfPostedNotices",
+    "numOfExpectedNotices",
+    "numOfExpectingOrders",
     "notices"
 })
 public class Board
@@ -75,16 +77,32 @@ public class Board
      * 
      * 
      */
-    @JsonProperty("numOfExpectingOrders")
-    private Integer numOfExpectingOrders;
+    @JsonProperty("numOfAnnouncements")
+    private Integer numOfAnnouncements;
     /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("numOfAnnouncements")
-    private Integer numOfAnnouncements;
+    @JsonProperty("numOfPostedNotices")
+    private Integer numOfPostedNotices;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectedNotices")
+    private Integer numOfExpectedNotices;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectingOrders")
+    private Integer numOfExpectingOrders;
     @JsonProperty("notices")
     private List<Notice> notices = null;
 
@@ -97,8 +115,10 @@ public class Board
 
     /**
      * 
+     * @param numOfExpectedNotices
      * @param boardType
      * @param numOfNotices
+     * @param numOfPostedNotices
      * @param expectOrderToNoticeId
      * @param title
      * @param versionDate
@@ -112,14 +132,16 @@ public class Board
      * @param documentationName
      * @param numOfAnnouncements
      */
-    public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfExpectingOrders, Integer numOfAnnouncements, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
+    public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
         super(boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
         this.numOfNotices = numOfNotices;
-        this.numOfExpectingOrders = numOfExpectingOrders;
         this.numOfAnnouncements = numOfAnnouncements;
+        this.numOfPostedNotices = numOfPostedNotices;
+        this.numOfExpectedNotices = numOfExpectedNotices;
+        this.numOfExpectingOrders = numOfExpectingOrders;
         this.notices = notices;
     }
 
@@ -217,28 +239,6 @@ public class Board
      * 
      * 
      */
-    @JsonProperty("numOfExpectingOrders")
-    public Integer getNumOfExpectingOrders() {
-        return numOfExpectingOrders;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfExpectingOrders")
-    public void setNumOfExpectingOrders(Integer numOfExpectingOrders) {
-        this.numOfExpectingOrders = numOfExpectingOrders;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("numOfAnnouncements")
     public Integer getNumOfAnnouncements() {
         return numOfAnnouncements;
@@ -255,6 +255,72 @@ public class Board
         this.numOfAnnouncements = numOfAnnouncements;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfPostedNotices")
+    public Integer getNumOfPostedNotices() {
+        return numOfPostedNotices;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfPostedNotices")
+    public void setNumOfPostedNotices(Integer numOfPostedNotices) {
+        this.numOfPostedNotices = numOfPostedNotices;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectedNotices")
+    public Integer getNumOfExpectedNotices() {
+        return numOfExpectedNotices;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectedNotices")
+    public void setNumOfExpectedNotices(Integer numOfExpectedNotices) {
+        this.numOfExpectedNotices = numOfExpectedNotices;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectingOrders")
+    public Integer getNumOfExpectingOrders() {
+        return numOfExpectingOrders;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectingOrders")
+    public void setNumOfExpectingOrders(Integer numOfExpectingOrders) {
+        this.numOfExpectingOrders = numOfExpectingOrders;
+    }
+
     @JsonProperty("notices")
     public List<Notice> getNotices() {
         return notices;
@@ -267,7 +333,7 @@ public class Board
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("numOfNotices", numOfNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("numOfAnnouncements", numOfAnnouncements).append("notices", notices).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("numOfNotices", numOfNotices).append("numOfAnnouncements", numOfAnnouncements).append("numOfPostedNotices", numOfPostedNotices).append("numOfExpectedNotices", numOfExpectedNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("notices", notices).toString();
     }
 
     @Override

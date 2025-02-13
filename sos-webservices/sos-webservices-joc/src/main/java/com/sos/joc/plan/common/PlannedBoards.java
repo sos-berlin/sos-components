@@ -80,14 +80,16 @@ public class PlannedBoards {
 
         int numOfExpectingOrders = 0;
         int numOfAnnouncements = 0;
-        int numOfNotices = 0;
+        int numOfExpectedNotices = 0;
+        int numOfPostedNotices = 0;
         List<Notice> notices = new ArrayList<>();
         for (JPlannedBoard pb : pbs) {
-            numOfAnnouncements += pb.toNoticePlace().values().stream().mapToInt(this::getNumOfAnnouncements).sum();
-            numOfExpectingOrders += pb.toNoticePlace().values().stream().mapToInt(this::getNumOfExpectingOrders).sum();
-            if (compact) {
-                numOfNotices += pb.toNoticePlace().values().stream().mapToInt(this::getNumOfNotices).sum();
-            } else {
+            Collection<JNoticePlace> noticePlaces = pb.toNoticePlace().values();
+            numOfAnnouncements += noticePlaces.stream().mapToInt(this::getNumOfAnnouncements).sum();
+            numOfPostedNotices += noticePlaces.stream().mapToInt(this::getNumOfPostedNotices).sum();
+            numOfExpectedNotices += noticePlaces.stream().mapToInt(this::getNumOfExpectedNotices).sum();
+            numOfExpectingOrders += noticePlaces.stream().mapToInt(this::getNumOfExpectingOrders).sum();
+            if (!compact) {
                 PlanId planid = pb.id().planId();
                 notices.addAll(pb.toNoticePlace().entrySet().stream().flatMap(e -> getNotices(planid, e.getKey(), e.getValue()).stream()).collect(
                         Collectors.toList()));
@@ -96,11 +98,13 @@ public class PlannedBoards {
 
         item.setNumOfExpectingOrders(numOfExpectingOrders);
         item.setNumOfAnnouncements(numOfAnnouncements);
+        item.setNumOfExpectedNotices(numOfExpectedNotices);
+        item.setNumOfPostedNotices(numOfPostedNotices);
         if (!compact) {
             item.setNotices(notices);
-            item.setNumOfNotices(notices.size() - numOfAnnouncements);
+            item.setNumOfNotices(notices.size());
         } else {
-            item.setNumOfNotices(numOfNotices);
+            item.setNumOfNotices(numOfExpectedNotices + numOfAnnouncements + numOfPostedNotices);
         }
         return item;
     }
@@ -144,9 +148,6 @@ public class PlannedBoards {
         return notice;
     }
     
-    private int getNumOfNotices(JNoticePlace np) {
-        return np.notice().isPresent() ? 1 : 0;
-    }
     
     private int getNumOfAnnouncements(JNoticePlace np) {
         return np.isAnnounced() ? 1 : 0;
@@ -154,6 +155,14 @@ public class PlannedBoards {
     
     private int getNumOfExpectingOrders(JNoticePlace np) {
         return np.expectingOrderIds().size();
+    }
+    
+    private int getNumOfPostedNotices(JNoticePlace np) {
+        return np.notice().isPresent() ? 1 : 0;
+    }
+    
+    private int getNumOfExpectedNotices(JNoticePlace np) {
+        return np.expectingOrderIds().isEmpty() ? 0 : 1;
     }
     
     private SyncStateText getSyncStateText(BoardPath boardpath) {

@@ -1,10 +1,14 @@
 
 package com.sos.joc.model.board;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.sos.joc.model.plan.PlanSchemaId;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -19,6 +23,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
+    "planSchemaIds",
+    "planKeys",
     "noticeBoardPath",
     "compact",
     "limit"
@@ -34,6 +40,17 @@ public class BoardFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    @JsonProperty("planSchemaIds")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<PlanSchemaId> planSchemaIds = new LinkedHashSet<PlanSchemaId>();
+    /**
+     * Will be ignored for global schema because it has no plan keys
+     * 
+     */
+    @JsonProperty("planKeys")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("Will be ignored for global schema because it has no plan keys")
+    private Set<String> planKeys = new LinkedHashSet<String>();
     /**
      * string without < and >
      * <p>
@@ -82,6 +99,34 @@ public class BoardFilter {
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
+    }
+
+    @JsonProperty("planSchemaIds")
+    public Set<PlanSchemaId> getPlanSchemaIds() {
+        return planSchemaIds;
+    }
+
+    @JsonProperty("planSchemaIds")
+    public void setPlanSchemaIds(Set<PlanSchemaId> planSchemaIds) {
+        this.planSchemaIds = planSchemaIds;
+    }
+
+    /**
+     * Will be ignored for global schema because it has no plan keys
+     * 
+     */
+    @JsonProperty("planKeys")
+    public Set<String> getPlanKeys() {
+        return planKeys;
+    }
+
+    /**
+     * Will be ignored for global schema because it has no plan keys
+     * 
+     */
+    @JsonProperty("planKeys")
+    public void setPlanKeys(Set<String> planKeys) {
+        this.planKeys = planKeys;
     }
 
     /**
@@ -150,12 +195,12 @@ public class BoardFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPath", noticeBoardPath).append("compact", compact).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("planSchemaIds", planSchemaIds).append("planKeys", planKeys).append("noticeBoardPath", noticeBoardPath).append("compact", compact).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(noticeBoardPath).append(limit).append(controllerId).append(compact).toHashCode();
+        return new HashCodeBuilder().append(planSchemaIds).append(planKeys).append(controllerId).append(compact).append(noticeBoardPath).append(limit).toHashCode();
     }
 
     @Override
@@ -167,7 +212,7 @@ public class BoardFilter {
             return false;
         }
         BoardFilter rhs = ((BoardFilter) other);
-        return new EqualsBuilder().append(noticeBoardPath, rhs.noticeBoardPath).append(limit, rhs.limit).append(controllerId, rhs.controllerId).append(compact, rhs.compact).isEquals();
+        return new EqualsBuilder().append(planSchemaIds, rhs.planSchemaIds).append(planKeys, rhs.planKeys).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(noticeBoardPath, rhs.noticeBoardPath).append(limit, rhs.limit).isEquals();
     }
 
 }

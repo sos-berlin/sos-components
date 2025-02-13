@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,12 +37,14 @@ import com.sos.joc.model.board.Boards;
 import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
+import com.sos.joc.model.plan.PlanSchemaId;
 import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 import js7.data.board.BoardPath;
 import js7.data.order.OrderId;
+import js7.data.plan.PlanId;
 import js7.data_for_java.board.JNoticePlace;
 import js7.data_for_java.board.JPlannedBoard;
 import js7.data_for_java.controller.JControllerState;
@@ -121,11 +124,10 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             JocError jocError = getJocError();
             if (contents != null) {
                 Set<BoardPath> boardNames = contents.stream().map(DeployedContent::getName).map(BoardPath::of).collect(Collectors.toSet());
-                Map<BoardPath, List<JPlannedBoard>> jBoards = getPathToBoard(controllerState, boardNames);
+                Map<BoardPath, List<JPlannedBoard>> jBoards = getPathToBoard(controllerState, boardNames, filter);
                 
                 Map<String, OrderV> orders = Collections.emptyMap();
                 if (filter.getCompact() != Boolean.TRUE) {
-                    Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
                     
                     Set<OrderId> eos = jBoards.values().stream().flatMap(Collection::stream).map(JPlannedBoard::toNoticePlace).map(Map::values)
                             .flatMap(Collection::stream).map(JNoticePlace::expectingOrderIds).flatMap(Collection::stream).collect(Collectors.toSet());
@@ -172,11 +174,24 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
         }
     }
     
-    private Map<BoardPath, List<JPlannedBoard>> getPathToBoard(JControllerState currentState, Set<BoardPath> boards) {
+    private Map<BoardPath, List<JPlannedBoard>> getPathToBoard(JControllerState currentState, Set<BoardPath> boards, BoardsFilter filter) {
         if (currentState == null) {
             return Collections.emptyMap();
         }
-        Stream<Map.Entry<BoardPath, JPlannedBoard>> stream = currentState.toPlan().values().stream().map(JPlan::toPlannedBoard).flatMap(m -> m
+        
+        Stream<Map.Entry<PlanId, JPlan>> plansStream = currentState.toPlan().entrySet().stream();
+        
+        if (filter.getPlanSchemaIds() != null && !filter.getPlanSchemaIds().isEmpty()) {
+            Set<String> schemaIds = filter.getPlanSchemaIds().stream().map(PlanSchemaId::name).collect(Collectors.toSet());
+            plansStream = plansStream.filter(e -> schemaIds.contains(e.getKey().planSchemaId().string()));
+        }
+        if (filter.getPlanKeys() != null && !filter.getPlanKeys().isEmpty()) {
+            Predicate<Map.Entry<PlanId, JPlan>> planKeyFilter = e -> e.getKey().isGlobal() || filter.getPlanKeys().stream().map(pk -> pk.replace("*",
+                    ".*").replace("?", ".")).anyMatch(pk -> e.getKey().planKey().string().matches(pk));
+            plansStream = plansStream.filter(planKeyFilter);
+        }
+        
+        Stream<Map.Entry<BoardPath, JPlannedBoard>> stream = plansStream.map(Map.Entry::getValue).map(JPlan::toPlannedBoard).flatMap(m -> m
                 .entrySet().stream());
         if (boards != null) {
             stream = stream.filter(e -> boards.contains(e.getKey()));

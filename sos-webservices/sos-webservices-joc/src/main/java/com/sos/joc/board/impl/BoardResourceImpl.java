@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
@@ -28,12 +30,14 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.board.Board;
 import com.sos.joc.model.board.BoardFilter;
 import com.sos.joc.model.order.OrderV;
+import com.sos.joc.model.plan.PlanSchemaId;
 import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 import js7.data.board.BoardPath;
 import js7.data.order.OrderId;
+import js7.data.plan.PlanId;
 import js7.data_for_java.board.JNoticePlace;
 import js7.data_for_java.board.JPlannedBoard;
 import js7.data_for_java.controller.JControllerState;
@@ -88,13 +92,25 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             if (currentState != null) {
                 surveyInstant = currentState.instant();
                 answer.setSurveyDate(Date.from(surveyInstant));
-                pbs = currentState.toPlan().values().stream().map(JPlan::toPlannedBoard).map(m -> m.get(boardPath)).filter(Objects::nonNull).collect(
+                
+                Stream<Map.Entry<PlanId, JPlan>> plansStream = currentState.toPlan().entrySet().stream();
+                
+                if (filter.getPlanSchemaIds() != null && !filter.getPlanSchemaIds().isEmpty()) {
+                    Set<String> schemaIds = filter.getPlanSchemaIds().stream().map(PlanSchemaId::name).collect(Collectors.toSet());
+                    plansStream = plansStream.filter(e -> schemaIds.contains(e.getKey().planSchemaId().string()));
+                }
+                if (filter.getPlanKeys() != null && !filter.getPlanKeys().isEmpty()) {
+                    Predicate<Map.Entry<PlanId, JPlan>> planKeyFilter = e -> e.getKey().isGlobal() || filter.getPlanKeys().stream().map(pk -> pk
+                            .replace("*", ".*").replace("?", ".")).anyMatch(pk -> e.getKey().planKey().string().matches(pk));
+                    plansStream = plansStream.filter(planKeyFilter);
+                }
+                
+                pbs = plansStream.map(Map.Entry::getValue).map(JPlan::toPlannedBoard).map(m -> m.get(boardPath)).filter(Objects::nonNull).collect(
                         Collectors.toList());
             }
             
             Map<String, OrderV> orders = Collections.emptyMap();
             if (filter.getCompact() != Boolean.TRUE) {
-                Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
                 ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
                 Set<OrderId> eos = pbs.stream().map(JPlannedBoard::toNoticePlace).map(Map::values).flatMap(Collection::stream).map(

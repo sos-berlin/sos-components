@@ -3,11 +3,13 @@ package com.sos.joc.plan.impl;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,6 +60,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
     private static final String API_CALL = "./plans";
     private static final Logger LOGGER = LoggerFactory.getLogger(PlansResourceImpl.class);
     private static final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
+    private final static int limitOrdersDefault = 10000;
     private SOSHibernateSession session = null;
     private JControllerState currentState = null;
 
@@ -132,19 +135,27 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         } else {
             Map<String, Set<String>> orderTags = getOrderTags(filter.getControllerId(), jp);
             Long surveyDateMillis = currentState.instant().toEpochMilli();
+            AtomicInteger counter = new AtomicInteger(0);
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
+                    counter.incrementAndGet();
                     return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
                 } catch (Exception e) {
                     return null;
                 }
             };
 
-            orders = jOrders.map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
+            Stream<OrderV> ordersStream = jOrders.map(mapJOrderToOrderV).filter(Objects::nonNull);
+            
+            Integer limitOrders = filter.getLimit() == null ? limitOrdersDefault : filter.getLimit();
+            if (limitOrders > -1 && jp.orderIds().size() > limitOrders) {
+                ordersStream = ordersStream.sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders.longValue()); 
+            }
+            orders = ordersStream.collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
 
-            plan.setOrders(orders.values()); // TODO sort by scheduledFor?
-            plan.setNumOfOrders(orders.size());
+            plan.setOrders(orders.values());
+            plan.setNumOfOrders(counter.get());
         }
 
         plan.setNoticeBoards(getBoards(jp.toPlannedBoard(), filter, orders));
