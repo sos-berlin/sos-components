@@ -25,7 +25,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "planSchemaIds",
     "planKeys",
     "onlyOpenPlans",
-    "onlyClosedPlans"
+    "onlyClosedPlans",
+    "compact"
 })
 public class PlansFilter {
 
@@ -42,17 +43,19 @@ public class PlansFilter {
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<PlanSchemaId> planSchemaIds = new LinkedHashSet<PlanSchemaId>();
     /**
-     * Will be ignored for global schema bacause it has no plan keys
+     * Will be ignored for global schema because it has no plan keys
      * 
      */
     @JsonProperty("planKeys")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    @JsonPropertyDescription("Will be ignored for global schema bacause it has no plan keys")
+    @JsonPropertyDescription("Will be ignored for global schema because it has no plan keys")
     private Set<String> planKeys = new LinkedHashSet<String>();
     @JsonProperty("onlyOpenPlans")
     private Boolean onlyOpenPlans = false;
     @JsonProperty("onlyClosedPlans")
     private Boolean onlyClosedPlans = false;
+    @JsonProperty("compact")
+    private Boolean compact = false;
 
     /**
      * controllerId
@@ -89,7 +92,7 @@ public class PlansFilter {
     }
 
     /**
-     * Will be ignored for global schema bacause it has no plan keys
+     * Will be ignored for global schema because it has no plan keys
      * 
      */
     @JsonProperty("planKeys")
@@ -98,7 +101,7 @@ public class PlansFilter {
     }
 
     /**
-     * Will be ignored for global schema bacause it has no plan keys
+     * Will be ignored for global schema because it has no plan keys
      * 
      */
     @JsonProperty("planKeys")
@@ -126,14 +129,24 @@ public class PlansFilter {
         this.onlyClosedPlans = onlyClosedPlans;
     }
 
+    @JsonProperty("compact")
+    public Boolean getCompact() {
+        return compact;
+    }
+
+    @JsonProperty("compact")
+    public void setCompact(Boolean compact) {
+        this.compact = compact;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("planSchemaIds", planSchemaIds).append("planKeys", planKeys).append("onlyOpenPlans", onlyOpenPlans).append("onlyClosedPlans", onlyClosedPlans).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("planSchemaIds", planSchemaIds).append("planKeys", planKeys).append("onlyOpenPlans", onlyOpenPlans).append("onlyClosedPlans", onlyClosedPlans).append("compact", compact).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planSchemaIds).append(planKeys).append(onlyOpenPlans).append(onlyClosedPlans).append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(planSchemaIds).append(planKeys).append(controllerId).append(compact).append(onlyOpenPlans).append(onlyClosedPlans).toHashCode();
     }
 
     @Override
@@ -145,7 +158,7 @@ public class PlansFilter {
             return false;
         }
         PlansFilter rhs = ((PlansFilter) other);
-        return new EqualsBuilder().append(planSchemaIds, rhs.planSchemaIds).append(planKeys, rhs.planKeys).append(onlyOpenPlans, rhs.onlyOpenPlans).append(onlyClosedPlans, rhs.onlyClosedPlans).append(controllerId, rhs.controllerId).isEquals();
+        return new EqualsBuilder().append(planSchemaIds, rhs.planSchemaIds).append(planKeys, rhs.planKeys).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(onlyOpenPlans, rhs.onlyOpenPlans).append(onlyClosedPlans, rhs.onlyClosedPlans).isEquals();
     }
 
 }

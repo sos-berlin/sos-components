@@ -2011,11 +2011,15 @@ public class OrdersHelper {
         return endPoss;
     }
     
-    public static Stream<JOrder> getJOrdersFromOrderIds(Collection<OrderId> orderids, JControllerState controllerState) {
-        return orderids.stream().map(o -> controllerState.idToOrder().get(o)).filter(Objects::nonNull);
+    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Collection<OrderId> orderids, Set<Folder> permittedFolders, JControllerState controllerState) {
+        return getPermittedJOrdersFromOrderIds(orderids.stream(), permittedFolders, controllerState);
     }
     
-    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Collection<OrderId> orderids, Set<Folder> permittedFolders, JControllerState controllerState) {
+    public static Stream<JOrder> getJOrdersFromOrderIds(Stream<OrderId> orderids, JControllerState controllerState) {
+        return orderids.map(o -> controllerState.idToOrder().get(o)).filter(Objects::nonNull);
+    }
+    
+    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Stream<OrderId> orderids, Set<Folder> permittedFolders, JControllerState controllerState) {
         Stream<JOrder> orders = getJOrdersFromOrderIds(orderids, controllerState);
         if (permittedFolders != null && !permittedFolders.isEmpty()) {
             orders = orders.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));

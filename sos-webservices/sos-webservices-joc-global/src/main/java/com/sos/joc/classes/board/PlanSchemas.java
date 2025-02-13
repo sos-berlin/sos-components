@@ -34,7 +34,7 @@ public class PlanSchemas {
 
         {
             put("DailyPlan", JPlanSchema.of(PlanSchemaId.of("DailyPlan"), JExpression.apply(
-                    "match($js7OrderId, '#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*', '$1') ?"), Optional.empty()));
+                    "match($js7OrderId, '#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*', '$1') ?"), Optional.empty(), Collections.emptyMap()));
         }
     });
 
@@ -68,7 +68,8 @@ public class PlanSchemas {
     }
     
     private static Map<Boolean, List<JPlanSchema>> getGroupedPlanSchemas(JControllerState currentState) {
-        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.planKeyExpr(), ps.planIsClosedFunction());
+        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.planKeyExpr(), ps.planIsClosedFunction(), ps
+                .namedValues());
         Set<JPlanSchema> knownPlanSchemas = currentState.idToPlanSchemaState().values().stream().filter(p -> !p.asScala().isGlobal()).map(
                 JPlanSchemaState::item).map(cloneWithoutRevision).collect(Collectors.toSet());
         return planSchemas.values().stream().collect(Collectors.groupingBy(sp -> knownPlanSchemas.contains(sp)));

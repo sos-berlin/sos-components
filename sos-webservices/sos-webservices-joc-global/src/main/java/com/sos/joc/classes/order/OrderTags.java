@@ -27,10 +27,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -613,38 +615,88 @@ public class OrderTags {
             return Collections.emptyMap();
         }
         
-        Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds);
+        if (orderIds.size() > 2000) { // TODO 2000? maybe a different number? 
+            /* MS SQL Server: 8003 The incoming request has too many parameters. The server supports a maximum of 2100 parameters. 
+             * Reduce the number of parameters and resend the request.
+             */
+            
+            Function<String, Date> toDate = s -> {
+                try {
+                    return SOSDate.getDate(s);
+                } catch (SOSInvalidDataException e) {
+                    return null;
+                }
+            };
+            Set<Date> dailyPlanDates = orderIds.stream().map(s -> s.substring(1, 11)).map(toDate).filter(Objects::nonNull).collect(Collectors.toSet());
+            
+            StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as groupName from ");
+            hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
+            hql.append(" g on t.groupId = g.id");
 
-        StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as groupName from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
-        hql.append(" g on t.groupId = g.id");
-        
-        List<String> clauses = new ArrayList<>(2);
-        if (!controllerId.isBlank()) {
-            clauses.add("t.controllerId=:controllerId");
-        }
-        String clause = IntStream.range(0, chunkedOrderIds.size()).mapToObj(i -> "t.orderId in (:orderIds" + i + ")").collect(Collectors.joining(
-                " or "));
-        if (chunkedOrderIds.size() > 1) {
-            clause = "(" + clause + ")";
-        }
-        clauses.add(clause);
-        hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by t.ordering");
+            List<String> clauses = new ArrayList<>(2);
+            if (!controllerId.isBlank()) {
+                clauses.add("t.controllerId=:controllerId");
+            }
+            if (dailyPlanDates.size() == 1) {
+                clauses.add("t.dailyPlanDate=:dailyPlanDate");
+            } else {
+                clauses.add("t.dailyPlanDate in (:dailyPlanDates)");
+            }
+            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by t.ordering");
+            
+            Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString(), DBItemHistoryOrderTag.class);
+            if (!controllerId.isBlank()) {
+                query.setParameter("controllerId", controllerId);
+            }
+            if (dailyPlanDates.size() == 1) {
+                query.setParameter("dailyPlanDate", dailyPlanDates.iterator().next(), TemporalType.TIMESTAMP);
+            } else {
+                query.setParameterList("dailyPlanDates", dailyPlanDates);
+            }
+            List<DBItemHistoryOrderTag> result = connection.getResultList(query);
+            if (result == null) {
+                return Collections.emptyMap();
+            }
+            Map<String, Set<String>> m = result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(
+                    DBItemHistoryOrderTag::getGroupedTag, Collectors.toCollection(LinkedHashSet::new))));
+            m.keySet().retainAll(orderIds);
+            return m;
+            
+        } else {
 
-        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString(), DBItemHistoryOrderTag.class);
-        if (!controllerId.isBlank()) {
-            query.setParameter("controllerId", controllerId);
+            Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds);
+
+            StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as groupName from ");
+            hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
+            hql.append(" g on t.groupId = g.id");
+
+            List<String> clauses = new ArrayList<>(2);
+            if (!controllerId.isBlank()) {
+                clauses.add("t.controllerId=:controllerId");
+            }
+            String clause = IntStream.range(0, chunkedOrderIds.size()).mapToObj(i -> "t.orderId in (:orderIds" + i + ")").collect(Collectors.joining(
+                    " or "));
+            if (chunkedOrderIds.size() > 1) {
+                clause = "(" + clause + ")";
+            }
+            clauses.add(clause);
+            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by t.ordering");
+
+            Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString(), DBItemHistoryOrderTag.class);
+            if (!controllerId.isBlank()) {
+                query.setParameter("controllerId", controllerId);
+            }
+            AtomicInteger counter = new AtomicInteger();
+            for (List<String> chunk : chunkedOrderIds) {
+                query.setParameterList("orderIds" + counter.getAndIncrement(), chunk);
+            }
+            List<DBItemHistoryOrderTag> result = connection.getResultList(query);
+            if (result == null) {
+                return Collections.emptyMap();
+            }
+            return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(
+                    DBItemHistoryOrderTag::getGroupedTag, Collectors.toCollection(LinkedHashSet::new))));
         }
-        AtomicInteger counter = new AtomicInteger();
-        for (List<String> chunk : chunkedOrderIds) {
-            query.setParameterList("orderIds" + counter.getAndIncrement(), chunk);
-        }
-        List<DBItemHistoryOrderTag> result = connection.getResultList(query);
-        if (result == null) {
-            return Collections.emptyMap();
-        }
-        return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getGroupedTag,
-                Collectors.toCollection(LinkedHashSet::new))));
     }
     
     public static List<DBItemHistoryOrderTag> getTagsByTagNames(Collection<String> tagNames, SOSHibernateSession connection)

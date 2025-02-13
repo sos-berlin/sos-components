@@ -122,7 +122,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         planId.setPlanKey(plankey);
         plan.setPlanId(planId);
         
-        Map<String, Set<String>> orderTags = getOrderTags(filter.getControllerId(), jp);
+        Map<String, Set<String>> orderTags = filter.getCompact() ? Collections.emptyMap() : getOrderTags(filter.getControllerId(), jp);
         
         Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
             try {
@@ -132,13 +132,16 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             }
         };
         
-        Map<String, OrderV> orders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState).map(
-                mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
-        
-        plan.setOrders(orders.values());
-//        plan.setOrders(OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState).map(
-//                mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
-        plan.setNoticeBoards(getBoards(pId, jp.toPlannedBoard(), filter, orders));
+        Map<String, OrderV> orders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState)
+                .map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
+        plan.setNumOfOrders(orders.size());
+
+        if (filter.getCompact()) {
+            plan.setOrders(null);
+        } else {
+            plan.setOrders(orders.values());
+        }
+        plan.setNoticeBoards(getBoards(jp.toPlannedBoard(), filter, orders));
         
         return plan;
     }
@@ -157,7 +160,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         return orderTags;
     }
     
-    private List<Board> getBoards(PlanId planId, Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<String, OrderV> orders) {
+    private List<Board> getBoards(Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<String, OrderV> orders) {
         try {
             List<String> boardPaths = jBoards.keySet().stream().map(BoardPath::string).collect(Collectors.toList());
             if (boardPaths.isEmpty()) {
@@ -168,11 +171,21 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             bFilter.setControllerId(filter.getControllerId());
             bFilter.setNoticeBoardPaths(boardPaths);
             
-            return getBoards(bFilter, planId, jBoards, orders);
+            return getBoards(bFilter, jBoards, orders, Boolean.TRUE == filter.getCompact());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+    
+//    private List<Plan> get1(PlansFilter filter) throws Exception {
+//        Set<BoardPath> boards = new HashSet<>();
+////        currentState.toPlan().values().stream().map(JPlan::toPlannedBoard).map(Map::values).flatMap(Collection::stream);
+////        currentState.toPlan().values().stream().map(JPlan::toPlannedBoard).map(m -> m.get(BoardPath.of("myBoard")));
+//        Map<BoardPath, List<JPlannedBoard>> m1 = currentState.toPlan().values().stream().map(JPlan::toPlannedBoard).flatMap(m -> m.entrySet().stream()).filter(e -> boards.contains(e.getKey())).collect(Collectors.groupingBy(e -> e.getKey(), Collectors.mapping(e -> e.getValue(), Collectors.toList())));
+//        m1.get(BoardPath.of("myBoard")).get(0).toNoticePlace()
+//        return currentState.toPlan().entrySet().stream().map(e -> getPlan(e.getKey(), e.getValue(), filter)).filter(Objects::nonNull).collect(
+//                Collectors.toList());
+//    }
     
     private List<Plan> get(PlansFilter filter) throws Exception {
         return currentState.toPlan().entrySet().stream().map(e -> getPlan(e.getKey(), e.getValue(), filter)).filter(Objects::nonNull).collect(
@@ -206,7 +219,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
 //    }
     
 
-    private List<Board> getBoards(BoardsFilter filter, PlanId planId, Map<BoardPath, JPlannedBoard> jBoards, Map<String, OrderV> orders)
+    private List<Board> getBoards(BoardsFilter filter, Map<BoardPath, JPlannedBoard> jBoards, Map<String, OrderV> orders, boolean compact)
             throws Exception {
         try {
             String controllerId = filter.getControllerId();
@@ -241,7 +254,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             JocError jocError = getJocError();
             if (contents != null) {
                 
-                PlannedBoards plB = new PlannedBoards(planId, jBoards, orders);
+                PlannedBoards plB = new PlannedBoards(jBoards, orders, compact);
                 
                 //Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
 

@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "planId",
+    "numOfOrders",
     "orders",
     "closed",
     "noticeBoards"
@@ -39,6 +40,15 @@ public class Plan {
      */
     @JsonProperty("planId")
     private PlanId planId;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("numOfOrders")
+    private Integer numOfOrders;
     @JsonProperty("orders")
     @JsonDeserialize(as = java.util.HashSet.class)
     private Collection<OrderV> orders = null;
@@ -74,6 +84,30 @@ public class Plan {
     @JsonProperty("planId")
     public void setPlanId(PlanId planId) {
         this.planId = planId;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("numOfOrders")
+    public Integer getNumOfOrders() {
+        return numOfOrders;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("numOfOrders")
+    public void setNumOfOrders(Integer numOfOrders) {
+        this.numOfOrders = numOfOrders;
     }
 
     @JsonProperty("orders")
@@ -118,12 +152,12 @@ public class Plan {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("planId", planId).append("orders", orders).append("closed", closed).append("noticeBoards", noticeBoards).toString();
+        return new ToStringBuilder(this).append("planId", planId).append("numOfOrders", numOfOrders).append("orders", orders).append("closed", closed).append("noticeBoards", noticeBoards).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(closed).append(planId).append(orders).append(noticeBoards).toHashCode();
+        return new HashCodeBuilder().append(closed).append(planId).append(orders).append(numOfOrders).append(noticeBoards).toHashCode();
     }
 
     @Override
@@ -135,7 +169,7 @@ public class Plan {
             return false;
         }
         Plan rhs = ((Plan) other);
-        return new EqualsBuilder().append(closed, rhs.closed).append(planId, rhs.planId).append(orders, rhs.orders).append(noticeBoards, rhs.noticeBoards).isEquals();
+        return new EqualsBuilder().append(closed, rhs.closed).append(planId, rhs.planId).append(orders, rhs.orders).append(numOfOrders, rhs.numOfOrders).append(noticeBoards, rhs.noticeBoards).isEquals();
     }
 
 }

@@ -3,14 +3,12 @@ package com.sos.joc.classes.calendar;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
@@ -113,13 +111,15 @@ public class DailyPlanCalendar {
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             Map<CalendarPath, JCalendar> knownCalendars = null;
             try {
-                JControllerApi api = ControllerApi.of(controllerId);
+                //JControllerApi api = ControllerApi.of(controllerId);
+                JControllerProxy proxy = Proxy.of(controllerId);
                 try {
-                    knownCalendars = api.controllerState().get(2, TimeUnit.SECONDS).map(JControllerState::pathToCalendar).getOrNull();
+                    //knownCalendars = api.controllerState().get(2, TimeUnit.SECONDS).map(JControllerState::pathToCalendar).getOrNull();
+                    knownCalendars = proxy.currentState().pathToCalendar();
                 } catch (Exception e1) {
                 }
                 if (!dailyPlanCalendarIsAlreadySubmitted(knownCalendars, calendar)) {
-                    api.updateItems(itemOperation).thenAccept(e -> {
+                    proxy.api().updateItems(itemOperation).thenAccept(e -> {
                         if (curControllerId != null && controllerId.equals(curControllerId)) {
                             ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
                         } else {
