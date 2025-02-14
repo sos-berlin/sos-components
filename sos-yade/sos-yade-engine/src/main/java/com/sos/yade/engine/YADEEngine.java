@@ -131,7 +131,7 @@ public class YADEEngine {
                 YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
                 /** 10) Source/Target: execute operation(COPY,MOVE,GETLIST,REMOVE) */
-                YADEOperationsManager.execute(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
+                YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
 
                 /** 11) Source/Target: execute commands after operation on success */
                 YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
@@ -169,7 +169,7 @@ public class YADEEngine {
                     YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
                     /** 10) Source/Target: execute operation(COPY,MOVE,GETLIST,REMOVE) */
-                    YADEOperationsManager.execute(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
+                    YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
 
                     /** 11) Source/Target: execute commands after operation on success */
                     YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);

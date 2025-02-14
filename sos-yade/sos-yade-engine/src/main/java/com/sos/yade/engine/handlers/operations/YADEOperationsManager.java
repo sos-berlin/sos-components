@@ -29,7 +29,7 @@ public class YADEOperationsManager {
      * - GetList<br/>
      */
     /** TODO not use "YADEArguments args" ... */
-    public static void execute(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
+    public static void process(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
             List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator) throws YADEEngineOperationException {
 
         TransferOperation operation = args.getOperation().getValue();
