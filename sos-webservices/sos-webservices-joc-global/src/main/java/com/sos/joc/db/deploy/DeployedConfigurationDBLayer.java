@@ -564,26 +564,26 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public List<WorkflowId> getUsedWorkflowsByPostNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
+    public <T extends WorkflowId> List<T> getUsedWorkflowsByPostNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getUsedWorkflowsByNoticeBoard(boardName, controllerId, "post");
     }
 
-    public List<WorkflowId> getUsedWorkflowsByExpectedNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
+    public <T extends WorkflowId> List<T> getUsedWorkflowsByExpectedNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getUsedWorkflowsByNoticeBoard(boardName, controllerId, "expect");
     }
     
-    public List<WorkflowId> getUsedWorkflowsByConsumeNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
+    public <T extends WorkflowId> List<T> getUsedWorkflowsByConsumeNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getUsedWorkflowsByNoticeBoard(boardName, controllerId, "consume");
     }
 
     // type = consume, post or expect
-    private List<WorkflowId> getUsedWorkflowsByNoticeBoard(String boardName, String controllerId, String type) throws DBConnectionRefusedException,
+    private <T extends WorkflowId> List<T> getUsedWorkflowsByNoticeBoard(String boardName, String controllerId, String type) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-            StringBuilder hql = new StringBuilder("select new ").append(WorkflowId.class.getName());
+            StringBuilder hql = new StringBuilder("select new ").append(WorkflowIdAndTags.class.getName());
             hql.append("(dc.path, dc.commitId) from ");
             hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
             hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
@@ -595,7 +595,38 @@ public class DeployedConfigurationDBLayer {
             String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$." + type + "Notices");
             hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
 
-            Query<WorkflowId> query = session.createQuery(hql.toString());
+            Query<T> query = session.createQuery(hql.toString());
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("controllerId", controllerId);
+            query.setParameter("boardName", getRegexpParameter(boardName, "\""));
+            List<T> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public <T extends WorkflowId> List<T> getUsedWorkflowsByNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(WorkflowIdAndTags.class.getName());
+            hql.append("(dc.path, dc.commitId) from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+            hql.append("where dc.type=:type ");
+            hql.append("and dc.controllerId=:controllerId ");
+            hql.append("and sw.deployed=1 ");
+            hql.append("and ");
+
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
+            hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
+
+            Query<T> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
             query.setParameter("boardName", getRegexpParameter(boardName, "\""));
@@ -635,7 +666,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-
+    
     public List<String> getExpectedNoticeBoardWorkflows(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select dc.name from ");

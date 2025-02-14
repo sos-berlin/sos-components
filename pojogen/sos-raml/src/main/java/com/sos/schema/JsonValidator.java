@@ -111,6 +111,7 @@ public class JsonValidator {
             put("LockFilter", "lock/lockFilter-schema.json");
             put("LocksFilter", "lock/locksFilter-schema.json");
 
+            put("BoardPathFilter", "board/boardPathFilter-schema.json");
             put("BoardFilter", "board/boardFilter-schema.json");
             put("BoardsFilter", "board/boardsFilter-schema.json");
             put("ModifyNotice", "board/modifyNotice-schema.json");

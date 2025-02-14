@@ -62,6 +62,15 @@ public class PlannedBoards {
         this.limitOrders = limit == null ? limitOrdersDefault : limit;
     }
     
+    public PlannedBoards(BoardPath boardPath) {
+        this.jBoards = Collections.singletonMap(boardPath, Collections.emptyList());
+        this.orders = Collections.emptyMap();
+        this.compact = true;
+        this.controllerState = null;
+        this.withSysncState = false;
+        this.limitOrders = 0;
+    }
+    
     @SuppressWarnings("unchecked")
     public Board getPlannedBoard(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
 
