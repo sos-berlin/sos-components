@@ -9,6 +9,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,8 +19,8 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.base.Joiner;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
@@ -28,6 +29,8 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
+import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
@@ -38,6 +41,7 @@ import com.sos.commons.vfs.exception.SOSProviderInitializationException;
 import com.sos.commons.vfs.ssh.common.ASSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.ssh.exceptions.SOSSSHClientNotInitializedException;
 import com.sos.commons.vfs.ssh.exceptions.SOSSSHCommandExitViolentlyException;
 
 import net.schmizz.keepalive.KeepAliveProvider;
@@ -55,7 +59,6 @@ import net.schmizz.sshj.sftp.FileMode;
 import net.schmizz.sshj.sftp.OpenMode;
 import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.SFTPClient;
-import net.schmizz.sshj.sftp.SFTPException;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.UserAuthException;
@@ -109,22 +112,8 @@ public class SSHJProvider extends ASSHProvider {
     @Override
     public void disconnect() {
         commands = new ConcurrentHashMap<>();
-        List<String> msg = new ArrayList<>();
-        if (sshClient != null) {
-            try {
-                sshClient.close();
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug(getLogPrefix() + "[sshClient]closed");
-                }
-            } catch (IOException e) {
-                msg.add("[sftpClient]" + e.toString());
-            } finally {
-                sshClient = null;
-            }
-        }
-        if (msg.size() > 0) {
-            getLogger().info(getLogPrefix() + "[disconnect][onClose]" + Joiner.on(", ").join(msg));
-        }
+        closeQuietly(sshClient);
+        sshClient = null;
         getLogger().info(getDisconnectedMsg());
     }
 
@@ -134,7 +123,7 @@ public class SSHJProvider extends ASSHProvider {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             sftp.mkdir(path);
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[createDirectory][" + path + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -148,7 +137,7 @@ public class SSHJProvider extends ASSHProvider {
             sftp.mkdirs(path);
             return true;
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[createDirectoriesIfNotExist][" + path + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -158,7 +147,7 @@ public class SSHJProvider extends ASSHProvider {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             SSHJProviderUtil.delete(sftp, path);
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[delete][" + path + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -172,31 +161,87 @@ public class SSHJProvider extends ASSHProvider {
             } catch (SOSProviderException e) {
                 if (e.getCause() instanceof SOSNoSuchFileException) {
                     if (getLogger().isDebugEnabled()) {
-                        getLogger().debug("%s[deleteIfExists][%s]not exists", getLogPrefix(), path);
+                        getLogger().debug("%s[deleteIfExists]not exists", getPathOperationPrefix(path));
                     }
                     return false;
                 }
                 throw e;
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[deleteIfExists][" + path + "]", e.getCause());
+            throw new SOSProviderException(getPathOperationPrefix(path), e.getCause());
         }
     }
 
     @Override
-    public void rename(String source, String target) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, source, "source");
-        checkParam(target, "target");
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            try {
-                source = sftp.canonicalize(source);
-            } catch (SFTPException e) {
-                SSHJProviderUtil.throwException(e, source);
-            }
-            sftp.rename(source, target);
-        } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[rename][" + source + "]->[" + target + "]", e);
+    public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (paths == null) {
+            return null;
         }
+        if (sshClient == null) {
+            throw new SOSSSHClientNotInitializedException();
+        }
+        DeleteFilesResult r = new DeleteFilesResult(paths.size());
+        try (SFTPClient sftp = sshClient.newSFTPClient()) {
+            l: for (String path : paths) {
+                try {
+                    if (SSHJProviderUtil.exists(sftp, path)) {
+                        SSHJProviderUtil.delete(sftp, path);
+                        r.addSuccess();
+                    } else {
+                        r.addNotFound(path);
+                    }
+                } catch (Throwable e) {
+                    r.addError(path, e);
+                    if (stopOnSingleFileError) {
+                        break l;
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            new SOSProviderException(e);
+        }
+        return r;
+    }
+
+    @Override
+    public void rename(String sourcePath, String targetPath) throws SOSProviderException {
+        SSHJProviderUtil.checkBeforeOperation(sshClient, sourcePath, "sourcePath");
+        checkParam(targetPath, "targetPath");
+        try (SFTPClient sftp = sshClient.newSFTPClient()) {
+            SSHJProviderUtil.rename(sftp, sourcePath, targetPath);
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(sourcePath) + "->[" + targetPath + "]", e);
+        }
+    }
+
+    @Override
+    public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (paths == null) {
+            return null;
+        }
+        RenameFilesResult r = new RenameFilesResult(paths.size());
+        try (SFTPClient sftp = sshClient.newSFTPClient()) {
+            l: for (Map.Entry<String, String> entry : paths.entrySet()) {
+                String sourcePath = entry.getKey();
+                String targetPath = entry.getValue();
+                try {
+                    if (SSHJProviderUtil.exists(sftp, sourcePath)) {
+                        SSHJProviderUtil.rename(sftp, sourcePath, targetPath);
+                        r.addSuccess(sourcePath, targetPath);
+                    } else {
+                        r.addNotFound(sourcePath);
+                    }
+                } catch (Throwable e) {
+                    r.addError(sourcePath, e);
+                    if (stopOnSingleFileError) {
+                        break l;
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            new SOSProviderException(e);
+        }
+        return r;
     }
 
     @Override
@@ -209,7 +254,7 @@ public class SSHJProvider extends ASSHProvider {
             return SSHJProviderUtil.exists(sftp, path);
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists][%s][false]%s", getLogPrefix(), path, e.toString());
+                getLogger().debug("%s[exists=false]%s", getPathOperationPrefix(path), e.toString());
             }
         }
         return false;
@@ -242,7 +287,7 @@ public class SSHJProvider extends ASSHProvider {
             }
         } catch (NoSuchFileException e) {
         } catch (IOException e) {
-            throw new SOSProviderException(getLogPrefix() + "[" + path + "]]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
         return f;
     }
@@ -260,7 +305,7 @@ public class SSHJProvider extends ASSHProvider {
         } catch (NoSuchFileException e) {
             file = null;
         } catch (IOException e) {
-            throw new SOSProviderException(getLogPrefix() + "[" + file.getFullPath() + "]]", e);
+            throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
         }
         return file;
     }
@@ -273,36 +318,25 @@ public class SSHJProvider extends ASSHProvider {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             return SSHJProviderUtil.is(getLogger(), getLogPrefix(), sftp, path, FileMode.Type.DIRECTORY);
         } catch (Throwable e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[isDirectory=false]%s", getPathOperationPrefix(path), e.toString());
+            }
             return false;
         }
     }
 
     @Override
-    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
-        if (!isValidModificationTime(milliseconds)) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getLogPrefix(), path, milliseconds);
-            }
-            return false;
-        }
-        if (sshClient == null) {
-            return false;
-        }
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
+        SSHJProviderUtil.checkBeforeOperation(sshClient, path, path);
+        checkModificationTime(path, milliseconds);
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            checkParam(path, "path");
-
             FileAttributes attr = sftp.stat(path);
-            if (attr != null) {
-                long seconds = milliseconds / 1_000L;
-                FileAttributes newAttr = new FileAttributes.Builder().withAtimeMtime(attr.getAtime(), seconds).build();
-                sftp.setattr(path, newAttr);
-                return true;
-            }
-            return false;
+            long seconds = milliseconds / 1_000L;
+            FileAttributes newAttr = new FileAttributes.Builder().withAtimeMtime(attr.getAtime(), seconds).build();
+            sftp.setattr(path, newAttr);
         } catch (Throwable e) {
-            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getLogPrefix(), path, milliseconds, e);
-            return false;
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -319,7 +353,7 @@ public class SSHJProvider extends ASSHProvider {
             SSHJProviderUtil.put(sftp, source, target);
             sftp.chmod(target, perm);
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[put][" + source + "][" + target + "][perm=" + perm + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(source) + "[" + target + "][perm=" + perm + "]", e);
         }
     }
 
@@ -328,7 +362,7 @@ public class SSHJProvider extends ASSHProvider {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             SSHJProviderUtil.put(sftp, source, target);
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[put][" + source + "][" + target + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
     }
 
@@ -337,7 +371,7 @@ public class SSHJProvider extends ASSHProvider {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             sftp.get(sftp.canonicalize(source), new FileSystemFile(target));
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[get][" + source + "][" + target + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
     }
 
@@ -613,8 +647,10 @@ public class SSHJProvider extends ASSHProvider {
     public InputStream getInputStream(String path) throws SOSProviderException {
         SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            RemoteFile remoteFile = sftp.open(path);
+        final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
+        try {
+            sftpRef.set(sshClient.newSFTPClient());
+            RemoteFile remoteFile = sftpRef.get().open(path);
             return remoteFile.new ReadAheadRemoteFileInputStream(16) {
 
                 private final AtomicBoolean close = new AtomicBoolean();
@@ -627,13 +663,15 @@ public class SSHJProvider extends ASSHProvider {
                     try {
                         super.close();
                     } finally {
-                        remoteFile.close();
+                        closeQuietly(remoteFile);
+                        closeQuietly(sftpRef.get());
                         close.set(true);
                     }
                 }
             };
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            closeQuietly(sftpRef.get());
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -641,7 +679,9 @@ public class SSHJProvider extends ASSHProvider {
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
         SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
+        final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
+        try {
+            sftpRef.set(sshClient.newSFTPClient());
             EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT);
             if (append) {
                 mode.add(OpenMode.APPEND);
@@ -649,21 +689,28 @@ public class SSHJProvider extends ASSHProvider {
                 // transferMode = ChannelSftp.RESUME; //TODO?
                 mode.add(OpenMode.TRUNC);
             }
-            RemoteFile remoteFile = sftp.open(path, mode);
+            RemoteFile remoteFile = sftpRef.get().open(path, mode);
             return remoteFile.new RemoteFileOutputStream(0, 16) {
 
-                private boolean isClosed = false;
+                private final AtomicBoolean close = new AtomicBoolean();
 
                 @Override
-                public synchronized void close() throws IOException {
-                    if (!isClosed) {
-                        remoteFile.close();
-                        isClosed = true;
+                public void close() throws IOException {
+                    if (close.get()) {
+                        return;
+                    }
+                    try {
+                        super.close();
+                    } finally {
+                        closeQuietly(remoteFile);
+                        closeQuietly(sftpRef.get());
+                        close.set(true);
                     }
                 }
             };
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            closeQuietly(sftpRef.get());
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -685,7 +732,7 @@ public class SSHJProvider extends ASSHProvider {
             }
             return baos.toString(StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new SOSProviderException(e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 

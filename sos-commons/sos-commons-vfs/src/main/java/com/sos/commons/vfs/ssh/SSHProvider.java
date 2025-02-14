@@ -2,13 +2,17 @@ package com.sos.commons.vfs.ssh;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
+import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
@@ -22,10 +26,10 @@ public class SSHProvider extends ASSHProvider {
     private final ASSHProvider provider;
 
     public SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
-        provider = getProviderInstance(logger, args);
+        provider = initializeProvider(logger, args);
     }
 
-    private static ASSHProvider getProviderInstance(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
+    private static ASSHProvider initializeProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
         // switch (args.getSSHProviderType().getValue()) {
         // case JSCH:
         // new JschProvider(logger, args);
@@ -101,8 +105,8 @@ public class SSHProvider extends ASSHProvider {
     }
 
     @Override
-    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
-        return provider.setFileLastModifiedFromMillis(path, milliseconds);
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
+        provider.setFileLastModifiedFromMillis(path, milliseconds);
     }
 
     @Override
@@ -145,6 +149,16 @@ public class SSHProvider extends ASSHProvider {
     @Override
     public String getFileContentIfExists(String path) throws SOSProviderException {
         return provider.getFileContentIfExists(path);
+    }
+
+    @Override
+    public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        return provider.deleteFilesIfExist(paths, stopOnSingleFileError);
+    }
+
+    @Override
+    public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        return provider.renameFilesIfExist(paths, stopOnSingleFileError);
     }
 
 }

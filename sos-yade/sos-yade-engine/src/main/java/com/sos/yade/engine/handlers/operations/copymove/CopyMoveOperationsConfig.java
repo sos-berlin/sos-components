@@ -10,25 +10,52 @@ import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
 import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 
-public class YADECopyMoveOperationConfig {
+public class CopyMoveOperationsConfig {
 
     private final Source source;
     private final Target target;
 
+    private final Parallel parallel;
+
+    private final TransferOperation operation;
     private final String integrityHashAlgorithm;
     private final int bufferSize;
     private final int maxRetries;
     private final boolean checkFileSize;
 
-    public YADECopyMoveOperationConfig(final TransferOperation operation, final YADEArguments args, final YADESourceProviderDelegator sourceDelegator,
+    public CopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args, final YADESourceProviderDelegator sourceDelegator,
             final YADETargetProviderDelegator targetDelegator) {
-        source = new Source(operation, sourceDelegator);
-        target = new Target(targetDelegator);
+        this.operation = operation;
 
-        integrityHashAlgorithm = YADEArgumentsHelper.getIntegrityHashAlgorithm(args, sourceDelegator, targetDelegator);
-        bufferSize = args.getBufferSize().getValue().intValue();
-        maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
-        checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
+        this.source = new Source(sourceDelegator);
+        this.target = new Target(targetDelegator);
+
+        this.parallel = initializeParallel(args.getParallelMaxThreads().getValue());
+
+        this.integrityHashAlgorithm = YADEArgumentsHelper.getIntegrityHashAlgorithm(args, sourceDelegator, targetDelegator);
+        this.bufferSize = args.getBufferSize().getValue().intValue();
+        this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
+        this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
+    }
+
+    private Parallel initializeParallel(String parallel) {
+        if ("AUTO".equalsIgnoreCase(parallel)) {
+            return new Parallel(-1);
+        }
+        try {
+            int val = Integer.valueOf(parallel).intValue();
+            return val <= 1 ? null : new Parallel(val);
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    public boolean isMoveOperation() {
+        return TransferOperation.MOVE.equals(operation);
+    }
+
+    private boolean isCopyOperation() {
+        return TransferOperation.COPY.equals(operation);
     }
 
     private int getMaxRetries(final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
@@ -94,6 +121,30 @@ public class YADECopyMoveOperationConfig {
         return target;
     }
 
+    public Parallel getParallel() {
+        return parallel;
+    }
+
+    public class Parallel {
+
+        private final boolean auto;
+        private final int maxThreads;
+
+        private Parallel(int maxThreads) {
+            this.auto = maxThreads <= 0;
+            this.maxThreads = maxThreads;
+        }
+
+        public boolean isAuto() {
+            return auto;
+        }
+
+        public int getMaxThreads() {
+            return maxThreads;
+        }
+
+    }
+
     public class Source {
 
         private final String directory;
@@ -102,12 +153,12 @@ public class YADECopyMoveOperationConfig {
         private final boolean replacemenEnabled;
         private final boolean checkIntegrityHash;
 
-        private Source(TransferOperation operation, YADESourceProviderDelegator sourceDelegator) {
+        private Source(YADESourceProviderDelegator sourceDelegator) {
             // directory path without trailing separator
             this.directory = sourceDelegator.getDirectory() == null ? "" : sourceDelegator.getDirectory().getPath();
             this.pathSeparator = sourceDelegator.getPathSeparator();
             this.recursiveSelection = sourceDelegator.getArgs().getRecursive().isTrue();
-            this.replacemenEnabled = TransferOperation.COPY.equals(operation) && sourceDelegator.getArgs().isReplacementEnabled();
+            this.replacemenEnabled = isCopyOperation() && sourceDelegator.getArgs().isReplacementEnabled();
             this.checkIntegrityHash = sourceDelegator.getArgs().getCheckIntegrityHash().isTrue();
         }
 
@@ -197,6 +248,10 @@ public class YADECopyMoveOperationConfig {
 
         public Atomic getAtomic() {
             return atomic;
+        }
+
+        public boolean isAtomicTransactionalEnabled() {
+            return atomic != null && atomic.isTransactionalEnabled();
         }
 
         public boolean isReplacementEnabled() {

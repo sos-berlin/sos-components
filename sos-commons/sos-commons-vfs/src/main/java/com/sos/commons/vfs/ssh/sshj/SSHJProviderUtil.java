@@ -25,11 +25,11 @@ import net.schmizz.keepalive.KeepAliveRunner;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.FileMode;
+import net.schmizz.sshj.sftp.FileMode.Type;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
+import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.sftp.SFTPException;
-import net.schmizz.sshj.sftp.FileMode.Type;
-import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import net.schmizz.sshj.userauth.password.PasswordFinder;
 import net.schmizz.sshj.userauth.password.Resource;
@@ -227,6 +227,15 @@ public class SSHJProviderUtil {
 
     protected static void put(SFTPClient sftp, String source, String target) throws IOException {
         sftp.put(new FileSystemFile(source), target);
+    }
+
+    protected static void rename(SFTPClient sftp, String sourcePath, String targetPath) throws Exception {
+        try {
+            sourcePath = sftp.canonicalize(sourcePath);
+        } catch (SFTPException e) {
+            SSHJProviderUtil.throwException(e, sourcePath);
+        }
+        sftp.rename(sourcePath, targetPath);
     }
 
 }

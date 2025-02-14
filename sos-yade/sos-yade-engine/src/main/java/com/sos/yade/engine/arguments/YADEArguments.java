@@ -20,6 +20,11 @@ public class YADEArguments {
     private SOSArgument<String> returnValues = new SOSArgument<>("return-values", false);
 
     /** - Transfer adjustments ------- */
+    // Number <=1 : non-parallel
+    // Number > 1 : number of threads is configurable and controlled with an ExecutorService - non implemented yet...
+    // String AUTO(case-insensitive) : number of threads is controlled by Java with parallelStream()
+    private SOSArgument<String> parallelMaxThreads = new SOSArgument<>("parallel_max_threads", false, "AUTO");
+
     private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(8 * 1_024));
 
     /** - Integrity Hash ------- */
@@ -54,6 +59,10 @@ public class YADEArguments {
 
     public SOSArgument<String> getIntegrityHashAlgorithm() {
         return integrityHashAlgorithm;
+    }
+
+    public SOSArgument<String> getParallelMaxThreads() {
+        return parallelMaxThreads;
     }
 
 }

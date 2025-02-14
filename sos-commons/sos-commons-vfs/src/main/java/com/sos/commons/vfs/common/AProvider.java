@@ -1,5 +1,6 @@
 package com.sos.commons.vfs.common;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
@@ -116,6 +117,19 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return executeCommand(command, null, env);
     }
 
+    public String getPathOperationPrefix(String path) {
+        return getLogPrefix() + "[" + path + "]";
+    }
+
+    public void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Throwable e) {
+            }
+        }
+    }
+
     public ISOSLogger getLogger() {
         return logger;
     }
@@ -149,4 +163,9 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return milliseconds > 0;
     }
 
+    public static void checkModificationTime(String path, long milliseconds) throws SOSProviderException {
+        if (!isValidModificationTime(milliseconds)) {
+            throw new SOSProviderException("[" + path + "][" + milliseconds + "]not valid modification time");
+        }
+    }
 }

@@ -14,7 +14,7 @@ import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
 import com.sos.yade.engine.handlers.commands.YADECommandsHandler.YADECommandsResult;
-import com.sos.yade.engine.handlers.operations.YADEOperationHandler;
+import com.sos.yade.engine.handlers.operations.YADEOperationsManager;
 import com.sos.yade.engine.handlers.source.YADESourceFilesSelector;
 import com.sos.yade.engine.handlers.source.YADESourcePollingHandler;
 import com.sos.yade.engine.handlers.source.YADESourceSteadyFilesHandler;
@@ -131,7 +131,7 @@ public class YADEEngine {
                 YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
                 /** 10) Source/Target: execute operation(COPY,MOVE,GETLIST,REMOVE) */
-                YADEOperationHandler.execute(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
+                YADEOperationsManager.execute(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
 
                 /** 11) Source/Target: execute commands after operation on success */
                 YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
@@ -169,7 +169,7 @@ public class YADEEngine {
                     YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
                     /** 10) Source/Target: execute operation(COPY,MOVE,GETLIST,REMOVE) */
-                    YADEOperationHandler.execute(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
+                    YADEOperationsManager.execute(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
 
                     /** 11) Source/Target: execute commands after operation on success */
                     YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);

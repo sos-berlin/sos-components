@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.sos.commons.util.common.SOSCommandResult;
@@ -12,6 +13,8 @@ import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.ProviderFileBuilder;
+import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
+import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
@@ -71,13 +74,17 @@ public interface IProvider {
      *         {@code false} if the file/directory could not be deleted because it did not exist */
     public boolean deleteIfExists(String path) throws SOSProviderException;
 
+    public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException;
+
     /** Move or rename a file to a target file.<br/>
      * If the target file exists, then the target file is replaced.
      *
      * @param source
      * @param target
      * @throws SOSProviderException */
-    public void rename(String source, String target) throws SOSProviderException;
+    public void rename(String sourcePath, String targetPath) throws SOSProviderException;
+
+    public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException;
 
     /** Tests whether a file/directory exists. **/
     public boolean exists(String path);
@@ -98,21 +105,12 @@ public interface IProvider {
 
     public String getFileContentIfExists(String path) throws SOSProviderException;
 
-    /** Returns the modification time in milliseconds or -1<br/>
-     * (the time cannot be evaluated, e.g. because the file does not exist, ...)<br/>
-     * Does not throw exceptions, but should report errors at warning level</br>
-     * 
-     * @param path
-     * @return */
-    // public long getFileLastModifiedMillis(String path);
-
     /** Sets modification time from milliseconds.<br/>
-     * Does not throw exceptions, but should report errors at warning level</br>
      * 
      * @param path
      * @param milliseconds
      * @return */
-    public boolean setFileLastModifiedFromMillis(String path, long milliseconds);
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException;
 
     public InputStream getInputStream(String path) throws SOSProviderException;
 

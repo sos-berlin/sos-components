@@ -9,7 +9,7 @@ import java.util.TreeSet;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.exception.SOSProviderException;
-import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationConfig;
+import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
 
 public class YADEDirectoryMapper {
 
@@ -31,7 +31,7 @@ public class YADEDirectoryMapper {
         sourceFilesDirectories.add(directoryPathWithoutTrailinSeparator);
     }
 
-    public void tryCreateAllTargetDirectoriesBeforeOperation(final YADECopyMoveOperationConfig config,
+    public void tryCreateAllTargetDirectoriesBeforeOperation(final CopyMoveOperationsConfig config,
             final YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
         tryMapSourceTarget(config, targetDelegator);
 
@@ -61,7 +61,7 @@ public class YADEDirectoryMapper {
     // TODO problem - the path may be changed due to the target replacing arguments...
     // - it may be a sub path, but also a parent/other path...
     // - it cannot be identified here because the substitution may depend on the filename..
-    private void tryMapSourceTarget(final YADECopyMoveOperationConfig config, final YADETargetProviderDelegator targetDelegator) {
+    private void tryMapSourceTarget(final CopyMoveOperationsConfig config, final YADETargetProviderDelegator targetDelegator) {
         sourceTarget.clear();
 
         // Map Source to 1-level Target
@@ -94,7 +94,7 @@ public class YADEDirectoryMapper {
         }
     }
 
-    private String getSourceDirectoryForMapping(final YADECopyMoveOperationConfig config, String sourceDirectory) {
+    private String getSourceDirectoryForMapping(final CopyMoveOperationsConfig config, String sourceDirectory) {
         String result;
         if (config.getSource().isRecursiveSelection()) {
             if (sourceDirectory.startsWith(config.getSource().getDirectory())) {
@@ -160,7 +160,7 @@ public class YADEDirectoryMapper {
         return set;
     }
 
-    public String getTargetDirectory(final YADECopyMoveOperationConfig config, final YADETargetProviderDelegator targetDelegator,
+    public String getTargetDirectory(final CopyMoveOperationsConfig config, final YADETargetProviderDelegator targetDelegator,
             final YADEProviderFile sourceFile, final String subDirectory) throws SOSProviderException {
         String targetDirectory;
         if (target == null) {// target replacement is not enabled, ignore fileNameInfo

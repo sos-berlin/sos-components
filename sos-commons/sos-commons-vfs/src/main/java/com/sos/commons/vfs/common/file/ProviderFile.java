@@ -1,5 +1,6 @@
 package com.sos.commons.vfs.common.file;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.vfs.common.AProvider;
 
@@ -54,5 +55,10 @@ public class ProviderFile {
 
     public void setLastModifiedMillis(long val) {
         lastModifiedMillis = val;
+    }
+
+    public String getLastModifiedAsString() {
+        return AProvider.isValidModificationTime(lastModifiedMillis) ? SOSDate.tryGetDateTimeAsString(lastModifiedMillis) : String.valueOf(
+                lastModifiedMillis);
     }
 }

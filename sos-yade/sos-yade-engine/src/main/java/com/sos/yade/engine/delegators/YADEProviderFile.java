@@ -7,7 +7,7 @@ import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
-import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationConfig;
+import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
 import com.sos.yade.engine.helpers.YADEReplacementHelper;
 
 public class YADEProviderFile extends ProviderFile {
@@ -58,6 +58,10 @@ public class YADEProviderFile extends ProviderFile {
         return TransferEntryState.TRANSFERRED.equals(state);
     }
 
+    public boolean isTransferredOrTransferring() {// succeeded?
+        return TransferEntryState.TRANSFERRED.equals(state) || TransferEntryState.TRANSFERRING.equals(state);
+    }
+
     public boolean isSkipped() {
         return TransferEntryState.SKIPPED.equals(state) || TransferEntryState.NOT_OVERWRITTEN.equals(state);
     }
@@ -69,8 +73,8 @@ public class YADEProviderFile extends ProviderFile {
     }
 
     /** Operations: Copy/Move(with target) */
-    public void initTarget(YADECopyMoveOperationConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, int index) throws SOSProviderException {
+    public void initTarget(CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
+            int index) throws SOSProviderException {
         init(index);
         initTarget(config, sourceDelegator, targetDelegator);
     }
@@ -79,8 +83,8 @@ public class YADEProviderFile extends ProviderFile {
         target = null;
     }
 
-    private void initTarget(YADECopyMoveOperationConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
+    private void initTarget(CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator)
+            throws SOSProviderException {
         if (config.getTarget().getCumulate() != null) {
             target = null;
             return;
@@ -116,7 +120,7 @@ public class YADEProviderFile extends ProviderFile {
      * @param sourceFile
      * @param config
      * @return the final name of the file after transfer */
-    private YADEFileNameInfo getTargetFinalFilePathInfo(YADECopyMoveOperationConfig config, YADETargetProviderDelegator targetDelegator) {
+    private YADEFileNameInfo getTargetFinalFilePathInfo(CopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator) {
         // 1) Source name
         String fileName = getName();
         // 2) Compressed name

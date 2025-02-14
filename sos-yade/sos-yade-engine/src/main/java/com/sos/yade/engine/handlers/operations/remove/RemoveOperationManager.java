@@ -12,17 +12,10 @@ import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
 
-public class YADESourceOperationRemoveHandler {
+/** Remove files on Source */
+public class RemoveOperationManager {
 
-    /** TODO parallel processing ...
-     * 
-     * @param operation
-     * @param logger
-     * @param sourceProvider
-     * @param sourceFiles
-     * @param additionalHeadLineMessage - TODO to remove. should be placed in BANNER
-     * @throws SOSYADEEngineOperationException */
-    public static void execute(TransferOperation operation, ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
+    public static void process(TransferOperation operation, ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
             List<ProviderFile> sourceFiles, String additionalHeadLineMessage) throws YADEEngineOperationException {
         if (!SOSString.isEmpty(additionalHeadLineMessage)) {
             logger.info("[%s]%s", operation, additionalHeadLineMessage);

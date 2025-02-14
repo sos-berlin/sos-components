@@ -14,7 +14,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSPath;
@@ -28,6 +30,8 @@ import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
+import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
 import com.sos.commons.vfs.exception.SOSProviderException;
@@ -86,7 +90,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             Files.createDirectory(getPath(path));
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[createDirectory][" + path + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -102,7 +106,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             Files.createDirectories(p);
             return true;
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[createDirectoriesIfNotExist][" + path + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -113,7 +117,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             SOSPath.delete(getPath(path));
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[delete][" + path + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -124,20 +128,72 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             return SOSPath.deleteIfExists(getPath(path));
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[deleteIfExists][" + path + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     @Override
-    public void rename(String source, String target) throws SOSProviderException {
-        checkParam(source, "source");
-        checkParam(target, "target");
+    public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (paths == null) {
+            return null;
+        }
+        DeleteFilesResult r = new DeleteFilesResult(paths.size());
+        l: for (String path : paths) {
+            try {
+                Path p = getPath(path);
+                if (exists(p)) {
+                    SOSPath.delete(p);
+                    r.addSuccess();
+                } else {
+                    r.addNotFound(path);
+                }
+            } catch (Throwable e) {
+                r.addError(path, e);
+                if (stopOnSingleFileError) {
+                    break l;
+                }
+            }
+        }
+        return r;
+    }
+
+    @Override
+    public void rename(String sourcePath, String targetPath) throws SOSProviderException {
+        checkParam(sourcePath, "sourcePath");
+        checkParam(targetPath, "targetPath");
 
         try {
-            SOSPath.renameTo(source, target);
+            SOSPath.renameTo(sourcePath, targetPath);
         } catch (Throwable e) {
-            throw new SOSProviderException(getLogPrefix() + "[rename][source=" + source + "][target=" + target + "]", e);
+            throw new SOSProviderException(getPathOperationPrefix(sourcePath) + "->[" + targetPath + "]", e);
         }
+    }
+
+    @Override
+    public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (paths == null) {
+            return null;
+        }
+        RenameFilesResult r = new RenameFilesResult(paths.size());
+        l: for (Map.Entry<String, String> entry : paths.entrySet()) {
+            String sourcePath = entry.getKey();
+            String targetPath = entry.getValue();
+            try {
+                Path p = getPath(sourcePath);
+                if (exists(p)) {
+                    SOSPath.renameTo(p, getPath(targetPath));
+                    r.addSuccess(sourcePath, targetPath);
+                } else {
+                    r.addNotFound(sourcePath);
+                }
+            } catch (Throwable e) {
+                r.addError(sourcePath, e);
+                if (stopOnSingleFileError) {
+                    break l;
+                }
+            }
+        }
+        return r;
     }
 
     @Override
@@ -148,7 +204,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             return exists(getPath(path));
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists][%s][false]%s", getLogPrefix(), path, e.toString());
+                getLogger().debug("%s[exists=false]%s", getPathOperationPrefix(path), e.toString());
             }
             return false;
         }
@@ -181,7 +237,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             }
         } catch (NoSuchFileException e) {
         } catch (IOException e) {
-            throw new SOSProviderException(getLogPrefix() + "[" + path + "]]", e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
         return file;
     }
@@ -199,7 +255,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         } catch (NoSuchFileException e) {
             file = null;
         } catch (IOException e) {
-            throw new SOSProviderException(getLogPrefix() + "[" + file.getFullPath() + "]]", e);
+            throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
         }
         return file;
     }
@@ -208,33 +264,23 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     public boolean isDirectory(String path) {
         try {
             checkParam(path, "path"); // here because should not throw any errors
-
             return SOSPath.isDirectory(path);
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[isDirectory][%s][false]%s", getLogPrefix(), path, e.toString());
+                getLogger().debug("%s[isDirectory=false]%s", getPathOperationPrefix(path), e.toString());
             }
             return false;
         }
     }
 
     @Override
-    public boolean setFileLastModifiedFromMillis(String path, long milliseconds) {
-        if (!isValidModificationTime(milliseconds)) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setFileLastModifiedFromMillis][%s][%s][false]not valid modification time", getLogPrefix(), path, milliseconds);
-            }
-            return false;
-        }
-
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
+        checkParam(path, "path");
+        checkModificationTime(path, milliseconds);
         try {
-            checkParam(path, "path");
-
             SOSPath.setLastModifiedFromMillis(path, milliseconds);
-            return true;
         } catch (Throwable e) {
-            getLogger().warn("%s[setFileLastModifiedFromMillis][%s][%s]%s", getLogPrefix(), path, milliseconds, e);
-            return false;
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -253,7 +299,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         try {
             return Files.newInputStream(getPath(path));
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -267,7 +313,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                 return Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -280,7 +326,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             }
             return SOSPath.readFile(p);
         } catch (IOException e) {
-            throw new SOSProviderException(e);
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
