@@ -37,7 +37,9 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.board.BoardConverter;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
@@ -68,6 +70,8 @@ import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
+import js7.data_for_java.item.JUpdateItemOperation;
+import js7.proxy.javaapi.JControllerProxy;
 
 @Path("inventory/deployment")
 public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
@@ -329,12 +333,23 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         boolean selfIssued = false;
         String signerDN = null;
         X509Certificate cert = null;
+        JControllerProxy proxy = Proxy.of(controllerId);
+        
         switch (keyPair.getKeyAlgorithm()) {
         case SOSKeyConstants.PGP_ALGORITHM_NAME:
-            UpdateItemUtils.updateItemsAddOrDeletePGPFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId)
-                .thenAccept(either -> 
-                    StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(),getJocError(),
-                                    API_CALL, null, false));
+            Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
+                    toDeleteForRename, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null);
+
+            BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
+                if (e.isRight()) {
+                    UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations1).thenAccept(either -> StoreDeployments
+                            .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                    false));
+                } else {
+                    StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                            false);
+                }
+            });
             break;
         case SOSKeyConstants.RSA_ALGORITHM_NAME:
             cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
@@ -342,18 +357,36 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 //            verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
 //            if (verified) {
             if (!selfIssued) {
-                UpdateItemUtils.updateItemsAddOrDeleteX509CertificateFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId, 
-                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
-                        keyPair.getCertificate()).thenAccept(either -> 
-                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null, false));
+                Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
+                        toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
+                                : SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate(), null);
+                
+                BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
+                    if (e.isRight()) {
+                        UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations2).thenAccept(either -> StoreDeployments
+                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                        false));
+                    } else {
+                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                false);
+                    }
+                });
             } else {
                 signerDN = cert.getSubjectDN().getName();
-                UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
-                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
-                        signerDN).thenAccept(either -> 
-                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null, false));
+                Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
+                        toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
+                                : SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN);
+                
+                BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
+                    if (e.isRight()) {
+                        UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations3).thenAccept(either -> StoreDeployments
+                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                        false));
+                    } else {
+                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                false);
+                    }
+                });
             }
             break;
         case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -362,18 +395,36 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 //          verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
 //          if (verified) {
           if (!selfIssued) {
-                UpdateItemUtils.updateItemsAddOrDeleteX509CertificateFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
-                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
-                        keyPair.getCertificate()).thenAccept(either -> 
-                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null, false));
+              Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
+                      toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
+                              : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate(), null);
+              
+              BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
+                  if (e.isRight()) {
+                      UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations4).thenAccept(either -> StoreDeployments
+                              .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                      false));
+                  } else {
+                      StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                              false);
+                  }
+              });
             } else {
                 signerDN = cert.getSubjectDN().getName();
-                UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
-                        filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
-                        signerDN).thenAccept(either -> 
-                            StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null, false));
+                Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
+                        toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
+                                : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN);
+                
+                BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
+                    if (e.isRight()) {
+                        UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations5).thenAccept(either -> StoreDeployments
+                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                        false));
+                    } else {
+                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                false);
+                    }
+                });
             }
             break;
         }

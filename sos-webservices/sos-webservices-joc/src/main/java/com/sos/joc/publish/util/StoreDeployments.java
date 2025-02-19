@@ -29,8 +29,10 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.board.BoardConverter;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -58,6 +60,8 @@ import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data_for_java.item.JUpdateItemOperation;
+import js7.proxy.javaapi.JControllerProxy;
 
 public class StoreDeployments {
 
@@ -156,7 +160,7 @@ public class StoreDeployments {
         }
     }
 
-    public static void processAfterAdd(Either<Problem, Void> either, String account, String commitId, String controllerId, String accessToken,
+    public static void processAfterAdd(Either<Problem, ?> either, String account, String commitId, String controllerId, String accessToken,
             JocError jocError, String wsIdentifier, String dailyPlanDate, boolean includeLate) {
         // asynchronous processing: this method is called from a CompletableFuture and therefore
         // creates a new db session as the session of the caller may already be closed
@@ -271,13 +275,22 @@ public class StoreDeployments {
             boolean selfIssued = false;
             String signerDN = null;
             X509Certificate cert = null;
+            JControllerProxy proxy = Proxy.of(controllerId);
             // call updateItems command via ControllerApi for the given controller
 
             switch (signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                UpdateItemUtils.updateItemsAddOrDeletePGP(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete, controllerId)
-                        .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier,
-                                dailyPlanDate, includeLate));
+                Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                        .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null);
+                
+                BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
+                    if (e.isRight()) {
+                        UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations1).thenAccept(either -> processAfterAdd(either, account,
+                                commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                    } else {
+                        processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                    }
+                });
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
                 if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
@@ -288,15 +301,31 @@ public class StoreDeployments {
                     // verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                     // if (verified) {
                     if (!selfIssued) {
-                        UpdateItemUtils.updateItemsAddOrDeleteX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
-                                controllerId, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate()).thenAccept(
-                                        either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier,
-                                                dailyPlanDate, includeLate));
+                        Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
+                                        .getCertificate(), null);
+                        
+                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
+                            if (e.isRight()) {
+                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations2).thenAccept(either -> processAfterAdd(either,
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                            } else {
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                            }
+                        });
                     } else {
                         signerDN = cert.getSubjectDN().getName();
-                        UpdateItemUtils.updateItemsAddOrDeleteX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
-                                controllerId, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> processAfterAdd(either, account,
-                                        commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                        Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN);
+                        
+                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
+                            if (e.isRight()) {
+                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations3).thenAccept(either -> processAfterAdd(either,
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                            } else {
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                            }
+                        });
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
@@ -311,15 +340,31 @@ public class StoreDeployments {
                     // verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                     // if (verified) {
                     if (!selfIssued) {
-                        UpdateItemUtils.updateItemsAddOrDeleteX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
-                                controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate()).thenAccept(
-                                        either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier,
-                                                dailyPlanDate, includeLate));
+                        Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
+                                        .getCertificate(), null);
+                        
+                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
+                            if (e.isRight()) {
+                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations4).thenAccept(either -> processAfterAdd(either,
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                            } else {
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                            }
+                        });
                     } else {
                         signerDN = cert.getSubjectDN().getName();
-                        UpdateItemUtils.updateItemsAddOrDeleteX509SignerDN(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
-                                controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> processAfterAdd(either, account,
-                                        commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                        Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN);
+                        
+                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
+                            if (e.isRight()) {
+                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations5).thenAccept(either -> processAfterAdd(either,
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                            } else {
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                            }
+                        });
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";

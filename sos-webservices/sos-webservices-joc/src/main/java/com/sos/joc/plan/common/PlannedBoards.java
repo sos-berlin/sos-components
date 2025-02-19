@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.controller.model.board.Board;
 import com.sos.controller.model.board.Notice;
+import com.sos.controller.model.board.NoticeState;
 import com.sos.controller.model.board.NoticeStateText;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.Globals;
@@ -43,6 +45,17 @@ public class PlannedBoards {
     private final JControllerState controllerState;
     private final boolean withSysncState;
     private final Integer limitOrders;
+    
+    private static final Map<NoticeStateText, Integer> severities = Collections.unmodifiableMap(new HashMap<NoticeStateText, Integer>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(NoticeStateText.POSTED, 6);
+            put(NoticeStateText.EXPECTED, 8);
+            put(NoticeStateText.ANNOUNCED, 4);
+        }
+    });
 
     public PlannedBoards(Map<BoardPath, ?> jBoards, Map<String, OrderV> orders, boolean compact, Integer limit, JControllerState controllerState) {
         this.jBoards = jBoards;
@@ -138,7 +151,7 @@ public class PlannedBoards {
         Notice notice = new Notice();
         notice.setId(noticeKeyShortString);
         jNotice.endOfLife().map(Date::from).ifPresent(notice::setEndOfLife);
-        notice.setState(BoardHelper.getState(NoticeStateText.POSTED));
+        notice.setState(getState(NoticeStateText.POSTED));
         return notice;
     }
 
@@ -153,7 +166,7 @@ public class PlannedBoards {
             notice.setExpectingOrders(expectingOrders.collect(Collectors.toList()));
             // TODO notice.setWorkflowTagsPerWorkflow();
         }
-        notice.setState(BoardHelper.getState(NoticeStateText.EXPECTED, np.isAnnounced()));
+        notice.setState(getState(NoticeStateText.EXPECTED, np.isAnnounced()));
         return notice;
     }
     
@@ -195,6 +208,21 @@ public class PlannedBoards {
             item.setState(SyncStateHelper.getState(getSyncStateText(BoardPath.of(dc.getName()))));
         }
         return item;
+    }
+    
+    private static NoticeState getState(NoticeStateText state) {
+        NoticeState nState = new NoticeState();
+        nState.set_text(state);
+        nState.setSeverity(severities.get(state));
+        return nState;
+    }
+    
+    private static NoticeState getState(NoticeStateText state, boolean isAnnounced) {
+        if (isAnnounced) {
+            return getState(NoticeStateText.ANNOUNCED);
+        } else {
+            return getState(state);
+        }
     }
 
 }

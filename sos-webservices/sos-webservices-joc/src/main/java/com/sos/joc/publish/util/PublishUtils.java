@@ -125,13 +125,9 @@ import com.sos.sign.model.workflow.Workflow;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
-import js7.data.board.BoardPath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
-import js7.data_for_java.board.JBoardItem;
-import js7.data_for_java.board.JGlobalBoard;
-import js7.data_for_java.board.JPlannableBoard;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
@@ -1721,66 +1717,6 @@ public abstract class PublishUtils {
 
     public static JLock getJLock(Lock lock) {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T extends JBoardItem> T getJBoard(Board board) {
-        if (board.getBoardType() != null) {
-            switch (board.getBoardType()) {
-            case PLANNABLE:
-                return (T) getJPlannableBoard(board);
-            default: // case GLOBAL
-                return (T) getJGlobalBoard(board);
-            }
-        } else if (board.getTYPE() != null) {
-            switch (board.getTYPE()) {
-            case PLANNABLEBOARD:
-                return (T) getJPlannableBoard(board);
-            default: // case GLOBAL
-                return (T) getJGlobalBoard(board);
-            }
-        } else {
-            return (T) getJGlobalBoard(board);
-        }
-    }
-    
-    private static JGlobalBoard getJGlobalBoard(Board board) {
-        // JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
-        if (board.getPostOrderToNoticeId() == null && board.getExpectOrderToNoticeId() != null) {
-            board.setPostOrderToNoticeId(board.getExpectOrderToNoticeId()); 
-        } else if (board.getPostOrderToNoticeId() != null && board.getExpectOrderToNoticeId() == null) {
-            board.setExpectOrderToNoticeId(board.getPostOrderToNoticeId()); 
-        }
-        JExpression postOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
-        JExpression expectOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
-        if (board.getPostOrderToNoticeId() != null) {
-            postOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getPostOrderToNoticeId()));
-        }
-        if (board.getExpectOrderToNoticeId() != null) {
-            expectOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getExpectOrderToNoticeId()));
-        }
-        JExpression endOfLifeExpression = JExpression.fromString(""); //default empty
-        if (board.getEndOfLife() != null) {
-            endOfLifeExpression = getOrThrowEither(JExpression.parse(board.getEndOfLife()));
-        }
-        return JGlobalBoard.of(BoardPath.of(board.getPath()), postOrderToNoticeIdExpression, expectOrderToNoticeIdExpression, endOfLifeExpression);
-    }
-    
-    private static JPlannableBoard getJPlannableBoard(Board board) {
-        if (board.getPostOrderToNoticeId() == null && board.getExpectOrderToNoticeId() != null) {
-            board.setPostOrderToNoticeId(board.getExpectOrderToNoticeId()); 
-        } else if (board.getPostOrderToNoticeId() != null && board.getExpectOrderToNoticeId() == null) {
-            board.setExpectOrderToNoticeId(board.getPostOrderToNoticeId()); 
-        }
-        JExpression postOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
-        JExpression expectOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
-        if (board.getPostOrderToNoticeId() != null) {
-            postOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getPostOrderToNoticeId()));
-        }
-        if (board.getExpectOrderToNoticeId() != null) {
-            expectOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getExpectOrderToNoticeId()));
-        }
-        return JPlannableBoard.of(BoardPath.of(board.getPath()), postOrderToNoticeIdExpression, expectOrderToNoticeIdExpression);
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
