@@ -249,21 +249,27 @@ public class Validator {
             }
         } else if (ConfigurationType.NOTICEBOARD.equals(type)) {
             Board board = (Board) config;
+            
+            if (board.getPostOrderToNoticeId() != null) {
+                validateExpression("$.postOrderToNoticeId: ", board.getPostOrderToNoticeId());
+            }
+            if (board.getExpectOrderToNoticeId() != null) {
+                validateExpression("$.expectOrderToNoticeId: ", board.getExpectOrderToNoticeId());
+            }
+            
             if (board.getBoardType() == null || board.getBoardType().equals(BoardType.GLOBAL)) {
-                if (board.getPostOrderToNoticeId() != null) {
-                    validateExpression("$.postOrderToNoticeId: ", board.getPostOrderToNoticeId());
-                } else {
-                    throw new JocConfigurationException("$.postOrderToNoticeId: is required");
-                }
-                if (board.getExpectOrderToNoticeId() != null) {
-                    validateExpression("$.expectOrderToNoticeId: ", board.getExpectOrderToNoticeId());
-                } else {
+                if (board.getPostOrderToNoticeId() == null && board.getExpectOrderToNoticeId() == null) {
                     throw new JocConfigurationException("$.expectOrderToNoticeId: is required");
                 }
                 if (board.getEndOfLife() != null) {
                     validateExpression("$.endOfLife: ", board.getEndOfLife());
                 } else {
                     throw new JocConfigurationException("$.endOfLife: is required");
+                }
+            } else {
+                if (board.getPostOrderToNoticeId() != null && board.getExpectOrderToNoticeId() != null && !board.getPostOrderToNoticeId().equals(board
+                        .getExpectOrderToNoticeId())) {
+                    throw new JocConfigurationException("use only $.postOrderToNoticeId");
                 }
             }
         } else if (ConfigurationType.REPORT.equals(type)) {

@@ -69,144 +69,144 @@ public class BoardHelper {
     private static final String NoticeIdSeparator = "╱";
     private static final String EmptyNoticeKey = "—";
 
-    public static Board getCompactBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<NoticeId, Integer> numOfExpectings)
-            throws Exception {
-
-        final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
-
-        Board item = init(dc);
-        item.setState(SyncStateHelper.getState(getSyncStateText(controllerState, jBoardState)));
-        item.setNumOfExpectingOrders(numOfExpectings.values().stream().mapToInt(Integer::intValue).sum());
-        int numOfNotices = numOfExpectings.keySet().size();
+//    public static Board getCompactBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<NoticeId, Integer> numOfExpectings)
+//            throws Exception {
+//
+//        final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
+//
+//        Board item = init(dc);
+//        item.setState(SyncStateHelper.getState(getSyncStateText(controllerState, jBoardState)));
+//        item.setNumOfExpectingOrders(numOfExpectings.values().stream().mapToInt(Integer::intValue).sum());
+//        int numOfNotices = numOfExpectings.keySet().size();
+////        if (jBoardState != null) {
+////            numOfNotices += StreamSupport.stream(JavaConverters.asJava(jBoardState.asScala().notices()).spliterator(), false).mapToInt(e -> 1).sum();
+////        }
+//        item.setNumOfNotices(numOfNotices);
+//        item.setNotices(null);
+//
+//        return item;
+//    }
+    
+//    public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<NoticeId, List<JOrder>> expectings,
+//            Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId, long surveyDateMillis, SOSHibernateSession session) throws Exception {
+//
+//        final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
+//
+//        Board item = init(dc);
+//        item.setState(SyncStateHelper.getState(getSyncStateText(controllerState, jBoardState)));
+//        item.setNumOfExpectingOrders(expectings.values().stream().mapToInt(List::size).sum());
+//
+//        ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
+//        List<Notice> notices = new ArrayList<>();
+//        boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
+//        
+//        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
+//            try {
+//                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
+//            } catch (Exception e) {
+//                return null;
+//            }
+//        };
+//        
 //        if (jBoardState != null) {
-//            numOfNotices += StreamSupport.stream(JavaConverters.asJava(jBoardState.asScala().notices()).spliterator(), false).mapToInt(e -> 1).sum();
+//            final BoardState bs = jBoardState.asScala();
+//            
+//            //LOGGER.info(JavaConverters.asJava(bs.toNoticePlace()).toString());
+////            JavaConverters.asJava(bs.toNoticePlace()).forEach((pnk, nplace) -> {
+////                JNoticePlace np = JNoticePlace.apply(nplace);
+////                boolean isNotExpected = np.expectingOrderIds().isEmpty();
+////                if (isNotExpected) {
+////                    Notice notice = new Notice();
+////                    //notice.setKey(pnk.noticeKey().string());
+////                    notice.setId(getNoticeKeyShortString(pnk));
+////                    np.notice().flatMap(JNotice::endOfLife).map(Date::from).ifPresent(d -> notice.setEndOfLife(d));
+////                    if (np.isAnnounced()) {
+////                        notice.setState(getState(NoticeStateText.ANNOUNCED));
+////                    } else {
+////                        notice.setState(getState(NoticeStateText.POSTED));
+////                    }
+////                    notice.setExpectingOrders(null);
+////                    notices.add(notice);
+////                } else {
+////                    NoticeId noticeId = NoticeId.of(pnk.planId(), jBoardState.path(), pnk.noticeKey());
+////                    Notice notice = getExpectingOrder(noticeId, expectings.get(noticeId), limit, compareScheduleFor, mapJOrderToOrderV,
+////                            withWorkflowTagsDisplayed, session);
+////                    if (np.isAnnounced()) {
+////                        notice.setState(getState(NoticeStateText.ANNOUNCED));
+////                    }
+////                    notices.add(notice);
+////                }
+////            });
 //        }
-        item.setNumOfNotices(numOfNotices);
-        item.setNotices(null);
+//        
+////        expectings.forEach((noticeId, jOrders) -> {
+////            Notice notice = getExpectingOrder(noticeId, jOrders, limit, compareScheduleFor, mapJOrderToOrderV, withWorkflowTagsDisplayed, session);
+////            notices.add(notice);
+////        });
+//
+//        item.setNotices(notices);
+//        item.setNumOfNotices(notices.size());
+//        return item;
+//    }
+    
+//    private static Notice getExpectingOrder(NoticeId noticeId, List<JOrder> jOrders, Integer limit, ToLongFunction<JOrder> compareScheduleFor,
+//            Function<JOrder, OrderV> mapJOrderToOrderV, boolean withWorkflowTagsDisplayed, SOSHibernateSession session) {
+//        Notice notice = new Notice();
+//        notice.setId(BoardHelper.getNoticeKeyShortString(noticeId));
+//        //notice.setKey(noticeId.noticeKey().string());
+//        notice.setEndOfLife(null);
+//        if (limit > -1) {
+//            notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
+//                    .map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+//        } else {
+//            notice.setExpectingOrders(jOrders.stream().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+//        }
+//        notice.setState(getState(NoticeStateText.EXPECTED));
+//        if (withWorkflowTagsDisplayed) {
+//            notice.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, jOrders.stream().map(JOrder::workflowId).map(
+//                    JWorkflowId::path).map(WorkflowPath::string)));
+//        }
+//        return notice;
+//    }
+    
+//    private static JBoardState getJBoardState(JControllerState controllerState, String boardName) {
+//        if (controllerState != null) {
+//            return controllerState.pathToBoardState().get(BoardPath.of(boardName));
+//        }
+//        return null;
+//    }
+    
+//    private static SyncStateText getSyncStateText(JControllerState controllerState, JBoardState jBoardState) {
+//        SyncStateText stateText = SyncStateText.UNKNOWN;
+//        if (controllerState != null) {
+//            stateText = SyncStateText.NOT_IN_SYNC;
+//            if (jBoardState != null) {
+//                stateText = SyncStateText.IN_SYNC;
+//            }
+//        }
+//        return stateText;
+//    }
+    
+//    public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
+//            Set<BoardPath> boardPaths, Set<Folder> permittedFolders) {
+//        return getExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
+//    }
+    
+//    public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
+//        return expectingOrders.collect(Collectors.groupingByConcurrent(
+//                ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(ExpectingOrder::getNoticeId, Collectors.mapping(
+//                        ExpectingOrder::getJOrder, Collectors.toList()))));
+//    }
 
-        return item;
-    }
+//    public static ConcurrentMap<String, ConcurrentMap<NoticeId, Integer>> getNumOfExpectingOrders(JControllerState controllerState,
+//            Set<BoardPath> boardPaths, Set<Folder> permittedFolders) {
+//        return getNumOfExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
+//    }
     
-    public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<NoticeId, List<JOrder>> expectings,
-            Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId, long surveyDateMillis, SOSHibernateSession session) throws Exception {
-
-        final JBoardState jBoardState = getJBoardState(controllerState, dc.getName());
-
-        Board item = init(dc);
-        item.setState(SyncStateHelper.getState(getSyncStateText(controllerState, jBoardState)));
-        item.setNumOfExpectingOrders(expectings.values().stream().mapToInt(List::size).sum());
-
-        ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
-        List<Notice> notices = new ArrayList<>();
-        boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
-        
-        Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
-            try {
-                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
-            } catch (Exception e) {
-                return null;
-            }
-        };
-        
-        if (jBoardState != null) {
-            final BoardState bs = jBoardState.asScala();
-            
-            //LOGGER.info(JavaConverters.asJava(bs.toNoticePlace()).toString());
-//            JavaConverters.asJava(bs.toNoticePlace()).forEach((pnk, nplace) -> {
-//                JNoticePlace np = JNoticePlace.apply(nplace);
-//                boolean isNotExpected = np.expectingOrderIds().isEmpty();
-//                if (isNotExpected) {
-//                    Notice notice = new Notice();
-//                    //notice.setKey(pnk.noticeKey().string());
-//                    notice.setId(getNoticeKeyShortString(pnk));
-//                    np.notice().flatMap(JNotice::endOfLife).map(Date::from).ifPresent(d -> notice.setEndOfLife(d));
-//                    if (np.isAnnounced()) {
-//                        notice.setState(getState(NoticeStateText.ANNOUNCED));
-//                    } else {
-//                        notice.setState(getState(NoticeStateText.POSTED));
-//                    }
-//                    notice.setExpectingOrders(null);
-//                    notices.add(notice);
-//                } else {
-//                    NoticeId noticeId = NoticeId.of(pnk.planId(), jBoardState.path(), pnk.noticeKey());
-//                    Notice notice = getExpectingOrder(noticeId, expectings.get(noticeId), limit, compareScheduleFor, mapJOrderToOrderV,
-//                            withWorkflowTagsDisplayed, session);
-//                    if (np.isAnnounced()) {
-//                        notice.setState(getState(NoticeStateText.ANNOUNCED));
-//                    }
-//                    notices.add(notice);
-//                }
-//            });
-        }
-        
-//        expectings.forEach((noticeId, jOrders) -> {
-//            Notice notice = getExpectingOrder(noticeId, jOrders, limit, compareScheduleFor, mapJOrderToOrderV, withWorkflowTagsDisplayed, session);
-//            notices.add(notice);
-//        });
-
-        item.setNotices(notices);
-        item.setNumOfNotices(notices.size());
-        return item;
-    }
-    
-    private static Notice getExpectingOrder(NoticeId noticeId, List<JOrder> jOrders, Integer limit, ToLongFunction<JOrder> compareScheduleFor,
-            Function<JOrder, OrderV> mapJOrderToOrderV, boolean withWorkflowTagsDisplayed, SOSHibernateSession session) {
-        Notice notice = new Notice();
-        notice.setId(BoardHelper.getNoticeKeyShortString(noticeId));
-        //notice.setKey(noticeId.noticeKey().string());
-        notice.setEndOfLife(null);
-        if (limit > -1) {
-            notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
-                    .map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
-        } else {
-            notice.setExpectingOrders(jOrders.stream().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
-        }
-        notice.setState(getState(NoticeStateText.EXPECTED));
-        if (withWorkflowTagsDisplayed) {
-            notice.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, jOrders.stream().map(JOrder::workflowId).map(
-                    JWorkflowId::path).map(WorkflowPath::string)));
-        }
-        return notice;
-    }
-    
-    private static JBoardState getJBoardState(JControllerState controllerState, String boardName) {
-        if (controllerState != null) {
-            return controllerState.pathToBoardState().get(BoardPath.of(boardName));
-        }
-        return null;
-    }
-    
-    private static SyncStateText getSyncStateText(JControllerState controllerState, JBoardState jBoardState) {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
-        if (controllerState != null) {
-            stateText = SyncStateText.NOT_IN_SYNC;
-            if (jBoardState != null) {
-                stateText = SyncStateText.IN_SYNC;
-            }
-        }
-        return stateText;
-    }
-    
-    public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
-            Set<BoardPath> boardPaths, Set<Folder> permittedFolders) {
-        return getExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
-    }
-    
-    public static ConcurrentMap<String, ConcurrentMap<NoticeId, List<JOrder>>> getExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
-        return expectingOrders.collect(Collectors.groupingByConcurrent(
-                ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(ExpectingOrder::getNoticeId, Collectors.mapping(
-                        ExpectingOrder::getJOrder, Collectors.toList()))));
-    }
-
-    public static ConcurrentMap<String, ConcurrentMap<NoticeId, Integer>> getNumOfExpectingOrders(JControllerState controllerState,
-            Set<BoardPath> boardPaths, Set<Folder> permittedFolders) {
-        return getNumOfExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
-    }
-    
-    public static ConcurrentMap<String, ConcurrentMap<NoticeId, Integer>> getNumOfExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
-        return expectingOrders.collect(Collectors.groupingByConcurrent(ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(
-                ExpectingOrder::getNoticeId, Collectors.reducing(0, e -> 1, Integer::sum))));
-    }
+//    public static ConcurrentMap<String, ConcurrentMap<NoticeId, Integer>> getNumOfExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
+//        return expectingOrders.collect(Collectors.groupingByConcurrent(ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(
+//                ExpectingOrder::getNoticeId, Collectors.reducing(0, e -> 1, Integer::sum))));
+//    }
     
     public static JControllerState getCurrentState(String controllerId) {
         JControllerState currentstate = null;
@@ -226,62 +226,68 @@ public class BoardHelper {
         Function<JOrder, Stream<ExpectingOrder>> mapper = order -> controllerState.orderToStillExpectedNotices(order.id()).stream().filter(
                 e -> boardPaths.contains(e.boardPath())).map(e -> new ExpectingOrder(order, e));
         
-        if (permittedFolders == null || permittedFolders.isEmpty()) {
-            return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel().flatMap(mapper).filter(
-                    Objects::nonNull);
-        }
-        ConcurrentMap<JWorkflowId, List<JOrder>> ordersPerWorkflow = controllerState.ordersBy(JOrderPredicates.byOrderState(
-                Order.ExpectingNotices.class)).parallel().collect(Collectors.groupingByConcurrent(JOrder::workflowId));
-        return ordersPerWorkflow.entrySet().parallelStream().filter(e -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
-                permittedFolders)).map(Map.Entry::getValue).flatMap(List::stream).flatMap(mapper).filter(Objects::nonNull);
-    }
-    
-    public static Stream<JOrder> getAllExpectingOrdersStream(JControllerState controllerState, Set<Folder> permittedFolders) {
-        if (controllerState == null) {
-            return Stream.empty();
-        }
-        Stream<JOrder> jOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class));
+        Stream<JOrder> jOrderStream = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel();
         if (permittedFolders != null && !permittedFolders.isEmpty()) {
-            jOrders = jOrders.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
+            jOrderStream = jOrderStream.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
         }
-        return jOrders;
+        return jOrderStream.flatMap(mapper).filter(Objects::nonNull);
+        
+//        if (permittedFolders == null || permittedFolders.isEmpty()) {
+//            return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel().flatMap(mapper).filter(
+//                    Objects::nonNull);
+//        }
+//        ConcurrentMap<JWorkflowId, List<JOrder>> ordersPerWorkflow = controllerState.ordersBy(JOrderPredicates.byOrderState(
+//                Order.ExpectingNotices.class)).parallel().collect(Collectors.groupingByConcurrent(JOrder::workflowId));
+//        return ordersPerWorkflow.entrySet().parallelStream().filter(e -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
+//                permittedFolders)).map(Map.Entry::getValue).flatMap(List::stream).flatMap(mapper).filter(Objects::nonNull);
     }
     
-    public static Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
-        Board item = Globals.objectMapper.readValue(dc.getContent(), Board.class);
-        item.setPath(dc.getPath());
-        item.setVersionDate(dc.getCreated());
-        item.setVersion(null);
-        return item;
-    }
+//    public static Stream<JOrder> getAllExpectingOrdersStream(JControllerState controllerState, Set<Folder> permittedFolders) {
+//        if (controllerState == null) {
+//            return Stream.empty();
+//        }
+//        Stream<JOrder> jOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class));
+//        if (permittedFolders != null && !permittedFolders.isEmpty()) {
+//            jOrders = jOrders.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
+//        }
+//        return jOrders;
+//    }
     
-    public static NoticeState getState(NoticeStateText state) {
-        NoticeState nState = new NoticeState();
-        nState.set_text(state);
-        nState.setSeverity(severities.get(state));
-        return nState;
-    }
+//    public static Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
+//        Board item = Globals.objectMapper.readValue(dc.getContent(), Board.class);
+//        item.setPath(dc.getPath());
+//        item.setVersionDate(dc.getCreated());
+//        item.setVersion(null);
+//        return item;
+//    }
     
-    public static NoticeState getState(NoticeStateText state, boolean isAnnounced) {
-        NoticeState nState = new NoticeState();
-        if (isAnnounced) {
-            state = NoticeStateText.ANNOUNCED;
-        }
-        nState.set_text(state);
-        nState.setSeverity(severities.get(state));
-        return nState;
-    }
+//    public static NoticeState getState(NoticeStateText state) {
+//        NoticeState nState = new NoticeState();
+//        nState.set_text(state);
+//        nState.setSeverity(severities.get(state));
+//        return nState;
+//    }
     
-    private static final Map<NoticeStateText, Integer> severities = Collections.unmodifiableMap(new HashMap<NoticeStateText, Integer>() {
-
-        private static final long serialVersionUID = 1L;
-
-        {
-            put(NoticeStateText.POSTED, 6);
-            put(NoticeStateText.EXPECTED, 8);
-            put(NoticeStateText.ANNOUNCED, 4);
-        }
-    });
+//    public static NoticeState getState(NoticeStateText state, boolean isAnnounced) {
+//        NoticeState nState = new NoticeState();
+//        if (isAnnounced) {
+//            state = NoticeStateText.ANNOUNCED;
+//        }
+//        nState.set_text(state);
+//        nState.setSeverity(severities.get(state));
+//        return nState;
+//    }
+    
+//    private static final Map<NoticeStateText, Integer> severities = Collections.unmodifiableMap(new HashMap<NoticeStateText, Integer>() {
+//
+//        private static final long serialVersionUID = 1L;
+//
+//        {
+//            put(NoticeStateText.POSTED, 6);
+//            put(NoticeStateText.EXPECTED, 8);
+//            put(NoticeStateText.ANNOUNCED, 4);
+//        }
+//    });
     
     public static NoticeId getNoticeId(String noticeIdStr, String boardPath) {
         
@@ -289,6 +295,9 @@ public class BoardHelper {
         BoardPath bPath = BoardPath.of(JocInventory.pathToName(boardPath));
         
         if (!noticeIdStr.contains("/")) { // old noticeId for global boards
+            if (noticeIdStr.equals("-")) {
+                noticeIdStr = "";
+            }
             return NoticeId.of(PlanId.Global(), bPath, NoticeKey.of(noticeIdStr));
         } else {
             String[] noticeIdParts = noticeIdStr.split("/");

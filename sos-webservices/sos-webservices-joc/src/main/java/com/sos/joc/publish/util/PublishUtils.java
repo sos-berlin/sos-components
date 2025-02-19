@@ -1746,30 +1746,41 @@ public abstract class PublishUtils {
     
     private static JGlobalBoard getJGlobalBoard(Board board) {
         // JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
-        JExpression toNoticeExpression = null;
-        JExpression readingOrderToNoticeIdExpression = null;
-        JExpression endOfLifeExpression = null;
-        Either<Problem, JExpression> toNoticeEither = JExpression.parse(board.getPostOrderToNoticeId());
-        if (toNoticeEither.isLeft()) {
-            throw new JocDeployException(toNoticeEither.getLeft().toString());
-        } else {
-            toNoticeExpression = toNoticeEither.get();
+        if (board.getPostOrderToNoticeId() == null && board.getExpectOrderToNoticeId() != null) {
+            board.setPostOrderToNoticeId(board.getExpectOrderToNoticeId()); 
+        } else if (board.getPostOrderToNoticeId() != null && board.getExpectOrderToNoticeId() == null) {
+            board.setExpectOrderToNoticeId(board.getPostOrderToNoticeId()); 
         }
-        Either<Problem, JExpression> readingOrderToNoticeIdEither = JExpression.parse(board.getExpectOrderToNoticeId());
-        if (readingOrderToNoticeIdEither.isLeft()) {
-            throw new JocDeployException(readingOrderToNoticeIdEither.getLeft().toString());
-        } else {
-            readingOrderToNoticeIdExpression = readingOrderToNoticeIdEither.get();
+        JExpression postOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
+        JExpression expectOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
+        if (board.getPostOrderToNoticeId() != null) {
+            postOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getPostOrderToNoticeId()));
         }
+        if (board.getExpectOrderToNoticeId() != null) {
+            expectOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getExpectOrderToNoticeId()));
+        }
+        JExpression endOfLifeExpression = JExpression.fromString(""); //default empty
         if (board.getEndOfLife() != null) {
             endOfLifeExpression = getOrThrowEither(JExpression.parse(board.getEndOfLife()));
         }
-        return JGlobalBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
+        return JGlobalBoard.of(BoardPath.of(board.getPath()), postOrderToNoticeIdExpression, expectOrderToNoticeIdExpression, endOfLifeExpression);
     }
     
     private static JPlannableBoard getJPlannableBoard(Board board) {
-        JExpression ex = JExpression.fromString(""); //default empty
-        return JPlannableBoard.of(BoardPath.of(board.getPath()), ex, ex);
+        if (board.getPostOrderToNoticeId() == null && board.getExpectOrderToNoticeId() != null) {
+            board.setPostOrderToNoticeId(board.getExpectOrderToNoticeId()); 
+        } else if (board.getPostOrderToNoticeId() != null && board.getExpectOrderToNoticeId() == null) {
+            board.setExpectOrderToNoticeId(board.getPostOrderToNoticeId()); 
+        }
+        JExpression postOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
+        JExpression expectOrderToNoticeIdExpression = JExpression.fromString(""); //default empty
+        if (board.getPostOrderToNoticeId() != null) {
+            postOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getPostOrderToNoticeId()));
+        }
+        if (board.getExpectOrderToNoticeId() != null) {
+            expectOrderToNoticeIdExpression = getOrThrowEither(JExpression.parse(board.getExpectOrderToNoticeId()));
+        }
+        return JPlannableBoard.of(BoardPath.of(board.getPath()), postOrderToNoticeIdExpression, expectOrderToNoticeIdExpression);
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {

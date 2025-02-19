@@ -147,8 +147,12 @@ public class JsonSerializer {
         }
         if (b.getBoardType() != null && b.getBoardType().equals(BoardType.PLANNABLE)) {
             b.setEndOfLife(null);
-            b.setExpectOrderToNoticeId(null);
-            b.setPostOrderToNoticeId(null);
+            if (b.getPostOrderToNoticeId() != null && b.getExpectOrderToNoticeId() != null) {
+                b.setPostOrderToNoticeId(null);
+            }
+            if (b.getExpectOrderToNoticeId() != null && b.getExpectOrderToNoticeId().replace("\"", "").isBlank()) {
+                b.setExpectOrderToNoticeId(null);
+            }
         } else {
             if (b.getEndOfLife() != null) {
                 b.setEndOfLife(b.getEndOfLife().replaceAll("(\\$)epochMilli", "$1js7EpochMilli"));

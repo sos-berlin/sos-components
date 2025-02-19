@@ -1126,7 +1126,7 @@ public class ImportUtils {
         }
         if (board.getTYPE().equals(DeployType.PLANNABLEBOARD)) {
             return true;
-        } else if (board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board.getPostOrderToNoticeId() == null) {
+        } else if (board.getEndOfLife() == null && (board.getExpectOrderToNoticeId() == null || board.getPostOrderToNoticeId() == null)) {
             return false;
         } else {
             return true;
@@ -1137,10 +1137,12 @@ public class ImportUtils {
         if (board == null) {
             return false;
         }
-        if (board.getBoardType() != null && board.getBoardType().equals(BoardType.PLANNABLE)) {
-            return board.getTYPE() != null || board.getDocumentationName() != null;
-        } else if (board.getDocumentationName() == null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null
-                && board.getPostOrderToNoticeId() == null && board.getTYPE() == null) {
+        if (board.getBoardType() == null) {
+            return false;
+        }
+        if (board.getBoardType().equals(BoardType.PLANNABLE)) {
+            return true;
+        } else if (board.getEndOfLife() == null && (board.getExpectOrderToNoticeId() == null || board.getPostOrderToNoticeId() == null)) {
             return false;
         } else {
             return true;
