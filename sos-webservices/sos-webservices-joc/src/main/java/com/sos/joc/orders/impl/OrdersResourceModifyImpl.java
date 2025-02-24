@@ -713,8 +713,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     prevPosString = jPos.toString();
                 }
             } else {
-//                prevPos = cop.getCurrentOrderPosition().toList();
-//                prevPosString = cop.getCurrentOrderPosition().toString();
+                prevPos = cop.getCurrentOrderPosition().toList();
+                prevPosString = cop.getCurrentOrderPosition().toString();
             }
             
         } else {
@@ -757,6 +757,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         jocError, "append", null);
             }
         } else {
+            // TODO JOC-1997 this case never reached -> dead code
             Variables v = new Variables();
             v.setAdditionalProperties(variables.getAdditionalProperties());
             List<Object> posList = new LinkedList<>(cop.getCurrentOrderPosition().toList());
