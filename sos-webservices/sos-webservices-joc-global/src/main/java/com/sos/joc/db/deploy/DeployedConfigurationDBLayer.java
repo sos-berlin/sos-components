@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -640,6 +641,17 @@ public class DeployedConfigurationDBLayer {
     
     public List<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
+        return getUsedWorkflowsByNoticeBoards(null, controllerId).collect(Collectors.toList());
+    }
+    
+    public List<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId, Set<String> boardNames) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        return getUsedWorkflowsByNoticeBoards(null, controllerId).filter(wb -> wb.getNoticeBoardNames().stream().anyMatch(boardNames::contains))
+                .collect(Collectors.toList());
+    }
+    
+    public Stream<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String boardName, String controllerId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
@@ -650,16 +662,23 @@ public class DeployedConfigurationDBLayer {
             hql.append("and dc.controllerId=:controllerId ");
             hql.append("and sw.deployed=1 ");
             hql.append("and ");
-            hql.append(jsonFunc).append(" is not null");
+            if (boardName == null || boardName.isEmpty()) {
+                hql.append(jsonFunc).append(" is not null");
+            } else {
+                hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
+            }
 
             Query<DeployedContent> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
+            if (boardName != null && !boardName.isEmpty()) {
+                query.setParameter("boardName", getRegexpParameter(boardName, "\""));
+            }
             List<DeployedContent> result = session.getResultList(query);
             if (result != null) {
-                return result.stream().map(DeployedContent::mapToWorkflowBoards).collect(Collectors.toList());
+                return result.stream().map(DeployedContent::mapToWorkflowBoards).filter(Objects::nonNull);
             }
-            return Collections.emptyList();
+            return Stream.empty();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

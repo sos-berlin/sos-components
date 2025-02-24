@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.controller.model.board.Board;
+import com.sos.controller.model.board.BoardDeps;
 import com.sos.controller.model.board.Notice;
 import com.sos.controller.model.board.NoticeState;
 import com.sos.controller.model.board.NoticeStateText;
@@ -40,7 +41,7 @@ public class PlannedBoards {
 
     private final static int limitOrdersDefault = 10000;
     private final Map<BoardPath, ?> jBoards;
-    private final Map<String, OrderV> orders;
+    private final Map<OrderId, OrderV> orders;
     private final boolean compact;
     private final JControllerState controllerState;
     private final boolean withSysncState;
@@ -57,7 +58,7 @@ public class PlannedBoards {
         }
     });
 
-    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<String, OrderV> orders, boolean compact, Integer limit, JControllerState controllerState) {
+    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<OrderId, OrderV> orders, boolean compact, Integer limit, JControllerState controllerState) {
         this.jBoards = jBoards;
         this.orders = orders;
         this.compact = compact;
@@ -66,7 +67,7 @@ public class PlannedBoards {
         this.limitOrders = limit == null ? limitOrdersDefault : limit;
     }
     
-    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<String, OrderV> orders, boolean compact, Integer limit) {
+    public PlannedBoards(Map<BoardPath, ?> jBoards, Map<OrderId, OrderV> orders, boolean compact, Integer limit) {
         this.jBoards = jBoards;
         this.orders = orders;
         this.compact = compact;
@@ -85,20 +86,28 @@ public class PlannedBoards {
     }
     
     @SuppressWarnings("unchecked")
-    public Board getPlannedBoard(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
+    public <T extends Board> T getPlannedBoard(DeployedContent dc, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
 
         Object pbs = jBoards.get(BoardPath.of(dc.getName()));
         if (pbs == null) {
-            return getPlannedBoard(init(dc), Collections.emptyList());
+            return getPlannedBoard(init(dc, clazz), Collections.emptyList());
         }
         if (pbs instanceof JPlannedBoard) {
-            return getPlannedBoard(init(dc), Collections.singleton((JPlannedBoard) pbs));
+            return getPlannedBoard(init(dc, clazz), Collections.singleton((JPlannedBoard) pbs));
         } else {
-            return getPlannedBoard(init(dc), (Collection<JPlannedBoard>) pbs);
+            return getPlannedBoard(init(dc, clazz), (Collection<JPlannedBoard>) pbs);
         }
     }
     
-    private Board getPlannedBoard(Board item, Collection<JPlannedBoard> pbs) throws JsonParseException, JsonMappingException, IOException {
+    public Board getPlannedBoard(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
+        return getPlannedBoard(dc, Board.class);
+    }
+    
+    public BoardDeps getPlannedBoardDeps(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
+        return getPlannedBoard(dc, BoardDeps.class);
+    }
+    
+    private <T extends Board> T getPlannedBoard(T item, Collection<JPlannedBoard> pbs) throws JsonParseException, JsonMappingException, IOException {
 
         int numOfExpectingOrders = 0;
         int numOfAnnouncements = 0;
@@ -159,7 +168,7 @@ public class PlannedBoards {
         Notice notice = new Notice();
         notice.setId(noticeKeyShortString);
         if (!np.expectingOrderIds().isEmpty()) {
-            Stream<OrderV> expectingOrders = np.expectingOrderIds().stream().map(OrderId::string).map(this.orders::get).filter(Objects::nonNull);
+            Stream<OrderV> expectingOrders = np.expectingOrderIds().stream().map(this.orders::get).filter(Objects::nonNull);
             if (limitOrders > -1 && np.expectingOrderIds().size() > limitOrders) {
                 expectingOrders = expectingOrders.sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders.longValue());
             }
@@ -176,6 +185,7 @@ public class PlannedBoards {
     }
     
     private int getNumOfExpectingOrders(JNoticePlace np) {
+        //return np.expectingOrderIds().stream().filter(orders::containsKey).mapToInt(oId -> 1).sum();
         return np.expectingOrderIds().size();
     }
     
@@ -184,6 +194,7 @@ public class PlannedBoards {
     }
     
     private int getNumOfExpectedNotices(JNoticePlace np) {
+        //return np.expectingOrderIds().stream().filter(orders::containsKey).findAny().isEmpty() ? 0 : 1;
         return np.expectingOrderIds().isEmpty() ? 0 : 1;
     }
     
@@ -198,8 +209,8 @@ public class PlannedBoards {
         return stateText;
     }
     
-    private Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
-        Board item = Globals.objectMapper.readValue(dc.getContent(), Board.class);
+    private <T extends Board> T init(DeployedContent dc, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
+        T item = Globals.objectMapper.readValue(dc.getContent(), clazz);
         item.setTYPE(null);
         item.setPath(dc.getPath());
         item.setVersionDate(dc.getCreated());

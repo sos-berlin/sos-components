@@ -17,11 +17,10 @@ public class DeployedContent {
     private String commitId;
     private Boolean isCurrentVersion;
     private Date created;
-    private String controllerId;
     
-    public DeployedContent(String path, String json, String commitId) {
+    public DeployedContent(String path, String instructionJson, String commitId) {
         this.path = path;
-        this.json = json;
+        this.json = instructionJson;
         this.commitId = commitId;
         this.created = null;
         this.isCurrentVersion = null;
@@ -53,14 +52,6 @@ public class DeployedContent {
         this.commitId = commitId;
         this.created = created;
         this.isCurrentVersion = isCurrentVersion;
-    }
-    
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-    
-    public String getControllerId() {
-        return controllerId;
     }
     
     public void setContent(String json) {

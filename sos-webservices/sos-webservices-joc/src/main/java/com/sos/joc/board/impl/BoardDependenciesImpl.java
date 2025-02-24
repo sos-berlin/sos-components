@@ -1,6 +1,7 @@
 package com.sos.joc.board.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.board.BoardDeps;
@@ -74,17 +76,30 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
             board.setVersionDate(dc.getCreated());
             board.setVersion(null);
             
-            List<WorkflowIdAndTags> wcIds = dbLayer.getUsedWorkflowsByConsumeNoticeBoard(dc.getName(), controllerId);
-            List<WorkflowIdAndTags> weIds = dbLayer.getUsedWorkflowsByExpectedNoticeBoard(dc.getName(), controllerId);
-            List<WorkflowIdAndTags> wpIds = dbLayer.getUsedWorkflowsByPostNoticeBoard(dc.getName(), controllerId);
+            List<WorkflowBoards> wbs = dbLayer.getUsedWorkflowsByNoticeBoards(dc.getName(), controllerId).collect(Collectors.toList());
             
+            List<WorkflowIdAndTags> wcIds = new ArrayList<>();
+            List<WorkflowIdAndTags> weIds = new ArrayList<>();
+            List<WorkflowIdAndTags> wpIds = new ArrayList<>();
+            
+            Stream<WorkflowBoards> wbsStream = wbs.stream();
             if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
-                Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(session, Stream.concat(Stream.concat(
-                        getWorkflowNamesStream(wcIds), getWorkflowNamesStream(weIds)), getWorkflowNamesStream(wpIds)));
-                wcIds = addTags(wcIds, wTags);
-                weIds = addTags(weIds, wTags);
-                wpIds = addTags(wpIds, wTags);
+                Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(session, getWorkflowNamesStream(wbs));
+                wbsStream = addTags(wbsStream, wTags);
             }
+            
+            wbsStream.forEach(wb -> {
+                WorkflowIdAndTags wId = new WorkflowIdAndTags(wb.getWorkflowTags(), wb.getPath(), wb.getVersionId());
+                if (wb.hasConsumeNotice(dc.getName())) {
+                    wcIds.add(wId);
+                }
+                if (wb.hasExpectNotice(dc.getName())) {
+                    weIds.add(wId);
+                }
+                if (wb.hasPostNotice(dc.getName())) {
+                    wpIds.add(wId);
+                } 
+            });
             
             board.setConsumingWorkflows(wcIds);
             board.setExpectingWorkflows(weIds);
@@ -101,13 +116,12 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
         }
     }
     
-    private Stream<String> getWorkflowNamesStream(List<WorkflowIdAndTags> wIds) {
-        return wIds.stream().map(WorkflowIdAndTags::getPath).map(JocInventory::pathToName);
+    private <T extends WorkflowIdAndTags> Stream<String> getWorkflowNamesStream(List<T> wIds) {
+        return wIds.stream().map(T::getPath).map(JocInventory::pathToName);
     }
     
-    private List<WorkflowIdAndTags> addTags(List<WorkflowIdAndTags> wIds, Map<String, LinkedHashSet<String>> wTags) {
-        return wIds.stream().peek(w -> w.setWorkflowTags(wTags.get(JocInventory.pathToName(w.getPath())))).collect(Collectors
-                .toList());
+    private <T extends WorkflowIdAndTags> Stream<T> addTags(Stream<T> wIds, Map<String, LinkedHashSet<String>> wTags) {
+        return wIds.peek(w -> w.setWorkflowTags(wTags.get(JocInventory.pathToName(w.getPath()))));
     }
 
 }

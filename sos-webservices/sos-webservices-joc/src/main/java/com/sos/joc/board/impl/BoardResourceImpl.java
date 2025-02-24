@@ -109,7 +109,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                         Collectors.toList());
             }
             
-            Map<String, OrderV> orders = Collections.emptyMap();
+            Map<OrderId, OrderV> orders = Collections.emptyMap();
             if (filter.getCompact() != Boolean.TRUE) {
                 ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
@@ -128,7 +128,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                 };
 
                 orders = OrdersHelper.getPermittedJOrdersFromOrderIds(eos, folderPermissions.getListOfFolders(), currentState).map(mapJOrderToOrderV)
-                        .filter(Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
+                        .filter(Objects::nonNull).collect(Collectors.toMap(o -> OrderId.of(o.getOrderId()), Function.identity()));
             }
             
             PlannedBoards plB = new PlannedBoards(Collections.singletonMap(boardPath, pbs), orders, filter.getCompact() == Boolean.TRUE, filter

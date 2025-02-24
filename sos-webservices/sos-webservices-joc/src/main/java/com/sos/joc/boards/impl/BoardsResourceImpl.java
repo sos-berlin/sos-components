@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.board.Board;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.boards.resource.IBoardsResource;
@@ -126,7 +127,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 Set<BoardPath> boardNames = contents.stream().map(DeployedContent::getName).map(BoardPath::of).collect(Collectors.toSet());
                 Map<BoardPath, List<JPlannedBoard>> jBoards = getPathToBoard(controllerState, boardNames, filter);
                 
-                Map<String, OrderV> orders = Collections.emptyMap();
+                Map<OrderId, OrderV> orders = Collections.emptyMap();
                 if (filter.getCompact() != Boolean.TRUE) {
                     
                     Set<OrderId> eos = jBoards.values().stream().flatMap(Collection::stream).map(JPlannedBoard::toNoticePlace).map(Map::values)
@@ -144,7 +145,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                     };
 
                     orders = OrdersHelper.getPermittedJOrdersFromOrderIds(eos, permittedFolders, controllerState).map(mapJOrderToOrderV).filter(
-                            Objects::nonNull).collect(Collectors.toMap(OrderV::getOrderId, Function.identity()));
+                            Objects::nonNull).collect(Collectors.toMap(o -> OrderId.of(o.getOrderId()), Function.identity()));
                 }
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, filter.getCompact() == Boolean.TRUE, filter.getLimit(), controllerState);

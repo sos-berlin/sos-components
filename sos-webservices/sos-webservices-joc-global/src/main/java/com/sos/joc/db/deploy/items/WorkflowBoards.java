@@ -10,18 +10,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowIdAndTags;
 
 
-/**
- * agent
- * <p>
- * 
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WorkflowBoards
-    extends WorkflowId
+    extends WorkflowIdAndTags
 {
 
     @JsonProperty("postNotices")
@@ -32,6 +26,9 @@ public class WorkflowBoards
 
     @JsonProperty("consumeNotices")
     private List<String> consumeNotices;
+    
+    @JsonProperty("noticeBoardNames")
+    private List<String> noticeBoardNames;
 
     @JsonProperty("postNotices")
     public List<String> getPostNotices() {
@@ -61,6 +58,16 @@ public class WorkflowBoards
     @JsonProperty("consumeNotices")
     public void setConsumeNotices(List<String> consumeNotices) {
         this.consumeNotices = consumeNotices;
+    }
+    
+    @JsonProperty("noticeBoardNames")
+    public List<String> getNoticeBoardNames() {
+        return noticeBoardNames;
+    }
+
+    @JsonProperty("noticeBoardNames")
+    public void setNoticeBoardNames(List<String> noticeBoardNames) {
+        this.noticeBoardNames = noticeBoardNames;
     }
     
     @JsonIgnore
