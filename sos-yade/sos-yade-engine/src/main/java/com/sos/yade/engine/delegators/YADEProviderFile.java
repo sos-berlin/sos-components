@@ -4,6 +4,8 @@ import java.security.MessageDigest;
 import java.util.Optional;
 
 import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
@@ -27,8 +29,9 @@ public class YADEProviderFile extends ProviderFile {
 
     private String checksum;
 
-    public YADEProviderFile(String fullPath, long size, long lastModifiedMillis, YADEDirectoryMapper directoryMapper, boolean checkSteady) {
-        super(fullPath, size, lastModifiedMillis);
+    public YADEProviderFile(IProvider provider, String fullPath, long size, long lastModifiedMillis, YADEDirectoryMapper directoryMapper,
+            boolean checkSteady) {
+        super(provider, fullPath, size, lastModifiedMillis);
         parentFullPath = SOSPathUtil.getParentPath(getFullPath());
         if (directoryMapper != null) {
             directoryMapper.addSourceFileDirectory(parentFullPath);
@@ -73,18 +76,18 @@ public class YADEProviderFile extends ProviderFile {
     }
 
     /** Operations: Copy/Move(with target) */
-    public void initTarget(CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
-            int index) throws SOSProviderException {
+    public void initTarget(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, int index) throws SOSProviderException {
         init(index);
-        initTarget(config, sourceDelegator, targetDelegator);
+        initTarget(logger, config, sourceDelegator, targetDelegator);
     }
 
     public void resetTarget() {
         target = null;
     }
 
-    private void initTarget(CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator)
-            throws SOSProviderException {
+    private void initTarget(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
         if (config.getTarget().getCumulate() != null) {
             target = null;
             return;
@@ -103,11 +106,12 @@ public class YADEProviderFile extends ProviderFile {
         if (fileNameInfo.isAbsolutePath()) {// name replaced to an absolute path
             targetDirectory = fileNameInfo.getParent();
         } else {
-            targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(config, targetDelegator, this, fileNameInfo.getParent());
+            targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(logger, config, targetDelegator, this, fileNameInfo
+                    .getParent());
         }
 
-        String transferFileFullPath = SOSPathUtil.appendPath(targetDirectory, transferFileName, targetDelegator.getPathSeparator());
-        target = new YADETargetProviderFile(transferFileFullPath);
+        String transferFileFullPath = SOSPathUtil.appendPath(targetDirectory, transferFileName, targetDelegator.getProvider().getPathSeparator());
+        target = new YADETargetProviderFile(targetDelegator.getProvider(), transferFileFullPath);
         if (config.getTarget().getAtomic() != null) {
             /** the final name of the file after transfer */
             target.setFinalName(finalFileName);

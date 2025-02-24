@@ -53,8 +53,8 @@ public class SOSPathUtilTest {
 
         LOGGER.info("[SOSPathUtil][String]--------------");
         LOGGER.info("    [input][stringPaths]" + stringPaths);
-        LOGGER.info("    [selectTopLevelPaths][stringPaths]" + SOSPathUtil.selectTopLevelPaths(stringPaths, '/'));
-        LOGGER.info("    [selectDeepestLevelPaths]" + SOSPathUtil.selectDeepestLevelPaths(stringPaths, '/'));
+        LOGGER.info("    [selectTopLevelPaths][stringPaths]" + SOSPathUtil.selectTopLevelPaths(stringPaths, "/"));
+        LOGGER.info("    [selectDeepestLevelPaths]" + SOSPathUtil.selectDeepestLevelPaths(stringPaths, "/"));
 
         List<Path> paths = stringPaths.stream().map(p -> Path.of(p)).collect(Collectors.toList());
         LOGGER.info("[SOSPath][Path]--------------");

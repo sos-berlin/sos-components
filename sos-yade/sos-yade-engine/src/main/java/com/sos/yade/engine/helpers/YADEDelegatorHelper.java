@@ -27,16 +27,16 @@ public class YADEDelegatorHelper {
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
     public static YADESourceProviderDelegator getSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs)
             throws YADEEngineInitializationException {
-        return new YADESourceProviderDelegator(getProvider(logger, sourceArgs.getProvider()), sourceArgs);
+        return new YADESourceProviderDelegator(getProvider(logger, "Source", sourceArgs.getProvider()), sourceArgs);
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
     public static YADETargetProviderDelegator getTargetDelegator(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs)
             throws YADEEngineInitializationException {
-        if (!needTargetProvider(args)) {
+        if (!YADEArgumentsHelper.needTargetProvider(args)) {
             return null;
         }
-        return new YADETargetProviderDelegator(getProvider(logger, targetArgs.getProvider()), targetArgs);
+        return new YADETargetProviderDelegator(getProvider(logger, "Target", targetArgs.getProvider()), targetArgs);
     }
 
     public static void ensureConnected(ISOSLogger logger, IYADEProviderDelegator delegator) throws YADEEngineConnectionException {
@@ -84,9 +84,9 @@ public class YADEDelegatorHelper {
         }
     }
 
-    private static IProvider getProvider(ISOSLogger logger, AProviderArguments args) throws YADEEngineInitializationException {
+    private static IProvider getProvider(ISOSLogger logger, String identifier, AProviderArguments args) throws YADEEngineInitializationException {
         if (args == null) {
-            throw new YADEEngineInitializationException(new SOSMissingDataException("YADEProviderArguments"));
+            throw new YADEEngineInitializationException(new SOSMissingDataException("[" + identifier + "]YADEProviderArguments"));
         }
 
         SOSArgument<Protocol> protocol = args.getProtocol();
@@ -126,24 +126,6 @@ public class YADEDelegatorHelper {
             throw new YADEEngineInitializationException(e);
         }
         return p;
-    }
-
-    private static boolean needTargetProvider(YADEArguments args) throws YADEEngineInitializationException {
-        switch (args.getOperation().getValue()) {
-        case GETLIST:
-        case REMOVE:
-        case RENAME:
-            return false;
-        case UNKNOWN:
-            throw new YADEEngineInitializationException(new SOSInvalidDataException(args.getOperation().getName() + "=" + args.getOperation()
-                    .getValue()));
-        // case COPY:
-        // case MOVE:
-        // case COPYFROMINTERNET:
-        // case COPYTOINTERNET:
-        default:
-            return true;
-        }
     }
 
 }

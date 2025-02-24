@@ -110,7 +110,7 @@ public class YADESourceFilesSelector {
             return List.of();
         }
 
-        String sourceDirectory = sourceDelegator.getDirectory() == null ? null : sourceDelegator.getDirectory().getPath();
+        // String sourceDirectory = sourceDelegator.getDirectory() == null ? null : sourceDelegator.getDirectory().getPath();
         List<ProviderFile> result = new ArrayList<>();
         int counterAdded = 0;
         int counter = 0;
@@ -122,9 +122,9 @@ public class YADESourceFilesSelector {
                 continue l;
             }
             String path = singleFile;
-            if (sourceDirectory != null) {
+            if (sourceDelegator.getDirectory() != null) {
                 if (!sourceDelegator.getProvider().isAbsolutePath(singleFile)) {
-                    path = SOSPathUtil.appendPath(sourceDirectory, singleFile, sourceDelegator.getPathSeparator());
+                    path = SOSPathUtil.appendPath(sourceDelegator.getDirectory(), singleFile, sourceDelegator.getProvider().getPathSeparator());
                 }
             }
 
@@ -184,6 +184,8 @@ public class YADESourceFilesSelector {
             List<ProviderFile> sourceFiles) throws YADEEngineSourceFilesSelectorException {
         checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
         checkFileListSize(sourceDelegator, clientArgs, sourceFiles);
+        
+        logger.info("%sfiles found=%s", sourceDelegator.getLogPrefix(), sourceFiles.size());
     }
 
     private static void checkZeroByteFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)

@@ -5,7 +5,7 @@ import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 
 /** Get list of files from Source */
-public class GetListOperationManager {
+public class GetListOperationHandler {
 
     /** No special processing as a ResultSetFile is to be created, but it is an operation that can be performed for all operation types
      * 

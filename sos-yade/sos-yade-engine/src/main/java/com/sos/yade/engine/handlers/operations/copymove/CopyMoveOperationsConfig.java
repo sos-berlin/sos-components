@@ -143,20 +143,28 @@ public class CopyMoveOperationsConfig {
             return maxThreads;
         }
 
+        @Override
+        public String toString() {
+            if (auto) {
+                return "auto=true";
+            }
+            return "maxThreads=" + maxThreads;
+        }
+
     }
 
     public class Source {
 
         private final String directory;
-        private final char pathSeparator;
+        private final String pathSeparator;
         private final boolean recursiveSelection;
         private final boolean replacemenEnabled;
         private final boolean checkIntegrityHash;
 
         private Source(YADESourceProviderDelegator sourceDelegator) {
             // directory path without trailing separator
-            this.directory = sourceDelegator.getDirectory() == null ? "" : sourceDelegator.getDirectory().getPath();
-            this.pathSeparator = sourceDelegator.getPathSeparator();
+            this.directory = sourceDelegator.getDirectory() == null ? "" : sourceDelegator.getDirectory();
+            this.pathSeparator = sourceDelegator.getProvider().getPathSeparator();
             this.recursiveSelection = sourceDelegator.getArgs().getRecursive().isTrue();
             this.replacemenEnabled = isCopyOperation() && sourceDelegator.getArgs().isReplacementEnabled();
             this.checkIntegrityHash = sourceDelegator.getArgs().getCheckIntegrityHash().isTrue();
@@ -166,7 +174,7 @@ public class CopyMoveOperationsConfig {
             return directory;
         }
 
-        public char getPathSeparator() {
+        public String getPathSeparator() {
             return pathSeparator;
         }
 
@@ -298,7 +306,7 @@ public class CopyMoveOperationsConfig {
 
         // TODO optimize - clone methods ....
         private YADETargetProviderFile getFile(final YADETargetProviderDelegator targetDelegator, final Atomic atomic) {
-            YADETargetProviderFile tmp = new YADETargetProviderFile(getFileFullPath(targetDelegator));
+            YADETargetProviderFile tmp = new YADETargetProviderFile(targetDelegator.getProvider(), getFileFullPath(targetDelegator));
 
             // See YADEProviderFile.initTarget
             // Note: compress extension is not used because the cumulative file provides the file name with extension
@@ -310,8 +318,9 @@ public class CopyMoveOperationsConfig {
                 transferFileName = atomic.getPrefix() + finalFileName + atomic.getSuffix();
             }
 
-            String transferFileFullPath = SOSPathUtil.appendPath(tmp.getParentFullPath(), transferFileName, targetDelegator.getPathSeparator());
-            YADETargetProviderFile file = new YADETargetProviderFile(transferFileFullPath);
+            String transferFileFullPath = SOSPathUtil.appendPath(tmp.getParentFullPath(), transferFileName, targetDelegator.getProvider()
+                    .getPathSeparator());
+            YADETargetProviderFile file = new YADETargetProviderFile(targetDelegator.getProvider(), transferFileFullPath);
             if (atomic != null) {
                 file.setFinalName(finalFileName);
             }
@@ -319,10 +328,10 @@ public class CopyMoveOperationsConfig {
         }
 
         private String getFileFullPath(final YADETargetProviderDelegator targetDelegator) {
-            String path = targetDelegator.normalizePath(targetDelegator.getArgs().getCumulativeFileName().getValue());
+            String path = targetDelegator.getProvider().toPathStyle(targetDelegator.getArgs().getCumulativeFileName().getValue());
             if (!targetDelegator.getProvider().isAbsolutePath(path)) {
                 if (targetDelegator.getDirectory() != null) {
-                    path = SOSPathUtil.appendPath(targetDelegator.getDirectory().getPath(), path, targetDelegator.getPathSeparator());
+                    path = SOSPathUtil.appendPath(targetDelegator.getDirectory(), path, targetDelegator.getProvider().getPathSeparator());
                 }
             }
             return path;

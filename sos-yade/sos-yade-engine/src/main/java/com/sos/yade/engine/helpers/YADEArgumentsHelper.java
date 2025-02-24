@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -14,6 +15,7 @@ import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.yade.engine.arguments.YADEArguments;
 import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.arguments.YADESourceArguments.ZeroByteTransfer;
+import com.sos.yade.engine.arguments.YADETargetArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
@@ -25,7 +27,7 @@ public class YADEArgumentsHelper {
      * 
      * @param args
      * @throws SOSYADEEngineException */
-    public static void checkCommonConfiguration(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs)
+    public static void checkCommonConfiguration(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs, YADETargetArguments targetArgs)
             throws YADEEngineInitializationException {
         if (args == null) {
             throw new YADEEngineInitializationException(new SOSMissingDataException("YADEArguments"));
@@ -33,7 +35,13 @@ public class YADEArgumentsHelper {
         if (args.getOperation().getValue() == null) {
             throw new YADEEngineInitializationException(new SOSMissingDataException(args.getOperation().getName()));
         }
-        sourceArguments(logger, sourceArgs);
+        if (sourceArgs == null) {
+            throw new YADEEngineInitializationException(new SOSMissingDataException("Source Arguments"));
+        }
+        if (needTargetProvider(args) && targetArgs == null) {
+            throw new YADEEngineInitializationException(new SOSMissingDataException("Target Arguments"));
+        }
+        adjustSourceArguments(logger, sourceArgs);
     }
 
     public static void checkConfiguration(YADEArguments args, YADESourceProviderDelegator sourceDelegator,
@@ -71,7 +79,7 @@ public class YADEArgumentsHelper {
         return sourceDelegator.getArgs().getCheckIntegrityHash().isTrue() || targetDelegator.getArgs().getCreateIntegrityHashFile().isTrue();
     }
 
-    private static void sourceArguments(ISOSLogger logger, YADESourceArguments args) {
+    private static void adjustSourceArguments(ISOSLogger logger, YADESourceArguments args) {
         if (ZeroByteTransfer.RELAXED.equals(args.getZeroByteTransfer().getValue())) {
             if (args.getMinFileSize().getValue() == null || args.getMinFileSize().getValue().longValue() <= 0L) {
                 logger.info("minFileSize is set to 1 due to ZeroByteTransfer.RELAXED");
@@ -100,6 +108,24 @@ public class YADEArgumentsHelper {
             return SOSDate.resolveAge("s", arg.getValue()).longValue();
         } catch (Throwable e) {
             return defaultValue;
+        }
+    }
+
+    public static boolean needTargetProvider(YADEArguments args) throws YADEEngineInitializationException {
+        switch (args.getOperation().getValue()) {
+        case GETLIST:
+        case REMOVE:
+        case RENAME:
+            return false;
+        case UNKNOWN:
+            throw new YADEEngineInitializationException(new SOSInvalidDataException(args.getOperation().getName() + "=" + args.getOperation()
+                    .getValue()));
+        // case COPY:
+        // case MOVE:
+        // case COPYFROMINTERNET:
+        // case COPYTOINTERNET:
+        default:
+            return true;
         }
     }
 }

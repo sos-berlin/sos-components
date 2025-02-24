@@ -118,18 +118,8 @@ public class SSHJProvider extends ASSHProvider {
     }
 
     @Override
-    public void createDirectory(String path) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            sftp.mkdir(path);
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    @Override
     public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
+        checkBeforeOperation("createDirectoriesIfNotExist", sshClient, path, "path");
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             if (SSHJProviderUtil.exists(sftp, path)) {
                 return false;
@@ -141,19 +131,11 @@ public class SSHJProvider extends ASSHProvider {
         }
     }
 
-    @Override
-    public void delete(String path) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            SSHJProviderUtil.delete(sftp, path);
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
     // TODO test if not exists ....
     @Override
     public boolean deleteIfExists(String path) throws SOSProviderException {
+        checkBeforeOperation("deleteIfExists", sshClient, path, "path");
+
         try {
             try (SFTPClient sftp = sshClient.newSFTPClient()) {
                 SSHJProviderUtil.delete(sftp, path);
@@ -173,25 +155,24 @@ public class SSHJProvider extends ASSHProvider {
     }
 
     @Override
-    public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
-        if (paths == null) {
+    public DeleteFilesResult deleteFilesIfExist(Collection<String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (files == null) {
             return null;
         }
-        if (sshClient == null) {
-            throw new SOSSSHClientNotInitializedException();
-        }
-        DeleteFilesResult r = new DeleteFilesResult(paths.size());
+        checkBeforeOperation("deleteFilesIfExist", sshClient);
+
+        DeleteFilesResult r = new DeleteFilesResult(files.size());
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            l: for (String path : paths) {
+            l: for (String file : files) {
                 try {
-                    if (SSHJProviderUtil.exists(sftp, path)) {
-                        SSHJProviderUtil.delete(sftp, path);
+                    if (SSHJProviderUtil.exists(sftp, file)) {
+                        SSHJProviderUtil.delete(sftp, file);
                         r.addSuccess();
                     } else {
-                        r.addNotFound(path);
+                        r.addNotFound(file);
                     }
                 } catch (Throwable e) {
-                    r.addError(path, e);
+                    r.addError(file, e);
                     if (stopOnSingleFileError) {
                         break l;
                     }
@@ -204,35 +185,26 @@ public class SSHJProvider extends ASSHProvider {
     }
 
     @Override
-    public void rename(String sourcePath, String targetPath) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, sourcePath, "sourcePath");
-        checkParam(targetPath, "targetPath");
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            SSHJProviderUtil.rename(sftp, sourcePath, targetPath);
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(sourcePath) + "->[" + targetPath + "]", e);
-        }
-    }
-
-    @Override
-    public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
-        if (paths == null) {
+    public RenameFilesResult renameFilesIfExist(Map<String, String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (files == null) {
             return null;
         }
-        RenameFilesResult r = new RenameFilesResult(paths.size());
+        checkBeforeOperation("renameFilesIfExist", sshClient);
+
+        RenameFilesResult r = new RenameFilesResult(files.size());
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            l: for (Map.Entry<String, String> entry : paths.entrySet()) {
-                String sourcePath = entry.getKey();
-                String targetPath = entry.getValue();
+            l: for (Map.Entry<String, String> entry : files.entrySet()) {
+                String source = entry.getKey();
+                String target = entry.getValue();
                 try {
-                    if (SSHJProviderUtil.exists(sftp, sourcePath)) {
-                        SSHJProviderUtil.rename(sftp, sourcePath, targetPath);
-                        r.addSuccess(sourcePath, targetPath);
+                    if (SSHJProviderUtil.exists(sftp, source)) {
+                        SSHJProviderUtil.rename(sftp, source, target);
+                        r.addSuccess(source, target);
                     } else {
-                        r.addNotFound(sourcePath);
+                        r.addNotFound(source);
                     }
                 } catch (Throwable e) {
-                    r.addError(sourcePath, e);
+                    r.addError(source, e);
                     if (stopOnSingleFileError) {
                         break l;
                     }
@@ -250,7 +222,7 @@ public class SSHJProvider extends ASSHProvider {
             return false;
         }
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            checkParam(path, "path"); // here because should not throw any errors
+            checkParam("exists", path, "path"); // here because should not throw any errors
             return SSHJProviderUtil.exists(sftp, path);
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
@@ -262,8 +234,9 @@ public class SSHJProvider extends ASSHProvider {
 
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
-        selection = ProviderFileSelection.createIfNull(selection);
+        checkBeforeOperation("selectFiles", sshClient);
 
+        selection = ProviderFileSelection.createIfNull(selection);
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
         List<ProviderFile> result = new ArrayList<>();
         try {
@@ -277,7 +250,7 @@ public class SSHJProvider extends ASSHProvider {
 
     @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        checkParam(path, "path");
+        checkBeforeOperation("getFileIfExists", sshClient, path, "path");
 
         ProviderFile f = null;
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
@@ -294,6 +267,8 @@ public class SSHJProvider extends ASSHProvider {
 
     @Override
     public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
+        checkBeforeOperation("rereadFileIfExists", sshClient);
+
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             FileAttributes attr = sftp.stat(file.getFullPath());
             if (attr != null && SSHJProviderUtil.isFileType(attr.getType())) {
@@ -315,7 +290,9 @@ public class SSHJProvider extends ASSHProvider {
         if (sshClient == null) {
             return false;
         }
+
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
+            checkParam("isDirectory", path, "path");
             return SSHJProviderUtil.is(getLogger(), getLogPrefix(), sftp, path, FileMode.Type.DIRECTORY);
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
@@ -327,7 +304,7 @@ public class SSHJProvider extends ASSHProvider {
 
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, path, path);
+        checkBeforeOperation("setFileLastModifiedFromMillis", sshClient, path, path);
         checkModificationTime(path, milliseconds);
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
@@ -645,7 +622,7 @@ public class SSHJProvider extends ASSHProvider {
 
     @Override
     public InputStream getInputStream(String path) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
+        checkBeforeOperation("getInputStream", sshClient, path, "path");
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         try {
@@ -677,7 +654,7 @@ public class SSHJProvider extends ASSHProvider {
 
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
+        checkBeforeOperation("getOutputStream", sshClient, path, "path");
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         try {
@@ -716,7 +693,8 @@ public class SSHJProvider extends ASSHProvider {
 
     @Override
     public String getFileContentIfExists(String path) throws SOSProviderException {
-        SSHJProviderUtil.checkBeforeOperation(sshClient, path, "path");
+        checkBeforeOperation("getFileContentIfExists", sshClient, path, "path");
+
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             if (!SSHJProviderUtil.exists(sftp, path)) {
                 return null;
@@ -734,6 +712,17 @@ public class SSHJProvider extends ASSHProvider {
         } catch (IOException e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
+    }
+
+    private void checkBeforeOperation(String method, SSHClient ssh) throws SOSProviderException {
+        if (ssh == null) {
+            throw new SOSSSHClientNotInitializedException(getLogPrefix() + method);
+        }
+    }
+
+    private void checkBeforeOperation(String method, SSHClient ssh, String paramValue, String msg) throws SOSProviderException {
+        checkBeforeOperation(method, ssh);
+        checkParam(method, paramValue, msg);
     }
 
 }

@@ -2,6 +2,7 @@ package com.sos.yade.engine;
 
 import java.util.List;
 
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.engine.arguments.YADEArguments;
@@ -80,11 +81,14 @@ public class YADEEngine {
         // Source handlers
         YADESourcePollingHandler sourcePolling = null;
         try {
+            if (logger == null) {
+                throw new SOSMissingDataException("logger");
+            }
             /** 1) Print transfer configuration */
             YADEHelper.printBanner(logger, args);
 
             /** 2) Check/Initialize configuration */
-            YADEArgumentsHelper.checkCommonConfiguration(logger, args, sourceArgs);
+            YADEArgumentsHelper.checkCommonConfiguration(logger, args, sourceArgs, targetArgs);
             // Source/Target: System Properties files
             YADEHelper.setConfiguredSystemProperties(logger, clientArgs);
 
@@ -130,7 +134,7 @@ public class YADEEngine {
                 /** 9) Target: execute commands before operation */
                 YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
-                /** 10) Source/Target: execute operation(COPY,MOVE,GETLIST,REMOVE) */
+                /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                 YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
 
                 /** 11) Source/Target: execute commands after operation on success */
@@ -141,7 +145,6 @@ public class YADEEngine {
             } finally {
                 onFinally(logger, args, sourceDelegator, targetDelegator, files, exception, true);
             }
-
         } else {
             pl: while (true) {
                 exception = null;
@@ -168,12 +171,11 @@ public class YADEEngine {
                     /** 9) Target: execute commands before operation */
                     YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
-                    /** 10) Source/Target: execute operation(COPY,MOVE,GETLIST,REMOVE) */
+                    /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                     YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator);
 
                     /** 11) Source/Target: execute commands after operation on success */
                     YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
-
                 } catch (Throwable e) {
                     onError(logger, sourceDelegator, targetDelegator, exception);
                     exception = e;

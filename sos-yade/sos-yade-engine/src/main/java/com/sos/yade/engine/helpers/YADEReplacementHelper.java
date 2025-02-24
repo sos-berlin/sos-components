@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sos.commons.vfs.local.LocalProvider;
 import com.sos.yade.engine.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.delegators.YADEFileNameInfo;
 import com.sos.yade.engine.delegators.YADEProviderFile;
@@ -71,7 +72,7 @@ public class YADEReplacementHelper {
 
     public static void main(String[] args) {
         try {
-            YADEProviderFile file = new YADEProviderFile("/tmp/1abc12def123.TXT", 0, 0, null, false);
+            YADEProviderFile file = new YADEProviderFile(new LocalProvider(null, null), "/tmp/1abc12def123.TXT", 0, 0, null, false);
             String regex = "(1)abc(12)def(.*)";
             String replacement = "A;BB;CCC";
 

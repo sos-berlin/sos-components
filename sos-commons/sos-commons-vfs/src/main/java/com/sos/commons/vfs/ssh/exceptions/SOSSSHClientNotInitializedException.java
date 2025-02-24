@@ -6,8 +6,8 @@ public class SOSSSHClientNotInitializedException extends SOSProviderException {
 
     private static final long serialVersionUID = 1L;
 
-    public SOSSSHClientNotInitializedException() {
-        super();
+    public SOSSSHClientNotInitializedException(String msg) {
+        super(msg);
     }
 
 }

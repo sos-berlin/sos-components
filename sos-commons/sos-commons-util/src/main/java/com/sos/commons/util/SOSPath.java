@@ -666,7 +666,7 @@ public class SOSPath {
         if (SOSCollection.isEmpty(paths)) {
             return new TreeSet<>();
         }
-        return SOSPathUtil.selectTopLevelPaths(paths, 'x').stream().map(Path::of).collect(Collectors.toCollection(TreeSet::new));
+        return SOSPathUtil.selectTopLevelPaths(paths).stream().map(Path::of).collect(Collectors.toCollection(TreeSet::new));
     }
 
     /** Selects the deepest level paths from a collection of path.<br/>
@@ -680,7 +680,7 @@ public class SOSPath {
         if (SOSCollection.isEmpty(paths)) {
             return new TreeSet<>();
         }
-        return SOSPathUtil.selectDeepestLevelPaths(paths, 'x').stream().map(Path::of).collect(Collectors.toCollection(TreeSet::new));
+        return SOSPathUtil.selectDeepestLevelPaths(paths).stream().map(Path::of).collect(Collectors.toCollection(TreeSet::new));
     }
 
     public class SOSPathResult {

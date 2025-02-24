@@ -1,9 +1,10 @@
 package com.sos.yade.engine.arguments;
 
+import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.vfs.common.AProviderArguments;
 
-public class YADESourceTargetArguments {
+public class YADESourceTargetArguments extends ASOSArguments {
 
     private AProviderArguments provider;
     private YADEProviderCommandArguments commands;
@@ -23,7 +24,7 @@ public class YADESourceTargetArguments {
     }
 
     public boolean isReplacementEnabled() {
-        return !replacing.getValue().isEmpty() && !replacement.getValue().isEmpty();
+        return !replacing.isEmpty() && !replacement.isEmpty();
     }
 
     public AProviderArguments getProvider() {

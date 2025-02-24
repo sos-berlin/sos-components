@@ -1,15 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="INFO">
+<Configuration>
 	<Appenders>
-		<Console name="console" target="SYSTEM_OUT">
+		<Console name="MDCConsole" target="SYSTEM_OUT">
 			<PatternLayout
-				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%X{F}:%X{L}) - %m%n" />
+		</Console>
+		<!-- Appender for root logger -->
+		<Console name="DefaultConsole" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%F:%L) - %m%n" />
 		</Console>
 	</Appenders>
+
 	<Loggers>
+		<Logger name="com.sos.commons.util.common.logger"
+			additivity="false">
+			<AppenderRef ref="MDCConsole" />
+		</Logger>
+
 		<Root level="info">
-			<AppenderRef ref="console" />
+			<AppenderRef ref="DefaultConsole" />
 		</Root>
+
+		<Logger name="net" level="trace" />
+		<Logger name="net.schmizz" level="info" />
 		<Logger name="com.sos" level="debug" />
 	</Loggers>
 </Configuration>

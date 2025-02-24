@@ -8,6 +8,7 @@ import java.util.TreeSet;
 
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
 
@@ -28,14 +29,21 @@ public class YADEDirectoryMapper {
     private Set<String> source;
 
     public void addSourceFileDirectory(String directoryPathWithoutTrailinSeparator) {
+        if (SOSString.isEmpty(directoryPathWithoutTrailinSeparator)) {
+            return;
+        }
         sourceFilesDirectories.add(directoryPathWithoutTrailinSeparator);
     }
 
-    public void tryCreateAllTargetDirectoriesBeforeOperation(final CopyMoveOperationsConfig config,
+    public void tryCreateAllTargetDirectoriesBeforeOperation(final ISOSLogger logger, final CopyMoveOperationsConfig config,
             final YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
-        tryMapSourceTarget(config, targetDelegator);
+        tryMapSourceTarget(logger, config, targetDelegator);
 
-        Set<String> targetDirs = getTargetDirectoriesToCreate(targetDelegator);
+        Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
+        if (logger.isDebugEnabled()) {
+            logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation]targetDirs[size=" + targetDirs.size() + "]" + targetDirs);
+        }
+
         if (targetDirs.size() > 0) {
             targetDelegator.getProvider().createDirectoriesIfNotExist(targetDirs);
         }
@@ -61,14 +69,23 @@ public class YADEDirectoryMapper {
     // TODO problem - the path may be changed due to the target replacing arguments...
     // - it may be a sub path, but also a parent/other path...
     // - it cannot be identified here because the substitution may depend on the filename..
-    private void tryMapSourceTarget(final CopyMoveOperationsConfig config, final YADETargetProviderDelegator targetDelegator) {
+    private void tryMapSourceTarget(final ISOSLogger logger, final CopyMoveOperationsConfig config, final YADETargetProviderDelegator targetDelegator)
+            throws SOSProviderException {
         sourceTarget.clear();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("[tryMapSourceTarget]sourceFilesDirectories[size=" + sourceFilesDirectories.size() + "]" + sourceFilesDirectories);
+        }
 
         // Map Source to 1-level Target
         if (!config.getTarget().isCreateDirectoriesEnabled()) {
             // TODO if recursive ....?
             for (final String sourceDirectory : sourceFilesDirectories) {
-                sourceTarget.put(sourceDirectory, getTargetDirectory(targetDelegator, ""));
+                sourceTarget.put(sourceDirectory, getTargetDirectory(logger, targetDelegator, ""));
+            }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[tryMapSourceTarget][isCreateDirectoriesEnabled=false][sourceTarget]" + sourceTarget);
             }
             return;
         }
@@ -79,18 +96,29 @@ public class YADEDirectoryMapper {
             for (final String sourceDirectory : sourceFilesDirectories) {
                 sourceTarget.put(sourceDirectory, config.getTarget().getCumulate().getFile().getParentFullPath());
             }
+            if (logger.isDebugEnabled()) {
+                logger.debug("[tryMapSourceTarget][cumulate][sourceTarget]" + sourceTarget);
+            }
             return;
         }
 
         // Not map Source/Target
         if (targetDelegator.getArgs().isReplacementEnabled()) {
             target = new HashSet<>();
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[tryMapSourceTarget][isReplacementEnabled=true][target]" + target);
+            }
             return;
         }
 
         // Map Source/Target
         for (final String sourceDirectory : sourceFilesDirectories) {
-            sourceTarget.put(sourceDirectory, getTargetDirectory(targetDelegator, getSourceDirectoryForMapping(config, sourceDirectory)));
+            sourceTarget.put(sourceDirectory, getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(config, sourceDirectory)));
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("[tryMapSourceTarget][sourceTarget]" + sourceTarget);
         }
     }
 
@@ -105,7 +133,7 @@ public class YADEDirectoryMapper {
                 } else {
                     // sourceDirectory string length can't be less then config.getSource().getDirectory() string length
                     result = sourceDirectory.substring(0, config.getSource().getDirectory().length());
-                    result = SOSString.trimStart(sourceDirectory, String.valueOf(config.getSource().getPathSeparator()));
+                    result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
                 }
             } else {
                 // YADE-600 + YADE-619(makeDirs)
@@ -118,13 +146,13 @@ public class YADEDirectoryMapper {
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
                         // Temp
-                        result = SOSString.trimStart(sourceDirectory, String.valueOf(config.getSource().getPathSeparator()));
+                        result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
                     }
                 } else if (SOSPathUtil.isAbsoluteWindowsUNCPath(sourceDirectory)) { // \\server\share
                     // server\share TODO trim server?
-                    result = SOSString.trimStart(sourceDirectory, String.valueOf(config.getSource().getPathSeparator()));
+                    result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
                 } else {
-                    result = SOSString.trimStart(sourceDirectory, String.valueOf(config.getSource().getPathSeparator()));
+                    result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
                 }
             }
         } else {
@@ -134,43 +162,60 @@ public class YADEDirectoryMapper {
     }
 
     // sourceDirectoryPathForMapping - directory path without leading path separator
-    private String getTargetDirectory(final YADETargetProviderDelegator targetDelegator, String sourceDirectoryPathForMapping) {
+    private String getTargetDirectory(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator,
+            String sourceDirectoryPathForMapping) throws SOSProviderException {
         // TODO - ??? check YADE 1 - relative to the working directory? (due to directoryPath - without leading path separator)
-        String targetPath = sourceDirectoryPathForMapping.isEmpty() ? "" : targetDelegator.normalizePath(sourceDirectoryPathForMapping);
+        String targetPath = sourceDirectoryPathForMapping.isEmpty() ? "" : targetDelegator.getProvider().toPathStyle(sourceDirectoryPathForMapping);
         if (targetDelegator.getDirectory() != null) {
             if (targetPath.isEmpty()) {
-                targetPath = targetDelegator.getDirectory().getPath(); // already normalized without trailing path separator
+                targetPath = targetDelegator.getDirectory(); // already normalized without trailing path separator
             } else {
-                targetPath = SOSPathUtil.appendPath(targetDelegator.getDirectory().getPath(), targetPath, targetDelegator.getPathSeparator());
+                targetPath = SOSPathUtil.appendPath(targetDelegator.getDirectory(), targetPath, targetDelegator.getProvider().getPathSeparator());
+            }
+        }
+        if (SOSString.isEmpty(targetPath)) {
+            // targetPath = ".";
+            // if (logger.isDebugEnabled()) {
+            // logger.debug("[getTargetDirectory][targetPath is empty][set to]" + targetPath);
+            // }
+            throw new SOSProviderException(targetDelegator.getLogPrefix() + "Target directory can't be evaluated");
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[getTargetDirectory][sourceDirectoryPathForMapping=" + sourceDirectoryPathForMapping + "]targetPath=" + targetPath);
             }
         }
         return targetPath;
     }
 
-    private Set<String> getTargetDirectoriesToCreate(final YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
+    private Set<String> getTargetDirectoriesToCreate(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator)
+            throws SOSProviderException {
         if (target == null) {
-            return SOSPathUtil.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getPathSeparator());
+            if (logger.isDebugEnabled()) {
+                logger.debug("[getTargetDirectoriesToCreate][target=null]" + sourceTarget.values());
+            }
+            return SOSPathUtil.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getProvider().getPathSeparator());
         }
 
         Set<String> set = new TreeSet<>();
         if (targetDelegator.getDirectory() != null) {
-            set.add(targetDelegator.getDirectory().getPath());
-            tryCreateTargetDirectory(targetDelegator, targetDelegator.getDirectory().getPath(), false);
+            set.add(targetDelegator.getDirectory());
+            tryCreateTargetDirectory(targetDelegator, targetDelegator.getDirectory(), false);
         }
         return set;
     }
 
-    public String getTargetDirectory(final CopyMoveOperationsConfig config, final YADETargetProviderDelegator targetDelegator,
-            final YADEProviderFile sourceFile, final String subDirectory) throws SOSProviderException {
+    public String getTargetDirectory(final ISOSLogger logger, final CopyMoveOperationsConfig config,
+            final YADETargetProviderDelegator targetDelegator, final YADEProviderFile sourceFile, final String subDirectory)
+            throws SOSProviderException {
         String targetDirectory;
         if (target == null) {// target replacement is not enabled, ignore fileNameInfo
             targetDirectory = sourceTarget.get(sourceFile.getParentFullPath());
         } else {
-            targetDirectory = getTargetDirectory(targetDelegator, getSourceDirectoryForMapping(config, sourceFile.getParentFullPath()));
+            targetDirectory = getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(config, sourceFile.getParentFullPath()));
             if (!SOSString.isEmpty(subDirectory)) {
-                targetDirectory = SOSPathUtil.appendPath(targetDirectory, subDirectory, targetDelegator.getPathSeparator());
+                targetDirectory = SOSPathUtil.appendPath(targetDirectory, subDirectory, targetDelegator.getProvider().getPathSeparator());
             }
-            tryCreateTargetDirectory(targetDelegator, targetDirectory, true);
+            tryCreateTargetDirectory(targetDelegator, targetDirectory, config.getTarget().isCreateDirectoriesEnabled());
         }
         return targetDirectory;
     }

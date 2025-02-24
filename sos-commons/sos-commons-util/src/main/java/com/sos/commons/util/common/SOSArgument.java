@@ -65,7 +65,7 @@ public class SOSArgument<T> {
     }
 
     public T getValue() {
-        if (value == null) {// for unit tests. otherwise see ABlockingInternalJob createJobArguments
+        if (value == null) {// for unit tests. otherwise see com.sos.js7.job.Job setDeclaredJobArgument
             return defaultValue;
         }
         return value;

@@ -18,7 +18,6 @@ import com.sos.commons.vfs.common.file.ProviderFileBuilder;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.commons.vfs.ssh.exceptions.SOSSSHClientNotInitializedException;
 
 import net.schmizz.keepalive.KeepAlive;
 import net.schmizz.keepalive.KeepAliveRunner;
@@ -75,7 +74,6 @@ public class SSHJProviderUtil {
 
     protected static boolean is(ISOSLogger logger, String logPrefix, SFTPClient sftp, String path, FileMode.Type type) {
         try {
-            AProvider.checkParam(path, "path");
             FileAttributes attr = sftp.stat(path);
             if (attr != null) {
                 return type.equals(attr.getType());
@@ -86,13 +84,6 @@ public class SSHJProviderUtil {
             }
         }
         return false;
-    }
-
-    protected static void checkBeforeOperation(SSHClient ssh, String paramValue, String msg) throws SOSProviderException {
-        if (ssh == null) {
-            throw new SOSSSHClientNotInitializedException();
-        }
-        AProvider.checkParam(paramValue, msg);
     }
 
     protected static void throwException(SFTPException e, String msg) throws Exception {

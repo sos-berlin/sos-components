@@ -294,7 +294,6 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> mergeJobAndStepArguments(final OrderProcessStep<A> step) {
         Map<String, Object> map = null;
         if (step == null) {
@@ -633,7 +632,6 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
     }
 
-    @SuppressWarnings("unchecked")
     private <V> void setDeclaredArgumentValueSource(final OrderProcessStep<A> step, Field field, JobArgument<V> arg, List<String> allNames,
             boolean isNamedValue, Map<String, DetailValue> jobResources) {
         if (arg.getName() == null || step.getInternalStep() == null) {// source Java - internal usage

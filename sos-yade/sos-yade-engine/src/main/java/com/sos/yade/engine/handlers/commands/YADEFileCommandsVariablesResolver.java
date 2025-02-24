@@ -8,9 +8,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.sos.commons.util.SOSPathUtil;
-import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.yade.engine.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.delegators.YADEProviderFile;
+import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 
 /** The following special variables are available:<br/>
  * See:<br/>
@@ -62,7 +64,8 @@ public class YADEFileCommandsVariablesResolver {
     }
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$(date|time)|\\$\\{(" + String.join("|", VAR_NAMES) + ")\\}");
 
-    public static String resolve(ProviderDirectoryPath sourceDirectory, ProviderDirectoryPath targetDirectory, ProviderFile file, String command) {
+    public static String resolve(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, ProviderFile file,
+            String command) {
         Matcher matcher = VARIABLE_PATTERN.matcher(command);
         if (!matcher.find()) {
             return command;
@@ -72,13 +75,13 @@ public class YADEFileCommandsVariablesResolver {
         StringBuilder result = new StringBuilder();
         matcher.reset();
         while (matcher.find()) {
-            matcher.appendReplacement(result, Matcher.quoteReplacement(getVarValue(sourceDirectory, targetDirectory, yadeFile, matcher.group())));
+            matcher.appendReplacement(result, Matcher.quoteReplacement(getVarValue(sourceDelegator, targetDelegator, yadeFile, matcher.group())));
         }
         matcher.appendTail(result);
         return result.toString();
     }
 
-    private static String getVarValue(ProviderDirectoryPath sourceDirectory, ProviderDirectoryPath targetDirectory, YADEProviderFile file,
+    private static String getVarValue(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile file,
             String var) {
         switch (var) {
         /** Date/time variables */
@@ -89,94 +92,100 @@ public class YADEFileCommandsVariablesResolver {
 
         /** Directory variables */
         case "${TargetDirFullName}":
-            return getOrDefault(targetDirectory);
+            return getDirectoryPath(targetDelegator);
         case "${SourceDirFullName}":
-            return getOrDefault(sourceDirectory);
+            return getDirectoryPath(sourceDelegator);
 
         /** The name of a file on the target host */
         case "${TargetFileFullName}":
-            return file.getTarget() == null ? "" : getFullPath(file.getTarget().getFinalFullPath());
+            return file.getTarget() == null ? "" : getFileFullPath(file.getTarget().getFinalFullPath());
         case "${TargetFileRelativeName}":
-            return file.getTarget() == null ? "" : getRelativePath(targetDirectory, file.getTarget().getFinalFullPath());
+            return file.getTarget() == null ? "" : getFileRelativePath(targetDelegator, file.getTarget().getFinalFullPath());
         case "${TargetFileBaseName}":
-            return file.getTarget() == null ? "" : getBaseName(file.getTarget().getFinalFullPath());
+            return file.getTarget() == null ? "" : getFileBaseName(file.getTarget().getFinalFullPath());
         case "${TargetFileParentFullName}":
-            return file.getTarget() == null ? "" : getParentFullPath(file.getTarget().getFinalFullPath());
+            return file.getTarget() == null ? "" : getFileParentFullPath(file.getTarget().getFinalFullPath());
         case "${TargetFileParentBaseName}":
-            return file.getTarget() == null ? "" : getParentBaseName(file.getTarget().getFinalFullPath());
+            return file.getTarget() == null ? "" : getFileParentBaseName(file.getTarget().getFinalFullPath());
 
         /** The name of a file on the target host during transfer (a file name can be prefixed or suffixed) */
         case "${TargetTransferFileFullName}":
-            return file.getTarget() == null ? "" : getFullPath(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFileFullPath(file.getTarget().getFullPath());
         case "${TargetTransferFileRelativeName}":
-            return file.getTarget() == null ? "" : getRelativePath(targetDirectory, file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFileRelativePath(targetDelegator, file.getTarget().getFullPath());
         case "${TargetTransferFileBaseName}":
-            return file.getTarget() == null ? "" : getBaseName(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFileBaseName(file.getTarget().getFullPath());
         case "${TargetTransferFileParentFullName}":
-            return file.getTarget() == null ? "" : getParentFullPath(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFileParentFullPath(file.getTarget().getFullPath());
         case "${TargetTransferFileParentBaseName}":
-            return file.getTarget() == null ? "" : getParentBaseName(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFileParentBaseName(file.getTarget().getFullPath());
 
         /** The name of a file on the source host */
         case "${SourceFileFullName}":
-            return getFullPath(file.getFullPath());
+            return getFileFullPath(file.getFullPath());
         case "${SourceFileRelativeName}":
-            return getRelativePath(sourceDirectory, file.getFullPath());
+            return getFileRelativePath(sourceDelegator, file.getFullPath());
         case "${SourceFileBaseName}":
-            return getBaseName(file.getFullPath());
+            return getFileBaseName(file.getFullPath());
         case "${SourceFileParentFullName}":
-            return getParentFullPath(file.getFullPath());
+            return getFileParentFullPath(file.getFullPath());
         case "${SourceFileParentBaseName}":
-            return getParentBaseName(file.getFullPath());
+            return getFileParentBaseName(file.getFullPath());
 
         /** The name of a file on the source host after Rename operation */
         case "${SourceFileRenamedFullName}":
-            return getFullPath(file.getFinalFullPath());
+            return getFileFullPath(file.getFinalFullPath());
         case "${SourceFileRenamedRelativeName}":
-            return getRelativePath(sourceDirectory, file.getFinalFullPath());
+            return getFileRelativePath(sourceDelegator, file.getFinalFullPath());
         case "${SourceFileRenamedBaseName}":
-            return getBaseName(file.getFinalFullPath());
+            return getFileBaseName(file.getFinalFullPath());
         case "${SourceFileRenamedParentFullName}":
-            return getParentFullPath(file.getFinalFullPath());
+            return getFileParentFullPath(file.getFinalFullPath());
         case "${SourceFileRenamedParentBaseName}":
-            return getParentBaseName(file.getFinalFullPath());
+            return getFileParentBaseName(file.getFinalFullPath());
         default:
             return var;
         }
     }
 
-    private static String getFullPath(String fullPath) {
+    private static String getDirectoryPath(IYADEProviderDelegator delegator) {
+        if (delegator == null || delegator.getDirectory() == null) {
+            return getOrDefault(null);
+        }
+        return delegator.getDirectory();
+    }
+
+    private static String getFileFullPath(String fullPath) {
         return getOrDefault(fullPath);
     }
 
     // TODO check...
-    private static String getRelativePath(ProviderDirectoryPath directory, String fullPath) {
-        if (directory == null) {
-            return getBaseName(fullPath);
+    private static String getFileRelativePath(IYADEProviderDelegator delegator, String fullPath) {
+        if (delegator == null) {
+            return getOrDefault(null);
+        }
+        if (delegator.getDirectory() == null) {
+            return getFileBaseName(fullPath);
         }
         if (fullPath == null) {
             return getOrDefault(fullPath);
         }
-        if (fullPath.startsWith(directory.getPathWithTrailingSeparator())) {
-            return fullPath.substring(directory.getPathWithTrailingSeparator().length());
+        if (fullPath.startsWith(delegator.getDirectoryWithTrailingPathSeparator())) {
+            return fullPath.substring(delegator.getDirectoryWithTrailingPathSeparator().length());
         }
         return getOrDefault(fullPath);
     }
 
-    private static String getBaseName(String fullPath) {
+    private static String getFileBaseName(String fullPath) {
         return getOrDefault(SOSPathUtil.getName(fullPath));
     }
 
-    private static String getParentFullPath(String fullPath) {
+    private static String getFileParentFullPath(String fullPath) {
         return getOrDefault(SOSPathUtil.getParentPath(fullPath));
     }
 
-    private static String getParentBaseName(String fullPath) {
+    private static String getFileParentBaseName(String fullPath) {
         return getOrDefault(SOSPathUtil.getName(SOSPathUtil.getParentPath(fullPath)));
-    }
-
-    private static String getOrDefault(ProviderDirectoryPath val) {
-        return val == null ? "" : getOrDefault(val.getPath());
     }
 
     private static String getOrDefault(String val) {

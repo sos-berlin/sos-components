@@ -1,7 +1,6 @@
 package com.sos.yade.engine.delegators;
 
 import com.sos.commons.vfs.common.IProvider;
-import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.yade.engine.arguments.YADESourceTargetArguments;
 
 public interface IYADEProviderDelegator {
@@ -10,7 +9,11 @@ public interface IYADEProviderDelegator {
 
     public YADESourceTargetArguments getArgs();
 
-    public ProviderDirectoryPath getDirectory();
+    /** Directory path without trailing path separator */
+    public String getDirectory();
+
+    /** Directory path with trailing path separator */
+    public String getDirectoryWithTrailingPathSeparator();
 
     public String getIdentifier();
 

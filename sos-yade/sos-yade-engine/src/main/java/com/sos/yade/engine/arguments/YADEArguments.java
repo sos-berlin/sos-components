@@ -2,11 +2,12 @@ package com.sos.yade.engine.arguments;
 
 import java.nio.file.Path;
 
+import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.yade.commons.Yade.TransferOperation;
 
 // TODO Jump as separated Include JumpTransferArguments when DMZ
-public class YADEArguments {
+public class YADEArguments extends ASOSArguments {
 
     /** - Fragment ------- */
     private SOSArgument<Path> settings = new SOSArgument<>("settings", false);

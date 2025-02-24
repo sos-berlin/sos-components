@@ -17,15 +17,15 @@ public class YADEFileNameInfo {
     }
 
     public YADEFileNameInfo(final AYADEProviderDelegator delegator, final String fileNameOrPath) {
-        String normalized = delegator.normalizePath(fileNameOrPath);
-        if (normalized.contains(String.valueOf(delegator.getPathSeparator()))) {
-            name = SOSPathUtil.getName(normalized);
-            parent = SOSPathUtil.getParentPath(normalized, delegator.getPathSeparator());
+        String formatted = delegator.getProvider().toPathStyle(fileNameOrPath);
+        if (formatted.contains(delegator.getProvider().getPathSeparator())) {
+            name = SOSPathUtil.getName(formatted);
+            parent = SOSPathUtil.getParentPath(formatted, delegator.getProvider().getPathSeparator());
             // parent is not null - due to normalized.contains(...)
-            path = SOSPathUtil.appendPath(parent, name, delegator.getPathSeparator());// or normalized...
+            path = SOSPathUtil.appendPath(parent, name, delegator.getProvider().getPathSeparator());// or normalized...
             absolutePath = delegator.getProvider().isAbsolutePath(parent);
         } else {
-            name = normalized;
+            name = formatted;
             parent = null;
             path = null;
             absolutePath = false;

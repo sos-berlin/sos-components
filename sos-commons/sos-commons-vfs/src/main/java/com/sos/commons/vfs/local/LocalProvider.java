@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -28,7 +29,6 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
-import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.common.file.files.RenameFilesResult;
@@ -45,19 +45,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         if (getArguments().getCredentialStore() != null) {
             // e.g. see SSHProvider
         }
-    }
-
-    @Override
-    public boolean isAbsolutePath(String path) {
-        return SOSPathUtil.isAbsoluteFileSystemPath(path);
-    }
-
-    @Override
-    public ProviderDirectoryPath getDirectoryPath(String path) {
-        if (SOSString.isEmpty(path)) {
-            return null;
-        }
-        return new ProviderDirectoryPath(Paths.get(path));
     }
 
     @Override
@@ -84,19 +71,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     @Override
-    public void createDirectory(String path) throws SOSProviderException {
-        checkParam(path, "path");
-
-        try {
-            Files.createDirectory(getPath(path));
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    @Override
     public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException {
-        checkParam(path, "path");
+        checkParam("createDirectoriesIfNotExist", path, "path");
 
         try {
             Path p = getPath(path);
@@ -111,19 +87,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     @Override
-    public void delete(String path) throws SOSProviderException {
-        checkParam(path, "path");
-
-        try {
-            SOSPath.delete(getPath(path));
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    @Override
     public boolean deleteIfExists(String path) throws SOSProviderException {
-        checkParam(path, "path");
+        checkParam("deleteIfExists", path, "path");
 
         try {
             return SOSPath.deleteIfExists(getPath(path));
@@ -133,22 +98,23 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     @Override
-    public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
-        if (paths == null) {
+    public DeleteFilesResult deleteFilesIfExist(Collection<String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (files == null) {
             return null;
         }
-        DeleteFilesResult r = new DeleteFilesResult(paths.size());
-        l: for (String path : paths) {
+
+        DeleteFilesResult r = new DeleteFilesResult(files.size());
+        l: for (String file : files) {
             try {
-                Path p = getPath(path);
-                if (exists(p)) {
-                    SOSPath.delete(p);
+                Path path = getPath(file);
+                if (exists(path)) {
+                    SOSPath.delete(path);
                     r.addSuccess();
                 } else {
-                    r.addNotFound(path);
+                    r.addNotFound(file);
                 }
             } catch (Throwable e) {
-                r.addError(path, e);
+                r.addError(file, e);
                 if (stopOnSingleFileError) {
                     break l;
                 }
@@ -158,36 +124,25 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     @Override
-    public void rename(String sourcePath, String targetPath) throws SOSProviderException {
-        checkParam(sourcePath, "sourcePath");
-        checkParam(targetPath, "targetPath");
-
-        try {
-            SOSPath.renameTo(sourcePath, targetPath);
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(sourcePath) + "->[" + targetPath + "]", e);
-        }
-    }
-
-    @Override
-    public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
-        if (paths == null) {
+    public RenameFilesResult renameFilesIfExist(Map<String, String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+        if (files == null) {
             return null;
         }
-        RenameFilesResult r = new RenameFilesResult(paths.size());
-        l: for (Map.Entry<String, String> entry : paths.entrySet()) {
-            String sourcePath = entry.getKey();
-            String targetPath = entry.getValue();
+
+        RenameFilesResult r = new RenameFilesResult(files.size());
+        l: for (Map.Entry<String, String> entry : files.entrySet()) {
+            String source = entry.getKey();
+            String target = entry.getValue();
             try {
-                Path p = getPath(sourcePath);
+                Path p = getPath(source);
                 if (exists(p)) {
-                    SOSPath.renameTo(p, getPath(targetPath));
-                    r.addSuccess(sourcePath, targetPath);
+                    SOSPath.renameTo(p, getPath(target));
+                    r.addSuccess(source, target);
                 } else {
-                    r.addNotFound(sourcePath);
+                    r.addNotFound(source);
                 }
             } catch (Throwable e) {
-                r.addError(sourcePath, e);
+                r.addError(source, e);
                 if (stopOnSingleFileError) {
                     break l;
                 }
@@ -199,7 +154,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     @Override
     public boolean exists(String path) {
         try {
-            checkParam(path, "path"); // here because should not throw any errors
+            checkParam("exists", path, "path"); // here because should not throw any errors
 
             return exists(getPath(path));
         } catch (Throwable e) {
@@ -226,7 +181,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
     @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        checkParam(path, "path");
+        checkParam("getFileIfExists", path, "path");
 
         Path p = getPath(path);
         ProviderFile file = null;
@@ -263,7 +218,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     @Override
     public boolean isDirectory(String path) {
         try {
-            checkParam(path, "path"); // here because should not throw any errors
+            checkParam("isDirectory", path, "path"); // here because should not throw any errors
             return SOSPath.isDirectory(path);
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
@@ -275,8 +230,9 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
-        checkParam(path, "path");
+        checkParam("setFileLastModifiedFromMillis", path, "path");
         checkModificationTime(path, milliseconds);
+
         try {
             SOSPath.setLastModifiedFromMillis(path, milliseconds);
         } catch (Throwable e) {
@@ -328,6 +284,32 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         } catch (IOException e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
+    }
+
+    @Override
+    public String getPathSeparator() {
+        return FileSystems.getDefault().getSeparator();
+    }
+
+    @Override
+    public boolean isAbsolutePath(String path) {
+        return SOSPathUtil.isAbsoluteFileSystemPath(path);
+    }
+
+    @Override
+    public String getDirectoryPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return null;
+        }
+        return super.getDirectoryPath(SOSPath.toAbsoluteNormalizedPath(path).toString());
+    }
+
+    @Override
+    public String getDirectoryPathWithTrailingPathSeparator(String path) {
+        if (SOSString.isEmpty(path)) {
+            return null;
+        }
+        return super.getDirectoryPathWithTrailingPathSeparator(SOSPath.toAbsoluteNormalizedPath(path).toString());
     }
 
     private Path getPath(String path) {

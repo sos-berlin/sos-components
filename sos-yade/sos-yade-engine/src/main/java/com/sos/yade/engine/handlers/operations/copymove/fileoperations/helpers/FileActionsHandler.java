@@ -26,7 +26,7 @@ public class FileActionsHandler {
         }
         String targetFileOldPath = targetFile.getFullPath();
         String targetFileNewPath = targetFile.getFinalFullPath();
-        targetDelegator.getProvider().rename(targetFileOldPath, targetFileNewPath);
+        targetDelegator.getProvider().renameFileIfExists(targetFileOldPath, targetFileNewPath);
         targetFile.setSubState(TransferEntryState.RENAMED);
         logger.info("[%s]%s[%s][renamed][%s]", sourceFile.getIndex(), targetDelegator.getLogPrefix(), targetFileOldPath, targetFileNewPath);
     }
@@ -105,7 +105,7 @@ public class FileActionsHandler {
             sourceDelegator.getDirectoryMapper().tryCreateSourceDirectory(sourceDelegator, sourceFile, info);
 
             // rename
-            sourceDelegator.getProvider().rename(sourceFile.getFullPath(), sourceFile.getFinalFullPath());
+            sourceDelegator.getProvider().renameFileIfExists(sourceFile.getFullPath(), sourceFile.getFinalFullPath());
             // after successful rename
             sourceFile.setState(TransferEntryState.RENAMED);
         }

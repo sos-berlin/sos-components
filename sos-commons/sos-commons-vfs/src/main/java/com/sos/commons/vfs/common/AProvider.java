@@ -2,11 +2,12 @@ package com.sos.commons.vfs.common;
 
 import java.io.Closeable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
@@ -14,6 +15,7 @@ import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.ProviderFileBuilder;
+import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
 import com.sos.commons.vfs.exception.SOSProviderConnectException;
@@ -28,7 +30,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     private final A arguments;
 
     // Default providerFileCreator function creates a standard ProviderFile using the builder
-    private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build();
+    private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build(this);
     // source/target type - logging - is not set if only one provider is used (e.g. SSH JITL Job)
     private AProviderContext context;
 
@@ -43,25 +45,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         providerFileCreator = val;
     }
 
-    public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {
-        return providerFileCreator;
-    }
-
-    /** Method to create a ProviderFile by using the providerFileCreator function
-     * 
-     * @param fullPath
-     * @param size
-     * @param lastModifiedMillis
-     * @return */
-    public ProviderFile createProviderFile(String fullPath, long size, long lastModifiedMillis) {
-        return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
-    }
-
-    public static ProviderFile createProviderFile(Function<ProviderFileBuilder, ProviderFile> providerFileCreator, String fullPath, long size,
-            long lastModifiedMillis) {
-        return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
-    }
-
     @Override
     public void setContext(AProviderContext val) {
         context = val;
@@ -70,10 +53,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     @Override
     public AProviderContext getContext() {
         return context;
-    }
-
-    public String getLogPrefix() {
-        return context == null ? "" : context.getLogPrefix();
     }
 
     @Override
@@ -97,9 +76,35 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return result;
     }
 
-    /** Provider (non-YADE) method */
-    public List<ProviderFile> selectFiles(String directory) throws SOSProviderException {
-        return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
+    @Override
+    public RenameFilesResult renameFileIfExists(String sourcePath, String targetPath) throws SOSProviderException {
+        checkParam("renameFileIfExists", sourcePath, "sourcePath");
+        checkParam("renameFileIfExists", targetPath, "targetPath");
+
+        return renameFilesIfExist(Collections.singletonMap(sourcePath, targetPath), true);
+    }
+
+    @Override
+    public String getDirectoryPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return null;
+        }
+        return SOSPathUtil.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(path)
+                : SOSPathUtil.getWindowsStyleDirectoryWithoutTrailingSeparator(path);
+    }
+
+    @Override
+    public String getDirectoryPathWithTrailingPathSeparator(String path) {
+        if (SOSString.isEmpty(path)) {
+            return null;
+        }
+        return SOSPathUtil.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(path) : SOSPathUtil
+                .getWindowsStyleDirectoryWithTrailingSeparator(path);
+    }
+
+    @Override
+    public String toPathStyle(String path) {
+        return SOSPathUtil.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtil.toUnixStyle(path) : SOSPathUtil.toWindowsStyle(path);
     }
 
     @Override
@@ -115,6 +120,34 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     @Override
     public SOSCommandResult executeCommand(String command, SOSEnv env) {
         return executeCommand(command, null, env);
+    }
+
+    public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {
+        return providerFileCreator;
+    }
+
+    /** Method to create a ProviderFile by using the providerFileCreator function
+     * 
+     * @param fullPath
+     * @param size
+     * @param lastModifiedMillis
+     * @return */
+    public ProviderFile createProviderFile(String fullPath, long size, long lastModifiedMillis) {
+        return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
+    }
+
+    public static ProviderFile createProviderFile(Function<ProviderFileBuilder, ProviderFile> providerFileCreator, String fullPath, long size,
+            long lastModifiedMillis) {
+        return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
+    }
+
+    /** Provider (non-YADE) method */
+    public List<ProviderFile> selectFiles(String directory) throws SOSProviderException {
+        return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
+    }
+
+    public String getLogPrefix() {
+        return context == null ? "" : context.getLogPrefix();
     }
 
     public String getPathOperationPrefix(String path) {
@@ -149,9 +182,9 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
-    public static void checkParam(String paramValue, String msg) throws SOSProviderException {
+    public void checkParam(String method, String paramValue, String msg) throws SOSProviderException {
         if (SOSString.isEmpty(paramValue)) {
-            throw new SOSProviderException(new SOSMissingDataException(msg));
+            throw new SOSProviderException(getLogPrefix() + "[" + method + "]" + msg + " missing");
         }
     }
 
@@ -163,9 +196,9 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return milliseconds > 0;
     }
 
-    public static void checkModificationTime(String path, long milliseconds) throws SOSProviderException {
+    public void checkModificationTime(String path, long milliseconds) throws SOSProviderException {
         if (!isValidModificationTime(milliseconds)) {
-            throw new SOSProviderException("[" + path + "][" + milliseconds + "]not valid modification time");
+            throw new SOSProviderException(getLogPrefix() + "[" + path + "][" + milliseconds + "]not valid modification time");
         }
     }
 }

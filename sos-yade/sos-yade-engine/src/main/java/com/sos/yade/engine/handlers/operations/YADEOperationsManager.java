@@ -14,9 +14,9 @@ import com.sos.yade.engine.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
-import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsManager;
-import com.sos.yade.engine.handlers.operations.getlist.GetListOperationManager;
-import com.sos.yade.engine.handlers.operations.remove.RemoveOperationManager;
+import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsHandler;
+import com.sos.yade.engine.handlers.operations.getlist.GetListOperationHandler;
+import com.sos.yade.engine.handlers.operations.remove.RemoveOperationHandler;
 
 public class YADEOperationsManager {
 
@@ -42,7 +42,7 @@ public class YADEOperationsManager {
                 return;
             }
 
-            CopyMoveOperationsManager.process(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles);
+            CopyMoveOperationsHandler.process(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles);
             // TODO after operation?
             createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
             break;
@@ -52,7 +52,7 @@ public class YADEOperationsManager {
                 createResultSetFileFromSourceFiles(logger, clientArgs, sourceFiles);
                 return;
             }
-            RemoveOperationManager.process(operation, logger, sourceDelegator, sourceFiles, getTransactionalIgoredMessage(args)
+            RemoveOperationHandler.process(operation, logger, sourceDelegator, sourceFiles, getTransactionalIgoredMessage(args)
                     + getCommandsAfterFileIgoredMessage(sourceDelegator.getArgs().getCommands()));
             // TODO after operation?
             createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
@@ -60,7 +60,7 @@ public class YADEOperationsManager {
         case GETLIST:
             // Get list of files from Source.
             // Special processing without doNotPerformOperationDueToEmptyFiles() due to the assumption of 0 source files
-            GetListOperationManager.process(operation, logger, getTransactionalIgoredMessage(args));
+            GetListOperationHandler.process(operation, logger, getTransactionalIgoredMessage(args));
             createResultSetFileFromSourceFiles(logger, clientArgs, sourceFiles);
             break;
 

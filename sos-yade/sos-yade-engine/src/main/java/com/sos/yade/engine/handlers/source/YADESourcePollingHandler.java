@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.file.ProviderDirectoryPath;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.arguments.YADESourcePollingArguments;
@@ -57,8 +56,6 @@ public class YADESourcePollingHandler {
     public List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, String excludedFileExtension)
             throws YADEEngineSourcePollingException {
 
-        ProviderDirectoryPath sourceDir = sourceDelegator.getDirectory();
-
         List<ProviderFile> result = new ArrayList<>();
 
         int currentFilesCount = 0;
@@ -82,10 +79,11 @@ public class YADESourcePollingHandler {
             if (!shouldSelectFiles && args.getPolling().getPollingWait4SourceFolder().getValue()) {
                 // sourceDir!=null is already checked on method begin
                 ensureConnected(logger, sourceDelegator, currentPollingTime);
-                if (sourceDelegator.getProvider().exists(sourceDir.getPath())) {
+                if (sourceDelegator.getProvider().exists(sourceDelegator.getDirectory())) {
                     shouldSelectFiles = true;
                 } else {
-                    logger.info("[%s[%s]Source directory not found. Wait for the directory due to polling mode...", logPrefix, sourceDir);
+                    logger.info("[%s[%s]Source directory not found. Wait for the directory due to polling mode...", logPrefix, sourceDelegator
+                            .getDirectory());
                     shouldSelectFiles = false;
                 }
             } else {

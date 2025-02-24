@@ -24,8 +24,8 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     // single files
     private SOSArgument<List<String>> filePath = new SOSArgument<>("file_path", false);
     private SOSArgument<Path> fileList = new SOSArgument<>("file_list_name", false);
-    // TODO RegExp YADE 1 default "^.*$"
-    private SOSArgument<String> fileSpec = new SOSArgument<>("file_path", false);
+    // multiple files
+    private SOSArgument<String> fileSpec = new SOSArgument<>("file_path", false, "^.*$");
     // Max files
     private SOSArgument<Integer> maxFiles = new SOSArgument<>("max_files", false);
     // Max/Min age/size defined but not used in YADE 1 ------- */

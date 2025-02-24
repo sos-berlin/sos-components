@@ -28,7 +28,7 @@ import com.sos.yade.engine.handlers.operations.copymove.fileoperations.FileHandl
 // TransferEntryState.ROLLED_BACK <- (Target file deleted) checkTargetFileSize, checkChecksum
 // targetFile.setSubState(TransferEntryState.RENAMED); after transfer
 // sourceFile.setState(TransferEntryState.MOVED); after transfer - after source file deleted
-public class CopyMoveOperationsManager {
+public class CopyMoveOperationsHandler {
 
     public static void process(TransferOperation operation, ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
@@ -43,7 +43,7 @@ public class CopyMoveOperationsManager {
             // 2) Target: map the source to the target directories and try to create all target directories before individual file transfer
             // - all target directories are only evaluated if target replacement is not enabled,
             // -- otherwise the target directories are evaluated/created on every file
-            sourceDelegator.getDirectoryMapper().tryCreateAllTargetDirectoriesBeforeOperation(config, targetDelegator);
+            sourceDelegator.getDirectoryMapper().tryCreateAllTargetDirectoriesBeforeOperation(logger, config, targetDelegator);
         } catch (SOSProviderException e) {
             throw new YADEEngineOperationException(e);
         }
@@ -65,6 +65,10 @@ public class CopyMoveOperationsManager {
 
     private static void processFiles(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("[Parallel]" + config.getParallel());
+        }
+
         if (config.getParallel() == null) {
             processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles);
         } else {
@@ -77,11 +81,13 @@ public class CopyMoveOperationsManager {
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
         // number of threads is controlled by Java
         if (config.getParallel().isAuto()) {
-            AtomicInteger index = new AtomicInteger(0);
+            AtomicInteger index = new AtomicInteger(1);
             try {
                 sourceFiles.parallelStream().forEach(f -> {
                     try {
-                        FileHandler.process(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) f, index.getAndIncrement());
+                        FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) f, index
+                                .getAndIncrement());
+                        h.run();
                     } catch (Throwable e) {
                         new RuntimeException(e);
                     }
@@ -101,7 +107,8 @@ public class CopyMoveOperationsManager {
         int index = 0;
         for (ProviderFile sourceFile : sourceFiles) {
             try {
-                FileHandler.process(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) sourceFile, index++);
+                FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) sourceFile, index++);
+                h.run();
             } catch (Throwable e) {
                 // TODO - details about source/target file - should be set in transferFile(..)
                 throw new YADEEngineOperationException(e);

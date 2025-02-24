@@ -1,6 +1,5 @@
 package com.sos.commons.vfs.common.file.selection;
 
-import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.vfs.common.file.ProviderFile;
 
 public class ProviderFileSelection {
@@ -24,7 +23,8 @@ public class ProviderFileSelection {
     // TODO pattern and SOSPathUtil.toUnixStylePath ???
     public boolean checkDirectory(String filePath) {
         if (config.getExcludedDirectoriesPattern() != null) {
-            if (config.getExcludedDirectoriesPattern().matcher(SOSPathUtil.toUnixPath(filePath)).find()) {
+            // if (config.getExcludedDirectoriesPattern().matcher(SOSPathUtil.toUnixStyle(filePath)).find()) {
+            if (config.getExcludedDirectoriesPattern().matcher(filePath).find()) {
                 return false;
             }
         }

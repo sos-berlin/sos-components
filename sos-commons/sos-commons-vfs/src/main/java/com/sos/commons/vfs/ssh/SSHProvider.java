@@ -54,29 +54,24 @@ public class SSHProvider extends ASSHProvider {
         provider.disconnect();
     }
 
-    @Override
-    public void createDirectory(String path) throws SOSProviderException {
-        provider.createDirectory(path);
-    }
+    // @Override
+    // public void createDirectory(String path) throws SOSProviderException {
+    // provider.createDirectory(path);
+    // }
 
     @Override
     public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException {
         return provider.createDirectoriesIfNotExist(path);
     }
 
-    @Override
-    public void delete(String path) throws SOSProviderException {
-        provider.delete(path);
-    }
+    // @Override
+    // public void delete(String path) throws SOSProviderException {
+    // provider.delete(path);
+    // }
 
     @Override
     public boolean deleteIfExists(String path) throws SOSProviderException {
         return provider.deleteIfExists(path);
-    }
-
-    @Override
-    public void rename(String source, String target) throws SOSProviderException {
-        provider.rename(source, target);
     }
 
     @Override

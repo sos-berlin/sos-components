@@ -1,5 +1,7 @@
 package com.sos.commons.vfs.common.file;
 
+import com.sos.commons.vfs.common.IProvider;
+
 /** Builder class to construct ProviderFile objects */
 public class ProviderFileBuilder {
 
@@ -34,7 +36,7 @@ public class ProviderFileBuilder {
         return lastModifiedMillis;
     }
 
-    public ProviderFile build() {
-        return new ProviderFile(fullPath, size, lastModifiedMillis);
+    public ProviderFile build(IProvider provider) {
+        return new ProviderFile(provider, fullPath, size, lastModifiedMillis);
     }
 }

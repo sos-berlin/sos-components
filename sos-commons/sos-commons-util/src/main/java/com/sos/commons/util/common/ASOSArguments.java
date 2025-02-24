@@ -22,7 +22,26 @@ public abstract class ASOSArguments {
         return this.getClass().getName();
     }
 
-    public void setArguments(List<SOSArgument<?>> args) throws IllegalArgumentException, IllegalAccessException {
+    @SuppressWarnings("unchecked")
+    // For UnitTest
+    public <T> void applyDefaultOnNullValue() throws Exception {
+        getArgumentFields();
+        for (Field f : argumentFields) {
+            f.setAccessible(true);
+            SOSArgument<T> current = (SOSArgument<T>) f.get(this);
+            if (current.getName() == null) {
+                continue;
+            }
+            if (current.getDefaultValue() != null) {
+                if (current.getValue() == null || current.getValue().equals(current.getDefaultValue())) {
+                    current.setValue(current.getDefaultValue());
+                    f.set(this, current);
+                }
+            }
+        }
+    }
+
+    public void setArguments(List<SOSArgument<?>> args) throws Exception {
         getArgumentFields();
         for (Field f : argumentFields) {
             f.setAccessible(true);
