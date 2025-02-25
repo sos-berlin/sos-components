@@ -13,6 +13,9 @@ public class ProviderFile {
     private long size;
     private long lastModifiedMillis;
 
+    /** file position in the entire files list */
+    private int index;
+
     public ProviderFile(IProvider provider, String fullPath, long size, long lastModifiedMillis) {
         setFullPath(provider, fullPath);
         if (this.fullPath != null) {
@@ -47,6 +50,14 @@ public class ProviderFile {
 
     public void setSize(long val) {
         size = val;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int val) {
+        index = val;
     }
 
     public long getLastModifiedMillis() {

@@ -22,8 +22,6 @@ public class YADESourcePollingHandler {
     private static final int POLLING_MAX_RETRIES_ON_CONNECTION_ERROR = 1_000;
     private static final int WAIT_SECONDS_ON_CONNECTION_ERROR = 10;
 
-    private final boolean enabled;
-
     private YADESourceArguments args;
     private PollingMethod method;
     private String mainLogPrefix;
@@ -38,14 +36,10 @@ public class YADESourcePollingHandler {
     private int cycleCounter;
 
     public YADESourcePollingHandler(YADESourceProviderDelegator sourceDelegator) {
-        YADESourceArguments args = sourceDelegator.getArgs();
-        this.enabled = args.isPoolTimeoutEnabled();
-        if (this.enabled) {
-            this.args = args;
-            initMethod();
-            this.mainLogPrefix = sourceDelegator.getLogPrefix() + "[polling]";
-            this.start = Instant.now();
-        }
+        this.args = sourceDelegator.getArgs();
+        initMethod();
+        this.mainLogPrefix = sourceDelegator.getLogPrefix() + "[polling]";
+        this.start = Instant.now();
     }
 
     public void incrementCycleCounter() {
@@ -211,16 +205,12 @@ public class YADESourcePollingHandler {
         }
     }
 
-    public boolean enabled() {
-        return enabled;
-    }
-
     public PollingMethod getMethod() {
         return method;
     }
 
     public boolean isPollingServer() {
-        return enabled ? args.getPolling().getPollingServer().isTrue() : false;
+        return args.getPolling().getPollingServer().isTrue();
     }
 
     private boolean isServerDuration() {
@@ -228,7 +218,7 @@ public class YADESourcePollingHandler {
     }
 
     private boolean isPollingServerDurationElapsed(ISOSLogger logger) {
-        if (!enabled || !isServerDuration()) {
+        if (!isServerDuration()) {
             return false;
         }
         long differenceInSeconds = Math.abs(Instant.now().getEpochSecond() - start.getEpochSecond());
@@ -239,7 +229,6 @@ public class YADESourcePollingHandler {
             }
             return true;
         }
-
         return false;
     }
 

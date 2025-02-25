@@ -151,7 +151,11 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     public String getPathOperationPrefix(String path) {
-        return getLogPrefix() + "[" + path + "]";
+        return getPathOperationPrefix(getLogPrefix(), path);
+    }
+
+    public static String getPathOperationPrefix(String logPrefix, String path) {
+        return logPrefix + "[" + path + "]";
     }
 
     public void closeQuietly(Closeable closeable) {

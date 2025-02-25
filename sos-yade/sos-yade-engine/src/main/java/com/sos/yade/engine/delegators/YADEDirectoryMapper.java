@@ -25,8 +25,8 @@ public class YADEDirectoryMapper {
     /** Set target directories per file e.g. if target file replacement is enabled */
     private Set<String> target;
 
-    /** when source replacement */
-    private Set<String> source;
+    /** If source replacement */
+    private Set<String> sourceReplacement;
 
     public void addSourceFileDirectory(String directoryPathWithoutTrailinSeparator) {
         if (SOSString.isEmpty(directoryPathWithoutTrailinSeparator)) {
@@ -39,27 +39,44 @@ public class YADEDirectoryMapper {
             final YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
         tryMapSourceTarget(logger, config, targetDelegator);
 
+        boolean isDebugEnabled = logger.isDebugEnabled();
         Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
-        if (logger.isDebugEnabled()) {
-            logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation]targetDirs[size=" + targetDirs.size() + "]" + targetDirs);
-        }
-
         if (targetDirs.size() > 0) {
-            targetDelegator.getProvider().createDirectoriesIfNotExist(targetDirs);
+            if (targetDelegator.getProvider().createDirectoriesIfNotExist(targetDirs)) {
+                if (isDebugEnabled) {
+                    logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s]created", targetDirs);
+                }
+            } else {
+                if (isDebugEnabled) {
+                    logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s][skip]already exist", targetDirs);
+                }
+            }
+        } else {
+            if (isDebugEnabled) {
+                logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][skip]targetDirs is empty");
+            }
         }
     }
 
-    public synchronized void tryCreateSourceDirectory(YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile,
+    public synchronized void tryCreateSourceDirectory(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile,
             YADEFileNameInfo newNameInfo) throws SOSProviderException {
 
         if (newNameInfo.needsParent()) {
-            if (source == null) {
-                source = new HashSet<>();
+            if (sourceReplacement == null) {
+                sourceReplacement = new HashSet<>();
             }
             String directory = sourceFile.getFinalFullPathParent();
-            if (!source.contains(directory)) {
-                sourceDelegator.getProvider().createDirectoriesIfNotExist(directory);
-                source.add(directory);
+            if (!sourceReplacement.contains(directory)) {
+                if (sourceDelegator.getProvider().createDirectoriesIfNotExist(directory)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[tryCreateSourceDirectory][directory=%s]created", directory);
+                    }
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[tryCreateSourceDirectory][directory=%s][skip]already exists", directory);
+                    }
+                }
+                sourceReplacement.add(directory);
             }
         }
 
@@ -114,7 +131,8 @@ public class YADEDirectoryMapper {
 
         // Map Source/Target
         for (final String sourceDirectory : sourceFilesDirectories) {
-            sourceTarget.put(sourceDirectory, getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(config, sourceDirectory)));
+            sourceTarget.put(sourceDirectory, getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(logger, config,
+                    sourceDirectory)));
         }
 
         if (logger.isDebugEnabled()) {
@@ -122,9 +140,21 @@ public class YADEDirectoryMapper {
         }
     }
 
-    private String getSourceDirectoryForMapping(final CopyMoveOperationsConfig config, String sourceDirectory) {
+    /** Recursion:<br/>
+     * - If source_dir is defined, the relative path is returned<br/>
+     * - If source_dir is not defined, a normalized(e.g. without Windows letters. etc.) path is returned<br/>
+     * 
+     * @param logger
+     * @param config
+     * @param sourceDirectory
+     * @return */
+    private String getSourceDirectoryForMapping(final ISOSLogger logger, final CopyMoveOperationsConfig config, final String sourceDirectory) {
         String result;
         if (config.getSource().isRecursiveSelection()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[getSourceDirectoryForMapping][isRecursiveSelection=true][configured=%s]%s", config.getSource().getDirectory(),
+                        sourceDirectory);
+            }
             if (sourceDirectory.startsWith(config.getSource().getDirectory())) {
                 // relative
                 if (sourceDirectory.equalsIgnoreCase(config.getSource().getDirectory())) {
@@ -132,8 +162,8 @@ public class YADEDirectoryMapper {
                     result = "";
                 } else {
                     // sourceDirectory string length can't be less then config.getSource().getDirectory() string length
-                    result = sourceDirectory.substring(0, config.getSource().getDirectory().length());
-                    result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
+                    result = sourceDirectory.substring(config.getSource().getDirectory().length());
+                    result = SOSString.trimStart(result, config.getSource().getPathSeparator());
                 }
             } else {
                 // YADE-600 + YADE-619(makeDirs)
@@ -158,6 +188,10 @@ public class YADEDirectoryMapper {
         } else {
             result = ""; // TODO check YADE1 makeDirs=false,recursive=false ...
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug("[getSourceDirectoryForMapping]result=" + result);
+        }
+
         return result;
     }
 
@@ -191,15 +225,19 @@ public class YADEDirectoryMapper {
             throws SOSProviderException {
         if (target == null) {
             if (logger.isDebugEnabled()) {
-                logger.debug("[getTargetDirectoriesToCreate][target=null]" + sourceTarget.values());
+                logger.debug("[getTargetDirectoriesToCreate][original]" + sourceTarget.values());
             }
-            return SOSPathUtil.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getProvider().getPathSeparator());
+            Set<String> result = SOSPathUtil.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getProvider().getPathSeparator());
+            if (logger.isDebugEnabled()) {
+                logger.debug("[getTargetDirectoriesToCreate][deepestLevelPaths]" + result);
+            }
+            return result;
         }
 
         Set<String> set = new TreeSet<>();
         if (targetDelegator.getDirectory() != null) {
             set.add(targetDelegator.getDirectory());
-            tryCreateTargetDirectory(targetDelegator, targetDelegator.getDirectory(), false);
+            tryCreateTargetDirectory(logger, targetDelegator, targetDelegator.getDirectory(), false);
         }
         return set;
     }
@@ -211,21 +249,34 @@ public class YADEDirectoryMapper {
         if (target == null) {// target replacement is not enabled, ignore fileNameInfo
             targetDirectory = sourceTarget.get(sourceFile.getParentFullPath());
         } else {
-            targetDirectory = getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(config, sourceFile.getParentFullPath()));
+            targetDirectory = getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(logger, config, sourceFile
+                    .getParentFullPath()));
             if (!SOSString.isEmpty(subDirectory)) {
                 targetDirectory = SOSPathUtil.appendPath(targetDirectory, subDirectory, targetDelegator.getProvider().getPathSeparator());
             }
-            tryCreateTargetDirectory(targetDelegator, targetDirectory, config.getTarget().isCreateDirectoriesEnabled());
+            tryCreateTargetDirectory(logger, targetDelegator, targetDirectory, config.getTarget().isCreateDirectoriesEnabled());
         }
         return targetDirectory;
     }
 
     // if parallel transfer - access to map from different threads
-    private synchronized void tryCreateTargetDirectory(final YADETargetProviderDelegator targetDelegator, String targetDirectory,
-            boolean createDirectory) throws SOSProviderException {
+    private synchronized void tryCreateTargetDirectory(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator,
+            String targetDirectory, boolean createDirectory) throws SOSProviderException {
         if (!target.contains(targetDirectory)) {
             if (createDirectory) {
-                targetDelegator.getProvider().createDirectoriesIfNotExist(targetDirectory);
+                if (targetDelegator.getProvider().createDirectoriesIfNotExist(targetDirectory)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[tryCreateTargetDirectory][directory=%s]created", targetDirectory);
+                    }
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[tryCreateTargetDirectory][directory=%s][skip]already exists", targetDirectory);
+                    }
+                }
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[tryCreateTargetDirectory][directory=%s][skip]create=false", targetDirectory);
+                }
             }
             target.add(targetDirectory);
         }

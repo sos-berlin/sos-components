@@ -241,7 +241,8 @@ public class SSHJProvider extends ASSHProvider {
         List<ProviderFile> result = new ArrayList<>();
         try {
             int counterAdded = 0;
-            result.addAll(SSHJProviderUtil.selectFiles(sshClient, getProviderFileCreator(), selection, directory, counterAdded));
+            result.addAll(SSHJProviderUtil.selectFiles(getLogger(), getLogger().isDebugEnabled(), getLogPrefix(), sshClient, getProviderFileCreator(),
+                    selection, directory, counterAdded));
         } catch (SOSProviderException e) {
             throw e;
         }

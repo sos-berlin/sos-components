@@ -22,6 +22,7 @@ import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineSourceFilesSelectorException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceZeroByteFilesException;
+import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 
 public class YADESourceFilesSelector {
 
@@ -58,6 +59,7 @@ public class YADESourceFilesSelector {
         YADESourceArguments sourceArgs = sourceDelegator.getArgs();
         ProviderFileSelectionConfig.Builder builder = new ProviderFileSelectionConfig.Builder();
         if (!singleFiles) {
+            builder.directory(sourceDelegator.getDirectory());
             // case sensitive
             builder.fileNamePattern(Pattern.compile(sourceArgs.getFileSpec().getValue(), 0));
             if (!SOSString.isEmpty(sourceArgs.getExcludedDirectories().getValue())) {
@@ -182,10 +184,33 @@ public class YADESourceFilesSelector {
 
     public static void checkSelectionResult(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEClientArguments clientArgs,
             List<ProviderFile> sourceFiles) throws YADEEngineSourceFilesSelectorException {
+        StringBuilder sb = new StringBuilder();
+        if (sourceDelegator.getDirectory() != null) {
+            sb.append("[").append(sourceDelegator.getDirectory()).append("]");
+        }
+        sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getRecursive())).append("]");
+        if (sourceDelegator.getArgs().isSingleFilesSelection()) {
+            if (sourceDelegator.getArgs().isFileListEnabled()) {
+                sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFileList())).append("]");
+            } else if (sourceDelegator.getArgs().isFilePathEnabled()) {
+                sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFilePath())).append("]");
+            }
+        } else {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFileSpec())).append("]");
+        }
+        if (!sourceDelegator.getArgs().getMaxFiles().isEmpty()) {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFiles())).append("]");
+        }
+        if (!sourceDelegator.getArgs().getMinFileSize().isEmpty()) {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMinFileSize())).append("]");
+        }
+        if (!sourceDelegator.getArgs().getMaxFileSize().isEmpty()) {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFileSize())).append("]");
+        }
+        logger.info("%s%sfound=%s", sourceDelegator.getLogPrefix(), sb, sourceFiles.size());
+
         checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
         checkFileListSize(sourceDelegator, clientArgs, sourceFiles);
-        
-        logger.info("%sfiles found=%s", sourceDelegator.getLogPrefix(), sourceFiles.size());
     }
 
     private static void checkZeroByteFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)
@@ -205,15 +230,15 @@ public class YADESourceFilesSelector {
             if (zeroSizeFiles.size() == sourceFiles.size()) {
                 i = 1;
                 for (ProviderFile f : zeroSizeFiles) {
-                    logger.info("%s[%s][TransferZeroByteFiles=NO][%s]Bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
+                    logger.info("%s[%s][TransferZeroByteFiles=NO][%s]bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
                     i++;
                 }
                 throw new YADEEngineSourceZeroByteFilesException(String.format(
-                        "[TransferZeroByteFiles=NO]All %s files have zero byte size, transfer aborted", zeroSizeFiles.size()));
+                        "[TransferZeroByteFiles=NO]All %s file(s) have zero byte size, transfer aborted", zeroSizeFiles.size()));
             }
             break;
         case RELAXED:  // not transfer zero byte files
-            // already handled by selection - YADEArgumentsHelper.checkConfiguration/sourceArguments
+            // already handled by selection - YADEArgumentsChecker.adjustSourceArguments
             // the selection for ZeroByteTransfer.RELAXED not contains the zero byte files
             break;
         case STRICT:   // abort transfer if any zero byte file is found
@@ -221,7 +246,7 @@ public class YADESourceFilesSelector {
             if (zeroSizeFiles.size() > 0) {
                 i = 1;
                 for (ProviderFile f : zeroSizeFiles) {
-                    logger.info("%s[%s][TransferZeroByteFiles=STRICT][%s]Bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
+                    logger.info("%s[%s][TransferZeroByteFiles=STRICT][%s]bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
                     i++;
                 }
                 throw new YADEEngineSourceZeroByteFilesException(String.format("[TransferZeroByteFiles=STRICT]%s zero byte size file(s) detected",

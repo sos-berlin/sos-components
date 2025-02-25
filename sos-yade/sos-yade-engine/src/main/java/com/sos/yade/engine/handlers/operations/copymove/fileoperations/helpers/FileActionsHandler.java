@@ -102,7 +102,7 @@ public class FileActionsHandler {
         if (newNameInfo.isPresent()) {
             YADEFileNameInfo info = newNameInfo.get();
             sourceFile.setFinalName(info);
-            sourceDelegator.getDirectoryMapper().tryCreateSourceDirectory(sourceDelegator, sourceFile, info);
+            sourceDelegator.getDirectoryMapper().tryCreateSourceDirectory(logger, sourceDelegator, sourceFile, info);
 
             // rename
             sourceDelegator.getProvider().renameFileIfExists(sourceFile.getFullPath(), sourceFile.getFinalFullPath());

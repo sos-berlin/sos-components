@@ -95,6 +95,14 @@ public class SOSDate {
         return getCurrentDateTimeAsString(null);
     }
 
+    public static String tryGetCurrentDateTimeAsString() {
+        try {
+            return getCurrentDateTimeAsString(null);
+        } catch (SOSInvalidDataException e) {
+            return e.toString();
+        }
+    }
+
     public static String getCurrentDateTimeAsString(TimeZone timeZone) throws SOSInvalidDataException {
         return format(new Date(), DATETIME_FORMAT, timeZone);
     }

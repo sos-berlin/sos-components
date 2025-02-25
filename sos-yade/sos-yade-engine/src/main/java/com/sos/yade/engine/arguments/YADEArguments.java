@@ -26,7 +26,7 @@ public class YADEArguments extends ASOSArguments {
     // String AUTO(case-insensitive) : number of threads is controlled by Java with parallelStream()
     private SOSArgument<String> parallelMaxThreads = new SOSArgument<>("parallel_max_threads", false, "AUTO");
 
-    private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(8 * 1_024));
+    private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(32 * 1_024));
 
     /** - Integrity Hash ------- */
     // YADE-1

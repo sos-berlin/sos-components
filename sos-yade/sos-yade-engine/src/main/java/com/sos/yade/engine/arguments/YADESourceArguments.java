@@ -66,7 +66,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         return !checkSteadyStateInterval.isEmpty();
     }
 
-    public boolean isPoolTimeoutEnabled() {
+    public boolean isPollingEnabled() {
         return polling != null && polling.getPollTimeout().getValue() != null;
     }
 

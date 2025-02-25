@@ -254,6 +254,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     public InputStream getInputStream(String path) throws SOSProviderException {
         try {
             return Files.newInputStream(getPath(path));
+            // return new FileInputStream(getPath(path).toFile());
         } catch (Throwable e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
@@ -268,6 +269,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             } else {
                 return Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             }
+            // return new FileOutputStream(getPath(path).toFile(), append);
         } catch (Throwable e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
@@ -356,8 +358,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                 public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) {
                     if (selection.maxFilesExceeded(counterAdded)) {
                         if (isDebugEnabled) {
-                            getLogger().debug(String.format("[%s][skip][preVisitDirectory][maxFiles=%s]exceeded", path, selection.getConfig()
-                                    .getMaxFiles()));
+                            getLogger().debug(String.format("%s[skip][preVisitDirectory][maxFiles=%s]exceeded", getPathOperationPrefix(path
+                                    .toString()), selection.getConfig().getMaxFiles()));
                         }
                         // return result;
                         return FileVisitResult.TERMINATE;
@@ -366,8 +368,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                         return FileVisitResult.CONTINUE;
                     }
                     if (isDebugEnabled) {
-                        getLogger().debug(String.format("[%s][preVisitDirectory][match][excludedDirectories=%s]", path, selection.getConfig()
-                                .getExcludedDirectoriesPattern().pattern()));
+                        getLogger().debug(String.format("%s[preVisitDirectory][match][excludedDirectories=%s]", getPathOperationPrefix(path
+                                .toString()), selection.getConfig().getExcludedDirectoriesPattern().pattern()));
                     }
                     return FileVisitResult.SKIP_SUBTREE;
                 }
@@ -377,21 +379,26 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                     if (!attrs.isDirectory()) {
                         if (selection.maxFilesExceeded(counterAdded)) {
                             if (isDebugEnabled) {
-                                getLogger().debug(String.format("[%s][skip][preVisitDirectory][maxFiles=%s]exceeded", path, selection.getConfig()
-                                        .getMaxFiles()));
+                                getLogger().debug(String.format("%s[skip][preVisitDirectory][maxFiles=%s]exceeded", getPathOperationPrefix(path
+                                        .toString()), selection.getConfig().getMaxFiles()));
                             }
                             // return result;
                             return FileVisitResult.TERMINATE;
                         }
                         if (isTraceEnabled) {
-                            getLogger().trace(String.format("[%s][visitFile]", path));
+                            getLogger().trace(String.format("%s[visitFile]", getPathOperationPrefix(path.toString())));
                         }
                         String fileName = path.getFileName().toString();
                         if (selection.checkFileName(fileName)) {
                             ProviderFile file = createProviderFile(path);
                             if (selection.checkProviderFileMinMaxSize(file)) {
                                 counterAdded++;
+                                file.setIndex(counterAdded);
                                 result.add(file);
+
+                                if (isDebugEnabled) {
+                                    getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                }
                             }
                         }
                     }
@@ -409,28 +416,37 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         boolean isDebugEnabled = getLogger().isDebugEnabled();
         boolean isTraceEnabled = getLogger().isTraceEnabled();
 
+        if (isDebugEnabled) {
+            getLogger().debug(SOSString.toString(selection.getConfig(), true));
+        }
+
         List<ProviderFile> result = new ArrayList<>();
         int counterAdded = 0;
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
             for (Path path : stream) {
                 if (selection.maxFilesExceeded(counterAdded)) {
                     if (isDebugEnabled) {
-                        getLogger().debug(String.format("[%s][skip][preVisitDirectory][maxFiles=%s]exceeded", path, selection.getConfig()
-                                .getMaxFiles()));
+                        getLogger().debug(String.format("%s[skip][preVisitDirectory][maxFiles=%s]exceeded", getPathOperationPrefix(path.toString()),
+                                selection.getConfig().getMaxFiles()));
                     }
                     // return FileVisitResult.TERMINATE;
                     return result;
                 }
                 if (!Files.isDirectory(path)) {
                     if (isTraceEnabled) {
-                        getLogger().trace(String.format("[%s]", path));
+                        getLogger().trace(getPathOperationPrefix(path.toString()));
                     }
                     String fileName = path.getFileName().toString();
                     if (selection.checkFileName(fileName)) {
                         ProviderFile file = createProviderFile(path);
                         if (selection.checkProviderFileMinMaxSize(file)) {
                             counterAdded++;
+                            file.setIndex(counterAdded);
                             result.add(file);
+
+                            if (isDebugEnabled) {
+                                getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                            }
                         }
                     }
                 }

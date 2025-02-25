@@ -8,14 +8,14 @@ import com.sos.yade.engine.arguments.YADEArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
-import com.sos.yade.engine.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
 
 public class CopyMoveOperationsConfig {
 
+    private final YADEParallelProcessingConfig parallel;
+
     private final Source source;
     private final Target target;
-
-    private final Parallel parallel;
 
     private final TransferOperation operation;
     private final String integrityHashAlgorithm;
@@ -23,31 +23,19 @@ public class CopyMoveOperationsConfig {
     private final int maxRetries;
     private final boolean checkFileSize;
 
-    public CopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args, final YADESourceProviderDelegator sourceDelegator,
-            final YADETargetProviderDelegator targetDelegator) {
+    public CopyMoveOperationsConfig(final TransferOperation operation, final YADEParallelProcessingConfig parallelConfig, final YADEArguments args,
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
         this.operation = operation;
+
+        this.parallel = parallelConfig;
 
         this.source = new Source(sourceDelegator);
         this.target = new Target(targetDelegator);
 
-        this.parallel = initializeParallel(args.getParallelMaxThreads().getValue());
-
-        this.integrityHashAlgorithm = YADEArgumentsHelper.getIntegrityHashAlgorithm(args, sourceDelegator, targetDelegator);
+        this.integrityHashAlgorithm = args.getIntegrityHashAlgorithm().getValue();
         this.bufferSize = args.getBufferSize().getValue().intValue();
         this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
         this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
-    }
-
-    private Parallel initializeParallel(String parallel) {
-        if ("AUTO".equalsIgnoreCase(parallel)) {
-            return new Parallel(-1);
-        }
-        try {
-            int val = Integer.valueOf(parallel).intValue();
-            return val <= 1 ? null : new Parallel(val);
-        } catch (Throwable e) {
-            return null;
-        }
     }
 
     public boolean isMoveOperation() {
@@ -113,44 +101,16 @@ public class CopyMoveOperationsConfig {
         return checkFileSize;
     }
 
+    public YADEParallelProcessingConfig getParallel() {
+        return parallel;
+    }
+
     public Source getSource() {
         return source;
     }
 
     public Target getTarget() {
         return target;
-    }
-
-    public Parallel getParallel() {
-        return parallel;
-    }
-
-    public class Parallel {
-
-        private final boolean auto;
-        private final int maxThreads;
-
-        private Parallel(int maxThreads) {
-            this.auto = maxThreads <= 0;
-            this.maxThreads = maxThreads;
-        }
-
-        public boolean isAuto() {
-            return auto;
-        }
-
-        public int getMaxThreads() {
-            return maxThreads;
-        }
-
-        @Override
-        public String toString() {
-            if (auto) {
-                return "auto=true";
-            }
-            return "maxThreads=" + maxThreads;
-        }
-
     }
 
     public class Source {

@@ -30,30 +30,28 @@ public class FileHandler implements Runnable {
     private final YADESourceProviderDelegator sourceDelegator;
     private final YADETargetProviderDelegator targetDelegator;
     private final YADEProviderFile sourceFile;
-    private final int index;
 
     public FileHandler(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, int index) {
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile) {
         this.logger = logger;
         this.config = config;
         this.sourceDelegator = sourceDelegator;
         this.targetDelegator = targetDelegator;
         this.sourceFile = sourceFile;
-        this.index = index;
     }
 
     @Override
     public void run() {
         try {
             boolean isCumulateTarget = config.getTarget().getCumulate() != null;
-            String logPrefix = config.getParallel() == null ? String.valueOf(index) : index + "][" + getThreadName();
+            String logPrefix = config.getParallel() == null ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + getThreadName();
             YADETargetProviderFile targetFile;
             // 1) Target - initialize/get Target file
             if (isCumulateTarget) {
                 targetFile = config.getTarget().getCumulate().getFile();
             } else {
                 // 1) Target: may create target directories if target replacement enabled
-                sourceFile.initTarget(logger, config, sourceDelegator, targetDelegator, index);
+                sourceFile.initTarget(logger, config, sourceDelegator, targetDelegator);
                 targetFile = sourceFile.getTarget();
 
                 // 2) Target: check should be transferred...
@@ -74,17 +72,17 @@ public class FileHandler implements Runnable {
             YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
             targetFile.setState(TransferEntryState.TRANSFERRING);
 
-            Instant startTime = Instant.now();
             boolean isCompressTarget = config.getTarget().getCompress() != null;
             MessageDigest sourceMessageDigest = FileIntegrityHashHelper.getMessageDigest(config, config.getSource().isCheckIntegrityHashEnabled());
             MessageDigest targetMessageDigest = FileIntegrityHashHelper.getMessageDigest(config, config.getTarget()
                     .isCreateIntegrityHashFileEnabled());
 
             boolean useBufferedStreams = true;
-
+            
             int attempts = 0;
-
             boolean isCumulateTargetWritten = false;
+            
+            Instant startTime = Instant.now();
             l: while (attempts < config.getMaxRetries()) {
                 // int cumulativeFileSeperatorLength = 0;
                 try (InputStream sourceStream = FileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile, useBufferedStreams);
@@ -146,7 +144,7 @@ public class FileHandler implements Runnable {
             FileActionsHandler.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, isCompressTarget, isCumulateTarget);
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
-            logger.info("[%s][transferred][%s=%s][%s=%s][Bytes=%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
+            logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
                     targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize(), SOSDate.getDuration(startTime, Instant.now()));
 
             FileActionsHandler.checkTargetFileSize(logger, config, sourceDelegator, sourceFile, targetDelegator, targetFile);

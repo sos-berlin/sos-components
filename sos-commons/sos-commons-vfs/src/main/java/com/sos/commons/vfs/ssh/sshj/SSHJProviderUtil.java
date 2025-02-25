@@ -174,8 +174,9 @@ public class SSHJProviderUtil {
     }
 
     // possible recursion
-    protected static List<ProviderFile> selectFiles(SSHClient ssh, Function<ProviderFileBuilder, ProviderFile> providerFileCreator,
-            ProviderFileSelection selection, String directoryPath, int counterAdded) throws SOSProviderException {
+    protected static List<ProviderFile> selectFiles(ISOSLogger logger, boolean isDebugEnabled, String logPrefix, SSHClient ssh,
+            Function<ProviderFileBuilder, ProviderFile> providerFileCreator, ProviderFileSelection selection, String directoryPath, int counterAdded)
+            throws SOSProviderException {
         List<ProviderFile> recursiveResult = new ArrayList<>();
         try (SFTPClient sftp = ssh.newSFTPClient()) {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
@@ -183,7 +184,8 @@ public class SSHJProviderUtil {
                 if (selection.maxFilesExceeded(counterAdded)) {
                     return recursiveResult;
                 }
-                processRemoteResource(ssh, providerFileCreator, selection, subResource, counterAdded, recursiveResult);
+                processRemoteResource(logger, isDebugEnabled, logPrefix, ssh, providerFileCreator, selection, subResource, counterAdded,
+                        recursiveResult);
             }
         } catch (Throwable e) {
             throw new SOSProviderException(e);
@@ -191,12 +193,14 @@ public class SSHJProviderUtil {
         return recursiveResult;
     }
 
-    private static void processRemoteResource(SSHClient ssh, Function<ProviderFileBuilder, ProviderFile> providerFileCreator,
-            ProviderFileSelection selection, RemoteResourceInfo resource, int counterAdded, List<ProviderFile> result) throws SOSProviderException {
+    private static void processRemoteResource(ISOSLogger logger, boolean isDebugEnabled, String logPrefix, SSHClient ssh,
+            Function<ProviderFileBuilder, ProviderFile> providerFileCreator, ProviderFileSelection selection, RemoteResourceInfo resource,
+            int counterAdded, List<ProviderFile> result) throws SOSProviderException {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
                 if (selection.checkDirectory(resource.getPath())) {
-                    List<ProviderFile> recursiveFiles = selectFiles(ssh, providerFileCreator, selection, resource.getPath(), counterAdded);
+                    List<ProviderFile> recursiveFiles = selectFiles(logger, isDebugEnabled, logPrefix, ssh, providerFileCreator, selection, resource
+                            .getPath(), counterAdded);
                     result.addAll(recursiveFiles);
                 }
             }
@@ -209,7 +213,12 @@ public class SSHJProviderUtil {
                             .getFileLastModifiedMillis(attr));
                     if (selection.checkProviderFileMinMaxSize(file)) {
                         counterAdded++;
+                        file.setIndex(counterAdded);
                         result.add(file);
+
+                        if (isDebugEnabled) {
+                            logger.debug(AProvider.getPathOperationPrefix(logPrefix, file.getFullPath()) + "added");
+                        }
                     }
                 }
             }

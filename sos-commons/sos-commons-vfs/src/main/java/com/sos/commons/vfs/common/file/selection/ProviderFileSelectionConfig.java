@@ -32,6 +32,7 @@ public class ProviderFileSelectionConfig {
         this.filterByMaxFiles = this.maxFiles > -1; // YADE 1: > 0
         this.filterByMaxFileSize = this.maxFileSize > -1L;
         this.filterByMinFileSize = this.minFileSize > -1L;
+
     }
 
     public static class Builder {
@@ -135,4 +136,5 @@ public class ProviderFileSelectionConfig {
     public boolean isFilterByMinFileSizeEnabled() {
         return filterByMinFileSize;
     }
+
 }

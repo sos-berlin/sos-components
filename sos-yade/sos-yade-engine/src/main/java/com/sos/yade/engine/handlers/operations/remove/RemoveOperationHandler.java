@@ -20,10 +20,9 @@ public class RemoveOperationHandler {
         if (!SOSString.isEmpty(additionalHeadLineMessage)) {
             logger.info("[%s]%s", operation, additionalHeadLineMessage);
         }
-        int index = 0;
         for (ProviderFile sourceFile : sourceFiles) {
             YADEProviderFile file = (YADEProviderFile) sourceFile;
-            file.init(index++);
+            file.resetSteady();
             try {
                 YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, file);
 

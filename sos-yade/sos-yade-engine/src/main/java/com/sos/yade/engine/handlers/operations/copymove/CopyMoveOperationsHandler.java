@@ -3,7 +3,6 @@ package com.sos.yade.engine.handlers.operations.copymove;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.sos.commons.exception.SOSMissingDataException;
@@ -21,6 +20,7 @@ import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.operations.copymove.fileoperations.FileHandler;
+import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
 
 // TransferEntryState.NOT_OVERWRITTEN
 // TransferEntryState.TRANSFERRING
@@ -30,14 +30,15 @@ import com.sos.yade.engine.handlers.operations.copymove.fileoperations.FileHandl
 // sourceFile.setState(TransferEntryState.MOVED); after transfer - after source file deleted
 public class CopyMoveOperationsHandler {
 
-    public static void process(TransferOperation operation, ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
+    public static void process(TransferOperation operation, ISOSLogger logger, YADEParallelProcessingConfig parallelProcessingConfig,
+            YADEArguments args, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
+            List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
         if (targetDelegator == null) {
             throw new YADEEngineOperationException(new SOSMissingDataException("TargetDelegator"));
         }
 
         // 1) Source/Target: initialize transfer configuration(cumulative file,compress,atomic etc.)
-        CopyMoveOperationsConfig config = new CopyMoveOperationsConfig(operation, args, sourceDelegator, targetDelegator);
+        CopyMoveOperationsConfig config = new CopyMoveOperationsConfig(operation, parallelProcessingConfig, args, sourceDelegator, targetDelegator);
 
         try {
             // 2) Target: map the source to the target directories and try to create all target directories before individual file transfer
@@ -65,10 +66,6 @@ public class CopyMoveOperationsHandler {
 
     private static void processFiles(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("[Parallel]" + config.getParallel());
-        }
-
         if (config.getParallel() == null) {
             processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles);
         } else {
@@ -81,12 +78,10 @@ public class CopyMoveOperationsHandler {
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
         // number of threads is controlled by Java
         if (config.getParallel().isAuto()) {
-            AtomicInteger index = new AtomicInteger(1);
             try {
                 sourceFiles.parallelStream().forEach(f -> {
                     try {
-                        FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) f, index
-                                .getAndIncrement());
+                        FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) f);
                         h.run();
                     } catch (Throwable e) {
                         new RuntimeException(e);
@@ -104,10 +99,9 @@ public class CopyMoveOperationsHandler {
 
     private static void processFilesSequentially(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
-        int index = 0;
         for (ProviderFile sourceFile : sourceFiles) {
             try {
-                FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) sourceFile, index++);
+                FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) sourceFile);
                 h.run();
             } catch (Throwable e) {
                 // TODO - details about source/target file - should be set in transferFile(..)

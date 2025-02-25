@@ -3,7 +3,7 @@
 	<Appenders>
 		<Console name="MDCConsole" target="SYSTEM_OUT">
 			<PatternLayout
-				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%X{F}:%X{L}) - %m%n" />
+				pattern="%d{HH:mm:ss.SSS}[%5p] (%X{F}:%X{L}) - %m%n" />
 		</Console>
 		<!-- Appender for root logger -->
 		<Console name="DefaultConsole" target="SYSTEM_OUT">

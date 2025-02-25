@@ -16,9 +16,6 @@ public class YADEProviderFile extends ProviderFile {
 
     private Steady steady = null;
     private TransferEntryState state = null;
-    /** file transfer position in the entire files list */
-    private int index;
-
     /** parent directory without trailing separator */
     private String parentFullPath;
 
@@ -69,25 +66,18 @@ public class YADEProviderFile extends ProviderFile {
         return TransferEntryState.SKIPPED.equals(state) || TransferEntryState.NOT_OVERWRITTEN.equals(state);
     }
 
-    /** Operations: Remove(without target) and Copy/Move(with target) */
-    public void init(int index) {
-        this.index = index;
+    public void resetSteady() {
         this.steady = null;
-    }
-
-    /** Operations: Copy/Move(with target) */
-    public void initTarget(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, int index) throws SOSProviderException {
-        init(index);
-        initTarget(logger, config, sourceDelegator, targetDelegator);
     }
 
     public void resetTarget() {
         target = null;
     }
 
-    private void initTarget(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+    /** Operations: Copy/Move(with target) */
+    public void initTarget(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
+        resetSteady();
         if (config.getTarget().getCumulate() != null) {
             target = null;
             return;
@@ -144,10 +134,6 @@ public class YADEProviderFile extends ProviderFile {
             info = new YADEFileNameInfo(targetDelegator, fileName);
         }
         return info;
-    }
-
-    public int getIndex() {
-        return index;
     }
 
     public void setFinalName(YADEFileNameInfo newNameInfo) {
