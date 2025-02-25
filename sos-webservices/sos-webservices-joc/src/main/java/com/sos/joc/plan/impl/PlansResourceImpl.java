@@ -197,7 +197,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             Stream<String> availableBoardNames = jBoards.keySet().stream().map(BoardPath::string);
             if (filter.getNoticeBoardPaths() != null && !filter.getNoticeBoardPaths().isEmpty()) {
                 Set<String> requestedBoardNames = filter.getNoticeBoardPaths().stream().map(JocInventory::pathToName).collect(Collectors.toSet());
-                availableBoardNames.filter(bp -> requestedBoardNames.contains(bp));
+                availableBoardNames = availableBoardNames.filter(bp -> requestedBoardNames.contains(bp));
             }
             List<String> boardNames = availableBoardNames.collect(Collectors.toList()); 
             if (boardNames.isEmpty()) {
