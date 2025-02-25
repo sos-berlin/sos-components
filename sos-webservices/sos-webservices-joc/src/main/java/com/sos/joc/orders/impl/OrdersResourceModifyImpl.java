@@ -649,7 +649,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
         }
         
-        historyOperations = getHistoryOperations(jOrder, modifyOrders.getVariables(), cop, workflowPositionStringOpt, getJocError());
+        historyOperations = getHistoryOperations(modifyOrders.getVariables(), cop, workflowPositionStringOpt, getJocError());
         
         Optional<JPosition> orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
         orderPositionOpt = cop.forceOrderPosition(orderPositionOpt, modifyOrders.getForce() == Boolean.TRUE);
@@ -677,95 +677,26 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
     
-    private static List<JHistoryOperation> getHistoryOperations(JOrder jOrder, Variables variables, CheckedResumeOrdersPositions cop,
+    private static List<JHistoryOperation> getHistoryOperations(Variables variables, CheckedResumeOrdersPositions cop,
             Optional<String> workflowPositionStringOpt, JocError jocError) throws JsonProcessingException {
-        
+
         List<JHistoryOperation> historyOperations = Collections.emptyList();
         if (variables == null || variables.getAdditionalProperties() == null || variables.getAdditionalProperties().isEmpty()) {
             return historyOperations;
         }
-        Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Position::getPositionString).collect(
-                Collectors.toCollection(LinkedHashSet::new));
-        int posIndex = getIndex(allowedPositionsWithImplicitEnds, workflowPositionStringOpt.orElse(""));
-        int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentWorkflowPosition().toString());
-        boolean isNotFuturePosition = posIndex <= curPosIndex;
-        
+
         Map<String, Object> vars = variables.getAdditionalProperties();
-        if (vars.containsKey("returnCode") && vars.get("returnCode") instanceof String && ((String) vars.get("returnCode")).matches(
-                "\\d+")) {
+        if (vars.containsKey("returnCode") && vars.get("returnCode") instanceof String && ((String) vars.get("returnCode")).matches("\\d+")) {
             variables.setAdditionalProperty("returnCode", Long.valueOf((String) vars.get("returnCode")));
         }
 
-        // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous position
-        List<Object> prevPos = null;
-        String prevPosString = null;
-        if (isNotFuturePosition) {
-            
-            List<JPosition> historicPositions = JavaConverters.asJava(jOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
-                    .apply(h.position())).collect(Collectors.toCollection(LinkedList::new));
-            List<String> historicWorkflowPositions = historicPositions.stream().map(JPosition::toString).map(p -> cop
-                    .orderPositionToWorkflowPosition(p)).collect(Collectors.toCollection(LinkedList::new));
-            int lastIndexOfWorkflowPos =  historicWorkflowPositions.lastIndexOf(workflowPositionStringOpt.orElse(""));
-            if (lastIndexOfWorkflowPos > 0) {
-                JPosition jPos = historicPositions.get(lastIndexOfWorkflowPos - 1);
-                if (jPos != null) {
-                    prevPos = jPos.toList();
-                    prevPosString = jPos.toString();
-                }
-            } else {
-                prevPos = cop.getCurrentOrderPosition().toList();
-                prevPosString = cop.getCurrentOrderPosition().toString();
-            }
-            
-        } else {
-            prevPos = cop.getCurrentOrderPosition().toList();
-            prevPosString = cop.getCurrentOrderPosition().toString();
-        }
-        if (prevPos != null) {
-//            final String prevPString = prevPosString;
-//            Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
-//                    .toString().equals(prevPString)).findFirst();
-            HistoricOutcome h = null;
-            for (HistoricOutcome ho : cop.getHistoricOutcomes()) {
-                if (JPosition.fromList(ho.getPosition()).get().toString().equals(prevPosString)) {
-                    h = ho;
-                }
-            }
-            if (h != null) {
-                //HistoricOutcome h = hoOpt.get();
-                Variables v = h.getOutcome().getNamedValues();
-                if (v == null) {
-                    v = new Variables();
-                }
-                v.setAdditionalProperties(variables.getAdditionalProperties());
-                if ("Disrupted".equals(h.getOutcome().getTYPE())) {
-                    String errMsg = null;
-                    try {
-                        errMsg = h.getOutcome().getReason().getProblem().getMessage();
-                    } catch (Exception e) {
-                        //
-                    }
-                    h = new HistoricOutcome(prevPos, new Outcome("Failed", errMsg, v, null, null));
-                } else {
-                    h.getOutcome().setNamedValues(v);
-                }
-                historyOperations = getJHistoricOperations(h, jocError, "replace", null);
-            } else {
-                Variables v = new Variables();
-                v.setAdditionalProperties(variables.getAdditionalProperties());
-                historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)),
-                        jocError, "append", null);
-            }
-        } else {
-            // TODO JOC-1997 this case never reached -> dead code
-            Variables v = new Variables();
-            v.setAdditionalProperties(variables.getAdditionalProperties());
-            List<Object> posList = new LinkedList<>(cop.getCurrentOrderPosition().toList());
-            int prev = ((Integer) posList.remove(posList.size() - 1)) - 1;
-            posList.add(Math.max(0, prev));
-            historyOperations = getJHistoricOperations(new HistoricOutcome(posList, new Outcome("Succeeded", null, v, null, null)),
-                    jocError, "insert", cop.getCurrentOrderPosition());
-        }
+        JPosition jPos = workflowPositionStringOpt.map(CheckedResumeOrdersPositions::getJPositionFromString).orElse(cop.getCurrentOrderPosition());
+
+        Variables v = new Variables();
+        v.setAdditionalProperties(variables.getAdditionalProperties());
+        historyOperations = getJHistoricOperations(new HistoricOutcome(jPos.toList(), new Outcome("Succeeded", null, v, null, null)), jocError,
+                "append", null);
+
         return historyOperations;
     }
 
@@ -787,16 +718,16 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private static int getIndex(Set<? extends Object> set, Object value) {
-        int result = 0;
-        for (Object entry : set) {
-            if (entry.equals(value)) {
-                return result;
-            }
-            result++;
-        }
-        return result;
-    }
+//    private static int getIndex(Set<? extends Object> set, Object value) {
+//        int result = 0;
+//        for (Object entry : set) {
+//            if (entry.equals(value)) {
+//                return result;
+//            }
+//            result++;
+//        }
+//        return result;
+//    }
 
     // private static List<HistoricOutcome> subList(List<HistoricOutcome> hOutcomes, String positionString, String curPositionString,
     // Set<String> allowedPositions) {

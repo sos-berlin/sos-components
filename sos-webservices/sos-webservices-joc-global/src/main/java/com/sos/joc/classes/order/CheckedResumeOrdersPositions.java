@@ -614,7 +614,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         return positionString;
     }
     
-    private JPosition getJPositionFromString(String positionString) {
+    public static JPosition getJPositionFromString(String positionString) {
         return JPosition.fromList(Arrays.asList(positionString.split("[:/]")).stream().map(str -> str.matches("\\d+") ? Integer.valueOf(str) : str)
                 .collect(Collectors.toCollection(LinkedList::new))).get();
     }
