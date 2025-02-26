@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -411,9 +412,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     try {
                         Workflow w = cachedWorkflows.get(name);
                         if (w == null) {
-                            String wj = dbLayer.getDeployedJsonByConfigurationName(ConfigurationType.WORKFLOW, name);
+                            String wj = getDeployedWorkflowJson(dbLayer, name);
                             if (wj == null) {
-                                throw new Exception(workflowMsg + " couldn't find workflow deployment");
+                                throw new DBMissingDataException(workflowMsg + " couldn't find workflow deployment");
                             }
                             w = WorkflowConverter.convertInventoryWorkflow(wj);
                             cachedWorkflows.put(name, w);
@@ -438,7 +439,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     try {
                         Workflow w = cachedWorkflows.get(name);
                         if (w == null) {
-                            String wj = dbLayer.getDeployedJsonByConfigurationName(ConfigurationType.WORKFLOW, name);
+                            String wj = getDeployedWorkflowJson(dbLayer, name);
                             if (wj == null) {
                                 wj = dbLayer.getConfigurationProperty(name, ConfigurationType.WORKFLOW.intValue(), "content");
                             }
@@ -486,6 +487,24 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     .getPath()));
         }
         return errors;
+    }
+    
+    private String getDeployedWorkflowJson(InventoryDBLayer dbLayer, String workflowName) throws SOSHibernateException {
+        String wj = null;
+        int trials = 4;
+        // JOC-2001 try again because of asynchronous call of release and deploy api
+        for (int i = 0; i < trials; i++) {
+            wj = dbLayer.getDeployedJsonByConfigurationName(ConfigurationType.WORKFLOW, workflowName);
+            if (wj != null) {
+                break;
+            }
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                //
+            }
+        }
+        return wj;
     }
 
     private static void deleteReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog,
