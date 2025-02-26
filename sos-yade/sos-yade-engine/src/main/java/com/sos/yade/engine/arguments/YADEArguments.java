@@ -14,6 +14,7 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<String> profile = new SOSArgument<>("profile", false);
 
     /** - Meta info ------- */
+    /** COPY, MOVE, GETLIST, RENAME */
     private SOSArgument<TransferOperation> operation = new SOSArgument<>("operation", true);
 
     /** - JS7 History ------- */
@@ -21,18 +22,26 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<String> returnValues = new SOSArgument<>("return-values", false);
 
     /** - Transfer adjustments ------- */
-    // Number <=1 : non-parallel
-    // Number > 1 : number of threads is configurable and controlled with an ExecutorService - non implemented yet...
-    // String AUTO(case-insensitive) : number of threads is controlled by Java with parallelStream()
-    private SOSArgument<String> parallelMaxThreads = new SOSArgument<>("parallel_max_threads", false, "AUTO");
 
+    /** COPY/MOVE operations: transfer files in parallel<br/>
+     * Note: only affects the file transfer - the file selection on the Source is not affected<br/>
+     * Note SSH: 5 threads - doesn't really bring much - ~16 seconds (individual file transfers needs longer as without threads) .. to check: because of
+     * occupied bandwidth? sshj?<br/>
+     * The value should be controlled, as using uncontrolled parallelStream() threads can exceed the number of concurrent clients configured by a server (e.g.
+     * for SSH transfers) <br/>
+     * - Number <=1 : non-parallel<br/>
+     * - Number > 1 : number of threads for parallel execution<br/>
+     */
+    private SOSArgument<Integer> parallelMaxThreads = new SOSArgument<>("parallel_max_threads", false, Integer.valueOf(1));
+
+    /** COPY/MOVE operations: the buffer size(bytes) for reading the Source file/writing the Target file */
     private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(32 * 1_024));
 
     /** - Integrity Hash ------- */
-    // YADE-1
-    // Same algorithm for Source and Target - currently only md5 is supported
-    // Source -> CheckIntegrityHash, Target -> CreateIntegrityHashFile
-    // argument name is based on XML schema definition
+    /** COPY/MOVE operations<br/>
+     * Same algorithm for Source and Target - currently only md5 is supported<br/>
+     * Source -> CheckIntegrityHash, Target -> CreateIntegrityHashFile<br/>
+     * Argument name is based on XML schema definition */
     private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("security_hash_type", false, "md5");
 
     // YADE 1 used in code but not defined in schema...
@@ -62,8 +71,11 @@ public class YADEArguments extends ASOSArguments {
         return integrityHashAlgorithm;
     }
 
-    public SOSArgument<String> getParallelMaxThreads() {
+    public SOSArgument<Integer> getParallelMaxThreads() {
         return parallelMaxThreads;
     }
 
+    public boolean isParallelismEnabled() {
+        return !parallelMaxThreads.isEmpty() && parallelMaxThreads.getValue() > 1;
+    }
 }

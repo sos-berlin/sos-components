@@ -31,9 +31,9 @@ public class YADEHelper {
             return null;
         }
         if (delegator instanceof YADESourceProviderDelegator) {
-            return new YADEEngineSourceConnectionException(ex);
+            return new YADEEngineSourceConnectionException(ex.getCause());
         }
-        return new YADEEngineTargetConnectionException(ex);
+        return new YADEEngineTargetConnectionException(ex.getCause());
     }
 
     public static boolean isConnectionException(Throwable cause) {

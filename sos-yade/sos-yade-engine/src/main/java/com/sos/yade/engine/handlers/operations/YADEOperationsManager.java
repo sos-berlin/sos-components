@@ -2,6 +2,7 @@ package com.sos.yade.engine.handlers.operations;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPath;
@@ -17,7 +18,6 @@ import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsHandler;
 import com.sos.yade.engine.handlers.operations.getlist.GetListOperationHandler;
 import com.sos.yade.engine.handlers.operations.remove.RemoveOperationHandler;
-import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
 
 public class YADEOperationsManager {
 
@@ -30,9 +30,8 @@ public class YADEOperationsManager {
      * - GetList<br/>
      */
     /** TODO not use "YADEArguments args" ... */
-    public static void process(ISOSLogger logger, YADEParallelProcessingConfig parallelProcessingConfig, YADEArguments args,
-            YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles,
-            YADETargetProviderDelegator targetDelegator) throws YADEEngineOperationException {
+    public static void process(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
+            List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator, AtomicBoolean cancel) throws YADEEngineOperationException {
 
         TransferOperation operation = args.getOperation().getValue();
         switch (operation) {
@@ -44,7 +43,7 @@ public class YADEOperationsManager {
                 return;
             }
 
-            CopyMoveOperationsHandler.process(operation, logger, parallelProcessingConfig, args, sourceDelegator, targetDelegator, sourceFiles);
+            CopyMoveOperationsHandler.process(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles, cancel);
             // TODO after operation?
             createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
             break;

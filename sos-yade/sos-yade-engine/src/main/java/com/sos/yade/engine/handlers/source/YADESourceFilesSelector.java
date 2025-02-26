@@ -50,7 +50,7 @@ public class YADESourceFilesSelector {
         try {
             return sourceDelegator.getProvider().selectFiles(selection);
         } catch (Throwable e) {
-            throw new YADEEngineSourceFilesSelectorException(e);
+            throw new YADEEngineSourceFilesSelectorException(e.getCause());
         }
     }
 

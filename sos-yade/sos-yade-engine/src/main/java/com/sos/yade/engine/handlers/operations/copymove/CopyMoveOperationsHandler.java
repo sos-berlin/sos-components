@@ -3,6 +3,10 @@ package com.sos.yade.engine.handlers.operations.copymove;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.sos.commons.exception.SOSMissingDataException;
@@ -20,7 +24,6 @@ import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.operations.copymove.fileoperations.FileHandler;
-import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
 
 // TransferEntryState.NOT_OVERWRITTEN
 // TransferEntryState.TRANSFERRING
@@ -30,15 +33,14 @@ import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
 // sourceFile.setState(TransferEntryState.MOVED); after transfer - after source file deleted
 public class CopyMoveOperationsHandler {
 
-    public static void process(TransferOperation operation, ISOSLogger logger, YADEParallelProcessingConfig parallelProcessingConfig,
-            YADEArguments args, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
-            List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
+    public static void process(TransferOperation operation, ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, AtomicBoolean cancel) throws YADEEngineOperationException {
         if (targetDelegator == null) {
             throw new YADEEngineOperationException(new SOSMissingDataException("TargetDelegator"));
         }
 
         // 1) Source/Target: initialize transfer configuration(cumulative file,compress,atomic etc.)
-        CopyMoveOperationsConfig config = new CopyMoveOperationsConfig(operation, parallelProcessingConfig, args, sourceDelegator, targetDelegator);
+        CopyMoveOperationsConfig config = new CopyMoveOperationsConfig(operation, args, sourceDelegator, targetDelegator);
 
         try {
             // 2) Target: map the source to the target directories and try to create all target directories before individual file transfer
@@ -55,7 +57,7 @@ public class CopyMoveOperationsHandler {
 
         // 4) Source/Target: Transfer files
         try {
-            processFiles(logger, config, sourceDelegator, targetDelegator, sourceFiles);
+            processFiles(logger, config, sourceDelegator, targetDelegator, sourceFiles, cancel);
         } catch (Throwable e) {
             // does not throws exception
             rollbackIfTransactional(logger, config, sourceDelegator, targetDelegator, sourceFiles);
@@ -65,47 +67,77 @@ public class CopyMoveOperationsHandler {
     }
 
     private static void processFiles(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
-        if (config.getParallel() == null) {
-            processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles);
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, AtomicBoolean cancel) throws YADEEngineOperationException {
+        if (config.getParallelMaxThreads() == 1 || sourceFiles.size() == 1 || config.getTarget().getCumulate() != null) {
+            processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles, cancel);
         } else {
-            processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles);
+            processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles, cancel);
         }
     }
 
-    // TODO stop on transactional errors - send signal FileHandler.process of other files
     private static void processFilesInParallel(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
-        // number of threads is controlled by Java
-        if (config.getParallel().isAuto()) {
-            try {
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, AtomicBoolean cancel) throws YADEEngineOperationException {
+        int maxThreads = config.getParallelMaxThreads();
+        int size = sourceFiles.size();
+        if (size < maxThreads) {
+            maxThreads = size;
+        }
+        // custom ForkJoinPool & parallelStream because this combination:
+        // - allows control over the number of threads created
+        // - blocks the main thread until all tasks are completed
+        // - does not increase memory usage (compared to using a Future list callback in case of a large number of files)
+        ForkJoinPool threadPool = new ForkJoinPool(maxThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
+
+            private int count = 1;
+
+            @Override
+            public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+                ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                thread.setName("yade-thread-" + (count++));
+                return thread;
+            }
+
+        }, null, false);
+        try {
+            threadPool.submit(() -> {
                 sourceFiles.parallelStream().forEach(f -> {
+                    if (cancel.get()) {
+                        return;
+                    }
                     try {
-                        FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) f);
-                        h.run();
+                        new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) f, cancel).run();
                     } catch (Throwable e) {
-                        new RuntimeException(e);
+                        if (config.isTransactionalEnabled()) {
+                            cancel.set(true);
+                            new RuntimeException(e);
+                        }
                     }
                 });
-            } catch (Throwable e) {
-                throw new YADEEngineOperationException(e);
+            }).join();
+        } catch (Throwable e) {
+            throw new YADEEngineOperationException(e);
+        } finally {
+            threadPool.shutdown();
+            try {
+                threadPool.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
             }
-        }
-        // number of threads is configurable and controlled with an ExecutorService
-        else {
-            // config.getParallel().getMaxThreads();
         }
     }
 
     private static void processFilesSequentially(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, AtomicBoolean cancel) throws YADEEngineOperationException {
         for (ProviderFile sourceFile : sourceFiles) {
+            if (cancel.get()) {
+                return;
+            }
             try {
-                FileHandler h = new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) sourceFile);
-                h.run();
+                new FileHandler(logger, config, sourceDelegator, targetDelegator, (YADEProviderFile) sourceFile, cancel).run();
             } catch (Throwable e) {
-                // TODO - details about source/target file - should be set in transferFile(..)
-                throw new YADEEngineOperationException(e);
+                if (config.isTransactionalEnabled()) {
+                    cancel.set(true);
+                    throw new YADEEngineOperationException(e);
+                }
             }
         }
     }
@@ -124,7 +156,7 @@ public class CopyMoveOperationsHandler {
 
     private static void completeSourceIfTransactional(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) throws YADEEngineOperationException {
-        if (!config.getTarget().isAtomicTransactionalEnabled()) {
+        if (!config.isTransactionalEnabled()) {
             return;
         }
 
@@ -180,7 +212,7 @@ public class CopyMoveOperationsHandler {
 
     private static void rollbackIfTransactional(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles) {
-        if (!config.getTarget().isAtomicTransactionalEnabled()) {
+        if (!config.isTransactionalEnabled()) {
             return;
         }
         // 1) Target: delete cumulative file

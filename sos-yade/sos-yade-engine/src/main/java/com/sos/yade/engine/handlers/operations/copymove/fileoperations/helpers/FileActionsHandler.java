@@ -79,7 +79,7 @@ public class FileActionsHandler {
     /** Source: ProviderFile Operations */
     public static void processSourceFileAfterNonTransactionalTransfer(ISOSLogger logger, CopyMoveOperationsConfig config,
             YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile) throws SOSProviderException {
-        if (!config.getTarget().isAtomicTransactionalEnabled()) {
+        if (!config.isTransactionalEnabled()) {
             return;
         }
 

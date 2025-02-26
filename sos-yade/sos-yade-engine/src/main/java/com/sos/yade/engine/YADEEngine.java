@@ -2,6 +2,7 @@ package com.sos.yade.engine;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
@@ -23,7 +24,6 @@ import com.sos.yade.engine.helpers.YADEArgumentsChecker;
 import com.sos.yade.engine.helpers.YADEBannerHelper;
 import com.sos.yade.engine.helpers.YADEDelegatorHelper;
 import com.sos.yade.engine.helpers.YADEHelper;
-import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
 
 /** Different/incompatible with YADE 1:<br/>
  * -------------------------------------------------------------------------------------------------<br/>
@@ -71,6 +71,8 @@ import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
  */
 public class YADEEngine {
 
+    private AtomicBoolean cancel = new AtomicBoolean(false);
+
     public YADEEngine() {
         // TODO
     }
@@ -83,10 +85,9 @@ public class YADEEngine {
 
         YADESourceProviderDelegator sourceDelegator = null;
         YADETargetProviderDelegator targetDelegator = null;
-        YADEParallelProcessingConfig parallelProcessingConfig = YADEParallelProcessingConfig.createInstance(args);
         try {
             /** 1) Print transfer configuration */
-            YADEBannerHelper.printBanner(logger, parallelProcessingConfig, args, clientArgs, sourceArgs, targetArgs);
+            YADEBannerHelper.printBanner(logger, args, clientArgs, sourceArgs, targetArgs);
 
             /** 2) Check/Initialize configuration */
             YADEArgumentsChecker.validateOrExit(logger, args, sourceArgs, targetArgs);
@@ -130,7 +131,7 @@ public class YADEEngine {
                 YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
                 /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
-                YADEOperationsManager.process(logger, parallelProcessingConfig, args, clientArgs, sourceDelegator, files, targetDelegator);
+                YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator, cancel);
 
                 /** 11) Source/Target: execute commands after operation on success */
                 YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
@@ -168,7 +169,7 @@ public class YADEEngine {
                     YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
 
                     /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
-                    YADEOperationsManager.process(logger, parallelProcessingConfig, args, clientArgs, sourceDelegator, files, targetDelegator);
+                    YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator, cancel);
 
                     /** 11) Source/Target: execute commands after operation on success */
                     YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);

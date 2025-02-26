@@ -4,9 +4,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 import com.sos.commons.util.SOSComparisonOperator;
+import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 
-public class YADEClientArguments {
+public class YADEClientArguments extends ASOSArguments{
 
     /** - System Properties ------- */
     private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("system_property_files", false);

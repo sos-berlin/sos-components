@@ -2,9 +2,10 @@ package com.sos.yade.engine.arguments;
 
 import com.sos.commons.util.common.SOSArgument;
 
+/** COPY/MOVE operations arguments */
 public class YADETargetArguments extends YADESourceTargetArguments {
 
-    // Create missing directories on Target
+    /** Create missing directories on the Target */
     private SOSArgument<Boolean> createDirectories = new SOSArgument<>("make_dirs", false, Boolean.valueOf(true));
 
     /** - Transfer options ------- */
@@ -23,11 +24,11 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     // YADE1 checks this argument
     // private SOSArgument<Boolean> cumulateFiles = new SOSArgument<>("cumulate_files", false, Boolean.valueOf(false));
     // YADE JS7 checks this argument
-    // Name of file into which all files hat to be cumulated
+    /** Name of file into which all files hat to be cumulated */
     private SOSArgument<String> cumulativeFileName = new SOSArgument<>("cumulative_filename", false);
-    // Text which has to replaced between cumulated files
+    /** Text which has to replaced between cumulated files */
     private SOSArgument<String> cumulativeFileSeparator = new SOSArgument<>("cumulative_file_separator", false);
-    // Delete cumulative file before starting transfer
+    /** Delete cumulative file before starting transfer */
     private SOSArgument<Boolean> cumulativeFileDelete = new SOSArgument<>("cumulative_file_delete", false, Boolean.valueOf(false));
 
     /** - Compressing ------- */
@@ -36,8 +37,8 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     // YADE JS7 checks this argument (YADE1 default: .gz)
     private SOSArgument<String> compressedFileExtension = new SOSArgument<>("compressed_file_extension", false);
 
-    /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments ------- */
-    // argument name is based on XML schema definition
+    /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments<br/>
+     * Argument name is based on XML schema definition */
     private SOSArgument<Boolean> createIntegrityHashFile = new SOSArgument<>("create_security_hash_file", false, Boolean.valueOf(false));
 
     public SOSArgument<Boolean> getCreateDirectories() {
