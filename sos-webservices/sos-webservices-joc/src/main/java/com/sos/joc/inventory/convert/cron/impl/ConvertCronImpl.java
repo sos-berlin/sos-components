@@ -33,6 +33,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.classes.inventory.Validator;
@@ -191,6 +192,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         item.setAuditLogId(dbAuditLog.getId());
         item.setContent(Globals.objectMapper.writeValueAsString(in.getConfiguration()));
         JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
+        DependencyResolver.updateDependencies(item);
         if (JocInventory.isFolder(item.getType())) {
             JocInventory.postFolderEvent(item.getFolder());
         } else {

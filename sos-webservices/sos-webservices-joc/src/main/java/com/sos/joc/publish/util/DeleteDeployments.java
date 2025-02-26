@@ -28,6 +28,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.Proxy;
@@ -237,13 +238,17 @@ public class DeleteDeployments {
                     for (ConfigurationType objType : RESTORE_ORDER) {
                         Set<DBItemInventoryConfigurationTrash> itemsFromTrash = itemsFromTrashByType.get(objType.intValue());
                         if(itemsFromTrash != null) {
+                            List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
                             for (DBItemInventoryConfigurationTrash trashItem : itemsFromTrash) {
                                 if (trashItem != null) {
                                     parentFolders.add(trashItem.getFolder());
-                                    JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
+                                    DBItemInventoryConfiguration recreatedFromTrash = recreateItem(trashItem, null, invDbLayer);
+                                    JocInventory.insertConfiguration(invDbLayer, recreatedFromTrash);
+                                    updated.add(recreatedFromTrash);
                                     invDbLayer.getSession().delete(trashItem);
                                 }
                             }
+                            DependencyResolver.updateDependencies(updated);
                         }
                     }
                     for(String parentFolder : parentFolders) {

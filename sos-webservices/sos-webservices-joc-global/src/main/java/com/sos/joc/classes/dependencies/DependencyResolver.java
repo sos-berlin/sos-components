@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -63,6 +61,8 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 //import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
 import com.sos.joc.model.inventory.dependencies.update.ResponseItem;
 import com.sos.joc.model.publish.OperationType;
+
+import cats.effect.kernel.Ref;
 
 public class DependencyResolver {
 
@@ -252,7 +252,6 @@ public class DependencyResolver {
                 try {
                     Workflow w = Globals.objectMapper.readValue(wf.getContent(), Workflow.class);
                     if (w.getJobs() != null) {
-                        Map<String, Job> replacedJobs = new HashMap<>();
                         w.getJobs().getAdditionalProperties().forEach((jobName, job) -> {
                             if (job.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
                                 ExecutableScript es = job.getExecutable().cast();
@@ -1013,55 +1012,36 @@ public class DependencyResolver {
         return item;
     }
     
-    /**
-     * This method is used by JocInventory at each store operation
-     * @param session
-     * @param inventoryDbItem
-     * @throws SOSHibernateException
-     * @throws JsonMappingException
-     * @throws JsonProcessingException
-     */
-    public static void updateDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
+    public static void updateDependencies(DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
-        // this method is in use (JocInventory update and insert methods)
-        
         new Thread(() -> {
-            int i = 0;
-            if (session != null) {
-                //wait until session from insert/update inventoryDbItem is disconnected.
-                while (session.getCurrentSession() != null && i < 120) {
-                    //LOGGER.info(session.getIdentifier() + " is alive");
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(500);
-                    } catch (InterruptedException e) {
-                        //
-                    }
-                    i++;
-                }
-                try {
-                    insertOrRenewDependencies(inventoryDbItem);
-                } catch (Exception e) {
-                    //TODO use ProblemHelper
-                    LOGGER.error("", e);
-                }
+            try {
+                insertOrRenewDependencies(inventoryDbItem);
+            } catch (Exception e) {
+                //TODO use ProblemHelper
+                LOGGER.error("", e);
             }
         }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
         
     }
     
-    public static void updateDependencies(SOSHibernateSession session, List<DBItemInventoryConfiguration> allCfgs)
+    public static void updateDependencies(List<DBItemInventoryConfiguration> allCfgs)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
-        insertOrRenewDependencies(session, allCfgs);
+        updateDependencies(allCfgs, false);
+    }
+
+    public static void updateDependencies(List<DBItemInventoryConfiguration> allCfgs, boolean withPool)
+            throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
+        new Thread(() -> {
+            try {
+                insertOrRenewDependencies(allCfgs, withPool);
+            } catch (Exception e) {
+                //TODO use ProblemHelper
+                LOGGER.error("", e);
+            }
+        }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
     }
     
-    /**
-     * This method is used by the DependencyResolver as used in JocInventory at each store operation
-     * @param session
-     * @param inventoryDbItem
-     * @throws SOSHibernateException
-     * @throws JsonMappingException
-     * @throws JsonProcessingException
-     */
     public static void insertOrRenewDependencies(DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         // this method is in use (JocInventory update and insert methods)
@@ -1078,68 +1058,68 @@ public class DependencyResolver {
         }
     }
 
-    /**
-     * This method is used by the DependencyResolver as used in ./inventory/dependencies/update API for processing multiple objects 
-     *  with a minimum of db accesses 
-     *  
-     * @param session
-     * @param allCfgs
-     * @throws SOSHibernateException
-     * @throws JsonMappingException
-     * @throws JsonProcessingException
-     * @throws InterruptedException
-     */
-    public static void insertOrRenewDependencies(SOSHibernateSession session, List<DBItemInventoryConfiguration> allCfgs)
+    public static void insertOrRenewDependencies(List<DBItemInventoryConfiguration> allCfgs, boolean withPool)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
         // this method is in use
         Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems = allCfgs.stream() .collect(
                 Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, 
                         Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
         DependencyResolver.dependencyTypes.forEach(ctype -> groupedItems.putIfAbsent(ConfigurationType.fromValue(ctype), Collections.emptyMap()));
-        DBLayerDependencies layer = new DBLayerDependencies(session);
-
-        List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item, groupedItems)).collect(Collectors.toList());
+        Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
+        List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item)).collect(Collectors.toList());
         if(!callables.isEmpty()) {
-//            ExecutorService executorService = Executors.newFixedThreadPool(Math.min(callables.size(), 5));
-            Integer maxPoolSize = readMaxPoolSize(session.getFactory().getConfigFile());
             ExecutorService executorService = null;
             try {
-                if(maxPoolSize != null) {
-                    executorService = Executors.newFixedThreadPool(Math.min(callables.size(), maxPoolSize/2));
+                if(withPool) {
+                    Integer maxPoolSize = readMaxPoolSize(Globals.getHibernateConfFile());
+                    if(maxPoolSize != null) {
+                        executorService = Executors.newFixedThreadPool(Math.min(callables.size(), maxPoolSize/2));
+                    } else {
+                        executorService = Executors.newFixedThreadPool(1);
+                    }
                 } else {
-                    executorService = Executors.newFixedThreadPool(Math.min(callables.size(), 1));
+                    executorService = Executors.newFixedThreadPool(1);
                 }
                 for (Future<ReferencedDbItem> result : executorService.invokeAll(callables)) {
                     try {
-                        ReferencedDbItem item = result.get();
-                        // store new dependencies if direct or indirect references are present
-                        if (!(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty())) {
-                            layer.insertOrReplaceDependencies(item.getReferencedItem(), convert(item, session));
-                        }
+                        referencedItems.add(result.get());
                     } catch (ExecutionException e) {
                         if (e.getCause() != null) {
                             LOGGER.error("", e.getCause());
                         } else {
                             LOGGER.error("", e);
                         }
-                    } catch (Exception e) {
-                        LOGGER.error("", e);
                     }
                 } 
             } finally {
                 executorService.shutdown();
             }
-            
+            SOSHibernateSession session = null;
+            try {
+                session = Globals.createSosHibernateStatelessConnection("storeDependencies");
+                DBLayerDependencies layer = new DBLayerDependencies(session);
+                referencedItems.stream()
+                    .filter(item -> !(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty()))
+                    .forEach(ref -> {
+                        try {
+                            layer.insertOrReplaceDependencies(ref.getReferencedItem(), convert(ref, layer.getSession()));
+                        } catch (Exception e) {
+                            LOGGER.error("", e);
+                        }
+                    });
+            } finally {
+                Globals.disconnect(session);
+            }
         }
     }
 
-    private static Integer readMaxPoolSize (Optional<Path> hibernateConfigFile) {
+    private static Integer readMaxPoolSize (Path hibernateConfigFile) {
         try {
-            if(hibernateConfigFile.isPresent()) {
-                String cfg = Files.readString(hibernateConfigFile.get());
+            if(hibernateConfigFile != null) {
+                String cfg = Files.readString(hibernateConfigFile);
                 if(cfg.contains("hibernate.hikari.maximumPoolSize")) {
                     Configuration config = new Configuration();
-                    config.configure(hibernateConfigFile.get().toUri().toURL());
+                    config.configure(hibernateConfigFile.toUri().toURL());
                     Object key = config.getProperties().get("hibernate.hikari.maximumPoolSize");
                     if(key != null) {
                         return Integer.valueOf(key.toString());
@@ -1152,20 +1132,10 @@ public class DependencyResolver {
         return null;
     }
 
-    /**
-     * This method is used by the DependencyResolver as used in ./inventory/dependencies/update API for processing multiple objects 
-     *  with a minimum of db accesses 
-     * @param session
-     * @param inventoryDbItem
-     * @param allCfgs
-     * @throws SOSHibernateException
-     * @throws JsonMappingException
-     * @throws JsonProcessingException
-     */
+    // this method is currently not in use (method above with callables is currently used in the api)
     public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem,
             Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
                     throws SOSHibernateException, JsonMappingException, JsonProcessingException {
-        // this method is currently not in use (method above with callables is currently used in the api)
         ReferencedDbItem references = resolveReferencedBy(inventoryDbItem, groupedItems);
         resolveReferences(references, groupedItems);
         // store new dependencies
@@ -1174,9 +1144,9 @@ public class DependencyResolver {
 
     }
     
+    // this method is in use
     public static List<DBItemInventoryDependency> getStoredDependencies(SOSHibernateSession session,
             DBItemInventoryConfiguration inventoryObject) throws SOSHibernateException {
-        // this method is in use
         List<DBItemInventoryDependency> dependencies = new ArrayList<DBItemInventoryDependency>();
         DBLayerDependencies dbLayer = new DBLayerDependencies(session);
         dependencies = dbLayer.getDependencies(inventoryObject);
@@ -1188,8 +1158,8 @@ public class DependencyResolver {
         return allDependencies.stream().filter(dep -> dep.getInvId().equals(item.getId())).collect(Collectors.toList());
     }
     
+    // this method is currently in use
     public static Set<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
-        // this method is currently not in use
         Set<DBItemInventoryDependency> dependencies = new HashSet<DBItemInventoryDependency>();
         dependencies.addAll(reference.getReferencedBy().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
@@ -1234,9 +1204,9 @@ public class DependencyResolver {
         return dependencies;
     }
     
+    // this method is in use
     public static ReferencedDbItem convert(SOSHibernateSession session, DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
-        // this method is in use
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
         if(dependencies != null && !dependencies.isEmpty()) {

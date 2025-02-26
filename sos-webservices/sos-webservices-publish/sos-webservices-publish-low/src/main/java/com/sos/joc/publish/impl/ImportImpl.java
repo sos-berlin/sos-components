@@ -28,6 +28,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -152,6 +153,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
             Map<String, String> oldNewNameMap = new HashMap<>();
+            List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
             
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
@@ -204,22 +206,26 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                 }
                             }
                         }
-                    	// update the changed referenced object if already exists
-                    	Set<ConfigurationObject> alreadyStored = new HashSet<ConfigurationObject>();
-                    	for (ConfigurationObject reference : updatedReferencesByUpdateableConfiguration.keySet()) {
-                    	     Set<ConfigurationObject> referencedBy = updatedReferencesByUpdateableConfiguration.get(reference);
-                    	     if(referencedBy != null) {
+                        // update the changed referenced object if already exists
+                        Set<ConfigurationObject> alreadyStored = new HashSet<ConfigurationObject>();
+                        for (ConfigurationObject reference : updatedReferencesByUpdateableConfiguration.keySet()) {
+                            Set<ConfigurationObject> referencedBy = updatedReferencesByUpdateableConfiguration.get(reference);
+                            if(referencedBy != null) {
                                  for (ConfigurationObject refBy : referencedBy) { 
                                      if (!alreadyStored.contains(refBy)) {
-                                         ImportUtils.updateConfigurationWithChangedReferences(dbLayer, refBy);
+                                         DBItemInventoryConfiguration stored = 
+                                                 ImportUtils.updateConfigurationWithChangedReferences(dbLayer, refBy);
                                          alreadyStored.add(refBy);
+                                         if(stored != null) {
+                                             updated.add(stored);
+                                         }
                                      }
                                  }
-                    	     }
-                    	}
+                            }
+                        }
                     } else {
-                    	// check if items to import already exist in current configuration and ignore them
-                    	// import only if item does not exist yet
+                        // check if items to import already exist in current configuration and ignore them
+                        // import only if item does not exist yet
                         Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
                                 .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
                         for (ConfigurationType type : importOrder) {
@@ -253,6 +259,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         }
                     }
             	}
+                updated.addAll(storedConfigurations);
+                DependencyResolver.updateDependencies(updated);
                 if (!filteredConfigurations.isEmpty()) {
                     JocAuditLog.storeAuditLogDetails(filteredConfigurations.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
                             .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());

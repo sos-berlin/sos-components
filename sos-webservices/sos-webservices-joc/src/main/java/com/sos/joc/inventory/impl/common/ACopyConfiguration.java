@@ -21,6 +21,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -44,6 +45,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
     
     public JOCDefaultResponse copy(RequestFilter in, boolean forDescriptors, String request) throws Exception {
         SOSHibernateSession session = null;
+        List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
@@ -165,10 +167,16 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                         if(!newItemPath.toString().replace('\\', '/').equals(JocInventory.ROOT_FOLDER)) {
                             newDbItem = createItem(oldDBFolderItem, newItemPath);
                             newDBFolderItems.add(newDbItem);
-                            JocInventory.insertOrUpdateConfiguration(dbLayer, newDbItem);
+                            DBItemInventoryConfiguration alreadyExists = dbLayer.getConfiguration(newDbItem.getPath(), newDbItem.getType());
+                            if (alreadyExists != null) {
+                                newDBFolderItems.add(alreadyExists);
+                            } else {
+                                JocInventory.insertConfiguration(dbLayer, newDbItem);
+                            }
                         }
                     }
                 }
+                updated = newDBFolderItems;
                 oldDBFolderContent = newDBFolderItems;
 //                Map<ConfigurationType, Map<String, String>> oldToNewName = (!in.getShallowCopy()) ? oldDBFolderContent.stream().filter(
 //                        item -> typesForReferences.contains(item.getType())).collect(Collectors.groupingBy(
@@ -248,6 +256,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                         // JOC-1232
                         JocInventory.updateConfiguration(dbLayer, item);
                     }
+                    updated = oldDBFolderContent;
                 } else {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
                         item.setAuditLogId(dbAuditLog.getId());
@@ -362,6 +371,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                         if (jsonIsChanged) {
                             item.setContent(json);
                             JocInventory.updateConfiguration(dbLayer, item);
+                            updated.add(item);
                         }
                     }
                 }
@@ -410,6 +420,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                 //createAuditLog(newDbItem, in.getAuditLog());
                 newDbItem.setAuditLogId(dbAuditLog.getId());
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
+                updated.add(newDbItem);
                 if(forDescriptors) {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
                 } else {
@@ -420,6 +431,9 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                 events = Collections.singleton(newDbItem.getFolder());
             }
             session.commit();
+            if(!updated.isEmpty()) {
+                DependencyResolver.updateDependencies(updated);
+            }
             for (String event : events) {
                 JocInventory.postEvent(event);
             }

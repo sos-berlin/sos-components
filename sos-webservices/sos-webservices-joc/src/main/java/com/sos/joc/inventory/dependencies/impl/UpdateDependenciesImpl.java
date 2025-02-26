@@ -37,7 +37,7 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
             InventoryDBLayer dblayer = new InventoryDBLayer(session);
             List<DBItemInventoryConfiguration> allConfigs = dblayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
             
-            DependencyResolver.updateDependencies(session, allConfigs);
+            DependencyResolver.updateDependencies(allConfigs);
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

@@ -338,7 +338,7 @@ public class ImportUtils {
     	}
     }
 
-    public static void updateConfigurationWithChangedReferences (DBLayerDeploy dbLayer, ConfigurationObject config) {
+    public static DBItemInventoryConfiguration updateConfigurationWithChangedReferences (DBLayerDeploy dbLayer, ConfigurationObject config) {
         DBItemInventoryConfiguration alreadyExist = dbLayer.getInventoryConfigurationByNameAndType(config.getName(), config.getObjectType().intValue());
         if (alreadyExist != null) {
             try {
@@ -359,6 +359,7 @@ public class ImportUtils {
                 throw new JocImportException(e);
             }
         }
+        return alreadyExist;
     }
     
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {

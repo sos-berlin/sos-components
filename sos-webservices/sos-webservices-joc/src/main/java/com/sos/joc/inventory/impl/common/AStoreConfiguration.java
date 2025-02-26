@@ -26,6 +26,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.classes.inventory.ReferenceValidator;
@@ -125,7 +126,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                 JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
             }
             session.commit();
-
+            DependencyResolver.updateDependencies(item);
             ConfigurationObject answer = new ConfigurationObject();
             answer.setId(item.getId());
             answer.setDeliveryDate(Date.from(Instant.now()));

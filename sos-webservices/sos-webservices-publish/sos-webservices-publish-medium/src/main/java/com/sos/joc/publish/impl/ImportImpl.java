@@ -28,6 +28,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -151,6 +152,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
             Map<String, String> oldNewNameMap = new HashMap<>();
+            List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
             
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
@@ -181,38 +183,45 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         
                     	Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
                     			.collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
-                        Map<ConfigurationObject, Set<ConfigurationObject>> updatedReferencesByUpdateableConfiguration = new HashMap<ConfigurationObject, Set<ConfigurationObject>>();
-                    	for (ConfigurationType type : importOrder) {
-                    		List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
-                    		if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
-                        		for (ConfigurationObject configuration : configurationsByType.get(type)) {
-                            		DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                        			if (canAdd(configuration.getPath(), permittedFolders)) {
-                        				filteredConfigurations.add(configuration);
-                                    	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
-                                    			existingConfiguration, configuration, configurationsByType, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
-                                    	ImportUtils.replaceReferences(updateable);
-                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable.getReferencedBy());
-                                        storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(
-                                                updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames));
+                        Map<ConfigurationObject, Set<ConfigurationObject>> updatedReferencesByUpdateableConfiguration = new HashMap<>();
+                        for (ConfigurationType type : importOrder) {
+                            List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
+                            if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
+                                for (ConfigurationObject configuration : configurationsByType.get(type)) {
+                                    DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(),
+                                            configuration.getObjectType());
+                                    if (canAdd(configuration.getPath(), permittedFolders)) {
+                                        filteredConfigurations.add(configuration);
+                                        UpdateableConfigurationObject updateable = ImportUtils.createUpdateableConfiguration(existingConfiguration,
+                                                configuration, configurationsByType, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(),
+                                                dbLayer);
+                                        ImportUtils.replaceReferences(updateable);
+                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable
+                                                .getReferencedBy());
+                                        storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account,
+                                                auditLogId, filter.getOverwrite(), agentNames));
                                         oldNewNameMap.put(updateable.getOldName(), updateable.getNewName());
-                        			}
-                        		}
-                    		}
-                    	}
-                    	// update the changed referenced object if already exists
-                    	Set<ConfigurationObject> alreadyStored = new HashSet<ConfigurationObject>();
-                    	for (ConfigurationObject reference : updatedReferencesByUpdateableConfiguration.keySet()) {
-                    	     Set<ConfigurationObject> referencedBy = updatedReferencesByUpdateableConfiguration.get(reference);
-                    	     if(referencedBy != null) {
+                                    }
+                                }
+                            }
+                        }
+                        // update the changed referenced object if already exists
+                        Set<ConfigurationObject> alreadyStored = new HashSet<ConfigurationObject>();
+                        for (ConfigurationObject reference : updatedReferencesByUpdateableConfiguration.keySet()) {
+                            Set<ConfigurationObject> referencedBy = updatedReferencesByUpdateableConfiguration.get(reference);
+                            if(referencedBy != null) {
                                  for (ConfigurationObject refBy : referencedBy) { 
                                      if (!alreadyStored.contains(refBy)) {
-                                         ImportUtils.updateConfigurationWithChangedReferences(dbLayer, refBy);
+                                         DBItemInventoryConfiguration stored = 
+                                                 ImportUtils.updateConfigurationWithChangedReferences(dbLayer, refBy);
                                          alreadyStored.add(refBy);
+                                         if(stored != null) {
+                                             updated.add(stored);
+                                         }
                                      }
                                  }
-                    	     }
-                    	}
+                            }
+                        }
                     } else {
                     	// check if items to import already exist in current configuration and ignore them
                     	// import only if item does not exist yet
@@ -249,17 +258,20 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         }
                     }
             	}
+                updated.addAll(storedConfigurations);
+                DependencyResolver.updateDependencies(updated);
                 if (!filteredConfigurations.isEmpty()) {
                     JocAuditLog.storeAuditLogDetails(filteredConfigurations.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
                             .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-                    filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(item -> {
-                        try {
-                            JocInventory.makeParentDirs(invDbLayer, item, auditLogId, ConfigurationType.FOLDER);
-                        } catch (SOSHibernateException e) {
-                            throw new JocSosHibernateException(e);
-                        }
-                    });
+                    filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(
+                            item -> {
+                                try {
+                                    JocInventory.makeParentDirs(invDbLayer, item, auditLogId, ConfigurationType.FOLDER);
+                                } catch (SOSHibernateException e) {
+                                    throw new JocSosHibernateException(e);
+                                }
+                            });
                 }
             }
             

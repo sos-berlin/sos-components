@@ -19,6 +19,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
@@ -29,18 +30,17 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.deploy.DeploymentHistoryMoveEvent;
-import com.sos.joc.event.bean.inventory.InventoryJobTagEvent;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.rename.RequestFilter;
-import com.sos.joc.publish.db.DBLayerDeploy;
 
 public abstract class ARenameConfiguration extends JOCResourceImpl {
 
     public JOCDefaultResponse rename(RequestFilter in, String request) throws Exception {
         SOSHibernateSession session = null;
+        List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>(); 
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
@@ -146,6 +146,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 if (deletedIds.remove(config.getId())) {
                     config.setId(null);
                     JocInventory.insertConfiguration(dbLayer, config);
+                    updated.add(config);
                 } else {
                     JocInventory.updateConfiguration(dbLayer, config);
                 }
@@ -159,10 +160,12 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                     if (deletedIds.remove(item.getId())) {
                         config.setId(null);
                         JocInventory.insertConfiguration(dbLayer, item);
+                        updated.add(item);
                     } else {
                         JocInventory.updateConfiguration(dbLayer, item);
                     }
                 }
+                DependencyResolver.updateDependencies(updated);
                 response.setPath(config.getPath());
                 response.setId(config.getId());
                 
@@ -170,12 +173,12 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 folderEvents.add(newFolder);
                 
             } else {
-                if (!newPath.equalsIgnoreCase(config.getPath())) { //if not only upper-lower case is changed then check if target exists
+                if (!newPath.equalsIgnoreCase(config.getPath())) { // if not only upper-lower case is changed then check if target exists
                     DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
                     
                     if (targetItem != null) {
-                        throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
-                                .value().toLowerCase(), targetItem.getPath()));
+                        throw new JocObjectAlreadyExistException(String.format("%s %s already exists", 
+                                ConfigurationType.fromValue(config.getType()).value().toLowerCase(), targetItem.getPath()));
                     } else {
                         // check unique name
                         List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());

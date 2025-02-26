@@ -17,6 +17,7 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -65,7 +66,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             List<Long> workflowInvIds = new ArrayList<>();
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
-            
+            List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
             if (JocInventory.isFolder(type)) {
                 
                 if (!folderPermissions.isPermittedForFolder(newPathWithoutFix)) {
@@ -100,6 +101,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                             if (!folderPaths.contains(trashItem.getPath())) {
                                 item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)), dbAuditLog.getId(), dbLayer);
                                 JocInventory.insertConfiguration(dbLayer, item);
+                                updated.add(item);
                             }
                         } else {
                             List<DBItemInventoryConfiguration> targetItems = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
@@ -119,6 +121,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                                 JocInventory.insertConfiguration(dbLayer, item);
                                 restoreTaggings(item, tagDbLayer, workflowInvIds);
                             }
+                            updated.add(item);
                         }
                     }
                 }
@@ -179,6 +182,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                         dbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
                     }
                     JocInventory.insertConfiguration(dbLayer, dbItem);
+                    updated.add(dbItem);
                     restoreTaggings(dbItem, pWithoutFix.getFileName().toString(), tagDbLayer, workflowInvIds);
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
@@ -186,6 +190,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                     DBItemInventoryConfiguration dbItem = createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
                             .replaceFirst(replace.get(0), replace.get(1))), dbAuditLog.getId(), dbLayer);
                     JocInventory.insertConfiguration(dbLayer, dbItem);
+                    updated.add(dbItem);
                     restoreTaggings(dbItem, tagDbLayer, workflowInvIds);
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
@@ -213,7 +218,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
                 tagDbLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
-
+            DependencyResolver.updateDependencies(updated);
             response.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(response);
         } catch (Throwable e) {

@@ -1046,7 +1046,6 @@ public class JocInventory {
 
         handleWorkflowSearch(dbLayer, item, config);
         handleReleasedJobTemplate(dbLayer, item, config);
-        DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
@@ -1061,7 +1060,6 @@ public class JocInventory {
         dbLayer.getSession().save(item);
         
         handleWorkflowSearch(dbLayer, item, config);
-        DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 
     public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
@@ -1151,7 +1149,8 @@ public class JocInventory {
     }
 
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
-            InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
+            InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException,
+                IOException {
         Set<String> events = new HashSet<>();
         if (config.getName().equals(newName)) {
             return events;

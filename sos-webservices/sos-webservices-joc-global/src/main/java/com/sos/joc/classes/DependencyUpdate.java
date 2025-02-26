@@ -1,6 +1,9 @@
 package com.sos.joc.classes;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,19 +40,25 @@ public class DependencyUpdate {
     public static void update() {
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(DependencyUpdate.class.getSimpleName());
-            InventoryDBLayer dblayer = new InventoryDBLayer(session);
-            DBLayerDependencies depDblayer = new DBLayerDependencies(session);
-            if(!depDblayer.checkDependenciesPresent()) {
-                List<DBItemInventoryConfiguration> allConfigs = dblayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
-                DependencyResolver.updateDependencies(session, allConfigs);
+            InventoryDBLayer dblayer;
+            List<DBItemInventoryConfiguration> allConfigs = Collections.emptyList();
+            try {
+                session = Globals.createSosHibernateStatelessConnection(DependencyUpdate.class.getSimpleName());
+                dblayer = new InventoryDBLayer(session);
+                DBLayerDependencies depDblayer = new DBLayerDependencies(session);
+                if(!depDblayer.checkDependenciesPresent()) {
+                    allConfigs = dblayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
+                }
+            } finally {
+                Globals.disconnect(session);
+            }
+            if(!allConfigs.isEmpty()) {
+                DependencyResolver.updateDependencies(allConfigs, true);
             }
         } catch (InterruptedException e) {
             // do nothing
         } catch (Throwable e) {
             LOGGER.warn("error ocurred, dependencies not processed.");
-        } finally {
-            Globals.disconnect(session);
         }
     }
 
