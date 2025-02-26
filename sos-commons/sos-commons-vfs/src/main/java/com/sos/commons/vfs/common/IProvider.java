@@ -88,8 +88,6 @@ public interface IProvider {
 
     public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException;
 
-    public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> creator);
-
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException;
 
     public String getFileContentIfExists(String path) throws SOSProviderException;
@@ -104,6 +102,8 @@ public interface IProvider {
     public InputStream getInputStream(String path) throws SOSProviderException;
 
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException;
+
+    public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> creator);
 
     /** Context e.g. for YADE to determinate Source/Target */
     public void setContext(AProviderContext context);

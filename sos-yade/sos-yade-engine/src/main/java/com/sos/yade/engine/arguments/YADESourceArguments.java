@@ -46,8 +46,9 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     // YADE1 - not needed? due to MOVE operation
     // private SOSArgument<Boolean> removeFiles = new SOSArgument<>("remove_files", false, Boolean.valueOf(false));
 
-    /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments ------- */
-    // argument name is based on XML schema definition
+    /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments<br/>
+     * COPY/MOVE operations: check transferred Target file against an integrity hash file(md5) placed on the Source
+     * Argument name is based on XML schema definition */
     private SOSArgument<Boolean> checkIntegrityHash = new SOSArgument<>("check_security_hash", false, Boolean.valueOf(false));
 
     public boolean isSingleFilesSelection() {

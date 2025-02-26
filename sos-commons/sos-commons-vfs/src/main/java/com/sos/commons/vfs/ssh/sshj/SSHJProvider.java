@@ -240,9 +240,8 @@ public class SSHJProvider extends ASSHProvider {
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
         List<ProviderFile> result = new ArrayList<>();
         try {
-            int counterAdded = 0;
-            result.addAll(SSHJProviderUtil.selectFiles(getLogger(), getLogger().isDebugEnabled(), getLogPrefix(), sshClient, getProviderFileCreator(),
-                    selection, directory, counterAdded));
+            SSHJProviderUtil.selectFiles(getLogger(), getLogger().isDebugEnabled(), getLogPrefix(), sshClient, getProviderFileCreator(), selection,
+                    directory, result);
         } catch (SOSProviderException e) {
             throw e;
         }

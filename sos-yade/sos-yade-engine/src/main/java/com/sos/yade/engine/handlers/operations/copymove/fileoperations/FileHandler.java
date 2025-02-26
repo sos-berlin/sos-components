@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.SOSDate;
@@ -23,28 +24,35 @@ import com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers.F
 import com.sos.yade.engine.helpers.YADEDelegatorHelper;
 
 /** Single "transfer" file manager */
-public class FileHandler implements Runnable {
+public class FileHandler {
+
+    // SSH (buffer_size=32KB): 4.5GB ~ 1.15 minutes, 1.5 GB ~ 25 seconds
+    private static final long LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN = 3221225475L;// 3GB
+
+    private static final long USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN = 10485760L;// 10 MB
 
     private final ISOSLogger logger;
     private final CopyMoveOperationsConfig config;
     private final YADESourceProviderDelegator sourceDelegator;
     private final YADETargetProviderDelegator targetDelegator;
     private final YADEProviderFile sourceFile;
+    private final AtomicBoolean cancel;
 
     public FileHandler(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile) {
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, AtomicBoolean cancel) {
         this.logger = logger;
         this.config = config;
         this.sourceDelegator = sourceDelegator;
         this.targetDelegator = targetDelegator;
         this.sourceFile = sourceFile;
+        this.cancel = cancel;
     }
 
-    @Override
     public void run() {
         try {
             boolean isCumulateTarget = config.getTarget().getCumulate() != null;
-            String logPrefix = config.getParallel() == null ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + getThreadName();
+            String logPrefix = config.getParallelMaxThreads() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
+                    .currentThread().getName();
             YADETargetProviderFile targetFile;
             // 1) Target - initialize/get Target file
             if (isCumulateTarget) {
@@ -71,17 +79,26 @@ public class FileHandler implements Runnable {
             // 2) Source/Target: commands before file transfer
             YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
             targetFile.setState(TransferEntryState.TRANSFERRING);
+            // TODO config.getParallelMaxThreads() == 1 - make it sense if parallel because of random order?
+            if (config.getParallelMaxThreads() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
+                logger.info("[%s][%s][%s]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath());
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[%s][%s][%s][% b]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), sourceFile
+                            .getSize());
+                }
+            }
 
             boolean isCompressTarget = config.getTarget().getCompress() != null;
             MessageDigest sourceMessageDigest = FileIntegrityHashHelper.getMessageDigest(config, config.getSource().isCheckIntegrityHashEnabled());
             MessageDigest targetMessageDigest = FileIntegrityHashHelper.getMessageDigest(config, config.getTarget()
                     .isCreateIntegrityHashFileEnabled());
 
-            boolean useBufferedStreams = true;
-            
+            boolean useBufferedStreams = sourceFile.getSize() > USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN ? true : false;
+
             int attempts = 0;
             boolean isCumulateTargetWritten = false;
-            
+
             Instant startTime = Instant.now();
             l: while (attempts < config.getMaxRetries()) {
                 // int cumulativeFileSeperatorLength = 0;
@@ -165,10 +182,6 @@ public class FileHandler implements Runnable {
         } catch (Throwable e) {
             throw new YADEEngineTransferFileRuntimeException(e);
         }
-    }
-
-    private static String getThreadName() {
-        return Thread.currentThread().getName().replace("ForkJoinPool.commonPool-", "");
     }
 
 }

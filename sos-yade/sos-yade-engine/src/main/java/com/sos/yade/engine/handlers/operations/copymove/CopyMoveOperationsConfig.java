@@ -8,11 +8,8 @@ import com.sos.yade.engine.arguments.YADEArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
-import com.sos.yade.engine.helpers.YADEParallelProcessingConfig;
 
 public class CopyMoveOperationsConfig {
-
-    private final YADEParallelProcessingConfig parallel;
 
     private final Source source;
     private final Target target;
@@ -21,13 +18,12 @@ public class CopyMoveOperationsConfig {
     private final String integrityHashAlgorithm;
     private final int bufferSize;
     private final int maxRetries;
+    private final int parallelMaxThreads;
     private final boolean checkFileSize;
 
-    public CopyMoveOperationsConfig(final TransferOperation operation, final YADEParallelProcessingConfig parallelConfig, final YADEArguments args,
-            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
+    public CopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args, final YADESourceProviderDelegator sourceDelegator,
+            final YADETargetProviderDelegator targetDelegator) {
         this.operation = operation;
-
-        this.parallel = parallelConfig;
 
         this.source = new Source(sourceDelegator);
         this.target = new Target(targetDelegator);
@@ -35,6 +31,7 @@ public class CopyMoveOperationsConfig {
         this.integrityHashAlgorithm = args.getIntegrityHashAlgorithm().getValue();
         this.bufferSize = args.getBufferSize().getValue().intValue();
         this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
+        this.parallelMaxThreads = args.isParallelismEnabled() ? args.getParallelMaxThreads().getValue().intValue() : 1;
         this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
     }
 
@@ -44,6 +41,10 @@ public class CopyMoveOperationsConfig {
 
     private boolean isCopyOperation() {
         return TransferOperation.COPY.equals(operation);
+    }
+
+    public boolean isTransactionalEnabled() {
+        return getTarget().getAtomic() != null && getTarget().getAtomic().transactional;
     }
 
     private int getMaxRetries(final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
@@ -97,12 +98,12 @@ public class CopyMoveOperationsConfig {
         return maxRetries;
     }
 
-    public boolean isCheckFileSizeEnabled() {
-        return checkFileSize;
+    public int getParallelMaxThreads() {
+        return parallelMaxThreads;
     }
 
-    public YADEParallelProcessingConfig getParallel() {
-        return parallel;
+    public boolean isCheckFileSizeEnabled() {
+        return checkFileSize;
     }
 
     public Source getSource() {
@@ -216,10 +217,6 @@ public class CopyMoveOperationsConfig {
 
         public Atomic getAtomic() {
             return atomic;
-        }
-
-        public boolean isAtomicTransactionalEnabled() {
-            return atomic != null && atomic.isTransactionalEnabled();
         }
 
         public boolean isReplacementEnabled() {

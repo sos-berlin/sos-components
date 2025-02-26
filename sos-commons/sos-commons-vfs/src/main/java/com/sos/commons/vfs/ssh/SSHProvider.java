@@ -5,12 +5,15 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.vfs.common.AProviderContext;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.common.file.ProviderFileBuilder;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
@@ -30,12 +33,6 @@ public class SSHProvider extends ASSHProvider {
     }
 
     private static ASSHProvider initializeProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
-        // switch (args.getSSHProviderType().getValue()) {
-        // case JSCH:
-        // new JschProvider(logger, args);
-        // default:
-        // new SSHJProvider(logger, args);
-        // }
         return new SSHJProvider(logger, args);
     }
 
@@ -54,20 +51,20 @@ public class SSHProvider extends ASSHProvider {
         provider.disconnect();
     }
 
-    // @Override
-    // public void createDirectory(String path) throws SOSProviderException {
-    // provider.createDirectory(path);
-    // }
+    @Override
+    public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> creator) {
+        provider.setProviderFileCreator(creator);
+    }
+
+    @Override
+    public void setContext(AProviderContext context) {
+        provider.setContext(context);
+    }
 
     @Override
     public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException {
         return provider.createDirectoriesIfNotExist(path);
     }
-
-    // @Override
-    // public void delete(String path) throws SOSProviderException {
-    // provider.delete(path);
-    // }
 
     @Override
     public boolean deleteIfExists(String path) throws SOSProviderException {
@@ -114,23 +111,6 @@ public class SSHProvider extends ASSHProvider {
         return provider.cancelCommands();
     }
 
-    /* -- Additional SSH Provider specific methods ------------------------- */
-    public SSHServerInfo getServerInfo() {
-        return provider.getServerInfo();
-    }
-
-    public void put(String source, String target, int perm) throws SOSProviderException {
-        provider.put(source, target, perm);
-    }
-
-    public void put(String source, String target) throws SOSProviderException {
-        provider.put(source, target);
-    }
-
-    public void get(String source, String target) throws SOSProviderException {
-        provider.get(source, target);
-    }
-
     @Override
     public InputStream getInputStream(String path) throws SOSProviderException {
         return provider.getInputStream(path);
@@ -154,6 +134,23 @@ public class SSHProvider extends ASSHProvider {
     @Override
     public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
         return provider.renameFilesIfExist(paths, stopOnSingleFileError);
+    }
+
+    /* -- Additional SSH Provider specific methods ------------------------- */
+    public SSHServerInfo getServerInfo() {
+        return provider.getServerInfo();
+    }
+
+    public void put(String source, String target, int perm) throws SOSProviderException {
+        provider.put(source, target, perm);
+    }
+
+    public void put(String source, String target) throws SOSProviderException {
+        provider.put(source, target);
+    }
+
+    public void get(String source, String target) throws SOSProviderException {
+        provider.get(source, target);
     }
 
 }

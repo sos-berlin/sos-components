@@ -3,6 +3,8 @@ package com.sos.yade.engine.helpers;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.common.logger.ISOSLogger;
@@ -11,20 +13,21 @@ import com.sos.yade.engine.arguments.YADEArguments;
 import com.sos.yade.engine.arguments.YADEClientArguments;
 import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.arguments.YADETargetArguments;
+import com.sos.yade.engine.delegators.YADEProviderFile;
 
 public class YADEBannerHelper {
 
     private static final String SEPARATOR_LINE = "**************************************************************";
 
     // TODO use String.format
-    public static void printBanner(ISOSLogger logger, YADEParallelProcessingConfig parallelProcessingConfig, YADEArguments args,
-            YADEClientArguments clientArgs, YADESourceArguments sourcesArgs, YADETargetArguments targetArgs) {
+    public static void printBanner(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourcesArgs,
+            YADETargetArguments targetArgs) {
         logger.info(SEPARATOR_LINE);
         logger.info("*    YADE    - Managed File Transfer (www.sos-berlin.com)    *");
         logger.info("*    Version - xyz                                           *");
         logger.info(SEPARATOR_LINE);
 
-        printTransferBanner(logger, parallelProcessingConfig, args, targetArgs);
+        printTransferBanner(logger, args, targetArgs);
         printClientBanner(logger, clientArgs);
         printSourceBanner(logger, sourcesArgs);
         printTargetBanner(logger, targetArgs);
@@ -32,8 +35,7 @@ public class YADEBannerHelper {
         logger.info(SEPARATOR_LINE);
     }
 
-    private static void printTransferBanner(ISOSLogger logger, YADEParallelProcessingConfig parallelProcessingConfig, YADEArguments args,
-            YADETargetArguments targetArgs) {
+    private static void printTransferBanner(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs) {
         StringBuilder sb = new StringBuilder("[Transfer]");
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
         if (targetArgs != null) {
@@ -45,9 +47,8 @@ public class YADEBannerHelper {
         if (!args.getProfile().isEmpty()) {
             sb.append(",").append(YADEArgumentsHelper.toString(args.getProfile()));
         }
-        if (parallelProcessingConfig != null) {
-            String add = parallelProcessingConfig.isAuto() ? "AUTO" : String.valueOf(parallelProcessingConfig.getMaxThreads());
-            sb.append(",").append(args.getParallelMaxThreads().getName()).append("=").append(add);
+        if (args.isParallelismEnabled()) {
+            sb.append(",").append(YADEArgumentsHelper.toString(args.getParallelMaxThreads()));
         }
         logger.info(sb);
     }
@@ -205,7 +206,22 @@ public class YADEBannerHelper {
 
     public static void printSummary(ISOSLogger logger, Instant start, YADEArguments args, List<ProviderFile> files, Throwable exception) {
         logger.info(SEPARATOR_LINE);
-        logger.info(files.size() + " file(s) " + SOSDate.getDuration(start, Instant.now()));
+        int filesSize = files == null ? 0 : files.size();
+        logger.info(filesSize + " file(s) " + SOSDate.getDuration(start, Instant.now()));
+        if (exception != null) {
+            logger.error("[FAILED]%s", exception.toString());
+        }
+        if (filesSize > 0) {
+            Map<String, List<YADEProviderFile>> groupedByState = files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> {
+                if (f.getTarget() != null) {
+                    return f.getTarget().getState() == null ? "UNKNOWN" : f.getTarget().getState().toString();
+                }
+                return f.getState() == null ? "UNKNOWN" : f.getState().toString();
+            }));
+            groupedByState.forEach((category, fileList) -> logger.info(category + ": " + fileList.stream().map(YADEProviderFile::getName).collect(
+                    Collectors.toList())));
+        }
+
     }
 
 }
