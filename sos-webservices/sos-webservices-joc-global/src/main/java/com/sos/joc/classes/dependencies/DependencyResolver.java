@@ -62,8 +62,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.update.ResponseItem;
 import com.sos.joc.model.publish.OperationType;
 
-import cats.effect.kernel.Ref;
-
 public class DependencyResolver {
 
 
@@ -1061,10 +1059,6 @@ public class DependencyResolver {
     public static void insertOrRenewDependencies(List<DBItemInventoryConfiguration> allCfgs, boolean withPool)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
         // this method is in use
-        Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems = allCfgs.stream() .collect(
-                Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, 
-                        Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
-        DependencyResolver.dependencyTypes.forEach(ctype -> groupedItems.putIfAbsent(ConfigurationType.fromValue(ctype), Collections.emptyMap()));
         Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
         List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item)).collect(Collectors.toList());
         if(!callables.isEmpty()) {
