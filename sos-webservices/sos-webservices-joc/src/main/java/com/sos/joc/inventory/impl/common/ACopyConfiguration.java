@@ -371,9 +371,9 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                         if (jsonIsChanged) {
                             item.setContent(json);
                             JocInventory.updateConfiguration(dbLayer, item);
-                            updated.add(item);
                         }
                     }
+                    updated = oldDBFolderContent;
                 }
                 
                 events = Collections.singleton(newPathWithoutFix);
