@@ -1,5 +1,7 @@
 package com.sos.commons.vfs.common.file;
 
+import java.util.TimeZone;
+
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.vfs.common.AProvider;
@@ -68,8 +70,9 @@ public class ProviderFile {
         lastModifiedMillis = val;
     }
 
-    public String getLastModifiedAsString() {
-        return AProvider.isValidModificationTime(lastModifiedMillis) ? SOSDate.tryGetDateTimeAsString(lastModifiedMillis) : String.valueOf(
-                lastModifiedMillis);
+    /** as UTC because the YADE client only knows its own time zone, and the provider's time zone is unknown */
+    public String getLastModifiedAsUTCString() {
+        return AProvider.isValidModificationTime(lastModifiedMillis) ? SOSDate.tryGetDateTimeAsString(lastModifiedMillis, TimeZone.getTimeZone(
+                SOSDate.TIMEZONE_UTC)) : String.valueOf(lastModifiedMillis);
     }
 }

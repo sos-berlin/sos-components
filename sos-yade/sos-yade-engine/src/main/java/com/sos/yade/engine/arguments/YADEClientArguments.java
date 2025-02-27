@@ -7,7 +7,7 @@ import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 
-public class YADEClientArguments extends ASOSArguments{
+public class YADEClientArguments extends ASOSArguments {
 
     /** - System Properties ------- */
     private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("system_property_files", false);
@@ -17,7 +17,7 @@ public class YADEClientArguments extends ASOSArguments{
     // private SOSArgument<Boolean> createResultSet = new SOSArgument<>("create_result_set", false, Boolean.valueOf(false));
     // TODO not set default?
     private SOSArgument<SOSComparisonOperator> raiseErrorIfResultSetIs = new SOSArgument<>("raise_error_if_result_set_is", false);
-    private SOSArgument<Integer> expectedSizeOfResultSet = new SOSArgument<>("expected_size_of_result_set", false, Integer.valueOf(0));
+    private SOSArgument<Integer> expectedSizeOfResultSet = new SOSArgument<>("expected_size_of_result_set", false);
     // TODO 2 result files ....
     // TODO check if Path is OK (were the file created? on YADE client system - OK)
     private SOSArgument<Path> resultListFile = new SOSArgument<>("result_list_file", false);

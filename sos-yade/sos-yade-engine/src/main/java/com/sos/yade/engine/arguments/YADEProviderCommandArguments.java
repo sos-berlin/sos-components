@@ -2,10 +2,11 @@ package com.sos.yade.engine.arguments;
 
 import java.util.List;
 
+import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 
-public class YADEProviderCommandArguments {
+public class YADEProviderCommandArguments extends ASOSArguments {
 
     // -- Command delimiter for all command types ------------------------------
     private SOSArgument<String> commandDelimiter = new SOSArgument<>("command_delimiter", false, ";");
@@ -83,12 +84,20 @@ public class YADEProviderCommandArguments {
         return commandsBeforeFile;
     }
 
+    public void setCommandsBeforeFile(String val) {
+        commandsBeforeFile.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+    }
+
     public SOSArgument<Boolean> getCommandsBeforeFileEnableForSkipped() {
         return commandsBeforeFileEnableForSkipped;
     }
 
     public SOSArgument<List<String>> getCommandsAfterFile() {
         return commandsAfterFile;
+    }
+
+    public void setCommandsAfterFile(String val) {
+        commandsAfterFile.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
     }
 
     public SOSArgument<Boolean> getCommandsAfterFileDisableForSkipped() {

@@ -51,12 +51,13 @@ public abstract class AFileResult {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("totalFiles=").append(totalFiles);
-        sb.append(",processedFiles=").append(processedFiles);
-        sb.append(",notFound=").append(notFound);
+        sb.append("total_files=").append(totalFiles);
+        sb.append("(processed=").append(processedFiles);
+        sb.append(",not_found=").append(String.join(" ,", notFound));
         if (hasErrors()) {
             sb.append(",errors=").append(errors);
         }
+        sb.append(")");
         return sb.toString();
     }
 

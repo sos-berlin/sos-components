@@ -15,9 +15,9 @@ import com.sos.yade.engine.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
-import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsHandler;
-import com.sos.yade.engine.handlers.operations.getlist.GetListOperationHandler;
-import com.sos.yade.engine.handlers.operations.remove.RemoveOperationHandler;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsHandler;
+import com.sos.yade.engine.handlers.operations.getlist.YADEGetListOperationHandler;
+import com.sos.yade.engine.handlers.operations.remove.YADERemoveOperationHandler;
 
 public class YADEOperationsManager {
 
@@ -31,7 +31,9 @@ public class YADEOperationsManager {
      */
     /** TODO not use "YADEArguments args" ... */
     public static void process(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
-            List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator, AtomicBoolean cancel) throws YADEEngineOperationException {
+            List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator, AtomicBoolean cancel) throws Exception {
+
+        logger.info("[%s]start...", args.getOperation().getValue());
 
         TransferOperation operation = args.getOperation().getValue();
         switch (operation) {
@@ -43,7 +45,7 @@ public class YADEOperationsManager {
                 return;
             }
 
-            CopyMoveOperationsHandler.process(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles, cancel);
+            YADECopyMoveOperationsHandler.process(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles, cancel);
             // TODO after operation?
             createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
             break;
@@ -53,7 +55,7 @@ public class YADEOperationsManager {
                 createResultSetFileFromSourceFiles(logger, clientArgs, sourceFiles);
                 return;
             }
-            RemoveOperationHandler.process(operation, logger, sourceDelegator, sourceFiles, getTransactionalIgoredMessage(args)
+            YADERemoveOperationHandler.process(operation, logger, sourceDelegator, sourceFiles, getTransactionalIgoredMessage(args)
                     + getCommandsAfterFileIgoredMessage(sourceDelegator.getArgs().getCommands()));
             // TODO after operation?
             createResultSetFileFromSourceFiles(null, clientArgs, sourceFiles);
@@ -61,7 +63,7 @@ public class YADEOperationsManager {
         case GETLIST:
             // Get list of files from Source.
             // Special processing without doNotPerformOperationDueToEmptyFiles() due to the assumption of 0 source files
-            GetListOperationHandler.process(operation, logger, getTransactionalIgoredMessage(args));
+            YADEGetListOperationHandler.process(operation, logger, getTransactionalIgoredMessage(args));
             createResultSetFileFromSourceFiles(logger, clientArgs, sourceFiles);
             break;
 

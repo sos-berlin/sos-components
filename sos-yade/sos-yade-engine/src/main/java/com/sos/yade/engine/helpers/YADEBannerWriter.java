@@ -9,33 +9,34 @@ import java.util.stream.Collectors;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.arguments.YADEArguments;
 import com.sos.yade.engine.arguments.YADEClientArguments;
 import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.arguments.YADETargetArguments;
 import com.sos.yade.engine.delegators.YADEProviderFile;
 
-public class YADEBannerHelper {
+public class YADEBannerWriter {
 
     private static final String SEPARATOR_LINE = "**************************************************************";
 
     // TODO use String.format
-    public static void printBanner(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourcesArgs,
+    public static void writeHeader(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourcesArgs,
             YADETargetArguments targetArgs) {
         logger.info(SEPARATOR_LINE);
         logger.info("*    YADE    - Managed File Transfer (www.sos-berlin.com)    *");
         logger.info("*    Version - xyz                                           *");
         logger.info(SEPARATOR_LINE);
 
-        printTransferBanner(logger, args, targetArgs);
-        printClientBanner(logger, clientArgs);
-        printSourceBanner(logger, sourcesArgs);
-        printTargetBanner(logger, targetArgs);
+        writeTransferHeader(logger, args, targetArgs);
+        writeClientHeader(logger, clientArgs);
+        writeSourceHeader(logger, sourcesArgs);
+        writeTargetHeader(logger, targetArgs);
 
         logger.info(SEPARATOR_LINE);
     }
 
-    private static void printTransferBanner(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs) {
+    private static void writeTransferHeader(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs) {
         StringBuilder sb = new StringBuilder("[Transfer]");
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
         if (targetArgs != null) {
@@ -48,12 +49,12 @@ public class YADEBannerHelper {
             sb.append(",").append(YADEArgumentsHelper.toString(args.getProfile()));
         }
         if (args.isParallelismEnabled()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(args.getParallelMaxThreads()));
+            sb.append(",").append(YADEArgumentsHelper.toString(args.getParallelism()));
         }
         logger.info(sb);
     }
 
-    private static void printClientBanner(ISOSLogger logger, YADEClientArguments clientArgs) {
+    private static void writeClientHeader(ISOSLogger logger, YADEClientArguments clientArgs) {
         if (clientArgs == null) {
             return;
         }
@@ -78,13 +79,13 @@ public class YADEBannerHelper {
         }
 
         // E-Mail
-        if (!clientArgs.getMailOnEmptyFiles().isEmpty()) {
+        if (clientArgs.getMailOnEmptyFiles().isTrue()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getMailOnEmptyFiles()));
         }
-        if (!clientArgs.getMailOnError().isEmpty()) {
+        if (clientArgs.getMailOnError().isTrue()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getMailOnError()));
         }
-        if (!clientArgs.getMailOnSuccess().isEmpty()) {
+        if (clientArgs.getMailOnSuccess().isTrue()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getMailOnSuccess()));
         }
 
@@ -93,7 +94,7 @@ public class YADEBannerHelper {
         }
     }
 
-    private static void printSourceBanner(ISOSLogger logger, YADESourceArguments sourcesArgs) {
+    private static void writeSourceHeader(ISOSLogger logger, YADESourceArguments sourcesArgs) {
         StringBuilder sb = new StringBuilder("[Source]");
         sb.append(YADEArgumentsHelper.toString(sourcesArgs.getProvider().getProtocol()));
         sb.append(",source_dir=").append(sourcesArgs.getDirectory().getDisplayValue());
@@ -165,7 +166,7 @@ public class YADEBannerHelper {
         logger.info(sb);
     }
 
-    private static void printTargetBanner(ISOSLogger logger, YADETargetArguments targetArgs) {
+    private static void writeTargetHeader(ISOSLogger logger, YADETargetArguments targetArgs) {
         if (targetArgs == null) {
             return;
         }
@@ -204,24 +205,63 @@ public class YADEBannerHelper {
         logger.info(sb);
     }
 
-    public static void printSummary(ISOSLogger logger, Instant start, YADEArguments args, List<ProviderFile> files, Throwable exception) {
+    public static void writeSummary(ISOSLogger logger, Instant totalStart, Instant operationStart, Instant operationEnd, YADEArguments args,
+            YADETargetArguments targetArgs, List<ProviderFile> files, Throwable error) {
         logger.info(SEPARATOR_LINE);
-        int filesSize = files == null ? 0 : files.size();
-        logger.info(filesSize + " file(s) " + SOSDate.getDuration(start, Instant.now()));
-        if (exception != null) {
-            logger.error("[FAILED]%s", exception.toString());
+
+        int totalFiles = files == null ? 0 : files.size();
+
+        StringBuilder sb = new StringBuilder("[Summary]");
+        sb.append("total_duration=").append(SOSDate.getDuration(totalStart, Instant.now()));
+        if (operationStart != null && operationEnd != null) {
+            sb.append("(operation=").append(SOSDate.getDuration(operationStart, operationEnd)).append(")");
         }
-        if (filesSize > 0) {
-            Map<String, List<YADEProviderFile>> groupedByState = files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> {
-                if (f.getTarget() != null) {
-                    return f.getTarget().getState() == null ? "UNKNOWN" : f.getTarget().getState().toString();
-                }
-                return f.getState() == null ? "UNKNOWN" : f.getState().toString();
-            }));
-            groupedByState.forEach((category, fileList) -> logger.info(category + ": " + fileList.stream().map(YADEProviderFile::getName).collect(
-                    Collectors.toList())));
+        sb.append(",total_files=").append(totalFiles);
+
+        if (totalFiles > 0) {
+            List<String> l = new ArrayList<>();
+            FileStateUtils.getGroupedByState(targetArgs, files).forEach((state, fileList) -> {
+                // sb.append(",").append(state.toLowerCase()).append("=").append(fileList.size());
+                l.add(state.toLowerCase() + "=" + fileList.size());
+            });
+            if (l.size() > 0) {
+                sb.append("(").append(String.join(",", l)).append(")");
+            }
+        }
+        logger.info(sb);
+
+        if (error != null) {
+            logger.error("[Error]%s", error.toString());
+        }
+    }
+
+    private class FileStateUtils {
+
+        private static Map<String, List<YADEProviderFile>> getGroupedByState(YADETargetArguments targetArgs, List<ProviderFile> files) {
+            // skipping the RENAMED subState if the renaming was due to an atomic transfer and not due to a defined replacement
+            final boolean skipRenameSubStateForTarget = targetArgs != null && !targetArgs.isReplacementEnabled();
+            return files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> getState(f, skipRenameSubStateForTarget)));
         }
 
+        private static String getState(YADEProviderFile f, boolean skipRenameSubStateForTarget) {
+            if (f.getTarget() != null) {
+                return resolve(f.getTarget(), skipRenameSubStateForTarget);
+            }
+            return resolve(f, false);
+        }
+
+        private static String resolve(YADEProviderFile f, boolean skipRenameSubStateForTarget) {
+            String state = f.getState() == null ? TransferEntryState.UNKNOWN.toString() : f.getState().toString();
+            String subState = getSubState(f, skipRenameSubStateForTarget);
+            return state + subState;
+        }
+
+        private static String getSubState(YADEProviderFile target, boolean skipRenameSubState) {
+            if (target.getSubState() == null || (skipRenameSubState && TransferEntryState.RENAMED.equals(target.getSubState()))) {
+                return "";
+            }
+            return "(" + target.getSubState() + ")";
+        }
     }
 
 }

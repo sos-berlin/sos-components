@@ -12,14 +12,14 @@ import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileIntegrityHashViolationException;
-import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 
 /** Single "transfer" file operations */
-public class FileIntegrityHashHelper {
+public class YADEFileIntegrityHashHelper {
 
     /** Source/Target: IntegrityHash */
     // NoSuchAlgorithmException is already checked on YADEEngine start
-    public static MessageDigest getMessageDigest(CopyMoveOperationsConfig config, boolean create) {
+    public static MessageDigest getMessageDigest(YADECopyMoveOperationsConfig config, boolean create) {
         if (!create) {
             return null;
         }
@@ -58,7 +58,7 @@ public class FileIntegrityHashHelper {
     }
 
     /** Checks a checksum file on the Source system and deletes the transferred Target file if the checksum does not match */
-    public static void checkSourceChecksum(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+    public static void checkSourceChecksum(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws Exception {
         if (!config.getSource().isCheckIntegrityHashEnabled() || sourceFile.getChecksum() == null) {
             return;

@@ -15,16 +15,15 @@ import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
-import com.sos.yade.engine.exceptions.YADEEngineTransferFileRuntimeException;
 import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
-import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
-import com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers.FileActionsHandler;
-import com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers.FileIntegrityHashHelper;
-import com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers.FileStreamHelper;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers.YADEFileActionsExecuter;
+import com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers.YADEFileIntegrityHashHelper;
+import com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers.YADEFileStreamHelper;
 import com.sos.yade.engine.helpers.YADEDelegatorHelper;
 
 /** Single "transfer" file manager */
-public class FileHandler {
+public class YADEFileHandler {
 
     // SSH (buffer_size=32KB): 4.5GB ~ 1.15 minutes, 1.5 GB ~ 25 seconds
     private static final long LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN = 3221225475L;// 3GB
@@ -32,13 +31,13 @@ public class FileHandler {
     private static final long USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN = 10485760L;// 10 MB
 
     private final ISOSLogger logger;
-    private final CopyMoveOperationsConfig config;
+    private final YADECopyMoveOperationsConfig config;
     private final YADESourceProviderDelegator sourceDelegator;
     private final YADETargetProviderDelegator targetDelegator;
     private final YADEProviderFile sourceFile;
     private final AtomicBoolean cancel;
 
-    public FileHandler(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+    public YADEFileHandler(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, AtomicBoolean cancel) {
         this.logger = logger;
         this.config = config;
@@ -48,10 +47,10 @@ public class FileHandler {
         this.cancel = cancel;
     }
 
-    public void run() {
+    public void run() throws YADEEngineTransferFileException {
         try {
             boolean isCumulateTarget = config.getTarget().getCumulate() != null;
-            String logPrefix = config.getParallelMaxThreads() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
+            String logPrefix = config.getParallelism() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
                     .currentThread().getName();
             YADETargetProviderFile targetFile;
             // 1) Target - initialize/get Target file
@@ -80,18 +79,20 @@ public class FileHandler {
             YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
             targetFile.setState(TransferEntryState.TRANSFERRING);
             // TODO config.getParallelMaxThreads() == 1 - make it sense if parallel because of random order?
-            if (config.getParallelMaxThreads() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
-                logger.info("[%s][%s][%s]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath());
+            if (config.getParallelism() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
+                logger.info("[%s][%s][%s,bytes=%s][%s][%s]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), sourceFile
+                        .getSize(), targetDelegator.getIdentifier(), targetFile.getFullPath());
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[%s][%s][%s][% b]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), sourceFile
-                            .getSize());
+                    logger.debug("[%s][%s][%s,bytes=%s][%s][%s]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
+                            sourceFile.getSize(), targetDelegator.getIdentifier(), targetFile.getFullPath());
                 }
             }
 
             boolean isCompressTarget = config.getTarget().getCompress() != null;
-            MessageDigest sourceMessageDigest = FileIntegrityHashHelper.getMessageDigest(config, config.getSource().isCheckIntegrityHashEnabled());
-            MessageDigest targetMessageDigest = FileIntegrityHashHelper.getMessageDigest(config, config.getTarget()
+            MessageDigest sourceMessageDigest = YADEFileIntegrityHashHelper.getMessageDigest(config, config.getSource()
+                    .isCheckIntegrityHashEnabled());
+            MessageDigest targetMessageDigest = YADEFileIntegrityHashHelper.getMessageDigest(config, config.getTarget()
                     .isCreateIntegrityHashFileEnabled());
 
             boolean useBufferedStreams = sourceFile.getSize() > USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN ? true : false;
@@ -102,12 +103,12 @@ public class FileHandler {
             Instant startTime = Instant.now();
             l: while (attempts < config.getMaxRetries()) {
                 // int cumulativeFileSeperatorLength = 0;
-                try (InputStream sourceStream = FileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile, useBufferedStreams);
-                        OutputStream targetOutputStream = FileStreamHelper.getTargetOutputStream(config, targetDelegator, targetFile,
+                try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile, useBufferedStreams);
+                        OutputStream targetOutputStream = YADEFileStreamHelper.getTargetOutputStream(config, targetDelegator, targetFile,
                                 useBufferedStreams); OutputStream targetStream = isCompressTarget ? new GZIPOutputStream(targetOutputStream)
                                         : targetOutputStream) {
                     if (attempts > 0) {
-                        FileStreamHelper.skipSourceInputStreamToPosition(sourceStream, targetFile);
+                        YADEFileStreamHelper.skipSourceInputStreamToPosition(sourceStream, targetFile);
                     }
 
                     if (isCumulateTarget && !isCumulateTargetWritten) {
@@ -117,8 +118,8 @@ public class FileHandler {
                         // cumulativeFileSeperatorLength = bytes.length;
                         targetOutputStream.write(bytes);
 
-                        FileIntegrityHashHelper.updateSourceMessageDigest(sourceMessageDigest, bytes);
-                        FileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, bytes, isCompressTarget);
+                        YADEFileIntegrityHashHelper.updateSourceMessageDigest(sourceMessageDigest, bytes);
+                        YADEFileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, bytes, isCompressTarget);
                         isCumulateTargetWritten = true;
                     }
 
@@ -126,8 +127,8 @@ public class FileHandler {
                         byte[] bytes = new byte[0];
                         targetStream.write(bytes);
 
-                        FileIntegrityHashHelper.updateSourceMessageDigest(sourceMessageDigest, bytes);
-                        FileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, bytes, isCompressTarget);
+                        YADEFileIntegrityHashHelper.updateSourceMessageDigest(sourceMessageDigest, bytes);
+                        YADEFileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, bytes, isCompressTarget);
                     } else {
                         byte[] buffer = new byte[config.getBufferSize()];
                         int bytesRead;
@@ -135,10 +136,10 @@ public class FileHandler {
                             targetStream.write(buffer, 0, bytesRead);
                             targetFile.updateProgressSize(bytesRead);
 
-                            FileIntegrityHashHelper.updateSourceMessageDigest(targetMessageDigest, buffer, bytesRead);
-                            FileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, buffer, bytesRead, isCompressTarget);
+                            YADEFileIntegrityHashHelper.updateSourceMessageDigest(targetMessageDigest, buffer, bytesRead);
+                            YADEFileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, buffer, bytesRead, isCompressTarget);
                         }
-                        FileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, isCompressTarget);
+                        YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, isCompressTarget);
                     }
                     break l;
                 } catch (Throwable e) {
@@ -153,34 +154,37 @@ public class FileHandler {
                     YADEDelegatorHelper.ensureConnected(logger, targetDelegator);
 
                     if (attempts >= config.getMaxRetries()) {
-                        throw new YADEEngineTransferFileException("[" + targetFile.getFullPath() + "]Maximum retry attempts=" + config.getMaxRetries()
-                                + " reached", e);
+                        String add = config.getMaxRetries() <= 1 ? "" : "[maximum retry attempts=" + config.getMaxRetries() + " reached]";
+                        throw new YADEEngineTransferFileException(String.format("[%s]%s[%s]%s", logPrefix, targetDelegator.getLogPrefix(), targetFile
+                                .getFullPath(), add + e), e);
                     }
                 }
             }
-            FileActionsHandler.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, isCompressTarget, isCumulateTarget);
+            YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, isCompressTarget, isCumulateTarget);
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
             logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
                     targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize(), SOSDate.getDuration(startTime, Instant.now()));
 
-            FileActionsHandler.checkTargetFileSize(logger, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
+            YADEFileActionsExecuter.checkTargetFileSize(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
 
-            FileIntegrityHashHelper.setChecksum(logger, targetDelegator, targetFile, sourceFile.getIndex(), targetMessageDigest);
-            FileIntegrityHashHelper.setChecksum(logger, sourceDelegator, sourceFile, sourceFile.getIndex(), sourceMessageDigest);
-            FileIntegrityHashHelper.checkSourceChecksum(logger, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
+            YADEFileIntegrityHashHelper.setChecksum(logger, targetDelegator, targetFile, sourceFile.getIndex(), targetMessageDigest);
+            YADEFileIntegrityHashHelper.setChecksum(logger, sourceDelegator, sourceFile, sourceFile.getIndex(), sourceMessageDigest);
+            YADEFileIntegrityHashHelper.checkSourceChecksum(logger, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
 
             YADECommandsHandler.executeAfterFile(logger, sourceDelegator, targetDelegator, sourceFile);
 
             // YADE1 renames after executeAfterFile command
             // Rename Target always - transactional transfer or not
-            FileActionsHandler.renameTargetFile(logger, config, sourceFile, targetDelegator, targetFile);
-            FileActionsHandler.setTargetFileModificationDate(logger, config, sourceFile, targetDelegator, targetFile);
+            YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
+            YADEFileActionsExecuter.setTargetFileModificationDate(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
 
             // Source
-            FileActionsHandler.processSourceFileAfterNonTransactionalTransfer(logger, config, sourceDelegator, sourceFile);
+            YADEFileActionsExecuter.processSourceFileAfterNonTransactionalTransfer(logger, logPrefix, config, sourceDelegator, sourceFile);
+        } catch (YADEEngineTransferFileException e) {
+            throw e;
         } catch (Throwable e) {
-            throw new YADEEngineTransferFileRuntimeException(e);
+            throw new YADEEngineTransferFileException(e);
         }
     }
 

@@ -1,15 +1,21 @@
 package com.sos.yade.engine.helpers;
 
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.logger.SOSSlf4jLogger;
 import com.sos.commons.vfs.local.LocalProvider;
+import com.sos.commons.vfs.local.common.LocalProviderArguments;
+import com.sos.yade.engine.arguments.YADESourceArguments;
 import com.sos.yade.engine.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.delegators.YADEFileNameInfo;
 import com.sos.yade.engine.delegators.YADEProviderFile;
+import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 
 public class YADEReplacementHelper {
 
@@ -35,6 +41,11 @@ public class YADEReplacementHelper {
                 result.append(fileName, lastEnd, matcher.start(i));
                 String groupReplacement = (i - 1 < replacements.length) ? replacements[i - 1] : replacements[replacements.length - 1];
                 groupReplacement = replaceVariables(groupReplacement, fileName);
+
+                // dynamic replacement of all place holders ($1, $2, ...)
+                // YADE JS7: replaceGroupReferences is new and not available with YADE1...
+                groupReplacement = replaceGroupReferences(groupReplacement, matcher);
+
                 result.append(groupReplacement);
                 lastEnd = matcher.end(i);
             }
@@ -46,6 +57,28 @@ public class YADEReplacementHelper {
         } else {
             return Optional.of(new YADEFileNameInfo(delegator, newName));
         }
+    }
+
+    /** Replaces all $1, $2, ... with the actual group values from the Matcher<br/>
+     * Java 8 solution because of execution on the Agent ... */
+    private static String replaceGroupReferences(String replacement, Matcher matcher) {
+        Pattern groupPattern = Pattern.compile("\\$(\\d+)");
+        Matcher groupMatcher = groupPattern.matcher(replacement);
+
+        // Java 9+ solution
+        // return groupMatcher.replaceAll(match -> {
+        // int groupIndex = Integer.parseInt(match.group(1)); // $1 -> 1
+        // return matcher.groupCount() >= groupIndex ? matcher.group(groupIndex) : "";
+        // });
+
+        StringBuilder result = new StringBuilder();
+        while (groupMatcher.find()) {
+            int groupIndex = Integer.parseInt(groupMatcher.group(1)); // $1 -> 1
+            String replacementValue = matcher.groupCount() >= groupIndex ? matcher.group(groupIndex) : "";
+            groupMatcher.appendReplacement(result, replacementValue != null ? Matcher.quoteReplacement(replacementValue) : "");
+        }
+        groupMatcher.appendTail(result);
+        return result.toString();
     }
 
     private static String replaceVariables(String replacement, String fileName) {
@@ -72,16 +105,39 @@ public class YADEReplacementHelper {
 
     public static void main(String[] args) {
         try {
-            YADEProviderFile file = new YADEProviderFile(new LocalProvider(null, null), "/tmp/1abc12def123.TXT", 0, 0, null, false);
+            AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SOSSlf4jLogger(), new LocalProviderArguments()),
+                    new YADESourceArguments());
+
+            YADEProviderFile file = new YADEProviderFile(delegator.getProvider(), "/tmp/1abc12def123.TXT", 0, 0, null, false);
+            /** 1) Change File Name */
+            // YADE1 functionality
             String regex = "(1)abc(12)def(.*)";
             String replacement = "A;BB;CCC";
 
-            // regex = ".*";
-            // replacement = "[date:yyyy-MM-dd-HH-mm-ss];BB;1.txt";
-            // replacement = "[filename:uppercase]";
+            regex = ".*";
+            replacement = "[date:yyyy-MM-dd-HH-mm-ss];BB;1.txt";
+            replacement = "[filename:uppercase]";
 
-            Optional<YADEFileNameInfo> result = getReplacementResultIfDifferent(null, file.getName(), regex, replacement);
-            System.out.println("RESULT:" + result.isPresent());
+            // YADE JS7 New: dynamic replacement of all place holders ($1, $2, ...)
+            // regex = "(\\.[a-zA-Z0-9]+)$";
+            // replacement = "X$1";
+
+            /** 2) Change File Path based on file name */
+            regex = "(^.*$)";
+            replacement = "/sub/$1";
+            //replacement = "../$1";
+
+            Optional<YADEFileNameInfo> result = getReplacementResultIfDifferent(delegator, file.getName(), regex, replacement);
+            System.out.println("[RESULT]" + (result.isPresent() ? SOSString.toString(result.get()) : "false"));
+
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(file.getName());
+            if (matcher.find()) {
+                System.out.println("[RESULT][replaceAll]" + file.getName().replaceAll(regex, replacement));
+            }
+            
+            System.out.println(Path.of("/sub").isAbsolute());
+
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -32,7 +32,7 @@ public class YADEArguments extends ASOSArguments {
      * - Number <=1 : non-parallel<br/>
      * - Number > 1 : number of threads for parallel execution<br/>
      */
-    private SOSArgument<Integer> parallelMaxThreads = new SOSArgument<>("parallel_max_threads", false, Integer.valueOf(1));
+    private SOSArgument<Integer> parallelism = new SOSArgument<>("parallelism", false, Integer.valueOf(1));
 
     /** COPY/MOVE operations: the buffer size(bytes) for reading the Source file/writing the Target file */
     private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(32 * 1_024));
@@ -71,11 +71,11 @@ public class YADEArguments extends ASOSArguments {
         return integrityHashAlgorithm;
     }
 
-    public SOSArgument<Integer> getParallelMaxThreads() {
-        return parallelMaxThreads;
+    public SOSArgument<Integer> getParallelism() {
+        return parallelism;
     }
 
     public boolean isParallelismEnabled() {
-        return !parallelMaxThreads.isEmpty() && parallelMaxThreads.getValue() > 1;
+        return !parallelism.isEmpty() && parallelism.getValue() > 1;
     }
 }

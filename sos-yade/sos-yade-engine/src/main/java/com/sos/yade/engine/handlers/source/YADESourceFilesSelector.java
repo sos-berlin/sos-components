@@ -281,6 +281,9 @@ public class YADESourceFilesSelector {
         }
 
         // ResultSet
+        if (clientArgs.getExpectedSizeOfResultSet().isEmpty()) {
+            return size;
+        }
         SOSComparisonOperator op = clientArgs.getRaiseErrorIfResultSetIs().getValue();
         if (op != null) {
             int expectedSize = clientArgs.getExpectedSizeOfResultSet().getValue();

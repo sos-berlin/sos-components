@@ -13,7 +13,7 @@ import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
 
 /** Remove files on Source */
-public class RemoveOperationHandler {
+public class YADERemoveOperationHandler {
 
     public static void process(TransferOperation operation, ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
             List<ProviderFile> sourceFiles, String additionalHeadLineMessage) throws YADEEngineOperationException {

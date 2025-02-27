@@ -27,6 +27,6 @@
 		<Logger
 			name="net.schmizz.sshj.connection.channel.direct.SessionChannel"
 			level="warn" />
-		<Logger name="com.sos" level="info" />
+		<Logger name="com.sos" level="debug" />
 	</Loggers>
 </Configuration>

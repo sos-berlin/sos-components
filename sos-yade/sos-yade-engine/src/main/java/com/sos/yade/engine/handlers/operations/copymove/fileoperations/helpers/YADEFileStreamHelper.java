@@ -13,13 +13,13 @@ import com.sos.yade.engine.delegators.YADEProviderFile;
 import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
-import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 
 /** Single "transfer" file operations */
-public class FileStreamHelper {
+public class YADEFileStreamHelper {
 
     /** Source: InputStream */
-    public static InputStream getSourceInputStream(CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+    public static InputStream getSourceInputStream(YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADEProviderFile sourceFile, boolean useBufferedStreams) throws SOSProviderException {
         InputStream is = sourceDelegator.getProvider().getInputStream(sourceFile.getFullPath());
         if (useBufferedStreams) {
@@ -42,7 +42,7 @@ public class FileStreamHelper {
     }
 
     /** Target: OutputStream */
-    public static OutputStream getTargetOutputStream(CopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
+    public static OutputStream getTargetOutputStream(YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
             YADEProviderFile targetFile, boolean useBufferedStreams) throws SOSProviderException {
         OutputStream os = targetDelegator.getProvider().getOutputStream(targetFile.getFullPath(), config.getTarget().isAppendEnabled());
         if (useBufferedStreams) {

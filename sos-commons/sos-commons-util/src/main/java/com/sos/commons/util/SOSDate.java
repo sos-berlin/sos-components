@@ -144,8 +144,20 @@ public class SOSDate {
         }
     }
 
+    public static String tryGetDateTimeAsString(long datetime, TimeZone timeZone) {
+        try {
+            return getDateTimeAsString(datetime, timeZone);
+        } catch (SOSInvalidDataException e) {
+            return e.toString();
+        }
+    }
+
     public static String getDateTimeAsString(long datetime) throws SOSInvalidDataException {
         return format(new Date(datetime), DATETIME_FORMAT);
+    }
+
+    public static String getDateTimeAsString(long datetime, TimeZone timeZone) throws SOSInvalidDataException {
+        return format(new Date(datetime), DATETIME_FORMAT, timeZone);
     }
 
     public static String getDateTimeAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {

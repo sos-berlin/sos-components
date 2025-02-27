@@ -9,7 +9,7 @@ import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
 
-public class CopyMoveOperationsConfig {
+public class YADECopyMoveOperationsConfig {
 
     private final Source source;
     private final Target target;
@@ -18,11 +18,11 @@ public class CopyMoveOperationsConfig {
     private final String integrityHashAlgorithm;
     private final int bufferSize;
     private final int maxRetries;
-    private final int parallelMaxThreads;
+    private final int parallelism;
     private final boolean checkFileSize;
 
-    public CopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args, final YADESourceProviderDelegator sourceDelegator,
-            final YADETargetProviderDelegator targetDelegator) {
+    public YADECopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args,
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
         this.operation = operation;
 
         this.source = new Source(sourceDelegator);
@@ -31,7 +31,7 @@ public class CopyMoveOperationsConfig {
         this.integrityHashAlgorithm = args.getIntegrityHashAlgorithm().getValue();
         this.bufferSize = args.getBufferSize().getValue().intValue();
         this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
-        this.parallelMaxThreads = args.isParallelismEnabled() ? args.getParallelMaxThreads().getValue().intValue() : 1;
+        this.parallelism = args.isParallelismEnabled() ? args.getParallelism().getValue().intValue() : 1;
         this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
     }
 
@@ -98,8 +98,8 @@ public class CopyMoveOperationsConfig {
         return maxRetries;
     }
 
-    public int getParallelMaxThreads() {
-        return parallelMaxThreads;
+    public int getParallelism() {
+        return parallelism;
     }
 
     public boolean isCheckFileSizeEnabled() {

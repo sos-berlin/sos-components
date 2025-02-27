@@ -9,7 +9,7 @@ import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
-import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.helpers.YADEReplacementHelper;
 
 public class YADEProviderFile extends ProviderFile {
@@ -25,6 +25,8 @@ public class YADEProviderFile extends ProviderFile {
     private YADETargetProviderFile target;
 
     private String checksum;
+
+    private TransferEntryState subState;
 
     public YADEProviderFile(IProvider provider, String fullPath, long size, long lastModifiedMillis, YADEDirectoryMapper directoryMapper,
             boolean checkSteady) {
@@ -75,7 +77,7 @@ public class YADEProviderFile extends ProviderFile {
     }
 
     /** Operations: Copy/Move(with target) */
-    public void initTarget(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+    public void initTarget(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
         resetSteady();
         if (config.getTarget().getCumulate() != null) {
@@ -92,14 +94,7 @@ public class YADEProviderFile extends ProviderFile {
         if (config.getTarget().getAtomic() != null) {
             transferFileName = config.getTarget().getAtomic().getPrefix() + finalFileName + config.getTarget().getAtomic().getSuffix();
         }
-        String targetDirectory;
-        if (fileNameInfo.isAbsolutePath()) {// name replaced to an absolute path
-            targetDirectory = fileNameInfo.getParent();
-        } else {
-            targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(logger, config, targetDelegator, this, fileNameInfo
-                    .getParent());
-        }
-
+        String targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(logger, config, targetDelegator, this, fileNameInfo);
         String transferFileFullPath = SOSPathUtil.appendPath(targetDirectory, transferFileName, targetDelegator.getProvider().getPathSeparator());
         target = new YADETargetProviderFile(targetDelegator.getProvider(), transferFileFullPath);
         if (config.getTarget().getAtomic() != null) {
@@ -114,7 +109,7 @@ public class YADEProviderFile extends ProviderFile {
      * @param sourceFile
      * @param config
      * @return the final name of the file after transfer */
-    private YADEFileNameInfo getTargetFinalFilePathInfo(CopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator) {
+    private YADEFileNameInfo getTargetFinalFilePathInfo(YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator) {
         // 1) Source name
         String fileName = getName();
         // 2) Compressed name
@@ -183,6 +178,14 @@ public class YADEProviderFile extends ProviderFile {
 
     public void setChecksum(String val) {
         checksum = val;
+    }
+
+    public void setSubState(TransferEntryState val) {
+        subState = val;
+    }
+
+    public TransferEntryState getSubState() {
+        return subState;
     }
 
     public void setChecksum(MessageDigest digest) {

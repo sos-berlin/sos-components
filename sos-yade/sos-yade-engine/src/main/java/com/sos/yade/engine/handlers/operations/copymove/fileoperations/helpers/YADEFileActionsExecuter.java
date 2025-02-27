@@ -13,34 +13,36 @@ import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.delegators.YADETargetProviderFile;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileSizeException;
-import com.sos.yade.engine.handlers.operations.copymove.CopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 
 /** Single "transfer" file operations */
-public class FileActionsHandler {
+public class YADEFileActionsExecuter {
 
     /** Target: ProviderFile Operations */
-    public static void renameTargetFile(ISOSLogger logger, CopyMoveOperationsConfig config, YADEProviderFile sourceFile,
+    public static void renameTargetFile(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config, YADEProviderFile sourceFile,
             YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws SOSProviderException {
         if (!targetFile.needsRename()) {
             return;
         }
+
         String targetFileOldPath = targetFile.getFullPath();
         String targetFileNewPath = targetFile.getFinalFullPath();
         targetDelegator.getProvider().renameFileIfExists(targetFileOldPath, targetFileNewPath);
         targetFile.setSubState(TransferEntryState.RENAMED);
-        logger.info("[%s]%s[%s][renamed][%s]", sourceFile.getIndex(), targetDelegator.getLogPrefix(), targetFileOldPath, targetFileNewPath);
+        logger.info("[%s]%s[%s][renamed][%s]", logPrefix, targetDelegator.getLogPrefix(), targetFileOldPath, targetFileNewPath);
     }
 
-    public static void setTargetFileModificationDate(ISOSLogger logger, CopyMoveOperationsConfig config, YADEProviderFile sourceFile,
-            YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws SOSProviderException {
+    public static void setTargetFileModificationDate(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
+            YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws Exception {
         if (!config.getTarget().isKeepModificationDateEnabled()) {
             return;
         }
-        targetDelegator.getProvider().setFileLastModifiedFromMillis(targetFile.getFinalFullPath(), sourceFile.getLastModifiedMillis());
+
         if (logger.isDebugEnabled()) {
-            logger.debug("[%s]%s[%s][setTargetFileModificationDate]%s", sourceFile.getIndex(), targetDelegator.getLogPrefix(), targetFile
-                    .getFinalFullPath(), targetFile.getLastModifiedAsString());
+            logger.debug("[%s]%s[%s][setTargetFileModificationDate][UTC]%s", logPrefix, targetDelegator.getLogPrefix(), targetFile.getFinalFullPath(),
+                    sourceFile.getLastModifiedAsUTCString());
         }
+        targetDelegator.getProvider().setFileLastModifiedFromMillis(targetFile.getFinalFullPath(), sourceFile.getLastModifiedMillis());
     }
 
     public static void finalizeTargetFileSize(YADETargetProviderDelegator delegator, YADEProviderFile sourceFile, YADETargetProviderFile targetFile,
@@ -59,14 +61,15 @@ public class FileActionsHandler {
         }
     }
 
-    public static void checkTargetFileSize(ISOSLogger logger, CopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws Exception {
+    public static void checkTargetFileSize(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
+            YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator,
+            YADETargetProviderFile targetFile) throws Exception {
         if (!config.isCheckFileSizeEnabled()) {
             return;
         }
         if (sourceFile.getSize() != targetFile.getSize()) {
-            String msg = String.format("[%s][%s=%s, Bytes=%s][%s=%s, Bytes=%s]", sourceFile.getIndex(), sourceDelegator.getIdentifier(), sourceFile
-                    .getFullPath(), sourceFile.getSize(), targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize());
+            String msg = String.format("[%s][%s=%s, Bytes=%s][%s=%s, Bytes=%s]", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
+                    sourceFile.getSize(), targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize());
 
             targetDelegator.getProvider().deleteIfExists(targetFile.getFullPath());
             targetFile.setState(TransferEntryState.ROLLED_BACK);
@@ -77,27 +80,23 @@ public class FileActionsHandler {
     }
 
     /** Source: ProviderFile Operations */
-    public static void processSourceFileAfterNonTransactionalTransfer(ISOSLogger logger, CopyMoveOperationsConfig config,
+    // TODO set State? subState? how to display the source file info in the summary?
+    public static void processSourceFileAfterNonTransactionalTransfer(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
             YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile) throws SOSProviderException {
-        if (!config.isTransactionalEnabled()) {
+        if (config.isTransactionalEnabled()) {
             return;
         }
 
         if (config.isMoveOperation()) {
-            try {
-                sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath());
-                sourceFile.setState(TransferEntryState.MOVED);
-            } catch (Throwable e) {
-                logger.error("[%s][delete]%s", sourceFile.getIndex(), e.toString());
-            }
+            sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath());
+            sourceFile.setState(TransferEntryState.MOVED);
         } else if (config.getSource().isReplacementEnabled()) {
-            renameSourceFile(logger, sourceDelegator, sourceFile);
+            renameSourceFile(logger, logPrefix, sourceDelegator, sourceFile);
         }
     }
 
-    // TODO rename per file? - rollback... or after transfer of all files?
-    private static void renameSourceFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile)
-            throws SOSProviderException {
+    private static void renameSourceFile(ISOSLogger logger, String logPrefix, YADESourceProviderDelegator sourceDelegator,
+            YADEProviderFile sourceFile) throws SOSProviderException {
         Optional<YADEFileNameInfo> newNameInfo = sourceFile.getReplacementResultIfDifferent(sourceDelegator);
         if (newNameInfo.isPresent()) {
             YADEFileNameInfo info = newNameInfo.get();

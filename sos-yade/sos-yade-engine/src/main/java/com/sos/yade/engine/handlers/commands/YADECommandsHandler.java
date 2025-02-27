@@ -2,6 +2,7 @@ package com.sos.yade.engine.handlers.commands;
 
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.logger.ISOSLogger;
@@ -37,7 +38,7 @@ public class YADECommandsHandler {
             if (result.hasError(THROW_ERROR_ON_STDERR)) {
                 throw new YADEEngineCommandException(String.format("%s[%s]", delegator.getLogPrefix(), an), result);
             }
-            logger.info("%s[%s]%s", delegator.getLogPrefix(), an, result.toString());
+            logCommandResult(logger, delegator.getLogPrefix() + "[" + an + "][" + command + "]", result);
         }
     }
 
@@ -195,7 +196,7 @@ public class YADECommandsHandler {
                 if (result.hasError(THROW_ERROR_ON_STDERR)) {
                     throw new YADEEngineCommandException(String.format("%s[%s]", delegator.getLogPrefix(), an), result);
                 }
-                logger.info("%s[%s]%s", delegator.getLogPrefix(), an, result.toString());
+                logCommandResult(logger, delegator.getLogPrefix() + "[" + an + "][" + command + "]", result);
             }
         }
     }
@@ -215,7 +216,7 @@ public class YADECommandsHandler {
             if (result.hasError(THROW_ERROR_ON_STDERR)) {
                 throw new YADEEngineCommandException(msg, result);
             }
-            logger.info("%s%s", msg, result.toString());
+            logCommandResult(logger, msg, result);
         }
     }
 
@@ -234,6 +235,30 @@ public class YADECommandsHandler {
             logger.info("%s%s[%s]%s", logPrefix, add, commandsArg.getName(), YADEArgumentsHelper.toString(commandsArg, commandDelimiterArg
                     .getValue()));
         }
+    }
+
+    private static void logCommandResult(ISOSLogger logger, String msg, SOSCommandResult result) {
+        boolean successExitCode = result.getExitCode() != null && result.getExitCode().intValue() == 0;
+        boolean hasStdOut = !SOSString.isEmpty(result.getStdOut());
+        boolean hasStdErr = !SOSString.isEmpty(result.getStdErr());
+        boolean hasException = result.getException() != null;
+
+        if (successExitCode && !hasStdOut && !hasStdErr && !hasException) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("[result]");
+        sb.append("[exitCode=").append(result.getExitCode()).append("]");
+        if (hasStdOut) {
+            sb.append("[std:out=").append(result.getStdOut().trim()).append("]");
+        }
+        if (hasStdErr) {
+            sb.append("[std:err=").append(result.getStdErr().trim()).append("]");
+        }
+        if (hasException) {
+            sb.append("[exception=").append(result.getException()).append("]");
+        }
+        logger.info(msg + sb);
     }
 
     /** TODO getSource/getTarget ??? */
