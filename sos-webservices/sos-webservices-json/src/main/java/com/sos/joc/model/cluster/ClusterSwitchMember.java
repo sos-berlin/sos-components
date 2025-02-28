@@ -4,6 +4,7 @@ package com.sos.joc.model.cluster;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,7 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "memberId"
+    "memberId",
+    "auditLog"
 })
 public class ClusterSwitchMember {
 
@@ -30,6 +32,14 @@ public class ClusterSwitchMember {
      */
     @JsonProperty("memberId")
     private String memberId;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * string without < and >
@@ -55,14 +65,36 @@ public class ClusterSwitchMember {
         this.memberId = memberId;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("memberId", memberId).toString();
+        return new ToStringBuilder(this).append("memberId", memberId).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(memberId).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(memberId).toHashCode();
     }
 
     @Override
@@ -74,7 +106,7 @@ public class ClusterSwitchMember {
             return false;
         }
         ClusterSwitchMember rhs = ((ClusterSwitchMember) other);
-        return new EqualsBuilder().append(memberId, rhs.memberId).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(memberId, rhs.memberId).isEquals();
     }
 
 }

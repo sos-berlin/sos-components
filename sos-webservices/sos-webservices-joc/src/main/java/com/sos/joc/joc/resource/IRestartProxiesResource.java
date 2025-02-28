@@ -16,6 +16,6 @@ public interface IRestartProxiesResource {
     @Path("proxies/restart")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse restart(@HeaderParam("X-Access-Token") String accessToken);
+    public JOCDefaultResponse restart(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 
 }

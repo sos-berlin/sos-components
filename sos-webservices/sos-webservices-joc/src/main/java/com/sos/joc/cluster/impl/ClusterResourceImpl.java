@@ -22,6 +22,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.ClusterResponse;
 import com.sos.joc.model.cluster.ClusterRestart;
 import com.sos.joc.model.cluster.ClusterServiceRun;
@@ -53,6 +54,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterServiceRun in = Globals.objectMapper.readValue(filterBytes, ClusterServiceRun.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
+                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
                 response = processAnswer(in.getType(), JocClusterService.getInstance().runServiceNow(in, StartupMode.run_now));
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -73,6 +75,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
+                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
                 if (in.getType().equals(ClusterServices.cluster)) { // all services
                     response = processAnswer(in.getType(), JocClusterService.getInstance().restart(StartupMode.manual_restart));
                     // proxy restart in addition
@@ -99,6 +102,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
+                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
                 response = processAnswer(ClusterServices.cluster, JocClusterService.getInstance().switchMember(StartupMode.manual_switchover, in
                         .getMemberId()));
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -121,6 +125,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
+                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
                 session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
 
                 JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(session);
