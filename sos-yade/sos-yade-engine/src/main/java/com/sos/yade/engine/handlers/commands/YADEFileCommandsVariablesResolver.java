@@ -84,6 +84,9 @@ public class YADEFileCommandsVariablesResolver {
 
     private static String getVarValue(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile file,
             String var) {
+
+        boolean sourceFileNotNeedsRename = !file.needsRename();
+
         switch (var) {
         /** Date/time variables */
         case "$date":
@@ -135,15 +138,15 @@ public class YADEFileCommandsVariablesResolver {
 
         /** The name of a file on the source host after Rename operation */
         case "${SourceFileRenamedFullName}":
-            return getFileFullPath(file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileFullPath(file.getFinalFullPath());
         case "${SourceFileRenamedRelativeName}":
-            return getFileRelativePath(sourceDelegator, file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileRelativePath(sourceDelegator, file.getFinalFullPath());
         case "${SourceFileRenamedBaseName}":
-            return getFileBaseName(file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileBaseName(file.getFinalFullPath());
         case "${SourceFileRenamedParentFullName}":
-            return getFileParentFullPath(sourceDelegator, file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileParentFullPath(sourceDelegator, file.getFinalFullPath());
         case "${SourceFileRenamedParentBaseName}":
-            return getFileParentBaseName(sourceDelegator, file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileParentBaseName(sourceDelegator, file.getFinalFullPath());
         default:
             return var;
         }
