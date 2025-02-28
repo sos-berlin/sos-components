@@ -97,7 +97,7 @@ public class SSHJProvider extends ASSHProvider {
 
             getLogger().info(getConnectedMsg(SSHJProviderUtil.getConnectedInfos(sshClient)));
         } catch (Throwable e) {
-            throw new SOSProviderConnectException(String.format("[%s]", getMainInfo()), e);
+            throw new SOSProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
 

@@ -1,58 +1,24 @@
-package com.sos.yade.engine.helpers;
+package com.sos.yade.engine.common.helpers;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.yade.engine.arguments.YADEClientArguments;
-import com.sos.yade.engine.delegators.IYADEProviderDelegator;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
-import com.sos.yade.engine.exceptions.YADEEngineSourceConnectionException;
-import com.sos.yade.engine.exceptions.YADEEngineTargetConnectionException;
+import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.common.arguments.YADEClientArguments;
+import com.sos.yade.engine.exceptions.YADEEngineException;
 
-public class YADEHelper {
+public class YADEClientHelper {
 
-
-    public static void throwConnectionException(IYADEProviderDelegator delegator, Throwable e) throws YADEEngineConnectionException {
-        YADEEngineConnectionException ex = getConnectionException(delegator, e);
-        if (ex != null) {
-            throw ex;
-        }
-    }
-
-    public static YADEEngineConnectionException getConnectionException(IYADEProviderDelegator delegator, Throwable ex) {
-        if (delegator == null) {
-            return null;
-        }
-        if (delegator instanceof YADESourceProviderDelegator) {
-            return new YADEEngineSourceConnectionException(ex.getCause());
-        }
-        return new YADEEngineTargetConnectionException(ex.getCause());
-    }
-
-    public static boolean isConnectionException(Throwable cause) {
-        if (cause == null) {
-            return false;
-        }
-        Throwable e = cause;
-        while (e != null) {
-            if (e instanceof YADEEngineConnectionException) {
-                return true;
-            }
-            e = e.getCause();
-        }
-        return false;
-    }
-
-    
-
-    
+    private static String NEW_LINE = "\n"; // System.lineSeparator();
 
     public static void setConfiguredSystemProperties(ISOSLogger logger, YADEClientArguments args) {
         if (SOSCollection.isEmpty(args.getSystemPropertyFiles().getValue())) {
@@ -80,6 +46,35 @@ public class YADEHelper {
                 logger.debug("[%s]%s=%s", method, n, v);
             }
             System.setProperty(n, v);
+        }
+    }
+
+    public static void writeResultSet(ISOSLogger logger, TransferOperation operation, YADEClientArguments clientArgs, List<ProviderFile> sourceFiles)
+            throws Exception {
+        if (clientArgs.getResultListFile().getValue() == null) {
+            return;
+        }
+        Path file = SOSPath.toAbsoluteNormalizedPath(clientArgs.getResultListFile().getValue());
+        logger.info("[%s]write %s entries to the result set file", file);
+
+        boolean logEntries = TransferOperation.GETLIST.equals(operation);
+        StringBuilder sb = new StringBuilder();
+        if (SOSCollection.isEmpty(sourceFiles)) {
+            sb.append(NEW_LINE);
+        } else {
+            sourceFiles.stream().forEach(f -> {
+                String entry = f.getFullPath();
+                if (logEntries) {
+                    logger.info(entry);
+                }
+                sb.append(entry).append(NEW_LINE);
+            });
+        }
+        try {
+            SOSPath.overwrite(file, sb.toString());
+            // SOSPath.append(file, sb.toString());
+        } catch (Throwable e) {
+            throw new YADEEngineException("[writeResultSet][" + file + "]" + e, e);
         }
     }
 

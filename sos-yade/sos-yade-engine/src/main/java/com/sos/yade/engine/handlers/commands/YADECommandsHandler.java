@@ -6,15 +6,15 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.yade.engine.arguments.YADEProviderCommandArguments;
-import com.sos.yade.engine.arguments.YADESourceTargetArguments;
-import com.sos.yade.engine.delegators.IYADEProviderDelegator;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.arguments.YADEProviderCommandArguments;
+import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.common.delegators.IYADEProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.common.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.common.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineCommandException;
-import com.sos.yade.engine.helpers.YADEArgumentsHelper;
-import com.sos.yade.engine.helpers.YADEHelper;
 
 public class YADECommandsHandler {
 
@@ -132,6 +132,11 @@ public class YADECommandsHandler {
         }
     }
 
+    public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile file)
+            throws YADEEngineCommandException {
+        executeAfterFile(logger, sourceDelegator, null, file);
+    }
+
     public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
             YADEProviderFile file) throws YADEEngineCommandException {
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
@@ -166,7 +171,7 @@ public class YADECommandsHandler {
 
         String an = arg.getName();
         // e.g. target connection exception, but provider is source...
-        if (exception != null && YADEHelper.isConnectionException(exception) && !delegator.getProvider().isConnected()) {
+        if (exception != null && YADEProviderDelegatorHelper.isConnectionException(exception) && !delegator.getProvider().isConnected()) {
             logger.info("%s[%s][%s][skip]due to a connection exception", delegator.getLogPrefix(), an, YADEArgumentsHelper.toString(arg, args
                     .getCommandDelimiter().getValue()));
             return;

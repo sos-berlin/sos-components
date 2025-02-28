@@ -1,4 +1,4 @@
-package com.sos.yade.engine.helpers;
+package com.sos.yade.engine.common.helpers;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
@@ -12,17 +12,19 @@ import com.sos.commons.vfs.local.LocalProvider;
 import com.sos.commons.vfs.local.common.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.yade.engine.arguments.YADEArguments;
-import com.sos.yade.engine.arguments.YADESourceArguments;
-import com.sos.yade.engine.arguments.YADESourceTargetArguments;
-import com.sos.yade.engine.arguments.YADETargetArguments;
-import com.sos.yade.engine.delegators.IYADEProviderDelegator;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.common.arguments.YADETargetArguments;
+import com.sos.yade.engine.common.delegators.IYADEProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetConnectionException;
 
-public class YADEDelegatorHelper {
+public class YADEProviderDelegatorHelper {
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
     public static YADESourceProviderDelegator getSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs)
@@ -50,7 +52,7 @@ public class YADEDelegatorHelper {
             try {
                 delegator.getProvider().ensureConnected();
             } catch (Throwable e) {
-                YADEHelper.throwConnectionException(delegator, e);
+                throwConnectionException(delegator, e);
             }
             return;
         }
@@ -64,10 +66,10 @@ public class YADEDelegatorHelper {
                 return;
             } catch (Throwable e) {
                 if (retryCounter == maxRetries) {
-                    YADEHelper.throwConnectionException(delegator, e);
+                    throwConnectionException(delegator, e);
                 }
                 logger.info("%s[retry=%s in %ss]%s", delegator.getLogPrefix(), retryCounter + 1, retryInterval, e.toString(), e);
-                YADEHelper.waitFor(retryInterval);
+                YADEClientHelper.waitFor(retryInterval);
             }
         }
     }
@@ -126,6 +128,37 @@ public class YADEDelegatorHelper {
             throw new YADEEngineInitializationException(e);
         }
         return p;
+    }
+
+    private static void throwConnectionException(IYADEProviderDelegator delegator, Throwable e) throws YADEEngineConnectionException {
+        YADEEngineConnectionException ex = getConnectionException(delegator, e);
+        if (ex != null) {
+            throw ex;
+        }
+    }
+
+    public static YADEEngineConnectionException getConnectionException(IYADEProviderDelegator delegator, Throwable ex) {
+        if (delegator == null) {
+            return null;
+        }
+        if (delegator instanceof YADESourceProviderDelegator) {
+            return new YADEEngineSourceConnectionException(ex.getCause());
+        }
+        return new YADEEngineTargetConnectionException(ex.getCause());
+    }
+
+    public static boolean isConnectionException(Throwable cause) {
+        if (cause == null) {
+            return false;
+        }
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof YADEEngineConnectionException) {
+                return true;
+            }
+            e = e.getCause();
+        }
+        return false;
     }
 
 }

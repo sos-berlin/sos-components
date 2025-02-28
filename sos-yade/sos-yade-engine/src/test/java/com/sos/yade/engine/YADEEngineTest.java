@@ -14,13 +14,13 @@ import com.sos.commons.vfs.local.common.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.arguments.YADEArguments;
-import com.sos.yade.engine.arguments.YADEClientArguments;
-import com.sos.yade.engine.arguments.YADEProviderCommandArguments;
-import com.sos.yade.engine.arguments.YADESourceArguments;
-import com.sos.yade.engine.arguments.YADESourceArguments.ZeroByteTransfer;
-import com.sos.yade.engine.arguments.YADESourceTargetArguments;
-import com.sos.yade.engine.arguments.YADETargetArguments;
+import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.arguments.YADEClientArguments;
+import com.sos.yade.engine.common.arguments.YADEProviderCommandArguments;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.arguments.YADESourceArguments.ZeroByteTransfer;
+import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.common.arguments.YADETargetArguments;
 
 public class YADEEngineTest {
 
@@ -70,7 +70,7 @@ public class YADEEngineTest {
             /** Target Commands */
             targetArgs.setCommands(createAndSetProviderCommandArgs(false));
 
-            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs);
+            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -98,10 +98,11 @@ public class YADEEngineTest {
             YADETargetArguments targetArgs = getSFTPTargetArgs();
             targetArgs.getDirectory().setValue(SSH_TARGET_DIR);
             targetArgs.getKeepModificationDate().setValue(true);
+            targetArgs.getTransactional().setValue(true);
 
-            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs);
+            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
+            LOGGER.error(e.toString());
         }
     }
 
@@ -126,7 +127,7 @@ public class YADEEngineTest {
             targetArgs.getDirectory().setValue(LOCAL_TARGET_DIR);
             targetArgs.getKeepModificationDate().setValue(true);
 
-            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs);
+            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }

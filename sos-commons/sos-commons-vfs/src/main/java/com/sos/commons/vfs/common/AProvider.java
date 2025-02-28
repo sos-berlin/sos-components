@@ -34,6 +34,9 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     // source/target type - logging - is not set if only one provider is used (e.g. SSH JITL Job)
     private AProviderContext context;
 
+    /** For Connect/Disconnect logging e.g. LocalProvider=null, SSHProvider=user@server:port */
+    private String accessInfo;
+
     public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
         this.logger = logger;
         this.arguments = arguments;
@@ -204,5 +207,30 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         if (!isValidModificationTime(milliseconds)) {
             throw new SOSProviderException(getLogPrefix() + "[" + path + "][" + milliseconds + "]not valid modification time");
         }
+    }
+
+    public String getAccessInfo() {
+        return accessInfo;
+    }
+
+    public void setAccessInfo(String val) {
+        accessInfo = val;
+    }
+
+    public String getConnectMsg() {
+        return String.format("%s[connect]%s ...", getLogPrefix(), accessInfo);
+    }
+
+    public String getConnectedMsg() {
+        return getConnectedMsg(null);
+    }
+
+    public String getConnectedMsg(String additionalInfos) {
+        String add = SOSString.isEmpty(additionalInfos) ? accessInfo : "[" + accessInfo + "]" + additionalInfos;
+        return String.format("%s[connected]%s", getLogPrefix(), add);
+    }
+
+    public String getDisconnectedMsg() {
+        return String.format("%s[disconnected]%s", getLogPrefix(), accessInfo);
     }
 }

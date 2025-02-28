@@ -1,4 +1,4 @@
-package com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers;
+package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -9,11 +9,11 @@ import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.exception.SOSProviderException;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderFile;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
 
 /** Single "transfer" file operations */
 public class YADEFileStreamHelper {

@@ -6,12 +6,12 @@ import java.util.stream.Collectors;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.arguments.YADESourceArguments;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.common.helpers.YADEClientHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourceSteadyFilesException;
-import com.sos.yade.engine.helpers.YADEArgumentsHelper;
-import com.sos.yade.engine.helpers.YADEHelper;
 
 public class YADESourceFilesSteadyStateChecker {
 
@@ -34,7 +34,7 @@ public class YADESourceFilesSteadyStateChecker {
 
             String position = String.format("checkSteadyCount=%s of %s", i + 1, total);
             logger.info(String.format("%s[%s][wait]%ss...", sourceDelegator.getLogPrefix(), position, interval));
-            YADEHelper.waitFor(interval);
+            YADEClientHelper.waitFor(interval);
 
             l: for (ProviderFile sourceFile : sourceFiles) {
                 if (!checkFileSteadyState(sourceDelegator, sourceFile)) {
@@ -44,7 +44,7 @@ public class YADESourceFilesSteadyStateChecker {
             }
             if (steady) {
                 logger.info("%s[%s][all files seem steady]extra waiting %ss for late comers", sourceDelegator.getLogPrefix(), position, interval);
-                YADEHelper.waitFor(interval);
+                YADEClientHelper.waitFor(interval);
                 nl: for (ProviderFile sourceFile : sourceFiles) {
                     if (!checkFileSteadyState(sourceDelegator, sourceFile)) {
                         steady = false;
@@ -63,22 +63,22 @@ public class YADESourceFilesSteadyStateChecker {
         }
     }
 
-    private static boolean checkFileSteadyState(YADESourceProviderDelegator sourceDelegator, ProviderFile sourceFile)
+    private static boolean checkFileSteadyState(YADESourceProviderDelegator sourceDelegator, ProviderFile providerFile)
             throws YADEEngineSourceSteadyFilesException {
-        YADEProviderFile yf = (YADEProviderFile) sourceFile;
-        if (yf.getSteady().isSteady()) {
+        YADEProviderFile file = (YADEProviderFile) providerFile;
+        if (file.getSteady().isSteady()) {
             return true;
         }
         try {
-            String path = sourceFile.getFullPath();
-            sourceFile = sourceDelegator.getProvider().rereadFileIfExists(sourceFile);
-            if (sourceFile == null) {
+            String path = providerFile.getFullPath();
+            providerFile = sourceDelegator.getProvider().rereadFileIfExists(providerFile);
+            if (providerFile == null) {
                 throw new YADEEngineSourceSteadyFilesException("[" + path + "]not found");
             }
-            yf = (YADEProviderFile) sourceFile;
-            yf.getSteady().checkIfSteady();
+            file = (YADEProviderFile) providerFile;
+            file.getSteady().checkIfSteady();
 
-            return yf.getSteady().isSteady();
+            return file.getSteady().isSteady();
         } catch (YADEEngineSourceSteadyFilesException e) {
             throw e;
         } catch (Throwable e) {

@@ -17,12 +17,12 @@ import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.arguments.YADEArguments;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
-import com.sos.yade.engine.handlers.operations.copymove.fileoperations.YADEFileHandler;
+import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
 
 // Target File
 // - TransferEntryState.NOT_OVERWRITTEN

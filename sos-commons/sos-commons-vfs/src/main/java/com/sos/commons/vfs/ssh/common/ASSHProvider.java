@@ -13,8 +13,6 @@ import com.sos.commons.vfs.exception.SOSProviderInitializationException;
 
 public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
 
-    private final String mainInfo;
-
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private SSHServerInfo serverInfo;
     private String serverVersion;
@@ -22,14 +20,14 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     /** Layer for instantiating a Real Provider: SSHJ or ... */
     public ASSHProvider() throws SOSProviderInitializationException {
         super(null, null);
-        mainInfo = null;
     }
 
     /** Real Provider */
     public ASSHProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
         super(logger, args);
         resolveCredentialStore();
-        mainInfo = String.format("%s:%s", getArguments().getHost().getDisplayValue(), getArguments().getPort().getDisplayValue());
+        setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
+                .getPort().getDisplayValue()));
     }
 
     public abstract void put(String source, String target, int perm) throws SOSProviderException;
@@ -59,31 +57,19 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
         serverVersion = val;
     }
 
-    public String getMainInfo() {
-        return mainInfo;
-    }
-
-    public String getConnectMsg() {
-        return String.format("%s[connect]%s ...", getLogPrefix(), mainInfo);
-    }
-
     public String getConnectedMsg(List<String> additionalInfos) {
-        String r = String.format("%s[connected][%s]", getLogPrefix(), mainInfo);
+        String msg = "";
         if (SOSCollection.isEmpty(additionalInfos)) {
             if (serverInfo != null) {
-                r += serverInfo.toString();
+                msg += serverInfo.toString();
             }
         } else {
             if (serverInfo != null) {
-                r += "[" + serverInfo.toString() + "]";
+                msg += "[" + serverInfo.toString() + "]";
             }
-            r += Joiner.on(", ").join(additionalInfos);
+            msg += Joiner.on(", ").join(additionalInfos);
         }
-        return r;
-    }
-
-    public String getDisconnectedMsg() {
-        return String.format("%s[disconnected]%s", getLogPrefix(), mainInfo);
+        return getConnectedMsg(msg);
     }
 
     private void resolveCredentialStore() throws SOSProviderInitializationException {

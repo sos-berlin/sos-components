@@ -1,4 +1,4 @@
-package com.sos.yade.engine.delegators;
+package com.sos.yade.engine.common;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,8 +10,18 @@ import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADEFileNameInfo;
+import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileReplacementHelper;
 
+/** @see YADEFileReplacementHelper
+ * @see YADEFileNameInfo
+ * @apiNote COPY/MOVE operations.<br/>
+ *          The YADEDirectoryMapper tries to evaluate and create all target directories before the operation.<br/>
+ *          An exception is if Target Replacement is enabled, because in this case the target paths can only be calculated per file.<br/>
+ */
 public class YADEDirectoryMapper {
 
     /** full directory paths of source files without trailing separator */
@@ -65,7 +75,7 @@ public class YADEDirectoryMapper {
             if (sourceReplacement == null) {
                 sourceReplacement = new HashSet<>();
             }
-            String directory = sourceFile.getFinalFullPathParent();
+            String directory = sourceFile.getFinalFullPathParent(sourceDelegator);
             if (!sourceReplacement.contains(directory)) {
                 if (sourceDelegator.getProvider().createDirectoriesIfNotExist(directory)) {
                     if (logger.isDebugEnabled()) {
@@ -203,7 +213,7 @@ public class YADEDirectoryMapper {
             if (targetPath.isEmpty()) {
                 targetPath = targetDelegator.getDirectory(); // already normalized without trailing path separator
             } else {
-                targetPath = SOSPathUtil.appendPath(targetDelegator.getDirectory(), targetPath, targetDelegator.getProvider().getPathSeparator());
+                targetPath = targetDelegator.appendPath(targetDelegator.getDirectory(), targetPath);
             }
         }
         if (SOSString.isEmpty(targetPath)) {
@@ -254,8 +264,7 @@ public class YADEDirectoryMapper {
                 targetDirectory = getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(logger, config, sourceFile
                         .getParentFullPath()));
                 if (!SOSString.isEmpty(fileNameInfo.getParent())) {
-                    targetDirectory = SOSPathUtil.appendPath(targetDirectory, fileNameInfo.getParent(), targetDelegator.getProvider()
-                            .getPathSeparator());
+                    targetDirectory = targetDelegator.appendPath(targetDirectory, fileNameInfo.getParent());
                 }
             }
             tryCreateTargetDirectory(logger, targetDelegator, targetDirectory, config.getTarget().isCreateDirectoriesEnabled());

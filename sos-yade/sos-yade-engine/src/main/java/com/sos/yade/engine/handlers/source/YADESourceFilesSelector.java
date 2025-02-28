@@ -10,19 +10,18 @@ import java.util.stream.Collectors;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
-import com.sos.yade.engine.arguments.YADEClientArguments;
-import com.sos.yade.engine.arguments.YADESourceArguments;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.arguments.YADEClientArguments;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourceFilesSelectorException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceZeroByteFilesException;
-import com.sos.yade.engine.helpers.YADEArgumentsHelper;
 
 public class YADESourceFilesSelector {
 
@@ -126,7 +125,7 @@ public class YADESourceFilesSelector {
             String path = singleFile;
             if (sourceDelegator.getDirectory() != null) {
                 if (!sourceDelegator.getProvider().isAbsolutePath(singleFile)) {
-                    path = SOSPathUtil.appendPath(sourceDelegator.getDirectory(), singleFile, sourceDelegator.getProvider().getPathSeparator());
+                    path = sourceDelegator.appendPath(sourceDelegator.getDirectory(), singleFile);
                 }
             }
 

@@ -1,4 +1,4 @@
-package com.sos.yade.engine.arguments;
+package com.sos.yade.engine.common.arguments;
 
 import java.nio.file.Path;
 

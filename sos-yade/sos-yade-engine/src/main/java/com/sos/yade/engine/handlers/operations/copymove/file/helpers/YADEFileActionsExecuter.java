@@ -1,4 +1,4 @@
-package com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers;
+package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
 import java.util.Optional;
 
@@ -6,14 +6,15 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.exception.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
-import com.sos.yade.engine.delegators.YADEFileNameInfo;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderFile;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileSizeException;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADEFileNameInfo;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
 
 /** Single "transfer" file operations */
 public class YADEFileActionsExecuter {
@@ -97,10 +98,10 @@ public class YADEFileActionsExecuter {
 
     private static void renameSourceFile(ISOSLogger logger, String logPrefix, YADESourceProviderDelegator sourceDelegator,
             YADEProviderFile sourceFile) throws SOSProviderException {
-        Optional<YADEFileNameInfo> newNameInfo = sourceFile.getReplacementResultIfDifferent(sourceDelegator);
+        Optional<YADEFileNameInfo> newNameInfo = YADEFileHandler.getReplacementResultIfDifferent(sourceDelegator, sourceFile);
         if (newNameInfo.isPresent()) {
             YADEFileNameInfo info = newNameInfo.get();
-            sourceFile.setFinalName(info);
+            sourceFile.setFinalFullPath(sourceDelegator, YADEFileHandler.getFinalFullPath(sourceDelegator, sourceFile, info));
             sourceDelegator.getDirectoryMapper().tryCreateSourceDirectory(logger, sourceDelegator, sourceFile, info);
 
             // rename
@@ -109,4 +110,5 @@ public class YADEFileActionsExecuter {
             sourceFile.setState(TransferEntryState.RENAMED);
         }
     }
+
 }

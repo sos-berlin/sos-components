@@ -1,4 +1,4 @@
-package com.sos.yade.engine.helpers;
+package com.sos.yade.engine.common.helpers;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,8 +7,10 @@ import java.util.stream.Stream;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.yade.engine.arguments.YADEArguments;
+import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.yade.engine.common.arguments.YADEArguments;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEArgumentsHelper {
@@ -55,5 +57,24 @@ public class YADEArgumentsHelper {
 
     public static <T> String toString(SOSArgument<T> arg) {
         return arg.getName() + "=" + arg.getDisplayValue();
+    }
+
+    public static String toString(ISOSLogger logger, String prefix, ASOSArguments args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix);
+        sb.append("[").append(args.getClass().getSimpleName()).append("]");
+        boolean add = false;
+        try {
+            for (SOSArgument<?> arg : args.getArguments()) {
+                if (add) {
+                    sb.append(",");
+                }
+                sb.append(toString(arg));
+                add = true;
+            }
+        } catch (Throwable e) {
+            logger.warn(sb + e.toString());
+        }
+        return sb.toString();
     }
 }

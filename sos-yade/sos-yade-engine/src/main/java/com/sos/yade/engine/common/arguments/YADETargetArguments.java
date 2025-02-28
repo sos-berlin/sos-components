@@ -1,4 +1,4 @@
-package com.sos.yade.engine.arguments;
+package com.sos.yade.engine.common.arguments;
 
 import com.sos.commons.util.common.SOSArgument;
 

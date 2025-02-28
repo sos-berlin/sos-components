@@ -1,13 +1,16 @@
-package com.sos.yade.engine.delegators;
+package com.sos.yade.engine.common.delegators;
 
 import com.sos.commons.vfs.common.AProviderContext;
 import com.sos.commons.vfs.common.IProvider;
-import com.sos.yade.engine.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.YADEDirectoryMapper;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
 
+/** @apiNote all operations */
 public class YADESourceProviderDelegator extends AYADEProviderDelegator {
 
     private final static String IDENTIFIER = "Source";
-    private final static String LOG_PREFIX = "[" + IDENTIFIER + "]";
+    public final static String LOG_PREFIX = "[" + IDENTIFIER + "]";
 
     private final YADEDirectoryMapper directoryMapper;
 
@@ -27,7 +30,7 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
         // directories.addSourceDirectory(getDirectory().getPath());
         // }
         // set YADE specific ProviderFile
-        provider.setProviderFileCreator(builder -> new YADEProviderFile(provider, builder.getFullPath(), builder.getSize(), builder
+        provider.setProviderFileCreator(builder -> new YADEProviderFile(this, builder.getFullPath(), builder.getSize(), builder
                 .getLastModifiedMillis(), directoryMapper, args.isCheckSteadyStateEnabled()));
     }
 

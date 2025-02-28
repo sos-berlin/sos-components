@@ -1,4 +1,4 @@
-package com.sos.yade.engine.helpers;
+package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -11,13 +11,33 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.logger.SOSSlf4jLogger;
 import com.sos.commons.vfs.local.LocalProvider;
 import com.sos.commons.vfs.local.common.LocalProviderArguments;
-import com.sos.yade.engine.arguments.YADESourceArguments;
-import com.sos.yade.engine.delegators.AYADEProviderDelegator;
-import com.sos.yade.engine.delegators.YADEFileNameInfo;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADEFileNameInfo;
 
-public class YADEReplacementHelper {
+/** @see YADEFileNameInfo
+ * @apiNote COPY/MOVE operations.<br/>
+ *          - A masked replacement supports masks for substitution in the filename with format strings that are enclosed with [ and ].<br/>
+ *          -- The following format strings are supported:<br/>
+ *          --- [date:<date format>] - date format must be a valid Java data format string, e.g. yyyyMMddHHmmss, yyyy-MM-dd.HHmmss etc.<br/>
+ *          --- [filename:] - will be substituted by the original file name including the file extension<br/>
+ *          --- [filename:lowercase] - will be substituted by the original file name including the file extension with all characters converted to lower
+ *          case.<br/>
+ *          --- [filename:uppercase] - will be substituted by the original file name including the file extension with all characters converted to upper
+ *          case.<br/>
+ *          - Use with capturing groups:<br/>
+ *          -- For replacement "capturing groups" are used. Only the content of the capturing groups is replaced.<br/>
+ *          -- Multiple replacements are separated by a semicolon ";".<br/>
+ *          -- Example 1: regex:(1)abc(12)def(.*), replacement:A;BB;CCC<br/>
+ *          --- Result for "1abc12def123.txt":<br/>
+ *          ---- AabcBBdefCCC (the same parent path as before)<br/>
+ *          -- Example 2: regex=(^.*$), replacement=X:/sub/$1<br/>
+ *          --- Result for "1abc12def123.txt":<br/>
+ *          ---- the same name but the parent path is "X:/sub"<br/>
+ */
+public class YADEFileReplacementHelper {
 
     private static final String VAR_DATE_PREFIX = "[date:";
     private static final String VAR_FILENAME_PREFIX = "[filename:";
@@ -108,7 +128,7 @@ public class YADEReplacementHelper {
             AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SOSSlf4jLogger(), new LocalProviderArguments()),
                     new YADESourceArguments());
 
-            YADEProviderFile file = new YADEProviderFile(delegator.getProvider(), "/tmp/1abc12def123.TXT", 0, 0, null, false);
+            YADEProviderFile file = new YADEProviderFile(delegator, "/tmp/1abc12def123.TXT", 0, 0, null, false);
             /** 1) Change File Name */
             // YADE1 functionality
             String regex = "(1)abc(12)def(.*)";
@@ -125,7 +145,7 @@ public class YADEReplacementHelper {
             /** 2) Change File Path based on file name */
             regex = "(^.*$)";
             replacement = "/sub/$1";
-            //replacement = "../$1";
+            // replacement = "../$1";
 
             Optional<YADEFileNameInfo> result = getReplacementResultIfDifferent(delegator, file.getName(), regex, replacement);
             System.out.println("[RESULT]" + (result.isPresent() ? SOSString.toString(result.get()) : "false"));
@@ -135,7 +155,7 @@ public class YADEReplacementHelper {
             if (matcher.find()) {
                 System.out.println("[RESULT][replaceAll]" + file.getName().replaceAll(regex, replacement));
             }
-            
+
             System.out.println(Path.of("/sub").isAbsolute());
 
         } catch (Exception e) {

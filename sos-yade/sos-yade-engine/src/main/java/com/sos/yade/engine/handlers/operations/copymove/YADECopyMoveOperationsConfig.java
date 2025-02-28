@@ -1,13 +1,12 @@
 package com.sos.yade.engine.handlers.operations.copymove;
 
-import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.arguments.YADEArguments;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderFile;
+import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
 
 public class YADECopyMoveOperationsConfig {
 
@@ -263,7 +262,7 @@ public class YADECopyMoveOperationsConfig {
 
         // TODO optimize - clone methods ....
         private YADETargetProviderFile getFile(final YADETargetProviderDelegator targetDelegator, final Atomic atomic) {
-            YADETargetProviderFile tmp = new YADETargetProviderFile(targetDelegator.getProvider(), getFileFullPath(targetDelegator));
+            YADETargetProviderFile tmp = new YADETargetProviderFile(targetDelegator, getFileFullPath(targetDelegator));
 
             // See YADEProviderFile.initTarget
             // Note: compress extension is not used because the cumulative file provides the file name with extension
@@ -275,12 +274,9 @@ public class YADECopyMoveOperationsConfig {
                 transferFileName = atomic.getPrefix() + finalFileName + atomic.getSuffix();
             }
 
-            String transferFileFullPath = SOSPathUtil.appendPath(tmp.getParentFullPath(), transferFileName, targetDelegator.getProvider()
-                    .getPathSeparator());
-            YADETargetProviderFile file = new YADETargetProviderFile(targetDelegator.getProvider(), transferFileFullPath);
-            if (atomic != null) {
-                file.setFinalName(finalFileName);
-            }
+            String transferFileFullPath = targetDelegator.appendPath(tmp.getParentFullPath(), transferFileName);
+            YADETargetProviderFile file = new YADETargetProviderFile(targetDelegator, transferFileFullPath);
+            file.setFinalFullPath(targetDelegator, finalFileName);
             return file;
         }
 
@@ -288,7 +284,7 @@ public class YADECopyMoveOperationsConfig {
             String path = targetDelegator.getProvider().toPathStyle(targetDelegator.getArgs().getCumulativeFileName().getValue());
             if (!targetDelegator.getProvider().isAbsolutePath(path)) {
                 if (targetDelegator.getDirectory() != null) {
-                    path = SOSPathUtil.appendPath(targetDelegator.getDirectory(), path, targetDelegator.getProvider().getPathSeparator());
+                    path = targetDelegator.appendPath(targetDelegator.getDirectory(), path);
                 }
             }
             return path;

@@ -1,10 +1,10 @@
-package com.sos.yade.engine.arguments;
+package com.sos.yade.engine.common.arguments;
 
 import java.util.List;
 
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.yade.engine.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.common.helpers.YADEArgumentsHelper;
 
 public class YADEProviderCommandArguments extends ASOSArguments {
 

@@ -1,4 +1,4 @@
-package com.sos.yade.engine.handlers.operations.copymove.fileoperations.helpers;
+package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -6,13 +6,13 @@ import java.security.NoSuchAlgorithmException;
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferEntryState;
-import com.sos.yade.engine.delegators.AYADEProviderDelegator;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderFile;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileIntegrityHashViolationException;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
 
 /** Single "transfer" file operations */
 public class YADEFileIntegrityHashHelper {

@@ -1,7 +1,8 @@
-package com.sos.yade.engine.delegators;
+package com.sos.yade.engine.common.delegators;
 
+import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.vfs.common.IProvider;
-import com.sos.yade.engine.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
 
 public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
@@ -36,6 +37,18 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     @Override
     public String getDirectoryWithTrailingPathSeparator() {
         return directoryWithTrailingPathSeparator;
+    }
+
+    public String appendPath(String parent, String file) {
+        return SOSPathUtil.appendPath(parent, file, provider.getPathSeparator());
+    }
+
+    public String getParentPath(String path) {
+        return SOSPathUtil.getParentPath(path, provider.getPathSeparator());
+    }
+
+    public boolean containsParentPath(String path) {
+        return path.contains(provider.getPathSeparator());
     }
 
 }

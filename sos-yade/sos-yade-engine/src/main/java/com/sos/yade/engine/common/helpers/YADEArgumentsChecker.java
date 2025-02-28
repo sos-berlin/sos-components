@@ -1,13 +1,13 @@
-package com.sos.yade.engine.helpers;
+package com.sos.yade.engine.common.helpers;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.yade.engine.arguments.YADEArguments;
-import com.sos.yade.engine.arguments.YADESourceArguments;
-import com.sos.yade.engine.arguments.YADESourceArguments.ZeroByteTransfer;
-import com.sos.yade.engine.arguments.YADETargetArguments;
+import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.arguments.YADESourceArguments.ZeroByteTransfer;
+import com.sos.yade.engine.common.arguments.YADETargetArguments;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEArgumentsChecker {

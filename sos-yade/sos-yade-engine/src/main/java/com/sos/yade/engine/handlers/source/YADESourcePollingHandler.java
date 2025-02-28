@@ -6,12 +6,13 @@ import java.util.List;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.arguments.YADESourceArguments;
-import com.sos.yade.engine.arguments.YADESourcePollingArguments;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.arguments.YADESourceArguments;
+import com.sos.yade.engine.common.arguments.YADESourcePollingArguments;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.common.helpers.YADEClientHelper;
+import com.sos.yade.engine.common.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourcePollingException;
-import com.sos.yade.engine.helpers.YADEArgumentsHelper;
-import com.sos.yade.engine.helpers.YADEHelper;
 
 public class YADESourcePollingHandler {
 
@@ -111,7 +112,7 @@ public class YADESourcePollingHandler {
             if (logger.isDebugEnabled()) {
                 logger.debug("[wait]%s seconds...", interval);
             }
-            YADEHelper.waitFor(interval);
+            YADEClientHelper.waitFor(interval);
             currentPollingTime += interval;
 
             // TODO ???? YADE 1...
@@ -153,14 +154,14 @@ public class YADESourcePollingHandler {
                     if (PollingMethod.Forever.equals(method)) {
                         if (count >= POLLING_MAX_RETRIES_ON_CONNECTION_ERROR) {
                             throw new YADEEngineSourcePollingException(String.format("Maximum reconnect retries(%s) reached",
-                                    POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), YADEHelper.getConnectionException(sourceDelegator, e));
+                                    POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e));
                         }
                     } else {
                         long currentTime = System.currentTimeMillis() / 1_000;
                         long pollingTime = PollingMethod.ServerDuration.equals(method) ? start.getEpochSecond() : currentPollingTime;
                         long duration = currentTime - pollingTime;
                         if (duration >= getPollTimeout()) {
-                            throw new YADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceDelegator, e));
+                            throw new YADEEngineSourcePollingException(YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e));
                         }
                     }
 
@@ -172,11 +173,11 @@ public class YADESourcePollingHandler {
                         // JobSchedulerException.LastErrorMessage = "";
                     }
                     logger.warn(error);
-                    YADEHelper.waitFor(WAIT_SECONDS_ON_CONNECTION_ERROR);
+                    YADEClientHelper.waitFor(WAIT_SECONDS_ON_CONNECTION_ERROR);
                 }
             }
         } catch (Throwable e) {
-            throw new YADEEngineSourcePollingException(YADEHelper.getConnectionException(sourceDelegator, e));
+            throw new YADEEngineSourcePollingException(YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e));
         }
     }
 

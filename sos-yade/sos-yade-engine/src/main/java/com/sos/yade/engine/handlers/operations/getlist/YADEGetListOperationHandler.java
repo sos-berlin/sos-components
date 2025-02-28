@@ -13,7 +13,7 @@ public class YADEGetListOperationHandler {
      * @param operation
      * @param additionalHeadLineMessage - TODO to remove. should be placed in BANNER
      * @throws SOSYADEEngineOperationException */
-    public static void process(TransferOperation operation, ISOSLogger logger, String additionalHeadLineMessage) throws YADEEngineOperationException {
-        logger.info("[%s]No transfer will be done. %s", operation, additionalHeadLineMessage);
+    public static void process(TransferOperation operation, ISOSLogger logger) throws YADEEngineOperationException {
+        logger.info("[%s]No transfer will be done", operation);
     }
 }
