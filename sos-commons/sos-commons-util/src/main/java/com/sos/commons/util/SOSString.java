@@ -191,6 +191,10 @@ public class SOSString {
         }
     }
 
+    public static String hashMD5(String val) {
+        return hash(val, "MD5");
+    }
+
     public static String hash256(String val) {
         return hash(val, "SHA-256");
     }

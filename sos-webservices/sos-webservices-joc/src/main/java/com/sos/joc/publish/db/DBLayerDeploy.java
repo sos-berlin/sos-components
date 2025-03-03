@@ -42,7 +42,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -998,51 +997,10 @@ public class DBLayerDeploy {
                 .toList()));
     }
 
-//    public DBItemDeploymentHistory getDeployedConfiguration(String path, Integer type) throws DBConnectionRefusedException, DBInvalidDataException {
-//        try {
-//            StringBuilder sql = new StringBuilder();
-//            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
-//            sql.append(" where path = :path");
-//            sql.append(" and type = :type");
-//            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-//            query.setParameter("path", path);
-//            query.setParameter("type", type);
-//            return session.getSingleResult(query);
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-
-//    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, Set<String> agentNames) {
-//        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, agentNames);
-//    }
-
-    public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite,
-            Set<String> agentNames) {
+    public DBItemInventoryConfiguration saveInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, Set<String> agentNames) {
         String configPath = configuration.getPath();
         ConfigurationType configType = configuration.getObjectType();
         try {
-            boolean isCalendar = JocInventory.isCalendar(configuration.getObjectType());
-            DBItemInventoryConfiguration existingConfiguration = null;
-            StringBuilder hql = new StringBuilder(" from ");
-            hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where name = :name");
-            if (isCalendar) {
-                hql.append(" and type in (:types)");
-            } else {
-                hql.append(" and type = :type");
-            }
-            Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
-            query.setParameter("name", configuration.getName());
-            if (isCalendar) {
-                query.setParameterList("types", JocInventory.getCalendarTypes());
-            } else {
-                query.setParameter("type", configuration.getObjectType().intValue());
-            }
-            query.setMaxResults(1);
-            existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
             try {
                 Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
@@ -1050,80 +1008,6 @@ public class DBLayerDeploy {
             } catch (Throwable e) {
                 valid = false;
             }
-            if (overwrite) {
-                if (existingConfiguration != null) {
-                    existingConfiguration.setModified(Date.from(Instant.now()));
-                    existingConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
-                    if (configuration.getConfiguration().getTitle() != null) {
-                        existingConfiguration.setTitle(configuration.getConfiguration().getTitle());
-                    }
-                    if (configuration.getPath() != null) {
-                        existingConfiguration.setPath(configuration.getPath());
-                        existingConfiguration.setFolder(Paths.get(existingConfiguration.getPath()).getParent().toString().replace('\\', '/'));
-                    }
-                    existingConfiguration.setAuditLogId(auditLogId);
-                    existingConfiguration.setValid(valid);
-                    existingConfiguration.setDeployed(false);
-                    existingConfiguration.setReleased(false);
-                    existingConfiguration.setType(configuration.getObjectType());
-                    JocInventory.updateConfiguration(new InventoryDBLayer(session), existingConfiguration);
-                    return existingConfiguration;
-                } else {
-                    DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
-                    Date now = Date.from(Instant.now());
-                    newConfiguration.setModified(now);
-                    newConfiguration.setCreated(now);
-                    newConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
-                    newConfiguration.setPath(configuration.getPath());
-                    newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
-                    newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
-                    newConfiguration.setType(configuration.getObjectType());
-                    newConfiguration.setAuditLogId(auditLogId);
-                    newConfiguration.setTitle(configuration.getConfiguration().getTitle());
-                    newConfiguration.setDeployed(false);
-                    newConfiguration.setReleased(false);
-                    newConfiguration.setValid(valid);
-                    JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
-                    return newConfiguration;
-                }
-            } else {
-                if(existingConfiguration != null) {
-                    throw new JocImportException(String.format("Cannot import, object with name '%1$s'. Object already exists and overwrite is set to false.", existingConfiguration.getName()));
-                }
-                DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
-                Date now = Date.from(Instant.now());
-                newConfiguration.setModified(now);
-                newConfiguration.setCreated(now);
-                newConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
-                newConfiguration.setPath(configuration.getPath());
-                newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
-                newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
-                newConfiguration.setType(configuration.getObjectType());
-                newConfiguration.setAuditLogId(auditLogId);
-                newConfiguration.setTitle(configuration.getConfiguration().getTitle());
-                newConfiguration.setDeployed(false);
-                newConfiguration.setReleased(false);
-                newConfiguration.setValid(valid);
-                JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
-                return newConfiguration;
-            }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(String.format("%1$s: %2$s - %3$s", configType.value().toLowerCase(), configPath, e.getMessage()), e);
-        } catch (IOException e) {
-            throw new JocException(e);
-        }
-    }
-
-    public DBItemInventoryConfiguration saveNewInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
-            boolean overwrite, Set<String> agentNames) {
-        boolean valid = false;
-        try {
-            Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
-            valid = true;
-        } catch (Exception e) {
-            valid = false;
-        }
-        try {
             DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
             Date now = Date.from(Instant.now());
             newConfiguration.setModified(now);
@@ -1141,7 +1025,44 @@ public class DBLayerDeploy {
             JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
             return newConfiguration;
         } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
+            throw new JocSosHibernateException(String.format("%1$s: %2$s - %3$s", configType.value().toLowerCase(), configPath, e.getMessage()), e);
+        } catch (IOException e) {
+            throw new JocException(e);
+        }
+    }
+
+    public DBItemInventoryConfiguration updateInventoryConfiguration(ConfigurationObject configuration, DBItemInventoryConfiguration existingConfiguration, 
+            String account, Long auditLogId, Set<String> agentNames) {
+        String configPath = configuration.getPath();
+        ConfigurationType configType = configuration.getObjectType();
+        try {
+            boolean valid = false;
+            try {
+                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+                valid = true;
+            } catch (Throwable e) {
+                valid = false;
+            }
+            if (existingConfiguration != null) {
+                existingConfiguration.setModified(Date.from(Instant.now()));
+                existingConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
+                if (configuration.getConfiguration().getTitle() != null) {
+                    existingConfiguration.setTitle(configuration.getConfiguration().getTitle());
+                }
+                if (configuration.getPath() != null) {
+                    existingConfiguration.setPath(configuration.getPath());
+                    existingConfiguration.setFolder(Paths.get(existingConfiguration.getPath()).getParent().toString().replace('\\', '/'));
+                }
+                existingConfiguration.setAuditLogId(auditLogId);
+                existingConfiguration.setValid(valid);
+                existingConfiguration.setDeployed(false);
+                existingConfiguration.setReleased(false);
+                existingConfiguration.setType(configuration.getObjectType());
+                JocInventory.updateConfiguration(new InventoryDBLayer(session), existingConfiguration);
+            }
+            return existingConfiguration;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(String.format("%1$s: %2$s - %3$s", configType.value().toLowerCase(), configPath, e.getMessage()), e);
         } catch (IOException e) {
             throw new JocException(e);
         }
@@ -1184,16 +1105,23 @@ public class DBLayerDeploy {
 
     public DBItemInventoryConfiguration getConfigurationByName(String name, Integer type) {
         try {
+            boolean isCalendar = JocInventory.isCalendar(ConfigurationType.fromValue(type));
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where name = :name");
-            hql.append(" and type = :type");
+            if (isCalendar) {
+                hql.append(" and type in (:types)");
+            } else {
+                hql.append(" and type = :type");
+            }
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("name", name);
-            query.setParameter("type", type);
+            if (isCalendar) {
+                query.setParameterList("types", JocInventory.getCalendarTypes());
+            } else {
+                query.setParameter("type", type);
+            }
             query.setMaxResults(1);
             return session.getSingleResult(query);
-        } catch (NoResultException e) {
-            return null;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }

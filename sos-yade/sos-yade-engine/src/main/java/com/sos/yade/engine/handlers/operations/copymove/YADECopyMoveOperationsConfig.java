@@ -1,13 +1,12 @@
 package com.sos.yade.engine.handlers.operations.copymove;
 
-import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.arguments.YADEArguments;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderFile;
+import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
 
 public class YADECopyMoveOperationsConfig {
 
@@ -22,7 +21,7 @@ public class YADECopyMoveOperationsConfig {
     private final boolean checkFileSize;
 
     public YADECopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args,
-            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator, int sourceFilesSize) {
         this.operation = operation;
 
         this.source = new Source(sourceDelegator);
@@ -31,7 +30,7 @@ public class YADECopyMoveOperationsConfig {
         this.integrityHashAlgorithm = args.getIntegrityHashAlgorithm().getValue();
         this.bufferSize = args.getBufferSize().getValue().intValue();
         this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
-        this.parallelism = args.isParallelismEnabled() ? args.getParallelism().getValue().intValue() : 1;
+        this.parallelism = getParallelism(args, sourceFilesSize);
         this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
     }
 
@@ -100,6 +99,15 @@ public class YADECopyMoveOperationsConfig {
 
     public int getParallelism() {
         return parallelism;
+    }
+
+    private int getParallelism(YADEArguments args, int sourceFilesSize) {
+        int p = args.isParallelismEnabled() ? args.getParallelism().getValue().intValue() : 1;
+        return sourceFilesSize == 1 || target.getCumulate() != null ? 1 : p;
+    }
+
+    public boolean processFilesSequentially() {
+        return parallelism == 1;
     }
 
     public boolean isCheckFileSizeEnabled() {
@@ -186,7 +194,7 @@ public class YADECopyMoveOperationsConfig {
             if (targetDelegator.getArgs().getCumulativeFileName().isEmpty() || targetDelegator.getArgs().getCumulativeFileSeparator().isEmpty()) {
                 return null;
             }
-            return new Cumulate(targetDelegator, atomic);
+            return new Cumulate(targetDelegator, compress, atomic);
         }
 
         private Compress initializeCompress(final YADETargetProviderDelegator targetDelegator) {
@@ -251,19 +259,37 @@ public class YADECopyMoveOperationsConfig {
 
     public class Cumulate {
 
+        private final static String EXISTING_FILE_SUFFIX_IF_COMPRESS = ".tmp.orig";
+        private final static String TRANSFER_FILE_SUFFIX_IF_COMPRESS = ".tmp.current";
+
         private final YADETargetProviderFile file;
         private final String fileSeparator;
         private final boolean deleteFile;
 
-        private Cumulate(final YADETargetProviderDelegator targetDelegator, final Atomic atomic) {
-            this.file = getFile(targetDelegator, atomic);
+        private Cumulate(final YADETargetProviderDelegator targetDelegator, final Compress compress, final Atomic atomic) {
+            this.file = getFile(targetDelegator, compress, atomic);
             this.fileSeparator = targetDelegator.getArgs().getCumulativeFileSeparator().getValue();
             this.deleteFile = targetDelegator.getArgs().getCumulativeFileDelete().isTrue();
         }
 
-        // TODO optimize - clone methods ....
-        private YADETargetProviderFile getFile(final YADETargetProviderDelegator targetDelegator, final Atomic atomic) {
-            YADETargetProviderFile tmp = new YADETargetProviderFile(targetDelegator.getProvider(), getFileFullPath(targetDelegator));
+        /** If the cumulative file should not be deleted before the operation (it means: the contents should be appended to an existing cumulative file)<br/>
+         * - the existing cumulative file is de-compressed to a temporary file If compress - it is not possible to update a compressed file directly with the
+         * compressed contents of a single source file.<br/>
+         * -- it means: the content of single source file are written to a temporary cumulative file without compression<br/>
+         * - When all source files have been processed:<br/>
+         * -- transactional=true<br/>
+         * --- on failure - the temporary file is deleted<br/>
+         * --- on success - the temporary file is compressed to the defined file name<br/>
+         * -- transactional=false<br/>
+         * --- on failure - a single source file error is ignored(cumulative file content may be inconsistent)<br/>
+         * --- at the end - the temporary file is compressed<br/>
+         * 
+         * @param targetDelegator
+         * @param compress
+         * @param atomic
+         * @return */
+        private YADETargetProviderFile getFile(final YADETargetProviderDelegator targetDelegator, final Compress compress, final Atomic atomic) {
+            YADETargetProviderFile tmp = new YADETargetProviderFile(targetDelegator, getFileFullPath(targetDelegator));
 
             // See YADEProviderFile.initTarget
             // Note: compress extension is not used because the cumulative file provides the file name with extension
@@ -271,16 +297,15 @@ public class YADECopyMoveOperationsConfig {
             String finalFileName = tmp.getName();
             /** transferFileName: file name during transfer - same path as finalFileName but can contains the atomic prefix/suffix */
             String transferFileName = finalFileName;
-            if (atomic != null) {
+            if (compress != null) {
+                transferFileName = finalFileName + TRANSFER_FILE_SUFFIX_IF_COMPRESS;
+            } else if (atomic != null) {
                 transferFileName = atomic.getPrefix() + finalFileName + atomic.getSuffix();
             }
 
-            String transferFileFullPath = SOSPathUtil.appendPath(tmp.getParentFullPath(), transferFileName, targetDelegator.getProvider()
-                    .getPathSeparator());
-            YADETargetProviderFile file = new YADETargetProviderFile(targetDelegator.getProvider(), transferFileFullPath);
-            if (atomic != null) {
-                file.setFinalName(finalFileName);
-            }
+            String transferFileFullPath = targetDelegator.appendPath(tmp.getParentFullPath(), transferFileName);
+            YADETargetProviderFile file = new YADETargetProviderFile(targetDelegator, transferFileFullPath);
+            file.setFinalFullPath(targetDelegator, finalFileName);
             return file;
         }
 
@@ -288,7 +313,7 @@ public class YADECopyMoveOperationsConfig {
             String path = targetDelegator.getProvider().toPathStyle(targetDelegator.getArgs().getCumulativeFileName().getValue());
             if (!targetDelegator.getProvider().isAbsolutePath(path)) {
                 if (targetDelegator.getDirectory() != null) {
-                    path = SOSPathUtil.appendPath(targetDelegator.getDirectory(), path, targetDelegator.getProvider().getPathSeparator());
+                    path = targetDelegator.appendPath(targetDelegator.getDirectory(), path);
                 }
             }
             return path;
@@ -296,6 +321,10 @@ public class YADECopyMoveOperationsConfig {
 
         public YADETargetProviderFile getFile() {
             return file;
+        }
+
+        public String getTmpFullPathOfExistingFileForDecompress() {
+            return file.getFinalFullPath() + EXISTING_FILE_SUFFIX_IF_COMPRESS;
         }
 
         public String getFileSeparator() {

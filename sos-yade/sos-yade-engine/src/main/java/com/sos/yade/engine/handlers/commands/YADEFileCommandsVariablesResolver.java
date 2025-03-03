@@ -9,15 +9,16 @@ import java.util.regex.Pattern;
 
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.delegators.IYADEProviderDelegator;
-import com.sos.yade.engine.delegators.YADEProviderFile;
-import com.sos.yade.engine.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.common.YADEProviderFile;
+import com.sos.yade.engine.common.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.common.delegators.IYADEProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 
-/** The following special variables are available:<br/>
- * See:<br/>
- * YADE User Manual - Pre- & Post-Processing / Variables<br/>
- * YADE-448 Refactoring variables used in pre- and post-processing commands<br/>
+/** @apiNote The following special variables are available:<br/>
+ *          See:<br/>
+ *          YADE User Manual - Pre- & Post-Processing / Variables<br/>
+ *          YADE-448 Refactoring variables used in pre- and post-processing commands<br/>
  */
 public class YADEFileCommandsVariablesResolver {
 
@@ -60,22 +61,22 @@ public class YADEFileCommandsVariablesResolver {
         VAR_NAMES.add("SourceFileRenamedBaseName");
         VAR_NAMES.add("SourceFileRenamedParentFullName");
         VAR_NAMES.add("SourceFileRenamedParentBaseName");
-
     }
+
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$(date|time)|\\$\\{(" + String.join("|", VAR_NAMES) + ")\\}");
 
-    public static String resolve(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, ProviderFile file,
+    public static String resolve(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, ProviderFile providerFile,
             String command) {
         Matcher matcher = VARIABLE_PATTERN.matcher(command);
         if (!matcher.find()) {
             return command;
         }
 
-        YADEProviderFile yadeFile = (YADEProviderFile) file;
+        YADEProviderFile file = (YADEProviderFile) providerFile;
         StringBuilder result = new StringBuilder();
         matcher.reset();
         while (matcher.find()) {
-            matcher.appendReplacement(result, Matcher.quoteReplacement(getVarValue(sourceDelegator, targetDelegator, yadeFile, matcher.group())));
+            matcher.appendReplacement(result, Matcher.quoteReplacement(getVarValue(sourceDelegator, targetDelegator, file, matcher.group())));
         }
         matcher.appendTail(result);
         return result.toString();
@@ -83,6 +84,9 @@ public class YADEFileCommandsVariablesResolver {
 
     private static String getVarValue(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile file,
             String var) {
+
+        boolean sourceFileNotNeedsRename = !file.needsRename();
+
         switch (var) {
         /** Date/time variables */
         case "$date":
@@ -104,9 +108,9 @@ public class YADEFileCommandsVariablesResolver {
         case "${TargetFileBaseName}":
             return file.getTarget() == null ? "" : getFileBaseName(file.getTarget().getFinalFullPath());
         case "${TargetFileParentFullName}":
-            return file.getTarget() == null ? "" : getFileParentFullPath(file.getTarget().getFinalFullPath());
+            return file.getTarget() == null ? "" : getFileParentFullPath(targetDelegator, file.getTarget().getFinalFullPath());
         case "${TargetFileParentBaseName}":
-            return file.getTarget() == null ? "" : getFileParentBaseName(file.getTarget().getFinalFullPath());
+            return file.getTarget() == null ? "" : getFileParentBaseName(targetDelegator, file.getTarget().getFinalFullPath());
 
         /** The name of a file on the target host during transfer (a file name can be prefixed or suffixed) */
         case "${TargetTransferFileFullName}":
@@ -116,9 +120,9 @@ public class YADEFileCommandsVariablesResolver {
         case "${TargetTransferFileBaseName}":
             return file.getTarget() == null ? "" : getFileBaseName(file.getTarget().getFullPath());
         case "${TargetTransferFileParentFullName}":
-            return file.getTarget() == null ? "" : getFileParentFullPath(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFileParentFullPath(targetDelegator, file.getTarget().getFullPath());
         case "${TargetTransferFileParentBaseName}":
-            return file.getTarget() == null ? "" : getFileParentBaseName(file.getTarget().getFullPath());
+            return file.getTarget() == null ? "" : getFileParentBaseName(targetDelegator, file.getTarget().getFullPath());
 
         /** The name of a file on the source host */
         case "${SourceFileFullName}":
@@ -128,21 +132,21 @@ public class YADEFileCommandsVariablesResolver {
         case "${SourceFileBaseName}":
             return getFileBaseName(file.getFullPath());
         case "${SourceFileParentFullName}":
-            return getFileParentFullPath(file.getFullPath());
+            return getFileParentFullPath(sourceDelegator, file.getFullPath());
         case "${SourceFileParentBaseName}":
-            return getFileParentBaseName(file.getFullPath());
+            return getFileParentBaseName(sourceDelegator, file.getFullPath());
 
         /** The name of a file on the source host after Rename operation */
         case "${SourceFileRenamedFullName}":
-            return getFileFullPath(file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileFullPath(file.getFinalFullPath());
         case "${SourceFileRenamedRelativeName}":
-            return getFileRelativePath(sourceDelegator, file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileRelativePath(sourceDelegator, file.getFinalFullPath());
         case "${SourceFileRenamedBaseName}":
-            return getFileBaseName(file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileBaseName(file.getFinalFullPath());
         case "${SourceFileRenamedParentFullName}":
-            return getFileParentFullPath(file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileParentFullPath(sourceDelegator, file.getFinalFullPath());
         case "${SourceFileRenamedParentBaseName}":
-            return getFileParentBaseName(file.getFinalFullPath());
+            return sourceFileNotNeedsRename ? "" : getFileParentBaseName(sourceDelegator, file.getFinalFullPath());
         default:
             return var;
         }
@@ -180,12 +184,12 @@ public class YADEFileCommandsVariablesResolver {
         return getOrDefault(SOSPathUtil.getName(fullPath));
     }
 
-    private static String getFileParentFullPath(String fullPath) {
-        return getOrDefault(SOSPathUtil.getParentPath(fullPath));
+    private static String getFileParentFullPath(AYADEProviderDelegator delegator, String fullPath) {
+        return getOrDefault(delegator.getParentPath(fullPath));
     }
 
-    private static String getFileParentBaseName(String fullPath) {
-        return getOrDefault(SOSPathUtil.getName(SOSPathUtil.getParentPath(fullPath)));
+    private static String getFileParentBaseName(AYADEProviderDelegator delegator, String fullPath) {
+        return getOrDefault(SOSPathUtil.getName(delegator.getParentPath(fullPath)));
     }
 
     private static String getOrDefault(String val) {

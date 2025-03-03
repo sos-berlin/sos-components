@@ -170,8 +170,21 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                             if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                                 for (ConfigurationObject configuration : configurationObjectsByType) {
-                                    storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
-                                            configuration, account, auditLogId, filter.getOverwrite(), agentNames));
+                                    DBItemInventoryConfiguration existingItem = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                                    if(existingItem != null) {
+                                        String jsonFromFile = Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration());
+                                        if(!JocInventory.isJsonHashEqual(existingItem.getContent(), jsonFromFile, existingItem.getTypeAsEnum())) {
+                                            storedConfigurations.add(
+                                                    dbLayer.updateInventoryConfiguration(configuration, existingItem, account, auditLogId, agentNames));
+                                        } else {
+                                            /*
+                                             * hash is equal, content did not differ, but overwrite is set to true - conflicting
+                                             * - currently overwrite is ignored
+                                             */
+                                        }
+                                    } else {
+                                        storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
+                                    }
                                 }
                             }
                         }
@@ -192,14 +205,15 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                             configuration.getObjectType());
                                     if (canAdd(configuration.getPath(), permittedFolders)) {
                                         filteredConfigurations.add(configuration);
-                                        UpdateableConfigurationObject updateable = ImportUtils.createUpdateableConfiguration(existingConfiguration,
-                                                configuration, configurationsByType, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(),
-                                                dbLayer);
+                                        UpdateableConfigurationObject updateable = ImportUtils.createUpdateableConfiguration(
+                                                existingConfiguration, configuration, configurationsByType, filter.getPrefix(), 
+                                                filter.getSuffix(), filter.getTargetFolder(), dbLayer);
                                         ImportUtils.replaceReferences(updateable);
-                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable
-                                                .getReferencedBy());
-                                        storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account,
-                                                auditLogId, filter.getOverwrite(), agentNames));
+                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), 
+                                                updateable.getReferencedBy());
+                                        
+                                        storedConfigurations.add(dbLayer.saveInventoryConfiguration(updateable.getConfigurationObject(), account,
+                                                auditLogId, agentNames));
                                         oldNewNameMap.put(updateable.getOldName(), updateable.getNewName());
                                     }
                                 }
@@ -223,8 +237,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             }
                         }
                     } else {
-                    	// check if items to import already exist in current configuration and ignore them
-                    	// import only if item does not exist yet
+                        // check if items to import already exist in current configuration and ignore them
+                        // import only if item does not exist yet
                         Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
                                 .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
                         for (ConfigurationType type : importOrder) {
@@ -240,14 +254,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                             }
                                             if (canAdd(configuration.getPath(), permittedFolders)) {
                                                 filteredConfigurations.add(configuration);
-                                                storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
-                                                        configuration, account, auditLogId, filter.getOverwrite(), agentNames));
+                                                storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
                                             }
                                         } else {
                                             if (canAdd(configuration.getPath(), permittedFolders)) {
                                                 filteredConfigurations.add(configuration);
-                                                storedConfigurations.add(dbLayer.saveOrUpdateInventoryConfiguration(
-                                                        configuration, account, auditLogId, filter.getOverwrite(), agentNames));
+                                                storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
                                             }
                                         }
                                     } else {

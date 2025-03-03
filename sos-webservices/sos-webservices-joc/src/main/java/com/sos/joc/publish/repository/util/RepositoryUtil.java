@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
@@ -706,26 +708,19 @@ public abstract class RepositoryUtil {
                 .filter(item -> ConfigurationType.FOLDER.equals(item.getConfiguration().getObjectType())).collect(Collectors.toSet());
         Set<Config> items = filter.getConfigurations().stream()
                 .filter(item -> !ConfigurationType.FOLDER.equals(item.getConfiguration().getObjectType())).collect(Collectors.toSet());
-        folders.stream().forEach(folder -> dbItemsToUpdate.addAll(dbLayer.getAllInventoryConfigurationsByFolder(
-                folder.getConfiguration().getPath(), folder.getConfiguration().getRecursive())));
-        items.stream().forEach(item -> {
-            DBItemInventoryConfiguration dbItem = dbLayer.getInventoryConfigurationByNameAndType(
-                    Paths.get(stripFileExtension(Paths.get(item.getConfiguration().getPath()))).getFileName().toString(),
-                    item.getConfiguration().getObjectType().intValue());
-            if (dbItem != null) {
-              if(!dbItem.getFolder().startsWith("/")) {
-                dbItem.setFolder("/" + dbItem.getFolder());
-              }
-              if(!dbItem.getPath().startsWith("/")) {
-                  dbItem.setPath("/" + dbItem.getPath());
-              }
-              dbItemsToUpdate.add(dbItem);   
-            }
-        });
+        
+        dbItemsToUpdate.addAll(folders.stream().map(folder -> dbLayer.getAllInventoryConfigurationsByFolder(
+                    folder.getConfiguration().getPath(), folder.getConfiguration().getRecursive()))
+                .flatMap(Collection::stream).collect(Collectors.toSet()));
+        dbItemsToUpdate.addAll(items.stream().map(item -> dbLayer.getInventoryConfigurationByNameAndType(
+                Paths.get(stripFileExtension(Paths.get(item.getConfiguration().getPath()))).getFileName().toString(),
+                item.getConfiguration().getObjectType().intValue())).filter(Objects::nonNull).collect(Collectors.toSet()));
 
         if (!dbItemsToUpdate.isEmpty()) {
+            Map<ConfigurationType, Set<String>> notUpdated = new HashMap<ConfigurationType, Set<String>>();
             InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-            dbItemsToUpdate.stream().peek(dbItem -> {
+            dbItemsToUpdate = dbItemsToUpdate.stream().map(dbItem -> {
+                boolean updated = false;
                 ConfigurationType objType = dbItem.getTypeAsEnum();
                 byte[] content = null;
                 try {
@@ -746,6 +741,14 @@ public abstract class RepositoryUtil {
                         updatedContent = getConfiguration(content, objType);
                     }
                     if (updatedContent != null) {
+                        if (!JocInventory.isJsonHashEqual(dbItem.getContent(), updatedContent, dbItem.getTypeAsEnum())) {
+                            updated = true;
+                        } else {
+                            if(!notUpdated.containsKey(dbItem.getTypeAsEnum())) {
+                                notUpdated.put(dbItem.getTypeAsEnum(), new HashSet<String>());
+                            }
+                            notUpdated.get(dbItem.getTypeAsEnum()).add(dbItem.getName());
+                        }
                         boolean valid = true;
                         try {
                             Validator.validate(objType, content, invDbLayer, null);
@@ -761,7 +764,17 @@ public abstract class RepositoryUtil {
                 } catch (IOException e) {
                     LOGGER.error("", e);
                 }
-            }).collect(Collectors.toSet());
+                if(updated) {
+                    return dbItem;
+                } else {
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet()); 
+            if(!notUpdated.isEmpty() && LOGGER.isDebugEnabled()) {
+                LOGGER.debug(notUpdated.entrySet().stream().map(entry -> {
+                    return entry.getValue().size()  + " " + entry.getKey().value().toLowerCase();
+                }).collect(Collectors.joining(", ", "[HASH COMPARE]:", " not updated, because json content is equal.")));
+            }
         }
         return dbItemsToUpdate;
     }

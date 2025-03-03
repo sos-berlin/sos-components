@@ -56,7 +56,6 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
-import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -1630,4 +1629,10 @@ public class JocInventory {
         }
     }
     
+    public static boolean isJsonHashEqual(String json1, String json2, ConfigurationType type) throws IOException {
+        return SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(JocInventory.content2IJSObject(json1, type)))
+            .equals(SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(JocInventory.content2IJSObject(json2, type))));
+    }
+    
+
 }

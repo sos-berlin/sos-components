@@ -6,9 +6,9 @@ import java.util.List;
 
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.commons.vfs.common.AProviderArguments;
+import com.sos.commons.vfs.common.AProviderExtendedArguments;
 
-public class SSHProviderArguments extends AProviderArguments {
+public class SSHProviderArguments extends AProviderExtendedArguments {
 
     public static final String CLASS_KEY = "SSH_PROVIDER";
 

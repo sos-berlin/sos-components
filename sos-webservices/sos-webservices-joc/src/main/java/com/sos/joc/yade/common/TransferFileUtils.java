@@ -85,7 +85,7 @@ public class TransferFileUtils {
             state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         // severity=INPROGRESS
-        case WAITING:
+        case SELECTED:
             state.set_text(FileTransferStateText.WAITING);
             state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.INPROGRESS));
             break;
@@ -127,7 +127,7 @@ public class TransferFileUtils {
         case UNDEFINED:
             return TransferEntryState.UNKNOWN.intValue();
         case WAITING:
-            return TransferEntryState.WAITING.intValue();
+            return TransferEntryState.SELECTED.intValue();
         case TRANSFERRING:
             return TransferEntryState.TRANSFERRING.intValue();
         case IN_PROGRESS:

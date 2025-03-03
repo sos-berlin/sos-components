@@ -53,7 +53,9 @@ public abstract class AFileResult {
         StringBuilder sb = new StringBuilder();
         sb.append("total_files=").append(totalFiles);
         sb.append("(processed=").append(processedFiles);
-        sb.append(",not_found=").append(String.join(" ,", notFound));
+        if (!notFound.isEmpty()) {
+            sb.append(",not_found=").append(String.join(" ,", notFound));
+        }
         if (hasErrors()) {
             sb.append(",errors=").append(errors);
         }

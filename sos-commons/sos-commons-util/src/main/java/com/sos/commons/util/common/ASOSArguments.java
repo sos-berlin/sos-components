@@ -1,6 +1,7 @@
 package com.sos.commons.util.common;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,6 +56,20 @@ public abstract class ASOSArguments {
             }
             f.set(this, current);
         }
+    }
+
+    public List<SOSArgument<?>> getArguments() throws Exception {
+        getArgumentFields();
+        List<SOSArgument<?>> l = new ArrayList<>();
+        for (Field f : argumentFields) {
+            f.setAccessible(true);
+            SOSArgument<?> current = (SOSArgument<?>) f.get(this);
+            if (current.getName() == null) {// internal usage
+                continue;
+            }
+            l.add(current);
+        }
+        return l;
     }
 
     private SOSArgument<?> find(List<SOSArgument<?>> args, String name) {

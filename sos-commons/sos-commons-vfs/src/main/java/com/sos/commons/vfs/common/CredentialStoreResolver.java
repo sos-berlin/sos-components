@@ -96,11 +96,14 @@ public class CredentialStoreResolver {
         entry = keepass2Argument(args, args.getUser(), entry);
         entry = keepass2Argument(args, args.getPassword(), entry);
 
-        if (args.getProxy() != null) {
-            entry = keepass2Argument(args, args.getProxyHost(), entry);
-            entry = keepass2Argument(args, args.getProxyUser(), entry);
-            entry = keepass2Argument(args, args.getProxyPassword(), entry);
-            args.recreateProxy();
+        if (args instanceof AProviderExtendedArguments) {
+            AProviderExtendedArguments ext = (AProviderExtendedArguments) args;
+            if (ext.getProxy() != null) {
+                entry = keepass2Argument(args, ext.getProxyHost(), entry);
+                entry = keepass2Argument(args, ext.getProxyUser(), entry);
+                entry = keepass2Argument(args, ext.getProxyPassword(), entry);
+                ext.recreateProxy();
+            }
         }
 
         if (additional2resolve != null) {
@@ -134,7 +137,12 @@ public class CredentialStoreResolver {
             }
             boolean setMultipleValue = false;
 
-            if (argName.equals(args.getHost().getName()) || argName.equals(args.getProxyHost().getName())) {
+            AProviderExtendedArguments ext = null;
+            if (args instanceof AProviderExtendedArguments) {
+                ext = (AProviderExtendedArguments) args;
+            }
+
+            if (argName.equals(args.getHost().getName()) || (ext != null && argName.equals(ext.getProxyHost().getName()))) {
                 String[] arr = value.split(":");
                 switch (arr.length) {
                 case 1:
@@ -148,8 +156,10 @@ public class CredentialStoreResolver {
                             sshArgs.getPort().setValue(Integer.parseInt(arr[1]));
                         }
                     } else {
-                        args.getProxyHost().setValue(arr[0]);
-                        args.getProxyPort().setValue(Integer.parseInt(arr[1]));
+                        if (ext != null) {
+                            ext.getProxyHost().setValue(arr[0]);
+                            ext.getProxyPort().setValue(Integer.parseInt(arr[1]));
+                        }
                     }
                 }
             }
