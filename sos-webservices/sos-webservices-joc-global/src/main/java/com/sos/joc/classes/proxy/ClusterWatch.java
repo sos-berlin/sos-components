@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,12 +33,10 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.node.NodeId;
-import js7.data_for_java.controller.JControllerState;
 import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JControllerProxy;
 
 public class ClusterWatch {
     
@@ -128,12 +125,17 @@ public class ClusterWatch {
 //        }
 //    }
     
-    public void appointNodes(String controllerId, JControllerApi controllerApi) throws DBMissingDataException, JocConfigurationException,
+    public void appointNodes(String controllerId, JControllerApi api) throws DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
-        appointNodes(controllerId, controllerApi, null, null, null);
+        appointNodes(controllerId, api, null, null, null, null);
     }
-    
-    public void appointNodes(String controllerId, JControllerApi controllerApi, JocInstancesDBLayer dbLayer, String accessToken,
+
+    public void appointNodes(String controllerId, JControllerProxy proxy) throws DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
+        appointNodes(controllerId, null, proxy, null, null, null);
+    }
+
+    public void appointNodes(String controllerId, JControllerApi api, JControllerProxy proxy, JocInstancesDBLayer dbLayer, String accessToken,
             JocError jocError) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, JocBadRequestException {
         if (onStart) {
@@ -146,9 +148,11 @@ public class ClusterWatch {
             throw new JocBadRequestException("There is no Controller cluster configured with the Id: " + controllerId);
         }
         
+        JControllerApi controllerApi = proxy == null ? api : proxy.api();
+        
         String watchId = start(controllerApi, controllerId, true, dbLayer);
            
-        ClusterState cState = getCurrentClusterState(controllerId, controllerApi);
+        ClusterState cState = getCurrentClusterState(controllerId, proxy);
 
         NodeId primeId = NodeId.of("Primary");
         Map<NodeId, Uri> idToUri = new HashMap<>();
@@ -333,19 +337,17 @@ public class ClusterWatch {
         }
     }
     
-    private static ClusterState getCurrentClusterState(String controllerId, JControllerApi controllerApi) {
+    private static ClusterState getCurrentClusterState(String controllerId, JControllerProxy proxy) {
         
         String clusterState = null;
         try {
-            Either<Problem, JControllerState> stateE = controllerApi.controllerState().get(2, TimeUnit.SECONDS);
-            if (stateE.isRight()) {
-                clusterState = stateE.get().clusterState().toJson();
-                LOGGER.info("[ClusterWatch] Current Controller cluster state for '" + controllerId + "': " + clusterState);
-            } else {
-                LOGGER.warn(ProblemHelper.getErrorMessage(stateE.getLeft()));
+            if (proxy == null) {
+                proxy = Proxy.of(controllerId);
             }
+            clusterState = proxy.currentState().clusterState().toJson();
+            LOGGER.info("[ClusterWatch] Current Controller cluster state for '" + controllerId + "': " + clusterState);
         } catch (Exception e) {
-            //
+            LOGGER.warn("", e);
         }
         
         ClusterState cState = new ClusterState();

@@ -41,7 +41,6 @@ import js7.proxy.data.event.ProxyEvent.ProxyCouplingError;
 import js7.proxy.data.event.ProxyEvent.ProxyDecoupled$;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
-import js7.proxy.javaapi.JProxyContext;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
 import scala.jdk.javaapi.OptionConverters;
@@ -55,15 +54,6 @@ public class ProxyContext {
     private Boolean coupled = null;
     private ProxyCredentials credentials;
 
-    protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws ControllerConnectionRefusedException {
-        this.credentials = credentials;
-        JControllerApi api = ControllerApiContext.newControllerApi(proxyContext, credentials);
-        if (credentials.getBackupUrl() != null && ProxyUser.JOC.equals(credentials.getUser())) {
-            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api);
-        }
-        start(api);
-    }
-    
     protected ProxyContext(JControllerApi controllerApi, ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         this.credentials = credentials;
         start(controllerApi);

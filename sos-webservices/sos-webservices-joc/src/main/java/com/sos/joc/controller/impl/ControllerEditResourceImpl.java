@@ -57,6 +57,7 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JControllerProxy;
 
 @Path("controller")
 public class ControllerEditResourceImpl extends JOCResourceImpl implements IControllerEditResource {
@@ -246,12 +247,12 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 ProxiesEdit.update(instances);
             }
             
-            JControllerApi controllerApi = null;
+            JControllerProxy proxy = null;
             
             if (dbControllers.size() == 2) {
                 try {
-                    controllerApi = ControllerApi.of(controllerId);
-                    ClusterWatch.getInstance().appointNodes(controllerId, controllerApi, new JocInstancesDBLayer(connection), accessToken,
+                    proxy = Proxy.of(controllerId);
+                    ClusterWatch.getInstance().appointNodes(controllerId, null, proxy, new JocInstancesDBLayer(connection), accessToken,
                             getJocError());
                 } catch (JocBadRequestException e) {
                 }
