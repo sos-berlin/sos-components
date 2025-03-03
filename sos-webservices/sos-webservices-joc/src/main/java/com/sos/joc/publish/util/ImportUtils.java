@@ -1243,7 +1243,8 @@ public class ImportUtils {
                 cfg.setValid(validateConfiguration(cfg, agentNames, dbLayer));
                 if(wasValid != cfg.getValid()) {
                     try {
-                        session.update(cfg);
+                        JocInventory.updateConfiguration(dbLayer, cfg);
+//                        session.update(cfg);
                     } catch (Throwable e) {
                         throw new JocSosHibernateException(e);
                     }
