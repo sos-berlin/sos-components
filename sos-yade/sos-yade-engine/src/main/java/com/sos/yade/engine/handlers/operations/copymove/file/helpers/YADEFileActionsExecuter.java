@@ -20,9 +20,9 @@ import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetPr
 public class YADEFileActionsExecuter {
 
     /** Target: ProviderFile Operations */
-    public static void renameTargetFile(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config, YADEProviderFile sourceFile,
-            YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws SOSProviderException {
-        if (!targetFile.needsRename()) {
+    public static void renameTargetFile(ISOSLogger logger, String logPrefix, YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile)
+            throws SOSProviderException {
+        if (targetFile == null || !targetFile.needsRename()) {
             return;
         }
 
@@ -47,15 +47,13 @@ public class YADEFileActionsExecuter {
     }
 
     public static void finalizeTargetFileSize(YADETargetProviderDelegator delegator, YADEProviderFile sourceFile, YADETargetProviderFile targetFile,
-            boolean isCompress, boolean isCumulate) throws Exception {
+            boolean isCompress) throws Exception {
         if (isCompress) {// the file size check is suppressed by compress but we read the file size for logging and serialization
-            if (!isCumulate) {
-                String filePath = targetFile.getFullPath();
-                targetFile = (YADETargetProviderFile) delegator.getProvider().rereadFileIfExists(targetFile);
-                if (targetFile == null) {
-                    // ???? sourceFile.resetTarget();
-                    throw new YADEEngineTransferFileException(new SOSNoSuchFileException(filePath, null));
-                }
+            String filePath = targetFile.getFullPath();
+            targetFile = (YADETargetProviderFile) delegator.getProvider().rereadFileIfExists(targetFile);
+            if (targetFile == null) {
+                // ???? sourceFile.resetTarget();
+                throw new YADEEngineTransferFileException(new SOSNoSuchFileException(filePath, null));
             }
         } else {
             targetFile.finalizeFileSize();

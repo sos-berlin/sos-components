@@ -41,8 +41,8 @@ public class YADEArgumentsHelper {
         switch (args.getOperation().getValue()) {
         case GETLIST:
         case REMOVE:
-        case RENAME:
             return false;
+        case RENAME:
         case UNKNOWN:
             throw new YADEEngineInitializationException(new SOSInvalidDataException(args.getOperation().getName() + "=" + args.getOperation()
                     .getValue()));

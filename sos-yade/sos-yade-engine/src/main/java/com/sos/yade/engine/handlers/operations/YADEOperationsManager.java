@@ -1,5 +1,7 @@
 package com.sos.yade.engine.handlers.operations;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,9 +25,10 @@ public class YADEOperationsManager {
      * - GetList<br/>
      */
     /** TODO not use "YADEArguments args" ... */
-    public static void process(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
+    public static Duration process(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
             List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator, AtomicBoolean cancel) throws Exception {
 
+        Instant start = Instant.now();
         logger.info("[%s]start...", args.getOperation().getValue());
 
         TransferOperation operation = args.getOperation().getValue();
@@ -34,14 +37,14 @@ public class YADEOperationsManager {
         case COPY:
         case MOVE:
             YADECopyMoveOperationsHandler.process(operation, logger, args, sourceDelegator, targetDelegator, sourceFiles, cancel);
-            break;
+            return Duration.between(start, Instant.now());
         // Source operations
         case REMOVE:
             YADERemoveOperationHandler.process(operation, logger, sourceDelegator, sourceFiles);
-            break;
+            return Duration.between(start, Instant.now());
         case GETLIST:
             YADEGetListOperationHandler.process(operation, logger);
-            break;
+            return null;
 
         // Non YADEEngine operations
         case COPYFROMINTERNET: // YADEDMZEngine
@@ -49,7 +52,7 @@ public class YADEOperationsManager {
         case RENAME: // TODO - to remove, not supported
         default:
             logger.info("[%s]ignored", operation);
-            break;
+            return null;
         }
     }
 

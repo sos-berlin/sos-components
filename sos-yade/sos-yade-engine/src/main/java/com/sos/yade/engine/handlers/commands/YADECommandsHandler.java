@@ -8,7 +8,6 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.arguments.YADEProviderCommandArguments;
-import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.common.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
@@ -159,11 +158,10 @@ public class YADECommandsHandler {
 
     // -- Help-Methods
     private static YADEProviderCommandArguments getArgs(IYADEProviderDelegator delegator) {
-        YADESourceTargetArguments args = delegator.getArgs();
-        if (args == null) {
+        if (delegator == null || delegator.getArgs() == null) {
             return null;
         }
-        return args.getCommands();
+        return delegator.getArgs().getCommands();
     }
 
     private static void executeAfterOperationCommands(ISOSLogger logger, IYADEProviderDelegator delegator, YADEProviderCommandArguments args,

@@ -1,5 +1,8 @@
 package com.sos.commons.vfs.common;
 
+import java.nio.file.Path;
+import java.util.List;
+
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.util.common.ASOSArguments;
@@ -41,6 +44,9 @@ public abstract class AProviderArguments extends ASOSArguments {
     private SOSArgument<String> keepassAttachmentPropertyName = new SOSArgument<String>(null, false);
 
     private CredentialStoreArguments credentialStore;
+
+    private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("system_property_files", false);
+    private SOSArgument<List<Path>> configurationFiles = new SOSArgument<>("configuration_files", false);
 
     public SOSArgument<Protocol> getProtocol() {
         return protocol;
@@ -88,6 +94,14 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public CredentialStoreArguments getCredentialStore() {
         return credentialStore;
+    }
+
+    public SOSArgument<List<Path>> getSystemPropertyFiles() {
+        return systemPropertyFiles;
+    }
+
+    public SOSArgument<List<Path>> getConfigurationFiles() {
+        return configurationFiles;
     }
 
     public int asMs(SOSArgument<Integer> arg) {

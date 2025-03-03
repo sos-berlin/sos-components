@@ -4,7 +4,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.common.arguments.YADEArguments;
+import com.sos.yade.engine.common.arguments.YADEClientArguments;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.common.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.common.arguments.YADETargetArguments;
@@ -12,24 +14,36 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEArgumentsChecker {
 
-    public static void validateOrExit(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs, YADETargetArguments targetArgs)
-            throws YADEEngineInitializationException {
+    public static void validateOrExit(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArguments, YADESourceArguments sourceArgs,
+            YADETargetArguments targetArgs) throws YADEEngineInitializationException {
 
-        checkCommonArguments(args);
+        boolean needTargetProvider = checkCommonArguments(args, clientArguments);
+        checkClientArguments(args, clientArguments, needTargetProvider);
         checkSourceArguments(sourceArgs);
-        checkTargetArguments(args, targetArgs);
-        checkSourceTargetArguments(args, sourceArgs, targetArgs);
+        checkTargetArguments(args, targetArgs, needTargetProvider);
+        checkSourceTargetArguments(args, sourceArgs, targetArgs, needTargetProvider);
 
         adjustSourceArguments(logger, sourceArgs);
-        adjustTargetArguments(logger, sourceArgs, targetArgs);
+        adjustTargetArguments(logger, sourceArgs, targetArgs, needTargetProvider);
     }
 
-    private static void checkCommonArguments(YADEArguments args) throws YADEEngineInitializationException {
+    private static boolean checkCommonArguments(YADEArguments args, YADEClientArguments clientArgs) throws YADEEngineInitializationException {
         if (args == null) {
             throw new YADEEngineInitializationException("Missing YADEArguments");
         }
         if (args.getOperation().getValue() == null) {
             throw new YADEEngineInitializationException("Missing \"" + args.getOperation().getName() + "\" argument");
+        }
+        return YADEArgumentsHelper.needTargetProvider(args);
+    }
+
+    private static void checkClientArguments(YADEArguments args, YADEClientArguments clientArgs, boolean needTargetProvider)
+            throws YADEEngineInitializationException {
+        if (!needTargetProvider && TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
+            if (clientArgs == null || clientArgs.getResultSetFileName().isEmpty()) {
+                throw new YADEEngineInitializationException("[" + TransferOperation.GETLIST + "]Missing \"" + clientArgs.getResultSetFileName()
+                        .getName() + "\" argument");
+            }
         }
     }
 
@@ -50,15 +64,16 @@ public class YADEArgumentsChecker {
 
     }
 
-    private static void checkTargetArguments(YADEArguments args, YADETargetArguments targetArgs) throws YADEEngineInitializationException {
-        if (YADEArgumentsHelper.needTargetProvider(args) && targetArgs == null) {
+    private static void checkTargetArguments(YADEArguments args, YADETargetArguments targetArgs, boolean needTargetProvider)
+            throws YADEEngineInitializationException {
+        if (needTargetProvider && targetArgs == null) {
             throw new YADEEngineInitializationException("Missing Target Arguments");
         }
     }
 
-    private static void checkSourceTargetArguments(YADEArguments args, YADESourceArguments sourceArgs, YADETargetArguments targetArgs)
-            throws YADEEngineInitializationException {
-        if (sourceArgs.getCheckIntegrityHash().isTrue() || (targetArgs != null && targetArgs.getCreateIntegrityHashFile().isTrue())) {
+    private static void checkSourceTargetArguments(YADEArguments args, YADESourceArguments sourceArgs, YADETargetArguments targetArgs,
+            boolean needTargetProvider) throws YADEEngineInitializationException {
+        if (sourceArgs.getCheckIntegrityHash().isTrue() || (needTargetProvider && targetArgs.getCreateIntegrityHashFile().isTrue())) {
             try {
                 MessageDigest.getInstance(args.getIntegrityHashAlgorithm().getValue());
             } catch (NoSuchAlgorithmException e) {
@@ -77,8 +92,13 @@ public class YADEArgumentsChecker {
         }
     }
 
-    private static void adjustTargetArguments(ISOSLogger logger, YADESourceArguments sourceArgs, YADETargetArguments targetArgs) {
-        if (targetArgs == null) {
+    private static void adjustTargetArguments(ISOSLogger logger, YADESourceArguments sourceArgs, YADETargetArguments targetArgs,
+            boolean needTargetProvider) {
+        if (!needTargetProvider) {
+            if (targetArgs != null) {
+                logger.info("Target arguments are ignored");
+            }
+            targetArgs = null;
             return;
         }
         if (!sourceArgs.isSingleFilesSelection() && targetArgs.getDirectory().isEmpty()) {

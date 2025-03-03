@@ -1,9 +1,13 @@
 package com.sos.commons.vfs.common;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.Function;
 
 import com.sos.commons.util.SOSCollection;
@@ -123,6 +127,36 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     @Override
     public SOSCommandResult executeCommand(String command, SOSEnv env) {
         return executeCommand(command, null, env);
+    }
+
+    public void setSystemProperties() {
+        if (SOSCollection.isEmpty(getArguments().getSystemPropertyFiles().getValue())) {
+            return;
+        }
+        String method = "setSystemProperties";
+        logger.info("%s[%s][files]", getLogPrefix(), method, SOSString.join(getArguments().getSystemPropertyFiles().getValue(), ",", f -> f
+                .toString()));
+        Properties p = new Properties();
+        for (Path file : getArguments().getSystemPropertyFiles().getValue()) {
+            if (Files.exists(file) && Files.isRegularFile(file)) {
+                try (BufferedReader reader = Files.newBufferedReader(file)) {
+                    p.load(reader);
+                    logger.info("[%s][%s]loaded", method, file);
+                } catch (Throwable e) {
+                    logger.warn("[%s][%s][failed]%s", method, file, e.toString());
+                }
+            } else {
+                logger.warn("[%s][%s]does not exist or is not a regular file", method, file);
+            }
+        }
+
+        for (String n : p.stringPropertyNames()) {
+            String v = p.getProperty(n);
+            if (logger.isDebugEnabled()) {
+                logger.debug("[%s]%s=%s", method, n, v);
+            }
+            System.setProperty(n, v);
+        }
     }
 
     public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {

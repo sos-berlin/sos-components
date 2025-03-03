@@ -52,16 +52,15 @@ public class YADEFileHandler {
         this.cancel = cancel;
     }
 
-    public void run() throws YADEEngineTransferFileException {
+    public void run(boolean useCumulativeTargetFile) throws YADEEngineTransferFileException {
         this.sourceFile.resetSteady();
 
         try {
-            boolean isCumulateTarget = config.getTarget().getCumulate() != null;
             String logPrefix = config.getParallelism() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
                     .currentThread().getName();
             YADETargetProviderFile targetFile;
             // 1) Target - initialize/get Target file
-            if (isCumulateTarget) {
+            if (useCumulativeTargetFile) {
                 targetFile = config.getTarget().getCumulate().getFile();
             } else {
                 // 1) Target: may create target directories if target replacement enabled
@@ -96,7 +95,8 @@ public class YADEFileHandler {
                 }
             }
 
-            boolean isCompressTarget = config.getTarget().getCompress() != null;
+            // not compress if cumulative file
+            boolean isCompressTarget = config.getTarget().getCompress() != null && !useCumulativeTargetFile;
             MessageDigest sourceMessageDigest = YADEFileIntegrityHashHelper.getMessageDigest(config, config.getSource()
                     .isCheckIntegrityHashEnabled());
             MessageDigest targetMessageDigest = YADEFileIntegrityHashHelper.getMessageDigest(config, config.getTarget()
@@ -118,7 +118,7 @@ public class YADEFileHandler {
                         YADEFileStreamHelper.skipSourceInputStreamToPosition(sourceStream, targetFile);
                     }
 
-                    if (isCumulateTarget && !isCumulateTargetWritten) {
+                    if (useCumulativeTargetFile && !isCumulateTargetWritten) {
                         // TODO replace variables .... XML Schema description for CumulativeFileSeparator is wrong
                         String fs = config.getTarget().getCumulate().getFileSeparator() + System.getProperty("line.separator");
                         byte[] bytes = fs.getBytes();
@@ -167,7 +167,7 @@ public class YADEFileHandler {
                     }
                 }
             }
-            YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, isCompressTarget, isCumulateTarget);
+            YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, isCompressTarget);
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
             logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
@@ -183,9 +183,10 @@ public class YADEFileHandler {
 
             // YADE1 renames after executeAfterFile command
             // Rename Target always - transactional transfer or not
-            YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
-            YADEFileActionsExecuter.setTargetFileModificationDate(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
-
+            if (!useCumulativeTargetFile) {
+                YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, targetDelegator, targetFile);
+                YADEFileActionsExecuter.setTargetFileModificationDate(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
+            }
             // Source
             YADEFileActionsExecuter.processSourceFileAfterNonTransactionalTransfer(logger, logPrefix, config, sourceDelegator, sourceFile);
         } catch (YADEEngineTransferFileException e) {

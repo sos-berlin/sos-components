@@ -1,5 +1,6 @@
 package com.sos.yade.engine.common.helpers;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
+import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.arguments.YADEArguments;
 import com.sos.yade.engine.common.arguments.YADEClientArguments;
@@ -69,23 +71,15 @@ public class YADEClientBannerWriter {
             return;
         }
         List<String> l = new ArrayList<>();
-        // System properties
-        if (!clientArgs.getSystemPropertyFiles().isEmpty()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getSystemPropertyFiles()));
-        }
-
         // ResultSet
+        if (!clientArgs.getResultSetFileName().isEmpty()) {
+            l.add(YADEArgumentsHelper.toString(clientArgs.getResultSetFileName()));
+        }
         if (!clientArgs.getExpectedSizeOfResultSet().isEmpty()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getExpectedSizeOfResultSet()));
         }
         if (!clientArgs.getRaiseErrorIfResultSetIs().isEmpty()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getRaiseErrorIfResultSetIs()));
-        }
-        if (!clientArgs.getResultListFile().isEmpty()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getResultListFile()));
-        }
-        if (!clientArgs.getResultSetFileName().isEmpty()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getResultSetFileName()));
         }
 
         // E-Mail
@@ -228,7 +222,7 @@ public class YADEClientBannerWriter {
         }
     }
 
-    public static void writeSummary(ISOSLogger logger, Instant totalStart, Instant operationStart, Instant operationEnd, YADEArguments args,
+    public static void writeSummary(ISOSLogger logger, Instant totalStart, Duration operationDuration, YADEArguments args,
             YADETargetArguments targetArgs, List<ProviderFile> files, Throwable error) {
         logger.info(SEPARATOR_LINE);
 
@@ -236,19 +230,24 @@ public class YADEClientBannerWriter {
 
         StringBuilder sb = new StringBuilder("[Summary]");
         sb.append("total_duration=").append(SOSDate.getDuration(totalStart, Instant.now()));
-        if (operationStart != null && operationEnd != null) {
-            sb.append("(operation=").append(SOSDate.getDuration(operationStart, operationEnd)).append(")");
+        if (operationDuration != null) {
+            sb.append("(operation=").append(SOSDate.getDuration(operationDuration)).append(")");
         }
         sb.append(",total_files=").append(totalFiles);
 
-        if (totalFiles > 0) {
+        if (totalFiles > 0 && !TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             List<String> l = new ArrayList<>();
-            FileStateUtils.getGroupedByState(targetArgs, files).forEach((state, fileList) -> {
-                // sb.append(",").append(state.toLowerCase()).append("=").append(fileList.size());
+            FileStateUtils.getGroupedByState(targetArgs, files, getDefaultState(args)).forEach((state, fileList) -> {
                 l.add(state.toLowerCase() + "=" + fileList.size());
             });
-            if (l.size() > 0) {
-                sb.append("(").append(String.join(",", l)).append(")");
+            int size = l.size();
+            if (size > 0) {
+                // TODO e.g. detect if cumulative file...
+                if (size == 1 && l.get(0).startsWith(getDefaultState(args).toString().toLowerCase())) {
+
+                } else {
+                    sb.append("(").append(String.join(",", l)).append(")");
+                }
             }
         }
         logger.info(sb);
@@ -258,23 +257,29 @@ public class YADEClientBannerWriter {
         }
     }
 
+    private static TransferEntryState getDefaultState(YADEArguments args) {
+        return TransferEntryState.UNKNOWN;
+    }
+
     private class FileStateUtils {
 
-        private static Map<String, List<YADEProviderFile>> getGroupedByState(YADETargetArguments targetArgs, List<ProviderFile> files) {
+        private static Map<String, List<YADEProviderFile>> getGroupedByState(YADETargetArguments targetArgs, List<ProviderFile> files,
+                TransferEntryState defaultState) {
             // skipping the RENAMED subState if the renaming was due to an atomic transfer and not due to a defined replacement
             final boolean skipRenameSubStateForTarget = targetArgs != null && !targetArgs.isReplacementEnabled();
-            return files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> getState(f, skipRenameSubStateForTarget)));
+            return files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> getState(f, defaultState,
+                    skipRenameSubStateForTarget)));
         }
 
-        private static String getState(YADEProviderFile f, boolean skipRenameSubStateForTarget) {
+        private static String getState(YADEProviderFile f, TransferEntryState defaultState, boolean skipRenameSubStateForTarget) {
             if (f.getTarget() != null) {
-                return resolve(f.getTarget(), skipRenameSubStateForTarget);
+                return resolve(f.getTarget(), defaultState, skipRenameSubStateForTarget);
             }
-            return resolve(f, false);
+            return resolve(f, defaultState, false);
         }
 
-        private static String resolve(YADEProviderFile f, boolean skipRenameSubStateForTarget) {
-            String state = f.getState() == null ? TransferEntryState.UNKNOWN.toString() : f.getState().toString();
+        private static String resolve(YADEProviderFile f, TransferEntryState defaultState, boolean skipRenameSubStateForTarget) {
+            String state = f.getState() == null ? defaultState.toString() : f.getState().toString();
             String subState = getSubState(f, skipRenameSubStateForTarget);
             return state + subState;
         }

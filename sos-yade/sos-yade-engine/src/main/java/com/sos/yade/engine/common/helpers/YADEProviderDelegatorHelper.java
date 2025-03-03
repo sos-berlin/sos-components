@@ -4,6 +4,7 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.AProviderArguments;
 import com.sos.commons.vfs.common.AProviderArguments.Protocol;
 import com.sos.commons.vfs.common.IProvider;
@@ -27,18 +28,18 @@ import com.sos.yade.engine.exceptions.YADEEngineTargetConnectionException;
 public class YADEProviderDelegatorHelper {
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADESourceProviderDelegator getSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs)
+    public static YADESourceProviderDelegator initializeSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs)
             throws YADEEngineInitializationException {
-        return new YADESourceProviderDelegator(getProvider(logger, "Source", sourceArgs.getProvider()), sourceArgs);
+        return new YADESourceProviderDelegator(initializeProvider(logger, "Source", sourceArgs.getProvider()), sourceArgs);
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADETargetProviderDelegator getTargetDelegator(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs)
+    public static YADETargetProviderDelegator initializeTargetDelegator(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs)
             throws YADEEngineInitializationException {
         if (!YADEArgumentsHelper.needTargetProvider(args)) {
             return null;
         }
-        return new YADETargetProviderDelegator(getProvider(logger, "Target", targetArgs.getProvider()), targetArgs);
+        return new YADETargetProviderDelegator(initializeProvider(logger, "Target", targetArgs.getProvider()), targetArgs);
     }
 
     public static void ensureConnected(ISOSLogger logger, IYADEProviderDelegator delegator) throws YADEEngineConnectionException {
@@ -86,7 +87,8 @@ public class YADEProviderDelegatorHelper {
         }
     }
 
-    private static IProvider getProvider(ISOSLogger logger, String identifier, AProviderArguments args) throws YADEEngineInitializationException {
+    private static IProvider initializeProvider(ISOSLogger logger, String identifier, AProviderArguments args)
+            throws YADEEngineInitializationException {
         if (args == null) {
             throw new YADEEngineInitializationException(new SOSMissingDataException("[" + identifier + "]YADEProviderArguments"));
         }
@@ -127,6 +129,7 @@ public class YADEProviderDelegatorHelper {
         } catch (SOSProviderException e) {
             throw new YADEEngineInitializationException(e);
         }
+        ((AProvider<?>) p).setSystemProperties();
         return p;
     }
 

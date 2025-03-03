@@ -38,6 +38,7 @@ public class YADEEngineTest {
     public void testLocal2Local() {
         YADEEngine yade = new YADEEngine();
         try {
+
             /** Common */
             YADEArguments args = createYADEArgs();
             args.getParallelism().setValue(1);
@@ -67,10 +68,18 @@ public class YADEEngineTest {
             // targetArgs.getAtomicSuffix().setValue("YYYY");
             setReplacementArgs(targetArgs, false);
 
+            targetArgs.getCompressedFileExtension().setValue("gz");
+            targetArgs.getCumulativeFileDelete().setValue(false);
+            targetArgs.getCumulativeFileName().setValue(LOCAL_TARGET_DIR + "/1.cumulative");
+            targetArgs.getCumulativeFileSeparator().setValue("-----------------");
+
             /** Target Commands */
             targetArgs.setCommands(createAndSetProviderCommandArgs(false));
 
-            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
+            YADEClientArguments clientArgs = createClientArgs();
+            // clientArgs.getResultSetFileName().setValue(Path.of(LOCAL_TARGET_DIR).resolve("result_set_file.txt"));
+
+            yade.execute(new SOSSlf4jLogger(), args, clientArgs, sourceArgs, targetArgs, true);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
