@@ -741,7 +741,7 @@ public abstract class RepositoryUtil {
                         updatedContent = getConfiguration(content, objType);
                     }
                     if (updatedContent != null) {
-                        if (!isJsonHashEqual(dbItem.getContent(), updatedContent, dbItem.getTypeAsEnum())) {
+                        if (!JocInventory.isJsonHashEqual(dbItem.getContent(), updatedContent, dbItem.getTypeAsEnum())) {
                             updated = true;
                         } else {
                             if(!notUpdated.containsKey(dbItem.getTypeAsEnum())) {
@@ -777,11 +777,6 @@ public abstract class RepositoryUtil {
             }
         }
         return dbItemsToUpdate;
-    }
-    
-    private static boolean isJsonHashEqual(String json1, String json2, ConfigurationType type) throws IOException {
-        return SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(JocInventory.content2IJSObject(json1, type)))
-            .equals(SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(JocInventory.content2IJSObject(json2, type))));
     }
     
     public static Set<DBItemInventoryConfiguration> getNewItemsToUpdate(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
