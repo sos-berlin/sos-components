@@ -34,6 +34,14 @@ public class PlanId {
      * string without < and >
      * <p>
      * 
+     * 
+     */
+    @JsonProperty("planKey")
+    private String planKey;
+    /**
+     * string without < and >
+     * <p>
+     * 
      * (Required)
      * 
      */
@@ -57,6 +65,17 @@ public class PlanId {
         this.noticeSpaceKey = noticeSpaceKey;
         this.planSchemaId = planSchemaId;
     }
+    
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("planKey")
+    public String getPlanKey() {
+        return planKey;
+    }
 
     /**
      * string without < and >
@@ -78,6 +97,7 @@ public class PlanId {
     @JsonProperty("noticeSpaceKey")
     public void setNoticeSpaceKey(String noticeSpaceKey) {
         this.noticeSpaceKey = noticeSpaceKey;
+        this.planKey = noticeSpaceKey;
     }
 
     /**
