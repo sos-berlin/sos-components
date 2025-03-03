@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sos.controller.model.board.BoardDeps;
+import com.sos.controller.model.board.Board;
 import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -44,7 +44,6 @@ public class Plan {
      * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("numOfOrders")
@@ -60,7 +59,7 @@ public class Plan {
     @JsonProperty("closed")
     private Boolean closed = false;
     @JsonProperty("noticeBoards")
-    private List<BoardDeps> noticeBoards = new ArrayList<BoardDeps>();
+    private List<Board> noticeBoards = new ArrayList<Board>();
 
     /**
      * PlanId
@@ -90,7 +89,6 @@ public class Plan {
      * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("numOfOrders")
@@ -102,7 +100,6 @@ public class Plan {
      * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("numOfOrders")
@@ -141,12 +138,12 @@ public class Plan {
     }
 
     @JsonProperty("noticeBoards")
-    public List<BoardDeps> getNoticeBoards() {
+    public List<Board> getNoticeBoards() {
         return noticeBoards;
     }
 
     @JsonProperty("noticeBoards")
-    public void setNoticeBoards(List<BoardDeps> noticeBoards) {
+    public void setNoticeBoards(List<Board> noticeBoards) {
         this.noticeBoards = noticeBoards;
     }
 

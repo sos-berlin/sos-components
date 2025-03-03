@@ -1,67 +1,29 @@
 package com.sos.joc.classes.board;
 
-import java.io.IOException;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.ToLongFunction;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.controller.model.board.Board;
-import com.sos.controller.model.board.Notice;
-import com.sos.controller.model.board.NoticeState;
-import com.sos.controller.model.board.NoticeStateText;
-import com.sos.controller.model.common.SyncStateText;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.classes.workflow.WorkflowsHelper;
-import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.order.OrderV;
-import com.sos.joc.model.plan.PlanSchemaId;
 
 import js7.data.board.BoardPath;
-import js7.data.board.BoardState;
 import js7.data.board.NoticeId;
 import js7.data.board.NoticeKey;
 import js7.data.board.PlannedNoticeKey;
 import js7.data.order.Order;
-import js7.data.order.OrderId;
 import js7.data.plan.PlanId;
 import js7.data.plan.PlanKey;
-import js7.data.workflow.WorkflowPath;
-import js7.data_for_java.board.JBoardState;
-import js7.data_for_java.board.JGlobalBoard;
-import js7.data_for_java.board.JNotice;
-import js7.data_for_java.board.JNoticePlace;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
-import js7.data_for_java.workflow.JWorkflowId;
-import scala.collection.JavaConverters;
 
 public class BoardHelper {
 
@@ -301,10 +263,10 @@ public class BoardHelper {
             return NoticeId.of(PlanId.Global(), bPath, NoticeKey.of(noticeIdStr));
         } else {
             String[] noticeIdParts = noticeIdStr.split("/");
-            PlanSchemaId pSchemaId = PlanSchemaId.fromValue(noticeIdParts[0]);
+            String pSchemaId = noticeIdParts[0];
             PlanId planId = PlanId.Global();
             NoticeKey noticeKey = NoticeKey.empty();
-            if (pSchemaId.equals(PlanSchemaId.Global)) {
+            if (pSchemaId.equals("Global")) {
                 // expect noticeIdParts.lenght = 2
                 // nothing to do -> planId = PlanId.Global()
                 if (noticeIdParts.length > 1 && !noticeIdParts[1].isEmpty() && !noticeIdParts[1].equals("-")) {
@@ -312,7 +274,7 @@ public class BoardHelper {
                 }
             } else {
                 // expect noticeIdParts.lenght == 3 (or 2 if NoticeKey is empty)
-                planId = PlanId.apply(js7.data.plan.PlanSchemaId.of(pSchemaId.value()), PlanKey.of(noticeIdParts[1]));
+                planId = PlanId.apply(js7.data.plan.PlanSchemaId.of(pSchemaId), PlanKey.of(noticeIdParts[1]));
                 if (noticeIdParts.length > 2 && !noticeIdParts[2].isEmpty() && !noticeIdParts[2].equals("-")) {
                     noticeKey = NoticeKey.of(noticeIdParts[2]);
                 }

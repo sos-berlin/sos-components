@@ -654,7 +654,7 @@ public class WorkflowsHelper {
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
                     String cnsNamesExpr = cns.getNoticeBoardNames();
-                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
                     cnsNames.forEach(nb -> consumeNoticeBoards.add(nb));
                     if (cns.getSubworkflow() == null || cns.getSubworkflow().getInstructions() == null) {
                         cns.setSubworkflow(new Instructions(Collections.emptyList())); 
@@ -1177,7 +1177,7 @@ public class WorkflowsHelper {
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
                     String cnsNamesExpr = cns.getNoticeBoardNames();
-                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
                     for (Map.Entry<String, String> oldNewBoardName : oldNewBoardNames.entrySet()) {
                         String oldBoardName = oldNewBoardName.getKey();
                         String newBoardName = oldNewBoardName.getValue();
@@ -1211,7 +1211,7 @@ public class WorkflowsHelper {
                 case EXPECT_NOTICES:
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
-                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
+                    Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
                     for (Map.Entry<String, String> oldNewBoardName : oldNewBoardNames.entrySet()) {
                         String oldBoardName = oldNewBoardName.getKey();
                         String newBoardName = oldNewBoardName.getValue();
@@ -1837,7 +1837,7 @@ public class WorkflowsHelper {
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
                     String cnsNamesExpr = cns.getNoticeBoardNames();
-                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
                     if (!cnsNames.isEmpty() && cnsNames.contains(boardName)) {
                         return true;
                     }
@@ -1856,7 +1856,7 @@ public class WorkflowsHelper {
                 case EXPECT_NOTICES:
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
-                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
+                    Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
                     if (!ensNames.isEmpty() && ensNames.contains(boardName)) {
                         return true;
                     }

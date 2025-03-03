@@ -37,6 +37,7 @@ import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.deploy.items.AddOrderTags;
 import com.sos.joc.db.deploy.items.Deployed;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.deploy.items.DeployedWorkflowWithBoards;
 import com.sos.joc.db.deploy.items.NumOfDeployment;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.db.inventory.items.InventoryNamePath;
@@ -674,6 +675,35 @@ public class DeployedConfigurationDBLayer {
             if (boardName != null && !boardName.isEmpty()) {
                 query.setParameter("boardName", getRegexpParameter(boardName, "\""));
             }
+            List<DeployedContent> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().map(DeployedContent::mapToWorkflowBoards).filter(Objects::nonNull);
+            }
+            return Stream.empty();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Stream<WorkflowBoards> getWorkflowsWithTopLevelBoards(String controllerId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
+            StringBuilder hql = new StringBuilder("select new ").append(DeployedWorkflowWithBoards.class.getName());
+            hql.append("(dc.path, dc.commitId, dc.content, sw.instructions) from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+            hql.append("where dc.type=:type ");
+            hql.append("and dc.controllerId=:controllerId ");
+            hql.append("and sw.deployed=1 ");
+            hql.append("and ");
+            hql.append(jsonFunc).append(" is not null");
+
+            Query<DeployedContent> query = session.createQuery(hql.toString());
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("controllerId", controllerId);
             List<DeployedContent> result = session.getResultList(query);
             if (result != null) {
                 return result.stream().map(DeployedContent::mapToWorkflowBoards).filter(Objects::nonNull);

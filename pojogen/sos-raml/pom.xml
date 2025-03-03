@@ -146,6 +146,7 @@
 								<exclude>tag/**/*.json</exclude>
 								<exclude>reporting/*.json</exclude>
 								<exclude>joc/properties-schema.json</exclude>
+								<exclude>board/boardsDeps-schema.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -200,6 +201,7 @@
 								<include>tag/**/*.json</include>
 								<include>reporting/*.json</include>
 								<include>joc/properties-schema.json</include>
+								<include>board/boardsDeps-schema.json</include>
 							</includes>
 						</configuration>
 						<goals>

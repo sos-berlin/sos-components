@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.controller.model.board.Board;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.boards.resource.IBoardsResource;
@@ -38,7 +37,6 @@ import com.sos.joc.model.board.Boards;
 import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
-import com.sos.joc.model.plan.PlanSchemaId;
 import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.schema.JsonValidator;
 
@@ -183,11 +181,11 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
         Stream<Map.Entry<PlanId, JPlan>> plansStream = currentState.toPlan().entrySet().stream();
         
         if (filter.getPlanSchemaIds() != null && !filter.getPlanSchemaIds().isEmpty()) {
-            Set<String> schemaIds = filter.getPlanSchemaIds().stream().map(PlanSchemaId::name).collect(Collectors.toSet());
+            Set<String> schemaIds = filter.getPlanSchemaIds();
             plansStream = plansStream.filter(e -> schemaIds.contains(e.getKey().planSchemaId().string()));
         }
-        if (filter.getPlanKeys() != null && !filter.getPlanKeys().isEmpty()) {
-            Predicate<Map.Entry<PlanId, JPlan>> planKeyFilter = e -> e.getKey().isGlobal() || filter.getPlanKeys().stream().map(pk -> pk.replace("*",
+        if (filter.getNoticeSpaceKeys() != null && !filter.getNoticeSpaceKeys().isEmpty()) {
+            Predicate<Map.Entry<PlanId, JPlan>> planKeyFilter = e -> e.getKey().isGlobal() || filter.getNoticeSpaceKeys().stream().map(pk -> pk.replace("*",
                     ".*").replace("?", ".")).anyMatch(pk -> e.getKey().planKey().string().matches(pk));
             plansStream = plansStream.filter(planKeyFilter);
         }

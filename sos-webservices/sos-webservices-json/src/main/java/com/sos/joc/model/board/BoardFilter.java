@@ -3,12 +3,12 @@ package com.sos.joc.model.board;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sos.joc.model.plan.PlanSchemaId;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -24,7 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "planSchemaIds",
-    "planKeys",
+    "noticeSpaceKeys",
     "noticeBoardPath",
     "compact",
     "limit"
@@ -42,15 +42,18 @@ public class BoardFilter {
     private String controllerId;
     @JsonProperty("planSchemaIds")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<PlanSchemaId> planSchemaIds = new LinkedHashSet<PlanSchemaId>();
+    private Set<String> planSchemaIds = new LinkedHashSet<String>();
     /**
      * Will be ignored for global schema because it has no plan keys
      * 
      */
-    @JsonProperty("planKeys")
+    @JsonProperty("noticeSpaceKeys")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Will be ignored for global schema because it has no plan keys")
-    private Set<String> planKeys = new LinkedHashSet<String>();
+    @JsonAlias({
+        "planKeys"
+    })
+    private Set<String> noticeSpaceKeys = new LinkedHashSet<String>();
     /**
      * string without < and >
      * <p>
@@ -102,12 +105,12 @@ public class BoardFilter {
     }
 
     @JsonProperty("planSchemaIds")
-    public Set<PlanSchemaId> getPlanSchemaIds() {
+    public Set<String> getPlanSchemaIds() {
         return planSchemaIds;
     }
 
     @JsonProperty("planSchemaIds")
-    public void setPlanSchemaIds(Set<PlanSchemaId> planSchemaIds) {
+    public void setPlanSchemaIds(Set<String> planSchemaIds) {
         this.planSchemaIds = planSchemaIds;
     }
 
@@ -115,18 +118,18 @@ public class BoardFilter {
      * Will be ignored for global schema because it has no plan keys
      * 
      */
-    @JsonProperty("planKeys")
-    public Set<String> getPlanKeys() {
-        return planKeys;
+    @JsonProperty("noticeSpaceKeys")
+    public Set<String> getNoticeSpaceKeys() {
+        return noticeSpaceKeys;
     }
 
     /**
      * Will be ignored for global schema because it has no plan keys
      * 
      */
-    @JsonProperty("planKeys")
-    public void setPlanKeys(Set<String> planKeys) {
-        this.planKeys = planKeys;
+    @JsonProperty("noticeSpaceKeys")
+    public void setNoticeSpaceKeys(Set<String> noticeSpaceKeys) {
+        this.noticeSpaceKeys = noticeSpaceKeys;
     }
 
     /**
@@ -195,12 +198,12 @@ public class BoardFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("planSchemaIds", planSchemaIds).append("planKeys", planKeys).append("noticeBoardPath", noticeBoardPath).append("compact", compact).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("planSchemaIds", planSchemaIds).append("noticeSpaceKeys", noticeSpaceKeys).append("noticeBoardPath", noticeBoardPath).append("compact", compact).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planSchemaIds).append(planKeys).append(controllerId).append(compact).append(noticeBoardPath).append(limit).toHashCode();
+        return new HashCodeBuilder().append(planSchemaIds).append(controllerId).append(compact).append(noticeBoardPath).append(limit).append(noticeSpaceKeys).toHashCode();
     }
 
     @Override
@@ -212,7 +215,7 @@ public class BoardFilter {
             return false;
         }
         BoardFilter rhs = ((BoardFilter) other);
-        return new EqualsBuilder().append(planSchemaIds, rhs.planSchemaIds).append(planKeys, rhs.planKeys).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(noticeBoardPath, rhs.noticeBoardPath).append(limit, rhs.limit).isEquals();
+        return new EqualsBuilder().append(planSchemaIds, rhs.planSchemaIds).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(noticeBoardPath, rhs.noticeBoardPath).append(limit, rhs.limit).append(noticeSpaceKeys, rhs.noticeSpaceKeys).isEquals();
     }
 
 }

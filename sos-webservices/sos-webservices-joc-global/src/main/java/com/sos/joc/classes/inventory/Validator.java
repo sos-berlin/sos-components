@@ -969,7 +969,7 @@ public class Validator {
                     if (cnsE.isLeft()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + cnsE.getLeft().message().replace("true", "'...'"));
                     }
-                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
                     cnsNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !cnsNames.isEmpty()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + cnsNames
@@ -1011,7 +1011,7 @@ public class Validator {
                     if (enE.isLeft()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + enE.getLeft().message().replace("true", "'...'"));
                     }
-                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
+                    Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
                     ensNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !ensNames.isEmpty()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + ensNames
@@ -1267,7 +1267,7 @@ public class Validator {
                     if (cnsE.isLeft()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + cnsE.getLeft().message().replace("true", "'...'"));
                     }
-                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
                     cnsNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !cnsNames.isEmpty()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + cnsNames
@@ -1309,7 +1309,7 @@ public class Validator {
                     if (enE.isLeft()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + enE.getLeft().message().replace("true", "'...'"));
                     }
-                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
+                    Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
                     ensNames.removeAll(boardNames);
                     if (boardNames.isEmpty() || !ensNames.isEmpty()) {
                         throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + ensNames

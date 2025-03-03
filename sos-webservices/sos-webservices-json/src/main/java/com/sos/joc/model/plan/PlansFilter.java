@@ -3,6 +3,7 @@ package com.sos.joc.model.plan;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -21,44 +22,33 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "planSchemaIds",
-    "planKeys",
+    "noticeSpaceKeys",
     "noticeBoardPaths",
-    "onlyOpenPlans",
-    "onlyClosedPlans",
     "compact",
     "limit"
 })
-public class PlansFilter {
+public class PlansFilter
+    extends PlansOpenCloseFilter
+{
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     @JsonProperty("planSchemaIds")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<PlanSchemaId> planSchemaIds = new LinkedHashSet<PlanSchemaId>();
+    private Set<String> planSchemaIds = new LinkedHashSet<String>();
     /**
      * Will be ignored for global schema because it has no plan keys
      * 
      */
-    @JsonProperty("planKeys")
+    @JsonProperty("noticeSpaceKeys")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Will be ignored for global schema because it has no plan keys")
-    private Set<String> planKeys = new LinkedHashSet<String>();
+    @JsonAlias({
+        "planKeys"
+    })
+    private Set<String> noticeSpaceKeys = new LinkedHashSet<String>();
     @JsonProperty("noticeBoardPaths")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> noticeBoardPaths = new LinkedHashSet<String>();
-    @JsonProperty("onlyOpenPlans")
-    private Boolean onlyOpenPlans = false;
-    @JsonProperty("onlyClosedPlans")
-    private Boolean onlyClosedPlans = false;
     @JsonProperty("compact")
     private Boolean compact = false;
     /**
@@ -69,37 +59,13 @@ public class PlansFilter {
     @JsonPropertyDescription("-1=unlimited")
     private Integer limit = 10000;
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
     @JsonProperty("planSchemaIds")
-    public Set<PlanSchemaId> getPlanSchemaIds() {
+    public Set<String> getPlanSchemaIds() {
         return planSchemaIds;
     }
 
     @JsonProperty("planSchemaIds")
-    public void setPlanSchemaIds(Set<PlanSchemaId> planSchemaIds) {
+    public void setPlanSchemaIds(Set<String> planSchemaIds) {
         this.planSchemaIds = planSchemaIds;
     }
 
@@ -107,18 +73,18 @@ public class PlansFilter {
      * Will be ignored for global schema because it has no plan keys
      * 
      */
-    @JsonProperty("planKeys")
-    public Set<String> getPlanKeys() {
-        return planKeys;
+    @JsonProperty("noticeSpaceKeys")
+    public Set<String> getNoticeSpaceKeys() {
+        return noticeSpaceKeys;
     }
 
     /**
      * Will be ignored for global schema because it has no plan keys
      * 
      */
-    @JsonProperty("planKeys")
-    public void setPlanKeys(Set<String> planKeys) {
-        this.planKeys = planKeys;
+    @JsonProperty("noticeSpaceKeys")
+    public void setNoticeSpaceKeys(Set<String> noticeSpaceKeys) {
+        this.noticeSpaceKeys = noticeSpaceKeys;
     }
 
     @JsonProperty("noticeBoardPaths")
@@ -129,26 +95,6 @@ public class PlansFilter {
     @JsonProperty("noticeBoardPaths")
     public void setNoticeBoardPaths(Set<String> noticeBoardPaths) {
         this.noticeBoardPaths = noticeBoardPaths;
-    }
-
-    @JsonProperty("onlyOpenPlans")
-    public Boolean getOnlyOpenPlans() {
-        return onlyOpenPlans;
-    }
-
-    @JsonProperty("onlyOpenPlans")
-    public void setOnlyOpenPlans(Boolean onlyOpenPlans) {
-        this.onlyOpenPlans = onlyOpenPlans;
-    }
-
-    @JsonProperty("onlyClosedPlans")
-    public Boolean getOnlyClosedPlans() {
-        return onlyClosedPlans;
-    }
-
-    @JsonProperty("onlyClosedPlans")
-    public void setOnlyClosedPlans(Boolean onlyClosedPlans) {
-        this.onlyClosedPlans = onlyClosedPlans;
     }
 
     @JsonProperty("compact")
@@ -181,12 +127,12 @@ public class PlansFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("planSchemaIds", planSchemaIds).append("planKeys", planKeys).append("noticeBoardPaths", noticeBoardPaths).append("onlyOpenPlans", onlyOpenPlans).append("onlyClosedPlans", onlyClosedPlans).append("compact", compact).append("limit", limit).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("planSchemaIds", planSchemaIds).append("noticeSpaceKeys", noticeSpaceKeys).append("noticeBoardPaths", noticeBoardPaths).append("compact", compact).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planSchemaIds).append(planKeys).append(controllerId).append(compact).append(noticeBoardPaths).append(limit).append(onlyOpenPlans).append(onlyClosedPlans).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(planSchemaIds).append(noticeBoardPaths).append(limit).append(noticeSpaceKeys).append(compact).toHashCode();
     }
 
     @Override
@@ -198,7 +144,7 @@ public class PlansFilter {
             return false;
         }
         PlansFilter rhs = ((PlansFilter) other);
-        return new EqualsBuilder().append(planSchemaIds, rhs.planSchemaIds).append(planKeys, rhs.planKeys).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(noticeBoardPaths, rhs.noticeBoardPaths).append(limit, rhs.limit).append(onlyOpenPlans, rhs.onlyOpenPlans).append(onlyClosedPlans, rhs.onlyClosedPlans).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(planSchemaIds, rhs.planSchemaIds).append(noticeBoardPaths, rhs.noticeBoardPaths).append(limit, rhs.limit).append(noticeSpaceKeys, rhs.noticeSpaceKeys).append(compact, rhs.compact).isEquals();
     }
 
 }

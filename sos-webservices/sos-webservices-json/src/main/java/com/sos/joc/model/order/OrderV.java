@@ -21,6 +21,7 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
+import com.sos.joc.model.plan.PlanId;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -44,6 +45,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "attachedState",
     "agentId",
     "subagentId",
+    "planId",
     "cycleState",
     "retryState",
     "sleepState",
@@ -143,6 +145,14 @@ public class OrderV {
     private String agentId;
     @JsonProperty("subagentId")
     private String subagentId;
+    /**
+     * PlanId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("planId")
+    private PlanId planId;
     /**
      * OrderCycleState
      * <p>
@@ -313,6 +323,7 @@ public class OrderV {
      * @param positionString
      * @param sleepState
      * @param scheduledFor
+     * @param planId
      * @param state
      * @param deliveryDate
      * @param cycleState
@@ -334,7 +345,7 @@ public class OrderV {
      * @param isSuspendible
      * @param workflowId
      */
-    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, OrderCycleState cycleState, OrderRetryState retryState, OrderSleepState sleepState, List<ExpectedNotice> expectedNotices, String label, Set<String> tags, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder, Boolean hasChildOrders, Boolean canLeave, Boolean isContinuable, Boolean isResumable, Boolean isSuspendible) {
+    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, PlanId planId, OrderCycleState cycleState, OrderRetryState retryState, OrderSleepState sleepState, List<ExpectedNotice> expectedNotices, String label, Set<String> tags, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder, Boolean hasChildOrders, Boolean canLeave, Boolean isContinuable, Boolean isResumable, Boolean isSuspendible) {
         super();
         this.deliveryDate = deliveryDate;
         this.surveyDate = surveyDate;
@@ -346,6 +357,7 @@ public class OrderV {
         this.attachedState = attachedState;
         this.agentId = agentId;
         this.subagentId = subagentId;
+        this.planId = planId;
         this.cycleState = cycleState;
         this.retryState = retryState;
         this.sleepState = sleepState;
@@ -570,6 +582,28 @@ public class OrderV {
     @JsonProperty("subagentId")
     public void setSubagentId(String subagentId) {
         this.subagentId = subagentId;
+    }
+
+    /**
+     * PlanId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("planId")
+    public PlanId getPlanId() {
+        return planId;
+    }
+
+    /**
+     * PlanId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("planId")
+    public void setPlanId(PlanId planId) {
+        this.planId = planId;
     }
 
     /**
@@ -974,12 +1008,12 @@ public class OrderV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("cycleState", cycleState).append("retryState", retryState).append("sleepState", sleepState).append("expectedNotices", expectedNotices).append("label", label).append("tags", tags).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).append("hasChildOrders", hasChildOrders).append("canLeave", canLeave).append("isContinuable", isContinuable).append("isResumable", isResumable).append("isSuspendible", isSuspendible).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("planId", planId).append("cycleState", cycleState).append("retryState", retryState).append("sleepState", sleepState).append("expectedNotices", expectedNotices).append("label", label).append("tags", tags).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).append("hasChildOrders", hasChildOrders).append("canLeave", canLeave).append("isContinuable", isContinuable).append("isResumable", isResumable).append("isSuspendible", isSuspendible).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(attachedState).append(expectedNotices).append(agentId).append(scheduledNever).append(orderId).append(lastOutcome).append(isResumable).append(retryState).append(historicOutcome).append(positionString).append(sleepState).append(scheduledFor).append(state).append(deliveryDate).append(cycleState).append(cyclicOrder).append(marked).append(isContinuable).append(requirements).append(canLeave).append(surveyDate).append(question).append(hasChildOrders).append(positionIsImplicitEnd).append(label).append(tags).append(endPositions).append(arguments).append(subagentId).append(position).append(isSuspendible).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(expectedNotices).append(agentId).append(scheduledNever).append(orderId).append(lastOutcome).append(isResumable).append(retryState).append(historicOutcome).append(positionString).append(sleepState).append(scheduledFor).append(planId).append(state).append(deliveryDate).append(cycleState).append(cyclicOrder).append(marked).append(isContinuable).append(requirements).append(canLeave).append(surveyDate).append(question).append(hasChildOrders).append(positionIsImplicitEnd).append(label).append(tags).append(endPositions).append(arguments).append(subagentId).append(position).append(isSuspendible).append(workflowId).toHashCode();
     }
 
     @Override
@@ -991,7 +1025,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(expectedNotices, rhs.expectedNotices).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(isResumable, rhs.isResumable).append(retryState, rhs.retryState).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(sleepState, rhs.sleepState).append(scheduledFor, rhs.scheduledFor).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).append(marked, rhs.marked).append(isContinuable, rhs.isContinuable).append(requirements, rhs.requirements).append(canLeave, rhs.canLeave).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(hasChildOrders, rhs.hasChildOrders).append(positionIsImplicitEnd, rhs.positionIsImplicitEnd).append(label, rhs.label).append(tags, rhs.tags).append(endPositions, rhs.endPositions).append(arguments, rhs.arguments).append(subagentId, rhs.subagentId).append(position, rhs.position).append(isSuspendible, rhs.isSuspendible).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(expectedNotices, rhs.expectedNotices).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(isResumable, rhs.isResumable).append(retryState, rhs.retryState).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(sleepState, rhs.sleepState).append(scheduledFor, rhs.scheduledFor).append(planId, rhs.planId).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).append(marked, rhs.marked).append(isContinuable, rhs.isContinuable).append(requirements, rhs.requirements).append(canLeave, rhs.canLeave).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(hasChildOrders, rhs.hasChildOrders).append(positionIsImplicitEnd, rhs.positionIsImplicitEnd).append(label, rhs.label).append(tags, rhs.tags).append(endPositions, rhs.endPositions).append(arguments, rhs.arguments).append(subagentId, rhs.subagentId).append(position, rhs.position).append(isSuspendible, rhs.isSuspendible).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

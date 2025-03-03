@@ -17,7 +17,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "planKey",
+    "noticeSpaceKey",
     "planSchemaId"
 })
 public class PlanId {
@@ -28,17 +28,17 @@ public class PlanId {
      * 
      * 
      */
-    @JsonProperty("planKey")
-    private String planKey;
+    @JsonProperty("noticeSpaceKey")
+    private String noticeSpaceKey;
     /**
-     * order state text
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("planSchemaId")
-    private PlanSchemaId planSchemaId;
+    private String planSchemaId;
 
     /**
      * No args constructor for use in serialization
@@ -50,11 +50,11 @@ public class PlanId {
     /**
      * 
      * @param planSchemaId
-     * @param planKey
+     * @param noticeSpaceKey
      */
-    public PlanId(String planKey, PlanSchemaId planSchemaId) {
+    public PlanId(String noticeSpaceKey, String planSchemaId) {
         super();
-        this.planKey = planKey;
+        this.noticeSpaceKey = noticeSpaceKey;
         this.planSchemaId = planSchemaId;
     }
 
@@ -64,9 +64,9 @@ public class PlanId {
      * 
      * 
      */
-    @JsonProperty("planKey")
-    public String getPlanKey() {
-        return planKey;
+    @JsonProperty("noticeSpaceKey")
+    public String getNoticeSpaceKey() {
+        return noticeSpaceKey;
     }
 
     /**
@@ -75,43 +75,43 @@ public class PlanId {
      * 
      * 
      */
-    @JsonProperty("planKey")
-    public void setPlanKey(String planKey) {
-        this.planKey = planKey;
+    @JsonProperty("noticeSpaceKey")
+    public void setNoticeSpaceKey(String noticeSpaceKey) {
+        this.noticeSpaceKey = noticeSpaceKey;
     }
 
     /**
-     * order state text
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("planSchemaId")
-    public PlanSchemaId getPlanSchemaId() {
+    public String getPlanSchemaId() {
         return planSchemaId;
     }
 
     /**
-     * order state text
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("planSchemaId")
-    public void setPlanSchemaId(PlanSchemaId planSchemaId) {
+    public void setPlanSchemaId(String planSchemaId) {
         this.planSchemaId = planSchemaId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("planKey", planKey).append("planSchemaId", planSchemaId).toString();
+        return new ToStringBuilder(this).append("noticeSpaceKey", noticeSpaceKey).append("planSchemaId", planSchemaId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planKey).append(planSchemaId).toHashCode();
+        return new HashCodeBuilder().append(planSchemaId).append(noticeSpaceKey).toHashCode();
     }
 
     @Override
@@ -123,7 +123,7 @@ public class PlanId {
             return false;
         }
         PlanId rhs = ((PlanId) other);
-        return new EqualsBuilder().append(planKey, rhs.planKey).append(planSchemaId, rhs.planSchemaId).isEquals();
+        return new EqualsBuilder().append(planSchemaId, rhs.planSchemaId).append(noticeSpaceKey, rhs.noticeSpaceKey).isEquals();
     }
 
 }

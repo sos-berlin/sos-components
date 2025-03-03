@@ -2,6 +2,8 @@
 package com.sos.joc.db.deploy.items;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -29,6 +31,14 @@ public class WorkflowBoards
     
     @JsonProperty("noticeBoardNames")
     private List<String> noticeBoardNames;
+    
+    /**
+     * top level positions of Expect-/ConsumeNotices instructions
+     * position -> list of board names
+     * 
+     */
+    @JsonIgnore
+    private Map<Integer, Set<String>> topLevelPositions;
 
     @JsonProperty("postNotices")
     public List<String> getPostNotices() {
@@ -71,6 +81,16 @@ public class WorkflowBoards
     }
     
     @JsonIgnore
+    public Map<Integer, Set<String>> getTopLevelPositions() {
+        return topLevelPositions;
+    }
+
+    @JsonIgnore
+    public void setTopLevelPositions(Map<Integer, Set<String>> topLevelPositions) {
+        this.topLevelPositions = topLevelPositions;
+    }
+    
+    @JsonIgnore
     public boolean hasPostNotice(String boardName) {
         return postNotices != null && postNotices.contains(boardName);
     }
@@ -86,17 +106,17 @@ public class WorkflowBoards
     }
     
     @JsonIgnore
-    private int hasPostNotice() {
+    public int hasPostNotice() {
         return postNotices != null && !postNotices.isEmpty() ? 1 : 0;
     }
     
     @JsonIgnore
-    private int hasExpectNotice() {
+    public int hasExpectNotice() {
         return expectNotices != null && !expectNotices.isEmpty() ? 2 : 0;
     }
     
     @JsonIgnore
-    private int hasConsumeNotice() {
+    public int hasConsumeNotice() {
         return consumeNotices != null && !consumeNotices.isEmpty() ? 4 : 0;
     }
     

@@ -2,7 +2,7 @@ package com.sos.joc.classes.inventory;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,11 +57,11 @@ public class NoticeToNoticesConverter {
         return ens;
     }
     
-    public static List<String> expectNoticeBoardsToList(String noticeBoardNames) {
+    public static Set<String> expectNoticeBoardsToSet(String noticeBoardNames) {
         if (noticeBoardNames == null) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
-        return expectNoticeBoardsToStream(noticeBoardNames).collect(Collectors.toList());
+        return expectNoticeBoardsToStream(noticeBoardNames).collect(Collectors.toSet());
     }
     
     public static Stream<String> expectNoticeBoardsToStream(String noticeBoardNames) {

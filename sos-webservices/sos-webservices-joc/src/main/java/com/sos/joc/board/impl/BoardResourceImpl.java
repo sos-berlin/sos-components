@@ -30,7 +30,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.board.Board;
 import com.sos.joc.model.board.BoardFilter;
 import com.sos.joc.model.order.OrderV;
-import com.sos.joc.model.plan.PlanSchemaId;
 import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.schema.JsonValidator;
 
@@ -96,12 +95,12 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                 Stream<Map.Entry<PlanId, JPlan>> plansStream = currentState.toPlan().entrySet().stream();
                 
                 if (filter.getPlanSchemaIds() != null && !filter.getPlanSchemaIds().isEmpty()) {
-                    Set<String> schemaIds = filter.getPlanSchemaIds().stream().map(PlanSchemaId::name).collect(Collectors.toSet());
+                    Set<String> schemaIds = filter.getPlanSchemaIds();
                     plansStream = plansStream.filter(e -> schemaIds.contains(e.getKey().planSchemaId().string()));
                 }
-                if (filter.getPlanKeys() != null && !filter.getPlanKeys().isEmpty()) {
-                    Predicate<Map.Entry<PlanId, JPlan>> planKeyFilter = e -> e.getKey().isGlobal() || filter.getPlanKeys().stream().map(pk -> pk
-                            .replace("*", ".*").replace("?", ".")).anyMatch(pk -> e.getKey().planKey().string().matches(pk));
+                if (filter.getNoticeSpaceKeys() != null && !filter.getNoticeSpaceKeys().isEmpty()) {
+                    Predicate<Map.Entry<PlanId, JPlan>> planKeyFilter = e -> e.getKey().isGlobal() || filter.getNoticeSpaceKeys().stream().map(
+                            pk -> pk.replace("*", ".*").replace("?", ".")).anyMatch(pk -> e.getKey().planKey().string().matches(pk));
                     plansStream = plansStream.filter(planKeyFilter);
                 }
                 

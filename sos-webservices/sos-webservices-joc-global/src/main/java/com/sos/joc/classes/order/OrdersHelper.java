@@ -62,7 +62,6 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.board.BoardHelper;
-import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
@@ -106,6 +105,7 @@ import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.order.OrderWaitingReason;
+import com.sos.joc.model.plan.PlanId;
 import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Workflow;
 
@@ -522,6 +522,7 @@ public class OrdersHelper {
         }
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
+        o.setPlanId(getPlanId(jOrder.asScala().planId()));
         o.setHasChildOrders(null);
         boolean isChildOrder = oItem.getId().contains("|");
         // List<js7.data.order.HistoricOutcome> hhh = JavaConverters.asJava(jOrder.asScala().historicOutcomes().toList());
@@ -693,6 +694,10 @@ public class OrdersHelper {
     private static boolean isInRetryInstruction(JOrder jOrder, JControllerState controllerState) {
         return js7.data.workflow.instructions.Retry.class.isAssignableFrom(controllerState.asScala().instruction(jOrder.asScala().workflowPosition())
                 .getClass());
+    }
+    
+    private static PlanId getPlanId(js7.data.plan.PlanId planId) {
+        return new PlanId(planId.planKey().string(), planId.planSchemaId().string());
     }
 
     private static JPosition moveChildOrderPosToImplicitEnd(JPosition pos, JOrder o, JControllerState controllerState) {

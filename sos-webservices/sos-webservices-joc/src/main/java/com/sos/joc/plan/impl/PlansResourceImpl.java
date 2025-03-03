@@ -17,10 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.controller.model.board.BoardDeps;
+import com.sos.controller.model.board.Board;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
-import com.sos.joc.boards.impl.BoardsDependenciesImpl;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -30,7 +29,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
-import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -38,9 +36,10 @@ import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.plan.Plan;
-import com.sos.joc.model.plan.PlanSchemaId;
 import com.sos.joc.model.plan.Plans;
 import com.sos.joc.model.plan.PlansFilter;
+import com.sos.joc.model.plan.PlansOpenCloseFilter;
+import com.sos.joc.plan.common.PlanHelper;
 import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.joc.plan.resource.IPlansResource;
 import com.sos.schema.JsonValidator;
@@ -54,12 +53,12 @@ import js7.data_for_java.board.JPlannedBoard;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.plan.JPlan;
-import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("plans")
 public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource {
 
     private static final String API_CALL = "./plans";
+    private static final String API_CALL_IDS = "./plans/ids";
     private static final Logger LOGGER = LoggerFactory.getLogger(PlansResourceImpl.class);
     private static final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 //    private final static int limitOrdersDefault = 10000;
@@ -95,48 +94,58 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         }
     }
     
-    private com.sos.joc.model.plan.Plan getPlan(PlanId pId, JPlan jp, PlansFilter filter) {
-        Plan plan = new Plan();
-        boolean isClosed = jp.isClosed();
-        if (isClosed && filter.getOnlyOpenPlans()) {
-            return null;
-        }
-        if (!isClosed && filter.getOnlyClosedPlans()) {
-            return null;
-        }
-        plan.setClosed(isClosed);
-        
-        PlanSchemaId pSchemaId = PlanSchemaId.fromValue(pId.planSchemaId().string());
-        if (filter.getPlanSchemaIds() != null && !filter.getPlanSchemaIds().isEmpty() && !filter.getPlanSchemaIds().contains(pSchemaId)) {
-            return null;
-        }
-        
-        String plankey = pId.planKey() == null ? null : pId.planKey().string(); //is maybe null for global schema
-        // keys are ignored for global plan schema
-        if (filter.getPlanKeys() != null && !filter.getPlanKeys().isEmpty() && !PlanSchemaId.Global.equals(pSchemaId)) {
-            if (!filter.getPlanKeys().contains(plankey)) {
-                // looking for globs inside filter.getPlanKeys()
-                if (!filter.getPlanKeys().stream().filter(pk -> pk.contains("*") || pk.contains("?")).anyMatch(pk -> plankey.matches(pk.replace("*",
-                        ".*").replace("?", ".")))) {
-                    return null;
-                }
+    @Override
+    public JOCDefaultResponse postPlanIds(String accessToken, byte[] filterBytes) {
+        try {
+            initLogging(API_CALL_IDS, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, PlansOpenCloseFilter.class);
+            PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getControllerPermissions(filter.getControllerId(), accessToken)
+                    .getNoticeBoards().getView());
+            if (response != null) {
+                return response;
             }
+            currentState = Proxy.of(filter.getControllerId()).currentState();
+            Plans entity = new Plans();
+            entity.setSurveyDate(Date.from(currentState.instant()));
+            session = Globals.createSosHibernateStatelessConnection(API_CALL_IDS);
+
+            entity.setPlans(currentState.toPlan().entrySet().stream().map(e -> getPlanIds(e.getKey(), e.getValue(), filter)).filter(Objects::nonNull)
+                    .collect(Collectors.toList()));
+
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    private com.sos.joc.model.plan.Plan getPlanIds(PlanId pId, JPlan jp, PlansFilter filter) {
+        filter.setNoticeSpaceKeys(null);
+        filter.setPlanSchemaIds(null);
+        return PlanHelper.getFilteredPlan(pId, jp, filter);
+    }
+    
+    private com.sos.joc.model.plan.Plan getPlan(PlanId pId, JPlan jp, PlansFilter filter) {
+        Plan plan = PlanHelper.getFilteredPlan(pId, jp, filter);
+        if (plan == null) {
+            return null;
         }
         
-        com.sos.joc.model.plan.PlanId planId = new com.sos.joc.model.plan.PlanId();
-        planId.setPlanSchemaId(pSchemaId);
-        planId.setPlanKey(plankey);
-        plan.setPlanId(planId);
-        
-        Stream<JOrder> jOrders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState);
+//        Stream<JOrder> jOrders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState);
         Map<OrderId, OrderV> orders = Collections.emptyMap();
         
-        Map<JWorkflowId, Set<JOrder>> workflowToOrder = jOrders.collect(Collectors.groupingBy(JOrder::workflowId, Collectors.toSet()));
+//        Map<JWorkflowId, Set<JOrder>> workflowToOrder = jOrders.collect(Collectors.groupingBy(JOrder::workflowId, Collectors.toSet()));
         
         // TODO check what workflow has (plannable?) boards -> filter workflowToOrder
         // TODO check position of expecting/consuming notice instruction on top level after order position
         
-        jOrders = workflowToOrder.values().stream().flatMap(Set::stream);
+//        jOrders = workflowToOrder.values().stream().flatMap(Set::stream);
 //        boolean compact = Boolean.TRUE == filter.getCompact();
 //        
 //        if (compact) {
@@ -191,7 +200,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
 //        return orderTags;
 //    }
     
-    private List<BoardDeps> getBoards(Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<OrderId, OrderV> orders) {
+    private List<Board> getBoards(Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<OrderId, OrderV> orders) {
         try {
             
             Stream<String> availableBoardNames = jBoards.keySet().stream().map(BoardPath::string);
@@ -220,34 +229,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 Collectors.toList());
     }
     
-//    private void print(Map<PlanId, JPlan> map) {
-//        System.out.println("PlanIds: " + map.keySet().stream().map(PlanId::shortString).collect(Collectors.toSet()));
-//        map.entrySet().stream().forEach(e -> {
-//                    System.out.println("PlanId: " + e.getKey().shortString());
-//                    System.out.println("isGlobal? " + e.getKey().isGlobal());
-//                    System.out.println("isClosed? " + e.getValue().isClosed());
-//                    System.out.println("OrderIds: " + e.getValue().orderIds().stream().map(OrderId::string).collect(Collectors.toSet()));
-//                    AtomicInteger index = new AtomicInteger(1);
-//                    e.getValue().toPlannedBoard().forEach((bPath, pboard) -> {
-//                        int i = index.getAndIncrement();
-//                        System.out.println("BoardPath[" + i + "]: " + bPath.string());
-//                        System.out.println("PlannedBoardId[" + i + "]: " + pboard.id());
-//                        AtomicInteger index2 = new AtomicInteger(1);
-//                        pboard.toNoticePlace().forEach((nKey, nPlace) -> {
-//                            int j = index2.getAndIncrement();
-//                            System.out.println("NoticeKey[" + i + "," + j + "]: " + nKey.string());
-//                            System.out.println("ExpectingOrderIds[" + i + "," + j + "]: " + nPlace.expectingOrderIds().stream().map(
-//                                    OrderId::string).collect(Collectors.toSet()));
-//                            System.out.println("isAnnounced[" + i + "," + j + "]? " + nPlace.isAnnounced());
-//                            System.out.println("Notice[" + i + "," + j + "]? " + nPlace.notice());
-//                        });
-//                        
-//                    });
-//                });
-//    }
-    
-
-    private List<BoardDeps> getBoards(BoardsFilter filter, Map<BoardPath, JPlannedBoard> jBoards, Map<OrderId, OrderV> orders, boolean compact)
+    private List<Board> getBoards(BoardsFilter filter, Map<BoardPath, JPlannedBoard> jBoards, Map<OrderId, OrderV> orders, boolean compact)
             throws Exception {
         try {
             String controllerId = filter.getControllerId();
@@ -282,7 +264,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             JocError jocError = getJocError();
             if (contents != null) {
                 
-                if (orders == null || orders.isEmpty()) {
+                if ((orders == null || orders.isEmpty()) && !compact) {
                     orders = Collections.emptyMap();
                     if (filter.getCompact() != Boolean.TRUE) {
                         
@@ -305,8 +287,6 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                     }
                 }
                 
-                Set<String> boardNames = jBoards.keySet().stream().map(bp -> bp.path().string()).collect(Collectors.toSet());
-                List<WorkflowBoards> wbs = BoardsDependenciesImpl.getWorkflowsWithBoards(controllerId, boardNames, dbLayer);
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, compact, filter.getLimit());
                 
@@ -315,7 +295,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
                         }
-                        return BoardsDependenciesImpl.withDeps(dc.getName(), plB.getPlannedBoardDeps(dc), wbs);
+                        return plB.getPlannedBoardDeps(dc);
                     } catch (Throwable e) {
                         if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                             LOGGER.info(jocError.printMetaInfo());
