@@ -27,6 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "numOfOrders",
     "orders",
     "closed",
+    "numOfNoticeBoards",
     "noticeBoards"
 })
 public class Plan {
@@ -58,6 +59,14 @@ public class Plan {
      */
     @JsonProperty("closed")
     private Boolean closed = false;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNoticeBoards")
+    private Integer numOfNoticeBoards;
     @JsonProperty("noticeBoards")
     private List<Board> noticeBoards = new ArrayList<Board>();
 
@@ -137,6 +146,28 @@ public class Plan {
         this.closed = closed;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNoticeBoards")
+    public Integer getNumOfNoticeBoards() {
+        return numOfNoticeBoards;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNoticeBoards")
+    public void setNumOfNoticeBoards(Integer numOfNoticeBoards) {
+        this.numOfNoticeBoards = numOfNoticeBoards;
+    }
+
     @JsonProperty("noticeBoards")
     public List<Board> getNoticeBoards() {
         return noticeBoards;
@@ -149,12 +180,12 @@ public class Plan {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("planId", planId).append("numOfOrders", numOfOrders).append("orders", orders).append("closed", closed).append("noticeBoards", noticeBoards).toString();
+        return new ToStringBuilder(this).append("planId", planId).append("numOfOrders", numOfOrders).append("orders", orders).append("closed", closed).append("numOfNoticeBoards", numOfNoticeBoards).append("noticeBoards", noticeBoards).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(closed).append(planId).append(orders).append(numOfOrders).append(noticeBoards).toHashCode();
+        return new HashCodeBuilder().append(numOfNoticeBoards).append(numOfOrders).append(closed).append(planId).append(orders).append(noticeBoards).toHashCode();
     }
 
     @Override
@@ -166,7 +197,7 @@ public class Plan {
             return false;
         }
         Plan rhs = ((Plan) other);
-        return new EqualsBuilder().append(closed, rhs.closed).append(planId, rhs.planId).append(orders, rhs.orders).append(numOfOrders, rhs.numOfOrders).append(noticeBoards, rhs.noticeBoards).isEquals();
+        return new EqualsBuilder().append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfOrders, rhs.numOfOrders).append(closed, rhs.closed).append(planId, rhs.planId).append(orders, rhs.orders).append(noticeBoards, rhs.noticeBoards).isEquals();
     }
 
 }

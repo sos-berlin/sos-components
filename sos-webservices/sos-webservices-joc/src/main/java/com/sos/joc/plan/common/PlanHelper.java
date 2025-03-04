@@ -26,7 +26,7 @@ public class PlanHelper {
         
         String plankey = pId.planKey() == null ? null : pId.planKey().string(); //is maybe null for global schema
         // keys are ignored for global plan schema
-        if (filter.getNoticeSpaceKeys() != null && !filter.getNoticeSpaceKeys().isEmpty() && !"Global".equals(pSchemaId)) {
+        if (filter.getNoticeSpaceKeys() != null && !filter.getNoticeSpaceKeys().isEmpty() && !"Global".equalsIgnoreCase(pSchemaId)) {
             if (!filter.getNoticeSpaceKeys().contains(plankey)) {
                 // looking for globs inside filter.getNoticeSpaceKeys()
                 if (!filter.getNoticeSpaceKeys().stream().filter(pk -> pk.contains("*") || pk.contains("?")).anyMatch(pk -> plankey.matches(pk.replace("*",
@@ -40,6 +40,8 @@ public class PlanHelper {
         planId.setPlanSchemaId(pSchemaId);
         planId.setNoticeSpaceKey(plankey);
         plan.setPlanId(planId);
+        plan.setNumOfNoticeBoards(jp.toPlannedBoard().size());
+        plan.setNoticeBoards(null);
         return plan;
     }
 
