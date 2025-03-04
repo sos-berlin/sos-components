@@ -26,12 +26,12 @@ public class YADEEngineTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YADEEngineTest.class);
 
-    private static String LOCAL_SOURCE_DIR = "/home/sos/test/yade_rewrite";
-    private static String LOCAL_TARGET_DIR = LOCAL_SOURCE_DIR + "/target";
+    private static String LOCAL_SOURCE_DIR = "/home/sos/test/yade_rewrite/source";
+    private static String LOCAL_TARGET_DIR = LOCAL_SOURCE_DIR + "/../target";
 
     private static String SSH_HOST = "sos.sos";
-    private static String SSH_SOURCE_DIR = "/home/sos/test/yade_rewrite";
-    private static String SSH_TARGET_DIR = SSH_SOURCE_DIR + "/target";
+    private static String SSH_SOURCE_DIR = "/home/sos/test/yade_rewrite/source";
+    private static String SSH_TARGET_DIR = SSH_SOURCE_DIR + "/../target";
 
     @Ignore
     @Test
