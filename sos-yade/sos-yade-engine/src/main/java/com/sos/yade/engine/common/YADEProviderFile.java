@@ -1,7 +1,5 @@
 package com.sos.yade.engine.common;
 
-import java.security.MessageDigest;
-
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.common.delegators.AYADEProviderDelegator;
@@ -19,7 +17,6 @@ public class YADEProviderFile extends ProviderFile {
     private String parentFullPath;
     /** after possible rename etc. */
     private String finalFullPath;
-    private String checksum;
 
     public YADEProviderFile(AYADEProviderDelegator delegator, String fullPath, long size, long lastModifiedMillis,
             YADEDirectoryMapper directoryMapper, boolean checkSteady) {
@@ -69,13 +66,6 @@ public class YADEProviderFile extends ProviderFile {
         target = null;
     }
 
-    public void resetChecksum() {
-        checksum = null;
-        if (target != null) {
-            target.resetChecksum();
-        }
-    }
-
     public boolean needsRename() {
         return finalFullPath != null && !finalFullPath.equalsIgnoreCase(getFullPath());
     }
@@ -100,37 +90,12 @@ public class YADEProviderFile extends ProviderFile {
         target = val;
     }
 
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public void setChecksum(String val) {
-        checksum = val;
-    }
-
     public void setSubState(TransferEntryState val) {
         subState = val;
     }
 
     public TransferEntryState getSubState() {
         return subState;
-    }
-
-    public void setChecksum(MessageDigest digest) {
-        if (digest == null) {
-            checksum = null;
-            return;
-        }
-        // byte[] toHexString
-        byte[] b = digest.digest();
-        char[] hexChar = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-        int length = b.length * 2;
-        StringBuilder sb = new StringBuilder(length);
-        for (byte element : b) {
-            sb.append(hexChar[(element & 0xf0) >>> 4]);
-            sb.append(hexChar[element & 0x0f]);
-        }
-        checksum = sb.toString();
     }
 
     public class Steady {
@@ -156,7 +121,5 @@ public class YADEProviderFile extends ProviderFile {
         public boolean isSteady() {
             return steady;
         }
-
     }
-
 }

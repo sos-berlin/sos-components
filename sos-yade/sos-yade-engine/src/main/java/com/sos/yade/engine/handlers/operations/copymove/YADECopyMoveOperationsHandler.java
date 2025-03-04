@@ -225,6 +225,7 @@ public class YADECopyMoveOperationsHandler {
 
         // 2) Target: delete files with the TRANSFERRING/TRANSFERRED state
         // - Note: the Target files can be already renamed
+        // - Note: the Target files can already be deleted(ROLLED_BACK state) if the source check checksum enabled and failed
         // - Note: the Source files by rollback are not affected
         Map<String, YADEProviderFile> paths = sourceFiles.stream()// filter
                 .map(f -> {
@@ -252,6 +253,12 @@ public class YADECopyMoveOperationsHandler {
 
         if (paths.size() > 0) {
             try {
+                if (config.getTarget().isCreateIntegrityHashFileEnabled()) {
+                    Map<String, YADEProviderFile> integrityHashFiles = paths.entrySet().stream().collect(Collectors.toMap(k -> k + config
+                            .getIntegrityHashFileExtensionWithDot(), v -> (YADEProviderFile) v, (existing, replacement) -> existing));
+                    paths.putAll(integrityHashFiles);
+                }
+
                 if (logger.isDebugEnabled()) {
                     logger.debug("%s[rollback][deleteFiles]%s", targetDelegator.getLogPrefix(), String.join(" ,", paths.keySet()));
                 }

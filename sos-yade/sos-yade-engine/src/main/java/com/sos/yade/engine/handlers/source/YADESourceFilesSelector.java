@@ -16,9 +16,11 @@ import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
+import com.sos.yade.engine.common.arguments.YADEArguments;
 import com.sos.yade.engine.common.arguments.YADEClientArguments;
 import com.sos.yade.engine.common.arguments.YADESourceArguments;
 import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.common.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourceFilesSelectorException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceZeroByteFilesException;
@@ -37,6 +39,18 @@ public class YADESourceFilesSelector {
         } else {
             return selectFiles(sourceDelegator, createProviderFileSelection(sourceDelegator, excludedFileExtension, false));
         }
+    }
+
+    public static String getExcludedFileExtension(YADEArguments args, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator) {
+        // Note: YADE1 uses only the source getCheckIntegrityHash argument ...
+        if (sourceDelegator.getArgs().getCheckIntegrityHash().isTrue()) {
+            return args.getIntegrityHashAlgorithm().getValue();
+        }
+        if (targetDelegator != null && targetDelegator.getArgs().getCreateIntegrityHashFile().isTrue()) {
+            return args.getIntegrityHashAlgorithm().getValue();
+        }
+        return null;
     }
 
     private static List<ProviderFile> selectFiles(YADESourceProviderDelegator sourceDelegator, ProviderFileSelection selection)

@@ -22,8 +22,8 @@ import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.common.YADEFileNameInfo;
 import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
+import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEChecksumFileHelper;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileActionsExecuter;
-import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileIntegrityHashHelper;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileReplacementHelper;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileStreamHelper;
 
@@ -96,10 +96,10 @@ public class YADEFileHandler {
             }
 
             // not compress if cumulative file
-            boolean isCompressTarget = config.getTarget().getCompress() != null && !useCumulativeTargetFile;
-            MessageDigest sourceMessageDigest = YADEFileIntegrityHashHelper.getMessageDigest(config, config.getSource()
+            boolean compressTarget = config.getTarget().getCompress() != null && !useCumulativeTargetFile;
+            MessageDigest sourceMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getSource()
                     .isCheckIntegrityHashEnabled());
-            MessageDigest targetMessageDigest = YADEFileIntegrityHashHelper.getMessageDigest(config, config.getTarget()
+            MessageDigest targetMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getTarget()
                     .isCreateIntegrityHashFileEnabled());
 
             boolean useBufferedStreams = sourceFile.getSize() > USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN ? true : false;
@@ -112,7 +112,7 @@ public class YADEFileHandler {
                 // int cumulativeFileSeperatorLength = 0;
                 try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile, useBufferedStreams);
                         OutputStream targetOutputStream = YADEFileStreamHelper.getTargetOutputStream(config, targetDelegator, targetFile,
-                                useBufferedStreams); OutputStream targetStream = isCompressTarget ? new GZIPOutputStream(targetOutputStream)
+                                useBufferedStreams); OutputStream targetStream = compressTarget ? new GZIPOutputStream(targetOutputStream)
                                         : targetOutputStream) {
                     if (attempts > 0) {
                         YADEFileStreamHelper.skipSourceInputStreamToPosition(sourceStream, targetFile);
@@ -125,8 +125,8 @@ public class YADEFileHandler {
                         // cumulativeFileSeperatorLength = bytes.length;
                         targetOutputStream.write(bytes);
 
-                        YADEFileIntegrityHashHelper.updateSourceMessageDigest(sourceMessageDigest, bytes);
-                        YADEFileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, bytes, isCompressTarget);
+                        YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
+                        YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
                         isCumulateTargetWritten = true;
                     }
 
@@ -134,8 +134,8 @@ public class YADEFileHandler {
                         byte[] bytes = new byte[0];
                         targetStream.write(bytes);
 
-                        YADEFileIntegrityHashHelper.updateSourceMessageDigest(sourceMessageDigest, bytes);
-                        YADEFileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, bytes, isCompressTarget);
+                        YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
+                        YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
                     } else {
                         byte[] buffer = new byte[config.getBufferSize()];
                         int bytesRead;
@@ -143,10 +143,10 @@ public class YADEFileHandler {
                             targetStream.write(buffer, 0, bytesRead);
                             targetFile.updateProgressSize(bytesRead);
 
-                            YADEFileIntegrityHashHelper.updateSourceMessageDigest(targetMessageDigest, buffer, bytesRead);
-                            YADEFileIntegrityHashHelper.updateTargetMessageDigest(targetMessageDigest, buffer, bytesRead, isCompressTarget);
+                            YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, buffer, bytesRead, false);
+                            YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, buffer, bytesRead, compressTarget);
                         }
-                        YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, isCompressTarget);
+                        YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
                     }
                     break l;
                 } catch (Throwable e) {
@@ -167,17 +167,15 @@ public class YADEFileHandler {
                     }
                 }
             }
-            YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, isCompressTarget);
+            YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, compressTarget);
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
             logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
                     targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize(), SOSDate.getDuration(startTime, Instant.now()));
 
             YADEFileActionsExecuter.checkTargetFileSize(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
-
-            YADEFileIntegrityHashHelper.setChecksum(logger, targetDelegator, targetFile, sourceFile.getIndex(), targetMessageDigest);
-            YADEFileIntegrityHashHelper.setChecksum(logger, sourceDelegator, sourceFile, sourceFile.getIndex(), sourceMessageDigest);
-            YADEFileIntegrityHashHelper.checkSourceChecksum(logger, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
+            YADEChecksumFileHelper.checkSourceChecksum(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile,
+                    sourceMessageDigest);
 
             YADECommandsHandler.executeAfterFile(logger, sourceDelegator, targetDelegator, sourceFile);
 
@@ -186,6 +184,8 @@ public class YADEFileHandler {
             if (!useCumulativeTargetFile) {
                 YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, targetDelegator, targetFile);
                 YADEFileActionsExecuter.setTargetFileModificationDate(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
+
+                YADEChecksumFileHelper.writeTargetChecksumFile(logger, logPrefix, config, targetDelegator, targetFile, targetMessageDigest);
             }
             // Source
             YADEFileActionsExecuter.processSourceFileAfterNonTransactionalTransfer(logger, logPrefix, config, sourceDelegator, sourceFile);
@@ -193,8 +193,6 @@ public class YADEFileHandler {
             throw e;
         } catch (Throwable e) {
             throw new YADEEngineTransferFileException(e);
-        } finally {
-            sourceFile.resetChecksum();
         }
     }
 

@@ -289,6 +289,15 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     @Override
+    public void writeFile(String path, String content) throws SOSProviderException {
+        try {
+            SOSPath.overwrite(getPath(path), content);
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
+    }
+
+    @Override
     public String getPathSeparator() {
         return FileSystems.getDefault().getSeparator();
     }

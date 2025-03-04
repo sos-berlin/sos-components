@@ -102,9 +102,10 @@ public class YADEEngine {
         }
 
         Duration operationDuration = null;
-        String sourceExcludedFileExtension = sourceArgs.getCheckIntegrityHash().isTrue() ? args.getIntegrityHashAlgorithm().getValue() : null;
         Throwable exception = null;
         List<ProviderFile> files = null;
+
+        String sourceExcludedFileExtension = YADESourceFilesSelector.getExcludedFileExtension(args, sourceDelegator, targetDelegator);
         // All steps may trigger an exception
         if (!sourceArgs.isPollingEnabled()) {
             try {

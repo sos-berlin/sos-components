@@ -89,6 +89,10 @@ public class YADECopyMoveOperationsConfig {
         return integrityHashAlgorithm;
     }
 
+    public String getIntegrityHashFileExtensionWithDot() {
+        return "." + integrityHashAlgorithm;
+    }
+
     public int getBufferSize() {
         return bufferSize;
     }

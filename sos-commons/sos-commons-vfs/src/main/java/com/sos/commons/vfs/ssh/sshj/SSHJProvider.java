@@ -714,6 +714,20 @@ public class SSHJProvider extends ASSHProvider {
         }
     }
 
+    @Override
+    public void writeFile(String path, String content) throws SOSProviderException {
+        checkBeforeOperation("writeFile", sshClient, path, "path");
+
+        EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT, OpenMode.TRUNC);
+        try (SFTPClient sftp = sshClient.newSFTPClient()) {
+            try (RemoteFile remoteFile = sftp.open(path, mode)) {
+                remoteFile.write(0, content.getBytes(StandardCharsets.UTF_8), 0, content.length());
+            }
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
+    }
+
     private void checkBeforeOperation(String method, SSHClient ssh) throws SOSProviderException {
         if (ssh == null) {
             throw new SOSSSHClientNotInitializedException(getLogPrefix() + method);

@@ -127,6 +127,11 @@ public class SSHProvider extends ASSHProvider {
     }
 
     @Override
+    public void writeFile(String path, String content) throws SOSProviderException {
+        provider.writeFile(path, content);
+    }
+
+    @Override
     public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
         return provider.deleteFilesIfExist(paths, stopOnSingleFileError);
     }

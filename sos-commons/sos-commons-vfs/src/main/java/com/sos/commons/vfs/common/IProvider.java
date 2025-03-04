@@ -90,9 +90,13 @@ public interface IProvider {
 
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException;
 
+    /** Returns the file contents if this file exists */
     public String getFileContentIfExists(String path) throws SOSProviderException;
 
-    /** Sets modification time from milliseconds.<br/>
+    /** An existing file is overwritten */
+    public void writeFile(String path, String content) throws SOSProviderException;
+
+    /** Sets modification time from milliseconds<br/>
      * 
      * @param path
      * @param milliseconds
