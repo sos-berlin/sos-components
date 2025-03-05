@@ -50,7 +50,7 @@
     <apache.commons.compress.version>1.26.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
     <apache.commons.text.version>1.11.0</apache.commons.text.version>
-    <apache.commons.net.version>3.10.0</apache.commons.net.version>
+    <apache.commons.net.version>3.11.1</apache.commons.net.version>
     <apache.httpcomponents.httpclient.version>4.5.14</apache.httpcomponents.httpclient.version>
     <json.version>1.1.4</json.version>
     <servlet.version>6.0.0</servlet.version>
@@ -91,6 +91,8 @@
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.29</json.schema.validator.version>
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
+    <webdav-version>2.22.0</webdav-version>
+    <smbj.version>0.14.0</smbj.version>
   </properties>
 
   <build>
@@ -937,7 +939,22 @@
         <artifactId>json-schema-validator</artifactId>
         <version>${json.schema.validator.version}</version>
       </dependency>
-
+      <!-- YADE -->
+      <dependency>
+        <groupId>com.hierynomus</groupId>
+        <artifactId>smbj</artifactId>
+        <version>${smbj.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-webdav</artifactId>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 </project>
