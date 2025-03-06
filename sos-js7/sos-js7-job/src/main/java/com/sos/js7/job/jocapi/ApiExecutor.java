@@ -47,7 +47,7 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
+import com.sos.commons.vfs.exceptions.SOSAuthenticationFailedException;
 import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStepLogger;

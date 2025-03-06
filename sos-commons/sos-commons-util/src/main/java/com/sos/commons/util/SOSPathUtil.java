@@ -1,5 +1,7 @@
 package com.sos.commons.util;
 
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -364,6 +366,47 @@ public class SOSPathUtil {
         }
         // default: e.g. if path without any path separator(file name )...
         return PATH_SEPARATOR_UNIX;
+    }
+
+    /** Examples:<br/>
+     * - 'folder/./file.txt' -> 'folder/file.txt'<br/>
+     * - '/home/user/./docs/../a' ->'/home/user/a'<br/>
+     * - 'a/b/./c/../d' -> 'a/b/d'<br/>
+     * - '/../' -> '/'<br/>
+     * - 'a/b/c/../../../' -> ''<br/>
+     * - '/a/../b/./c/.' ->'/b/c'<br/>
+     * - 'folder/file.txt'->'folder/file.txt'<br/>
+     * 
+     * @param path
+     * @return */
+    public static String normalize(String path) {
+        return normalize(path, null);
+    }
+
+    public static String normalize(String path, String pathSeparator) {
+        try {
+            if (SOSString.isEmpty(path) || (!path.contains("..") && !path.contains("."))) {
+                return path;
+            }
+            final String ps = getPathSeparator(path, pathSeparator);
+            // Windows/URI
+            if (path.contains(":")) {
+                if (isAbsoluteWindowsOpenSSHPath(path)) {
+                    String n = ps + Path.of(path.substring(1)).normalize().toString();
+                    return toUnixStyle(n);
+                } else if (isAbsoluteURIPath(path)) {
+                    return new URI(path).normalize().toURL().toString();
+                } else {
+                    String n = Path.of(path).normalize().toString();
+                    return isUnixStylePathSeparator(ps) ? toUnixStyle(n) : toWindowsStyle(n);
+                }
+            }
+            String n = Path.of(path).normalize().toString();
+            // Unix and UNC(\\server\share)
+            return isUnixStylePathSeparator(ps) ? toUnixStyle(n) : toWindowsStyle(n);
+        } catch (Throwable e) {
+            return path;
+        }
     }
 
     private static String getPathSeparator(Collection<?> paths, String pathSeparator) {

@@ -93,7 +93,7 @@ public class YADEEngine {
             YADEArgumentsChecker.validateOrExit(logger, args, clientArgs, sourceArgs, targetArgs);
 
             // Source/Target: initialize delegator/provider
-            sourceDelegator = YADEProviderDelegatorHelper.initializeSourceDelegator(logger, sourceArgs);
+            sourceDelegator = YADEProviderDelegatorHelper.initializeSourceDelegator(logger, args, sourceArgs);
             targetDelegator = YADEProviderDelegatorHelper.initializeTargetDelegator(logger, args, targetArgs);
         } catch (YADEEngineInitializationException e) {
             throw e;

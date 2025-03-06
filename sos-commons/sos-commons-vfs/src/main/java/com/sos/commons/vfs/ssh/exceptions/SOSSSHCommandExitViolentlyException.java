@@ -1,6 +1,6 @@
 package com.sos.commons.vfs.ssh.exceptions;
 
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
 
 import net.schmizz.sshj.connection.channel.direct.Signal;
 

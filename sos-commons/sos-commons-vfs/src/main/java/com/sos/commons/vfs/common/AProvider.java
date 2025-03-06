@@ -22,9 +22,9 @@ import com.sos.commons.vfs.common.file.ProviderFileBuilder;
 import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelectionConfig;
-import com.sos.commons.vfs.exception.SOSProviderConnectException;
-import com.sos.commons.vfs.exception.SOSProviderException;
-import com.sos.commons.vfs.exception.SOSProviderInitializationException;
+import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
 
 public abstract class AProvider<A extends AProviderArguments> implements IProvider {
 
@@ -46,7 +46,8 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         this.arguments = arguments;
     }
 
-    /** Method to set a custom providerFileCreator (a function that generates ProviderFile using the builder) */
+    /** Method to set a custom providerFileCreator (a function that generates ProviderFile using the builder)<br/>
+     * Overrides {@link IProvider#setProviderFileCreator(Function)} */
     @Override
     public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> val) {
         providerFileCreator = val;
@@ -70,13 +71,13 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     @Override
-    public boolean createDirectoriesIfNotExist(Collection<String> paths) throws SOSProviderException {
+    public boolean createDirectoriesIfNotExists(Collection<String> paths) throws SOSProviderException {
         if (SOSCollection.isEmpty(paths)) {
             return false;
         }
         boolean result = false;
         for (String path : paths) {
-            if (createDirectoriesIfNotExist(path)) {
+            if (createDirectoriesIfNotExists(path)) {
                 result = true;
             }
         }
@@ -84,29 +85,11 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     @Override
-    public RenameFilesResult renameFileIfExists(String sourcePath, String targetPath) throws SOSProviderException {
-        checkParam("renameFileIfExists", sourcePath, "sourcePath");
-        checkParam("renameFileIfExists", targetPath, "targetPath");
+    public RenameFilesResult renameFileIfSourceExists(String sourcePath, String targetPath) throws SOSProviderException {
+        checkParam("renameFileIfSourceExists", sourcePath, "sourcePath");
+        checkParam("renameFileIfSourceExists", targetPath, "targetPath");
 
-        return renameFilesIfExist(Collections.singletonMap(sourcePath, targetPath), true);
-    }
-
-    @Override
-    public String getDirectoryPath(String path) {
-        if (SOSString.isEmpty(path)) {
-            return null;
-        }
-        return SOSPathUtil.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(path)
-                : SOSPathUtil.getWindowsStyleDirectoryWithoutTrailingSeparator(path);
-    }
-
-    @Override
-    public String getDirectoryPathWithTrailingPathSeparator(String path) {
-        if (SOSString.isEmpty(path)) {
-            return null;
-        }
-        return SOSPathUtil.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(path) : SOSPathUtil
-                .getWindowsStyleDirectoryWithTrailingSeparator(path);
+        return renameFilesIfSourceExists(Collections.singletonMap(sourcePath, targetPath), true);
     }
 
     @Override

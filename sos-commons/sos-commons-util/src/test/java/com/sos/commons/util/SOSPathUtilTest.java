@@ -63,6 +63,43 @@ public class SOSPathUtilTest {
         LOGGER.info("    [selectDeepestLevelPaths]" + SOSPath.selectDeepestLevelPaths(paths));
     }
 
+    @Ignore
+    @Test
+    public void testNormalize() throws Exception {
+        List<String> stringPaths = new ArrayList<>();
+        stringPaths.add("folder/./file.txt");
+        stringPaths.add("/home/user/./docs/../a");
+        stringPaths.add("a/b/./c/../d");
+        stringPaths.add("/../");
+        stringPaths.add("a/b/c/../../../");
+        stringPaths.add("/a/../b/./c/.");
+        stringPaths.add("C:\\\\Users\\test\\..\\file.txt");
+        stringPaths.add("C:/Users/test/../file.txt");
+        // Windows OpenSSH
+        stringPaths.add("/C:/Users/test/../file.txt");
+        // stringPaths.add("C:/Users/test/../file.txt");
+        stringPaths.add("C:\\..\\Windows\\System32");
+        // UNC
+        stringPaths.add("\\\\server\\share\\x\\..\\1.txt");
+        // URI
+        stringPaths.add("https://server/x/../1.txt");
+
+        for (String path : stringPaths) {
+            LOGGER.info("[" + path + "]");
+            LOGGER.info("    [SOSPathUtil.normalize]" + SOSPathUtil.normalize(path));
+            LOGGER.info("    [Path.normalize]       " + normalizeToString(path));
+        }
+
+    }
+
+    private String normalizeToString(String path) {
+        try {
+            return Path.of(path).normalize().toString();
+        } catch (Throwable e) {
+            return e.toString();
+        }
+    }
+
     private void paths(String path) {
         LOGGER.info("[" + path + "]");
         LOGGER.info("    [SOSPathUtil.getName=" + SOSPathUtil.getName(path) + "][Path.getFileName=" + Path.of(path).getFileName() + "]");

@@ -8,7 +8,11 @@ import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.AProviderArguments;
 import com.sos.commons.vfs.common.AProviderArguments.Protocol;
 import com.sos.commons.vfs.common.IProvider;
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.ftp.FTPProvider;
+import com.sos.commons.vfs.ftp.FTPSProvider;
+import com.sos.commons.vfs.ftp.common.FTPProviderArguments;
+import com.sos.commons.vfs.ftp.common.FTPSProviderArguments;
 import com.sos.commons.vfs.local.LocalProvider;
 import com.sos.commons.vfs.local.common.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
@@ -28,9 +32,9 @@ import com.sos.yade.engine.exceptions.YADEEngineTargetConnectionException;
 public class YADEProviderDelegatorHelper {
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADESourceProviderDelegator initializeSourceDelegator(ISOSLogger logger, YADESourceArguments sourceArgs)
+    public static YADESourceProviderDelegator initializeSourceDelegator(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs)
             throws YADEEngineInitializationException {
-        return new YADESourceProviderDelegator(initializeProvider(logger, "Source", sourceArgs.getProvider()), sourceArgs);
+        return new YADESourceProviderDelegator(initializeProvider(logger, "Source", args, sourceArgs.getProvider()), sourceArgs);
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
@@ -39,7 +43,7 @@ public class YADEProviderDelegatorHelper {
         if (!YADEArgumentsHelper.needTargetProvider(args)) {
             return null;
         }
-        return new YADETargetProviderDelegator(initializeProvider(logger, "Target", targetArgs.getProvider()), targetArgs);
+        return new YADETargetProviderDelegator(initializeProvider(logger, "Target", args, targetArgs.getProvider()), targetArgs);
     }
 
     public static void ensureConnected(ISOSLogger logger, IYADEProviderDelegator delegator) throws YADEEngineConnectionException {
@@ -87,13 +91,13 @@ public class YADEProviderDelegatorHelper {
         }
     }
 
-    private static IProvider initializeProvider(ISOSLogger logger, String identifier, AProviderArguments args)
+    private static IProvider initializeProvider(ISOSLogger logger, String identifier, YADEArguments args, AProviderArguments providerArgs)
             throws YADEEngineInitializationException {
-        if (args == null) {
+        if (providerArgs == null) {
             throw new YADEEngineInitializationException(new SOSMissingDataException("[" + identifier + "]YADEProviderArguments"));
         }
 
-        SOSArgument<Protocol> protocol = args.getProtocol();
+        SOSArgument<Protocol> protocol = providerArgs.getProtocol();
         if (protocol.getValue() == null) {
             throw new YADEEngineInitializationException(new SOSMissingDataException(protocol.getName()));
         }
@@ -101,19 +105,23 @@ public class YADEProviderDelegatorHelper {
         try {
             switch (protocol.getValue()) {
             case FTP:
+                p = new FTPProvider(logger, (FTPProviderArguments) providerArgs);
+                args.getParallelism().setValue(1);
+                break;
             case FTPS:
-                throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
-            // break;
+                p = new FTPSProvider(logger, (FTPSProviderArguments) providerArgs);
+                args.getParallelism().setValue(1);
+                break;
             case HTTP:
             case HTTPS:
                 throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
             // break;
             case LOCAL:
-                p = new LocalProvider(logger, (LocalProviderArguments) args);
+                p = new LocalProvider(logger, (LocalProviderArguments) providerArgs);
                 break;
             case SFTP:
             case SSH:
-                p = new SSHProvider(logger, (SSHProviderArguments) args);
+                p = new SSHProvider(logger, (SSHProviderArguments) providerArgs);
                 break;
             case SMB:
                 throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());

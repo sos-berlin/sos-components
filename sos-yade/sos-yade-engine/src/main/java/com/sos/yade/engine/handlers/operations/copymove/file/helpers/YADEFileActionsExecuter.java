@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
@@ -28,7 +28,7 @@ public class YADEFileActionsExecuter {
 
         String targetFileOldPath = targetFile.getFullPath();
         String targetFileNewPath = targetFile.getFinalFullPath();
-        targetDelegator.getProvider().renameFileIfExists(targetFileOldPath, targetFileNewPath);
+        targetDelegator.getProvider().renameFileIfSourceExists(targetFileOldPath, targetFileNewPath);
         targetFile.setSubState(TransferEntryState.RENAMED);
         logger.info("[%s]%s[%s][renamed][%s]", logPrefix, targetDelegator.getLogPrefix(), targetFileOldPath, targetFileNewPath);
     }
@@ -103,7 +103,7 @@ public class YADEFileActionsExecuter {
             sourceDelegator.getDirectoryMapper().tryCreateSourceDirectory(logger, sourceDelegator, sourceFile, info);
 
             // rename
-            sourceDelegator.getProvider().renameFileIfExists(sourceFile.getFullPath(), sourceFile.getFinalFullPath());
+            sourceDelegator.getProvider().renameFileIfSourceExists(sourceFile.getFullPath(), sourceFile.getFinalFullPath());
             // after successful rename
             sourceFile.setState(TransferEntryState.RENAMED);
         }

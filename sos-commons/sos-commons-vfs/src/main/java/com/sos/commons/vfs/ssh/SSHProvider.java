@@ -5,23 +5,20 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.AProviderContext;
+import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.commons.vfs.common.file.ProviderFileBuilder;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exception.SOSProviderConnectException;
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.ssh.common.ASSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.commons.vfs.ssh.common.SSHServerInfo;
 import com.sos.commons.vfs.ssh.sshj.SSHJProvider;
 
 public class SSHProvider extends ASSHProvider {
@@ -36,124 +33,129 @@ public class SSHProvider extends ASSHProvider {
         return new SSHJProvider(logger, args);
     }
 
+    /** Overrides {@link IProvider#connect()} */
     @Override
     public void connect() throws SOSProviderConnectException {
         provider.connect();
     }
 
+    /** Overrides {@link IProvider#isConnected()} */
     @Override
     public boolean isConnected() {
         return provider.isConnected();
     }
 
+    /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
         provider.disconnect();
     }
 
+    /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public void setProviderFileCreator(Function<ProviderFileBuilder, ProviderFile> creator) {
-        provider.setProviderFileCreator(creator);
+    public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
+        return provider.createDirectoriesIfNotExists(path);
     }
 
-    @Override
-    public void setContext(AProviderContext context) {
-        provider.setContext(context);
-    }
-
-    @Override
-    public boolean createDirectoriesIfNotExist(String path) throws SOSProviderException {
-        return provider.createDirectoriesIfNotExist(path);
-    }
-
+    /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
     public boolean deleteIfExists(String path) throws SOSProviderException {
         return provider.deleteIfExists(path);
     }
 
+    /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) {
         return provider.exists(path);
     }
 
-    @Override
-    public boolean isDirectory(String path) {
-        return provider.isDirectory(path);
-    }
-
+    /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
         return provider.selectFiles(selection);
     }
 
+    /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
         return provider.getFileIfExists(path);
     }
 
+    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
     @Override
     public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
         return provider.rereadFileIfExists(file);
     }
 
+    /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
         provider.setFileLastModifiedFromMillis(path, milliseconds);
     }
 
+    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
     @Override
     public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
         return provider.executeCommand(command, timeout, env);
     }
 
+    /** Overrides {@link IProvider#cancelCommands())} */
     @Override
     public SOSCommandResult cancelCommands() {
         return provider.cancelCommands();
     }
 
+    /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
     public InputStream getInputStream(String path) throws SOSProviderException {
         return provider.getInputStream(path);
     }
 
+    /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
         return provider.getOutputStream(path, append);
     }
 
+    /** Overrides {@link IProvider#getFileContentIfExists(String)} */
     @Override
     public String getFileContentIfExists(String path) throws SOSProviderException {
         return provider.getFileContentIfExists(path);
     }
 
+    /** Overrides {@link IProvider#writeFile(String, String)} */
     @Override
     public void writeFile(String path, String content) throws SOSProviderException {
         provider.writeFile(path, content);
     }
 
+    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
     @Override
-    public DeleteFilesResult deleteFilesIfExist(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
-        return provider.deleteFilesIfExist(paths, stopOnSingleFileError);
+    public DeleteFilesResult deleteFilesIfExists(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        return provider.deleteFilesIfExists(paths, stopOnSingleFileError);
     }
 
+    /** Overrides {@link IProvider#renameFilesIfSourceExists(String, String)} */
     @Override
-    public RenameFilesResult renameFilesIfExist(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
-        return provider.renameFilesIfExist(paths, stopOnSingleFileError);
+    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+        return provider.renameFilesIfSourceExists(paths, stopOnSingleFileError);
     }
 
     /* -- Additional SSH Provider specific methods ------------------------- */
-    public SSHServerInfo getServerInfo() {
-        return provider.getServerInfo();
-    }
-
-    public void put(String source, String target, int perm) throws SOSProviderException {
-        provider.put(source, target, perm);
-    }
-
+    /** Overrides {@link ASSHProvider#put(String, String)} */
+    @Override
     public void put(String source, String target) throws SOSProviderException {
         provider.put(source, target);
     }
 
+    /** Overrides {@link ASSHProvider#put(String, String, int)} */
+    @Override
+    public void put(String source, String target, int perm) throws SOSProviderException {
+        provider.put(source, target, perm);
+    }
+
+    /** Overrides {@link ASSHProvider#get(String, String)} */
+    @Override
     public void get(String source, String target) throws SOSProviderException {
         provider.get(source, target);
     }

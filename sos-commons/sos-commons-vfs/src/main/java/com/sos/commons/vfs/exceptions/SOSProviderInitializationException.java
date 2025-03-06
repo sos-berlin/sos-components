@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.exception;
+package com.sos.commons.vfs.exceptions;
 
 public class SOSProviderInitializationException extends SOSProviderException {
 

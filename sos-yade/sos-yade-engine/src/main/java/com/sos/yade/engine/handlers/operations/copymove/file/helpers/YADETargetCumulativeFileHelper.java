@@ -10,7 +10,7 @@ import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
@@ -45,7 +45,7 @@ public class YADETargetCumulativeFileHelper {
         }
         DeleteFilesResult r;
         try {
-            r = targetDelegator.getProvider().deleteFilesIfExist(paths, false);
+            r = targetDelegator.getProvider().deleteFilesIfExists(paths, false);
             logger.info("%s%s[rollback][deleteResult]%s", targetDelegator.getLogPrefix(), LOG_PREFIX, r);
         } catch (Throwable e) {
             logger.info("%s%s[rollback][deleteFiles]%s", targetDelegator.getLogPrefix(), LOG_PREFIX, String.join(" ,", paths));
@@ -63,7 +63,7 @@ public class YADETargetCumulativeFileHelper {
         if (config.getTarget().getCumulate().getFile().needsRename()) {
             if (config.getTarget().isDeleteCumulativeFileEnabled()) {
                 if (config.getTarget().getCompress() == null) {
-                    targetDelegator.getProvider().renameFileIfExists(transferPath, finalPath);
+                    targetDelegator.getProvider().renameFileIfSourceExists(transferPath, finalPath);
                 } else {
                     compress(logger, config, targetDelegator, transferPath, finalPath);
                     targetDelegator.getProvider().deleteIfExists(transferPath);
@@ -88,7 +88,7 @@ public class YADETargetCumulativeFileHelper {
                     logger.info("%s%s[%s]updated", targetDelegator.getLogPrefix(), LOG_PREFIX, finalPath);
                 } else {
                     if (config.getTarget().getCompress() == null) {
-                        targetDelegator.getProvider().renameFileIfExists(transferPath, finalPath);
+                        targetDelegator.getProvider().renameFileIfSourceExists(transferPath, finalPath);
                     } else {
                         compress(logger, config, targetDelegator, transferPath, finalPath);
                         targetDelegator.getProvider().deleteIfExists(transferPath);

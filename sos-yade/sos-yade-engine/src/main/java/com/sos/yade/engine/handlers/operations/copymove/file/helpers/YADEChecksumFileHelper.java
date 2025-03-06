@@ -5,7 +5,7 @@ import java.security.NoSuchAlgorithmException;
 
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.common.YADEProviderFile;
 import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;

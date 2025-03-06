@@ -69,9 +69,6 @@ public class LocalProviderTest {
             // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos"));
             // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos/test.txt"));
 
-            LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos"));
-            LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos/test.txt"));
-
             // p.delete("D://tmp/1");
             // p.delete("D://tmp/sos/test");
             // LOGGER.info("[DELETED]" + p.deleteIfExists("D://tmp/sos/test/"));

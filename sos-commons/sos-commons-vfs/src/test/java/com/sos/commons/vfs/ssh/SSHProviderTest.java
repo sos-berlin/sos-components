@@ -278,9 +278,6 @@ public class SSHProviderTest {
             // LOGGER.info("[SIZE]" + p.getSize("/home/sos"));
             // LOGGER.info("[SIZE]" + p.getSize("/home/sos/test.txt"));
 
-            LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("/home/sos"));
-            LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("/home/sos/test.txt"));
-
             // p.delete("/home/sos/tmp_target.log");
             // p.delete("/home/sos/test");
             // LOGGER.info("[DELETED]" + p.deleteIfExists("/home/sos/test/"));
@@ -323,9 +320,6 @@ public class SSHProviderTest {
             LOGGER.info("[EXISTS]" + p.exists("D://tmp/sos"));
             // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos"));
             // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos/test.txt"));
-
-            LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos"));
-            LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos/test.txt"));
 
             // p.delete("D://tmp/1");
             // p.delete("D://tmp/sos/test");

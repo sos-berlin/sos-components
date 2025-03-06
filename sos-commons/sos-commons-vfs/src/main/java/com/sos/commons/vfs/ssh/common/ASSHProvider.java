@@ -1,15 +1,18 @@
 package com.sos.commons.vfs.ssh.common;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.CredentialStoreResolver;
-import com.sos.commons.vfs.exception.SOSProviderException;
-import com.sos.commons.vfs.exception.SOSProviderInitializationException;
+import com.sos.commons.vfs.common.IProvider;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
 
 public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
 
@@ -30,20 +33,35 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
                 .getPort().getDisplayValue()));
     }
 
+    /** SSH Provider specific method */
     public abstract void put(String source, String target, int perm) throws SOSProviderException;
 
+    /** SSH Provider specific method */
     public abstract void put(String source, String target) throws SOSProviderException;
 
+    /** SSH Provider specific method */
     public abstract void get(String source, String target) throws SOSProviderException;
 
+    /** Overrides {@link IProvider#isAbsolutePath(String)} */
     @Override
     public boolean isAbsolutePath(String path) {
         return SOSPathUtil.isAbsoluteFileSystemPath(path);
     }
 
+    /** Overrides {@link IProvider#getPathSeparator()} */
     @Override
     public String getPathSeparator() {
         return SOSPathUtil.PATH_SEPARATOR_UNIX;
+    }
+
+    /** Overrides {@link IProvider#normalizePath(String)} */
+    @Override
+    public String normalizePath(String path) {
+        if (SOSPathUtil.isAbsoluteWindowsOpenSSHPath(path)) {
+            String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
+            return toPathStyle(n);
+        }
+        return toPathStyle(SOSPath.toAbsoluteNormalizedPath(path).toString());
     }
 
     public SSHServerInfo getServerInfo() {

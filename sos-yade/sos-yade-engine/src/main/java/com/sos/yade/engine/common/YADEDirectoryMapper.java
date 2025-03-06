@@ -9,7 +9,7 @@ import java.util.TreeSet;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
@@ -52,7 +52,7 @@ public class YADEDirectoryMapper {
         boolean isDebugEnabled = logger.isDebugEnabled();
         Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
         if (targetDirs.size() > 0) {
-            if (targetDelegator.getProvider().createDirectoriesIfNotExist(targetDirs)) {
+            if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
                 if (isDebugEnabled) {
                     logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s]created", targetDirs);
                 }
@@ -77,7 +77,7 @@ public class YADEDirectoryMapper {
             }
             String directory = sourceFile.getFinalFullPathParent(sourceDelegator);
             if (!sourceReplacement.contains(directory)) {
-                if (sourceDelegator.getProvider().createDirectoriesIfNotExist(directory)) {
+                if (sourceDelegator.getProvider().createDirectoriesIfNotExists(directory)) {
                     if (logger.isDebugEnabled()) {
                         logger.debug("[tryCreateSourceDirectory][directory=%s]created", directory);
                     }
@@ -277,7 +277,7 @@ public class YADEDirectoryMapper {
             String targetDirectory, boolean createDirectory) throws SOSProviderException {
         if (!target.contains(targetDirectory)) {
             if (createDirectory) {
-                if (targetDelegator.getProvider().createDirectoriesIfNotExist(targetDirectory)) {
+                if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirectory)) {
                     if (logger.isDebugEnabled()) {
                         logger.debug("[tryCreateTargetDirectory][directory=%s]created", targetDirectory);
                     }

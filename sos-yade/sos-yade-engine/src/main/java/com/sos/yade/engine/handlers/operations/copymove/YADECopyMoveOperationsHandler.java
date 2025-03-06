@@ -14,7 +14,7 @@ import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.common.file.files.RenameFilesResult;
-import com.sos.commons.vfs.exception.SOSProviderException;
+import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.common.YADEProviderFile;
@@ -167,7 +167,7 @@ public class YADECopyMoveOperationsHandler {
             // TODO - set DELETED state ?
             if (paths.size() > 0) {
                 try {
-                    DeleteFilesResult r = sourceDelegator.getProvider().deleteFilesIfExist(paths, false);
+                    DeleteFilesResult r = sourceDelegator.getProvider().deleteFilesIfExists(paths, false);
                     if (r.hasErrors()) {
                         logger.error("%s[deleteResult]%s", sourceDelegator.getLogPrefix(), r);
                         throw new YADEEngineOperationException(String.format("%s[deleteFiles]%s", sourceDelegator.getLogPrefix(), r));
@@ -194,7 +194,7 @@ public class YADECopyMoveOperationsHandler {
 
                 if (paths.size() > 0) {
                     try {
-                        RenameFilesResult r = sourceDelegator.getProvider().renameFilesIfExist(paths, false);
+                        RenameFilesResult r = sourceDelegator.getProvider().renameFilesIfSourceExists(paths, false);
                         if (r.hasErrors()) {
                             logger.error("%s[renameResult]%s", sourceDelegator.getLogPrefix(), r);
                             throw new YADEEngineOperationException(String.format("%s[renameFiles]%s", sourceDelegator.getLogPrefix(), r));
@@ -262,7 +262,7 @@ public class YADECopyMoveOperationsHandler {
                 if (logger.isDebugEnabled()) {
                     logger.debug("%s[rollback][deleteFiles]%s", targetDelegator.getLogPrefix(), String.join(" ,", paths.keySet()));
                 }
-                DeleteFilesResult r = targetDelegator.getProvider().deleteFilesIfExist(paths.keySet(), false);
+                DeleteFilesResult r = targetDelegator.getProvider().deleteFilesIfExists(paths.keySet(), false);
                 paths.entrySet().stream().forEach(m -> {
                     if (r.getErrors().containsKey(m.getKey())) {
                         // TODO rollback-failed
