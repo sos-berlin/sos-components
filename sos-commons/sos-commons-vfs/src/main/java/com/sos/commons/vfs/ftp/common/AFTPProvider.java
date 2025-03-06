@@ -3,7 +3,6 @@ package com.sos.commons.vfs.ftp.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.NoSuchFileException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,10 +34,6 @@ import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
-import com.sos.commons.vfs.ssh.sshj.SSHJProviderUtil;
-
-import net.schmizz.sshj.sftp.FileAttributes;
-import net.schmizz.sshj.sftp.SFTPClient;
 
 public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
 
