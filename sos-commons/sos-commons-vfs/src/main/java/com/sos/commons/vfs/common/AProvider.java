@@ -38,12 +38,19 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     // source/target type - logging - is not set if only one provider is used (e.g. SSH JITL Job)
     private AProviderContext context;
 
+    private final Function<Object, Boolean> fileTypeChecker;
+
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSHProvider=user@server:port */
     private String accessInfo;
 
     public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
+        this(logger, arguments, null);
+    }
+
+    public AProvider(ISOSLogger logger, A arguments, Function<Object, Boolean> fileTypeChecker) throws SOSProviderInitializationException {
         this.logger = logger;
         this.arguments = arguments;
+        this.fileTypeChecker = fileTypeChecker;
     }
 
     /** Method to set a custom providerFileCreator (a function that generates ProviderFile using the builder)<br/>
@@ -156,11 +163,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
     }
 
-    public static ProviderFile createProviderFile(Function<ProviderFileBuilder, ProviderFile> providerFileCreator, String fullPath, long size,
-            long lastModifiedMillis) {
-        return providerFileCreator.apply(new ProviderFileBuilder().fullPath(fullPath).size(size).lastModifiedMillis(lastModifiedMillis));
-    }
-
     /** Provider (non-YADE) method */
     public List<ProviderFile> selectFiles(String directory) throws SOSProviderException {
         return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
@@ -171,11 +173,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     public String getPathOperationPrefix(String path) {
-        return getPathOperationPrefix(getLogPrefix(), path);
-    }
-
-    public static String getPathOperationPrefix(String logPrefix, String path) {
-        return logPrefix + "[" + path + "]";
+        return getLogPrefix() + "[" + path + "]";
     }
 
     public void closeQuietly(Closeable closeable) {
@@ -224,6 +222,10 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         if (!isValidModificationTime(milliseconds)) {
             throw new SOSProviderException(getLogPrefix() + "[" + path + "][" + milliseconds + "]not valid modification time");
         }
+    }
+
+    public boolean isValidFileType(Object fileRepresentator) {
+        return fileTypeChecker == null ? false : fileTypeChecker.apply(fileRepresentator);
     }
 
     public String getAccessInfo() {

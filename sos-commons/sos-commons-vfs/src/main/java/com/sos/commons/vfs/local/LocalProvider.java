@@ -29,6 +29,7 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
+import com.sos.commons.vfs.common.AProviderArguments.FileType;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
@@ -41,8 +42,15 @@ import com.sos.commons.vfs.local.common.LocalProviderArguments;
 
 public class LocalProvider extends AProvider<LocalProviderArguments> {
 
-    public LocalProvider(ISOSLogger logger, LocalProviderArguments arguments) throws SOSProviderInitializationException {
-        super(logger, arguments);
+    public LocalProvider(ISOSLogger logger, LocalProviderArguments args) throws SOSProviderInitializationException {
+        super(logger, args, fileRepresentator -> {
+            if (fileRepresentator == null) {
+                return false;
+            }
+            BasicFileAttributes a = (BasicFileAttributes) fileRepresentator;
+            return (a.isRegularFile() && args.getValidFileTypes().getValue().contains(FileType.REGULAR)) || (a.isSymbolicLink() && args
+                    .getValidFileTypes().getValue().contains(FileType.SYMLINK));
+        });
         if (getArguments().getCredentialStore() != null) {
             // e.g. see SSHProvider
         }
@@ -194,18 +202,13 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
         checkParam("getFileIfExists", path, "path");
 
-        Path p = getAbsoluteNormalizedPath(path);
-        ProviderFile file = null;
         try {
-            BasicFileAttributes attr = readFileAttributes(p);
-            if (attr != null) {
-                file = createProviderFile(p.toString(), attr.size(), getFileLastModifiedMillis(attr));
-            }
+            return createProviderFile(getAbsoluteNormalizedPath(path));
         } catch (NoSuchFileException e) {
+            return null;
         } catch (IOException e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
-        return file;
     }
 
     /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
@@ -332,15 +335,15 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     private ProviderFile createProviderFile(Path path) throws IOException {
         Path np = path.toAbsolutePath().normalize();
         BasicFileAttributes attr = readFileAttributes(np);
-        if (attr == null) {
-            return null;
+        if (isValidFileType(attr)) {
+            return createProviderFile(np.toString(), attr.size(), getFileLastModifiedMillis(attr));
         }
-        return createProviderFile(np.toString(), attr.size(), getFileLastModifiedMillis(attr));
+        return null;
     }
 
     private BasicFileAttributes readFileAttributes(Path path) throws IOException {
         BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-        if (attr.isRegularFile() || attr.isSymbolicLink()) {
+        if (isValidFileType(attr)) {
             return attr;
         }
         return null;
@@ -398,13 +401,15 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                         String fileName = path.getFileName().toString();
                         if (selection.checkFileName(fileName)) {
                             ProviderFile file = createProviderFile(path);
-                            if (selection.checkProviderFileMinMaxSize(file)) {
-                                counterAdded++;
-                                file.setIndex(counterAdded);
-                                result.add(file);
+                            if (file != null) {
+                                if (selection.checkProviderFileMinMaxSize(file)) {
+                                    counterAdded++;
+                                    file.setIndex(counterAdded);
+                                    result.add(file);
 
-                                if (isDebugEnabled) {
-                                    getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                    if (isDebugEnabled) {
+                                        getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                    }
                                 }
                             }
                         }
@@ -446,13 +451,15 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                     String fileName = path.getFileName().toString();
                     if (selection.checkFileName(fileName)) {
                         ProviderFile file = createProviderFile(path);
-                        if (selection.checkProviderFileMinMaxSize(file)) {
-                            counterAdded++;
-                            file.setIndex(counterAdded);
-                            result.add(file);
+                        if (file != null) {
+                            if (selection.checkProviderFileMinMaxSize(file)) {
+                                counterAdded++;
+                                file.setIndex(counterAdded);
+                                result.add(file);
 
-                            if (isDebugEnabled) {
-                                getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                if (isDebugEnabled) {
+                                    getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                }
                             }
                         }
                     }

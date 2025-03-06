@@ -1,11 +1,9 @@
 package com.sos.commons.vfs.ftp.common;
 
-import java.io.IOException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPCmd;
 import org.apache.commons.net.ftp.FTPReply;
 
 import com.sos.commons.util.SOSCollection;
@@ -20,32 +18,23 @@ public class FTPProtocolReply {
         this.text = getText(client);
     }
 
+    /** Reply code 211 */
     public boolean isSystemStatusReply() {
         return code == FTPReply.SYSTEM_STATUS;
     }
 
-    public boolean isPositiveReply() {
-        return FTPReply.isPositiveCompletion(code);
+    /** Reply code 213 - file exists */
+    public boolean isFileStatusReply() {
+        return code == FTPReply.FILE_STATUS;
     }
 
-    public boolean isNotFoundReply(FTPClient client, String path) {
-        // 550 - not found/permissions/locked...
-        if (code == FTPReply.FILE_UNAVAILABLE) {
-            // Reply text is not analyzed due to different implementations/languages
-            try {
-                client.sendCommand(FTPCmd.SIZE, path);
-                int replyCode = client.getReplyCode();
-                if (replyCode == FTPReply.FILE_STATUS) {// 213 - file exists
-                    return false;
-                }
-                if (replyCode == FTPReply.FILE_UNAVAILABLE) {
-                    return true;
-                }
-            } catch (IOException e) {
-                return false;
-            }
-        }
-        return false;
+    /** Reply code 550 - not found/permissions/locked... */
+    public boolean isFileUnavailableReply() {
+        return code == FTPReply.FILE_UNAVAILABLE;
+    }
+
+    public boolean isPositiveReply() {
+        return FTPReply.isPositiveCompletion(code);
     }
 
     @Override

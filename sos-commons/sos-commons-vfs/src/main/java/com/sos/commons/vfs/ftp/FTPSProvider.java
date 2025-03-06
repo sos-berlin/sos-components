@@ -22,6 +22,7 @@ public class FTPSProvider extends AFTPProvider {
         super(logger, arguments);
     }
 
+    /** Overrides {@link AFTPProvider#connect()} */
     @Override
     public void connect() throws SOSProviderConnectException {
         super.connect();
@@ -43,8 +44,9 @@ public class FTPSProvider extends AFTPProvider {
         debugCommand("enterLocalPassiveMode");
     }
 
-    @Override
     // TODO test PROXY ...
+    /** Overrides {@link AFTPProvider#createClient()} */
+    @Override
     public FTPClient createClient() throws Exception {
         FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
 

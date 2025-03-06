@@ -8,6 +8,7 @@ import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -365,6 +366,13 @@ public class SOSString {
         return String.format("%0" + zeroCount + "d", val);
     }
 
+    public static String join(Object[] array) {
+        if (array == null) {
+            return null;
+        }
+        return join(Arrays.asList(array), DEFAULT_JOIN_DELIMITER, Object::toString);
+    }
+
     public static String join(Collection<?> collection) {
         return join(collection, DEFAULT_JOIN_DELIMITER, Object::toString);
     }
@@ -387,6 +395,9 @@ public class SOSString {
      * @param transformation
      * @return */
     public static <T> String join(Collection<T> collection, String delimiter, Function<T, String> transformation) {
+        if (collection == null) {
+            return null;
+        }
         return collection.stream().map(transformation).collect(Collectors.joining(delimiter));
     }
 }

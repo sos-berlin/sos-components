@@ -25,17 +25,18 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.vfs.common.AProviderArguments.FileType;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
 import com.sos.commons.vfs.ssh.common.ASSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.commons.vfs.ssh.exceptions.SOSSSHClientNotInitializedException;
 import com.sos.commons.vfs.ssh.exceptions.SOSSSHCommandExitViolentlyException;
 
 import net.schmizz.sshj.SSHClient;
@@ -45,6 +46,7 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.connection.channel.direct.Signal;
 import net.schmizz.sshj.sftp.FileAttributes;
+import net.schmizz.sshj.sftp.FileMode;
 import net.schmizz.sshj.sftp.OpenMode;
 import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.SFTPClient;
@@ -56,7 +58,14 @@ public class SSHJProvider extends ASSHProvider {
     private Map<String, Command> commands = new ConcurrentHashMap<>();
 
     public SSHJProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
-        super(logger, args);
+        super(logger, args, fileRepresentator -> {
+            if (fileRepresentator == null) {
+                return false;
+            }
+            FileAttributes a = (FileAttributes) fileRepresentator;
+            return (FileMode.Type.REGULAR.equals(a.getType()) && args.getValidFileTypes().getValue().contains(FileType.REGULAR))
+                    || (FileMode.Type.SYMLINK.equals(a.getType()) && args.getValidFileTypes().getValue().contains(FileType.SYMLINK));
+        });
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -225,8 +234,7 @@ public class SSHJProvider extends ASSHProvider {
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
         List<ProviderFile> result = new ArrayList<>();
         try {
-            SSHJProviderUtil.selectFiles(getLogger(), getLogger().isDebugEnabled(), getLogPrefix(), sshClient, getProviderFileCreator(), selection,
-                    directory, result);
+            SSHJProviderUtil.selectFiles(this, selection, directory, result);
         } catch (SOSProviderException e) {
             throw e;
         }
@@ -238,17 +246,13 @@ public class SSHJProvider extends ASSHProvider {
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
         checkBeforeOperation("getFileIfExists", sshClient, path, "path");
 
-        ProviderFile f = null;
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            FileAttributes attr = sftp.stat(path);
-            if (attr != null && SSHJProviderUtil.isFileType(attr.getType())) {
-                f = createProviderFile(path, attr.getSize(), SSHJProviderUtil.getFileLastModifiedMillis(attr));
-            }
+            return createProviderFile(path, sftp.stat(path));
         } catch (NoSuchFileException e) {
+            return null;
         } catch (IOException e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
-        return f;
     }
 
     /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
@@ -258,7 +262,7 @@ public class SSHJProvider extends ASSHProvider {
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             FileAttributes attr = sftp.stat(file.getFullPath());
-            if (attr != null && SSHJProviderUtil.isFileType(attr.getType())) {
+            if (isValidFileType(attr)) {
                 file.setSize(attr.getSize());
                 file.setLastModifiedMillis(SSHJProviderUtil.getFileLastModifiedMillis(attr));
             } else {
@@ -542,13 +546,20 @@ public class SSHJProvider extends ASSHProvider {
 
     private void checkBeforeOperation(String method, SSHClient ssh) throws SOSProviderException {
         if (ssh == null) {
-            throw new SOSSSHClientNotInitializedException(getLogPrefix() + method);
+            throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "SSHClient");
         }
     }
 
     private void checkBeforeOperation(String method, SSHClient ssh, String paramValue, String msg) throws SOSProviderException {
         checkBeforeOperation(method, ssh);
         checkParam(method, paramValue, msg);
+    }
+
+    protected ProviderFile createProviderFile(String path, FileAttributes attr) {
+        if (!isValidFileType(attr)) {
+            return null;
+        }
+        return createProviderFile(path, attr.getSize(), SSHJProviderUtil.getFileLastModifiedMillis(attr));
     }
 
 }

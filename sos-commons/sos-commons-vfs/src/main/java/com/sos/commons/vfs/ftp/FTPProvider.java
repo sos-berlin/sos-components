@@ -15,8 +15,9 @@ public class FTPProvider extends AFTPProvider {
         super(logger, arguments);
     }
 
-    @Override
     // TODO test PROXY ...
+    /** Overrides {@link AFTPProvider#createClient()} */
+    @Override
     public FTPClient createClient() throws Exception {
         FTPClient client = null;
         if (getArguments().getProxy() == null) {

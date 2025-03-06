@@ -5,13 +5,11 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Function;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.commons.vfs.common.file.ProviderFileBuilder;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 
@@ -20,7 +18,6 @@ import net.schmizz.keepalive.KeepAliveRunner;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.FileMode;
-import net.schmizz.sshj.sftp.FileMode.Type;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.sftp.SFTPClient;
@@ -87,10 +84,6 @@ public class SSHJProviderUtil {
         return attr.getMtime() * 1_000L;
     }
 
-    protected static boolean isFileType(Type t) {
-        return FileMode.Type.REGULAR.equals(t) || FileMode.Type.SYMLINK.equals(t);
-    }
-
     protected static void delete(SFTPClient sftp, String path) throws Exception {
         try {
             path = sftp.canonicalize(path);
@@ -131,29 +124,26 @@ public class SSHJProviderUtil {
     }
 
     // possible recursion
-    protected static List<ProviderFile> selectFiles(ISOSLogger logger, boolean isDebugEnabled, String logPrefix, SSHClient ssh,
-            Function<ProviderFileBuilder, ProviderFile> providerFileCreator, ProviderFileSelection selection, String directoryPath,
+    protected static List<ProviderFile> selectFiles(SSHJProvider provider, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws SOSProviderException {
         int counterAdded = 0;
-        try (SFTPClient sftp = ssh.newSFTPClient()) {
-            list(logger, isDebugEnabled, logPrefix, sftp, providerFileCreator, selection, directoryPath, result, counterAdded);
+        try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
+            list(provider, sftp, selection, directoryPath, result, counterAdded);
         } catch (Throwable e) {
             throw new SOSProviderException(e);
         }
         return result;
     }
 
-    private static int list(ISOSLogger logger, boolean isDebugEnabled, String logPrefix, SFTPClient sftp,
-            Function<ProviderFileBuilder, ProviderFile> providerFileCreator, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result, int counterAdded) throws SOSProviderException {
+    private static int list(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
+            int counterAdded) throws SOSProviderException {
         try {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
             for (RemoteResourceInfo subResource : subDirInfos) {
                 if (selection.maxFilesExceeded(counterAdded)) {
                     return counterAdded;
                 }
-                counterAdded = processListEntry(logger, isDebugEnabled, logPrefix, sftp, providerFileCreator, selection, subResource, result,
-                        counterAdded);
+                counterAdded = processListEntry(provider, sftp, selection, subResource, result, counterAdded);
             }
         } catch (Throwable e) {
             throw new SOSProviderException(e);
@@ -161,31 +151,31 @@ public class SSHJProviderUtil {
         return counterAdded;
     }
 
-    private static int processListEntry(ISOSLogger logger, boolean isDebugEnabled, String logPrefix, SFTPClient sftp,
-            Function<ProviderFileBuilder, ProviderFile> providerFileCreator, ProviderFileSelection selection, RemoteResourceInfo resource,
+    private static int processListEntry(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
             List<ProviderFile> result, int counterAdded) throws SOSProviderException {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
                 if (selection.checkDirectory(resource.getPath())) {
-                    counterAdded = list(logger, isDebugEnabled, logPrefix, sftp, providerFileCreator, selection, resource.getPath(), result,
-                            counterAdded);
+                    counterAdded = list(provider, sftp, selection, resource.getPath(), result, counterAdded);
                 }
             }
         } else {
-            FileAttributes attr = resource.getAttributes();
-            if (attr != null && SSHJProviderUtil.isFileType(attr.getType())) {
-                String fileName = resource.getName();
-                if (selection.checkFileName(fileName)) {
-                    ProviderFile file = AProvider.createProviderFile(providerFileCreator, resource.getPath(), attr.getSize(), SSHJProviderUtil
-                            .getFileLastModifiedMillis(attr));
+            String fileName = resource.getName();
+            if (selection.checkFileName(fileName)) {
+                ProviderFile file = provider.createProviderFile(fileName, resource.getAttributes());
+                if (file == null) {
+                    if (provider.getLogger().isDebugEnabled()) {
+                        provider.getLogger().debug(provider.getPathOperationPrefix(fileName) + "[skip]" + toString(resource.getAttributes()));
+                    }
+                } else {
                     if (selection.checkProviderFileMinMaxSize(file)) {
                         counterAdded++;
 
                         file.setIndex(counterAdded);
                         result.add(file);
 
-                        if (isDebugEnabled) {
-                            logger.debug(AProvider.getPathOperationPrefix(logPrefix, file.getFullPath()) + "added");
+                        if (provider.getLogger().isDebugEnabled()) {
+                            provider.getLogger().debug(provider.getPathOperationPrefix(file.getFullPath()) + "added");
                         }
                     }
                 }
@@ -205,6 +195,13 @@ public class SSHJProviderUtil {
             SSHJProviderUtil.throwException(e, sourcePath);
         }
         sftp.rename(sourcePath, targetPath);
+    }
+
+    public static String toString(FileAttributes attr) {
+        if (attr == null) {
+            return null;
+        }
+        return "type=" + attr.getType() + "," + attr.toString();
     }
 
 }

@@ -2,6 +2,7 @@ package com.sos.commons.vfs.ssh.common;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
 
 import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
@@ -26,8 +27,9 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     /** Real Provider */
-    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
-        super(logger, args);
+    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args, Function<Object, Boolean> fileTypeChecker)
+            throws SOSProviderInitializationException {
+        super(logger, args, fileTypeChecker);
         resolveCredentialStore();
         setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
                 .getPort().getDisplayValue()));

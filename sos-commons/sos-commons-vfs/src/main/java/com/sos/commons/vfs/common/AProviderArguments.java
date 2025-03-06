@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.common;
 
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
@@ -31,6 +32,10 @@ public abstract class AProviderArguments extends ASOSArguments {
         JKS, JCEKS, PKCS12, PKCS11, DKS
     }
 
+    public enum FileType {
+        REGULAR, SYMLINK
+    }
+
     // Basic
     private SOSArgument<Protocol> protocol = new SOSArgument<Protocol>("protocol", true);
     private SOSArgument<String> host = new SOSArgument<String>("host", true);
@@ -47,6 +52,10 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("system_property_files", false);
     private SOSArgument<List<Path>> configurationFiles = new SOSArgument<>("configuration_files", false);
+
+    // JS7
+    private SOSArgument<EnumSet<FileType>> validFileTypes = new SOSArgument<>("valid_file_types", false, EnumSet.of(FileType.REGULAR,
+            FileType.SYMLINK));
 
     public SOSArgument<Protocol> getProtocol() {
         return protocol;
@@ -102,6 +111,10 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public SOSArgument<List<Path>> getConfigurationFiles() {
         return configurationFiles;
+    }
+
+    public SOSArgument<EnumSet<FileType>> getValidFileTypes() {
+        return validFileTypes;
     }
 
     public int asMs(SOSArgument<Integer> arg) {

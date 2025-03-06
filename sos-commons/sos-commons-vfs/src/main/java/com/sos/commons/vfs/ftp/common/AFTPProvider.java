@@ -3,6 +3,7 @@ package com.sos.commons.vfs.ftp.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.NoSuchFileException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPCmd;
 import org.apache.commons.net.ftp.FTPFile;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -23,22 +25,34 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.common.AProvider;
+import com.sos.commons.vfs.common.AProviderArguments.FileType;
 import com.sos.commons.vfs.common.IProvider;
 import com.sos.commons.vfs.common.file.ProviderFile;
 import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.common.file.files.RenameFilesResult;
 import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
-import com.sos.commons.vfs.ftp.exceptions.SOSFTPClientNotInitializedException;
+import com.sos.commons.vfs.ssh.sshj.SSHJProviderUtil;
+
+import net.schmizz.sshj.sftp.FileAttributes;
+import net.schmizz.sshj.sftp.SFTPClient;
 
 public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
 
     private FTPClient client;
 
-    public AFTPProvider(ISOSLogger logger, FTPProviderArguments arguments) throws SOSProviderInitializationException {
-        super(logger, arguments);
+    public AFTPProvider(ISOSLogger logger, FTPProviderArguments args) throws SOSProviderInitializationException {
+        super(logger, args, fileRepresentator -> {
+            if (fileRepresentator == null) {
+                return false;
+            }
+            FTPFile f = (FTPFile) fileRepresentator;
+            return (f.isFile() && args.getValidFileTypes().getValue().contains(FileType.REGULAR)) || (f.isSymbolicLink() && args.getValidFileTypes()
+                    .getValue().contains(FileType.SYMLINK));
+        });
         setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
                 .getPort().getDisplayValue()));
     }
@@ -192,7 +206,7 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
                 try {
                     if (!client.deleteFile(file)) {
                         FTPProtocolReply reply = new FTPProtocolReply(client);
-                        if (reply.isNotFoundReply(client, file)) {
+                        if (isReplyBasedOnFileNotFound(reply, file)) {
                             r.addNotFound(file);
                         } else {
                             throw new Exception(String.format("[failed to delete file]%s", reply));
@@ -228,7 +242,7 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
                 try {
                     if (!client.rename(source, target)) {
                         FTPProtocolReply reply = new FTPProtocolReply(client);
-                        if (reply.isNotFoundReply(client, source)) {
+                        if (isReplyBasedOnFileNotFound(reply, target)) {
                             r.addNotFound(source);
                         } else {
                             throw new Exception(String.format("[failed to rename file]%s", reply));
@@ -248,10 +262,35 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
         return r;
     }
 
-    /** Overrides {@link IProvider#exists(String)} */
+    /** Overrides {@link IProvider#exists(String)}<br/>
+     * Uses the SIZE command<br/>
+     * - alternative to listFiles<br/>
+     * TODO - which is better?<br/>
+     * -- which retrieves the information when, for example, the current user does not have the permissions to read the file but the file still exists... */
     @Override
     public boolean exists(String path) {
-        // TODO Auto-generated method stub
+        if (client == null) {
+            return false;
+        }
+
+        FTPProtocolReply reply = null;
+        try {
+            checkParam("exists", path, "path"); // here because should not throw any errors
+
+            client.sendCommand(FTPCmd.SIZE, path);
+            reply = new FTPProtocolReply(client);
+            if (reply.isFileStatusReply()) {
+                return false;
+            }
+            if (reply.isFileUnavailableReply()) {
+                return true;
+            }
+        } catch (Throwable e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[exists=false][reply=%s]%s", getPathOperationPrefix(path), reply, e.toString());
+            }
+            return false;
+        }
         return false;
     }
 
@@ -276,8 +315,12 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getFileIfExists", path, "path");
+        try {
+            return createProviderFile(path, getFTPFile("getFileIfExists", path));
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
     /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
@@ -437,7 +480,7 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
 
     private void checkBeforeOperation(String method) throws SOSProviderException {
         if (client == null) {
-            throw new SOSFTPClientNotInitializedException(getLogPrefix() + method);
+            throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "FTPClient");
         }
     }
 
@@ -460,6 +503,33 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
                 }
             }
         }
+    }
+
+    /** Attempt to determine if NOT_FOUND is truly the cause in the case of FTPReply.FILE_UNAVAILABLE, rather than issues like permissions, etc. */
+    private boolean isReplyBasedOnFileNotFound(FTPProtocolReply reply, String path) {
+        if (reply.isFileUnavailableReply()) {
+            // Reply text is not analyzed due to different implementations/languages
+            return exists(path);
+        }
+        return false;
+    }
+
+    private FTPFile getFTPFile(String caller, String path) throws Exception {
+        FTPFile[] files = client.listFiles(path);
+        if (SOSCollection.isEmpty(files)) {
+            return null;
+        }
+        if (files.length > 1) {
+            throw new Exception("[the path is ambiguous, more than one file found][" + files.length + "]" + SOSString.join(files));
+        }
+        return files[0];
+    }
+
+    private ProviderFile createProviderFile(String path, FTPFile file) {
+        if (file == null || !isValidFileType(file)) {
+            return null;
+        }
+        return createProviderFile(path, file.getSize(), file.getTimestamp() == null ? -1L : file.getTimestamp().getTimeInMillis());
     }
 
 }
