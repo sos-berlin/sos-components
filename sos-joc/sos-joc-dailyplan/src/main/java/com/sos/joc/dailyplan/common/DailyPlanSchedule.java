@@ -24,9 +24,7 @@ public class DailyPlanSchedule {
     }
 
     public String getWorkflowsAsString() {
-        return String.join(",", workflows.stream().map(e -> {
-            return e.getName();
-        }).collect(Collectors.toList()));
+        return workflows.stream().map(DailyPlanScheduleWorkflow::getName).collect(Collectors.joining(","));
     }
 
     public DailyPlanScheduleWorkflow addWorkflow(DailyPlanScheduleWorkflow newW) {

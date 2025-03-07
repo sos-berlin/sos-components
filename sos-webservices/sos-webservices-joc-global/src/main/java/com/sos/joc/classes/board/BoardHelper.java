@@ -260,15 +260,15 @@ public class BoardHelper {
             if (noticeIdStr.equals("-")) {
                 noticeIdStr = "";
             }
-            return NoticeId.of(PlanId.Global(), bPath, NoticeKey.of(noticeIdStr));
+            return NoticeId.of(PlanId.Global, bPath, NoticeKey.of(noticeIdStr));
         } else {
             String[] noticeIdParts = noticeIdStr.split("/");
             String pSchemaId = noticeIdParts[0];
-            PlanId planId = PlanId.Global();
+            PlanId planId = PlanId.Global;
             NoticeKey noticeKey = NoticeKey.empty();
             if (pSchemaId.equals("Global")) {
                 // expect noticeIdParts.lenght = 2
-                // nothing to do -> planId = PlanId.Global()
+                // nothing to do -> planId = PlanId.Global
                 if (noticeIdParts.length > 1 && !noticeIdParts[1].isEmpty() && !noticeIdParts[1].equals("-")) {
                     noticeKey = NoticeKey.of(noticeIdParts[1]);
                 }

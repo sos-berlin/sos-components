@@ -62,6 +62,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.board.BoardHelper;
+import com.sos.joc.classes.board.PlanSchemas;
 import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
@@ -118,6 +119,8 @@ import js7.data.order.OrderId;
 import js7.data.order.OrderMark.Cancelling;
 import js7.data.order.OrderMark.Resuming;
 import js7.data.order.OrderMark.Suspending;
+import js7.data.plan.PlanKey;
+import js7.data.plan.PlanSchemaId;
 import js7.data.subagent.SubagentId;
 import js7.data.value.BooleanValue;
 import js7.data.value.ListValue;
@@ -1460,7 +1463,16 @@ public class OrdersHelper {
         if (blockPosition == null) {
             blockPosition = JBranchPath.empty();
         }
-        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, forceJobAdmission, blockPosition, startPos, endPoss);
+        return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(orderId.string()), true, forceJobAdmission, blockPosition,
+                startPos, endPoss);
+    }
+    
+    private static PlanKey getDailyPlanPlanKey(String orderId) {
+        return PlanKey.of(orderId.replaceFirst("#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*", "$1"));
+    }
+    
+    public static js7.data.plan.PlanId getDailyPlanPlanId(String orderId) {
+        return new js7.data.plan.PlanId(PlanSchemaId.of(PlanSchemas.defaultPlanSchemaId), getDailyPlanPlanKey(orderId));
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {

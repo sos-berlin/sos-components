@@ -647,8 +647,11 @@ public class DeployedConfigurationDBLayer {
     
     public List<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId, Set<String> boardNames) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getUsedWorkflowsByNoticeBoards(null, controllerId).filter(wb -> wb.getNoticeBoardNames().stream().anyMatch(boardNames::contains))
-                .collect(Collectors.toList());
+        Stream<WorkflowBoards> wbs = getUsedWorkflowsByNoticeBoards(null, controllerId);
+        if (boardNames != null && !boardNames.isEmpty()) {
+            wbs = wbs.filter(wb -> wb.getNoticeBoardNames().stream().anyMatch(boardNames::contains));
+        }
+        return wbs.collect(Collectors.toList());
     }
     
     public Stream<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String boardName, String controllerId) throws DBConnectionRefusedException,
@@ -701,12 +704,12 @@ public class DeployedConfigurationDBLayer {
             hql.append("and ");
             hql.append(jsonFunc).append(" is not null");
 
-            Query<DeployedContent> query = session.createQuery(hql.toString());
+            Query<DeployedWorkflowWithBoards> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
-            List<DeployedContent> result = session.getResultList(query);
+            List<DeployedWorkflowWithBoards> result = session.getResultList(query);
             if (result != null) {
-                return result.stream().map(DeployedContent::mapToWorkflowBoards).filter(Objects::nonNull);
+                return result.stream().map(DeployedWorkflowWithBoards::mapToWorkflowBoards).filter(Objects::nonNull);
             }
             return Stream.empty();
         } catch (SOSHibernateInvalidSessionException ex) {

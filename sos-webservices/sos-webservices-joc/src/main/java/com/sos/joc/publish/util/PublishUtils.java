@@ -1698,13 +1698,22 @@ public abstract class PublishUtils {
         String directory = fileOrderSource.getDirectoryExpr() == null ? JExpression.quoteString(fileOrderSource.getDirectory()) : fileOrderSource
                 .getDirectoryExpr();
         
-        return getOrThrowEither(JFileWatch.checked(
+//        return getOrThrowEither(JFileWatch.legacyWithoutPlan (
+//                OrderWatchPath.of(fileOrderSource.getPath()),
+//                WorkflowPath.of(fileOrderSource.getWorkflowPath()),
+//                AgentPath.of(fileOrderSource.getAgentPath()),
+//                getOrThrowEither(JExpression.parse(directory)), 
+//                getFileOrderSourcePattern(fileOrderSource), 
+//                Optional.of(getFileOrderIdPattern(fileOrderSource)), 
+//                Duration.ofSeconds(delay)));
+        
+        return getOrThrowEither(JFileWatch.checked (
                 OrderWatchPath.of(fileOrderSource.getPath()),
                 WorkflowPath.of(fileOrderSource.getWorkflowPath()),
                 AgentPath.of(fileOrderSource.getAgentPath()),
                 getOrThrowEither(JExpression.parse(directory)), 
-                getFileOrderSourcePattern(fileOrderSource), 
-                Optional.of(getFileOrderIdPattern(fileOrderSource)), 
+                getFileOrderSourcePattern(fileOrderSource),  
+                Optional.of(getFileOrderPattern(fileOrderSource)),
                 Duration.ofSeconds(delay)));
     }
     
@@ -1725,6 +1734,10 @@ public abstract class PublishUtils {
         }
         return Optional.of(fileOrderSource.getPattern());
     }
+    
+    private static JExpression getFileOrderPattern(FileOrderSource fileOrderSource) {
+        return getOrThrowEither(JExpression.parse("{orderId: " + getFileOrderIdPattern(fileOrderSource) + ", planId: " + getFileOrderDailyPlanPlanIdPattern(fileOrderSource) + "}"));
+    }
 
     private static String getFileOrderIdPattern(FileOrderSource fileOrderSource) {
         String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#F' ++ " + OrdersHelper.mainOrderIdControllerPattern
@@ -1735,6 +1748,16 @@ public abstract class PublishUtils {
         }
         fileOrderSource.setTimeZone(null);
         return String.format(idPattern, timeZone);
+    }
+    
+    private static String getFileOrderDailyPlanPlanIdPattern(FileOrderSource fileOrderSource) {
+        String planIdPattern = "now(format='yyyy-MM-dd', timezone='%s')";
+        String timeZone = fileOrderSource.getTimeZone();
+        if (timeZone == null || timeZone.isEmpty()) {
+            timeZone = OrdersHelper.getDailyPlanTimeZone().getId();
+        }
+        fileOrderSource.setTimeZone(null);
+        return String.format(planIdPattern, timeZone);
     }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,
