@@ -25,6 +25,7 @@ import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.board.PlanSchemas;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
@@ -52,8 +53,10 @@ import com.sos.sign.model.workflow.Workflow;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
+import js7.data.plan.PlanSchemaId;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
+import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JRepo;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.workflow.position.JBranchPath;
@@ -114,7 +117,7 @@ public class OrderApi {
         return JBranchPath.empty();
     }
 
-    private static JFreshOrder mapToFreshOrder(FreshOrder order, Map<String, List<Object>> labelToPositionMap,
+    private static JFreshOrder mapToFreshOrder(FreshOrder order, Map<String, List<Object>> labelToPositionMap, PlanSchemaId planSchemaId,
             Map<WorkflowPath, Optional<Requirements>> workflowToOrderPreparation, boolean allowEmptyArguments) throws JsonMappingException,
             JsonProcessingException {
         WorkflowPath workflowPath = WorkflowPath.of(order.getWorkflowPath());
@@ -154,8 +157,8 @@ public class OrderApi {
 
         }
         boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
-        return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, scheduledFor, OrdersHelper.getDailyPlanPlanId(order.getId()), false,
-                forceJobAdmission, blockPosition, startPosition, endPositions);
+        return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, scheduledFor, OrdersHelper.getDailyPlanPlanId(planSchemaId, order
+                .getId()), false, forceJobAdmission, blockPosition, startPosition, endPositions);
     }
 
     public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String callerForLog, String controllerId, String dailyPlanDate,
@@ -170,7 +173,9 @@ public class OrderApi {
         String logDailyPlanDate = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
         final String lp = String.format("[%s]%s[%s][%s]%s", startupMode, callerForLog, method, controllerId, logDailyPlanDate);
         JControllerProxy proxy = Proxy.of(controllerId);
-        JRepo repo = proxy.currentState().repo();
+        JControllerState currentState = proxy.currentState();
+        PlanSchemaId planSchemaId = PlanSchemas.getDailyPlanPlanSchemaIfExists(currentState);
+        JRepo repo = currentState.repo();
         final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
 
         Map<WorkflowPath, Optional<Requirements>> workflowToOrderPreparation = orders.stream().map(PlannedOrder::getWorkflowName).distinct().map(
@@ -187,7 +192,7 @@ public class OrderApi {
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
-                either = Either.right(mapToFreshOrder(order.getFreshOrder(), order.getLabelToPositionMap(), workflowToOrderPreparation, allowEmptyArguments));
+                either = Either.right(mapToFreshOrder(order.getFreshOrder(), order.getLabelToPositionMap(), planSchemaId, workflowToOrderPreparation, allowEmptyArguments));
             } catch (Exception ex) {
                 either = Either.left(new BulkError(LOGGER).get(ex, jocError, order.getFreshOrder().getId()));
             }

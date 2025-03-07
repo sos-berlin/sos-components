@@ -29,7 +29,7 @@ import reactor.core.publisher.Flux;
 public class PlanSchemas {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanSchemas.class);
-    public static final String defaultPlanSchemaId = "DailyPlan"; 
+    private static final String defaultPlanSchemaId = "DailyPlan"; 
     private static final Map<String, JPlanSchema> planSchemas = Collections.unmodifiableMap(new HashMap<String, JPlanSchema>() {
 
         private static final long serialVersionUID = 1L;
@@ -68,6 +68,15 @@ public class PlanSchemas {
             LOGGER.error(String.format("Error at submitting plan %s %s to %s", schemaStr, getPlanSchemasToString(planSchemas.keySet().stream()),
                     controller), e);
         }
+    }
+    
+    public static boolean dailyPlanPlanSchemaExists(JControllerState currentState) {
+        return currentState.idToPlanSchemaState().containsKey(PlanSchemaId.of(defaultPlanSchemaId));
+    }
+    
+    public static PlanSchemaId getDailyPlanPlanSchemaIfExists(JControllerState currentState) {
+        PlanSchemaId id = PlanSchemaId.of(defaultPlanSchemaId);
+        return currentState.idToPlanSchemaState().containsKey(id) ? id : PlanSchemaId.Global;
     }
     
     private static Map<Boolean, List<JPlanSchema>> getGroupedPlanSchemas(JControllerState currentState) {
