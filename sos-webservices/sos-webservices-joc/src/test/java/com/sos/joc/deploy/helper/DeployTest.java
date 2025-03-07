@@ -27,6 +27,7 @@ import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;
@@ -39,6 +40,7 @@ import js7.data.agent.AgentPath;
 import js7.data.item.VersionId;
 import js7.data.lock.LockPath;
 import js7.data.order.OrderId;
+import js7.data.plan.PlanId;
 import js7.data.subagent.SubagentId;
 import js7.data.value.ListValue;
 import js7.data.value.ObjectValue;
@@ -289,7 +291,7 @@ public class DeployTest {
         try {
             String orderId = "#" + SOSDate.format(new Date(), "yyyy-MM-dd") + "#T0" + SOSDate.format(new Date(), "MMddHHmmss") + "-UNITTEST-"
                     + counter;
-            JFreshOrder order = JFreshOrder.of(OrderId.of(orderId), WorkflowPath.of(workflowName), Optional.empty(), arguments, true);
+            JFreshOrder order = JFreshOrder.of(OrderId.of(orderId), WorkflowPath.of(workflowName), arguments, PlanId.Global, Optional.empty(), true);
             api.addOrder(order).thenAccept(either -> {
                 if (either.isRight()) {
                     LOGGER.info(String.format("[arguments][put]%s", arguments));
