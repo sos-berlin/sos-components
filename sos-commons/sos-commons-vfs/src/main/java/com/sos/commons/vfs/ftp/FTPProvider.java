@@ -529,13 +529,12 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             if (args.getProxy() != null) {
                 client.setProxy(args.getProxy().getProxy());
             }
-            // TRUST MANAGER
-            if (!getArguments().getKeystoreFile().isEmpty()) {
-                KeyStoreType type = getArguments().getKeystoreType().getValue();
-                getLogger().info(String.format("%s[using keystore]type=%s, file=%s", getLogPrefix(), type, getArguments().getKeystoreFile()
-                        .getValue()));
-                client.setTrustManager(TrustManagerUtils.getDefaultTrustManager(loadKeyStore(getArguments().getKeystoreFile().getValue(), type,
-                        getArguments().getKeystorePassword().getValue())));
+            // TRUST MANAGER#
+            if (!args.getKeystoreFile().isEmpty()) {
+                KeyStoreType type = args.getKeystoreType().getValue();
+                getLogger().info(String.format("%s[using keystore]type=%s, file=%s", getLogPrefix(), type, args.getKeystoreFile().getValue()));
+                client.setTrustManager(TrustManagerUtils.getDefaultTrustManager(loadKeyStore(args.getKeystoreFile().getValue(), type, args
+                        .getKeystorePassword().getValue())));
             }
             return client;
         }

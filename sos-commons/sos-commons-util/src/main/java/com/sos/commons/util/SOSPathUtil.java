@@ -1,6 +1,7 @@
 package com.sos.commons.util;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
@@ -384,29 +385,29 @@ public class SOSPathUtil {
     }
 
     public static String normalize(String path, String pathSeparator) {
-        try {
-            if (SOSString.isEmpty(path) || (!path.contains("..") && !path.contains("."))) {
-                return path;
-            }
-            final String ps = getPathSeparator(path, pathSeparator);
-            // Windows/URI
-            if (path.contains(":")) {
-                if (isAbsoluteWindowsOpenSSHPath(path)) {
-                    String n = ps + Path.of(path.substring(1)).normalize().toString();
-                    return toUnixStyle(n);
-                } else if (isAbsoluteURIPath(path)) {
-                    return new URI(path).normalize().toURL().toString();
-                } else {
-                    String n = Path.of(path).normalize().toString();
-                    return isUnixStylePathSeparator(ps) ? toUnixStyle(n) : toWindowsStyle(n);
-                }
-            }
-            String n = Path.of(path).normalize().toString();
-            // Unix and UNC(\\server\share)
-            return isUnixStylePathSeparator(ps) ? toUnixStyle(n) : toWindowsStyle(n);
-        } catch (Throwable e) {
+        if (SOSString.isEmpty(path) || (!path.contains("..") && !path.contains("."))) {
             return path;
         }
+        final String ps = getPathSeparator(path, pathSeparator);
+        // Windows/URI
+        if (path.contains(":")) {
+            if (isAbsoluteWindowsOpenSSHPath(path)) {
+                String n = ps + Path.of(path.substring(1)).normalize().toString();
+                return toUnixStyle(n);
+            } else if (isAbsoluteURIPath(path)) {
+                try {
+                    return new URI(path).normalize().toString();
+                } catch (URISyntaxException e) {
+                    return path;
+                }
+            } else {
+                String n = Path.of(path).normalize().toString();
+                return isUnixStylePathSeparator(ps) ? toUnixStyle(n) : toWindowsStyle(n);
+            }
+        }
+        String n = Path.of(path).normalize().toString();
+        // Unix and UNC(\\server\share)
+        return isUnixStylePathSeparator(ps) ? toUnixStyle(n) : toWindowsStyle(n);
     }
 
     private static String getPathSeparator(Collection<?> paths, String pathSeparator) {

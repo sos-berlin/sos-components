@@ -1,9 +1,6 @@
 package com.sos.commons.vfs.ftp.commons;
 
-import java.nio.file.Path;
-
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.commons.AProviderExtendedArguments;
 
 public class FTPProviderArguments extends AProviderExtendedArguments {
@@ -14,15 +11,12 @@ public class FTPProviderArguments extends AProviderExtendedArguments {
 
     protected static final int DEFAULT_PORT = 21;
 
-    private SOSArgument<Integer> port = new SOSArgument<Integer>("port", true);
-
-    // Java Keystore/Truststore
-    private SOSArgument<KeyStoreType> keystoreType = new SOSArgument<>("keystore_type", false, KeyStoreType.JKS);
-    private SOSArgument<Path> keystoreFile = new SOSArgument<>("keystore_file", false);
-    private SOSArgument<String> keystorePassword = new SOSArgument<>("keystore_password", false, DisplayMode.MASKED);
+    // do not set the default value because SOSArgument.getValue() returns the default value
+    // - so FTPSProviderArguments cannot check whether the port has been set or not
+    private SOSArgument<Integer> port = new SOSArgument<>("port", false);
 
     // seconds
-    private SOSArgument<Integer> connectTimeout = new SOSArgument<Integer>("connect_timeout", false, Integer.valueOf(0));
+    private SOSArgument<Integer> connectTimeout = new SOSArgument<>("connect_timeout", false, Integer.valueOf(0));
     // KeepAlive - timeout interval in seconds
     // ?TODO server_alive_count_max
     private SOSArgument<Long> serverAliveInterval = new SOSArgument<>("server_alive_interval", false, Long.valueOf(180));// YADE1 default
@@ -47,18 +41,6 @@ public class FTPProviderArguments extends AProviderExtendedArguments {
 
     public boolean isBinaryTransferMode() {
         return TransferMode.BINARY.equals(transferMode.getValue());
-    }
-
-    public SOSArgument<KeyStoreType> getKeystoreType() {
-        return keystoreType;
-    }
-
-    public SOSArgument<Path> getKeystoreFile() {
-        return keystoreFile;
-    }
-
-    public SOSArgument<String> getKeystorePassword() {
-        return keystorePassword;
     }
 
     public SOSArgument<Long> getServerAliveInterval() {

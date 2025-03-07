@@ -11,6 +11,7 @@ import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.delegators.YADEProviderDelegatorFactory;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsChecker;
@@ -92,9 +93,9 @@ public class YADEEngine {
             /** 2) Check/Initialize configuration */
             YADEArgumentsChecker.validateOrExit(logger, args, clientArgs, sourceArgs, targetArgs);
 
-            // Source/Target: initialize delegator/provider
-            sourceDelegator = YADEProviderDelegatorHelper.initializeSourceDelegator(logger, args, sourceArgs);
-            targetDelegator = YADEProviderDelegatorHelper.initializeTargetDelegator(logger, args, targetArgs);
+            // Source/Target: create provider delegator
+            sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, args, sourceArgs);
+            targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, args, targetArgs);
         } catch (YADEEngineInitializationException e) {
             throw e;
         } catch (Throwable e) {
