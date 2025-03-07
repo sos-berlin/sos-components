@@ -36,7 +36,7 @@ public class PlanSchemas {
 
         {
             put(defaultPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(defaultPlanSchemaId), 
-                    Optional.of(JExprFunction.apply("(day) => $day < thresholdDay").asScala()),
+                    Optional.of(JExprFunction.apply("(day) => $day < $thresholdDay").asScala()),
                     Collections.singletonMap("thresholdDay", StringValue.empty())));
         }
     });
