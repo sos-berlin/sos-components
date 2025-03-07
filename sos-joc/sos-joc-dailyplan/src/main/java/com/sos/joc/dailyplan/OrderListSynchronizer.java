@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,11 +102,11 @@ public class OrderListSynchronizer {
         }
     }
 
-    private List<DBItemDailyPlanHistory> insertHistory(SOSHibernateSession session, Set<PlannedOrder> addedOrders) throws SOSHibernateException {
+    private Map<String, DBItemDailyPlanHistory> insertHistory(SOSHibernateSession session, Set<PlannedOrder> addedOrders) throws SOSHibernateException {
 
         Date submissionTime = settings.getSubmissionTime() == null ? new Date() : settings.getSubmissionTime();
 
-        List<DBItemDailyPlanHistory> result = new ArrayList<DBItemDailyPlanHistory>();
+        Map<String, DBItemDailyPlanHistory> result = new HashMap<>();
         for (PlannedOrder order : addedOrders) {
             Date dailyPlanDate = null;
             if (settings.getDailyPlanDate() == null) {
@@ -135,7 +136,7 @@ public class OrderListSynchronizer {
             item.setUserAccount(settings.getUserAccount());
 
             session.save(item);
-            result.add(item);
+            result.put(item.getOrderId(), item);
         }
         return result;
     }
@@ -169,7 +170,7 @@ public class OrderListSynchronizer {
             session = Globals.createSosHibernateStatelessConnection(sessionIdentifier);
             session.setAutoCommit(false);
 
-            List<DBItemDailyPlanHistory> inserted = new ArrayList<DBItemDailyPlanHistory>();
+            Map<String, DBItemDailyPlanHistory> inserted = Collections.emptyMap();
             try {
                 Instant start = Instant.now();
                 Globals.beginTransaction(session);

@@ -1104,6 +1104,9 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public int setHistorySubmitted(Long id, boolean submitted, String message) throws SOSHibernateException {
+        if (id == null || id == 0L) {
+            return 0;
+        }
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_HISTORY).append(" ");
         hql.append("set submitted=:submitted ");
         if (!SOSString.isEmpty(message)) {
