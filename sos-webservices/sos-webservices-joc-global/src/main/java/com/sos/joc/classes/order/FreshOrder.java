@@ -7,7 +7,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.sos.joc.classes.board.PlanSchemas;
+
 import js7.data.order.OrderId;
+import js7.data.plan.PlanId;
+import js7.data.plan.PlanKey;
+import js7.data.plan.PlanSchemaId;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
@@ -92,18 +97,28 @@ public class FreshOrder {
         if (branchPath == null) {
             branchPath = JBranchPath.empty();
         }
-        return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, false, forceJobAdmission, branchPath, startPosition, endPositions);
+        return JFreshOrder.of(newOrderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(), false, forceJobAdmission, branchPath, startPosition,
+                endPositions);
     }
 
     public JFreshOrder getJFreshOrderWithDeleteOrderWhenTerminated() {
         if (branchPath == null) {
             branchPath = JBranchPath.empty();
         }
-        return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, true, forceJobAdmission, branchPath, startPosition, endPositions);
+        return JFreshOrder.of(newOrderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(), true, forceJobAdmission, branchPath, startPosition,
+                endPositions);
     }
 
     private static OrderId generateNewFromOldOrderId(OrderId orderId, ZoneId zoneId) {
         return OrderId.of(OrdersHelper.generateNewFromOldOrderId(orderId.string(), zoneId));
+    }
+    
+    private PlanKey getDailyPlanPlanKey() {
+        return PlanKey.of(newOrderId.string().replaceFirst("#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*", "$1"));
+    }
+    
+    private PlanId getDailyPlanPlanId() {
+        return new PlanId(PlanSchemaId.of(PlanSchemas.defaultPlanSchemaId), getDailyPlanPlanKey());
     }
 
 }

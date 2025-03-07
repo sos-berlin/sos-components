@@ -17,24 +17,27 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.classes.ProblemHelper;
 
 import js7.data.plan.PlanSchemaId;
+import js7.data.value.StringValue;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.plan.JPlanSchema;
 import js7.data_for_java.plan.JPlanSchemaState;
-import js7.data_for_java.value.JExpression;
+import js7.data_for_java.value.JExprFunction;
 import js7.proxy.javaapi.JControllerApi;
 import reactor.core.publisher.Flux;
 
 public class PlanSchemas {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanSchemas.class);
+    public static final String defaultPlanSchemaId = "DailyPlan"; 
     private static final Map<String, JPlanSchema> planSchemas = Collections.unmodifiableMap(new HashMap<String, JPlanSchema>() {
 
         private static final long serialVersionUID = 1L;
 
         {
-            put("DailyPlan", JPlanSchema.of(PlanSchemaId.of("DailyPlan"), JExpression.apply(
-                    "match($js7OrderId, '#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*', '$1') ?"), Optional.empty(), Collections.emptyMap()));
+            put(defaultPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(defaultPlanSchemaId), 
+                    Optional.of(JExprFunction.apply("(day) => $day < thresholdDay").asScala()),
+                    Collections.singletonMap("thresholdDay", StringValue.empty())));
         }
     });
 
@@ -68,11 +71,11 @@ public class PlanSchemas {
     }
     
     private static Map<Boolean, List<JPlanSchema>> getGroupedPlanSchemas(JControllerState currentState) {
-        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.planKeyExpr(), ps.planIsClosedFunction(), ps
+        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.planIsClosedFunction(), ps
                 .namedValues());
         Set<JPlanSchema> knownPlanSchemas = currentState.idToPlanSchemaState().values().stream().filter(p -> !p.asScala().isGlobal()).map(
                 JPlanSchemaState::item).map(cloneWithoutRevision).collect(Collectors.toSet());
-        return planSchemas.values().stream().collect(Collectors.groupingBy(sp -> knownPlanSchemas.contains(sp)));
+        return planSchemas.values().stream().collect(Collectors.groupingBy(knownPlanSchemas::contains));
     }
     
     private static String getPlanSchemasToString(Collection<JPlanSchema> psIds) {
