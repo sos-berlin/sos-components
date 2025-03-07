@@ -5,8 +5,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.vfs.common.proxy.Proxy;
-import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
+import com.sos.commons.vfs.commons.proxy.Proxy;
+import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 
 import net.schmizz.sshj.Config;
 import net.schmizz.sshj.DefaultConfig;

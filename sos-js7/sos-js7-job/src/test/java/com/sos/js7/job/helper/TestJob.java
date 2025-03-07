@@ -3,7 +3,7 @@ package com.sos.js7.job.helper;
 import java.util.List;
 import java.util.Map;
 
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStep;
 

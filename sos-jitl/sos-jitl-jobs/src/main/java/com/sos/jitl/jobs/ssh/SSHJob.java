@@ -27,7 +27,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.vfs.ssh.SSHProvider;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 import com.sos.jitl.jobs.ssh.util.SSHJobUtil;
 import com.sos.js7.job.Job;

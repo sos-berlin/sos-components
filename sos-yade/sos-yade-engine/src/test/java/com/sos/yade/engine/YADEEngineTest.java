@@ -9,18 +9,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.common.logger.SOSSlf4jLogger;
-import com.sos.commons.vfs.common.AProviderArguments;
-import com.sos.commons.vfs.local.common.LocalProviderArguments;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.local.commons.LocalProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.common.arguments.YADEArguments;
-import com.sos.yade.engine.common.arguments.YADEClientArguments;
-import com.sos.yade.engine.common.arguments.YADEProviderCommandArguments;
-import com.sos.yade.engine.common.arguments.YADESourceArguments;
-import com.sos.yade.engine.common.arguments.YADESourceArguments.ZeroByteTransfer;
-import com.sos.yade.engine.common.arguments.YADESourceTargetArguments;
-import com.sos.yade.engine.common.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.arguments.YADEClientArguments;
+import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
+import com.sos.yade.engine.commons.arguments.YADESourceArguments;
+import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
+import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 
 public class YADEEngineTest {
 

@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.arguments.YADESourceArguments;
-import com.sos.yade.engine.common.arguments.YADESourcePollingArguments;
-import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.common.helpers.YADEArgumentsHelper;
-import com.sos.yade.engine.common.helpers.YADEClientHelper;
-import com.sos.yade.engine.common.helpers.YADEProviderDelegatorHelper;
+import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.yade.engine.commons.arguments.YADESourceArguments;
+import com.sos.yade.engine.commons.arguments.YADESourcePollingArguments;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.commons.helpers.YADEClientHelper;
+import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourcePollingException;
 
 public class YADESourcePollingHandler {

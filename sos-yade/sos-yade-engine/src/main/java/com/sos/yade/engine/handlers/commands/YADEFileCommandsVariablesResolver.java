@@ -8,12 +8,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.sos.commons.util.SOSPathUtil;
-import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.yade.engine.common.YADEProviderFile;
-import com.sos.yade.engine.common.delegators.AYADEProviderDelegator;
-import com.sos.yade.engine.common.delegators.IYADEProviderDelegator;
-import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
+import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 
 /** @apiNote The following special variables are available:<br/>
  *          See:<br/>

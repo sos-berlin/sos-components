@@ -13,7 +13,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.logger.SOSSlf4jLogger;
-import com.sos.commons.vfs.local.common.LocalProviderArguments;
+import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 
 public class LocalProviderTest {
 

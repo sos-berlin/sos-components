@@ -3,11 +3,11 @@ package com.sos.yade.engine.handlers.operations.remove;
 import java.util.List;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.common.YADEProviderFile;
-import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
 

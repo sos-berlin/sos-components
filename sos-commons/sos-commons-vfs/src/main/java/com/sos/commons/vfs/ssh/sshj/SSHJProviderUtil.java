@@ -8,9 +8,9 @@ import java.util.List;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.AProvider;
-import com.sos.commons.vfs.common.file.ProviderFile;
-import com.sos.commons.vfs.common.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.commons.AProvider;
+import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 
 import net.schmizz.keepalive.KeepAlive;
@@ -124,7 +124,7 @@ public class SSHJProviderUtil {
     }
 
     // possible recursion
-    protected static List<ProviderFile> selectFiles(SSHJProvider provider, ProviderFileSelection selection, String directoryPath,
+    protected static List<ProviderFile> selectFiles(SSHJProviderImpl provider, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws SOSProviderException {
         int counterAdded = 0;
         try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
@@ -135,7 +135,7 @@ public class SSHJProviderUtil {
         return result;
     }
 
-    private static int list(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
+    private static int list(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
             int counterAdded) throws SOSProviderException {
         try {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
@@ -151,7 +151,7 @@ public class SSHJProviderUtil {
         return counterAdded;
     }
 
-    private static int processListEntry(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
+    private static int processListEntry(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
             List<ProviderFile> result, int counterAdded) throws SOSProviderException {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {

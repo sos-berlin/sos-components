@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.helper.TestJob;
 import com.sos.js7.job.helper.TestJobArguments;

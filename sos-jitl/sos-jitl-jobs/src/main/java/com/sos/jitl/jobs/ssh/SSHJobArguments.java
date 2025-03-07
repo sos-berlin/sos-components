@@ -3,7 +3,7 @@ package com.sos.jitl.jobs.ssh;
 import java.util.List;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 

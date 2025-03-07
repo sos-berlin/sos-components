@@ -9,10 +9,10 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.file.files.DeleteFilesResult;
+import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
-import com.sos.yade.engine.common.YADEProviderFile;
-import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 
 public class YADETargetCumulativeFileHelper {

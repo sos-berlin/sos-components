@@ -10,10 +10,10 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
+import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.SOSAuthenticationFailedException;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
 
 import net.schmizz.keepalive.KeepAliveProvider;
 import net.schmizz.sshj.Config;

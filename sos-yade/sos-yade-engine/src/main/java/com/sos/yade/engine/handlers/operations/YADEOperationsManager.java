@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.common.file.ProviderFile;
+import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.common.arguments.YADEArguments;
-import com.sos.yade.engine.common.arguments.YADEClientArguments;
-import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.arguments.YADEClientArguments;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsHandler;
 import com.sos.yade.engine.handlers.operations.getlist.YADEGetListOperationHandler;
 import com.sos.yade.engine.handlers.operations.remove.YADERemoveOperationHandler;

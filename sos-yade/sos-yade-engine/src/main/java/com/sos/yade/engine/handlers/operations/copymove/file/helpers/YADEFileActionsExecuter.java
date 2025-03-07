@@ -6,15 +6,15 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.common.logger.ISOSLogger;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
-import com.sos.yade.engine.common.YADEProviderFile;
-import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileSizeException;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
-import com.sos.yade.engine.handlers.operations.copymove.file.common.YADEFileNameInfo;
-import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 
 /** Single "transfer" file operations */
 public class YADEFileActionsExecuter {

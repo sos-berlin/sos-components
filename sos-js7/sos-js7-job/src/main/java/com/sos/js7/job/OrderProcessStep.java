@@ -26,7 +26,7 @@ import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.ssh.SSHProvider;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument.Type;
 import com.sos.js7.job.JobArguments.LogLevel;
 import com.sos.js7.job.UnitTestJobHelper.UnitTestStepConfig;

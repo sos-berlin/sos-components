@@ -1,12 +1,12 @@
 package com.sos.yade.engine.handlers.operations.copymove;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.common.IProvider;
+import com.sos.commons.vfs.commons.IProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.common.arguments.YADEArguments;
-import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.common.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.handlers.operations.copymove.file.common.YADETargetProviderFile;
+import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 
 public class YADECopyMoveOperationsConfig {
 

@@ -16,9 +16,9 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.logger.SOSSlf4jLogger;
-import com.sos.commons.vfs.common.AProviderArguments.Protocol;
-import com.sos.commons.vfs.common.proxy.Proxy;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
+import com.sos.commons.vfs.commons.proxy.Proxy;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
 import com.sos.commons.vfs.ssh.helper.SSHProviderTestArguments;
 
 public class SSHProviderTest {

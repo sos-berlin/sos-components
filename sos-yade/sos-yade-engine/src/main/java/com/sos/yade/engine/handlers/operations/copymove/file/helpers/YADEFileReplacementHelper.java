@@ -10,12 +10,12 @@ import java.util.regex.Pattern;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.logger.SOSSlf4jLogger;
 import com.sos.commons.vfs.local.LocalProvider;
-import com.sos.commons.vfs.local.common.LocalProviderArguments;
-import com.sos.yade.engine.common.YADEProviderFile;
-import com.sos.yade.engine.common.arguments.YADESourceArguments;
-import com.sos.yade.engine.common.delegators.AYADEProviderDelegator;
-import com.sos.yade.engine.common.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.handlers.operations.copymove.file.common.YADEFileNameInfo;
+import com.sos.commons.vfs.local.commons.LocalProviderArguments;
+import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.arguments.YADESourceArguments;
+import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
 
 /** @see YADEFileNameInfo
  * @apiNote COPY/MOVE operations.<br/>

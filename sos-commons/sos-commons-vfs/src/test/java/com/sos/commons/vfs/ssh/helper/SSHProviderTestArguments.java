@@ -2,7 +2,7 @@ package com.sos.commons.vfs.ssh.helper;
 
 import java.util.Arrays;
 
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
 public class SSHProviderTestArguments extends SSHProviderArguments {
 
@@ -41,7 +41,7 @@ public class SSHProviderTestArguments extends SSHProviderArguments {
     public void setRequiredAuthentications(AuthMethod... val) {
         getRequiredAuthentications().setValue(Arrays.<AuthMethod> asList(val));
     }
-    
+
     public void setSimulateShell(Boolean val) {
         getSimulateShell().setValue(val);
     }

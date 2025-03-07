@@ -4,7 +4,7 @@ import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.vfs.ssh.SSHProvider;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
