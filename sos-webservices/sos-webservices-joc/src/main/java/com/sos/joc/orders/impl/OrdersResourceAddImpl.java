@@ -28,6 +28,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.board.PlanSchemas;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -58,6 +59,7 @@ import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
+import js7.data.plan.PlanSchemaId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
@@ -140,6 +142,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 
             final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
+            PlanSchemaId planSchemaId = PlanSchemas.getDailyPlanPlanSchemaIfExists(currentState);
             
             final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
@@ -197,7 +200,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     
                     // TODO check if endPos not before startPos
                     Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, scheduledFor, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, planSchemaId, scheduledFor, zoneId, startPos, endPoss, jBrachPath,
+                            forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
                     
                     if (order.getTags() != null && !order.getTags().isEmpty()) {

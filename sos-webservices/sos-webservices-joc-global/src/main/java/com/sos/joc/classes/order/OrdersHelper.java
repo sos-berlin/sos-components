@@ -1223,6 +1223,7 @@ public class OrdersHelper {
         final boolean variablesAreRemoved = dailyplanModifyOrder.getRemoveVariables() != null;
         final Optional<Long> secondsFromCurDate = JobSchedulerDate.getSecondsOfRelativeCurDate(dailyplanModifyOrder.getScheduledFor());
         Map<String, Requirements> cachedRequirements = new HashMap<>(1);
+        PlanSchemaId planSchemaId = PlanSchemas.getDailyPlanPlanSchemaIfExists(currentState);
 
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
             Either<Err419, FreshOrder> either = null;
@@ -1299,7 +1300,7 @@ public class OrdersHelper {
                     endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala().stopPositions()));
                 }
 
-                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, jBrachPath, startPos, endPoss,
+                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), planSchemaId, args, scheduledFor, jBrachPath, startPos, endPoss,
                         forceJobAdmission, zoneId);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
@@ -1441,38 +1442,42 @@ public class OrdersHelper {
         return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, ZoneId zoneId, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss,
-            JBranchPath blockPosition, boolean forceJobAdmission) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, PlanSchemaId planSchemaId, ZoneId zoneId, Optional<JPositionOrLabel> startPos,
+            Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-        return mapToFreshOrder(order, scheduledFor, zoneId, startPos, endPoss, blockPosition, forceJobAdmission);
+        return mapToFreshOrder(order, planSchemaId, scheduledFor, zoneId, startPos, endPoss, blockPosition, forceJobAdmission);
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, Optional<Instant> scheduledFor, ZoneId zoneId, Optional<JPositionOrLabel> startPos,
-            Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, PlanSchemaId planSchemaId, Optional<Instant> scheduledFor, ZoneId zoneId,
+            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
         if (zoneId == null) {
             zoneId = getDailyPlanTimeZone();
         }
         ZonedDateTime zonedNow = ZonedDateTime.of(LocalDateTime.now(zoneId), ZoneId.systemDefault());
         String orderId = String.format("#%s#T%s-%s", datetimeFormatter.format(zonedNow), getUniqueOrderId(zonedNow), order.getOrderName());
-        return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
+        return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), planSchemaId,
                 variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission);
     }
 
-    private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
+    private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, PlanSchemaId planSchemaId, Map<String, Value> args,
+            Optional<Instant> scheduledFor, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition,
+            boolean forceJobAdmission) {
         if (blockPosition == null) {
             blockPosition = JBranchPath.empty();
         }
-        return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(orderId.string()), true, forceJobAdmission, blockPosition,
-                startPos, endPoss);
+        return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(planSchemaId, orderId.string()), true, forceJobAdmission,
+                blockPosition, startPos, endPoss);
     }
     
     private static PlanKey getDailyPlanPlanKey(String orderId) {
         return PlanKey.of(orderId.replaceFirst("#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*", "$1"));
     }
     
-    public static js7.data.plan.PlanId getDailyPlanPlanId(String orderId) {
-        return new js7.data.plan.PlanId(PlanSchemaId.of(PlanSchemas.defaultPlanSchemaId), getDailyPlanPlanKey(orderId));
+    public static js7.data.plan.PlanId getDailyPlanPlanId(PlanSchemaId planSchemaId, String orderId) {
+        if (planSchemaId.equals(PlanSchemaId.Global)) {
+            return new js7.data.plan.PlanId(planSchemaId, PlanKey.Global);
+        }
+        return new js7.data.plan.PlanId(planSchemaId, getDailyPlanPlanKey(orderId));
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {
