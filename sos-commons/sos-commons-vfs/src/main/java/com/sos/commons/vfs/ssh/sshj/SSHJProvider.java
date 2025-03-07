@@ -261,19 +261,12 @@ public class SSHJProvider extends ASSHProvider {
         checkBeforeOperation("rereadFileIfExists", sshClient);
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            FileAttributes attr = sftp.stat(file.getFullPath());
-            if (isValidFileType(attr)) {
-                file.setSize(attr.getSize());
-                file.setLastModifiedMillis(SSHJProviderUtil.getFileLastModifiedMillis(attr));
-            } else {
-                // file = null; ???
-            }
+            return refreshFileMetadata(file, createProviderFile(file.getFullPath(), sftp.stat(file.getFullPath())));
         } catch (NoSuchFileException e) {
-            file = null;
+            return null;
         } catch (IOException e) {
             throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
         }
-        return file;
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String,long)} */

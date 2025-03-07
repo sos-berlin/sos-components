@@ -1,5 +1,6 @@
 package com.sos.commons.util.common;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSString;
@@ -24,6 +25,18 @@ public class SOSTimeout {
 
     public TimeUnit getTimeUnit() {
         return timeUnit;
+    }
+
+    public long toMillis() {
+        return timeUnit.toMillis(interval);
+    }
+
+    public long toSeconds() {
+        return timeUnit.toSeconds(interval);
+    }
+
+    public Duration toDuration() {
+        return Duration.ofMillis(toMillis());
     }
 
     /** n NANOSECONDS|MICROSECONDS|MILLISECONDS|SECONDS|MINUTES|HOURS|DAYS

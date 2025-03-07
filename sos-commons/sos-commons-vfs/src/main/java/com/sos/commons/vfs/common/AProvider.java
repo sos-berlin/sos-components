@@ -33,14 +33,15 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     private final ISOSLogger logger;
     private final A arguments;
 
-    // Default providerFileCreator function creates a standard ProviderFile using the builder
+    /** Default providerFileCreator function creates a standard ProviderFile using the builder */
     private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build(this);
-    // source/target type - logging - is not set if only one provider is used (e.g. SSH JITL Job)
+    /** Source/Target type - logging - is not set if only one provider is used (e.g. SSH JITL Job) */
     private AProviderContext context;
 
+    /** Checks the allowed file type - regular, symbolic link. If not set - all file types allowed */
     private final Function<Object, Boolean> fileTypeChecker;
 
-    /** For Connect/Disconnect logging e.g. LocalProvider=null, SSHProvider=user@server:port */
+    /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
 
     public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
@@ -149,10 +150,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
-    public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {
-        return providerFileCreator;
-    }
-
     /** Method to create a ProviderFile by using the providerFileCreator function
      * 
      * @param fullPath
@@ -185,37 +182,25 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
-    public ISOSLogger getLogger() {
-        return logger;
-    }
-
-    public A getArguments() {
-        return arguments;
-    }
-
-    public static String millis2string(int val) {
-        if (val <= 0) {
-            return String.valueOf(val).concat("ms");
+    /** Refresh file size and lastModified<br/>
+     * Note: fileAfterReread is not returned because there is other information (e.g. status) in the file
+     * 
+     * @param file
+     * @param fileAfterReread
+     * @return */
+    public ProviderFile refreshFileMetadata(ProviderFile file, ProviderFile fileAfterReread) {
+        if (fileAfterReread == null || file == null) {
+            return null;
         }
-        try {
-            return String.valueOf(Math.round(val / 1000)).concat("s");
-        } catch (Throwable e) {
-            return String.valueOf(val).concat("ms");
-        }
+        file.setSize(fileAfterReread.getSize());
+        file.setLastModifiedMillis(fileAfterReread.getLastModifiedMillis());
+        return file;
     }
 
     public void checkParam(String method, String paramValue, String msg) throws SOSProviderException {
         if (SOSString.isEmpty(paramValue)) {
             throw new SOSProviderException(getLogPrefix() + "[" + method + "]" + msg + " missing");
         }
-    }
-
-    public static boolean isValidFileSize(long fileSize) {
-        return fileSize >= 0;
-    }
-
-    public static boolean isValidModificationTime(long milliseconds) {
-        return milliseconds > 0;
     }
 
     public void checkModificationTime(String path, long milliseconds) throws SOSProviderException {
@@ -225,15 +210,11 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     public boolean isValidFileType(Object fileRepresentator) {
-        return fileTypeChecker == null ? false : fileTypeChecker.apply(fileRepresentator);
-    }
+        if (fileTypeChecker == null) {
+            return true;
+        }
 
-    public String getAccessInfo() {
-        return accessInfo;
-    }
-
-    public void setAccessInfo(String val) {
-        accessInfo = val;
+        return fileTypeChecker.apply(fileRepresentator);
     }
 
     public String getConnectMsg() {
@@ -251,5 +232,44 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public String getDisconnectedMsg() {
         return String.format("%s[disconnected]%s", getLogPrefix(), accessInfo);
+    }
+
+    public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {
+        return providerFileCreator;
+    }
+
+    public ISOSLogger getLogger() {
+        return logger;
+    }
+
+    public A getArguments() {
+        return arguments;
+    }
+
+    public String getAccessInfo() {
+        return accessInfo;
+    }
+
+    public void setAccessInfo(String val) {
+        accessInfo = val;
+    }
+
+    public static String millis2string(int val) {
+        if (val <= 0) {
+            return String.valueOf(val).concat("ms");
+        }
+        try {
+            return String.valueOf(Math.round(val / 1000)).concat("s");
+        } catch (Throwable e) {
+            return String.valueOf(val).concat("ms");
+        }
+    }
+
+    public static boolean isValidFileSize(long fileSize) {
+        return fileSize >= 0;
+    }
+
+    public static boolean isValidModificationTime(long milliseconds) {
+        return milliseconds > 0;
     }
 }

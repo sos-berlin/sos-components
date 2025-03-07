@@ -29,6 +29,7 @@ public class FTPProviderArguments extends AProviderExtendedArguments {
 
     private SOSArgument<Boolean> protocolCommandListener = new SOSArgument<>("protocol_command_listener", false, Boolean.valueOf(false));
 
+    /** Passive mode for higher compatibility (client.enterLocalPassiveMode()). Prevents problems with Firewalls/NAT routers. */
     private SOSArgument<Boolean> passiveMode = new SOSArgument<>("passive_mode", false, Boolean.valueOf(false));
 
     private SOSArgument<TransferMode> transferMode = new SOSArgument<>("transfer_mode", false, TransferMode.BINARY);

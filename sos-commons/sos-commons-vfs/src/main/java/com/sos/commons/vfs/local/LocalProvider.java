@@ -54,20 +54,13 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         if (getArguments().getCredentialStore() != null) {
             // e.g. see SSHProvider
         }
+        setAccessInfo();
     }
 
     /** Overrides {@link IProvider#connect())} */
     @Override
     public void connect() throws SOSProviderConnectException {
-        try {
-            getArguments().getHost().setValue(SOSShell.getHostname());
-        } catch (UnknownHostException e) {
-            getArguments().getHost().setValue("UNKNOWN_HOST");
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[connect]%s", getLogPrefix(), e.toString());
-            }
-        }
-        getArguments().getUser().setValue(SOSShell.getUsername());
+        getLogger().info(getAccessInfo());
     }
 
     /** Overrides {@link IProvider#isConnected()} */
@@ -215,19 +208,12 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     @Override
     public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
         try {
-            BasicFileAttributes attr = readFileAttributes(Paths.get(file.getFullPath()));
-            if (attr != null) {
-                file.setSize(attr.size());
-                file.setLastModifiedMillis(getFileLastModifiedMillis(attr));
-            } else {
-                // file = null; ???
-            }
+            return refreshFileMetadata(file, createProviderFile(getAbsoluteNormalizedPath(file.getFullPath())));
         } catch (NoSuchFileException e) {
-            file = null;
+            return null;
         } catch (IOException e) {
             throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
         }
-        return file;
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
@@ -258,6 +244,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
     public InputStream getInputStream(String path) throws SOSProviderException {
+        checkParam("getInputStream", path, "path");
+
         try {
             return Files.newInputStream(getAbsoluteNormalizedPath(path));
             // return new FileInputStream(getPath(path).toFile());
@@ -269,6 +257,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
+        checkParam("getOutputStream", path, "path");
+
         try {
             Path p = getAbsoluteNormalizedPath(path);
             if (append) {
@@ -285,6 +275,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     /** Overrides {@link IProvider#getFileContentIfExists(String)} */
     @Override
     public String getFileContentIfExists(String path) throws SOSProviderException {
+        checkParam("getFileContentIfExists", path, "path");
+
         try {
             Path p = getAbsoluteNormalizedPath(path);
             if (!exists(p)) {
@@ -299,6 +291,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     /** Overrides {@link IProvider#writeFile(String, String)} */
     @Override
     public void writeFile(String path, String content) throws SOSProviderException {
+        checkParam("writeFile", path, "path");
+
         try {
             SOSPath.overwrite(getAbsoluteNormalizedPath(path), content);
         } catch (Throwable e) {
@@ -469,6 +463,18 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             throw new SOSProviderException(e);
         }
         return result;
+    }
+
+    private void setAccessInfo() {
+        try {
+            getArguments().getHost().setValue(SOSShell.getHostname());
+        } catch (UnknownHostException e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[setHostname]%s", getLogPrefix(), e.toString());
+            }
+        }
+        getArguments().getUser().setValue(SOSShell.getUsername());
+        setAccessInfo(String.format("%s@%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue()));
     }
 
 }

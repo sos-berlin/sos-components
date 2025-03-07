@@ -1,13 +1,21 @@
 package com.sos.commons.vfs.ftp.common;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -68,22 +76,22 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
             client = createClient();
             client.setConnectTimeout(getArguments().getConnectTimeoutAsMs());
 
-            // connect
+            // Connect
             client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
             FTPProtocolReply reply = new FTPProtocolReply(client);
             if (!reply.isPositiveReply()) {
                 throw new Exception(String.format("%s[connect][FTP server refused connection]%s", getLogPrefix(), reply));
             }
 
-            // keep alive
-            client.setControlKeepAliveTimeout(Duration.ofSeconds(getArguments().getServerAliveInterval().getValue()));
-            // login
+            // Keep Alive
+            client.setControlKeepAliveTimeout(getKeepAliveTimeout());
+            // Login
             client.login(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
             reply = new FTPProtocolReply(client);
             if (!reply.isPositiveReply()) {
                 throw new Exception(String.format("%s[login]%s", getLogPrefix(), reply));
             }
-            // Post login commands
+            // Post Login Commands
             postLoginCommands();
         } catch (Throwable e) {
             if (isConnected()) {
@@ -170,7 +178,7 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
             FTPFile file = files[0];
             boolean deleted = false;
             if (file.isDirectory()) {
-                deleteDirectoryFilesRecursively(path);
+                FTPProviderUtil.deleteDirectoryFilesRecursively(client, getPathSeparator(), path);
                 deleted = client.removeDirectory(path);
                 if (!deleted) {
                     throw new Exception(String.format("[failed to remove directory][%s]%s", path, new FTPProtocolReply(client)));
@@ -311,8 +319,9 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
     @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
         checkBeforeOperation("getFileIfExists", path, "path");
+
         try {
-            return createProviderFile(path, getFTPFile("getFileIfExists", path));
+            return createProviderFile(path, FTPProviderUtil.getFTPFile("getFileIfExists", client, path));
         } catch (Throwable e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
@@ -321,56 +330,155 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
     /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
     @Override
     public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("rereadFileIfExists");
+
+        try {
+            return refreshFileMetadata(file, createProviderFile(file.getFullPath(), FTPProviderUtil.getFTPFile("rereadFileIfExists", client, file
+                    .getFullPath())));
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
+        }
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("selectFiles");
+
+        selection = ProviderFileSelection.createIfNull(selection);
+        String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
+        List<ProviderFile> result = new ArrayList<>();
+        try {
+            FTPProviderUtil.selectFiles(this, selection, directory, result);
+        } catch (SOSProviderException e) {
+            throw e;
+        }
+        return result;
     }
 
     @Override
     public String getFileContentIfExists(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getFileContentIfExists", path, "path");
+
+        StringBuilder content = new StringBuilder();
+        FTPProtocolReply reply = null;
+        try (InputStream is = client.retrieveFileStream(path); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8); BufferedReader br =
+                new BufferedReader(r)) {
+            reply = new FTPProtocolReply(client);
+            if (is == null || reply.isFileUnavailableReply()) {
+                return null;
+            }
+            br.lines().forEach(content::append);
+            return client.completePendingCommand() ? content.toString() : null;
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path) + (reply == null ? "" : reply), e);
+        }
     }
 
     /** Overrides {@link IProvider#writeFile(String, String)} */
     @Override
     public void writeFile(String path, String content) throws SOSProviderException {
-        // TODO Auto-generated method stub
+        checkBeforeOperation("writeFile", path, "path");
+
+        try (InputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))) {
+            // Store file (overwrites if it exists)
+            if (!client.storeFile(path, inputStream)) {
+                throw new SOSProviderException(String.format("%s[failed to write file]%s", getPathOperationPrefix(path), new FTPProtocolReply(
+                        client)));
+            }
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        } catch (SOSProviderException e) {
+            throw e;
+        }
 
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
-        // TODO Auto-generated method stub
+        checkBeforeOperation("setFileLastModifiedFromMillis", path, path);
+        checkModificationTime(path, milliseconds);
 
+        try {
+            // FTP servers expect the timestamp in UTC and exactly in this format
+            SimpleDateFormat f = new SimpleDateFormat("yyyyMMddHHmmss");
+            f.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
+            if (!client.setModificationTime(path, f.format(new Date(milliseconds)))) {
+                throw new SOSProviderException(String.format("%s[failed to set modification time]%s", getPathOperationPrefix(path),
+                        new FTPProtocolReply(client)));
+            }
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        } catch (SOSProviderException e) {
+            throw e;
+        }
     }
 
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
     public InputStream getInputStream(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getInputStream", path, "path");
+
+        try {
+            InputStream is = client.retrieveFileStream(path);
+            if (is == null) {
+                throw new SOSProviderException(String.format("%s[failed to open InputStream]%s", getPathOperationPrefix(path), new FTPProtocolReply(
+                        client)));
+            }
+            return is;
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        } catch (SOSProviderException e) {
+            throw e;
+        }
     }
 
     /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getOutputStream", path, "path");
+
+        try {
+            OutputStream os = append ? client.appendFileStream(path) : client.storeFileStream(path);
+            if (os == null) {
+                throw new SOSProviderException(String.format("%s[failed to open OutputStream]%s", getPathOperationPrefix(path), new FTPProtocolReply(
+                        client)));
+            }
+            return os;
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        } catch (SOSProviderException e) {
+            throw e;
+        }
     }
 
     /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
     @Override
     public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        // TODO Auto-generated method stub
-        return null;
+        SOSCommandResult result = new SOSCommandResult(command);
+        if (client == null) {
+            return result;
+        }
+
+        try {
+            if (timeout != null) {
+                client.setControlKeepAliveTimeout(timeout.toDuration());
+            }
+            client.sendCommand(command);
+            FTPProtocolReply reply = new FTPProtocolReply(client);
+            if (!reply.isPositiveReply()) {
+                throw new Exception(reply.toString());
+            }
+        } catch (Throwable e) {
+            result.setException(e);
+        } finally {
+            if (timeout != null) {
+                // restore configured Keep Alive
+                client.setControlKeepAliveTimeout(getKeepAliveTimeout());
+            }
+        }
+        return result;
     }
 
     /** Overrides {@link IProvider#cancelCommands()} */
@@ -380,20 +488,29 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
         return null;
     }
 
-    public FTPClient getClient() {
-        return client;
+    public void debugCommand(String command) {
+        if (!getLogger().isDebugEnabled() || getArguments().getProtocolCommandListener().isTrue()) {
+            return;
+        }
+        getLogger().debug("%s[%s]%s", getLogPrefix(), command, new FTPProtocolReply(client));
     }
 
     public void setProtocolCommandListener(FTPClient client) {
-        if (getArguments().getProtocolCommandListener().isTrue() || isCommandListenerEnvVarSet()) {
+        if (getArguments().getProtocolCommandListener().isTrue() || FTPProviderUtil.isCommandListenerEnvVarSet()) {
             client.addProtocolCommandListener(new FTPProtocolCommandListener(getLogger()));
             getLogger().debug(getLogPrefix() + "ProtocolCommandListener added");
         }
     }
 
-    private boolean isCommandListenerEnvVarSet() {
-        String val = System.getenv("AddFTPProtocol");
-        return val != null && "true".equalsIgnoreCase(val);
+    public ProviderFile createProviderFile(String path, FTPFile file) {
+        if (file == null || !isValidFileType(file)) {
+            return null;
+        }
+        return createProviderFile(path, file.getSize(), file.getTimestamp() == null ? -1L : file.getTimestamp().getTimeInMillis());
+    }
+
+    public FTPClient getClient() {
+        return client;
     }
 
     private String getConnectedInfos() {
@@ -466,13 +583,6 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
         debugCommand("sendCommand][" + command);
     }
 
-    public void debugCommand(String command) {
-        if (!getLogger().isDebugEnabled() || getArguments().getProtocolCommandListener().isTrue()) {
-            return;
-        }
-        getLogger().debug("%s[%s]%s", getLogPrefix(), command, new FTPProtocolReply(client));
-    }
-
     private void checkBeforeOperation(String method) throws SOSProviderException {
         if (client == null) {
             throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "FTPClient");
@@ -484,22 +594,6 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
         checkParam(method, paramValue, msg);
     }
 
-    private void deleteDirectoryFilesRecursively(String path) throws Exception {
-        FTPFile[] children = client.listFiles(path);
-        if (!SOSCollection.isEmpty(children)) {
-            for (FTPFile child : children) {
-                String childPath = path + getPathSeparator() + child.getName();
-                if (child.isDirectory()) {
-                    deleteDirectoryFilesRecursively(childPath);
-                } else {
-                    if (!client.deleteFile(childPath)) {
-                        throw new Exception(String.format("[failed to delete file][%s]%s", childPath, new FTPProtocolReply(client)));
-                    }
-                }
-            }
-        }
-    }
-
     /** Attempt to determine if NOT_FOUND is truly the cause in the case of FTPReply.FILE_UNAVAILABLE, rather than issues like permissions, etc. */
     private boolean isReplyBasedOnFileNotFound(FTPProtocolReply reply, String path) {
         if (reply.isFileUnavailableReply()) {
@@ -509,22 +603,8 @@ public abstract class AFTPProvider extends AProvider<FTPProviderArguments> {
         return false;
     }
 
-    private FTPFile getFTPFile(String caller, String path) throws Exception {
-        FTPFile[] files = client.listFiles(path);
-        if (SOSCollection.isEmpty(files)) {
-            return null;
-        }
-        if (files.length > 1) {
-            throw new Exception("[the path is ambiguous, more than one file found][" + files.length + "]" + SOSString.join(files));
-        }
-        return files[0];
-    }
-
-    private ProviderFile createProviderFile(String path, FTPFile file) {
-        if (file == null || !isValidFileType(file)) {
-            return null;
-        }
-        return createProviderFile(path, file.getSize(), file.getTimestamp() == null ? -1L : file.getTimestamp().getTimeInMillis());
+    private Duration getKeepAliveTimeout() {
+        return Duration.ofSeconds(getArguments().getServerAliveInterval().getValue());
     }
 
 }

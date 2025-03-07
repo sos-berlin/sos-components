@@ -33,6 +33,18 @@ public class FTPProtocolReply {
         return code == FTPReply.FILE_UNAVAILABLE;
     }
 
+    /** Check if the reply code is in the successful range (2xx)<br/>
+     *
+     *
+     * Others:<br/>
+     * - Check for intermediate replies (3xx), which are not failures, but may require further action<br/>
+     * -- FTPReply.isPositiveIntermediate(replyCode))<br />
+     * - Check for permanent failures (5xx)<br/>
+     * -- FTPReply.isNegativePermanent(replyCode)<br/>
+     * - Check for transient(that may be recoverable by another attempt) failures (4xx)<br/>
+     * -- FTPReply.isNegativeTransient(replyCode)<br/>
+     * 
+     * @return boolean */
     public boolean isPositiveReply() {
         return FTPReply.isPositiveCompletion(code);
     }
