@@ -690,7 +690,39 @@ public class DeployedConfigurationDBLayer {
         }
     }
     
-    public Stream<WorkflowBoards> getWorkflowsWithTopLevelBoards(String controllerId) throws DBConnectionRefusedException,
+//    public Stream<WorkflowBoards> getWorkflowsWithTopLevelBoards(String controllerId) throws DBConnectionRefusedException,
+//            DBInvalidDataException {
+//        try {
+//            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
+//            StringBuilder hql = new StringBuilder("select new ").append(DeployedWorkflowWithBoards.class.getName());
+//            hql.append("(dc.path, dc.commitId, dc.content, sw.instructions) from ");
+//            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+//            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+//            hql.append("where dc.type=:type ");
+//            hql.append("and dc.controllerId=:controllerId ");
+//            hql.append("and sw.deployed=1 ");
+//            hql.append("and ");
+//            hql.append(jsonFunc).append(" is not null ");
+//            // sometimes two rows in DBITEM_SEARCH_WORKFLOWS for the same Workflow -> then use youngest
+//            hql.append("and sw.modified=(select max(modified) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+//            hql.append(" where inventoryConfigurationId=sw.inventoryConfigurationId)");
+//
+//            Query<DeployedWorkflowWithBoards> query = session.createQuery(hql.toString());
+//            query.setParameter("type", DeployType.WORKFLOW.intValue());
+//            query.setParameter("controllerId", controllerId);
+//            List<DeployedWorkflowWithBoards> result = session.getResultList(query);
+//            if (result != null) {
+//                return result.stream().map(DeployedWorkflowWithBoards::mapToWorkflowBoards).filter(Objects::nonNull);
+//            }
+//            return Stream.empty();
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
+    
+    public List<DeployedWorkflowWithBoards> getWorkflowsWithBoards(String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
@@ -702,23 +734,26 @@ public class DeployedConfigurationDBLayer {
             hql.append("and dc.controllerId=:controllerId ");
             hql.append("and sw.deployed=1 ");
             hql.append("and ");
-            hql.append(jsonFunc).append(" is not null");
+            hql.append(jsonFunc).append(" is not null ");
+            // sometimes two rows in DBITEM_SEARCH_WORKFLOWS for the same Workflow -> then use youngest
+            hql.append("and sw.modified=(select max(modified) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+            hql.append(" where inventoryConfigurationId=sw.inventoryConfigurationId)");
 
             Query<DeployedWorkflowWithBoards> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
             List<DeployedWorkflowWithBoards> result = session.getResultList(query);
             if (result != null) {
-                return result.stream().map(DeployedWorkflowWithBoards::mapToWorkflowBoards).filter(Objects::nonNull);
+                return result;
             }
-            return Stream.empty();
+            return Collections.emptyList();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getExpectedNoticeBoardWorkflows(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select dc.name from ");

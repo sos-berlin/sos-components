@@ -29,7 +29,7 @@ import reactor.core.publisher.Flux;
 public class PlanSchemas {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanSchemas.class);
-    private static final String defaultPlanSchemaId = "DailyPlan"; 
+    public static final String defaultPlanSchemaId = "DailyPlan"; 
     private static final Map<String, JPlanSchema> planSchemas = Collections.unmodifiableMap(new HashMap<String, JPlanSchema>() {
 
         private static final long serialVersionUID = 1L;
