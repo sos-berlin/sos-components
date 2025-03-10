@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
@@ -18,7 +18,7 @@ import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
-import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
+import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
@@ -75,14 +75,14 @@ public class YADEFileHandler {
                         logger.info("[%s][skipped][DisableOverwriteFiles=true]%s=%s", logPrefix, targetDelegator.getIdentifier(), targetFile
                                 .getFinalFullPath());
 
-                        YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, targetDelegator, targetFile);
+                        YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, targetFile);
                         return;
                     }
                 }
             }
 
             // 2) Source/Target: commands before file transfer
-            YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
+            YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
             targetFile.setState(TransferEntryState.TRANSFERRING);
             // TODO config.getParallelMaxThreads() == 1 - make it sense if parallel because of random order?
             if (config.getParallelism() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
@@ -177,7 +177,7 @@ public class YADEFileHandler {
             YADEChecksumFileHelper.checkSourceChecksum(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile,
                     sourceMessageDigest);
 
-            YADECommandsHandler.executeAfterFile(logger, sourceDelegator, targetDelegator, sourceFile);
+            YADECommandExecutor.executeAfterFile(logger, sourceDelegator, targetDelegator, sourceFile);
 
             // YADE1 renames after executeAfterFile command
             // Rename Target always - transactional transfer or not

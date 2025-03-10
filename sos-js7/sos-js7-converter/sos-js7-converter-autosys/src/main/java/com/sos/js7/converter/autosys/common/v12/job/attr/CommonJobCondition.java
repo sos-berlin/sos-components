@@ -3,7 +3,7 @@ package com.sos.js7.converter.autosys.common.v12.job.attr;
 import java.util.List;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 import com.sos.js7.converter.commons.JS7ConverterHelper;

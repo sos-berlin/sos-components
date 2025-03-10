@@ -5,7 +5,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.vfs.commons.proxy.Proxy;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 
 import net.schmizz.sshj.Config;
@@ -34,10 +35,12 @@ public class SSHJTest {
         String user = "user";
         String authKey = "C://id_rsa.ppk";
 
-        String proxyHost = "proxy_host";
-        int proxyPort = 3128;
-        String proxyUser = "proxy_user";
-        String proxyPassword = "12345";
+        ProxyArguments proxyArgs = new ProxyArguments();
+        proxyArgs.getType().setValue(java.net.Proxy.Type.HTTP);
+        proxyArgs.getHost().setValue("proxy_host");
+        proxyArgs.getPort().setValue(3128);
+        proxyArgs.getUser().setValue("proxy_user");
+        proxyArgs.getPassword().setValue("12345");
         boolean useProxy = false;
 
         try {
@@ -50,8 +53,7 @@ public class SSHJTest {
             client.setConnectTimeout(connectTimeout);// socket.connect
 
             if (useProxy) {
-                Proxy proxy = new Proxy(java.net.Proxy.Type.HTTP, proxyHost, proxyPort, proxyUser, proxyPassword, 30);
-                client.setSocketFactory(new ProxySocketFactory(proxy));
+                client.setSocketFactory(new ProxySocketFactory(ProxyProvider.createInstance(proxyArgs)));
             }
 
             client.connect(host);

@@ -1,21 +1,23 @@
-package com.sos.commons.util.common.logger;
+package com.sos.commons.util.loggers.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
+
 /** slf4j-based implementation for applications that can be used in JS7 jobs (job logger) or standalone (slf4j API). */
-public class SOSSlf4jLogger implements ISOSLogger {
+public class SLF4JLogger implements ISOSLogger {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSlf4jLogger.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SLF4JLogger.class);
 
-    private static final String LOGGER_CLASS_NAME = SOSSlf4jLogger.class.getName();
+    private static final String LOGGER_CLASS_NAME = SLF4JLogger.class.getName();
     private static final String THREAD_CLASS_NAME = Thread.class.getName();
 
     private final boolean isDebugEnabled;
     private final boolean isTraceEnabled;
 
-    public SOSSlf4jLogger() {
+    public SLF4JLogger() {
         isDebugEnabled = LOGGER.isDebugEnabled();
         isTraceEnabled = LOGGER.isTraceEnabled();
     }

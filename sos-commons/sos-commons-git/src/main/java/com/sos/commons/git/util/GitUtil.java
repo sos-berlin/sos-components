@@ -4,8 +4,8 @@ import java.nio.file.Path;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.git.enums.GitConfigType;
 import com.sos.commons.git.enums.GitConfigAction;
+import com.sos.commons.git.enums.GitConfigType;
 import com.sos.commons.git.results.GitAddCommandResult;
 import com.sos.commons.git.results.GitCheckoutCommandResult;
 import com.sos.commons.git.results.GitCherryPickCommandResult;
@@ -23,7 +23,7 @@ import com.sos.commons.git.results.GitRestoreCommandResult;
 import com.sos.commons.git.results.GitStatusShortCommandResult;
 import com.sos.commons.git.results.GitTagCommandResult;
 import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 
 public class GitUtil {
     

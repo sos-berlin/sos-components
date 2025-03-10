@@ -15,7 +15,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.js7.converter.commons.config.items.DiagramConfig;
 
 public abstract class AGraphvizDiagramWriter {

@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;

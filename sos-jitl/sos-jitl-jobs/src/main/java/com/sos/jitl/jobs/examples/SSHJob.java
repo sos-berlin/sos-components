@@ -2,7 +2,8 @@ package com.sos.jitl.jobs.examples;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
@@ -16,6 +17,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
         if (providerArgs != null) {
             providerArgs.setCredentialStore(step.getIncludedArguments(CredentialStoreArguments.class));
+            providerArgs.setProxy(step.getIncludedArguments(ProxyArguments.class));
         }
         SSHProvider provider = new SSHProvider(step.getLogger(), providerArgs);
         step.addCancelableResource(provider);

@@ -3,8 +3,8 @@ package com.sos.jitl.jobs.examples;
 import java.nio.charset.Charset;
 
 import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
 

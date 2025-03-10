@@ -6,19 +6,19 @@ import java.net.UnknownHostException;
 
 import org.apache.commons.net.DefaultSocketFactory;
 
-import com.sos.commons.vfs.commons.proxy.Proxy;
+import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 
 public class HttpProxySocketFactory extends DefaultSocketFactory {
 
-    private final Proxy proxy;
+    private final ProxyProvider provider;
 
-    public HttpProxySocketFactory(final Proxy proxy) {
-        this.proxy = proxy;
+    public HttpProxySocketFactory(final ProxyProvider provider) {
+        this.provider = provider;
     }
 
     @Override
     public Socket createSocket() throws UnknownHostException, IOException {
-        return new HttpProxySocket(proxy);
+        return new HttpProxySocket(provider);
     }
 
 }

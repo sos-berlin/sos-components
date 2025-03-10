@@ -68,7 +68,7 @@ public class GenericMethodsTest {
 
         for (Map.Entry<String, Object> e : map.entrySet()) {
             LOGGER.info("1=" + e.getKey() + "=" + e.getValue());
-            JobArgument<?> arg = JobArgument.toExecuteJobArgument(e.getKey(), e.getValue());
+            JobArgument<?> arg = JobArgument.toUndeclaredExecuteJobArgument(e.getKey(), e.getValue());
             LOGGER.info("2=" + e.getKey() + "=" + SOSString.toString(arg));
         }
 

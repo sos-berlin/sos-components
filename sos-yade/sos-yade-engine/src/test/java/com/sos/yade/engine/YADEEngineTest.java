@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.common.logger.SOSSlf4jLogger;
+import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -83,7 +83,7 @@ public class YADEEngineTest {
             YADEClientArguments clientArgs = createClientArgs();
             // clientArgs.getResultSetFileName().setValue(Path.of(LOCAL_TARGET_DIR).resolve("result_set_file.txt"));
 
-            yade.execute(new SOSSlf4jLogger(), args, clientArgs, sourceArgs, targetArgs, true);
+            yade.execute(new SLF4JLogger(), args, clientArgs, sourceArgs, targetArgs, true);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -113,7 +113,7 @@ public class YADEEngineTest {
             targetArgs.getKeepModificationDate().setValue(true);
             targetArgs.getTransactional().setValue(true);
 
-            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
+            yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString());
         }
@@ -140,7 +140,7 @@ public class YADEEngineTest {
             targetArgs.getDirectory().setValue(LOCAL_TARGET_DIR);
             targetArgs.getKeepModificationDate().setValue(true);
 
-            yade.execute(new SOSSlf4jLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
+            yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }

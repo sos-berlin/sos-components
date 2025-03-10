@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSEnv;
-import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;

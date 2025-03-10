@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;

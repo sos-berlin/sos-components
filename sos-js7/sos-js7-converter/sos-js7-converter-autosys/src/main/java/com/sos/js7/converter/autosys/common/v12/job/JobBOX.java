@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 

@@ -15,46 +15,46 @@ import java.util.Base64;
 import org.apache.commons.io.IOUtils;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.commons.proxy.Proxy;
+import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 
 public class HttpProxySocket extends Socket {
 
-    private final Proxy proxy;
+    private final ProxyProvider provider;
 
-    public HttpProxySocket(final Proxy proxy) throws UnknownHostException, IOException {
+    public HttpProxySocket(final ProxyProvider provider) throws UnknownHostException, IOException {
         super();
-        this.proxy = proxy;
+        this.provider = provider;
     }
 
     @Override
     public void connect(final SocketAddress endpoint, final int timeout) throws IOException {
-        super.connect(proxy.getProxy().address(), proxy.getConnectTimeout());
+        super.connect(provider.getProxy().address(), provider.getConnectTimeout());
 
         String basicAuth = null;
-        if (!SOSString.isEmpty(proxy.getUser())) {
-            basicAuth = new String(Base64.getEncoder().encode(new String(proxy.getUser() + ":" + proxy.getPassword()).getBytes()));
+        if (!SOSString.isEmpty(provider.getUser())) {
+            basicAuth = new String(Base64.getEncoder().encode(new String(provider.getUser() + ":" + provider.getPassword()).getBytes()));
         }
 
         InetSocketAddress address = (InetSocketAddress) endpoint;
         OutputStream out = this.getOutputStream();
-        IOUtils.write(String.format("CONNECT %s:%s HTTP/1.0\r\n", address.getHostName(), address.getPort()), out, proxy.getCharset());
+        IOUtils.write(String.format("CONNECT %s:%s HTTP/1.0\r\n", address.getHostName(), address.getPort()), out, provider.getCharset());
         if (basicAuth != null) {
-            IOUtils.write("Proxy-Authorization: Basic ", out, proxy.getCharset());
-            IOUtils.write(basicAuth, out, proxy.getCharset());
+            IOUtils.write("Proxy-Authorization: Basic ", out, provider.getCharset());
+            IOUtils.write(basicAuth, out, provider.getCharset());
         }
-        IOUtils.write("\r\n", out, proxy.getCharset());
-        IOUtils.write("\r\n", out, proxy.getCharset());
+        IOUtils.write("\r\n", out, provider.getCharset());
+        IOUtils.write("\r\n", out, provider.getCharset());
         out.flush();
 
         InputStream in = this.getInputStream();
         String response = new LineNumberReader(new InputStreamReader(in)).readLine();
         if (response == null) {
-            throw new SocketException(String.format("[%s]missing response", ((InetSocketAddress) proxy.getProxy().address()).getHostName()));
+            throw new SocketException(String.format("[%s]missing response", ((InetSocketAddress) provider.getProxy().address()).getHostName()));
         }
         if (response.contains("200")) {
             in.skip(in.available());
         } else {
-            throw new SocketException(String.format("[%s][invalid response]%s", ((InetSocketAddress) proxy.getProxy().address()).getHostName(),
+            throw new SocketException(String.format("[%s][invalid response]%s", ((InetSocketAddress) provider.getProxy().address()).getHostName(),
                     response));
         }
     }

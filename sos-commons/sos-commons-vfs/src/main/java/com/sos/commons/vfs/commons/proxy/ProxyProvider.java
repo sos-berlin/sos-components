@@ -4,9 +4,11 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.vfs.commons.AProviderArguments;
 
-public class Proxy {
+public class ProxyProvider {
 
     private final java.net.Proxy proxy;
     private final String host;
@@ -16,13 +18,20 @@ public class Proxy {
     private int port;
     private Charset charset = Charset.defaultCharset();
 
-    public Proxy(java.net.Proxy.Type type, String host, int port, String user, String password, int connectTimeout) {
-        this.host = host;
-        this.user = user;
-        this.password = password;
-        this.connectTimeout = connectTimeout;
-        setPort(type, port);
-        proxy = new java.net.Proxy(type, new InetSocketAddress(this.host, this.port));
+    public static ProxyProvider createInstance(ProxyArguments args) {
+        if (args == null || args.getType().isEmpty() || args.getHost().isEmpty()) {
+            return null;
+        }
+        return new ProxyProvider(args);
+    }
+
+    private ProxyProvider(ProxyArguments args) {
+        this.host = args.getHost().getValue();
+        this.user = args.getUser().getValue();
+        this.password = args.getPassword().getValue();
+        this.connectTimeout = AProviderArguments.asMs(args.getConnectTimeout());
+        setPort(args.getType().getValue(), port);
+        proxy = new java.net.Proxy(args.getType().getValue(), new InetSocketAddress(this.host, this.port));
     }
 
     public java.net.Proxy getProxy() {

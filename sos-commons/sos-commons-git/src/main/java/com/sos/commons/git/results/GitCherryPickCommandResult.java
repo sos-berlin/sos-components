@@ -1,6 +1,6 @@
 package com.sos.commons.git.results;
 
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 
 public class GitCherryPickCommandResult extends GitCommandResult {
 

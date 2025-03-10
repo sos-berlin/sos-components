@@ -1,6 +1,6 @@
 package com.sos.yade.engine.commons.helpers;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;

@@ -1,6 +1,6 @@
 package com.sos.yade.engine.handlers.operations.getlist;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 

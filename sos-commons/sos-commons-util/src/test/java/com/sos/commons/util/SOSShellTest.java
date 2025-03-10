@@ -8,8 +8,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSTimeout;
 
 public class SOSShellTest {
 

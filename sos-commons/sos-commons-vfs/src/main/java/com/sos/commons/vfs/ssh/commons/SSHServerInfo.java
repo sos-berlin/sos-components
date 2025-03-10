@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 
 public class SSHServerInfo {
 

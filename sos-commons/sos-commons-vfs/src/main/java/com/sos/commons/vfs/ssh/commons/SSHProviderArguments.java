@@ -4,11 +4,12 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.commons.vfs.commons.AProviderExtendedArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.vfs.commons.AProviderArguments;
 
-public class SSHProviderArguments extends AProviderExtendedArguments {
+public class SSHProviderArguments extends AProviderArguments {
 
     public static final String CLASS_KEY = "SSH_PROVIDER";
 
@@ -21,7 +22,9 @@ public class SSHProviderArguments extends AProviderExtendedArguments {
         SSHJ
     }
 
-    private SOSArgument<Integer> port = new SOSArgument<Integer>("port", true, 22);
+    private static final int DEFAULT_PORT = 22;
+
+    private ProxyArguments proxy;
 
     // Authentication
     private SOSArgument<String> passphrase = new SOSArgument<String>("passphrase", false, DisplayMode.MASKED);
@@ -52,11 +55,16 @@ public class SSHProviderArguments extends AProviderExtendedArguments {
 
     public SSHProviderArguments() {
         getProtocol().setDefaultValue(Protocol.SFTP);
+        getPort().setDefaultValue(DEFAULT_PORT);
         getUser().setRequired(true);
     }
 
-    public SOSArgument<Integer> getPort() {
-        return port;
+    public ProxyArguments getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(ProxyArguments val) {
+        proxy = val;
     }
 
     public SOSArgument<AuthMethod> getAuthMethod() {

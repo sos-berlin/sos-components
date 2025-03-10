@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.inventory.model.report.Frequency;
 import com.sos.inventory.model.report.ReportPeriod;
 import com.sos.joc.Globals;

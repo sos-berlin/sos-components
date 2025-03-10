@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.ssh;
 import java.util.List;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -26,7 +27,7 @@ public class SSHJobArguments extends JobArguments {
     private JobArgument<String> postCommandDelete = new JobArgument<>("post_command_delete", false, "test -r %s && rm %s; exit 0");
 
     public SSHJobArguments() {
-        super(new SSHProviderArguments(), new CredentialStoreArguments());
+        super(new SSHProviderArguments(), new CredentialStoreArguments(), new ProxyArguments());
     }
 
     public JobArgument<String> getCommand() {

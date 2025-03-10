@@ -1,6 +1,5 @@
 package com.sos.commons.vfs.ssh;
 
-import java.net.Proxy.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -13,11 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSEnv;
-import com.sos.commons.util.common.logger.SOSSlf4jLogger;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
-import com.sos.commons.vfs.commons.proxy.Proxy;
+import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
 import com.sos.commons.vfs.ssh.helper.SSHProviderTestArguments;
 
@@ -30,8 +30,6 @@ public class SSHProviderTest {
     private static final String SSH_PASSWORD = "sos";
     private static final int SSH_PORT = 22;
     private static final String SSH_AUTH_FILE = "C://id_rsa.ppk";
-
-    private static final Proxy PROXY = new Proxy(Type.SOCKS, "proxy_host", 1080, "proxy_user", "12345", 30_000);
 
     @Ignore
     @Test
@@ -48,7 +46,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -79,7 +77,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
@@ -111,7 +109,7 @@ public class SSHProviderTest {
         csArgs.setEntryPath("/server/SFTP/localhost");
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
@@ -141,7 +139,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -169,7 +167,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -193,16 +191,16 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        args.setProxy(PROXY);
+        args.setProxy(getProxyArguments());
 
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
-            LOGGER.info(PROXY.toString());
+            LOGGER.info(ProxyProvider.createInstance(args.getProxy()).toString());
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -227,7 +225,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -262,7 +260,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "/home/sos/tmp_target.log");
@@ -305,7 +303,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "D://tmp_target.log");
@@ -348,7 +346,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SOSSlf4jLogger(), args);
+        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
         try {
             p.connect();
             Map<String, String> envVars = new HashMap<>();
@@ -375,6 +373,17 @@ public class SSHProviderTest {
             }
             return true;
         });
+    }
+
+    private ProxyArguments getProxyArguments() {
+        ProxyArguments args = new ProxyArguments();
+        args.getType().setValue(java.net.Proxy.Type.SOCKS);
+        args.getHost().setValue("proxy_host");
+        args.getPort().setValue(1080);
+        args.getUser().setValue("proxy_user");
+        args.getPassword().setValue("12345");
+        args.getConnectTimeout().setValue(30);
+        return args;
     }
 
 }

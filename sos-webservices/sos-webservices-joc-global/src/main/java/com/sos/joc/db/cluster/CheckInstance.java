@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.db.DBLayerJocCluster;

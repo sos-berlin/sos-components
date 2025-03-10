@@ -8,7 +8,7 @@ import java.util.TreeSet;
 
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;

@@ -1,4 +1,4 @@
-package com.sos.yade.engine.handlers.commands;
+package com.sos.yade.engine.handlers.command;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -20,7 +20,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
  *          YADE User Manual - Pre- & Post-Processing / Variables<br/>
  *          YADE-448 Refactoring variables used in pre- and post-processing commands<br/>
  */
-public class YADEFileCommandsVariablesResolver {
+public class YADEFileCommandVariablesResolver {
 
     private static final Set<String> VAR_NAMES = new HashSet<>();
 

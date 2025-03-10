@@ -4,9 +4,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSEnv;
-import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.joc.Globals;
 
 public class JOCSOSShell {

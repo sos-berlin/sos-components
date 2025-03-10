@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;

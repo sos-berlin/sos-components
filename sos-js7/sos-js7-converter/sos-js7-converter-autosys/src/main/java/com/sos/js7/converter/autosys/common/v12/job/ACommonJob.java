@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobBox;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobCondition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder;

@@ -2,7 +2,7 @@ package com.sos.js7.converter.autosys.common.v12.job;
 
 import java.nio.file.Path;
 
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 

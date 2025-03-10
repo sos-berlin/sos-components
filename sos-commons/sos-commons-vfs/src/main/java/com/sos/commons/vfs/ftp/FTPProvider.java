@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -30,19 +31,19 @@ import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSEnv;
-import com.sos.commons.util.common.SOSTimeout;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.beans.SOSTimeout;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
-import com.sos.commons.vfs.commons.AProviderArguments.KeyStoreType;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
@@ -521,41 +522,44 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
     private FTPClient createClient() throws Exception {
         /** FTPS */
+        ProxyProvider proxyProvider = ProxyProvider.createInstance(getArguments().getProxy());
         if (isFTPS) {
             FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
             // FTPSClient
             FTPSClient client = new FTPSClient(args.getSecureSocketProtocol().getValue(), args.isSecurityModeImplicit());
             // PROXY
-            if (args.getProxy() != null) {
-                client.setProxy(args.getProxy().getProxy());
+            if (proxyProvider != null) {
+                client.setProxy(proxyProvider.getProxy());
             }
             // TRUST MANAGER#
-            if (!args.getKeystoreFile().isEmpty()) {
-                KeyStoreType type = args.getKeystoreType().getValue();
-                getLogger().info(String.format("%s[using keystore]type=%s, file=%s", getLogPrefix(), type, args.getKeystoreFile().getValue()));
-                client.setTrustManager(TrustManagerUtils.getDefaultTrustManager(loadKeyStore(args.getKeystoreFile().getValue(), type, args
-                        .getKeystorePassword().getValue())));
+            if (args.getJavaKeyStore() != null) {
+                KeyStore ks = loadJavaKeyStore(args.getJavaKeyStore());
+                if (ks != null) {
+                    getLogger().info(String.format("%s[setTrustManager][keystore]type=%s,file=%s", getLogPrefix(), args.getJavaKeyStore().getType()
+                            .getValue(), args.getJavaKeyStore().getFile().getValue()));
+                    client.setTrustManager(TrustManagerUtils.getDefaultTrustManager(ks));
+                }
             }
             return client;
         }
         /** FTP */
         else {
             FTPClient client = null;
-            if (getArguments().getProxy() == null) {
+            if (proxyProvider == null) {
                 client = new FTPClient();
             } else {
                 // SOCKS PROXY
-                if (java.net.Proxy.Type.SOCKS.equals(getArguments().getProxy().getProxy().type())) {
+                if (java.net.Proxy.Type.SOCKS.equals(proxyProvider.getProxy().type())) {
                     client = new FTPClient();
-                    client.setSocketFactory(new ProxySocketFactory(getArguments().getProxy()));
+                    client.setSocketFactory(new ProxySocketFactory(proxyProvider));
                 }
                 // HTTP PROXY
                 else {
-                    if (getArguments().getProxy().getUser().isEmpty()) {
-                        client = new FTPHTTPClient(getArguments().getProxy().getHost(), getArguments().getProxy().getPort());
+                    if (proxyProvider.getUser().isEmpty()) {
+                        client = new FTPHTTPClient(proxyProvider.getHost(), proxyProvider.getPort());
                     } else {
-                        client = new FTPHTTPClient(getArguments().getProxy().getHost(), getArguments().getProxy().getPort(), getArguments().getProxy()
-                                .getUser(), getArguments().getProxy().getPassword());
+                        client = new FTPHTTPClient(proxyProvider.getHost(), proxyProvider.getPort(), proxyProvider.getUser(), proxyProvider
+                                .getPassword());
                     }
                 }
             }

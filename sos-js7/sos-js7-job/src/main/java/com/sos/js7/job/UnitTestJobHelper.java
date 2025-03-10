@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSReflection;
-import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.js7.job.exception.JobArgumentException;
 
 import js7.data_for_java.order.JOutcome;

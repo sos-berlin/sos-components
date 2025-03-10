@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.mail.SOSMailReceiver.Protocol;
-import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionAfterProcess;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 import com.sos.js7.job.UnitTestJobHelper;

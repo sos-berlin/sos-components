@@ -1,11 +1,11 @@
-package com.sos.yade.engine.handlers.commands;
+package com.sos.yade.engine.handlers.command;
 
 import java.util.List;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
@@ -15,7 +15,7 @@ import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineCommandException;
 
-public class YADECommandsHandler {
+public class YADECommandExecutor {
 
     private static final String AFTER_OPERATION_BUILTIN_FUNCTION_REMOVE_DIRECTORY = "REMOVE_DIRECTORY()";
 
@@ -55,10 +55,10 @@ public class YADECommandsHandler {
         }
     }
 
-    public static YADECommandsResult executeAfterOperationOnError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
+    public static YADECommandResult executeAfterOperationOnError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, Throwable exception) {
 
-        YADECommandsResult r = YADECommandsResult.createInstance();
+        YADECommandResult r = YADECommandResult.createInstance();
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsAfterOperationOnError().isEmpty()) {
             try {
@@ -80,10 +80,10 @@ public class YADECommandsHandler {
         return r;
     }
 
-    public static YADECommandsResult executeAfterOperationFinal(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
+    public static YADECommandResult executeAfterOperationFinal(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, Throwable exception) {
 
-        YADECommandsResult r = YADECommandsResult.createInstance();
+        YADECommandResult r = YADECommandResult.createInstance();
         YADEProviderCommandArguments args = getArgs(sourceDelegator);
         if (args != null && !args.getCommandsAfterOperationFinal().isEmpty()) {
             try {
@@ -212,7 +212,7 @@ public class YADECommandsHandler {
 
         String prefix = String.format("%s[%s][%s][%s]", delegator.getLogPrefix(), file.getIndex(), file.getFullPath(), arg.getName());
         for (String command : arg.getValue()) {
-            String resolved = YADEFileCommandsVariablesResolver.resolve(sourceDelegator, targetDelegator, file, command);
+            String resolved = YADEFileCommandVariablesResolver.resolve(sourceDelegator, targetDelegator, file, command);
             String msg = prefix + "[" + resolved + "]";
             logger.info(msg);
             SOSCommandResult result = delegator.getProvider().executeCommand(resolved);
@@ -265,13 +265,13 @@ public class YADECommandsHandler {
     }
 
     /** TODO getSource/getTarget ??? */
-    public class YADECommandsResult {
+    public class YADECommandResult {
 
         YADEEngineCommandException source;
         YADEEngineCommandException target;
 
-        private static YADECommandsResult createInstance() {
-            return new YADECommandsHandler().new YADECommandsResult();
+        private static YADECommandResult createInstance() {
+            return new YADECommandExecutor().new YADECommandResult();
         }
 
         public void logIfErrorOnInfoLevel(ISOSLogger logger) {

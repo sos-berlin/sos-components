@@ -3,7 +3,7 @@ package com.sos.yade.engine.commons.helpers;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;

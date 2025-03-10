@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;

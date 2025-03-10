@@ -8,10 +8,10 @@ import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
-import com.sos.commons.vfs.commons.CredentialStoreResolver;
 import com.sos.commons.vfs.commons.IProvider;
+import com.sos.commons.vfs.commons.ProviderCredentialStoreResolver;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
 
@@ -94,8 +94,8 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
 
     private void resolveCredentialStore() throws SOSProviderInitializationException {
         try {
-            if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
-                CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+            if (ProviderCredentialStoreResolver.resolve(getArguments(), getArguments().getProxy(), getArguments().getPassphrase())) {
+                ProviderCredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
             }
         } catch (Throwable e) {
             throw new SOSProviderInitializationException(e);

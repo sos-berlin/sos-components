@@ -3,7 +3,7 @@ package com.sos.commons.vfs.ftp.commons;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class FTPProtocolCommandListener implements ProtocolCommandListener {
 

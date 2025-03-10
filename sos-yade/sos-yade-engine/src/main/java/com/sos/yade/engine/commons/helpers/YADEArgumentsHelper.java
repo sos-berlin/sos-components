@@ -7,9 +7,9 @@ import java.util.stream.Stream;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 

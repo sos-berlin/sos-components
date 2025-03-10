@@ -1,4 +1,4 @@
-package com.sos.commons.util.common.logger;
+package com.sos.commons.util.loggers.base;
 
 /** Logging interface for applications that can be used in JS7 jobs (job logger) or standalone (slf4j API). */
 public interface ISOSLogger {

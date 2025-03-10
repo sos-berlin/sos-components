@@ -22,10 +22,10 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSEnv;
-import com.sos.commons.util.common.SOSTimeout;
-import com.sos.commons.util.exception.SOSTimeoutExeededException;
+import com.sos.commons.exception.SOSTimeoutExeededException;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.beans.SOSTimeout;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.Win32Exception;
 
@@ -96,7 +96,7 @@ public class SOSShell {
             err.join();
         } catch (Throwable e) {
             if (result.isTimeoutExeeded() && timeout != null) {
-                result.setException(new SOSTimeoutExeededException(timeout, e));
+                result.setException(new SOSTimeoutExeededException(timeout.toString(), e));
             } else {
                 result.setException(e);
             }

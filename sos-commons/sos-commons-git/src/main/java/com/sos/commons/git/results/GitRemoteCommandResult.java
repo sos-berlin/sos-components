@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.git.enums.RepositoryLinkType;
 import com.sos.commons.git.enums.RepositoryUpdateType;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 
 public class GitRemoteCommandResult extends GitCommandResult {
     

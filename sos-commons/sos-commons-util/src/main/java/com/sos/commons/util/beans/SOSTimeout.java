@@ -1,4 +1,4 @@
-package com.sos.commons.util.common;
+package com.sos.commons.util.beans;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;

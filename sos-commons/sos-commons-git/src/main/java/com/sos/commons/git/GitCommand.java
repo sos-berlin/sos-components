@@ -11,7 +11,7 @@ import com.sos.commons.git.results.GitCommandResult;
 import com.sos.commons.git.util.GitCommandConstants;
 import com.sos.commons.git.util.GitUtil;
 import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.common.SOSTimeout;
+import com.sos.commons.util.beans.SOSTimeout;
 
 public class GitCommand {
     private static final String DELIMITER_WINDOWS = " && ";

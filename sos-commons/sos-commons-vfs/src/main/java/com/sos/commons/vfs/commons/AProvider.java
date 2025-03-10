@@ -15,11 +15,11 @@ import java.util.function.Function;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.commons.util.common.SOSEnv;
-import com.sos.commons.util.common.SOSTimeout;
-import com.sos.commons.util.common.logger.ISOSLogger;
-import com.sos.commons.vfs.commons.AProviderArguments.KeyStoreType;
+import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.beans.SOSTimeout;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
@@ -275,11 +275,14 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     public static boolean isValidModificationTime(long milliseconds) {
         return milliseconds > 0;
     }
-    
-    public static KeyStore loadKeyStore(Path path, KeyStoreType type, String password) throws Exception {
-        KeyStore ks = KeyStore.getInstance(type.name());
-        char[] pass = password == null ? "".toCharArray() : password.toCharArray();
-        try (InputStream is = Files.newInputStream(path)) {
+
+    public static KeyStore loadJavaKeyStore(JavaKeyStoreArguments args) throws Exception {
+        if (args.getFile().getValue() == null) {
+            return null;
+        }
+        KeyStore ks = KeyStore.getInstance(args.getType().getValue().name());
+        char[] pass = args.getPassword().getValue() == null ? "".toCharArray() : args.getPassword().getValue().toCharArray();
+        try (InputStream is = Files.newInputStream(args.getFile().getValue())) {
             ks.load(is, pass);
         }
         return ks;

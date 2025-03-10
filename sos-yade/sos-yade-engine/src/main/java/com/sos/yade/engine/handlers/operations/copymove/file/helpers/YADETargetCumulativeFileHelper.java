@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.engine.commons.YADEProviderFile;

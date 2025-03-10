@@ -39,7 +39,7 @@ import com.sos.commons.git.results.GitPullCommandResult;
 import com.sos.commons.git.results.GitRemoteCommandResult;
 import com.sos.commons.git.results.GitStatusShortCommandResult;
 import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitTest {

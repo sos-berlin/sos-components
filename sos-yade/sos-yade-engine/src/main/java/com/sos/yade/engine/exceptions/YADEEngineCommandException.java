@@ -1,6 +1,6 @@
 package com.sos.yade.engine.exceptions;
 
-import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.beans.SOSCommandResult;
 
 public class YADEEngineCommandException extends YADEEngineException {
 

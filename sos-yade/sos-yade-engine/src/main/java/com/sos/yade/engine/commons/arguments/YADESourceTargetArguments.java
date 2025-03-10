@@ -1,7 +1,7 @@
 package com.sos.yade.engine.commons.arguments;
 
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.commons.AProviderArguments;
 
 public class YADESourceTargetArguments extends ASOSArguments {

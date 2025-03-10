@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.js7.job.JobArguments.LogLevel;
 
 import js7.launcher.forjava.internal.BlockingInternalJob;

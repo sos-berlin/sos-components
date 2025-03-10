@@ -1,6 +1,6 @@
 package com.sos.yade.engine.commons.arguments;
 
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument;
 
 /** COPY/MOVE operations arguments */
 public class YADETargetArguments extends YADESourceTargetArguments {

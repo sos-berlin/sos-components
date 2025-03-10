@@ -6,10 +6,12 @@ import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.SOSAuthenticationFailedException;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -63,8 +65,9 @@ public class SSHClientFactory {
         client.setTimeout(args.getSocketTimeoutAsMs());
         client.setConnectTimeout(args.getConnectTimeoutAsMs());
         // PROXY
-        if (args.getProxy() != null) {
-            client.setSocketFactory(new ProxySocketFactory(args.getProxy()));
+        ProxyProvider proxyProvider = ProxyProvider.createInstance(args.getProxy());
+        if (proxyProvider != null) {
+            client.setSocketFactory(new ProxySocketFactory(proxyProvider));
         }
         return client;
     }
@@ -161,9 +164,8 @@ public class SSHClientFactory {
         // TODO Agent support getArguments().getUseKeyAgent().getValue()
         KeyProvider keyProvider = null;
         // from KeePass attachment
-        if (args.getKeepassDatabase() != null && args.getKeepassDatabaseEntry() != null && !SOSString.isEmpty(args
-                .getKeepassAttachmentPropertyName())) {
-            keyProvider = getKeyProviderFromKeepass(client, args);
+        if (useKeyProviderFromKeepass(args)) {
+            keyProvider = getKeyProviderFromKeepass(client, args.getCredentialStore(), args.getPassphrase().getValue());
         } else {// from File
             if (SOSString.isEmpty(args.getAuthFile().getValue())) {
                 throw new SOSRequiredArgumentMissingException(args.getAuthFile().getName());
@@ -216,7 +218,15 @@ public class SSHClientFactory {
         };
     }
 
-    private static KeyProvider getKeyProviderFromKeepass(SSHClient sshClient, SSHProviderArguments args) throws Exception {
+    private static boolean useKeyProviderFromKeepass(SSHProviderArguments args) {
+        if (args.getCredentialStore() == null) {
+            return false;
+        }
+        CredentialStoreArguments cs = args.getCredentialStore();
+        return cs.getKeepassDatabase() != null && cs.getKeepassDatabaseEntry() != null && !SOSString.isEmpty(cs.getKeepassAttachmentPropertyName());
+    }
+
+    private static KeyProvider getKeyProviderFromKeepass(SSHClient sshClient, CredentialStoreArguments args, String passphrase) throws Exception {
         SOSKeePassDatabase kd = (SOSKeePassDatabase) args.getKeepassDatabase();
         if (kd == null) {
             throw new Exception("[keepass]keepass_database property is null");
@@ -228,8 +238,7 @@ public class SSHClientFactory {
         }
         try {
             String pk = new String(kd.getAttachment(ke, args.getKeepassAttachmentPropertyName()), "UTF-8");
-            return sshClient.loadKeys(pk, null, SOSString.isEmpty(args.getPassphrase().getValue()) ? null : getPasswordFinder(args.getPassphrase()
-                    .getValue()));
+            return sshClient.loadKeys(pk, null, SOSString.isEmpty(passphrase) ? null : getPasswordFinder(passphrase));
         } catch (Exception e) {
             String keePassPath = ke.getPath() + SOSKeePassPath.PROPERTY_PREFIX + args.getKeepassAttachmentPropertyName();
             throw new Exception(String.format("[keepass][%s]%s", keePassPath, e.toString()), e);

@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;

@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.logger.SOSSlf4jLogger;
+import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.local.LocalProvider;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.yade.engine.commons.YADEProviderFile;
@@ -125,7 +125,7 @@ public class YADEFileReplacementHelper {
 
     public static void main(String[] args) {
         try {
-            AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SOSSlf4jLogger(), new LocalProviderArguments()),
+            AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SLF4JLogger(), new LocalProviderArguments()),
                     new YADESourceArguments());
 
             YADEProviderFile file = new YADEProviderFile(delegator, "/tmp/1abc12def123.TXT", 0, 0, null, false);

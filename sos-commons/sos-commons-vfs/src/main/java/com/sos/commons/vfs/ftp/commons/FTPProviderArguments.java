@@ -1,9 +1,10 @@
 package com.sos.commons.vfs.ftp.commons;
 
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.vfs.commons.AProviderExtendedArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.vfs.commons.AProviderArguments;
 
-public class FTPProviderArguments extends AProviderExtendedArguments {
+public class FTPProviderArguments extends AProviderArguments {
 
     public enum TransferMode {
         ASCII, BINARY;
@@ -11,9 +12,7 @@ public class FTPProviderArguments extends AProviderExtendedArguments {
 
     protected static final int DEFAULT_PORT = 21;
 
-    // do not set the default value because SOSArgument.getValue() returns the default value
-    // - so FTPSProviderArguments cannot check whether the port has been set or not
-    private SOSArgument<Integer> port = new SOSArgument<>("port", false);
+    private ProxyArguments proxy;
 
     // seconds
     private SOSArgument<Integer> connectTimeout = new SOSArgument<>("connect_timeout", false, Integer.valueOf(0));
@@ -30,13 +29,16 @@ public class FTPProviderArguments extends AProviderExtendedArguments {
 
     public FTPProviderArguments() {
         getProtocol().setValue(Protocol.FTP);
+        getPort().setDefaultValue(DEFAULT_PORT);
+        getUser().setRequired(true);
     }
 
-    public SOSArgument<Integer> getPort() {
-        if (port.isEmpty()) {
-            port.setValue(Integer.valueOf(DEFAULT_PORT));
-        }
-        return port;
+    public ProxyArguments getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(ProxyArguments val) {
+        proxy = val;
     }
 
     public boolean isBinaryTransferMode() {

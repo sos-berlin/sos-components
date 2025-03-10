@@ -2,14 +2,14 @@ package com.sos.yade.engine.handlers.operations.remove;
 
 import java.util.List;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
-import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
+import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 
 /** Remove files on Source */
 public class YADERemoveOperationHandler {
@@ -21,7 +21,7 @@ public class YADERemoveOperationHandler {
             YADEProviderFile file = (YADEProviderFile) sourceFile;
             file.resetSteady();
             try {
-                YADECommandsHandler.executeBeforeFile(logger, sourceDelegator, file);
+                YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, file);
 
                 if (sourceDelegator.getProvider().deleteIfExists(file.getFullPath())) {
                     logger.info("%s[%s][%s]deleted", sourceDelegator.getLogPrefix(), file.getIndex(), file.getFullPath());
@@ -31,7 +31,7 @@ public class YADERemoveOperationHandler {
                 file.setState(TransferEntryState.DELETED);
 
                 // YADE JS7 (YADE1 does not execute AfterFile commands in case of a DELETE operation)
-                YADECommandsHandler.executeAfterFile(logger, sourceDelegator, file);
+                YADECommandExecutor.executeAfterFile(logger, sourceDelegator, file);
             } catch (Throwable e) {
                 file.setState(TransferEntryState.FAILED);
                 throw new YADEEngineOperationException(e);

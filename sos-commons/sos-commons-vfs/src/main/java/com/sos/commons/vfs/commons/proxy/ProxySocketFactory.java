@@ -11,19 +11,19 @@ import com.sos.commons.vfs.commons.proxy.http.HttpProxySocketFactory;
 
 public class ProxySocketFactory extends DefaultSocketFactory {
 
-    private final Proxy proxy;
+    private final ProxyProvider provider;
 
-    public ProxySocketFactory(Proxy proxy) {
-        this.proxy = proxy;
+    public ProxySocketFactory(ProxyProvider provider) {
+        this.provider = provider;
     }
 
     @Override
     public Socket createSocket() throws IOException {
-        switch (proxy.getProxy().type()) {
+        switch (provider.getProxy().type()) {
         case HTTP:
-            return new HttpProxySocketFactory(proxy).createSocket();
+            return new HttpProxySocketFactory(provider).createSocket();
         case SOCKS:
-            return new DefaultSocketFactory(proxy.getProxy()).createSocket();
+            return new DefaultSocketFactory(provider.getProxy()).createSocket();
         default:
             break;
         }

@@ -3,8 +3,8 @@ package com.sos.yade.engine.commons.arguments;
 import java.nio.file.Path;
 
 import com.sos.commons.util.SOSComparisonOperator;
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
 
 public class YADEClientArguments extends ASOSArguments {
 

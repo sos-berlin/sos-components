@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -20,12 +20,12 @@ import com.sos.yade.engine.commons.helpers.YADEClientHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
-import com.sos.yade.engine.handlers.commands.YADECommandsHandler;
-import com.sos.yade.engine.handlers.commands.YADECommandsHandler.YADECommandsResult;
+import com.sos.yade.engine.handlers.command.YADECommandExecutor;
+import com.sos.yade.engine.handlers.command.YADECommandExecutor.YADECommandResult;
 import com.sos.yade.engine.handlers.operations.YADEOperationsManager;
+import com.sos.yade.engine.handlers.source.YADESourceFilesPolling;
 import com.sos.yade.engine.handlers.source.YADESourceFilesSelector;
 import com.sos.yade.engine.handlers.source.YADESourceFilesSteadyStateChecker;
-import com.sos.yade.engine.handlers.source.YADESourcePollingHandler;
 
 /** Different/incompatible with YADE 1:<br/>
  * -------------------------------------------------------------------------------------------------<br/>
@@ -114,7 +114,7 @@ public class YADEEngine {
                 YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
 
                 /** 4) Source: execute commands before operation */
-                YADECommandsHandler.executeBeforeOperation(logger, sourceDelegator);
+                YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator);
 
                 /** 5) Source: select files */
                 files = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
@@ -130,14 +130,14 @@ public class YADEEngine {
                     YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
                     /** 9) Target: execute commands before operation */
-                    YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
+                    YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
                     /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                     operationDuration = YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator, cancel);
                 }
 
                 /** 11) Source/Target: execute commands after operation on success */
-                YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
+                YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
             } catch (Throwable e) {
                 onError(logger, sourceDelegator, targetDelegator, exception);
                 exception = e;
@@ -145,7 +145,7 @@ public class YADEEngine {
                 onFinally(logger, operationDuration, args, clientArgs, sourceDelegator, targetDelegator, files, exception, true);
             }
         } else {
-            YADESourcePollingHandler sourcePolling = new YADESourcePollingHandler(sourceDelegator);
+            YADESourceFilesPolling sourcePolling = new YADESourceFilesPolling(sourceDelegator);
             pl: while (true) {
                 exception = null;
                 operationDuration = null;
@@ -156,7 +156,7 @@ public class YADEEngine {
                     sourcePolling.ensureConnected(logger, sourceDelegator);
 
                     /** 4) Source: execute commands before operation */
-                    YADECommandsHandler.executeBeforeOperation(logger, sourceDelegator);
+                    YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator);
 
                     /** 5) Source: select files */
                     files = sourcePolling.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
@@ -172,14 +172,14 @@ public class YADEEngine {
                         YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
                         /** 9) Target: execute commands before operation */
-                        YADECommandsHandler.executeBeforeOperation(logger, targetDelegator);
+                        YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
                         /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                         operationDuration = YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator, cancel);
                     }
 
                     /** 11) Source/Target: execute commands after operation on success */
-                    YADECommandsHandler.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
+                    YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
                 } catch (Throwable e) {
                     onError(logger, sourceDelegator, targetDelegator, exception);
                     exception = e;
@@ -198,7 +198,7 @@ public class YADEEngine {
     private void onError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
             Throwable exception) {
         /** Source/Target: execute commands after operation on error */
-        YADECommandsResult r = YADECommandsHandler.executeAfterOperationOnError(logger, sourceDelegator, targetDelegator, exception);
+        YADECommandResult r = YADECommandExecutor.executeAfterOperationOnError(logger, sourceDelegator, targetDelegator, exception);
         // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
         r.logIfErrorOnErrorLevel(logger);
         // r.logIfErrorOnInfoLevel(logger);
@@ -208,7 +208,7 @@ public class YADEEngine {
             YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, List<ProviderFile> files, Throwable exception,
             boolean disconnectSource) throws YADEEngineException {
         /** Source/Target: execute commands after operation final */
-        YADECommandsResult r = YADECommandsHandler.executeAfterOperationFinal(logger, sourceDelegator, targetDelegator, exception);
+        YADECommandResult r = YADECommandExecutor.executeAfterOperationFinal(logger, sourceDelegator, targetDelegator, exception);
         // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
         r.logIfErrorOnErrorLevel(logger);
         // r.logIfErrorOnInfoLevel(logger);

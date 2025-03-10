@@ -2,12 +2,12 @@ package com.sos.yade.engine.commons.delegators;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.logger.ISOSLogger;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments;
-import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
+import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
