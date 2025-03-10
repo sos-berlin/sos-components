@@ -3,7 +3,7 @@ package com.sos.jitl.jobs.mail;
 import java.util.List;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 

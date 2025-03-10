@@ -21,10 +21,12 @@ import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.SOSArgumentHelper;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
+import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument.Type;
@@ -124,23 +126,35 @@ public class OrderProcessStep<A extends JobArguments> {
         if (executeJobArguments != null && executeJobArguments.size() > 0) {
             map = new HashMap<>();
             for (Map.Entry<String, Object> e : executeJobArguments.entrySet()) {
-                map.put(e.getKey(), JobArgument.toExecuteJobArgument(e.getKey(), e.getValue()));
+                map.put(e.getKey(), JobArgument.toUndeclaredExecuteJobArgument(e.getKey(), e.getValue()));
             }
         }
         executeJob(clazz, map, false);
     }
 
+    /** Execute another job<br />
+     * 
+     * @param <AJ>
+     * @param clazz
+     * @param executeJobArguments
+     * @throws Exception */
     public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, JobArgument<?>... executeJobArguments) throws Exception {
         executeJob(clazz, executeJobArguments == null || executeJobArguments.length == 0 ? null : Arrays.asList(executeJobArguments));
     }
 
+    /** Execute another job<br />
+     * 
+     * @param <AJ>
+     * @param clazz
+     * @param executeJobArguments
+     * @throws Exception */
     public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Collection<JobArgument<?>> executeJobArguments)
             throws Exception {
         Map<String, JobArgument<?>> map = null;
         if (executeJobArguments != null && executeJobArguments.size() > 0) {
             map = new HashMap<>();
             for (JobArgument<?> arg : executeJobArguments) {
-                map.put(arg.getName(), arg.toExecuteJobArgument());
+                map.put(arg.getName(), arg.toUndeclaredExecuteJobArgument());
             }
         }
         executeJob(clazz, map, true);
@@ -371,7 +385,7 @@ public class OrderProcessStep<A extends JobArguments> {
                     ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
                     vs.setSource(e.getValue().getSource());
                     try {
-                        allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue().getValue(), vs));
+                        allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue().getValue(), vs));
                     } catch (Throwable ex) {
                         getLogger().error("[LastSucceededOutcomes][" + e.getKey() + "]" + ex.toString());
                     }
@@ -385,7 +399,8 @@ public class OrderProcessStep<A extends JobArguments> {
                 o.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
                         try {
-                            allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.ORDER)));
+                            allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
+                                    ValueSourceType.ORDER)));
                         } catch (Throwable ex) {
                             getLogger().error("[OrderVariables][" + e.getKey() + "]" + ex.toString());
                         }
@@ -399,7 +414,8 @@ public class OrderProcessStep<A extends JobArguments> {
                 j.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
                         try {
-                            allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.JOB)));
+                            allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
+                                    ValueSourceType.JOB)));
                         } catch (Throwable ex) {
                             getLogger().error("[JobArgument][" + e.getKey() + "]" + ex.toString());
                         }
@@ -419,8 +435,7 @@ public class OrderProcessStep<A extends JobArguments> {
                     try {
                         ValueSource vs = new ValueSource(ValueSourceType.JOB_RESOURCE);
                         vs.setSource(dv.getSource());
-                        JobArgument<?> ja = new JobArgument<>(name, dv.getValue(), vs);
-                        allArguments.put(name, ja);
+                        allArguments.put(name, JobArgument.createUndeclaredArgument(name, dv.getValue(), vs));
                         // allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
                     } catch (Throwable ex) {
                         getLogger().error("[JobResources][" + dv.getSource() + "][" + e.getKey() + "]" + ex.toString());
@@ -434,7 +449,7 @@ public class OrderProcessStep<A extends JobArguments> {
             if (!allArguments.containsKey(e.getKey())) {
                 try {
                     ValueSource vs = new ValueSource(ValueSourceType.JOB_ARGUMENT);
-                    allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), vs));
+                    allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), vs));
                 } catch (Throwable ex) {
                     getLogger().error("[JobEnvironment.JobArgument][" + e.getKey() + "]" + ex.toString());
                 }
@@ -448,7 +463,7 @@ public class OrderProcessStep<A extends JobArguments> {
                     ValueSource vs = new ValueSource(ValueSourceType.ORDER_PREPARATION);
                     try {
                         Object o = getNamedValue(name);
-                        JobArgument<?> ar = new JobArgument<>(name, o, vs);
+                        JobArgument<?> ar = JobArgument.createUndeclaredArgument(name, o, vs);
                         // ar.setIsDirty(false);
                         allArguments.put(name, ar);
                     } catch (Throwable e1) {
@@ -462,7 +477,8 @@ public class OrderProcessStep<A extends JobArguments> {
             unitTestUndeclaredArguments.entrySet().stream().forEach(e -> {
                 if (!allArguments.containsKey(e.getKey())) {
                     try {
-                        allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.JOB_ARGUMENT)));
+                        allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
+                                ValueSourceType.JOB_ARGUMENT)));
                     } catch (Throwable ex) {
                         getLogger().error("[unitTestUndeclaredArguments][" + e.getKey() + "]" + ex.toString(), e);
                     }
@@ -607,6 +623,11 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
+    /** ScriptEngine method
+     * 
+     * @param clazzKey
+     * @return
+     * @throws JobArgumentException */
     public ASOSArguments getIncludedArguments(String clazzKey) throws JobArgumentException {
         if (clazzKey == null) {
             return null;
@@ -616,6 +637,10 @@ public class OrderProcessStep<A extends JobArguments> {
             return getIncludedArguments(new CredentialStoreArguments().getClass());
         case SSHProviderArguments.CLASS_KEY:
             return getIncludedArguments(SSHProviderArguments.class);
+        case JavaKeyStoreArguments.CLASS_KEY:
+            return getIncludedArguments(JavaKeyStoreArguments.class);
+        case ProxyArguments.CLASS_KEY:
+            return getIncludedArguments(ProxyArguments.class);
         default:
             return null;
         }

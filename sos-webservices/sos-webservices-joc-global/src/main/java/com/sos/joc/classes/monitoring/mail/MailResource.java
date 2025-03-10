@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
@@ -255,17 +255,14 @@ public class MailResource {
         return sb.toString();
     }
 
-    
     public String getContentType() {
         return contentType;
     }
 
-    
     public String getEncoding() {
         return encoding;
     }
 
-    
     public String getCharset() {
         return charset;
     }

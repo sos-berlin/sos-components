@@ -3,7 +3,7 @@ package com.sos.js7.job.examples.resolver;
 import java.util.List;
 import java.util.Map;
 
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArgumentValueIterator;
 import com.sos.js7.job.OrderProcessStepLogger;

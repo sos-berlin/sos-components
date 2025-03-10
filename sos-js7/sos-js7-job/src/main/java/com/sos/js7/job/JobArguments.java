@@ -1,15 +1,13 @@
 package com.sos.js7.job;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
 
 public class JobArguments {
 
@@ -64,8 +62,7 @@ public class JobArguments {
                         if (sa.getName() == null) {// internal usage
                             return null;
                         }
-                        Type type = ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
-                        return new JobArgument<>(sa, type);
+                        return JobArgument.createDeclaredArgumentFromIncluded(sa);
                     } catch (Throwable e) {
                         return null;
                     }

@@ -1,4 +1,4 @@
-package com.sos.commons.util.common;
+package com.sos.commons.util.arguments.base;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

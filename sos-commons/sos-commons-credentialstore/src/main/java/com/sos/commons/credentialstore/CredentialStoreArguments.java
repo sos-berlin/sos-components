@@ -3,9 +3,9 @@ package com.sos.commons.credentialstore;
 import com.sos.commons.credentialstore.exceptions.SOSCredentialStoreException;
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 
 public class CredentialStoreArguments extends ASOSArguments {
 
@@ -25,6 +25,11 @@ public class CredentialStoreArguments extends ASOSArguments {
     private SOSArgument<String> password = new SOSArgument<String>(ARG_NAME_PASSWORD, false, DisplayMode.MASKED);
     private SOSArgument<String> entryPath = new SOSArgument<String>(ARG_NAME_ENTRY_PATH, false);
     private SOSArgument<String> keePassModule = new SOSArgument<String>(ARG_NAME_KEEPASS_MODULE, false, SOSKeePassDatabase.DEFAULT_MODULE.name());
+
+    // Internal/Keepass
+    private SOSArgument<SOSKeePassDatabase> keepassDatabase = new SOSArgument<>(null, false);
+    private SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>> keepassDatabaseEntry = new SOSArgument<>(null, false);
+    private SOSArgument<String> keepassAttachmentPropertyName = new SOSArgument<>(null, false);
 
     public SOSArgument<String> getFile() {
         return file;
@@ -64,6 +69,30 @@ public class CredentialStoreArguments extends ASOSArguments {
 
     public void setEntryPath(String val) {
         entryPath.setValue(val);
+    }
+
+    public SOSKeePassDatabase getKeepassDatabase() {
+        return keepassDatabase.getValue();
+    }
+
+    public void setKeepassDatabase(SOSKeePassDatabase val) {
+        keepassDatabase.setValue(val);
+    }
+
+    public org.linguafranca.pwdb.Entry<?, ?, ?, ?> getKeepassDatabaseEntry() {
+        return keepassDatabaseEntry.getValue();
+    }
+
+    public void setKeepassDatabaseEntry(org.linguafranca.pwdb.Entry<?, ?, ?, ?> val) {
+        keepassDatabaseEntry.setValue(val);
+    }
+
+    public String getKeepassAttachmentPropertyName() {
+        return keepassAttachmentPropertyName.getValue();
+    }
+
+    public void setKeepassAttachmentPropertyName(String val) {
+        keepassAttachmentPropertyName.setValue(val);
     }
 
     public CredentialStoreResolver newResolver() {

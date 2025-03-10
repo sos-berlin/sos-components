@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.JobHelper;

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgumentHelper;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.js7.job.exception.JobProblemException;
 
 import io.vavr.control.Either;

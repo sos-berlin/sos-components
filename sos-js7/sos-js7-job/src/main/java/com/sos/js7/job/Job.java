@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.SOSArgumentHelper;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.js7.job.JobArguments.MockLevel;
 import com.sos.js7.job.ValueSource.ValueSourceType;

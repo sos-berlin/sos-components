@@ -1,17 +1,34 @@
-package com.sos.commons.util.common;
+package com.sos.commons.util.arguments.base;
 
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
-
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 
 /** SOSArgument&lt;T&gt; supported types(&lt;T&gt;):<br/>
  * - generally: all data types are supported <br/>
  * - usage in JITL: see com.sos.commons.job.JobArgument supported types <br/>
  * - does not implement the Serializable interface because T may not be serializable - e.g. sun.nio.fs.WindowsPath<br/>
  */
-public class SOSArgument<T> {
+public class SOSArgument<T> extends ASOSArgument<T> {
+
+    public enum DisplayMode {
+
+        NONE("<...>"), MASKED("********"), UNMASKED, UNKNOWN("<hidden>");
+
+        private final String value;
+
+        private DisplayMode() {
+            this(null);
+        }
+
+        private DisplayMode(String val) {
+            value = val;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
 
     private final String name;
     private boolean required;
@@ -38,6 +55,7 @@ public class SOSArgument<T> {
     }
 
     public SOSArgument(String name, boolean required, T defaultValue, DisplayMode displayMode) {
+        super();
         this.name = name;
         this.required = required;
         this.defaultValue = defaultValue;
@@ -74,6 +92,11 @@ public class SOSArgument<T> {
     public void setValue(T val) {
         value = val;
         setIsDirty();
+    }
+
+    @SuppressWarnings("unchecked")
+    public void applyValue(Object val) {
+        setValue((T) val);
     }
 
     public DisplayMode getDisplayMode() {
@@ -129,21 +152,6 @@ public class SOSArgument<T> {
 
     public boolean isTrue() {
         return value != null && value instanceof Boolean && (Boolean) value;
-    }
-
-    @SuppressWarnings("unchecked")
-    public void fromString(String val) {
-        if (value == null) {
-            return;
-        }
-        if (value instanceof String) {
-            value = (T) val;
-        } else if (value instanceof Integer) {
-            value = (T) Integer.valueOf(val);
-        } else if (value instanceof Long) {
-            value = (T) Long.valueOf(val);
-        }
-        // TODO
     }
 
     private void setIsDirty() {

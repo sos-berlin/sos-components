@@ -5,9 +5,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 
 public class TestArguments extends ASOSArguments {
 

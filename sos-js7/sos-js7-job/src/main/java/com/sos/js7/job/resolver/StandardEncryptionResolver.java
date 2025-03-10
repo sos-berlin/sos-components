@@ -8,7 +8,7 @@ import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArgumentValueIterator;

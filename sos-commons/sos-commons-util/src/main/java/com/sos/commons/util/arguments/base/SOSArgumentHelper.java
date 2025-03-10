@@ -1,27 +1,10 @@
-package com.sos.commons.util.common;
+package com.sos.commons.util.arguments.base;
+
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 
 public class SOSArgumentHelper {
 
     public static final String LIST_VALUE_DELIMITER = ";";
-
-    public enum DisplayMode {
-
-        NONE("<...>"), MASKED("********"), UNMASKED, UNKNOWN("<hidden>");
-
-        private final String value;
-
-        private DisplayMode() {
-            this(null);
-        }
-
-        private DisplayMode(String val) {
-            value = val;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
 
     private static final String DISPLAY_VALUE_TRUNCATING_SUFFIX = "<truncated>";
     private static final int DISPLAY_VALUE_MAX_LENGTH = 255;

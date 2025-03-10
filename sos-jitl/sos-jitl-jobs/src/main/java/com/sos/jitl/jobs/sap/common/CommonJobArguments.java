@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.jitl.jobs.sap.common.bean.AbstractJob;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.js7.job.JobArgument;
