@@ -192,9 +192,10 @@ public class OrderApi {
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
-                either = Either.right(mapToFreshOrder(order.getFreshOrder(), order.getLabelToPositionMap(), planSchemaId, workflowToOrderPreparation, allowEmptyArguments));
+                either = Either.right(mapToFreshOrder(order.getFreshOrder(), order.getLabelToPositionMap(), planSchemaId, workflowToOrderPreparation,
+                        allowEmptyArguments));
             } catch (Exception ex) {
-                either = Either.left(new BulkError(LOGGER).get(ex, jocError, order.getFreshOrder().getId()));
+                either = Either.left(new BulkError(LOGGER).get(ex, jocError, order.getFreshOrder(), controllerId));
             }
             return either;
         };
@@ -301,9 +302,6 @@ public class OrderApi {
                 Instant end = Instant.now();
                 LOGGER.info(String.format("%s[onError][submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(
                         start, end), msg));
-
-                ProblemHelper.postExceptionEventIfExist(Either.left(new RuntimeException(updateHistory + " orders couldn't be submitted")),
-                        accessToken, jocError, controllerId);
             } catch (Throwable e) {
                 LOGGER.error(String.format("%s %s", lp, e.toString()), e);
                 Globals.rollback(session);

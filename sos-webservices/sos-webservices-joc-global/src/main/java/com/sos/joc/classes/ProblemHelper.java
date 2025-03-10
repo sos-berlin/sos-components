@@ -21,12 +21,19 @@ public class ProblemHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProblemHelper.class);
     private static final String UNKNOWN_KEY = "UnknownKey";
+    private static final String UNKNOWN_PATH = "UnknownPath";
 
     public static String getErrorMessage(Problem problem) {
         if (problem == null) {
             return null;
         }
         return String.format("%s%s", (problem.codeOrNull() != null) ? problem.codeOrNull().string() + ": " : "", problem.message());
+    }
+    
+    public static String getErrorMessagePrefix(String controllerId, String errorType) {
+        controllerId = controllerId == null ? "" : "[" + controllerId + "]";
+        errorType = errorType == null ? "" : errorType + ": ";
+        return controllerId + errorType;
     }
 
     public static void throwProblemIfExist(Either<Problem, ?> either) throws JocException {
@@ -135,7 +142,8 @@ public class ProblemHelper {
             return new ControllerServiceUnavailableException(getErrorMessage(problem));
         default:
             // UnknownKey
-            if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
+            if (problem.codeOrNull() != null && (UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string()) || UNKNOWN_PATH.equalsIgnoreCase(problem
+                    .codeOrNull().string()))) {
                 return new ControllerObjectNotExistException(problem.message());
             }
             return new JocBadRequestException(getErrorMessage(problem));
@@ -152,32 +160,33 @@ public class ProblemHelper {
         case 409:
             // duplicate orders are ignored by controller -> 409 is no longer transmitted
             if (isOnlyHint) {
-                LOGGER.warn(marker, "ConflictWarning: " + getErrorMessage(problem));
+                LOGGER.warn(marker, getErrorMessagePrefix(controller, "ConflictWarning") + getErrorMessage(problem));
             } else {
-                LOGGER.error(marker, "ConflictError: " + getErrorMessage(problem));
+                LOGGER.error(marker, getErrorMessagePrefix(controller, "ConflictError") + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "ConflictError: " + getErrorMessage(problem), isOnlyHint);
         case 503:
             if (isOnlyHint) {
-                LOGGER.warn(marker, "ServiceUnavailableWarning: " + getErrorMessage(problem));
+                LOGGER.warn(marker, getErrorMessagePrefix(controller, "ServiceUnavailableWarning") + getErrorMessage(problem));
             } else {
-                LOGGER.error(marker, "ServiceUnavailableError: " + getErrorMessage(problem));
+                LOGGER.error(marker, getErrorMessagePrefix(controller, "ServiceUnavailableError") + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "ServiceUnavailableError: " + getErrorMessage(problem), isOnlyHint);
         default:
             // UnknownKey
-            if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
+            if (problem.codeOrNull() != null && (UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string()) || UNKNOWN_PATH.equalsIgnoreCase(problem
+                    .codeOrNull().string()))) {
                 if (isOnlyHint) {
-                    LOGGER.warn(marker, "ObjectNotExistWarning: " + getErrorMessage(problem));
+                    LOGGER.warn(marker, getErrorMessagePrefix(controller, "ObjectNotExistWarning") + getErrorMessage(problem));
                 } else {
-                    LOGGER.error(marker, "ObjectNotExistError: " + getErrorMessage(problem));
+                    LOGGER.error(marker, getErrorMessagePrefix(controller, "ObjectNotExistError") + getErrorMessage(problem));
                 }
                 return new ProblemEvent(accessToken, controller, "ObjectNotExistError: " + getErrorMessage(problem), isOnlyHint);
             }
             if (isOnlyHint) {
-                LOGGER.warn(marker, getErrorMessage(problem));
+                LOGGER.warn(marker, getErrorMessagePrefix(controller, null) + getErrorMessage(problem));
             } else {
-                LOGGER.error(marker, "BadRequestError: " + getErrorMessage(problem));
+                LOGGER.error(marker, getErrorMessagePrefix(controller, "BadRequestError") + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "BadRequestError: " + getErrorMessage(problem), isOnlyHint);
         }
