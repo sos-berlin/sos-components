@@ -31,7 +31,7 @@ public class PlannedOrder {
     private String orderName;
     private Set<String> tags;
     private Map<String, List<Object>> labelToPositionMap = Collections.emptyMap(); 
-    
+    private Exception exception = null;
 
     public PlannedOrder(String controllerId, FreshOrder freshOrder, DailyPlanSchedule dailyPlanSchedule, DailyPlanScheduleWorkflow scheduleWorkflow,
             Long calendarId, Set<String> tags) {
@@ -169,5 +169,17 @@ public class PlannedOrder {
     
     public boolean hasTags() {
         return tags != null && !tags.isEmpty();
+    }
+
+    public Exception getException() {
+        return exception;
+    }
+
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
+    
+    public String getExceptionMessage() {
+        return exception != null ? exception.getMessage() : "";
     }
 }

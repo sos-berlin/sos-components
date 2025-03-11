@@ -121,7 +121,11 @@ public class DBItemDailyPlanHistory extends DBItem {
     }
 
     public void setMessage(String val) {
-        message = val;
+        if (val != null && val.length() > 2000) {
+            message = val.substring(0, 2000);
+        } else {
+            message = val;
+        }
     }
 
     public Date getSubmissionTime() {

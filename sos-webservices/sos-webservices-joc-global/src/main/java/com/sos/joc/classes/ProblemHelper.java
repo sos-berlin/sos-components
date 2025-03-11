@@ -2,6 +2,7 @@ package com.sos.joc.classes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -70,10 +71,19 @@ public class ProblemHelper {
 
     private static synchronized void postEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller,
             boolean isOnlyHint) throws JocException {
+        String logContext = MDC.get("clusterService");
         if (either == null || either.isLeft()) {
+            if (err != null) {
+                if (logContext != null) {
+                    MDC.remove("clusterService"); 
+                }
+            }
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
                 err.clearMetaInfo();
+                if (logContext != null) {
+                    MDC.put("clusterService", logContext); 
+                }
             }
             if (either == null) {
                 if (accessToken != null && !accessToken.isEmpty()) {
@@ -90,12 +100,21 @@ public class ProblemHelper {
                     getEventOfProblem(marker, either.getLeft(), accessToken, controller, isOnlyHint);
                 }
             }
+            if (logContext != null) {
+                MDC.put("clusterService", logContext); 
+            }
         }
     }
 
     private static synchronized void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err,
             String controller, boolean isOnlyHint) throws JocException {
+        String logContext = MDC.get("clusterService");
         if (either == null || either.isLeft()) {
+            if (err != null) {
+                if (logContext != null) {
+                    MDC.remove("clusterService"); 
+                }
+            }
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
                 err.clearMetaInfo();
@@ -121,6 +140,9 @@ public class ProblemHelper {
                 if (accessToken != null && !accessToken.isEmpty()) {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString(), isOnlyHint));
                 }
+            }
+            if (logContext != null) {
+                MDC.put("clusterService", logContext); 
             }
         }
     }

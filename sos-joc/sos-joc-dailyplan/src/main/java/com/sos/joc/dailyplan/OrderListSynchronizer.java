@@ -66,9 +66,9 @@ public class OrderListSynchronizer {
     private final Map<PlannedOrderKey, PlannedOrder> plannedOrders;
     private final String callerForLog;
 
-    private JocError jocError;
+    private JocError jocError = null;
     private DBItemDailyPlanSubmission submission;
-    private String accessToken;
+    private String accessToken = null;
 
     public OrderListSynchronizer(DailyPlanSettings settings) {
         this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
@@ -143,6 +143,7 @@ public class OrderListSynchronizer {
 
     public void submitOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate) throws SOSHibernateException {
 
+        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
         String method = "submitOrdersToController";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String logDailyPlanDate = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";

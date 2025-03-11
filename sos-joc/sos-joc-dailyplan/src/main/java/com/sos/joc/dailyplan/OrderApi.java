@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -36,7 +37,6 @@ import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
-import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
@@ -47,7 +47,6 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.joc.model.common.Err419;
 import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
@@ -189,13 +188,14 @@ public class OrderApi {
                             }
                         }));
 
-        Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
-            Either<Err419, JFreshOrder> either = null;
+        Function<PlannedOrder, Either<PlannedOrder, JFreshOrder>> mapper = order -> {
+            Either<PlannedOrder, JFreshOrder> either = null;
             try {
                 either = Either.right(mapToFreshOrder(order.getFreshOrder(), order.getLabelToPositionMap(), planSchemaId, workflowToOrderPreparation,
                         allowEmptyArguments));
             } catch (Exception ex) {
-                either = Either.left(new BulkError(LOGGER).get(ex, jocError, order.getFreshOrder(), controllerId));
+                order.setException(ex);
+                either = Either.left(order);
             }
             return either;
         };
@@ -203,7 +203,7 @@ public class OrderApi {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s update submit state for history and order", lp));
         }
-        Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
+        Map<Boolean, Set<Either<PlannedOrder, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
                 Collectors.toSet()));
         
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
@@ -270,7 +270,7 @@ public class OrderApi {
                         session = null;
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("%s[onError][rollback  submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate
+                        LOGGER.info(String.format("%s[onError][rollback submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate
                                 .getDuration(start, end), msg));
 
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
@@ -298,10 +298,14 @@ public class OrderApi {
                 session.close();
                 session = null;
 
-                String msg = freshOrders.get(false).iterator().next().getLeft().getMessage();
+                String msg = freshOrders.get(false).stream().map(Either::getLeft).map(PlannedOrder::getException).filter(Objects::nonNull).map(
+                        Exception::toString).distinct().collect(Collectors.joining(", "));
                 Instant end = Instant.now();
                 LOGGER.info(String.format("%s[onError][submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(
                         start, end), msg));
+                if (jocError != null) {
+                    ProblemHelper.postProblemEventIfExist(Either.right(Problem.pure(msg)), accessToken, jocError, controllerId);
+                }
             } catch (Throwable e) {
                 LOGGER.error(String.format("%s %s", lp, e.toString()), e);
                 Globals.rollback(session);
@@ -335,15 +339,15 @@ public class OrderApi {
         return result;
     }
     
-    private static int updateHistory(DBLayerDailyPlannedOrders dbLayer, Set<Either<Err419, JFreshOrder>> errors,
+    private static int updateHistory(DBLayerDailyPlannedOrders dbLayer, Set<Either<PlannedOrder, JFreshOrder>> errors,
             Map<String, DBItemDailyPlanHistory> items) throws SOSHibernateException {
         int result = 0;
-        for (Either<Err419, JFreshOrder> error : errors) {
+        for (Either<PlannedOrder, JFreshOrder> error : errors) {
             if (error.isLeft()) {
-                Err419 e = error.getLeft();
-                DBItemDailyPlanHistory item = items.get(e.getPath());
+                PlannedOrder e = error.getLeft();
+                DBItemDailyPlanHistory item = items.get(e.getFreshOrder().getId());
                 if (item != null) {
-                    result += dbLayer.setHistorySubmitted(item.getId(), false, e.getMessage());
+                    result += dbLayer.setHistorySubmitted(item.getId(), false, e.getExceptionMessage());
                 }
             }
         }
