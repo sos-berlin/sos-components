@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.io.Closeable;
 import java.net.URL;
 
 import org.slf4j.Logger;
@@ -113,6 +114,24 @@ public class SOSClassUtil {
 
     public static URL getLocation(Class<?> clazz) {
         return clazz.getProtectionDomain().getCodeSource().getLocation();
+    }
+
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public static void closeQuietly(AutoCloseable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+            }
+        }
     }
 
 }

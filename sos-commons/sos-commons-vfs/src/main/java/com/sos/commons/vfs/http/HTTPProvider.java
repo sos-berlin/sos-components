@@ -1,159 +1,557 @@
 package com.sos.commons.vfs.http;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.InputStreamEntity;
+
+import com.sos.commons.exception.SOSNoSuchFileException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
+import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.http.commons.HTTPClient;
+import com.sos.commons.vfs.http.commons.HTTPInputStream;
+import com.sos.commons.vfs.http.commons.HTTPOutputStream;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 
 public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
+    private URI baseURI;
+    private HTTPClient client;
+
     public HTTPProvider(ISOSLogger logger, HTTPProviderArguments arguments) throws SOSProviderInitializationException {
         super(logger, arguments);
+        try {
+            // can be redefined on connect if not found
+            baseURI = info();
+        } catch (URISyntaxException e) {
+            throw new SOSProviderInitializationException(e);
+        }
     }
 
+    /** Overrides {@link IProvider#getPathSeparator()} */
     @Override
     public String getPathSeparator() {
         return SOSPathUtil.PATH_SEPARATOR_UNIX;
     }
 
+    /** Overrides {@link IProvider#isAbsolutePath(String)} */
     @Override
     public boolean isAbsolutePath(String path) {
         return SOSPathUtil.isAbsoluteURIPath(path);
     }
 
+    /** Overrides {@link IProvider#normalizePath(String)}<br/>
+     * Normalizes the given path by resolving it against the base URI and ensuring proper encoding.
+     * <p>
+     * This method ensures that both relative and absolute paths are handled correctly.<br/>
+     * It avoids using {@code new URI(String)} directly, as it would throw an exception<br/>
+     * if the input contains invalid characters (e.g., spaces, special symbols).<br/>
+     * Similarly, {@code new URL(String)} is not used for relative paths since it requires an absolute URL.
+     * </p>
+     *
+     * @param path The input path, which can be relative or absolute.
+     * @return A properly normalized and encoded URL string. */
     @Override
     public String normalizePath(String path) {
+        // return baseURI.resolve(path).normalize().toString();
         try {
-            return new URI(path).normalize().toString();
+            // new URI(null, path, null) not throw an exception if the path contains invalid characters
+            return baseURI.resolve(new URI(null, path, null)).toString();
         } catch (URISyntaxException e) {
-            return path;
+            return baseURI.resolve(encodeURL(path)).normalize().toString();
         }
     }
 
+    /** Overrides {@link IProvider#connect()} */
     @Override
     public void connect() throws SOSProviderConnectException {
-        // TODO Auto-generated method stub
+        try {
+            getLogger().info(getConnectMsg());
 
+            client = HTTPClient.createAuthenticatedClient(getLogger(), getArguments(), baseURI.getHost(), baseURI.getPort(), baseURI.getScheme());
+            connect(baseURI);
+
+            getLogger().info(getConnectedMsg());
+        } catch (Throwable e) {
+            throw new SOSProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+        }
     }
 
+    /** Overrides {@link IProvider#isConnected()} */
     @Override
     public boolean isConnected() {
-        // TODO Auto-generated method stub
-        return false;
+        return client != null;
     }
 
+    /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
-        // TODO Auto-generated method stub
+        SOSClassUtil.closeQuietly(client);
+        client = null;
 
+        getLogger().info(getDisconnectedMsg());
     }
 
+    /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        logNotImpementedMethod("selectFiles", selection == null ? "" : selection.toString());
+        return List.of();
     }
 
+    /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) {
-        // TODO Auto-generated method stub
+        if (client == null) {
+            return false;
+        }
+        URI uri = null;
+        try {
+            checkParam("exists", path, "path"); // here because should not throw any errors
+            uri = new URI(normalizePath(path));
+            try (CloseableHttpResponse response = client.execute(new HttpGet(uri))) {
+                StatusLine sl = response.getStatusLine();
+                if (!HTTPClient.isSuccessful(sl)) {
+                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                }
+            }
+            return true;
+        } catch (Throwable e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[uri=%s][exists=false]%s", getPathOperationPrefix(path), uri, e.toString());
+            }
+        }
         return false;
     }
 
+    /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
+        logNotImpementedMethod("createDirectoriesIfNotExists", path);
         return false;
     }
 
+    /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
     public boolean deleteIfExists(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return false;
+        checkBeforeOperation("deleteIfExists", path, "path");
+
+        try {
+            URI uri = new URI(normalizePath(path));
+            try (CloseableHttpResponse response = client.execute(new HttpDelete(uri))) {
+                StatusLine sl = response.getStatusLine();
+                if (!HTTPClient.isSuccessful(sl)) {
+                    if (HTTPClient.isNotFound(sl)) {
+                        return false;
+                    }
+                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                }
+            }
+            return true;
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e.getCause());
+        }
     }
 
+    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
+    // TODO check if isDirectory
     @Override
     public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        if (files == null) {
+            return null;
+        }
+        checkBeforeOperation("deleteFilesIfExists");
+
+        DeleteFilesResult r = new DeleteFilesResult(files.size());
+        try {
+            l: for (String file : files) {
+                try {
+                    if (deleteIfExists(file)) {
+                        r.addSuccess();
+                    } else {
+                        r.addNotFound(file);
+                    }
+                } catch (Throwable e) {
+                    r.addError(file, e);
+                    if (stopOnSingleFileError) {
+                        break l;
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            new SOSProviderException(e);
+        }
+        return r;
     }
 
+    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
     public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        if (files == null) {
+            return null;
+        }
+        checkBeforeOperation("renameFilesIfSourceExists");
+
+        RenameFilesResult r = new RenameFilesResult(files.size());
+        try {
+            l: for (Map.Entry<String, String> entry : files.entrySet()) {
+                String source = entry.getKey();
+                String target = entry.getValue();
+                try {
+                    if (renameFileIfExists(source, target)) {
+                        r.addSuccess();
+                    } else {
+                        r.addNotFound(source);
+                    }
+                } catch (Throwable e) {
+                    r.addError(source, e);
+                    if (stopOnSingleFileError) {
+                        break l;
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            new SOSProviderException(e);
+        }
+        return r;
     }
 
+    /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getFileIfExists", path, "path");
+
+        ProviderFile file = null;
+        try {
+            URI uri = new URI(normalizePath(path));
+            try (CloseableHttpResponse response = client.execute(new HttpGet(uri))) {
+                StatusLine sl = response.getStatusLine();
+                if (!HTTPClient.isSuccessful(sl) || !HTTPClient.isNotFound(sl)) {
+                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                }
+                file = createProviderFile(uri, response);
+            }
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e.getCause());
+        }
+        return file;
     }
 
+    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
     @Override
     public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("rereadFileIfExists");
+
+        try {
+            return refreshFileMetadata(file, getFileIfExists(file.getFullPath()));
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
+        }
     }
 
+    /** Overrides {@link IProvider#getFileContentIfExists(String, String)} */
     @Override
     public String getFileContentIfExists(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getFileContentIfExists", path, "path");
+
+        StringBuilder content = new StringBuilder();
+        try (InputStream is = getInputStream(new URI(normalizePath(path))); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(r)) {
+            br.lines().forEach(content::append);
+            return content.toString();
+        } catch (SOSNoSuchFileException e) {
+            return null;
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
+    /** Overrides {@link IProvider#writeFile(String, String)} */
     @Override
     public void writeFile(String path, String content) throws SOSProviderException {
-        // TODO Auto-generated method stub
+        checkBeforeOperation("writeFile", path, "path");
 
+        try {
+            URI uri = new URI(normalizePath(path));
+
+            HttpPut httpPut = new HttpPut(uri);
+            // httpPut.setEntity(new StringEntity(content, StandardCharsets.UTF_8));
+            // httpPut.setHeader("Content-Type", "text/plain");
+            httpPut.setEntity(new ByteArrayEntity(content.getBytes(StandardCharsets.UTF_8)));
+            httpPut.setHeader("Content-Type", "application/octet-stream");
+            // The 'Content-Length' Header is automatically set when an HttpEntity is used
+
+            try (CloseableHttpResponse response = client.execute(httpPut)) {
+                StatusLine sl = response.getStatusLine();
+                if (!HTTPClient.isSuccessful(sl)) {
+                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                }
+            }
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
+    /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
-        // TODO Auto-generated method stub
-
+        logNotImpementedMethod("setFileLastModifiedFromMillis", "path=" + path + ",milliseconds=" + milliseconds);
     }
 
+    /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
     public InputStream getInputStream(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getInputStream", path, "path");
+
+        try {
+            return getInputStream(new URI(normalizePath(path)));
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
+    private InputStream getInputStream(URI uri) throws Exception {
+        CloseableHttpResponse response = null;
+        try {
+            response = client.execute(new HttpGet(uri));
+            StatusLine sl = response.getStatusLine();
+            if (!HTTPClient.isSuccessful(sl)) {
+                if (HTTPClient.isNotFound(sl)) {
+                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(uri, sl)));
+                }
+                throw new Exception(HTTPClient.getResponseStatus(uri, sl));
+            }
+            return new HTTPInputStream(response);
+        } catch (Throwable e) {
+            SOSClassUtil.closeQuietly(response);
+            throw e;
+        }
+    }
+
+    /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("getOutputStream", path, "path");
+
+        try {
+            return new HTTPOutputStream(client, new HttpPut(new URI(normalizePath(path))));
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
+    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
     @Override
     public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        // TODO Auto-generated method stub
+        logNotImpementedMethod("executeCommand", command);
         return null;
     }
 
+    /** Overrides {@link IProvider#cancelCommands()} */
     @Override
     public SOSCommandResult cancelCommands() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public URI getBaseURI() {
+        return baseURI;
+    }
+
+    private URI info() throws URISyntaxException {
+        URI baseURI;
+        String hostOrUrl = SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(getArguments().getHost().getValue());
+        if (isAbsolutePath(hostOrUrl)) {
+            baseURI = toBaseURI(hostOrUrl);
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append("http://").append(hostOrUrl);
+            if (getArguments().getPort().isDirty()) {
+                sb.append(":").append(getArguments().getPort().getValue());
+            }
+            baseURI = toBaseURI(sb.toString());
+        }
+        setAccessInfo(baseURI);
+        return baseURI;
+    }
+
+    private void setAccessInfo(URI baseURI) {
+        if (getArguments().getUser().isEmpty()) {
+            setAccessInfo(baseURI.toString());
+        } else {
+            // HTTP Format: https://user:pass@example.com:8443/path/to/resource
+            // HTTPProvider: [user]https://example.com:8443/path/to/resource
+            setAccessInfo("[" + getArguments().getUser().getValue() + "]" + baseURI.toString());
+        }
+    }
+
+    /** @param spec absolute path
+     * @return URI representation
+     * @throws URISyntaxException */
+    private URI toBaseURI(String spec) throws URISyntaxException {
+        try {
+            // ensuring proper encoding
+            // variant 1) new URL
+            // or
+            // variant 2) new URI(null,spec,null);
+            return new URL(spec).toURI();
+        } catch (MalformedURLException | URISyntaxException e) {
+            return new URI(encodeURL(spec));
+        }
+    }
+
+    private String encodeURL(String input) {
+        // URLEncoder.encode converts blank to +
+        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    private void connect(URI uri) throws Exception {
+        StatusLine notFoundStatusLine = null;
+        try (CloseableHttpResponse response = client.execute(new HttpGet(baseURI))) {
+            StatusLine sl = response.getStatusLine();
+            if (HTTPClient.isServerError(notFoundStatusLine)) {
+                throw new Exception(HTTPClient.getResponseStatus(baseURI, sl));
+            }
+            if (HTTPClient.isNotFound(sl)) {
+                notFoundStatusLine = sl;
+            }
+        }
+        // Connection successful but baseURI not found - try redefining baseURI
+        // - recursive attempt with parent path
+        if (notFoundStatusLine != null) {
+            if (SOSString.isEmpty(uri.getPath())) {
+                throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
+            }
+            String newPath = uri.getPath().substring(0, uri.getPath().lastIndexOf('/'));
+            if (SOSString.isEmpty(newPath)) {
+                throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
+            }
+            // TODO info?
+            getLogger().info("%s[connect][%s]using parent path %s ...", getLogPrefix(), HTTPClient.getResponseStatus(uri, notFoundStatusLine),
+                    newPath);
+            baseURI = new URI(uri.getScheme(), uri.getHost(), newPath, null, null);
+            setAccessInfo(baseURI);
+
+            connect(baseURI);
+        }
+    }
+
+    /** PUT,DELETE implementation<br />
+     * - alternative - MOVE (may not be supported by the server…)
+     * 
+     * @param source
+     * @param target
+     * @return
+     * @throws SOSProviderException */
+    private boolean renameFileIfExists(String source, String target) throws SOSProviderException {
+        InputStream is = null;
+        boolean result = false;
+        try {
+            URI s = new URI(normalizePath(source));
+            URI t = new URI(normalizePath(target));
+
+            is = getInputStream(s);
+            HttpPut request = new HttpPut(t);
+            request.setEntity(new InputStreamEntity(is));
+
+            try (CloseableHttpResponse response = client.execute(request)) {
+                SOSClassUtil.closeQuietly(is);
+                is = null;
+
+                StatusLine sl = response.getStatusLine();
+                if (!HTTPClient.isSuccessful(sl)) {
+                    if (!HTTPClient.isNotFound(sl)) {
+                        throw new IOException(HTTPClient.getResponseStatus(t, sl));
+                    }
+                }
+            }
+            deleteIfExists(source);
+            result = true;
+        } catch (SOSNoSuchFileException e) { // is = getInputStream(s);
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(source + "->" + target), e.getCause());
+        } finally {
+            SOSClassUtil.closeQuietly(is);
+        }
+        return result;
+    }
+
+    private void checkBeforeOperation(String method) throws SOSProviderException {
+        if (client == null) {
+            throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "HTTPPClient");
+        }
+    }
+
+    private void checkBeforeOperation(String method, String paramValue, String msg) throws SOSProviderException {
+        checkBeforeOperation(method);
+        checkParam(method, paramValue, msg);
+    }
+
+    private ProviderFile createProviderFile(URI uri, HttpResponse response) throws Exception {
+        HttpEntity entity = response.getEntity();
+        if (entity == null) {
+            return null;
+        }
+        long size = getFileSize(uri, entity);
+        if (size < 0) {
+            return null;
+        }
+        return createProviderFile(uri.toString(), size, HTTPClient.getLastModifiedInMillis(response));
+    }
+
+    private long getFileSize(URI uri, HttpEntity entity) throws Exception {
+        long size = entity.getContentLength();
+        if (size < 0) {// e.g. Transfer-Encoding: chunked
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug(String.format("%s[getSizeFromEntity][%s][size=%s]use InputStream", getLogPrefix(), uri, size));
+            }
+            try (InputStream is = entity.getContent()) {
+                size = 0;
+
+                byte[] buffer = new byte[4_096];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    size += bytesRead;
+                }
+            }
+        }
+        return size;
     }
 
 }

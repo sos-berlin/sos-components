@@ -28,6 +28,7 @@ import org.apache.commons.net.util.TrustManagerUtils;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSJavaKeyStoreReader;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
@@ -371,6 +372,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         }
     }
 
+    /** Overrides {@link IProvider#getFileContentIfExists(String, String)} */
     @Override
     public String getFileContentIfExists(String path) throws SOSProviderException {
         checkBeforeOperation("getFileContentIfExists", path, "path");
@@ -401,10 +403,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 throw new SOSProviderException(String.format("%s[failed to write file]%s", getPathOperationPrefix(path), new FTPProtocolReply(
                         client)));
             }
-        } catch (IOException e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
         } catch (SOSProviderException e) {
             throw e;
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
 
     }
@@ -423,10 +425,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 throw new SOSProviderException(String.format("%s[failed to set modification time]%s", getPathOperationPrefix(path),
                         new FTPProtocolReply(client)));
             }
-        } catch (IOException e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
         } catch (SOSProviderException e) {
             throw e;
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -442,10 +444,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                         client)));
             }
             return is;
-        } catch (IOException e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
         } catch (SOSProviderException e) {
             throw e;
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -461,10 +463,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                         client)));
             }
             return os;
-        } catch (IOException e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
         } catch (SOSProviderException e) {
             throw e;
+        } catch (IOException e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -496,6 +498,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         return result;
     }
 
+    /** Overrides {@link IProvider#cancelCommands()} */
     @Override
     public SOSCommandResult cancelCommands() {
         // TODO Auto-generated method stub
@@ -533,7 +536,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             }
             // TRUST MANAGER#
             if (args.getJavaKeyStore() != null) {
-                KeyStore ks = loadJavaKeyStore(args.getJavaKeyStore());
+                KeyStore ks = SOSJavaKeyStoreReader.load(args.getJavaKeyStore().getFile().getValue(), args.getJavaKeyStore().getPassword().getValue(),
+                        args.getJavaKeyStore().getType().getValue());
                 if (ks != null) {
                     getLogger().info(String.format("%s[setTrustManager][keystore]type=%s,file=%s", getLogPrefix(), args.getJavaKeyStore().getType()
                             .getValue(), args.getJavaKeyStore().getFile().getValue()));

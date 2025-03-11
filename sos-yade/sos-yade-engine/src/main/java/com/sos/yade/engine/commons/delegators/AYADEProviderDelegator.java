@@ -13,11 +13,14 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final String directory;
     private final String directoryWithTrailingPathSeparator;
 
+    private final boolean httpProvider;
+
     public AYADEProviderDelegator(IProvider provider, YADESourceTargetArguments args) {
         this.provider = provider;
         this.args = args;
+        this.httpProvider = isHTTPProvider();
         this.directory = getDirectoryPath(args.getDirectory().getValue());
-        this.directoryWithTrailingPathSeparator = getDirectoryPathWithTrailingPathSeparator(args.getDirectory().getValue());
+        this.directoryWithTrailingPathSeparator = getDirectoryPathWithTrailingPathSeparator(directory);
     }
 
     /** Overrides {@link IYADEProviderDelegator#getProvider()} */
@@ -56,12 +59,32 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return path.contains(provider.getPathSeparator());
     }
 
+    public boolean hasHTTPProvider() {
+        return httpProvider;
+    }
+
+    private boolean isHTTPProvider() {
+        switch (getArgs().getProvider().getProtocol().getValue()) {
+        case HTTP:
+        case HTTPS:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     private String getDirectoryPath(String path) {
         if (SOSString.isEmpty(path)) {
             return null;
         }
-        return SOSPathUtil.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(
-                path) : SOSPathUtil.getWindowsStyleDirectoryWithoutTrailingSeparator(path);
+        String dir = path;
+        // TODO always normalize?
+        if (httpProvider) {
+            /** resolved and normalized based on baseURL */
+            dir = provider.normalizePath(path);
+        }
+        return SOSPathUtil.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(dir)
+                : SOSPathUtil.getWindowsStyleDirectoryWithoutTrailingSeparator(dir);
     }
 
     private String getDirectoryPathWithTrailingPathSeparator(String path) {

@@ -1,11 +1,8 @@
 package com.sos.commons.vfs.commons;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyStore;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +12,6 @@ import java.util.function.Function;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
@@ -46,6 +42,8 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
+
+    private String logPrefix;
 
     public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
         this(logger, arguments, null);
@@ -169,20 +167,14 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     public String getLogPrefix() {
-        return context == null ? "" : context.getLogPrefix();
+        if (logPrefix == null) {
+            logPrefix = context == null ? "" : context.getLogPrefix();
+        }
+        return logPrefix;
     }
 
     public String getPathOperationPrefix(String path) {
         return getLogPrefix() + "[" + path + "]";
-    }
-
-    public void closeQuietly(Closeable closeable) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (Throwable e) {
-            }
-        }
     }
 
     /** Refresh file size and lastModified<br/>
@@ -276,15 +268,8 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return milliseconds > 0;
     }
 
-    public static KeyStore loadJavaKeyStore(JavaKeyStoreArguments args) throws Exception {
-        if (args.getFile().getValue() == null) {
-            return null;
-        }
-        KeyStore ks = KeyStore.getInstance(args.getType().getValue().name());
-        char[] pass = args.getPassword().getValue() == null ? "".toCharArray() : args.getPassword().getValue().toCharArray();
-        try (InputStream is = Files.newInputStream(args.getFile().getValue())) {
-            ks.load(is, pass);
-        }
-        return ks;
+    public void logNotImpementedMethod(String methodName, String add) {
+        logger.info("%s[%s][%s][not implemented yet]%s", getLogPrefix(), getClass().getSimpleName(), methodName, add);
     }
+
 }

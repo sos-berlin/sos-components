@@ -1,5 +1,7 @@
 package com.sos.commons.util;
 
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -89,6 +91,32 @@ public class SOSPathUtilTest {
             LOGGER.info("    [SOSPathUtil.normalize]" + SOSPathUtil.normalize(path));
             LOGGER.info("    [Path.normalize]       " + normalizeToString(path));
         }
+
+    }
+
+    @Ignore
+    @Test
+    public void testURI() throws Exception {
+        String baseURL = "http://example.com/test/";
+        URI uri = new URI(baseURL);
+        LOGGER.info("[URI]" + uri.toString());
+        String toResolve = "http://example.com/test/1/a b/2";// manual .replace(" ", "%20");
+        try {
+            LOGGER.info(uri.resolve(toResolve).normalize().toString());
+        } catch (Exception e) {
+            LOGGER.error("[URI][resolve][" + uri + "]" + e);
+        }
+
+        URL url = new URL(baseURL);
+        LOGGER.info("[URL]" + url.toString());
+        try {
+            LOGGER.info(url.toURI().resolve(new URI(toResolve)).normalize().toString());
+        } catch (Exception e) {
+            LOGGER.error("[URL][resolve][" + uri + "]" + e);
+        }
+
+        URI uri2 = new URI(null, toResolve, null);
+        LOGGER.info("[URI2][resolve][" + uri2 + "]" + uri.resolve(uri2).normalize().toString());
 
     }
 

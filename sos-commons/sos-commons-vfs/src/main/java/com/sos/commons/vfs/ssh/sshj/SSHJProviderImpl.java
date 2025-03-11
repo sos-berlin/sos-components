@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
@@ -99,8 +100,9 @@ public class SSHJProviderImpl extends ASSHProvider {
     /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
-        commands = new ConcurrentHashMap<>();
-        closeQuietly(sshClient);
+        commands.clear();
+        SOSClassUtil.closeQuietly(sshClient);
+
         sshClient = null;
         getLogger().info(getDisconnectedMsg());
     }
@@ -345,14 +347,14 @@ public class SSHJProviderImpl extends ASSHProvider {
                     try {
                         super.close();
                     } finally {
-                        closeQuietly(remoteFile);
-                        closeQuietly(sftpRef.get());
+                        SOSClassUtil.closeQuietly(remoteFile);
+                        SOSClassUtil.closeQuietly(sftpRef.get());
                         close.set(true);
                     }
                 }
             };
         } catch (Throwable e) {
-            closeQuietly(sftpRef.get());
+            SOSClassUtil.closeQuietly(sftpRef.get());
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -385,14 +387,14 @@ public class SSHJProviderImpl extends ASSHProvider {
                     try {
                         super.close();
                     } finally {
-                        closeQuietly(remoteFile);
-                        closeQuietly(sftpRef.get());
+                        SOSClassUtil.closeQuietly(remoteFile);
+                        SOSClassUtil.closeQuietly(sftpRef.get());
                         close.set(true);
                     }
                 }
             };
         } catch (Throwable e) {
-            closeQuietly(sftpRef.get());
+            SOSClassUtil.closeQuietly(sftpRef.get());
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
     }

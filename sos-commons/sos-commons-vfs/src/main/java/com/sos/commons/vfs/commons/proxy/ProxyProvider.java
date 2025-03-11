@@ -46,6 +46,10 @@ public class ProxyProvider {
         return port;
     }
 
+    public boolean hasUserAndPassword() {
+        return !SOSString.isEmpty(user) && !SOSString.isEmpty(password);
+    }
+
     public String getUser() {
         return user;
     }

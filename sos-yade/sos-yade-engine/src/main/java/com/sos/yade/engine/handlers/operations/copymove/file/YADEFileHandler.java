@@ -2,6 +2,8 @@ package com.sos.yade.engine.handlers.operations.copymove.file;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Optional;
@@ -146,8 +148,9 @@ public class YADEFileHandler {
                             YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, buffer, bytesRead, false);
                             YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, buffer, bytesRead, compressTarget);
                         }
-                        YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
+                        // YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
                     }
+                    YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
                     break l;
                 } catch (Throwable e) {
                     attempts++;
@@ -224,6 +227,16 @@ public class YADEFileHandler {
     private YADEFileNameInfo getTargetFinalFilePathInfo() {
         // 1) Source name
         String fileName = sourceFile.getName();
+
+        // TODO check if needed - because of HTTPProvider normalized paths ...
+        if (sourceDelegator.hasHTTPProvider()) {
+            // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
+            //try {
+            //    fileName = URLEncoder.encode(fileName, "UTF-8");
+            //} catch (UnsupportedEncodingException e) {
+            //}
+        }
+
         // 2) Compressed name
         if (config.getTarget().getCompress() != null) {
             fileName = fileName + config.getTarget().getCompress().getFileExtension();
