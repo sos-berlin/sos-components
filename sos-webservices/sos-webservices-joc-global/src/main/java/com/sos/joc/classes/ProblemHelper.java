@@ -55,12 +55,12 @@ public class ProblemHelper {
         postEventIfExist(either, accessToken, err, controller, true);
     }
 
-    public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller)
+    public static void postExceptionEventIfExist(Either<? extends Throwable, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
         postExceptionEventIfExist(either, accessToken, err, controller, false);
     }
 
-    public static void postExceptionEventAsHintIfExist(Either<Exception, ?> either, String accessToken, JocError err,
+    public static void postExceptionEventAsHintIfExist(Either<? extends Throwable, ?> either, String accessToken, JocError err,
             String controller) throws JocException {
         postExceptionEventIfExist(either, accessToken, err, controller, true);
     }
@@ -106,7 +106,7 @@ public class ProblemHelper {
         }
     }
 
-    private static synchronized void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err,
+    private static synchronized void postExceptionEventIfExist(Either<? extends Throwable, ?> either, String accessToken, JocError err,
             String controller, boolean isOnlyHint) throws JocException {
         String logContext = MDC.get("clusterService");
         if (either == null || either.isLeft()) {
