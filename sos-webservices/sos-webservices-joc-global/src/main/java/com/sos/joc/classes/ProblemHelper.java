@@ -81,9 +81,6 @@ public class ProblemHelper {
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
                 err.clearMetaInfo();
-                if (logContext != null) {
-                    MDC.put("clusterService", logContext); 
-                }
             }
             if (either == null) {
                 if (accessToken != null && !accessToken.isEmpty()) {

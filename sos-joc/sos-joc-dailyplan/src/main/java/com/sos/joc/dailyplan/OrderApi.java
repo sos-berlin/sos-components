@@ -297,6 +297,7 @@ public class OrderApi {
                 LOGGER.info(String.format("%s[onError][submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(
                         start, end), msg));
                 if (jocError != null) {
+                    msg = "[" + method + "]" +msg;
                     ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), accessToken, jocError, controllerId);
                 }
             } catch (Throwable e) {
