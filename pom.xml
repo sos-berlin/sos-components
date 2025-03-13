@@ -91,7 +91,7 @@
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.29</json.schema.validator.version>
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
-    <webdav-version>2.22.0</webdav-version>
+    <webdav.jackrabbit.version>2.22.0</webdav.jackrabbit.version>
     <smbj.version>0.14.0</smbj.version>
   </properties>
 
@@ -954,6 +954,7 @@
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-webdav</artifactId>
+        <version>${webdav.jackrabbit.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

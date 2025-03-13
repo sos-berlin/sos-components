@@ -15,10 +15,10 @@ import org.ietf.jgss.Oid;
 import com.hierynomus.smbj.auth.AuthenticationContext;
 import com.hierynomus.smbj.auth.GSSAuthenticationContext;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.smb.commons.AuthMethod;
+import com.sos.commons.vfs.smb.commons.SMBAuthMethod;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
-public class AuthenticationContextFactory {
+public class SMBAuthenticationContextFactory {
 
     public static AuthenticationContext create(SMBProviderArguments args) throws Exception {
         switch (args.getAuthMethod().getValue()) {
@@ -42,7 +42,7 @@ public class AuthenticationContextFactory {
 
     /** Creates a GSSAPI authentication context based on the selected mechanism (e.g. Kerberos, SPNEGO, etc.). */
     private static GSSAuthenticationContext createGSSAPIContext(SMBProviderArguments args) throws Exception {
-        AuthMethod authMethod = args.getAuthMethod().getValue();
+        SMBAuthMethod authMethod = args.getAuthMethod().getValue();
         String username = args.getUser().getValue();
         String password = args.getPassword().getValue();
         String domain = args.getDomain().getValue();

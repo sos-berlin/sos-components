@@ -1,15 +1,14 @@
-package com.sos.commons.vfs.http.commons;
+package com.sos.commons.vfs.webdav.commons;
 
 import com.sos.commons.util.arguments.impl.SSLArguments;
+import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 
-public class HTTPSProviderArguments extends HTTPProviderArguments {
-
-    public static final int DEFAULT_PORT = 443;
+public class WebDAVSProviderArguments extends WebDAVProviderArguments {
 
     private SSLArguments ssl;
 
-    public HTTPSProviderArguments() {
-        getProtocol().setValue(Protocol.HTTPS);
+    public WebDAVSProviderArguments() {
+        getProtocol().setValue(Protocol.WEBDAVS);
         getPort().setDefaultValue(HTTPSProviderArguments.DEFAULT_PORT);
     }
 

@@ -54,16 +54,19 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         providerFileCreator = val;
     }
 
+    /** Overrides {@link IProvider#setContext(AProviderContext)} */
     @Override
     public void setContext(AProviderContext val) {
         context = val;
     }
 
+    /** Overrides {@link IProvider#getContext()} */
     @Override
     public AProviderContext getContext() {
         return context;
     }
 
+    /** Overrides {@link IProvider#ensureConnected())} */
     @Override
     public void ensureConnected() throws SOSProviderConnectException {
         if (!isConnected()) {
@@ -71,6 +74,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
+    /** Overrides {@link IProvider#createDirectoriesIfNotExists(Collection)} */
     @Override
     public boolean createDirectoriesIfNotExists(Collection<String> paths) throws SOSProviderException {
         if (SOSCollection.isEmpty(paths)) {
@@ -85,6 +89,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return result;
     }
 
+    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
     @Override
     public RenameFilesResult renameFileIfSourceExists(String sourcePath, String targetPath) throws SOSProviderException {
         checkParam("renameFileIfSourceExists", sourcePath, "sourcePath");
@@ -93,24 +98,42 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return renameFilesIfSourceExists(Collections.singletonMap(sourcePath, targetPath), true);
     }
 
+    /** Overrides {@link IProvider#toPathStyle(String)} */
     @Override
     public String toPathStyle(String path) {
         return SOSPathUtil.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtil.toUnixStyle(path) : SOSPathUtil.toWindowsStyle(path);
     }
 
+    /** Overrides {@link IProvider#executeCommand(String)} */
     @Override
     public SOSCommandResult executeCommand(String command) {
         return executeCommand(command, null, null);
     }
 
+    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout)} */
     @Override
     public SOSCommandResult executeCommand(String command, SOSTimeout timeout) {
         return executeCommand(command, timeout, null);
     }
 
+    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
     @Override
     public SOSCommandResult executeCommand(String command, SOSEnv env) {
         return executeCommand(command, null, env);
+    }
+
+    /** Overrides {@link IProvider#executeCommand(String,SOSTinmeout,SOSEnv)} */
+    @Override
+    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
+        logNotImpementedMethod("executeCommand", "[command]" + command);
+        return null;
+    }
+
+    // other thread
+    /** Overrides {@link IProvider#cancelCommands()} */
+    @Override
+    public SOSCommandResult cancelCommands() {
+        return null;
     }
 
     public void setSystemPropertiesFromFiles() {

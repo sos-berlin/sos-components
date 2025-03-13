@@ -18,7 +18,7 @@ import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
-import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.helper.SSHProviderTestArguments;
 
 public class SSHProviderTest {
@@ -39,7 +39,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PASSWORD);
+        args.setAuthMethod(SSHAuthMethod.PASSWORD);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
@@ -70,7 +70,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PUBLICKEY);
+        args.setAuthMethod(SSHAuthMethod.PUBLICKEY);
         args.setUser(SSH_USER);
         args.setAuthFile(SSH_AUTH_FILE);
 
@@ -99,7 +99,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PUBLICKEY);
+        args.setAuthMethod(SSHAuthMethod.PUBLICKEY);
         args.setUser("cs://@user");
         args.setAuthFile("cs://@attachment");
 
@@ -131,7 +131,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setPreferredAuthentications(AuthMethod.PASSWORD, AuthMethod.PUBLICKEY);
+        args.setPreferredAuthentications(SSHAuthMethod.PASSWORD, SSHAuthMethod.PUBLICKEY);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
@@ -159,7 +159,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setRequiredAuthentications(AuthMethod.PASSWORD, AuthMethod.PUBLICKEY);
+        args.setRequiredAuthentications(SSHAuthMethod.PASSWORD, SSHAuthMethod.PUBLICKEY);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
@@ -187,7 +187,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PASSWORD);
+        args.setAuthMethod(SSHAuthMethod.PASSWORD);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
@@ -218,7 +218,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PASSWORD);
+        args.setAuthMethod(SSHAuthMethod.PASSWORD);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
@@ -253,7 +253,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PASSWORD);
+        args.setAuthMethod(SSHAuthMethod.PASSWORD);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
@@ -296,7 +296,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PASSWORD);
+        args.setAuthMethod(SSHAuthMethod.PASSWORD);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
@@ -339,7 +339,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
-        args.setAuthMethod(AuthMethod.PASSWORD);
+        args.setAuthMethod(SSHAuthMethod.PASSWORD);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 

@@ -8,7 +8,7 @@ import com.sos.commons.vfs.commons.AProviderArguments;
 
 public class HTTPProviderArguments extends AProviderArguments {
 
-    private static final int DEFAULT_PORT = 80;
+    public static final int DEFAULT_PORT = 80;
 
     private ProxyArguments proxy;
 

@@ -53,12 +53,12 @@ import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.xfer.FileSystemFile;
 
-public class SSHJProviderImpl extends ASSHProvider {
+public class ProviderImpl extends ASSHProvider {
 
     private SSHClient sshClient;
     private Map<String, Command> commands = new ConcurrentHashMap<>();
 
-    public SSHJProviderImpl(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
+    public ProviderImpl(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
         super(logger, args);
     }
 

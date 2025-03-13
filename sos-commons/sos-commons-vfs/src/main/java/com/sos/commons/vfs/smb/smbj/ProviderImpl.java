@@ -34,9 +34,6 @@ import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.beans.SOSCommandResult;
-import com.sos.commons.util.beans.SOSEnv;
-import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.IProvider;
@@ -51,14 +48,14 @@ import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
 import com.sos.commons.vfs.smb.commons.ASMBProvider;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
-public class SMBJProviderImpl extends ASMBProvider {
+public class ProviderImpl extends ASMBProvider {
 
     private SMBClient client = null;
     private Session session = null;
 
     private boolean accessMaskMaximumAllowed = false;
 
-    public SMBJProviderImpl(ISOSLogger logger, SMBProviderArguments args) throws SOSProviderInitializationException {
+    public ProviderImpl(ISOSLogger logger, SMBProviderArguments args) throws SOSProviderInitializationException {
         super(logger, args);
     }
 
@@ -76,7 +73,7 @@ public class SMBJProviderImpl extends ASMBProvider {
             client = createClient();
             Connection connection = client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
             connected = true;
-            session = connection.authenticate(AuthenticationContextFactory.create(getArguments()));
+            session = connection.authenticate(SMBAuthenticationContextFactory.create(getArguments()));
 
             getLogger().info(getConnectedMsg());
         } catch (Throwable e) {
@@ -366,19 +363,8 @@ public class SMBJProviderImpl extends ASMBProvider {
 
     }
 
-    /** Overrides {@link IProvider#executeCommand(String,SOSTinmeout,SOSEnv)} */
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    // other thread
-    /** Overrides {@link IProvider#cancelCommands()} */
-    @Override
-    public SOSCommandResult cancelCommands() {
-        // TODO Auto-generated method stub
-        return null;
+    protected ProviderFile createProviderFile(String fullPath, FileIdBothDirectoryInformation info) {
+        return createProviderFile(fullPath, info.getEndOfFile(), info.getLastWriteTime().toEpochMillis());
     }
 
     private SMBClient createClient() {
@@ -507,10 +493,6 @@ public class SMBJProviderImpl extends ASMBProvider {
     private ProviderFile createProviderFile(String fullPath, FileAllInformation info) {
         return createProviderFile(fullPath, info.getStandardInformation().getEndOfFile(), info.getBasicInformation().getLastWriteTime()
                 .toEpochMillis());
-    }
-
-    protected ProviderFile createProviderFile(String fullPath, FileIdBothDirectoryInformation info) {
-        return createProviderFile(fullPath, info.getEndOfFile(), info.getLastWriteTime().toEpochMillis());
     }
 
     private void checkBeforeOperation(String method) throws SOSProviderException {

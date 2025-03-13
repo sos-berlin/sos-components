@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
-import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
@@ -18,7 +18,7 @@ public class TestJobArgumentsSuperClass extends JobArguments {
     // corresponds to the JOC/AGENT List type with the Singleton Map as list value
     private JobArgument<List<Map<String, Object>>> listSingletonMap = new JobArgument<>("list_singleton_map", false);
     private JobArgument<LinkedList<String>> linkedList = new JobArgument<>("linked_list", false);
-    private JobArgument<List<AuthMethod>> authMethods = new JobArgument<>("auth_methods", false);
+    private JobArgument<List<SSHAuthMethod>> authMethods = new JobArgument<>("auth_methods", false);
     private JobArgument<String> test = new JobArgument<>("test", false);
     private JobArgument<Path> path = new JobArgument<>("path", false);
     private JobArgument<String> password = new JobArgument<>("password", false, DisplayMode.MASKED);
@@ -39,7 +39,7 @@ public class TestJobArgumentsSuperClass extends JobArguments {
         return linkedList;
     }
 
-    public JobArgument<List<AuthMethod>> getAuthMethods() {
+    public JobArgument<List<SSHAuthMethod>> getAuthMethods() {
         return authMethods;
     }
 

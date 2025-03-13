@@ -22,6 +22,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.ClientProtocolException;
@@ -48,6 +49,8 @@ import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSJavaKeyStoreReader;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 
@@ -74,9 +77,9 @@ public class HTTPClient implements AutoCloseable {
         this.context = context;
     }
 
-    public static HTTPClient createAuthenticatedClient(ISOSLogger logger, HTTPProviderArguments args, String host, int port, String scheme)
-            throws Exception {
-        ProxyProvider proxyProvider = ProxyProvider.createInstance(args.getProxy());
+    public static HTTPClient createAuthenticatedClient(ISOSLogger logger, URI baseURI, HTTPAuthConfig authConfig, ProxyArguments proxyArgs,
+            SSLArguments sslArgs, List<String> defaultHeaders) throws Exception {
+        ProxyProvider proxyProvider = ProxyProvider.createInstance(proxyArgs);
 
         HttpClientBuilder clientBuilder = HttpClients.custom();
         RequestConfig.Builder requestBuilder = RequestConfig.custom();
@@ -86,12 +89,18 @@ public class HTTPClient implements AutoCloseable {
         BasicCredentialsProvider credentialsProvider = null;
         HttpHost serverHost = null;
         if (proxyProvider == null) {
-            if (!args.getUser().isEmpty() && args.getPassword().isEmpty()) {
-                serverHost = new HttpHost(host, port, scheme);
+            if (authConfig.getNTLM() == null) {
+                if (!SOSString.isEmpty(authConfig.getUsername())) {
+                    serverHost = new HttpHost(baseURI.getHost(), baseURI.getPort(), baseURI.getScheme());
 
+                    credentialsProvider = new BasicCredentialsProvider();
+                    credentialsProvider.setCredentials(new AuthScope(serverHost), new UsernamePasswordCredentials(authConfig.getUsername(), authConfig
+                            .getPassword()));
+                }
+            } else {
                 credentialsProvider = new BasicCredentialsProvider();
-                credentialsProvider.setCredentials(new AuthScope(serverHost), new UsernamePasswordCredentials(args.getUser().getValue(), args
-                        .getPassword().getValue()));
+                credentialsProvider.setCredentials(AuthScope.ANY, new NTCredentials(authConfig.getNTLM().getUsername(), authConfig.getPassword(),
+                        authConfig.getNTLM().getWorkstation(), authConfig.getNTLM().getDomain()));
             }
         } else {
             serverHost = new HttpHost(proxyProvider.getHost(), proxyProvider.getPort());
@@ -125,7 +134,7 @@ public class HTTPClient implements AutoCloseable {
         context.setAuthCache(authCache);
 
         // Client builder
-        setSSLContext(logger, args, scheme, clientBuilder);
+        setSSLContext(logger, sslArgs, baseURI.getScheme(), clientBuilder);
         clientBuilder
                 // Connection manager
                 .setConnectionManager(createConnectionManager())
@@ -140,7 +149,7 @@ public class HTTPClient implements AutoCloseable {
                         // build
                         .build())
                 // Default headers
-                .setDefaultHeaders(getDefaultHeaders(logger, args));
+                .setDefaultHeaders(toHeaders(logger, defaultHeaders));
         return new HTTPClient(clientBuilder.build(), context);
     }
 
@@ -211,37 +220,35 @@ public class HTTPClient implements AutoCloseable {
         }
     }
 
-    private static void setSSLContext(ISOSLogger logger, HTTPProviderArguments args, String baseURLScheme, HttpClientBuilder clientBuilder)
-            throws Exception {
+    private static void setSSLContext(ISOSLogger logger, SSLArguments args, String baseURLScheme, HttpClientBuilder clientBuilder) throws Exception {
         if (baseURLScheme.equalsIgnoreCase("https")) {
-            if (!(args instanceof HTTPSProviderArguments)) {
-                new Exception(("[HTTPClient][setSSLContext]missing HTTPSProviderArguments"));
+            if (args == null) {
+                new Exception(("[HTTPClient][setSSLContext]missing SSLArguments"));
             }
 
-            HTTPSProviderArguments httpsArgs = (HTTPSProviderArguments) args;
-            if (httpsArgs.getVerifyCertificateHostname().isTrue()) {
+            if (args.getVerifyCertificateHostname().isTrue()) {
                 clientBuilder.setSSLHostnameVerifier(null);
             } else {
                 clientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
 
                 logger.info("*********************** Security warning *********************************************************************");
-                logger.info("YADE option \"%s\" is currently \"false\". ", httpsArgs.getVerifyCertificateHostname().getName());
+                logger.info("YADE option \"%s\" is currently \"false\". ", args.getVerifyCertificateHostname().getName());
                 logger.info("The certificate verification process will not verify the DNS name of the certificate presented by the server,");
                 logger.info("with the hostname of the server in the URL used by the YADE client.");
                 logger.info("**************************************************************************************************************");
             }
 
             SSLContextBuilder builder = SSLContexts.custom();
-            if (httpsArgs.getAcceptUntrustedCertificate().isTrue()) {
+            if (args.getAcceptUntrustedCertificate().isTrue()) {
                 builder.loadTrustMaterial(TRUST_ALL_STRATEGY);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[HTTPClient][setSSLContext][%s=true]TRUST_ALL_STRATEGY", httpsArgs.getAcceptUntrustedCertificate().getName());
+                    logger.debug("[HTTPClient][setSSLContext][%s=true]TRUST_ALL_STRATEGY", args.getAcceptUntrustedCertificate().getName());
                 }
             } else {
-                if (httpsArgs.getJavaKeyStore() == null) {
+                if (args.getJavaKeyStore() == null) {
                     new Exception(("[HTTPClient][setSSLContext]missing Java KeyStore arguments"));
                 } else {
-                    SOSJavaKeyStoreReader r = new SOSJavaKeyStoreReader(SOSJavaKeyStoreReader.Type.KEY_AND_TRUSTSTORE, httpsArgs.getJavaKeyStore());
+                    SOSJavaKeyStoreReader r = new SOSJavaKeyStoreReader(SOSJavaKeyStoreReader.Type.KEY_AND_TRUSTSTORE, args.getJavaKeyStore());
                     KeyStore ks = r.read();
                     if (ks == null) {
                         new Exception(("[HTTPClient][setSSLContext][" + r.toString() + "]KeyMaterial not found"));
@@ -262,8 +269,8 @@ public class HTTPClient implements AutoCloseable {
         return m;
     }
 
-    private static List<Header> getDefaultHeaders(ISOSLogger logger, HTTPProviderArguments args) {
-        if (SOSCollection.isEmpty(args.getHTTPHeaders().getValue())) {
+    private static List<Header> toHeaders(ISOSLogger logger, List<String> defaultHeaders) {
+        if (SOSCollection.isEmpty(defaultHeaders)) {
             return List.of();
         }
 
@@ -278,7 +285,7 @@ public class HTTPClient implements AutoCloseable {
         // -> Accept-Encoding
         // -> ...
         final boolean isDebugEnabled = logger.isDebugEnabled();
-        return args.getHTTPHeaders().getValue().stream()
+        return defaultHeaders.stream()
                 // https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
                 // No whitespace is allowed between the header field-name and colon.
                 .map(String::trim)

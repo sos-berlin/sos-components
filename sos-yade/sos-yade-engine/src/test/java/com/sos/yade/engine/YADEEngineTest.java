@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
-import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -190,7 +190,7 @@ public class YADEEngineTest {
         SSHProviderArguments args = new SSHProviderArguments();
         args.applyDefaultOnNullValue();
         args.getHost().setValue(SSH_HOST);
-        args.getAuthMethod().setValue(AuthMethod.PASSWORD);
+        args.getAuthMethod().setValue(SSHAuthMethod.PASSWORD);
         args.getUser().setValue("sos");
         args.getPassword().setValue("sos");
         return args;

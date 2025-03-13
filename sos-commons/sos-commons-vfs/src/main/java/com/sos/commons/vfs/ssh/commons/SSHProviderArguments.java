@@ -13,10 +13,6 @@ public class SSHProviderArguments extends AProviderArguments {
 
     public static final String CLASS_KEY = "SSH_PROVIDER";
 
-    public enum AuthMethod {
-        PASSWORD, PUBLICKEY, KEYBOARD_INTERACTIVE
-    }
-
     // TODO add JSCH or ...
     public enum SSHProviderType {
         SSHJ
@@ -27,31 +23,31 @@ public class SSHProviderArguments extends AProviderArguments {
     private ProxyArguments proxy;
 
     // Authentication
-    private SOSArgument<String> passphrase = new SOSArgument<String>("passphrase", false, DisplayMode.MASKED);
+    private SOSArgument<String> passphrase = new SOSArgument<>("passphrase", false, DisplayMode.MASKED);
     /** String because can contains cs:// syntax */
-    private SOSArgument<String> authFile = new SOSArgument<String>("auth_file", false);
-    private SOSArgument<AuthMethod> authMethod = new SOSArgument<AuthMethod>("auth_method", false);
-    private SOSArgument<List<AuthMethod>> preferredAuthentications = new SOSArgument<List<AuthMethod>>("preferred_authentications", false);
-    private SOSArgument<List<AuthMethod>> requiredAuthentications = new SOSArgument<List<AuthMethod>>("required_authentications", false);
+    private SOSArgument<String> authFile = new SOSArgument<>("auth_file", false);
+    private SOSArgument<SSHAuthMethod> authMethod = new SOSArgument<>("auth_method", false);
+    private SOSArgument<List<SSHAuthMethod>> preferredAuthentications = new SOSArgument<>("preferred_authentications", false);
+    private SOSArgument<List<SSHAuthMethod>> requiredAuthentications = new SOSArgument<>("required_authentications", false);
 
     // Socket connect timeout in seconds based on socket.connect
-    private SOSArgument<Integer> connectTimeout = new SOSArgument<Integer>("connect_timeout", false, 0);
+    private SOSArgument<Integer> connectTimeout = new SOSArgument<>("connect_timeout", false, 0);
     // Socket timeout SO_TIMEOUT in seconds based on socket.setSoTimeout
-    private SOSArgument<Integer> socketTimeout = new SOSArgument<Integer>("socket_timeout", false, 0);
+    private SOSArgument<Integer> socketTimeout = new SOSArgument<>("socket_timeout", false, 0);
 
     // KeepAlive - timeout interval in seconds
     // ?TODO server_alive_count_max
-    private SOSArgument<Integer> serverAliveInterval = new SOSArgument<Integer>("server_alive_interval", false);
+    private SOSArgument<Integer> serverAliveInterval = new SOSArgument<>("server_alive_interval", false);
 
-    private SOSArgument<Boolean> strictHostkeyChecking = new SOSArgument<Boolean>("strict_hostkey_checking", false, false);
-    private SOSArgument<Path> hostkeyLocation = new SOSArgument<Path>("hostkey_location", false);
-    private SOSArgument<Boolean> useZlibCompression = new SOSArgument<Boolean>("use_zlib_compression", false, false);
-    private SOSArgument<Boolean> simulateShell = new SOSArgument<Boolean>("simulate_shell", false, false);
+    private SOSArgument<Boolean> strictHostkeyChecking = new SOSArgument<>("strict_hostkey_checking", false, false);
+    private SOSArgument<Path> hostkeyLocation = new SOSArgument<>("hostkey_location", false);
+    private SOSArgument<Boolean> useZlibCompression = new SOSArgument<>("use_zlib_compression", false, false);
+    private SOSArgument<Boolean> simulateShell = new SOSArgument<>("simulate_shell", false, false);
 
-    private SOSArgument<Charset> remoteCharset = new SOSArgument<Charset>("remote_charset", false, Charset.forName("UTF-8"));
+    private SOSArgument<Charset> remoteCharset = new SOSArgument<>("remote_charset", false, Charset.forName("UTF-8"));
 
     // "ssh_provider" - YADE 1 compatibility
-    private SOSArgument<SSHProviderType> sshProviderType = new SOSArgument<SSHProviderType>("ssh_provider", false, SSHProviderType.SSHJ);
+    private SOSArgument<SSHProviderType> sshProviderType = new SOSArgument<>("ssh_provider", false, SSHProviderType.SSHJ);
 
     public SSHProviderArguments() {
         getProtocol().setDefaultValue(Protocol.SFTP);
@@ -67,7 +63,7 @@ public class SSHProviderArguments extends AProviderArguments {
         proxy = val;
     }
 
-    public SOSArgument<AuthMethod> getAuthMethod() {
+    public SOSArgument<SSHAuthMethod> getAuthMethod() {
         return authMethod;
     }
 
@@ -79,11 +75,11 @@ public class SSHProviderArguments extends AProviderArguments {
         return authFile;
     }
 
-    public SOSArgument<List<AuthMethod>> getPreferredAuthentications() {
+    public SOSArgument<List<SSHAuthMethod>> getPreferredAuthentications() {
         return preferredAuthentications;
     }
 
-    public SOSArgument<List<AuthMethod>> getRequiredAuthentications() {
+    public SOSArgument<List<SSHAuthMethod>> getRequiredAuthentications() {
         return requiredAuthentications;
     }
 

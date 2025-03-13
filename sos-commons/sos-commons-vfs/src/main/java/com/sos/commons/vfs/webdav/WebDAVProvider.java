@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.ssh;
+package com.sos.commons.vfs.webdav;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,19 +17,20 @@ import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
-import com.sos.commons.vfs.ssh.commons.ASSHProvider;
-import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.commons.vfs.smb.commons.ASMBProvider;
+import com.sos.commons.vfs.webdav.commons.AWebDAVProvider;
+import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 
-public class SSHProvider extends ASSHProvider {
+public class WebDAVProvider extends ASMBProvider {
 
-    private final ASSHProvider impl;
+    private final AWebDAVProvider impl;
 
-    public SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
+    public WebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws SOSProviderException {
         impl = initialize(logger, args);
     }
 
-    private static ASSHProvider initialize(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderException {
-        return new com.sos.commons.vfs.ssh.sshj.ProviderImpl(logger, args);
+    private static AWebDAVProvider initialize(ISOSLogger logger, WebDAVProviderArguments args) throws SOSProviderException {
+        return new com.sos.commons.vfs.webdav.jackrabbit.ProviderImpl(logger, args);
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -140,23 +141,6 @@ public class SSHProvider extends ASSHProvider {
         return impl.renameFilesIfSourceExists(paths, stopOnSingleFileError);
     }
 
-    /* -- Additional SSH Provider specific methods ------------------------- */
-    /** Overrides {@link ASSHProvider#put(String, String)} */
-    @Override
-    public void put(String source, String target) throws SOSProviderException {
-        impl.put(source, target);
-    }
-
-    /** Overrides {@link ASSHProvider#put(String, String, int)} */
-    @Override
-    public void put(String source, String target, int perm) throws SOSProviderException {
-        impl.put(source, target, perm);
-    }
-
-    /** Overrides {@link ASSHProvider#get(String, String)} */
-    @Override
-    public void get(String source, String target) throws SOSProviderException {
-        impl.get(source, target);
-    }
+    /* -- Additional SMB Provider specific methods ------------------------- */
 
 }

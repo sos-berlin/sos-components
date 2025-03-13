@@ -14,8 +14,8 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.SOSAuthenticationFailedException;
+import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
-import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
 
 import net.schmizz.keepalive.KeepAliveProvider;
 import net.schmizz.sshj.Config;
@@ -84,7 +84,7 @@ public class SSHClientFactory {
 
     private static void usePreferredAuthentications(SSHProviderArguments args, SSHClient client) throws Exception {
         List<net.schmizz.sshj.userauth.method.AuthMethod> methods = new LinkedList<>();
-        for (AuthMethod am : args.getPreferredAuthentications().getValue()) {
+        for (SSHAuthMethod am : args.getPreferredAuthentications().getValue()) {
             switch (am) {
             case PUBLICKEY:
                 methods.add(getAuthPublickey(args, client));
@@ -102,7 +102,7 @@ public class SSHClientFactory {
 
     /** ssh(d)_config AuthenticationMethods */
     private static void useRequiredAuthentications(SSHProviderArguments args, SSHClient client) throws Exception {
-        for (AuthMethod am : args.getRequiredAuthentications().getValue()) {
+        for (SSHAuthMethod am : args.getRequiredAuthentications().getValue()) {
             switch (am) {
             case PUBLICKEY:
                 partialAuthentication(args, client, getAuthPublickey(args, client));

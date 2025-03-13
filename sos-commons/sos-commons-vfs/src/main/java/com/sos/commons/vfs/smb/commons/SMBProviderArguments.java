@@ -8,7 +8,7 @@ public class SMBProviderArguments extends AProviderArguments {
     private static final int DEFAULT_PORT = 445;
 
     // JS7 new - not in the XML schema
-    private SOSArgument<AuthMethod> authMethod = new SOSArgument<>("auth_method", false, AuthMethod.BASIC);
+    private SOSArgument<SMBAuthMethod> authMethod = new SOSArgument<>("auth_method", false, SMBAuthMethod.BASIC);
 
     private SOSArgument<String> domain = new SOSArgument<>("domain", false);
     // JS7 new - not in the XML schema
@@ -19,7 +19,7 @@ public class SMBProviderArguments extends AProviderArguments {
         getPort().setDefaultValue(DEFAULT_PORT);
     }
 
-    public SOSArgument<AuthMethod> getAuthMethod() {
+    public SOSArgument<SMBAuthMethod> getAuthMethod() {
         return authMethod;
     }
 

@@ -1,6 +1,6 @@
 package com.sos.commons.vfs.smb.commons;
 
-public enum AuthMethod {
+public enum SMBAuthMethod {
 
     /** Simple, no special configuration required. Less secure, no SSO(Single Sign-On). Recommended For: Standalone servers, workgroups<br/>
      * - NTLM: NT LAN Manager, an older authentication protocol from Microsoft, typically used when Kerberos is unavailable.<br/>
@@ -38,7 +38,7 @@ public enum AuthMethod {
     private final String oid;
     private final String loginContextName;
 
-    AuthMethod(String name, String oid, String loginContextName) {
+    SMBAuthMethod(String name, String oid, String loginContextName) {
         this.name = name;
         this.oid = oid;
         this.loginContextName = loginContextName;

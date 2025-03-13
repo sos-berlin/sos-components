@@ -19,7 +19,6 @@ import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.smb.commons.ASMBProvider;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
-import com.sos.commons.vfs.smb.smbj.SMBJProviderImpl;
 
 public class SMBProvider extends ASMBProvider {
 
@@ -30,7 +29,7 @@ public class SMBProvider extends ASMBProvider {
     }
 
     private static ASMBProvider initialize(ISOSLogger logger, SMBProviderArguments args) throws SOSProviderException {
-        return new SMBJProviderImpl(logger, args);
+        return new com.sos.commons.vfs.smb.smbj.ProviderImpl(logger, args);
     }
 
     /** Overrides {@link IProvider#connect()} */

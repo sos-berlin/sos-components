@@ -19,6 +19,8 @@ import com.sos.commons.vfs.smb.SMBProvider;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.commons.vfs.webdav.WebDAVProvider;
+import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
@@ -76,8 +78,8 @@ public class YADEProviderDelegatorFactory {
                 break;
             case WEBDAV:
             case WEBDAVS:
-                throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
-            // break;
+                p = new WebDAVProvider(logger, (WebDAVProviderArguments) providerArgs);
+                break;
             case UNKNOWN:
             default:
                 throw new YADEEngineInitializationException(new SOSInvalidDataException(protocol.getName() + "=" + protocol.getValue()));

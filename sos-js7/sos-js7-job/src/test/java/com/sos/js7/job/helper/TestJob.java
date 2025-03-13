@@ -3,7 +3,7 @@ package com.sos.js7.job.helper;
 import java.util.List;
 import java.util.Map;
 
-import com.sos.commons.vfs.ssh.commons.SSHProviderArguments.AuthMethod;
+import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStep;
 
@@ -20,7 +20,7 @@ public class TestJob extends TestJobSuperClass {
 
             if (step.getDeclaredArguments().getAuthMethods().getValue() != null) {
                 step.getLogger().info("getAuthMethods:");
-                for (AuthMethod m : step.getDeclaredArguments().getAuthMethods().getValue()) {
+                for (SSHAuthMethod m : step.getDeclaredArguments().getAuthMethods().getValue()) {
                     step.getLogger().info("    " + m + " (" + m.getClass() + ")");
                 }
             }

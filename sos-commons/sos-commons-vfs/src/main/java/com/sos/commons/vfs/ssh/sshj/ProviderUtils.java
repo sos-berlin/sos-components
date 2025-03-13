@@ -112,7 +112,7 @@ public class ProviderUtils {
     }
 
     // possible recursion
-    protected static List<ProviderFile> selectFiles(SSHJProviderImpl provider, ProviderFileSelection selection, String directoryPath,
+    protected static List<ProviderFile> selectFiles(ProviderImpl provider, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws SOSProviderException {
         int counterAdded = 0;
         try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
@@ -158,7 +158,7 @@ public class ProviderUtils {
         sftp.rmdir(path);
     }
 
-    private static int list(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
+    private static int list(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result, int counterAdded) throws SOSProviderException {
         try {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
@@ -174,7 +174,7 @@ public class ProviderUtils {
         return counterAdded;
     }
 
-    private static int processListEntry(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
+    private static int processListEntry(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
             List<ProviderFile> result, int counterAdded) throws SOSProviderException {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {

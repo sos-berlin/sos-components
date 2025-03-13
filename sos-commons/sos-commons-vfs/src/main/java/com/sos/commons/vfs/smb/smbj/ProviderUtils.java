@@ -101,7 +101,7 @@ public class ProviderUtils {
         return share.openFile(smbPath, ams, fa, sa, SMB2CreateDisposition.FILE_OPEN, co);
     }
 
-    protected static int list(SMBJProviderImpl provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
+    protected static int list(ProviderImpl provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
             DiskShare share, int counterAdded) {
         List<FileIdBothDirectoryInformation> infos = share.list(directoryPath);
         for (FileIdBothDirectoryInformation info : infos) {

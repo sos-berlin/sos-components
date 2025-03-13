@@ -6,11 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -31,11 +28,10 @@ import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.beans.SOSCommandResult;
-import com.sos.commons.util.beans.SOSEnv;
-import com.sos.commons.util.beans.SOSTimeout;
+import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
+import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
@@ -45,10 +41,13 @@ import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPInputStream;
 import com.sos.commons.vfs.http.commons.HTTPOutputStream;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
+import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
+import com.sos.commons.vfs.http.commons.HTTPUtils;
 
 public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
@@ -95,7 +94,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             // new URI(null, path, null) not throw an exception if the path contains invalid characters
             return baseURI.resolve(new URI(null, path, null)).toString();
         } catch (URISyntaxException e) {
-            return baseURI.resolve(encodeURL(path)).normalize().toString();
+            return baseURI.resolve(HTTPUtils.encodeURL(path)).normalize().toString();
         }
     }
 
@@ -108,8 +107,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
         try {
             getLogger().info(getConnectMsg());
-
-            client = HTTPClient.createAuthenticatedClient(getLogger(), getArguments(), baseURI.getHost(), baseURI.getPort(), baseURI.getScheme());
+            HTTPAuthConfig authConfig = new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
+            client = HTTPClient.createAuthenticatedClient(getLogger(), baseURI, authConfig, getArguments().getProxy(), getSSLArguments(),
+                    getArguments().getHTTPHeaders().getValue());
             connect(baseURI);
 
             getLogger().info(getConnectedMsg());
@@ -366,20 +366,6 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        logNotImpementedMethod("executeCommand", command);
-        return null;
-    }
-
-    /** Overrides {@link IProvider#cancelCommands()} */
-    @Override
-    public SOSCommandResult cancelCommands() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     public URI getBaseURI() {
         return baseURI;
     }
@@ -388,47 +374,21 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         URI baseURI;
         String hostOrUrl = SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(getArguments().getHost().getValue());
         if (isAbsolutePath(hostOrUrl)) {
-            baseURI = toBaseURI(hostOrUrl);
+            baseURI = HTTPUtils.toBaseURI(hostOrUrl);
         } else {
             StringBuilder sb = new StringBuilder();
             sb.append("http://").append(hostOrUrl);
             if (getArguments().getPort().isDirty()) {
                 sb.append(":").append(getArguments().getPort().getValue());
             }
-            baseURI = toBaseURI(sb.toString());
+            baseURI = HTTPUtils.toBaseURI(sb.toString());
         }
-        setAccessInfo(baseURI);
+        setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
         return baseURI;
     }
 
-    private void setAccessInfo(URI baseURI) {
-        if (getArguments().getUser().isEmpty()) {
-            setAccessInfo(baseURI.toString());
-        } else {
-            // HTTP Format: https://user:pass@example.com:8443/path/to/resource
-            // HTTPProvider: [user]https://example.com:8443/path/to/resource
-            setAccessInfo("[" + getArguments().getUser().getValue() + "]" + baseURI.toString());
-        }
-    }
-
-    /** @param spec absolute path
-     * @return URI representation
-     * @throws URISyntaxException */
-    private URI toBaseURI(String spec) throws URISyntaxException {
-        try {
-            // ensuring proper encoding
-            // variant 1) new URL
-            // or
-            // variant 2) new URI(null,spec,null);
-            return new URL(spec).toURI();
-        } catch (MalformedURLException | URISyntaxException e) {
-            return new URI(encodeURL(spec));
-        }
-    }
-
-    private String encodeURL(String input) {
-        // URLEncoder.encode converts blank to +
-        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+    private SSLArguments getSSLArguments() {
+        return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) ? ((HTTPSProviderArguments) getArguments()).getSSL() : null;
     }
 
     private void connect(URI uri) throws Exception {
@@ -456,7 +416,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             getLogger().info("%s[connect][%s]using parent path %s ...", getLogPrefix(), HTTPClient.getResponseStatus(uri, notFoundStatusLine),
                     newPath);
             baseURI = new URI(uri.getScheme(), uri.getHost(), newPath, null, null);
-            setAccessInfo(baseURI);
+            setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
 
             connect(baseURI);
         }

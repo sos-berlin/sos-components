@@ -2,6 +2,7 @@ package com.sos.commons.vfs.ssh.helper;
 
 import java.util.Arrays;
 
+import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
 public class SSHProviderTestArguments extends SSHProviderArguments {
@@ -26,7 +27,7 @@ public class SSHProviderTestArguments extends SSHProviderArguments {
         getPassword().setValue(val);
     }
 
-    public void setAuthMethod(AuthMethod val) {
+    public void setAuthMethod(SSHAuthMethod val) {
         getAuthMethod().setValue(val);
     }
 
@@ -34,12 +35,12 @@ public class SSHProviderTestArguments extends SSHProviderArguments {
         getAuthFile().setValue(val);
     }
 
-    public void setPreferredAuthentications(AuthMethod... val) {
-        getPreferredAuthentications().setValue(Arrays.<AuthMethod> asList(val));
+    public void setPreferredAuthentications(SSHAuthMethod... val) {
+        getPreferredAuthentications().setValue(Arrays.<SSHAuthMethod> asList(val));
     }
 
-    public void setRequiredAuthentications(AuthMethod... val) {
-        getRequiredAuthentications().setValue(Arrays.<AuthMethod> asList(val));
+    public void setRequiredAuthentications(SSHAuthMethod... val) {
+        getRequiredAuthentications().setValue(Arrays.<SSHAuthMethod> asList(val));
     }
 
     public void setSimulateShell(Boolean val) {
