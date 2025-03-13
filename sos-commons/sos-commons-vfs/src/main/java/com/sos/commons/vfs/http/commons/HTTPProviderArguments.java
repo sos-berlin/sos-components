@@ -12,6 +12,8 @@ public class HTTPProviderArguments extends AProviderArguments {
 
     private ProxyArguments proxy;
 
+    // JS7 new - not in the XML schema - currently only BASIC supported
+    private SOSArgument<HTTPAuthMethod> authMethod = new SOSArgument<>("auth_method", false, HTTPAuthMethod.BASIC);
     private SOSArgument<List<String>> httpHeaders = new SOSArgument<>("http_headers", false);
 
     public HTTPProviderArguments() {
@@ -25,6 +27,10 @@ public class HTTPProviderArguments extends AProviderArguments {
 
     public void setProxy(ProxyArguments val) {
         proxy = val;
+    }
+
+    public SOSArgument<HTTPAuthMethod> getAuthMethod() {
+        return authMethod;
     }
 
     public SOSArgument<List<String>> getHTTPHeaders() {
