@@ -27,6 +27,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.InputStreamEntity;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
+import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
@@ -101,6 +102,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#connect()} */
     @Override
     public void connect() throws SOSProviderConnectException {
+        if (SOSString.isEmpty(getArguments().getHost().getValue())) {
+            throw new SOSProviderConnectException(new SOSRequiredArgumentMissingException("host"));
+        }
+
         try {
             getLogger().info(getConnectMsg());
 
@@ -122,6 +127,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
+        if (client == null) {
+            return;
+        }
+
         SOSClassUtil.closeQuietly(client);
         client = null;
 
@@ -138,12 +147,11 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) {
-        if (client == null) {
+        if (client == null || path == null) {
             return false;
         }
         URI uri = null;
         try {
-            checkParam("exists", path, "path"); // here because should not throw any errors
             uri = new URI(normalizePath(path));
             try (CloseableHttpResponse response = client.execute(new HttpGet(uri))) {
                 StatusLine sl = response.getStatusLine();
@@ -346,24 +354,6 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    private InputStream getInputStream(URI uri) throws Exception {
-        CloseableHttpResponse response = null;
-        try {
-            response = client.execute(new HttpGet(uri));
-            StatusLine sl = response.getStatusLine();
-            if (!HTTPClient.isSuccessful(sl)) {
-                if (HTTPClient.isNotFound(sl)) {
-                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(uri, sl)));
-                }
-                throw new Exception(HTTPClient.getResponseStatus(uri, sl));
-            }
-            return new HTTPInputStream(response);
-        } catch (Throwable e) {
-            SOSClassUtil.closeQuietly(response);
-            throw e;
-        }
-    }
-
     /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
@@ -552,6 +542,24 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             }
         }
         return size;
+    }
+
+    private InputStream getInputStream(URI uri) throws Exception {
+        CloseableHttpResponse response = null;
+        try {
+            response = client.execute(new HttpGet(uri));
+            StatusLine sl = response.getStatusLine();
+            if (!HTTPClient.isSuccessful(sl)) {
+                if (HTTPClient.isNotFound(sl)) {
+                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(uri, sl)));
+                }
+                throw new Exception(HTTPClient.getResponseStatus(uri, sl));
+            }
+            return new HTTPInputStream(response);
+        } catch (Throwable e) {
+            SOSClassUtil.closeQuietly(response);
+            throw e;
+        }
     }
 
 }

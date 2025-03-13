@@ -24,7 +24,7 @@ import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.sftp.SFTPException;
 import net.schmizz.sshj.xfer.FileSystemFile;
 
-public class SSHJProviderUtil {
+public class ProviderUtils {
 
     protected static boolean is(ISOSLogger logger, String logPrefix, SFTPClient sftp, String path, FileMode.Type type) {
         try {
@@ -84,11 +84,14 @@ public class SSHJProviderUtil {
         return attr.getMtime() * 1_000L;
     }
 
+    /** @param sftp
+     * @param path
+     * @throws Exception can throw SOSNoSuchFileException */
     protected static void delete(SFTPClient sftp, String path) throws Exception {
         try {
             path = sftp.canonicalize(path);
         } catch (SFTPException e) {
-            SSHJProviderUtil.throwException(e, path);
+            throwException(e, path);
         }
         FileAttributes attr = sftp.stat(path);
         switch (attr.getType()) {
@@ -102,21 +105,6 @@ public class SSHJProviderUtil {
         default:
             break;
         }
-    }
-
-    /** Deletes all files and sub folders. */
-    private static void deleteDirectories(SFTPClient sftp, String path) throws Exception {
-        final Deque<RemoteResourceInfo> toRemove = new LinkedList<RemoteResourceInfo>();
-        SSHJProviderUtil.dirInfo(sftp, path, toRemove, true);
-        while (!toRemove.isEmpty()) {
-            RemoteResourceInfo resource = toRemove.pop();
-            if (resource.isDirectory()) {
-                sftp.rmdir(resource.getPath());
-            } else if (resource.isRegularFile()) {
-                sftp.rm(resource.getPath());
-            }
-        }
-        sftp.rmdir(path);
     }
 
     protected static boolean exists(SFTPClient sftp, String path) throws IOException {
@@ -135,8 +123,43 @@ public class SSHJProviderUtil {
         return result;
     }
 
-    private static int list(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            int counterAdded) throws SOSProviderException {
+    protected static void put(SFTPClient sftp, String source, String target) throws IOException {
+        sftp.put(new FileSystemFile(source), target);
+    }
+
+    protected static void rename(SFTPClient sftp, String sourcePath, String targetPath) throws Exception {
+        try {
+            sourcePath = sftp.canonicalize(sourcePath);
+        } catch (SFTPException e) {
+            throwException(e, sourcePath);
+        }
+        sftp.rename(sourcePath, targetPath);
+    }
+
+    protected static String toString(FileAttributes attr) {
+        if (attr == null) {
+            return null;
+        }
+        return "type=" + attr.getType() + "," + attr.toString();
+    }
+
+    /** Deletes all files and sub folders. */
+    private static void deleteDirectories(SFTPClient sftp, String path) throws Exception {
+        final Deque<RemoteResourceInfo> toRemove = new LinkedList<RemoteResourceInfo>();
+        dirInfo(sftp, path, toRemove, true);
+        while (!toRemove.isEmpty()) {
+            RemoteResourceInfo resource = toRemove.pop();
+            if (resource.isDirectory()) {
+                sftp.rmdir(resource.getPath());
+            } else if (resource.isRegularFile()) {
+                sftp.rm(resource.getPath());
+            }
+        }
+        sftp.rmdir(path);
+    }
+
+    private static int list(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
+            List<ProviderFile> result, int counterAdded) throws SOSProviderException {
         try {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
             for (RemoteResourceInfo subResource : subDirInfos) {
@@ -161,7 +184,7 @@ public class SSHJProviderUtil {
             }
         } else {
             String fileName = resource.getName();
-            if (selection.checkFileName(fileName)) {
+            if (selection.checkFileName(fileName) && selection.isValidFileType(resource.getAttributes())) {
                 ProviderFile file = provider.createProviderFile(fileName, resource.getAttributes());
                 if (file == null) {
                     if (provider.getLogger().isDebugEnabled()) {
@@ -182,26 +205,6 @@ public class SSHJProviderUtil {
             }
         }
         return counterAdded;
-    }
-
-    protected static void put(SFTPClient sftp, String source, String target) throws IOException {
-        sftp.put(new FileSystemFile(source), target);
-    }
-
-    protected static void rename(SFTPClient sftp, String sourcePath, String targetPath) throws Exception {
-        try {
-            sourcePath = sftp.canonicalize(sourcePath);
-        } catch (SFTPException e) {
-            SSHJProviderUtil.throwException(e, sourcePath);
-        }
-        sftp.rename(sourcePath, targetPath);
-    }
-
-    public static String toString(FileAttributes attr) {
-        if (attr == null) {
-            return null;
-        }
-        return "type=" + attr.getType() + "," + attr.toString();
     }
 
 }

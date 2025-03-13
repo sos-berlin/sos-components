@@ -12,7 +12,7 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 
-public class FTPProviderUtil {
+public class ProviderUtils {
 
     // possible recursion
     public static List<ProviderFile> selectFiles(FTPProvider provider, ProviderFileSelection selection, String directoryPath,
@@ -53,7 +53,7 @@ public class FTPProviderUtil {
             }
         } else {
             String fileName = resource.getName();
-            if (selection.checkFileName(fileName)) {
+            if (selection.checkFileName(fileName) && selection.isValidFileType(resource)) {
                 ProviderFile file = provider.createProviderFile(fileName, resource);
                 if (file == null) {
                     if (provider.getLogger().isDebugEnabled()) {

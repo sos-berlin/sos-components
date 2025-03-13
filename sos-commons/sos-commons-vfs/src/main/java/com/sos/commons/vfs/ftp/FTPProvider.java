@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -29,7 +30,6 @@ import org.apache.commons.net.util.TrustManagerUtils;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSJavaKeyStoreReader;
-import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
@@ -53,8 +53,8 @@ import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolCommandListener;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolReply;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
-import com.sos.commons.vfs.ftp.commons.FTPProviderUtil;
 import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
+import com.sos.commons.vfs.ftp.commons.ProviderUtils;
 
 public class FTPProvider extends AProvider<FTPProviderArguments> {
 
@@ -62,14 +62,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     private FTPClient client;
 
     public FTPProvider(ISOSLogger logger, FTPProviderArguments args) throws SOSProviderInitializationException {
-        super(logger, args, fileRepresentator -> {
-            if (fileRepresentator == null) {
-                return false;
-            }
-            FTPFile f = (FTPFile) fileRepresentator;
-            return (f.isFile() && args.getValidFileTypes().getValue().contains(FileType.REGULAR)) || (f.isSymbolicLink() && args.getValidFileTypes()
-                    .getValue().contains(FileType.SYMLINK));
-        });
+        super(logger, args);
         setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
                 .getPort().getDisplayValue()));
         isFTPS = Protocol.FTPS.equals(getArguments().getProtocol().getValue());
@@ -90,7 +83,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return toPathStyle(SOSPath.toAbsoluteNormalizedPath(path).toString());
+        return toPathStyle(Path.of(path).normalize().toString());
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -174,10 +167,19 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         checkBeforeOperation("selectFiles");
 
         selection = ProviderFileSelection.createIfNull(selection);
+        selection.setFileTypeChecker(fileRepresentator -> {
+            if (fileRepresentator == null) {
+                return false;
+            }
+            FTPFile r = (FTPFile) fileRepresentator;
+            return (r.isFile() && getArguments().getValidFileTypes().getValue().contains(FileType.REGULAR)) || (r.isSymbolicLink() && getArguments()
+                    .getValidFileTypes().getValue().contains(FileType.SYMLINK));
+        });
+
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
         List<ProviderFile> result = new ArrayList<>();
         try {
-            FTPProviderUtil.selectFiles(this, selection, directory, result);
+            ProviderUtils.selectFiles(this, selection, directory, result);
         } catch (SOSProviderException e) {
             throw e;
         }
@@ -191,14 +193,12 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
      * -- which retrieves the information when, for example, the current user does not have the permissions to read the file but the file still exists... */
     @Override
     public boolean exists(String path) {
-        if (client == null) {
+        if (client == null || path == null) {
             return false;
         }
 
         FTPProtocolReply reply = null;
         try {
-            checkParam("exists", path, "path"); // here because should not throw any errors
-
             client.sendCommand(FTPCmd.SIZE, path);
             reply = new FTPProtocolReply(client);
             if (reply.isFileStatusReply()) {
@@ -260,7 +260,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             FTPFile file = files[0];
             boolean deleted = false;
             if (file.isDirectory()) {
-                FTPProviderUtil.deleteDirectoryFilesRecursively(client, getPathSeparator(), path);
+                ProviderUtils.deleteDirectoryFilesRecursively(client, getPathSeparator(), path);
                 deleted = client.removeDirectory(path);
                 if (!deleted) {
                     throw new Exception(String.format("[failed to remove directory][%s]%s", path, new FTPProtocolReply(client)));
@@ -353,7 +353,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         checkBeforeOperation("getFileIfExists", path, "path");
 
         try {
-            return createProviderFile(path, FTPProviderUtil.getFTPFile("getFileIfExists", client, path));
+            return createProviderFile(path, ProviderUtils.getFTPFile("getFileIfExists", client, path));
         } catch (Throwable e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
@@ -365,7 +365,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         checkBeforeOperation("rereadFileIfExists");
 
         try {
-            return refreshFileMetadata(file, createProviderFile(file.getFullPath(), FTPProviderUtil.getFTPFile("rereadFileIfExists", client, file
+            return refreshFileMetadata(file, createProviderFile(file.getFullPath(), ProviderUtils.getFTPFile("rereadFileIfExists", client, file
                     .getFullPath())));
         } catch (Throwable e) {
             throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
@@ -408,7 +408,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         } catch (IOException e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
-
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
@@ -513,7 +512,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     }
 
     public ProviderFile createProviderFile(String path, FTPFile file) {
-        if (file == null || !isValidFileType(file)) {
+        if (file == null) {
             return null;
         }
         return createProviderFile(path, file.getSize(), file.getTimestamp() == null ? -1L : file.getTimestamp().getTimeInMillis());
@@ -687,7 +686,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     }
 
     private void setProtocolCommandListener(FTPClient client) {
-        if (getArguments().getProtocolCommandListener().isTrue() || FTPProviderUtil.isCommandListenerEnvVarSet()) {
+        if (getArguments().getProtocolCommandListener().isTrue() || ProviderUtils.isCommandListenerEnvVarSet()) {
             client.addProtocolCommandListener(new FTPProtocolCommandListener(getLogger()));
             getLogger().debug(getLogPrefix() + "ProtocolCommandListener added");
         }

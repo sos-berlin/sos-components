@@ -43,17 +43,7 @@ import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 public class LocalProvider extends AProvider<LocalProviderArguments> {
 
     public LocalProvider(ISOSLogger logger, LocalProviderArguments args) throws SOSProviderInitializationException {
-        super(logger, args, fileRepresentator -> {
-            if (fileRepresentator == null) {
-                return false;
-            }
-            BasicFileAttributes a = (BasicFileAttributes) fileRepresentator;
-            return (a.isRegularFile() && args.getValidFileTypes().getValue().contains(FileType.REGULAR)) || (a.isSymbolicLink() && args
-                    .getValidFileTypes().getValue().contains(FileType.SYMLINK));
-        });
-        if (getArguments().getCredentialStore() != null) {
-            // e.g. see SSHProvider
-        }
+        super(logger, args);
         setAccessInfo();
     }
 
@@ -97,6 +87,14 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
         selection = ProviderFileSelection.createIfNull(selection);
+        selection.setFileTypeChecker(fileRepresentator -> {
+            if (fileRepresentator == null) {
+                return false;
+            }
+            BasicFileAttributes r = (BasicFileAttributes) fileRepresentator;
+            return (r.isRegularFile() && getArguments().getValidFileTypes().getValue().contains(FileType.REGULAR)) || (r.isSymbolicLink()
+                    && getArguments().getValidFileTypes().getValue().contains(FileType.SYMLINK));
+        });
 
         Path directory = Paths.get(selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory());
         List<ProviderFile> result;
@@ -327,20 +325,15 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     private ProviderFile createProviderFile(Path path) throws IOException {
-        Path np = path.toAbsolutePath().normalize();
-        BasicFileAttributes attr = readFileAttributes(np);
-        if (isValidFileType(attr)) {
-            return createProviderFile(np.toString(), attr.size(), getFileLastModifiedMillis(attr));
-        }
-        return null;
+        return createProviderFile(path, readFileAttributes(path));
+    }
+
+    private ProviderFile createProviderFile(Path path, BasicFileAttributes attr) throws IOException {
+        return createProviderFile(path.toAbsolutePath().normalize().toString(), attr.size(), getFileLastModifiedMillis(attr));
     }
 
     private BasicFileAttributes readFileAttributes(Path path) throws IOException {
-        BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-        if (isValidFileType(attr)) {
-            return attr;
-        }
-        return null;
+        return Files.readAttributes(path, BasicFileAttributes.class);
     }
 
     private long getFileLastModifiedMillis(BasicFileAttributes attr) {
@@ -394,15 +387,18 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                         }
                         String fileName = path.getFileName().toString();
                         if (selection.checkFileName(fileName)) {
-                            ProviderFile file = createProviderFile(path);
-                            if (file != null) {
-                                if (selection.checkProviderFileMinMaxSize(file)) {
-                                    counterAdded++;
-                                    file.setIndex(counterAdded);
-                                    result.add(file);
+                            BasicFileAttributes attr = readFileAttributes(path);
+                            if (selection.isValidFileType(attr)) {
+                                ProviderFile file = createProviderFile(path, attr);
+                                if (file != null) {
+                                    if (selection.checkProviderFileMinMaxSize(file)) {
+                                        counterAdded++;
+                                        file.setIndex(counterAdded);
+                                        result.add(file);
 
-                                    if (isDebugEnabled) {
-                                        getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                        if (isDebugEnabled) {
+                                            getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                        }
                                     }
                                 }
                             }
@@ -444,15 +440,18 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                     }
                     String fileName = path.getFileName().toString();
                     if (selection.checkFileName(fileName)) {
-                        ProviderFile file = createProviderFile(path);
-                        if (file != null) {
-                            if (selection.checkProviderFileMinMaxSize(file)) {
-                                counterAdded++;
-                                file.setIndex(counterAdded);
-                                result.add(file);
+                        BasicFileAttributes attr = readFileAttributes(path);
+                        if (selection.isValidFileType(attr)) {
+                            ProviderFile file = createProviderFile(path, attr);
+                            if (file != null) {
+                                if (selection.checkProviderFileMinMaxSize(file)) {
+                                    counterAdded++;
+                                    file.setIndex(counterAdded);
+                                    result.add(file);
 
-                                if (isDebugEnabled) {
-                                    getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                    if (isDebugEnabled) {
+                                        getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                    }
                                 }
                             }
                         }

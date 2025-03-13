@@ -2,11 +2,9 @@ package com.sos.commons.vfs.ssh.commons;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Function;
 
 import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
@@ -27,9 +25,9 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     /** Real Provider */
-    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args, Function<Object, Boolean> fileTypeChecker)
+    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args)
             throws SOSProviderInitializationException {
-        super(logger, args, fileTypeChecker);
+        super(logger, args);
         resolveCredentialStore();
         setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
                 .getPort().getDisplayValue()));
@@ -63,7 +61,7 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
             String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
             return toPathStyle(n);
         }
-        return toPathStyle(SOSPath.toAbsoluteNormalizedPath(path).toString());
+        return toPathStyle(Path.of(path).normalize().toString());
     }
 
     public SSHServerInfo getServerInfo() {

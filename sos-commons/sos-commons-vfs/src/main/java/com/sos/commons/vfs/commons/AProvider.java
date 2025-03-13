@@ -37,22 +37,14 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     /** Source/Target type - logging - is not set if only one provider is used (e.g. SSH JITL Job) */
     private AProviderContext context;
 
-    /** Checks the allowed file type - regular, symbolic link. If not set - all file types allowed */
-    private final Function<Object, Boolean> fileTypeChecker;
-
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
 
     private String logPrefix;
 
     public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
-        this(logger, arguments, null);
-    }
-
-    public AProvider(ISOSLogger logger, A arguments, Function<Object, Boolean> fileTypeChecker) throws SOSProviderInitializationException {
         this.logger = logger;
         this.arguments = arguments;
-        this.fileTypeChecker = fileTypeChecker;
     }
 
     /** Method to set a custom providerFileCreator (a function that generates ProviderFile using the builder)<br/>
@@ -121,11 +113,11 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return executeCommand(command, null, env);
     }
 
-    public void setSystemProperties() {
+    public void setSystemPropertiesFromFiles() {
         if (SOSCollection.isEmpty(getArguments().getSystemPropertyFiles().getValue())) {
             return;
         }
-        String method = "setSystemProperties";
+        String method = "setSystemPropertiesFromFiles";
         logger.info("%s[%s][files]", getLogPrefix(), method, SOSString.join(getArguments().getSystemPropertyFiles().getValue(), ",", f -> f
                 .toString()));
         Properties p = new Properties();
@@ -149,6 +141,36 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
             }
             System.setProperty(n, v);
         }
+    }
+
+    public Properties getConfigurationPropertiesFromFiles() {
+        if (SOSCollection.isEmpty(getArguments().getConfigurationFiles().getValue())) {
+            return null;
+        }
+        String method = "getConfigurationPropertiesFromFiles";
+        logger.info("%s[%s][files]", getLogPrefix(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f
+                .toString()));
+        Properties p = new Properties();
+        for (Path file : getArguments().getConfigurationFiles().getValue()) {
+            if (Files.exists(file) && Files.isRegularFile(file)) {
+                try (BufferedReader reader = Files.newBufferedReader(file)) {
+                    p.load(reader);
+                    logger.info("[%s][%s]loaded", method, file);
+                } catch (Throwable e) {
+                    logger.warn("[%s][%s][failed]%s", method, file, e.toString());
+                }
+            } else {
+                logger.warn("[%s][%s]does not exist or is not a regular file", method, file);
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
+            for (String n : p.stringPropertyNames()) {
+                String v = p.getProperty(n);
+                logger.debug("[%s]%s=%s", method, n, v);
+            }
+        }
+        return p;
     }
 
     /** Method to create a ProviderFile by using the providerFileCreator function
@@ -202,14 +224,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         if (!isValidModificationTime(milliseconds)) {
             throw new SOSProviderException(getLogPrefix() + "[" + path + "][" + milliseconds + "]not valid modification time");
         }
-    }
-
-    public boolean isValidFileType(Object fileRepresentator) {
-        if (fileTypeChecker == null) {
-            return true;
-        }
-
-        return fileTypeChecker.apply(fileRepresentator);
     }
 
     public String getConnectMsg() {

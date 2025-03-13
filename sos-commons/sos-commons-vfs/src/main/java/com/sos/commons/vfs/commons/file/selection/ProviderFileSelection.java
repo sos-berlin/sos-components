@@ -1,11 +1,16 @@
 package com.sos.commons.vfs.commons.file.selection;
 
+import java.util.function.Function;
+
 import com.sos.commons.vfs.commons.file.ProviderFile;
 
 public class ProviderFileSelection {
 
     private ProviderFileSelectionConfig config;
     private ProviderFileSelectionResult result;
+
+    /** Checks the allowed file type - regular, symbolic link. If not set - all file types allowed */
+    private Function<Object, Boolean> fileTypeChecker;
 
     public static ProviderFileSelection createIfNull(ProviderFileSelection selection) {
         return selection == null ? new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().build()) : selection;
@@ -21,10 +26,10 @@ public class ProviderFileSelection {
     }
 
     // TODO pattern and SOSPathUtil.toUnixStylePath ???
-    public boolean checkDirectory(String filePath) {
+    public boolean checkDirectory(String directoryPath) {
         if (config.getExcludedDirectoriesPattern() != null) {
             // if (config.getExcludedDirectoriesPattern().matcher(SOSPathUtil.toUnixStyle(filePath)).find()) {
-            if (config.getExcludedDirectoriesPattern().matcher(filePath).find()) {
+            if (config.getExcludedDirectoriesPattern().matcher(directoryPath).find()) {
                 return false;
             }
         }
@@ -63,6 +68,17 @@ public class ProviderFileSelection {
             return false;
         }
         return true;
+    }
+
+    public boolean isValidFileType(Object fileRepresentator) {
+        if (fileTypeChecker == null) {
+            return true;
+        }
+        return fileTypeChecker.apply(fileRepresentator);
+    }
+
+    public void setFileTypeChecker(Function<Object, Boolean> val) {
+        fileTypeChecker = val;
     }
 
     public ProviderFileSelectionConfig getConfig() {

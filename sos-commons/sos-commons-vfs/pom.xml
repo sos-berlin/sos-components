@@ -34,20 +34,27 @@
 		</dependency>
 
 		<!-- 3rd Party Dependencies -->
+		<!-- FTP(S) -->
+		<dependency>
+			<groupId>commons-net</groupId>
+			<artifactId>commons-net</artifactId>
+		</dependency>
+		<!-- HTTP(S)-->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+		</dependency>
+		<!-- SMB -->
+		<dependency>
+			<groupId>com.hierynomus</groupId>
+			<artifactId>smbj</artifactId>
+		</dependency>
+		<!-- SSH -->
 		<dependency>
 			<groupId>com.hierynomus</groupId>
 			<artifactId>sshj</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>commons-net</groupId>
-			<artifactId>commons-net</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-		</dependency>
 
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -58,7 +65,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j2-impl</artifactId>

@@ -15,6 +15,8 @@ import com.sos.commons.vfs.http.HTTPProvider;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.local.LocalProvider;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
+import com.sos.commons.vfs.smb.SMBProvider;
+import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
@@ -70,8 +72,8 @@ public class YADEProviderDelegatorFactory {
                 p = new SSHProvider(logger, (SSHProviderArguments) providerArgs);
                 break;
             case SMB:
-                throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
-            // break;
+                p = new SMBProvider(logger, (SMBProviderArguments) providerArgs);
+                break;
             case WEBDAV:
             case WEBDAVS:
                 throw new YADEEngineInitializationException("[not implemented yet]" + protocol.getName() + "=" + protocol.getValue());
@@ -83,7 +85,7 @@ public class YADEProviderDelegatorFactory {
         } catch (SOSProviderException e) {
             throw new YADEEngineInitializationException(e);
         }
-        ((AProvider<?>) p).setSystemProperties();
+        ((AProvider<?>) p).setSystemPropertiesFromFiles();
         return p;
     }
 }

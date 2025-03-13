@@ -117,7 +117,14 @@ public class SOSPathUtilTest {
 
         URI uri2 = new URI(null, toResolve, null);
         LOGGER.info("[URI2][resolve][" + uri2 + "]" + uri.resolve(uri2).normalize().toString());
+    }
 
+    @Ignore
+    @Test
+    public void testPath() throws Exception {
+        LOGGER.info("[SOSPath.toAbsoluteNormalizedPath]" + SOSPath.toAbsoluteNormalizedPath("/test").toString());
+        LOGGER.info("[Path.normalize]" + Path.of("/test/2/../1").normalize().toString());
+        LOGGER.info("[Path.normalize]" + Path.of("\\\\server/2/../1").normalize().toString());
     }
 
     private String normalizeToString(String path) {
