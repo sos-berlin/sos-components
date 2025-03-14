@@ -20,17 +20,17 @@ public abstract class AWebDAVProvider extends AProvider<WebDAVProviderArguments>
     /** Layer for instantiating a Real Provider: JACKRABBIT or ... */
     public AWebDAVProvider() throws SOSProviderInitializationException {
         super(null, null);
+    }
+
+    /** Real Provider */
+    public AWebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws SOSProviderInitializationException {
+        super(logger, args);
         try {
             // can be redefined on connect if not found
             baseURI = info();
         } catch (URISyntaxException e) {
             throw new SOSProviderInitializationException(e);
         }
-    }
-
-    /** Real Provider */
-    public AWebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws SOSProviderInitializationException {
-        super(logger, args);
     }
 
     /** Overrides {@link IProvider#getPathSeparator()} */

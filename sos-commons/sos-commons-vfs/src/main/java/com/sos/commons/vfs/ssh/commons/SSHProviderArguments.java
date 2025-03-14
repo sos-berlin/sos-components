@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 
 public class SSHProviderArguments extends AProviderArguments {
@@ -19,8 +18,6 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     private static final int DEFAULT_PORT = 22;
-
-    private ProxyArguments proxy;
 
     // Authentication
     private SOSArgument<String> passphrase = new SOSArgument<>("passphrase", false, DisplayMode.MASKED);
@@ -53,14 +50,6 @@ public class SSHProviderArguments extends AProviderArguments {
         getProtocol().setDefaultValue(Protocol.SFTP);
         getPort().setDefaultValue(DEFAULT_PORT);
         getUser().setRequired(true);
-    }
-
-    public ProxyArguments getProxy() {
-        return proxy;
-    }
-
-    public void setProxy(ProxyArguments val) {
-        proxy = val;
     }
 
     public SOSArgument<SSHAuthMethod> getAuthMethod() {

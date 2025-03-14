@@ -12,9 +12,11 @@ import java.nio.file.Path;
 import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -44,7 +46,6 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
@@ -219,6 +220,46 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
+        checkBeforeOperation("createDirectoriesIfNotExists", path, "path");
+
+        try {
+            String dir = normalizePath(path);
+            if (client.changeWorkingDirectory(dir)) {
+                return false; // already exists
+            }
+
+            // check in reverse order:
+            // /home/test/1/2/3
+            // /home/test/1/2
+            // /home/test/1
+            Deque<String> toCreate = new ArrayDeque<>();
+            String parent = SOSPathUtil.getParentPath(dir);
+            while (!SOSString.isEmpty(parent) && !client.changeWorkingDirectory(parent)) {
+                toCreate.push(parent);
+                parent = SOSPathUtil.getParentPath(dir);
+            }
+
+            // create:
+            // /home/test/1
+            // /home/test/1/2
+            // /home/test/1/2/3
+            boolean created = false;
+            while (!toCreate.isEmpty()) {
+                String dirToCreate = toCreate.pop();
+                if (!client.makeDirectory(dirToCreate)) {
+                    throw new Exception(String.format("[failed to create directory][%s]%s", dirToCreate, new FTPProtocolReply(client)));
+                }
+                created = true;
+            }
+            return created;
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    // TODO to remove
+    private boolean createDirectoriesIfNotExistsX(String path) throws SOSProviderException {
         checkBeforeOperation("createDirectoriesIfNotExists", path, "path");
 
         try {
@@ -524,14 +565,13 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
     private FTPClient createClient() throws Exception {
         /** FTPS */
-        ProxyProvider proxyProvider = ProxyProvider.createInstance(getArguments().getProxy());
         if (isFTPS) {
             FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
             // FTPSClient
             FTPSClient client = new FTPSClient(args.getSecureSocketProtocol().getValue(), args.isSecurityModeImplicit());
             // PROXY
-            if (proxyProvider != null) {
-                client.setProxy(proxyProvider.getProxy());
+            if (getProxyProvider() != null) {
+                client.setProxy(getProxyProvider().getProxy());
             }
             // TRUST MANAGER#
             if (args.getJavaKeyStore() != null) {
@@ -548,21 +588,21 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         /** FTP */
         else {
             FTPClient client = null;
-            if (proxyProvider == null) {
+            if (getProxyProvider() == null) {
                 client = new FTPClient();
             } else {
                 // SOCKS PROXY
-                if (java.net.Proxy.Type.SOCKS.equals(proxyProvider.getProxy().type())) {
+                if (java.net.Proxy.Type.SOCKS.equals(getProxyProvider().getProxy().type())) {
                     client = new FTPClient();
-                    client.setSocketFactory(new ProxySocketFactory(proxyProvider));
+                    client.setSocketFactory(new ProxySocketFactory(getProxyProvider()));
                 }
                 // HTTP PROXY
                 else {
-                    if (proxyProvider.getUser().isEmpty()) {
-                        client = new FTPHTTPClient(proxyProvider.getHost(), proxyProvider.getPort());
+                    if (getProxyProvider().getUser().isEmpty()) {
+                        client = new FTPHTTPClient(getProxyProvider().getHost(), getProxyProvider().getPort());
                     } else {
-                        client = new FTPHTTPClient(proxyProvider.getHost(), proxyProvider.getPort(), proxyProvider.getUser(), proxyProvider
-                                .getPassword());
+                        client = new FTPHTTPClient(getProxyProvider().getHost(), getProxyProvider().getPort(), getProxyProvider().getUser(),
+                                getProxyProvider().getPassword());
                     }
                 }
             }

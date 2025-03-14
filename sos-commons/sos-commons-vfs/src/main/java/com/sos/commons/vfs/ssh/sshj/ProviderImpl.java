@@ -71,7 +71,7 @@ public class ProviderImpl extends ASSHProvider {
         try {
             getLogger().info(getConnectMsg());
 
-            sshClient = SSHClientFactory.createAuthenticatedClient(getArguments());
+            sshClient = SSHClientFactory.createAuthenticatedClient(getArguments(), getProxyProvider());
             setServerVersion(sshClient.getTransport().getServerVersion());
             getServerInfo();
 

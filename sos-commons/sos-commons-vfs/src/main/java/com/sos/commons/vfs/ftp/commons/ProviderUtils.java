@@ -6,6 +6,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPathUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
@@ -34,7 +35,7 @@ public class ProviderUtils {
                 if (selection.maxFilesExceeded(counterAdded)) {
                     return counterAdded;
                 }
-                counterAdded = processListEntry(provider, selection, subResource, result, counterAdded);
+                counterAdded = processListEntry(provider, selection, directoryPath, subResource, result, counterAdded);
             }
         } catch (Throwable e) {
             throw new SOSProviderException(e);
@@ -43,21 +44,22 @@ public class ProviderUtils {
     }
 
     // TODO resource.getName() - path???
-    private static int processListEntry(FTPProvider provider, ProviderFileSelection selection, FTPFile resource, List<ProviderFile> result,
-            int counterAdded) throws SOSProviderException {
+    private static int processListEntry(FTPProvider provider, ProviderFileSelection selection, String parentDirectory, FTPFile resource,
+            List<ProviderFile> result, int counterAdded) throws SOSProviderException {
+
+        String fullPath = SOSPathUtil.appendPath(parentDirectory, resource.getName());
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
-                if (selection.checkDirectory(resource.getName())) {
-                    counterAdded = list(provider, selection, resource.getName(), result, counterAdded);
+                if (selection.checkDirectory(fullPath)) {
+                    counterAdded = list(provider, selection, fullPath, result, counterAdded);
                 }
             }
         } else {
-            String fileName = resource.getName();
-            if (selection.checkFileName(fileName) && selection.isValidFileType(resource)) {
-                ProviderFile file = provider.createProviderFile(fileName, resource);
+            if (selection.checkFileName(resource.getName()) && selection.isValidFileType(resource)) {
+                ProviderFile file = provider.createProviderFile(fullPath, resource);
                 if (file == null) {
                     if (provider.getLogger().isDebugEnabled()) {
-                        provider.getLogger().debug(provider.getPathOperationPrefix(fileName) + "[skip]" + resource);
+                        provider.getLogger().debug(provider.getPathOperationPrefix(fullPath) + "[skip]" + resource);
                     }
                 } else {
                     if (selection.checkProviderFileMinMaxSize(file)) {

@@ -3,7 +3,10 @@ package com.sos.commons.vfs.webdav.jackrabbit;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
@@ -11,8 +14,11 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.IProvider;
@@ -20,6 +26,7 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
@@ -46,8 +53,7 @@ public class ProviderImpl extends AWebDAVProvider {
         try {
             getLogger().info(getConnectMsg());
 
-            client = HTTPClient.createAuthenticatedClient(getLogger(), getBaseURI(), getAuthConfig(), getArguments().getProxy(), getSSLArguments(),
-                    null);
+            client = HTTPClient.createAuthenticatedClient(getLogger(), getBaseURI(), getAuthConfig(), getProxyProvider(), getSSLArguments(), null);
             connect(getBaseURI());
 
             getLogger().info(getConnectedMsg());
@@ -59,36 +65,93 @@ public class ProviderImpl extends AWebDAVProvider {
     /** Overrides {@link IProvider#isConnected()} */
     @Override
     public boolean isConnected() {
-        // TODO Auto-generated method stub
-        return false;
+        return client != null;
     }
 
     /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
-        // TODO Auto-generated method stub
+        if (client == null) {
+            return;
+        }
 
+        SOSClassUtil.closeQuietly(client);
+        client = null;
+
+        getLogger().info(getDisconnectedMsg());
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return null;
+        checkBeforeOperation("selectFiles");
+
+        selection = ProviderFileSelection.createIfNull(selection);
+        // selection.setFileTypeChecker();
+
+        String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
+        List<ProviderFile> result = new ArrayList<>();
+        try {
+            ProviderUtils.selectFiles(this, selection, directory, result);
+        } catch (SOSProviderException e) {
+            throw e;
+        }
+        return result;
     }
 
     /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) {
-        // TODO Auto-generated method stub
+        if (client == null || path == null) {
+            return false;
+        }
+        URI uri = null;
+        try {
+            uri = new URI(normalizePath(path));
+            return ProviderUtils.exists(client, uri);
+        } catch (Throwable e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[uri=%s][exists=false]%s", getPathOperationPrefix(path), uri, e.toString());
+            }
+        }
         return false;
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
-        // TODO Auto-generated method stub
-        return false;
+        checkBeforeOperation("createDirectoriesIfNotExists", path, "path");
+
+        try {
+            URI uri = new URI(normalizePath(path));
+            if (ProviderUtils.directoryExists(client, uri)) {
+                return false; // already exists
+            }
+
+            // check in reverse order:
+            // https://example.com/test/1/2/3
+            // https://example.com/test/1/2
+            // https://example.com/test/1
+            Deque<URI> toCreate = new ArrayDeque<>();
+            URI parent = HTTPUtils.getParentURI(uri);
+            while (parent != null && !ProviderUtils.directoryExists(client, parent)) {
+                toCreate.push(parent);
+                parent = HTTPUtils.getParentURI(parent);
+            }
+
+            // create:
+            // https://example.com/test/1
+            // https://example.com/test/1/2
+            // https://example.com/test/1/2/3
+            boolean created = false;
+            while (!toCreate.isEmpty()) {
+                ProviderUtils.createDirectory(client, toCreate.pop());
+                created = true;
+            }
+            return created;
+        } catch (Throwable e) {
+            throw new SOSProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
     /** Overrides {@link IProvider#deleteIfExists(String)} */
@@ -161,6 +224,21 @@ public class ProviderImpl extends AWebDAVProvider {
         return null;
     }
 
+    public HTTPClient getClient() {
+        return client;
+    }
+
+    public ProviderFile createProviderFile(String href, CloseableHttpResponse response, DavPropertySet prop) throws Exception {
+        if (response == null || prop == null) {
+            return null;
+        }
+        long size = getFileSize(href, response, prop);
+        if (size < 0) {
+            return null;
+        }
+        return createProviderFile(href, size, HTTPClient.getLastModifiedInMillis(response));
+    }
+
     private void connect(URI uri) throws Exception {
         StatusLine notFoundStatusLine = null;
         try (CloseableHttpResponse response = client.execute(new HttpPropfind(getBaseURI(), null, DavConstants.DEPTH_0))) {
@@ -178,18 +256,42 @@ public class ProviderImpl extends AWebDAVProvider {
             if (SOSString.isEmpty(uri.getPath())) {
                 throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
             }
-            String newPath = uri.getPath().substring(0, uri.getPath().lastIndexOf('/'));
-            if (SOSString.isEmpty(newPath)) {
+            URI parentURI = HTTPUtils.getParentURI(uri);
+            if (parentURI == null) {
                 throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
             }
             // TODO info?
             getLogger().info("%s[connect][%s]using parent path %s ...", getLogPrefix(), HTTPClient.getResponseStatus(uri, notFoundStatusLine),
-                    newPath);
-            setBaseURI(new URI(uri.getScheme(), uri.getHost(), newPath, null, null));
+                    parentURI);
+            setBaseURI(parentURI);
             setAccessInfo(HTTPUtils.getAccessInfo(getBaseURI(), getArguments().getUser().getValue()));
 
             connect(getBaseURI());
         }
+    }
+
+    private void checkBeforeOperation(String method) throws SOSProviderException {
+        if (client == null) {
+            throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "HTTPPClient");
+        }
+    }
+
+    private void checkBeforeOperation(String method, String paramValue, String msg) throws SOSProviderException {
+        checkBeforeOperation(method);
+        checkParam(method, paramValue, msg);
+    }
+
+    private long getFileSize(String href, CloseableHttpResponse response, DavPropertySet prop) throws Exception {
+        DavProperty<?> p = prop.get(DavConstants.PROPERTY_GETCONTENTLENGTH);
+        long size = p == null ? -1L : Long.parseLong(p.getValue().toString());
+
+        if (size < 0) {// e.g. Transfer-Encoding: chunked
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug(String.format("%s[getSizeFromEntity][%s][size=%s]use InputStream", getLogPrefix(), href, size));
+            }
+            size = HTTPUtils.getFileSizeIfChunkedTransferEncoding(response.getEntity());
+        }
+        return size;
     }
 
 }

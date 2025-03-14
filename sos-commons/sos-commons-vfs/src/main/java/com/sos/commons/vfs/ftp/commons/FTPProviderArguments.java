@@ -1,7 +1,6 @@
 package com.sos.commons.vfs.ftp.commons;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 
 public class FTPProviderArguments extends AProviderArguments {
@@ -11,8 +10,6 @@ public class FTPProviderArguments extends AProviderArguments {
     }
 
     protected static final int DEFAULT_PORT = 21;
-
-    private ProxyArguments proxy;
 
     // seconds
     private SOSArgument<Integer> connectTimeout = new SOSArgument<>("connect_timeout", false, Integer.valueOf(0));
@@ -31,14 +28,6 @@ public class FTPProviderArguments extends AProviderArguments {
         getProtocol().setValue(Protocol.FTP);
         getPort().setDefaultValue(DEFAULT_PORT);
         getUser().setRequired(true);
-    }
-
-    public ProxyArguments getProxy() {
-        return proxy;
-    }
-
-    public void setProxy(ProxyArguments val) {
-        proxy = val;
     }
 
     public boolean isBinaryTransferMode() {

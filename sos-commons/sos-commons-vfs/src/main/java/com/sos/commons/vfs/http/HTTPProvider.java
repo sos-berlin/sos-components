@@ -43,7 +43,6 @@ import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
 import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
 import com.sos.commons.vfs.http.commons.HTTPClient;
-import com.sos.commons.vfs.http.commons.HTTPInputStream;
 import com.sos.commons.vfs.http.commons.HTTPOutputStream;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
@@ -107,9 +106,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
         try {
             getLogger().info(getConnectMsg());
-            HTTPAuthConfig authConfig = new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
-            client = HTTPClient.createAuthenticatedClient(getLogger(), baseURI, authConfig, getArguments().getProxy(), getSSLArguments(),
-                    getArguments().getHTTPHeaders().getValue());
+
+            client = HTTPClient.createAuthenticatedClient(getLogger(), baseURI, getAuthConfig(), getProxyProvider(), getSSLArguments(), getArguments()
+                    .getHTTPHeaders().getValue());
             connect(baseURI);
 
             getLogger().info(getConnectedMsg());
@@ -299,7 +298,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         checkBeforeOperation("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
-        try (InputStream is = getInputStream(new URI(normalizePath(path))); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8);
+        try (InputStream is = client.getHTTPInputStream(new URI(normalizePath(path))); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8);
                 BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
             return content.toString();
@@ -348,7 +347,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         checkBeforeOperation("getInputStream", path, "path");
 
         try {
-            return getInputStream(new URI(normalizePath(path)));
+            return client.getHTTPInputStream(new URI(normalizePath(path)));
         } catch (Throwable e) {
             throw new SOSProviderException(getPathOperationPrefix(path), e);
         }
@@ -391,6 +390,11 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) ? ((HTTPSProviderArguments) getArguments()).getSSL() : null;
     }
 
+    public HTTPAuthConfig getAuthConfig() {
+        // BASIC
+        return new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
+    }
+
     private void connect(URI uri) throws Exception {
         StatusLine notFoundStatusLine = null;
         try (CloseableHttpResponse response = client.execute(new HttpGet(baseURI))) {
@@ -408,14 +412,14 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             if (SOSString.isEmpty(uri.getPath())) {
                 throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
             }
-            String newPath = uri.getPath().substring(0, uri.getPath().lastIndexOf('/'));
-            if (SOSString.isEmpty(newPath)) {
+            URI parentURI = HTTPUtils.getParentURI(uri);
+            if (parentURI == null) {
                 throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
             }
             // TODO info?
             getLogger().info("%s[connect][%s]using parent path %s ...", getLogPrefix(), HTTPClient.getResponseStatus(uri, notFoundStatusLine),
-                    newPath);
-            baseURI = new URI(uri.getScheme(), uri.getHost(), newPath, null, null);
+                    parentURI);
+            baseURI = parentURI;
             setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
 
             connect(baseURI);
@@ -433,11 +437,11 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         InputStream is = null;
         boolean result = false;
         try {
-            URI s = new URI(normalizePath(source));
-            URI t = new URI(normalizePath(target));
+            URI sourceURI = new URI(normalizePath(source));
+            URI targetURI = new URI(normalizePath(target));
 
-            is = getInputStream(s);
-            HttpPut request = new HttpPut(t);
+            is = client.getHTTPInputStream(sourceURI);
+            HttpPut request = new HttpPut(targetURI);
             request.setEntity(new InputStreamEntity(is));
 
             try (CloseableHttpResponse response = client.execute(request)) {
@@ -447,7 +451,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
                     if (!HTTPClient.isNotFound(sl)) {
-                        throw new IOException(HTTPClient.getResponseStatus(t, sl));
+                        throw new IOException(HTTPClient.getResponseStatus(targetURI, sl));
                     }
                 }
             }
@@ -491,35 +495,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug(String.format("%s[getSizeFromEntity][%s][size=%s]use InputStream", getLogPrefix(), uri, size));
             }
-            try (InputStream is = entity.getContent()) {
-                size = 0;
-
-                byte[] buffer = new byte[4_096];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    size += bytesRead;
-                }
-            }
+            size = HTTPUtils.getFileSizeIfChunkedTransferEncoding(entity);
         }
         return size;
-    }
-
-    private InputStream getInputStream(URI uri) throws Exception {
-        CloseableHttpResponse response = null;
-        try {
-            response = client.execute(new HttpGet(uri));
-            StatusLine sl = response.getStatusLine();
-            if (!HTTPClient.isSuccessful(sl)) {
-                if (HTTPClient.isNotFound(sl)) {
-                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(uri, sl)));
-                }
-                throw new Exception(HTTPClient.getResponseStatus(uri, sl));
-            }
-            return new HTTPInputStream(response);
-        } catch (Throwable e) {
-            SOSClassUtil.closeQuietly(response);
-            throw e;
-        }
     }
 
 }

@@ -158,8 +158,8 @@ public class ProviderUtils {
         sftp.rmdir(path);
     }
 
-    private static int list(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result, int counterAdded) throws SOSProviderException {
+    private static int list(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
+            int counterAdded) throws SOSProviderException {
         try {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
             for (RemoteResourceInfo subResource : subDirInfos) {
@@ -183,12 +183,12 @@ public class ProviderUtils {
                 }
             }
         } else {
-            String fileName = resource.getName();
-            if (selection.checkFileName(fileName) && selection.isValidFileType(resource.getAttributes())) {
-                ProviderFile file = provider.createProviderFile(fileName, resource.getAttributes());
+            if (selection.checkFileName(resource.getName()) && selection.isValidFileType(resource.getAttributes())) {
+                ProviderFile file = provider.createProviderFile(resource.getPath(), resource.getAttributes());
                 if (file == null) {
                     if (provider.getLogger().isDebugEnabled()) {
-                        provider.getLogger().debug(provider.getPathOperationPrefix(fileName) + "[skip]" + toString(resource.getAttributes()));
+                        provider.getLogger().debug(provider.getPathOperationPrefix(resource.getPath()) + "[skip]" + toString(resource
+                                .getAttributes()));
                     }
                 } else {
                     if (selection.checkProviderFileMinMaxSize(file)) {

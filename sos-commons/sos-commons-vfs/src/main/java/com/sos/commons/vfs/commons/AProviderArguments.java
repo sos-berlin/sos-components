@@ -8,6 +8,7 @@ import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
 
 public abstract class AProviderArguments extends ASOSArguments {
 
@@ -32,6 +33,7 @@ public abstract class AProviderArguments extends ASOSArguments {
     }
 
     private CredentialStoreArguments credentialStore;
+    private ProxyArguments proxy;
 
     // Basic
     private SOSArgument<Protocol> protocol = new SOSArgument<>("protocol", true);
@@ -46,6 +48,22 @@ public abstract class AProviderArguments extends ASOSArguments {
     // JS7
     private SOSArgument<EnumSet<FileType>> validFileTypes = new SOSArgument<>("valid_file_types", false, EnumSet.of(FileType.REGULAR,
             FileType.SYMLINK));
+
+    public void setCredentialStore(CredentialStoreArguments val) {
+        credentialStore = val;
+    }
+
+    public CredentialStoreArguments getCredentialStore() {
+        return credentialStore;
+    }
+
+    public ProxyArguments getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(ProxyArguments val) {
+        proxy = val;
+    }
 
     public SOSArgument<Protocol> getProtocol() {
         return protocol;
@@ -65,14 +83,6 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public SOSArgument<String> getPassword() {
         return password;
-    }
-
-    public void setCredentialStore(CredentialStoreArguments val) {
-        credentialStore = val;
-    }
-
-    public CredentialStoreArguments getCredentialStore() {
-        return credentialStore;
     }
 
     public SOSArgument<List<Path>> getSystemPropertyFiles() {

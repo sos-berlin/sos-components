@@ -21,6 +21,7 @@ import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
+import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
 import com.sos.commons.vfs.exceptions.SOSProviderException;
 import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
@@ -31,6 +32,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     private final ISOSLogger logger;
     private final A arguments;
+    private final ProxyProvider proxyProvider;
 
     /** Default providerFileCreator function creates a standard ProviderFile using the builder */
     private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build(this);
@@ -45,6 +47,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
         this.logger = logger;
         this.arguments = arguments;
+        this.proxyProvider = this.arguments == null ? null : ProxyProvider.createInstance(this.arguments.getProxy());
     }
 
     /** Method to set a custom providerFileCreator (a function that generates ProviderFile using the builder)<br/>
@@ -249,6 +252,22 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
+    public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {
+        return providerFileCreator;
+    }
+
+    public ISOSLogger getLogger() {
+        return logger;
+    }
+
+    public A getArguments() {
+        return arguments;
+    }
+
+    public ProxyProvider getProxyProvider() {
+        return proxyProvider;
+    }
+
     public String getConnectMsg() {
         return String.format("%s[connect]%s ...", getLogPrefix(), accessInfo);
     }
@@ -266,24 +285,16 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return String.format("%s[disconnected]%s", getLogPrefix(), accessInfo);
     }
 
-    public Function<ProviderFileBuilder, ProviderFile> getProviderFileCreator() {
-        return providerFileCreator;
-    }
-
-    public ISOSLogger getLogger() {
-        return logger;
-    }
-
-    public A getArguments() {
-        return arguments;
-    }
-
     public String getAccessInfo() {
         return accessInfo;
     }
 
     public void setAccessInfo(String val) {
-        accessInfo = val;
+        if (proxyProvider == null) {
+            accessInfo = val;
+        } else {
+            accessInfo = "[proxy " + proxyProvider.getAccessInfo() + "]" + val;
+        }
     }
 
     public static String millis2string(int val) {

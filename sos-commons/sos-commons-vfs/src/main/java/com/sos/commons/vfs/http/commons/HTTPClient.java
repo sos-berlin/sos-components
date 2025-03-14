@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.http.commons;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URI;
@@ -29,6 +30,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -45,11 +47,11 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 
+import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSJavaKeyStoreReader;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
@@ -77,9 +79,8 @@ public class HTTPClient implements AutoCloseable {
         this.context = context;
     }
 
-    public static HTTPClient createAuthenticatedClient(ISOSLogger logger, URI baseURI, HTTPAuthConfig authConfig, ProxyArguments proxyArgs,
+    public static HTTPClient createAuthenticatedClient(ISOSLogger logger, URI baseURI, HTTPAuthConfig authConfig, ProxyProvider proxyProvider,
             SSLArguments sslArgs, List<String> defaultHeaders) throws Exception {
-        ProxyProvider proxyProvider = ProxyProvider.createInstance(proxyArgs);
 
         HttpClientBuilder clientBuilder = HttpClients.custom();
         RequestConfig.Builder requestBuilder = RequestConfig.custom();
@@ -160,6 +161,24 @@ public class HTTPClient implements AutoCloseable {
 
     public CloseableHttpResponse execute(HttpUriRequest request) throws ClientProtocolException, IOException {
         return client.execute(request, context);
+    }
+
+    public InputStream getHTTPInputStream(URI uri) throws Exception {
+        CloseableHttpResponse response = null;
+        try {
+            response = execute(new HttpGet(uri));
+            StatusLine sl = response.getStatusLine();
+            if (!HTTPClient.isSuccessful(sl)) {
+                if (HTTPClient.isNotFound(sl)) {
+                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(uri, sl)));
+                }
+                throw new Exception(HTTPClient.getResponseStatus(uri, sl));
+            }
+            return new HTTPInputStream(response);
+        } catch (Throwable e) {
+            SOSClassUtil.closeQuietly(response);
+            throw e;
+        }
     }
 
     public static boolean isSuccessful(StatusLine statusLine) {

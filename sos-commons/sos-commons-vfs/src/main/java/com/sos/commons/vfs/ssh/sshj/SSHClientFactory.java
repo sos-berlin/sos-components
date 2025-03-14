@@ -35,9 +35,9 @@ import net.schmizz.sshj.userauth.password.Resource;
 
 public class SSHClientFactory {
 
-    protected static SSHClient createAuthenticatedClient(SSHProviderArguments args) throws Exception {
+    protected static SSHClient createAuthenticatedClient(SSHProviderArguments args, ProxyProvider proxyProvider) throws Exception {
         /** 1) Create */
-        SSHClient client = create(args);
+        SSHClient client = create(args, proxyProvider);
         /** 2) Connect */
         client.connect(args.getHost().getValue(), args.getPort().getValue());
         /** 3) Authenticate */
@@ -49,7 +49,7 @@ public class SSHClientFactory {
         return client;
     }
 
-    private static SSHClient create(SSHProviderArguments args) throws Exception {
+    private static SSHClient create(SSHProviderArguments args, ProxyProvider proxyProvider) throws Exception {
         Config config = new DefaultConfig();
         // Keep Alive Provider
         if (!args.getServerAliveInterval().isEmpty()) {
@@ -65,7 +65,6 @@ public class SSHClientFactory {
         client.setTimeout(args.getSocketTimeoutAsMs());
         client.setConnectTimeout(args.getConnectTimeoutAsMs());
         // PROXY
-        ProxyProvider proxyProvider = ProxyProvider.createInstance(args.getProxy());
         if (proxyProvider != null) {
             client.setSocketFactory(new ProxySocketFactory(proxyProvider));
         }
