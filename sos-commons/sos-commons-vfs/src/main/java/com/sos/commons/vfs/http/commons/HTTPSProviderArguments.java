@@ -14,6 +14,10 @@ public class HTTPSProviderArguments extends HTTPProviderArguments {
     }
 
     public SSLArguments getSSL() {
+        if (ssl == null) {
+            ssl = new SSLArguments();
+            ssl.applyDefaultIfNullQuietly();
+        }
         return ssl;
     }
 

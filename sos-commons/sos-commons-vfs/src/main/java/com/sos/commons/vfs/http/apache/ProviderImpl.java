@@ -9,6 +9,7 @@ import java.io.Reader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -91,8 +92,8 @@ public class ProviderImpl extends HTTPProvider {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        logNotImpementedMethod("selectFiles", selection == null ? "" : selection.toString());
-        return List.of();
+        throw new ProviderException(getPathOperationPrefix(SOSString.toString(selection, Collections.singletonList("result"), true))
+                + "not supported via " + getArguments().getProtocol().getValue());
     }
 
     /** Overrides {@link IProvider#exists(String)} */
@@ -149,7 +150,7 @@ public class ProviderImpl extends HTTPProvider {
             }
             return true;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -235,7 +236,7 @@ public class ProviderImpl extends HTTPProvider {
                 return createProviderFile(uri, response);
             }
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
 
     }
@@ -402,7 +403,7 @@ public class ProviderImpl extends HTTPProvider {
         } catch (SOSNoSuchFileException e) { // is = getInputStream(s);
             return false;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         } finally {
             SOSClassUtil.closeQuietly(is);
         }

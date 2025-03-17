@@ -28,8 +28,10 @@ public class HTTPUtils {
      * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePath(URI, String)}).<br>
      * Without a trailing slash, relative resolution may produce incorrect results.
      * 
-     * See toBaseURI(String) */
-    public static URI getBaseURI(SOSArgument<String> hostArg, SOSArgument<Integer> portArg) throws URISyntaxException {
+     * See toBaseURI(String)
+     * 
+     * @throws MalformedURLException */
+    public static URI getBaseURI(SOSArgument<String> hostArg, SOSArgument<Integer> portArg) throws Exception {
         String hostOrUrl = SOSPathUtils.toUnixStyle(hostArg.getValue());
         if (SOSPathUtils.isAbsoluteURIPath(hostOrUrl)) {
             return toBaseURI(hostOrUrl);
@@ -62,7 +64,7 @@ public class HTTPUtils {
             // new URI(null, path, null) not throw an exception if the path contains invalid characters
             return baseURI.resolve(new URI(null, path, null)).normalize().toString();
         } catch (URISyntaxException e) {
-            return baseURI.resolve(encodeURL(path)).normalize().toString();
+            return baseURI.resolve(path).normalize().toString();
         }
     }
 
@@ -85,14 +87,20 @@ public class HTTPUtils {
         }
     }
 
+    public static String encode(String input) {
+        // URLEncoder.encode converts blank to +
+        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
     /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>
      * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePath(URI, String)}).<br>
      * Without a trailing slash, relative resolution may produce incorrect results.
      * 
      * @param spec Absolute HTTP path
      * @return URI
-     * @throws URISyntaxException */
-    private static URI toBaseURI(final String spec) throws URISyntaxException {
+     * @throws URISyntaxException
+     * @throws MalformedURLException */
+    private static URI toBaseURI(final String spec) throws Exception {
         String baseURI = spec;
         if (!baseURI.endsWith("/")) {
             if (baseURI.contains("?")) {// with query parameters
@@ -100,20 +108,11 @@ public class HTTPUtils {
             }
             baseURI = baseURI + "/";
         }
-        try {
-            // ensuring proper encoding
-            // variant 1) new URL
-            // or
-            // variant 2) new URI(null,spec,null);
-            return new URL(baseURI).toURI();
-        } catch (MalformedURLException | URISyntaxException e) {
-            return new URI(encodeURL(baseURI));
-        }
-    }
-
-    private static String encodeURL(String input) {
-        // URLEncoder.encode converts blank to +
-        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+        // ensuring proper encoding
+        // variant 1) new URL
+        // or
+        // variant 2) new URI(null,spec,null);
+        return new URL(baseURI).toURI();
     }
 
 }

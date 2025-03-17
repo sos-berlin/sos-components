@@ -24,8 +24,7 @@ public abstract class ASOSArguments {
     }
 
     @SuppressWarnings("unchecked")
-    // For UnitTest
-    public <T> void applyDefaultOnNullValue() throws Exception {
+    public <T> void applyDefaultIfNull() throws Exception {
         getArgumentFields();
         for (Field f : argumentFields) {
             f.setAccessible(true);
@@ -39,6 +38,13 @@ public abstract class ASOSArguments {
                     f.set(this, current);
                 }
             }
+        }
+    }
+
+    public <T> void applyDefaultIfNullQuietly() {
+        try {
+            applyDefaultIfNull();
+        } catch (Exception e) {
         }
     }
 

@@ -1,6 +1,8 @@
 package com.sos.yade.engine;
 
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
+import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -163,7 +166,6 @@ public class YADEEngineTest {
     public void testLocal2HTTP() {
         YADEEngine yade = new YADEEngine();
         try {
-
             /** Common */
             YADEArguments args = createYADEArgs();
             args.getParallelism().setValue(10);
@@ -194,29 +196,38 @@ public class YADEEngineTest {
     public void testHTTP2Local() {
         YADEEngine yade = new YADEEngine();
         try {
+            boolean useLocalhost = false;
 
             /** Common */
             YADEArguments args = createYADEArgs();
             args.getParallelism().setValue(10);
-            // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             args.getOperation().setValue(TransferOperation.COPY);
 
             /** Source */
-            YADESourceArguments sourceArgs = getLocalSourceArgs();
-            sourceArgs.getDirectory().setValue(LOCAL_SOURCE_DIR);
-            // args.getRecursive().setValue(true);
-            sourceArgs.getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
-            sourceArgs.getRecursive().setValue(false);
+            if (useLocalhost) {
+                HTTP_PORT = 8080;
+            } else {
+                HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
+            }
+            YADESourceArguments sourceArgs = getHTTPSourceArgs();
+            if (useLocalhost) {
+                sourceArgs.getFilePath().setValue(Collections.singletonList("yade/source/1.txt"));
+                sourceArgs.getProvider().getUser().setValue("yade");
+                sourceArgs.getProvider().getPassword().setValue("yade");
+            } else {
+                sourceArgs.getFilePath().setValue(Collections.singletonList("https://change.sos-berlin.com/browse/JS-2100?filter=14492"));
+            }
 
             /** Target */
-            YADETargetArguments targetArgs = getHTTPTargetArgs();
-            targetArgs.getDirectory().setValue(HTTP_TARGET_DIR);
+            YADETargetArguments targetArgs = getLocalTargetArgs();
+            targetArgs.getDirectory().setValue(LOCAL_TARGET_DIR);
             // targetArgs.getKeepModificationDate().setValue(true);
             targetArgs.getTransactional().setValue(true);
+            targetArgs.getCheckSize().setValue(false);
 
             yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
-            LOGGER.error(e.toString());
+            LOGGER.error(e.toString(), e);
         }
     }
 
@@ -279,20 +290,20 @@ public class YADEEngineTest {
 
     private YADEArguments createYADEArgs() throws Exception {
         YADEArguments args = new YADEArguments();
-        args.applyDefaultOnNullValue();
+        args.applyDefaultIfNull();
         return args;
     }
 
     private YADEClientArguments createClientArgs() throws Exception {
         YADEClientArguments args = new YADEClientArguments();
-        args.applyDefaultOnNullValue();
+        args.applyDefaultIfNull();
         return args;
     }
 
     private YADESourceArguments getLocalSourceArgs() throws Exception {
         YADESourceArguments args = createSourceArgs();
         AProviderArguments pa = new LocalProviderArguments();
-        pa.applyDefaultOnNullValue();
+        pa.applyDefaultIfNull();
         args.setProvider(pa);
         return args;
     }
@@ -300,7 +311,7 @@ public class YADEEngineTest {
     private YADETargetArguments getLocalTargetArgs() throws Exception {
         YADETargetArguments args = createTargetArgs();
         AProviderArguments pa = new LocalProviderArguments();
-        pa.applyDefaultOnNullValue();
+        pa.applyDefaultIfNull();
         args.setProvider(pa);
         return args;
     }
@@ -317,6 +328,12 @@ public class YADEEngineTest {
         return args;
     }
 
+    private YADESourceArguments getHTTPSourceArgs() throws Exception {
+        YADESourceArguments args = createSourceArgs();
+        args.setProvider(createHTTPProviderArgs());
+        return args;
+    }
+
     private YADETargetArguments getHTTPTargetArgs() throws Exception {
         YADETargetArguments args = createTargetArgs();
         args.setProvider(createHTTPProviderArgs());
@@ -325,7 +342,7 @@ public class YADEEngineTest {
 
     private SSHProviderArguments createSSHProviderArgs() throws Exception {
         SSHProviderArguments args = new SSHProviderArguments();
-        args.applyDefaultOnNullValue();
+        args.applyDefaultIfNull();
         args.getHost().setValue(SSH_HOST);
         args.getAuthMethod().setValue(SSHAuthMethod.PASSWORD);
         args.getUser().setValue("sos");
@@ -334,22 +351,30 @@ public class YADEEngineTest {
     }
 
     private HTTPProviderArguments createHTTPProviderArgs() throws Exception {
-        HTTPProviderArguments args = new HTTPProviderArguments();
-        args.applyDefaultOnNullValue();
+        boolean isHTTPS = HTTP_HOST.startsWith("https://");
+        HTTPProviderArguments args = isHTTPS ? new HTTPSProviderArguments() : new HTTPProviderArguments();
+        args.applyDefaultIfNull();
         args.getHost().setValue(HTTP_HOST);
         args.getPort().setValue(HTTP_PORT);
+
+        if (isHTTPS) {
+            Path keyStore = Path.of(System.getProperty("java.home")).resolve("lib/security/cacerts");
+            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getFile().setValue(keyStore);
+            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getPassword().setValue("changeit");
+        }
+
         return args;
     }
 
     private YADESourceArguments createSourceArgs() throws Exception {
         YADESourceArguments args = new YADESourceArguments();
-        args.applyDefaultOnNullValue();
+        args.applyDefaultIfNull();
         return args;
     }
 
     private YADETargetArguments createTargetArgs() throws Exception {
         YADETargetArguments args = new YADETargetArguments();
-        args.applyDefaultOnNullValue();
+        args.applyDefaultIfNull();
         return args;
     }
 
@@ -358,7 +383,7 @@ public class YADEEngineTest {
             return null;
         }
         YADEProviderCommandArguments args = new YADEProviderCommandArguments();
-        args.applyDefaultOnNullValue();
+        args.applyDefaultIfNull();
         args.setCommandsBeforeOperation("echo BEFORE_OPERATION");
         args.setCommandsAfterOperationOnSuccess("echo AFTER_OPERATION_ON_SUCCES");
         args.setCommandsAfterOperationOnError("echo AFTER_OPERATION_ON_ERROR");

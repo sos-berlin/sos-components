@@ -19,6 +19,10 @@ public class SSLArguments extends ASOSArguments {
     }
 
     public JavaKeyStoreArguments getJavaKeyStore() {
+        if (javaKeyStore == null) {
+            javaKeyStore = new JavaKeyStoreArguments();
+            javaKeyStore.applyDefaultIfNullQuietly();
+        }
         return javaKeyStore;
     }
 

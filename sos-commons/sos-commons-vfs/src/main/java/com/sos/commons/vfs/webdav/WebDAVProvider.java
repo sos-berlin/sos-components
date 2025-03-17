@@ -1,7 +1,6 @@
 package com.sos.commons.vfs.webdav;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.arguments.impl.SSLArguments;
@@ -30,7 +29,7 @@ public abstract class WebDAVProvider extends AProvider<WebDAVProviderArguments> 
             // if baseURI not found, can be redefined when connecting
             baseURI = HTTPUtils.getBaseURI(getArguments().getHost(), getArguments().getPort());
             setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
-        } catch (URISyntaxException e) {
+        } catch (Exception e) {
             throw new ProviderInitializationException(e);
         }
     }

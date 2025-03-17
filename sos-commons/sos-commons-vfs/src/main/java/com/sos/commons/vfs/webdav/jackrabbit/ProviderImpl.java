@@ -189,7 +189,7 @@ public class ProviderImpl extends WebDAVProvider {
             }
             return true;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -281,7 +281,7 @@ public class ProviderImpl extends WebDAVProvider {
                 return null;
             }
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -443,7 +443,7 @@ public class ProviderImpl extends WebDAVProvider {
             }
             return true;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
     }
 

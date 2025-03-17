@@ -1,7 +1,6 @@
 package com.sos.commons.vfs.http;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.arguments.impl.SSLArguments;
@@ -29,7 +28,7 @@ public abstract class HTTPProvider extends AProvider<HTTPProviderArguments> {
             // if baseURI not found, can be redefined when connecting
             setBaseURI(HTTPUtils.getBaseURI(getArguments().getHost(), getArguments().getPort()));
             setAccessInfo(HTTPUtils.getAccessInfo(getBaseURI(), getArguments().getUser().getValue()));
-        } catch (URISyntaxException e) {
+        } catch (Exception e) {
             throw new ProviderInitializationException(e);
         }
     }

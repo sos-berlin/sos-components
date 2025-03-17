@@ -136,10 +136,13 @@ public class HTTPClient implements AutoCloseable {
                 // .setConnectionManager(createConnectionManager())
                 // Request configuration
                 .setDefaultRequestConfig(requestBuilder
-                        // Read operations timeout - 300_000 (5 minutes)
+                        // 30_000 (30 seconds), 300_000 (5 minutes)
+                        // Read operations timeout
                         .setSocketTimeout(30_000)
                         // Connect timeout
-                        .setConnectTimeout(30_000).setConnectionRequestTimeout(300_000)
+                        .setConnectTimeout(30_000)
+                        // ConnectionRequestTimeout
+                        .setConnectionRequestTimeout(300_000)
                         // Redirect - without Redirect - 404 for directories
                         .setRedirectsEnabled(true)
                         // Cookie
@@ -239,7 +242,7 @@ public class HTTPClient implements AutoCloseable {
     private static void setSSLContext(ISOSLogger logger, SSLArguments args, String baseURLScheme, HttpClientBuilder clientBuilder) throws Exception {
         if (baseURLScheme.equalsIgnoreCase("https")) {
             if (args == null) {
-                new Exception(("[HTTPClient][setSSLContext]missing SSLArguments"));
+                throw new Exception(("[HTTPClient][setSSLContext]missing SSLArguments"));
             }
 
             if (args.getVerifyCertificateHostname().isTrue()) {
@@ -269,6 +272,10 @@ public class HTTPClient implements AutoCloseable {
                     if (ks == null) {
                         new Exception(("[HTTPClient][setSSLContext][" + r.toString() + "]KeyMaterial not found"));
                     } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("[HTTPClient][setSSLContext][loadKeyMaterial]" + r.getPath());
+                        }
+
                         builder.loadKeyMaterial(ks, r.getPassword());
                         builder.loadTrustMaterial(ks, null);
                     }

@@ -63,7 +63,7 @@ public class SOSString {
         return toString(o, excludeFieldNames, false);
     }
 
-    private static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues) {
+    public static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues) {
         return toString(o, excludeFieldNames, excludeNullValues, 0, 0);
     }
 

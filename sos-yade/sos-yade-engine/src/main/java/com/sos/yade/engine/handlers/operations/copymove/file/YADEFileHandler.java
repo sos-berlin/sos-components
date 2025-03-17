@@ -11,6 +11,7 @@ import java.util.zip.GZIPOutputStream;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.commons.vfs.http.commons.HTTPUtils;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
@@ -171,8 +172,8 @@ public class YADEFileHandler {
                         throwException = true;
                     }
                     if (throwException) {
-                        String msg = String.format("[%s]%s[%s]%s", logPrefix, targetDelegator.getLogPrefix(), targetFile.getFullPath(),
-                                throwExceptionAdd + e);
+                        String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
+                                targetDelegator.getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
                         logger.error(msg);
                         throw new YADEEngineTransferFileException(msg, e);
                     }
@@ -253,13 +254,9 @@ public class YADEFileHandler {
         // 1) Source name
         String fileName = sourceFile.getName();
 
-        // TODO check if needed - because of HTTPProvider normalized paths ...
         if (sourceDelegator.hasHTTPProvider()) {
             // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
-            // try {
-            // fileName = URLEncoder.encode(fileName, "UTF-8");
-            // } catch (UnsupportedEncodingException e) {
-            // }
+            fileName = HTTPUtils.encode(fileName);
         }
 
         // 2) Compressed name

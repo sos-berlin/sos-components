@@ -63,7 +63,7 @@ public class YADESourceFilesSelector {
         try {
             return sourceDelegator.getProvider().selectFiles(selection);
         } catch (Throwable e) {
-            throw new YADEEngineSourceFilesSelectorException(e.getCause());
+            throw new YADEEngineSourceFilesSelectorException(e.getCause() == null ? e : e.getCause());
         }
     }
 
@@ -148,7 +148,8 @@ public class YADESourceFilesSelector {
             try {
                 file = sourceDelegator.getProvider().getFileIfExists(path);
             } catch (Throwable e) {
-                throw new YADEEngineSourceFilesSelectorException(logPrefix, e);
+                Throwable ex = e.getCause() == null ? e : e.getCause();
+                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), e);
             }
             if (file == null) {
                 if (polling) {
@@ -164,6 +165,7 @@ public class YADESourceFilesSelector {
                 }
                 if (addSingleFile(logger, logPrefix, file, selection, polling)) {
                     counterAdded++;
+                    file.setIndex(counterAdded);
                     result.add(file);
                 }
             }
