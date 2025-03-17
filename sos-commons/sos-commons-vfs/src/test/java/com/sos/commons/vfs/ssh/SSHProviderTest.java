@@ -46,7 +46,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -77,7 +77,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
@@ -109,7 +109,7 @@ public class SSHProviderTest {
         csArgs.setEntryPath("/server/SFTP/localhost");
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
@@ -139,7 +139,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -167,7 +167,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -196,7 +196,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -225,7 +225,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
@@ -260,7 +260,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "/home/sos/tmp_target.log");
@@ -303,7 +303,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "D://tmp_target.log");
@@ -346,7 +346,7 @@ public class SSHProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        SSHProvider p = new SSHProvider(new SLF4JLogger(), args);
+        SSHProvider p = SSHProvider.createInstance(new SLF4JLogger(), args);
         try {
             p.connect();
             Map<String, String> envVars = new HashMap<>();

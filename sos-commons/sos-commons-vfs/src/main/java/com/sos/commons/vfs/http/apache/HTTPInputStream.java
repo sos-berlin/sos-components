@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.http.commons;
+package com.sos.commons.vfs.http.apache;
 
 import java.io.FilterInputStream;
 import java.io.IOException;

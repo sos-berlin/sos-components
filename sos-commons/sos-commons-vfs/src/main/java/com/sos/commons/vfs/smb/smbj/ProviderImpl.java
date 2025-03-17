@@ -47,10 +47,10 @@ import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
-import com.sos.commons.vfs.smb.commons.ASMBProvider;
+import com.sos.commons.vfs.smb.SMBProvider;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
-public class ProviderImpl extends ASMBProvider {
+public class ProviderImpl extends SMBProvider {
 
     private SMBClient client = null;
     private Session session = null;

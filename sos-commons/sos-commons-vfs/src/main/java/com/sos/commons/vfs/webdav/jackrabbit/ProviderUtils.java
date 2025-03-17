@@ -24,7 +24,7 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderException;
-import com.sos.commons.vfs.http.commons.HTTPClient;
+import com.sos.commons.vfs.http.apache.HTTPClient;
 
 public class ProviderUtils {
 

@@ -19,7 +19,7 @@ public class SSHJob extends Job<SSHJobArguments> {
             providerArgs.setCredentialStore(step.getIncludedArguments(CredentialStoreArguments.class));
             providerArgs.setProxy(step.getIncludedArguments(ProxyArguments.class));
         }
-        SSHProvider provider = new SSHProvider(step.getLogger(), providerArgs);
+        SSHProvider provider = SSHProvider.createInstance(step.getLogger(), providerArgs);
         step.addCancelableResource(provider);
         try {
             provider.connect();

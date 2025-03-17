@@ -1,14 +1,11 @@
 package com.sos.commons.vfs.http.commons;
 
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-
-import org.apache.http.HttpEntity;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -86,24 +83,6 @@ public class HTTPUtils {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("[URISyntaxException]" + uri, e);
         }
-    }
-
-    public static long getFileSizeIfChunkedTransferEncoding(HttpEntity entity) throws Exception {
-        long size = -1L;
-        if (entity == null) {
-            return size;
-        }
-
-        try (InputStream is = entity.getContent()) {
-            size = 0L;
-
-            byte[] buffer = new byte[4_096];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-                size += bytesRead;
-            }
-        }
-        return size;
     }
 
     /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>

@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.http.commons;
+package com.sos.commons.vfs.http.apache;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -52,6 +53,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
+import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
 
 public class HTTPClient implements AutoCloseable {
 
@@ -131,13 +133,15 @@ public class HTTPClient implements AutoCloseable {
         setSSLContext(logger, sslArgs, baseURI.getScheme(), clientBuilder);
         clientBuilder
                 // Connection manager
-                .setConnectionManager(createConnectionManager())
+                // .setConnectionManager(createConnectionManager())
                 // Request configuration
                 .setDefaultRequestConfig(requestBuilder
-                        // Read operations timeout
-                        .setSocketTimeout(5000)
+                        // Read operations timeout - 300_000 (5 minutes)
+                        .setSocketTimeout(30_000)
                         // Connect timeout
-                        .setConnectTimeout(5000)
+                        .setConnectTimeout(30_000).setConnectionRequestTimeout(300_000)
+                        // Redirect - without Redirect - 404 for directories
+                        .setRedirectsEnabled(true)
                         // Cookie
                         .setCookieSpec(CookieSpecs.STANDARD)
                         // build
@@ -175,6 +179,24 @@ public class HTTPClient implements AutoCloseable {
         }
     }
 
+    public static long getFileSizeIfChunkedTransferEncoding(HttpEntity entity) throws Exception {
+        long size = -1L;
+        if (entity == null) {
+            return size;
+        }
+
+        try (InputStream is = entity.getContent()) {
+            size = 0L;
+
+            byte[] buffer = new byte[4_096];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                size += bytesRead;
+            }
+        }
+        return size;
+    }
+
     public static boolean isSuccessful(StatusLine statusLine) {
         int sc = statusLine.getStatusCode();
         if (sc >= 200 && sc < 300) {
@@ -193,21 +215,6 @@ public class HTTPClient implements AutoCloseable {
 
     public static String getResponseStatus(HttpRequestBase request, HttpResponse response) {
         return getResponseStatus(request, response, null);
-    }
-
-    private static String getResponseStatus(HttpRequestBase request, HttpResponse response, Exception ex) {
-        StatusLine sl = response.getStatusLine();
-        StringBuilder sb = new StringBuilder();
-        sb.append("[").append(request.getMethod()).append("]");
-        sb.append("[").append(request.getURI()).append("]");
-        sb.append("[").append(sl.getStatusCode()).append("]");
-        if (ex == null) {
-            sb.append(getReasonPhraseOrDefault(sl));
-        } else {
-            sb.append("[").append(getReasonPhraseOrDefault(sl)).append("]");
-            sb.append(ex.toString());
-        }
-        return sb.toString();
     }
 
     public static long getLastModifiedInMillis(HttpResponse response) {
@@ -271,6 +278,7 @@ public class HTTPClient implements AutoCloseable {
         }
     }
 
+    @SuppressWarnings("unused")
     private static PoolingHttpClientConnectionManager createConnectionManager() {
         PoolingHttpClientConnectionManager m = new PoolingHttpClientConnectionManager();
         m.setMaxTotal(100);
@@ -315,6 +323,21 @@ public class HTTPClient implements AutoCloseable {
                         return new BasicHeader(name, value);
                     }
                 }).collect(Collectors.toList());
+    }
+
+    private static String getResponseStatus(HttpRequestBase request, HttpResponse response, Exception ex) {
+        StatusLine sl = response.getStatusLine();
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(request.getMethod()).append("]");
+        sb.append("[").append(request.getURI()).append("]");
+        sb.append("[").append(sl.getStatusCode()).append("]");
+        if (ex == null) {
+            sb.append(getReasonPhraseOrDefault(sl));
+        } else {
+            sb.append("[").append(getReasonPhraseOrDefault(sl)).append("]");
+            sb.append(ex.toString());
+        }
+        return sb.toString();
     }
 
     private static String getReasonPhraseOrDefault(StatusLine sl) {

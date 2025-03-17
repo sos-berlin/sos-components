@@ -1,169 +1,97 @@
 package com.sos.commons.vfs.ssh;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
-import com.sos.commons.util.beans.SOSCommandResult;
-import com.sos.commons.util.beans.SOSEnv;
-import com.sos.commons.util.beans.SOSTimeout;
+import com.google.common.base.Joiner;
+import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
-import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
-import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.commons.ProviderCredentialStoreResolver;
 import com.sos.commons.vfs.exceptions.ProviderException;
-import com.sos.commons.vfs.ssh.commons.ASSHProvider;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.commons.vfs.ssh.commons.SSHServerInfo;
 
-public class SSHProvider extends ASSHProvider {
+public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
 
-    private final ASSHProvider impl;
+    /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
+    private SSHServerInfo serverInfo;
+    private String serverVersion;
 
-    public SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws ProviderException {
-        impl = initialize(logger, args);
-    }
-
-    private static ASSHProvider initialize(ISOSLogger logger, SSHProviderArguments args) throws ProviderException {
+    public static SSHProvider createInstance(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
         return new com.sos.commons.vfs.ssh.sshj.ProviderImpl(logger, args);
     }
 
-    /** Overrides {@link IProvider#connect()} */
-    @Override
-    public void connect() throws ProviderConnectException {
-        impl.connect();
+    protected SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
+        super(logger, args, args == null ? null : args.getPassphrase());
+        setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
+                .getPort().getDisplayValue()));
     }
 
-    /** Overrides {@link IProvider#isConnected()} */
+    /** SSH Provider specific method */
+    public abstract void put(String source, String target, int perm) throws ProviderException;
+
+    /** SSH Provider specific method */
+    public abstract void put(String source, String target) throws ProviderException;
+
+    /** SSH Provider specific method */
+    public abstract void get(String source, String target) throws ProviderException;
+
+    /** Overrides {@link AProvider#onCredentialStoreResolved()} */
     @Override
-    public boolean isConnected() {
-        return impl.isConnected();
+    public void onCredentialStoreResolved() throws Exception {
+        ProviderCredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
     }
 
-    /** Overrides {@link IProvider#disconnect()} */
+    /** Overrides {@link IProvider#getPathSeparator()} */
     @Override
-    public void disconnect() {
-        impl.disconnect();
+    public String getPathSeparator() {
+        return SOSPathUtils.PATH_SEPARATOR_UNIX;
     }
 
-    /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
+    /** Overrides {@link IProvider#isAbsolutePath(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        return impl.createDirectoriesIfNotExists(path);
+    public boolean isAbsolutePath(String path) {
+        return SOSPathUtils.isAbsoluteFileSystemPath(path);
     }
 
-    /** Overrides {@link IProvider#deleteIfExists(String)} */
+    /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public boolean deleteIfExists(String path) throws ProviderException {
-        return impl.deleteIfExists(path);
+    public String normalizePath(String path) {
+        if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(path)) {
+            String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
+            return toPathStyle(n);
+        }
+        return toPathStyle(Path.of(path).normalize().toString());
     }
 
-    /** Overrides {@link IProvider#exists(String)} */
-    @Override
-    public boolean exists(String path) {
-        return impl.exists(path);
+    public SSHServerInfo getServerInfo() {
+        if (serverInfo == null) {
+            serverInfo = new SSHServerInfo(serverVersion, executeCommand("uname"));
+        }
+        return serverInfo;
     }
 
-    /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
-    @Override
-    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        return impl.selectFiles(selection);
+    public void setServerVersion(String val) {
+        serverVersion = val;
     }
 
-    /** Overrides {@link IProvider#getFileIfExists(String)} */
-    @Override
-    public ProviderFile getFileIfExists(String path) throws ProviderException {
-        return impl.getFileIfExists(path);
-    }
-
-    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
-    @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws ProviderException {
-        return impl.rereadFileIfExists(file);
-    }
-
-    /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
-    @Override
-    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
-        impl.setFileLastModifiedFromMillis(path, milliseconds);
-    }
-
-    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        return impl.executeCommand(command, timeout, env);
-    }
-
-    /** Overrides {@link IProvider#cancelCommands())} */
-    @Override
-    public SOSCommandResult cancelCommands() {
-        return impl.cancelCommands();
-    }
-
-    /** Overrides {@link IProvider#getInputStream(String)} */
-    @Override
-    public InputStream getInputStream(String path) throws ProviderException {
-        return impl.getInputStream(path);
-    }
-
-    /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
-    @Override
-    public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
-        return impl.getOutputStream(path, append);
-    }
-
-    /** Overrides {@link IProvider#getFileContentIfExists(String)} */
-    @Override
-    public String getFileContentIfExists(String path) throws ProviderException {
-        return impl.getFileContentIfExists(path);
-    }
-
-    /** Overrides {@link IProvider#writeFile(String, String)} */
-    @Override
-    public void writeFile(String path, String content) throws ProviderException {
-        impl.writeFile(path, content);
-    }
-
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
-    @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> paths, boolean stopOnSingleFileError) throws ProviderException {
-        return impl.deleteFilesIfExists(paths, stopOnSingleFileError);
-    }
-
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(String, String)} */
-    @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> paths, boolean stopOnSingleFileError) throws ProviderException {
-        return impl.renameFilesIfSourceExists(paths, stopOnSingleFileError);
-    }
-
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-        impl.validatePrerequisites(method);
-    }
-
-    /* -- Additional SSH Provider specific methods ------------------------- */
-    /** Overrides {@link ASSHProvider#put(String, String)} */
-    @Override
-    public void put(String source, String target) throws ProviderException {
-        impl.put(source, target);
-    }
-
-    /** Overrides {@link ASSHProvider#put(String, String, int)} */
-    @Override
-    public void put(String source, String target, int perm) throws ProviderException {
-        impl.put(source, target, perm);
-    }
-
-    /** Overrides {@link ASSHProvider#get(String, String)} */
-    @Override
-    public void get(String source, String target) throws ProviderException {
-        impl.get(source, target);
+    public String getConnectedMsg(List<String> additionalInfos) {
+        String msg = "";
+        if (SOSCollection.isEmpty(additionalInfos)) {
+            if (serverInfo != null) {
+                msg += serverInfo.toString();
+            }
+        } else {
+            if (serverInfo != null) {
+                msg += "[" + serverInfo.toString() + "]";
+            }
+            msg += Joiner.on(", ").join(additionalInfos);
+        }
+        return getConnectedMsg(msg);
     }
 
 }

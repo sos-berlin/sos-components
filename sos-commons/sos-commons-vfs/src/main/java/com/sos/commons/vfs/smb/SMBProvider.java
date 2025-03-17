@@ -1,152 +1,99 @@
 package com.sos.commons.vfs.smb;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Path;
 
-import com.sos.commons.util.beans.SOSCommandResult;
-import com.sos.commons.util.beans.SOSEnv;
-import com.sos.commons.util.beans.SOSTimeout;
+import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
-import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
-import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.ProviderConnectException;
-import com.sos.commons.vfs.exceptions.ProviderException;
-import com.sos.commons.vfs.smb.commons.ASMBProvider;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
-public class SMBProvider extends ASMBProvider {
+public abstract class SMBProvider extends AProvider<SMBProviderArguments> {
 
-    private final ASMBProvider impl;
+    private String shareName;
 
-    public SMBProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderException {
-        impl = initialize(logger, args);
-    }
-
-    private static ASMBProvider initialize(ISOSLogger logger, SMBProviderArguments args) throws ProviderException {
+    public static SMBProvider createInstance(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         return new com.sos.commons.vfs.smb.smbj.ProviderImpl(logger, args);
     }
 
-    /** Overrides {@link IProvider#connect()} */
-    @Override
-    public void connect() throws ProviderConnectException {
-        impl.connect();
+    protected SMBProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
+        super(logger, args);
+        setAccessInfo();
     }
 
-    /** Overrides {@link IProvider#isConnected()} */
+    /** Overrides {@link IProvider#getPathSeparator()}<br/>
+     * {@linkplain https://github.com/hierynomus/smbj/issues/170}<br/>
+     * {@linkplain https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/ffb795f3-027d-4a3c-997d-3085f2332f6f?redirectedfrom=MSDN} */
     @Override
-    public boolean isConnected() {
-        return impl.isConnected();
+    public String getPathSeparator() {
+        return SOSPathUtils.PATH_SEPARATOR_WINDOWS;
     }
 
-    /** Overrides {@link IProvider#disconnect()} */
+    /** Overrides {@link IProvider#isAbsolutePath(String)} */
     @Override
-    public void disconnect() {
-        impl.disconnect();
+    public boolean isAbsolutePath(String path) {
+        if (SOSString.isEmpty(getShareName(path))) {
+            return true;
+        }
+        if (SOSPathUtils.isAbsoluteWindowsUNCPath(path)) {
+            return true;
+        }
+        String p = SOSString.trimStart(toPathStyle(path), getPathSeparator());
+        return p.startsWith(getShareName(path));
     }
 
-    /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
+    /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        return impl.createDirectoriesIfNotExists(path);
+    public String normalizePath(String path) {
+        return toPathStyle(Path.of(path).normalize().toString());
     }
 
-    /** Overrides {@link IProvider#deleteIfExists(String)} */
-    @Override
-    public boolean deleteIfExists(String path) throws ProviderException {
-        return impl.deleteIfExists(path);
+    /** 'sos/documents/myfile.txt' -> 'sos'<br/>
+     * '/sos/documents/mydocuments/myfile.txt -> 'sos'<br/>
+     * '\\sos\\documents\\myfile.txt' -> 'sos'<br/>
+     * 'myfile.txt' -> ''<br/>
+     * '/myfile.txt' -> ''<br/>
+     * '/' -> '' <br/>
+     * '' -> '' <br/>
+     */
+    public String getShareName(String path) {
+        if (shareName == null) {
+            if (!getArguments().getShareName().isEmpty()) {
+                shareName = getArguments().getShareName().getValue();
+            } else if (SOSString.isEmpty(path)) {
+                shareName = "";
+            } else {
+                // Remove leading backslashes or slashes, if they exist and split in 2 parts
+                String[] pathParts = path.replaceAll("^[/\\\\]+", "").split("[/\\\\]", 2);
+                shareName = pathParts.length > 1 ? pathParts[0] : "";
+            }
+        }
+        return shareName;
     }
 
-    /** Overrides {@link IProvider#exists(String)} */
-    @Override
-    public boolean exists(String path) {
-        return impl.exists(path);
+    private void setAccessInfo() {
+        String authMethod = "";
+        String user = getArguments().getUser().getDisplayValue();
+        switch (getArguments().getAuthMethod().getValue()) {
+        case BASIC:
+            if (SOSString.isEmpty(user)) {
+                user = "anonymous";
+            }
+            break;
+        case KERBEROS:
+        case SPNEGO:
+        default:
+            authMethod = "[" + getArguments().getAuthMethod().getValue().name() + "]";
+            if (SOSString.isEmpty(user)) {
+                user = "[sso]";
+            }
+            break;
+        }
+        String domain = getArguments().getDomain().isEmpty() ? "" : " (" + getArguments().getDomain().getValue() + ")";
+        setAccessInfo(String.format("%s%s@%s:%s%s", authMethod, user, getArguments().getHost().getDisplayValue(), getArguments().getPort()
+                .getDisplayValue(), domain));
     }
-
-    /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
-    @Override
-    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        return impl.selectFiles(selection);
-    }
-
-    /** Overrides {@link IProvider#getFileIfExists(String)} */
-    @Override
-    public ProviderFile getFileIfExists(String path) throws ProviderException {
-        return impl.getFileIfExists(path);
-    }
-
-    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
-    @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws ProviderException {
-        return impl.rereadFileIfExists(file);
-    }
-
-    /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
-    @Override
-    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
-        impl.setFileLastModifiedFromMillis(path, milliseconds);
-    }
-
-    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        return impl.executeCommand(command, timeout, env);
-    }
-
-    /** Overrides {@link IProvider#cancelCommands())} */
-    @Override
-    public SOSCommandResult cancelCommands() {
-        return impl.cancelCommands();
-    }
-
-    /** Overrides {@link IProvider#getInputStream(String)} */
-    @Override
-    public InputStream getInputStream(String path) throws ProviderException {
-        return impl.getInputStream(path);
-    }
-
-    /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
-    @Override
-    public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
-        return impl.getOutputStream(path, append);
-    }
-
-    /** Overrides {@link IProvider#getFileContentIfExists(String)} */
-    @Override
-    public String getFileContentIfExists(String path) throws ProviderException {
-        return impl.getFileContentIfExists(path);
-    }
-
-    /** Overrides {@link IProvider#writeFile(String, String)} */
-    @Override
-    public void writeFile(String path, String content) throws ProviderException {
-        impl.writeFile(path, content);
-    }
-
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
-    @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> paths, boolean stopOnSingleFileError) throws ProviderException {
-        return impl.deleteFilesIfExists(paths, stopOnSingleFileError);
-    }
-
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(String, String)} */
-    @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> paths, boolean stopOnSingleFileError) throws ProviderException {
-        return impl.renameFilesIfSourceExists(paths, stopOnSingleFileError);
-    }
-
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-        impl.validatePrerequisites(method);
-    }
-
-    /* -- Additional SMB Provider specific methods ------------------------- */
 
 }

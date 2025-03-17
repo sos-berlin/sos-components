@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.webdav.jackrabbit;
+package com.sos.commons.vfs.http.apache;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,26 +8,19 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.HttpStatus;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.client.methods.HttpMove;
-import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.http.entity.InputStreamEntity;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -45,18 +38,15 @@ import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.HTTPProvider;
-import com.sos.commons.vfs.http.apache.HTTPClient;
-import com.sos.commons.vfs.http.apache.HTTPOutputStream;
+import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
-import com.sos.commons.vfs.webdav.WebDAVProvider;
-import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 
-public class ProviderImpl extends WebDAVProvider {
+public class ProviderImpl extends HTTPProvider {
 
     private HTTPClient client;
 
-    public ProviderImpl(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderInitializationException {
-        super(logger, args);
+    public ProviderImpl(ISOSLogger logger, HTTPProviderArguments arguments) throws ProviderInitializationException {
+        super(logger, arguments);
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -69,7 +59,8 @@ public class ProviderImpl extends WebDAVProvider {
         try {
             getLogger().info(getConnectMsg());
 
-            client = HTTPClient.createAuthenticatedClient(getLogger(), getBaseURI(), getAuthConfig(), getProxyProvider(), getSSLArguments(), null);
+            client = HTTPClient.createAuthenticatedClient(getLogger(), getBaseURI(), getAuthConfig(), getProxyProvider(), getSSLArguments(),
+                    getArguments().getHTTPHeaders().getValue());
             connect(getBaseURI());
 
             getLogger().info(getConnectedMsg());
@@ -100,19 +91,8 @@ public class ProviderImpl extends WebDAVProvider {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        validatePrerequisites("selectFiles");
-
-        selection = ProviderFileSelection.createIfNull(selection);
-        // selection.setFileTypeChecker();
-
-        String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
-        List<ProviderFile> result = new ArrayList<>();
-        try {
-            ProviderUtils.selectFiles(this, selection, directory, result);
-        } catch (ProviderException e) {
-            throw e;
-        }
-        return result;
+        logNotImpementedMethod("selectFiles", selection == null ? "" : selection.toString());
+        return List.of();
     }
 
     /** Overrides {@link IProvider#exists(String)} */
@@ -124,7 +104,14 @@ public class ProviderImpl extends WebDAVProvider {
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
-            return ProviderUtils.exists(client, uri);
+            HttpGet request = new HttpGet(uri);
+            try (CloseableHttpResponse response = client.execute(request)) {
+                StatusLine sl = response.getStatusLine();
+                if (!HTTPClient.isSuccessful(sl)) {
+                    throw new IOException(HTTPClient.getResponseStatus(request, response));
+                }
+            }
+            return true;
         } catch (Throwable e) {
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug("%s[uri=%s][exists=false]%s", getPathOperationPrefix(path), uri, e.toString());
@@ -133,42 +120,14 @@ public class ProviderImpl extends WebDAVProvider {
         return false;
     }
 
-    /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)}<br/>
-     * Check if exists - reverse order:<br/>
-     * - https://example.com/test/1/2/3<br/>
-     * - https://example.com/test/1/2<br/>
-     * - https://example.com/test/1<br/>
-     * Creates:<br/>
-     * - https://example.com/test/1<br/>
-     * - https://example.com/test/1/2<br/>
-     * - https://example.com/test/1/2/3<br/>
-     */
+    /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validatePrerequisites("createDirectoriesIfNotExists", path, "path");
-
-        try {
-            URI uri = new URI(normalizePath(path));
-            if (ProviderUtils.directoryExists(client, uri)) {
-                return false; // already exists
-            }
-
-            Deque<URI> toCreate = new ArrayDeque<>();
-            URI parent = HTTPUtils.getParentURI(uri);
-            while (parent != null && !parent.equals(uri) && !ProviderUtils.directoryExists(client, parent)) {
-                toCreate.push(parent);
-                parent = HTTPUtils.getParentURI(parent);
-            }
-
-            boolean created = false;
-            while (!toCreate.isEmpty()) {
-                ProviderUtils.createDirectory(client, toCreate.pop());
-                created = true;
-            }
-            return created;
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+        if (exists(path)) {
+            return false;
         }
+        throw new ProviderException(getPathOperationPrefix(path) + "[does not exist]a directory cannot be created via " + getArguments().getProtocol()
+                .getValue());
     }
 
     /** Overrides {@link IProvider#deleteIfExists(String)} */
@@ -177,7 +136,8 @@ public class ProviderImpl extends WebDAVProvider {
         validatePrerequisites("deleteIfExists", path, "path");
 
         try {
-            HttpDelete request = new HttpDelete(new URI(normalizePath(path)));
+            URI uri = new URI(normalizePath(path));
+            HttpDelete request = new HttpDelete(uri);
             try (CloseableHttpResponse response = client.execute(request)) {
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
@@ -193,7 +153,8 @@ public class ProviderImpl extends WebDAVProvider {
         }
     }
 
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean))} */
+    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
+    // TODO check if isDirectory
     @Override
     public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
@@ -223,7 +184,7 @@ public class ProviderImpl extends WebDAVProvider {
         return r;
     }
 
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean))} */
+    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
     public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
@@ -262,7 +223,7 @@ public class ProviderImpl extends WebDAVProvider {
 
         try {
             URI uri = new URI(normalizePath(path));
-            HttpPropfind request = ProviderUtils.createFilePropertiesRequest(uri);
+            HttpGet request = new HttpGet(uri);
             try (CloseableHttpResponse response = client.execute(request)) {
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
@@ -271,23 +232,17 @@ public class ProviderImpl extends WebDAVProvider {
                     }
                     throw new IOException(HTTPClient.getResponseStatus(request, response));
                 }
-                MultiStatus status = ProviderUtils.getMuiltiStatus(request, response);
-                if (status == null) {
-                    return null;
-                }
-                for (MultiStatusResponse resource : status.getResponses()) {
-                    return createProviderFile(resource.getHref(), response, resource.getProperties(HttpStatus.SC_OK));
-                }
-                return null;
+                return createProviderFile(uri, response);
             }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause());
         }
+
     }
 
-    /** Overrides {@link IProvider#getFileContentIfExists(String, String)}<br />
+    /** Overrides {@link IProvider#getFileContentIfExists(String, String)} <br/>
      * 
-     * @apiNote this method is implemented in the same way as {@link HTTPProvider#getFileContentIfExists(String)}.<br/>
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit {@link ProviderImpl#getFileContentIfExists(String)}.<br/>
      */
     @Override
     public String getFileContentIfExists(String path) throws ProviderException {
@@ -307,7 +262,8 @@ public class ProviderImpl extends WebDAVProvider {
 
     /** Overrides {@link IProvider#writeFile(String, String)}<br/>
      * 
-     * @apiNote this method is implemented in the same way(except DavConstants.HEADER_OVERWRITE) as {@link HTTPProvider#writeFile(String,String)}.<br/>
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit (except DavConstants.HEADER_OVERWRITE)
+     *          {@link ProviderImpl#writeFile(String,String)}.<br/>
      */
     @Override
     public void writeFile(String path, String content) throws ProviderException {
@@ -320,7 +276,6 @@ public class ProviderImpl extends WebDAVProvider {
             // request.setEntity(new StringEntity(content, StandardCharsets.UTF_8));
             // request.setHeader("Content-Type", "text/plain");
             request.setEntity(new ByteArrayEntity(content.getBytes(StandardCharsets.UTF_8)));
-            request.setHeader(DavConstants.HEADER_OVERWRITE, "T");
             request.setHeader("Content-Type", "application/octet-stream");
             // The 'Content-Length' Header is automatically set when an HttpEntity is used
 
@@ -335,7 +290,7 @@ public class ProviderImpl extends WebDAVProvider {
         }
     }
 
-    /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long))} */
+    /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
         logNotImpementedMethod("setFileLastModifiedFromMillis", "path=" + path + ",milliseconds=" + milliseconds);
@@ -343,7 +298,7 @@ public class ProviderImpl extends WebDAVProvider {
 
     /** Overrides {@link IProvider#getInputStream(String)}<br/>
      * 
-     * @apiNote this method is implemented in the same way as {@link HTTPProvider#getInputStream(String)}.<br/>
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit {@link ProviderImpl#getInputStream(String)}.<br/>
      */
     @Override
     public InputStream getInputStream(String path) throws ProviderException {
@@ -358,7 +313,7 @@ public class ProviderImpl extends WebDAVProvider {
 
     /** Overrides {@link IProvider#getOutputStream(String, boolean)}<br/>
      * 
-     * @apiNote this method is implemented in the same way as {@link HTTPProvider#getOutputStream(String,boolean)}.<br/>
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit {@link ProviderImpl#getOutputStream(String,boolean)}.<br/>
      */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
@@ -379,25 +334,10 @@ public class ProviderImpl extends WebDAVProvider {
         }
     }
 
-    public HTTPClient getClient() {
-        return client;
-    }
-
-    public ProviderFile createProviderFile(String href, CloseableHttpResponse response, DavPropertySet prop) throws Exception {
-        if (response == null || prop == null) {
-            return null;
-        }
-        long size = getFileSize(href, response, prop);
-        if (size < 0) {
-            return null;
-        }
-        return createProviderFile(href, size, getLastModifiedInMillis(prop));
-    }
-
     private void connect(URI uri) throws Exception {
         String notFoundMsg = null;
 
-        HttpPropfind request = new HttpPropfind(uri, null, DavConstants.DEPTH_0);
+        HttpGet request = new HttpGet(uri);
         try (CloseableHttpResponse response = client.execute(request)) {
             StatusLine sl = response.getStatusLine();
             if (HTTPClient.isServerError(sl)) {
@@ -426,13 +366,29 @@ public class ProviderImpl extends WebDAVProvider {
         }
     }
 
+    /** PUT,DELETE implementation<br />
+     * - alternative - MOVE (may not be supported by the server…)
+     * 
+     * @param source
+     * @param target
+     * @return
+     * @throws ProviderException */
     private boolean renameFileIfExists(String source, String target) throws ProviderException {
+        InputStream is = null;
         try {
+            deleteIfExists(target);
+
             URI sourceURI = new URI(normalizePath(source));
             URI targetURI = new URI(normalizePath(target));
 
-            HttpMove request = new HttpMove(sourceURI, targetURI, true);
+            is = client.getHTTPInputStream(sourceURI);
+            HttpPut request = new HttpPut(targetURI);
+            request.setEntity(new InputStreamEntity(is));
+
             try (CloseableHttpResponse response = client.execute(request)) {
+                SOSClassUtil.closeQuietly(is);
+                is = null;
+
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
                     if (HTTPClient.isNotFound(sl)) {
@@ -441,10 +397,16 @@ public class ProviderImpl extends WebDAVProvider {
                     throw new IOException(HTTPClient.getResponseStatus(request, response));
                 }
             }
+            deleteIfExists(source);
             return true;
+        } catch (SOSNoSuchFileException e) { // is = getInputStream(s);
+            return false;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e.getCause());
+        } finally {
+            SOSClassUtil.closeQuietly(is);
         }
+
     }
 
     private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
@@ -452,23 +414,27 @@ public class ProviderImpl extends WebDAVProvider {
         validateArgument(method, argValue, msg);
     }
 
-    private long getFileSize(String href, CloseableHttpResponse response, DavPropertySet prop) throws Exception {
-        DavProperty<?> p = prop.get(DavConstants.PROPERTY_GETCONTENTLENGTH);
-        long size = p == null ? -1L : Long.parseLong(p.getValue().toString());
-
-        if (size < 0) {// e.g. Transfer-Encoding: chunked
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug(String.format("%s[getSizeFromEntity][%s][size=%s]use InputStream", getLogPrefix(), href, size));
-            }
-            size = HTTPClient.getFileSizeIfChunkedTransferEncoding(response.getEntity());
+    private ProviderFile createProviderFile(URI uri, HttpResponse response) throws Exception {
+        HttpEntity entity = response.getEntity();
+        if (entity == null) {
+            return null;
         }
-        return size;
+        long size = getFileSize(uri, entity);
+        if (size < 0) {
+            return null;
+        }
+        return createProviderFile(uri.toString(), size, HTTPClient.getLastModifiedInMillis(response));
     }
 
-    private long getLastModifiedInMillis(DavPropertySet prop) {
-        DavProperty<?> p = prop.get(DavConstants.PROPERTY_GETLASTMODIFIED);
-        String value = (p == null || p.getValue() == null) ? null : p.getValue().toString();
-        return HTTPClient.getLastModifiedInMillis(value);
+    private long getFileSize(URI uri, HttpEntity entity) throws Exception {
+        long size = entity.getContentLength();
+        if (size < 0) {// e.g. Transfer-Encoding: chunked
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug(String.format("%s[getSizeFromEntity][%s][size=%s]use InputStream", getLogPrefix(), uri, size));
+            }
+            size = HTTPClient.getFileSizeIfChunkedTransferEncoding(entity);
+        }
+        return size;
     }
 
 }

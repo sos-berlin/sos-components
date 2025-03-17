@@ -54,6 +54,7 @@ public class YADEProviderDelegatorFactory {
         if (protocol.getValue() == null) {
             throw new YADEEngineInitializationException(new SOSMissingDataException(protocol.getName()));
         }
+        // <XXX>Provider.createInstance - multiple provider implementations available/possible
         IProvider p = null;
         try {
             switch (protocol.getValue()) {
@@ -62,23 +63,24 @@ public class YADEProviderDelegatorFactory {
                 p = new FTPProvider(logger, (FTPProviderArguments) providerArgs);
                 args.getParallelism().setValue(1);
                 break;
-            case HTTP:
-            case HTTPS:
-                p = new HTTPProvider(logger, (HTTPProviderArguments) providerArgs);
-                break;
             case LOCAL:
                 p = new LocalProvider(logger, (LocalProviderArguments) providerArgs);
                 break;
+            case HTTP:
+            case HTTPS:
+                p = HTTPProvider.createInstance(logger, (HTTPProviderArguments) providerArgs);
+                args.getParallelism().setValue(1);
+                break;
             case SFTP:
             case SSH:
-                p = new SSHProvider(logger, (SSHProviderArguments) providerArgs);
+                p = SSHProvider.createInstance(logger, (SSHProviderArguments) providerArgs);
                 break;
             case SMB:
-                p = new SMBProvider(logger, (SMBProviderArguments) providerArgs);
+                p = SMBProvider.createInstance(logger, (SMBProviderArguments) providerArgs);
                 break;
             case WEBDAV:
             case WEBDAVS:
-                p = new WebDAVProvider(logger, (WebDAVProviderArguments) providerArgs);
+                p = WebDAVProvider.createInstance(logger, (WebDAVProviderArguments) providerArgs);
                 break;
             case UNKNOWN:
             default:

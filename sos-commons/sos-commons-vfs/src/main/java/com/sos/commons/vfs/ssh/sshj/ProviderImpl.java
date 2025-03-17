@@ -37,7 +37,7 @@ import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
-import com.sos.commons.vfs.ssh.commons.ASSHProvider;
+import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.exceptions.SOSSSHCommandExitViolentlyException;
 
@@ -54,7 +54,7 @@ import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.xfer.FileSystemFile;
 
-public class ProviderImpl extends ASSHProvider {
+public class ProviderImpl extends SSHProvider {
 
     private SSHClient sshClient;
     private Map<String, Command> commands = new ConcurrentHashMap<>();

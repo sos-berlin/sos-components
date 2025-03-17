@@ -1,153 +1,77 @@
 package com.sos.commons.vfs.webdav;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-import com.sos.commons.util.beans.SOSCommandResult;
-import com.sos.commons.util.beans.SOSEnv;
-import com.sos.commons.util.beans.SOSTimeout;
+import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
+import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
-import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
-import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.ProviderConnectException;
-import com.sos.commons.vfs.exceptions.ProviderException;
-import com.sos.commons.vfs.smb.commons.ASMBProvider;
-import com.sos.commons.vfs.webdav.commons.AWebDAVProvider;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
+import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
+import com.sos.commons.vfs.http.commons.HTTPUtils;
+import com.sos.commons.vfs.webdav.commons.WebDAVAuthMethod;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
+import com.sos.commons.vfs.webdav.commons.WebDAVSProviderArguments;
 
-public class WebDAVProvider extends ASMBProvider {
+public abstract class WebDAVProvider extends AProvider<WebDAVProviderArguments> {
 
-    private final AWebDAVProvider impl;
+    private URI baseURI;
 
-    public WebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderException {
-        impl = initialize(logger, args);
-    }
-
-    private static AWebDAVProvider initialize(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderException {
+    public static WebDAVProvider createInstance(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderInitializationException {
         return new com.sos.commons.vfs.webdav.jackrabbit.ProviderImpl(logger, args);
     }
 
-    /** Overrides {@link IProvider#connect()} */
-    @Override
-    public void connect() throws ProviderConnectException {
-        impl.connect();
+    protected WebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderInitializationException {
+        super(logger, args);
+        try {
+            // if baseURI not found, can be redefined when connecting
+            baseURI = HTTPUtils.getBaseURI(getArguments().getHost(), getArguments().getPort());
+            setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
+        } catch (URISyntaxException e) {
+            throw new ProviderInitializationException(e);
+        }
     }
 
-    /** Overrides {@link IProvider#isConnected()} */
+    /** Overrides {@link IProvider#getPathSeparator()} */
     @Override
-    public boolean isConnected() {
-        return impl.isConnected();
+    public String getPathSeparator() {
+        return SOSPathUtils.PATH_SEPARATOR_UNIX;
     }
 
-    /** Overrides {@link IProvider#disconnect()} */
+    /** Overrides {@link IProvider#isAbsolutePath(String)} */
     @Override
-    public void disconnect() {
-        impl.disconnect();
+    public boolean isAbsolutePath(String path) {
+        return SOSPathUtils.isAbsoluteURIPath(path);
     }
 
-    /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
+    /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        return impl.createDirectoriesIfNotExists(path);
+    public String normalizePath(String path) {
+        return HTTPUtils.normalizePath(baseURI, path);
     }
 
-    /** Overrides {@link IProvider#deleteIfExists(String)} */
-    @Override
-    public boolean deleteIfExists(String path) throws ProviderException {
-        return impl.deleteIfExists(path);
+    public URI getBaseURI() {
+        return baseURI;
     }
 
-    /** Overrides {@link IProvider#exists(String)} */
-    @Override
-    public boolean exists(String path) {
-        return impl.exists(path);
+    public void setBaseURI(URI val) {
+        baseURI = val;
     }
 
-    /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
-    @Override
-    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        return impl.selectFiles(selection);
+    public SSLArguments getSSLArguments() {
+        return Protocol.WEBDAVS.equals(getArguments().getProtocol().getValue()) ? ((WebDAVSProviderArguments) getArguments()).getSSL() : null;
     }
 
-    /** Overrides {@link IProvider#getFileIfExists(String)} */
-    @Override
-    public ProviderFile getFileIfExists(String path) throws ProviderException {
-        return impl.getFileIfExists(path);
+    public HTTPAuthConfig getAuthConfig() {
+        if (WebDAVAuthMethod.NTLM.equals(getArguments().getAuthMethod().getValue())) {
+            return new HTTPAuthConfig(getLogger(), getArguments().getUser().getValue(), getArguments().getPassword().getValue(), getArguments()
+                    .getWorkstation().getValue(), getArguments().getDomain().getValue());
+        }
+        // BASIC
+        return new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
     }
-
-    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
-    @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws ProviderException {
-        return impl.rereadFileIfExists(file);
-    }
-
-    /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
-    @Override
-    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
-        impl.setFileLastModifiedFromMillis(path, milliseconds);
-    }
-
-    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
-    @Override
-    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
-        return impl.executeCommand(command, timeout, env);
-    }
-
-    /** Overrides {@link IProvider#cancelCommands())} */
-    @Override
-    public SOSCommandResult cancelCommands() {
-        return impl.cancelCommands();
-    }
-
-    /** Overrides {@link IProvider#getInputStream(String)} */
-    @Override
-    public InputStream getInputStream(String path) throws ProviderException {
-        return impl.getInputStream(path);
-    }
-
-    /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
-    @Override
-    public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
-        return impl.getOutputStream(path, append);
-    }
-
-    /** Overrides {@link IProvider#getFileContentIfExists(String)} */
-    @Override
-    public String getFileContentIfExists(String path) throws ProviderException {
-        return impl.getFileContentIfExists(path);
-    }
-
-    /** Overrides {@link IProvider#writeFile(String, String)} */
-    @Override
-    public void writeFile(String path, String content) throws ProviderException {
-        impl.writeFile(path, content);
-    }
-
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
-    @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> paths, boolean stopOnSingleFileError) throws ProviderException {
-        return impl.deleteFilesIfExists(paths, stopOnSingleFileError);
-    }
-
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(String, String)} */
-    @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> paths, boolean stopOnSingleFileError) throws ProviderException {
-        return impl.renameFilesIfSourceExists(paths, stopOnSingleFileError);
-    }
-
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-        impl.validatePrerequisites(method);
-    }
-
-    /* -- Additional SMB Provider specific methods ------------------------- */
 
 }

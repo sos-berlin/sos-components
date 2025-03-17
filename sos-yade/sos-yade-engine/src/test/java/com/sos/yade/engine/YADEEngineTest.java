@@ -1,7 +1,13 @@
 package com.sos.yade.engine;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -160,7 +166,7 @@ public class YADEEngineTest {
 
             /** Common */
             YADEArguments args = createYADEArgs();
-            args.getParallelism().setValue(1);
+            args.getParallelism().setValue(10);
             // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             args.getOperation().setValue(TransferOperation.COPY);
 
@@ -174,13 +180,101 @@ public class YADEEngineTest {
             /** Target */
             YADETargetArguments targetArgs = getHTTPTargetArgs();
             targetArgs.getDirectory().setValue(HTTP_TARGET_DIR);
-            targetArgs.getKeepModificationDate().setValue(true);
-            targetArgs.getTransactional().setValue(false);
+            // targetArgs.getKeepModificationDate().setValue(true);
+            targetArgs.getTransactional().setValue(true);
+
+            yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testHTTP2Local() {
+        YADEEngine yade = new YADEEngine();
+        try {
+
+            /** Common */
+            YADEArguments args = createYADEArgs();
+            args.getParallelism().setValue(10);
+            // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            args.getOperation().setValue(TransferOperation.COPY);
+
+            /** Source */
+            YADESourceArguments sourceArgs = getLocalSourceArgs();
+            sourceArgs.getDirectory().setValue(LOCAL_SOURCE_DIR);
+            // args.getRecursive().setValue(true);
+            sourceArgs.getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            sourceArgs.getRecursive().setValue(false);
+
+            /** Target */
+            YADETargetArguments targetArgs = getHTTPTargetArgs();
+            targetArgs.getDirectory().setValue(HTTP_TARGET_DIR);
+            // targetArgs.getKeepModificationDate().setValue(true);
+            targetArgs.getTransactional().setValue(true);
 
             yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString());
         }
+    }
+
+    @Ignore
+    @Test
+    public void testThread() {
+        ForkJoinPool threadPool = new ForkJoinPool(10, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
+
+            private int count = 1;
+
+            @Override
+            public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+                ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                thread.setName("yade-thread-" + (count++));
+                return thread;
+            }
+
+        }, null, false);
+        AtomicBoolean cancel = new AtomicBoolean(false);
+        List<String> sourceFiles = Arrays.asList("1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt", "7.txt", "8.txt", "9.txt", "10.txt");
+
+        Exception ex = null;
+        try {
+            threadPool.submit(() -> {
+                sourceFiles.parallelStream().forEach(f -> {
+
+                    LOGGER.info("[" + f + "]start...");
+                    if (f.equals("5.txt")) {
+                        cancel.set(true);
+                        throw new RuntimeException("5.txt Exception");
+                    }
+
+                    for (int i = 0; i < 10; i++) {
+                        if (cancel.get()) {
+                            LOGGER.info("    [" + f + "]cancelled");
+                            return;
+                        }
+                        try {
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException e) {
+                            LOGGER.warn("[" + f + "]InterruptedException");
+                        }
+                    }
+                    LOGGER.info("    [" + f + "]processed");
+                });
+            }).join();
+        } catch (Exception e) {
+            LOGGER.error("[threadPool.submit]" + e);
+            ex = e;
+        } finally {
+            LOGGER.info("[threadPool.shutdown]");
+            threadPool.shutdown();
+            try {
+                threadPool.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+            }
+        }
+        LOGGER.info("[END]" + ex);
     }
 
     private YADEArguments createYADEArgs() throws Exception {

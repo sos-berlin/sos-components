@@ -23,6 +23,7 @@ import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
+import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADETargetCumulativeFileHelper;
 
@@ -115,17 +116,18 @@ public class YADECopyMoveOperationsHandler {
                     try {
                         // useCumulativeTargetFile=false for transfers in parallel
                         new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(false);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         if (config.isTransactionalEnabled()) {
                             cancel.set(true);
-                            new RuntimeException(e);
+                            throw new RuntimeException(e);
                         }
                         setFailedIfNonTransactional(f);
                     }
                 });
+
             }).join();
-        } catch (Throwable e) {
-            throw new YADEEngineOperationException(e.getCause());
+        } catch (Exception e) {
+            throw new YADEEngineOperationException(getTransferFileException(e.getCause()));
         } finally {
             threadPool.shutdown();
             try {
@@ -296,6 +298,20 @@ public class YADECopyMoveOperationsHandler {
         } else {
             y.getTarget().setSubState(TransferEntryState.FAILED);
         }
+    }
+
+    private static Throwable getTransferFileException(Throwable ex) {
+        if (ex == null) {
+            return ex;
+        }
+        Throwable e = ex;
+        while (e != null) {
+            if (e instanceof YADEEngineTransferFileException) {
+                return e;
+            }
+            e = e.getCause();
+        }
+        return e;
     }
 
 }

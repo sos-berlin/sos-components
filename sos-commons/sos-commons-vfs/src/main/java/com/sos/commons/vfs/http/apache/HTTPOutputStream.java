@@ -1,7 +1,8 @@
-package com.sos.commons.vfs.http.commons;
+package com.sos.commons.vfs.http.apache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 
@@ -31,28 +32,45 @@ public class HTTPOutputStream extends OutputStream {
 
             @Override
             public void writeTo(OutputStream os) throws IOException {
-                synchronized (buffer) {
-                    buffer.writeTo(os);
-                    os.flush();
-                }
+                // synchronized (buffer) {
+                buffer.writeTo(os);
+                os.flush();
+                // }
             }
         });
+
         entity.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
         request.setEntity(entity);
     }
 
+    /** Handling large files – instead of the HTTPOutputStream class, an additional class should be implemented/used for HTTP upload file operations
+     * 
+     * @param is e.g. InputStream is = new FileInputStream(file)
+     * @return */
+    @SuppressWarnings("unused")
+    private EntityTemplate chunckedFromInputStream(InputStream is) {
+        EntityTemplate entity = new EntityTemplate(os -> {
+            byte[] buffer = new byte[8 * 1024 * 1024];
+            int len;
+            while ((len = is.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+            }
+        });
+        return entity;
+    }
+
     @Override
     public void write(int b) throws IOException {
-        synchronized (buffer) {
-            buffer.write(b);
-        }
+        // synchronized (buffer) {
+        buffer.write(b);
+        // }
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        synchronized (buffer) {
-            buffer.write(b, off, len);
-        }
+        // synchronized (buffer) {
+        buffer.write(b, off, len);
+        // }
     }
 
     @Override
