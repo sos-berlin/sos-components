@@ -47,7 +47,6 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.exceptions.SOSAuthenticationFailedException;
 import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStepLogger;
@@ -609,7 +608,7 @@ public class ApiExecutor {
         }
     }
 
-    private void handleExitCode(SOSRestApiClient client) throws SOSAuthenticationFailedException, SOSConnectionRefusedException, SOSException {
+    private void handleExitCode(SOSRestApiClient client) throws SOSConnectionRefusedException {
         if (client.statusCode() >= 500) {
             throw new SOSConnectionRefusedException();
         }

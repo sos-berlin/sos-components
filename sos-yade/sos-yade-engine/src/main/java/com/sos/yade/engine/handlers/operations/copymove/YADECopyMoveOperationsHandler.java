@@ -14,13 +14,14 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADETargetCumulativeFileHelper;
@@ -55,7 +56,7 @@ public class YADECopyMoveOperationsHandler {
         try {
             processFiles(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile, cancel);
         } catch (Throwable e) {
-            // does not throws exception
+            // rollbackIfTransactional - does not throws exception
             rollbackIfTransactional(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile);
             throw e;
         }
@@ -65,10 +66,18 @@ public class YADECopyMoveOperationsHandler {
     private static void processFiles(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean useCumulativeTargetFile, AtomicBoolean cancel)
             throws Exception {
-        if (config.processFilesSequentially()) {
-            processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile, cancel);
-        } else {
-            processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles, cancel);
+        try {
+            if (config.processFilesSequentially()) {
+                processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile, cancel);
+            } else {
+                processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles, cancel);
+            }
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            // re-connect in any case - e.g. for rollback, after operation commands...
+            YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
+            YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
         }
     }
 
@@ -176,7 +185,7 @@ public class YADECopyMoveOperationsHandler {
                     if (logger.isDebugEnabled()) {
                         logger.debug("%s[to delete]%s", sourceDelegator.getLogPrefix(), paths);
                     }
-                } catch (SOSProviderException e) {
+                } catch (ProviderException e) {
                     logger.error("%s[deleteFiles]%s", sourceDelegator.getLogPrefix(), e.toString());
                     throw new YADEEngineOperationException(String.format("%s[deleteFiles]%s", sourceDelegator.getLogPrefix(), e.toString()), e);
                 }
@@ -203,7 +212,7 @@ public class YADECopyMoveOperationsHandler {
                         if (logger.isDebugEnabled()) {
                             logger.debug("%s[to rename]%s", sourceDelegator.getLogPrefix(), paths);
                         }
-                    } catch (SOSProviderException e) {
+                    } catch (ProviderException e) {
                         logger.error("%s[renameFiles]%s", sourceDelegator.getLogPrefix(), e.toString());
                         throw new YADEEngineOperationException(String.format("%s[renameFiles]%s", sourceDelegator.getLogPrefix(), e.toString()), e);
                     }
@@ -273,7 +282,7 @@ public class YADECopyMoveOperationsHandler {
                     }
                 });
                 logger.info("%s[rollback][deleteResult]%s", targetDelegator.getLogPrefix(), r);
-            } catch (SOSProviderException e) {
+            } catch (ProviderException e) {
                 logger.info("%s[rollback][deleteFiles]%s", targetDelegator.getLogPrefix(), String.join(" ,", paths.keySet()));
                 logger.error("%s[rollback][deleteFiles]%s", targetDelegator.getLogPrefix(), e.toString());
             }

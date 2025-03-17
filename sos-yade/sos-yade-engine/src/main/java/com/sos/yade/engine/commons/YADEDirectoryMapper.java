@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
@@ -46,7 +46,7 @@ public class YADEDirectoryMapper {
     }
 
     public void tryCreateAllTargetDirectoriesBeforeOperation(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
-            final YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
+            final YADETargetProviderDelegator targetDelegator) throws ProviderException {
         tryMapSourceTarget(logger, config, targetDelegator);
 
         boolean isDebugEnabled = logger.isDebugEnabled();
@@ -69,7 +69,7 @@ public class YADEDirectoryMapper {
     }
 
     public synchronized void tryCreateSourceDirectory(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile,
-            YADEFileNameInfo newNameInfo) throws SOSProviderException {
+            YADEFileNameInfo newNameInfo) throws ProviderException {
 
         if (newNameInfo.needsParent()) {
             if (sourceReplacement == null) {
@@ -97,7 +97,7 @@ public class YADEDirectoryMapper {
     // - it may be a sub path, but also a parent/other path...
     // - it cannot be identified here because the substitution may depend on the filename..
     private void tryMapSourceTarget(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
-            final YADETargetProviderDelegator targetDelegator) throws SOSProviderException {
+            final YADETargetProviderDelegator targetDelegator) throws ProviderException {
         sourceTarget.clear();
 
         if (logger.isDebugEnabled()) {
@@ -179,7 +179,7 @@ public class YADEDirectoryMapper {
                 // e.g. for FilePath/FileList source files selection (not based on the configuredSourceDirectory)
                 int colon = sourceDirectory.indexOf(":"); // Windows/URI(HTTP) paths
                 if (colon > -1) {
-                    if (SOSPathUtil.isAbsoluteURIPath(sourceDirectory)) {// http(s)://server/1.txt TODO - use provider information instead
+                    if (SOSPathUtils.isAbsoluteURIPath(sourceDirectory)) {// http(s)://server/1.txt TODO - use provider information instead
                         // server/1.txt TODO trim server?
                         result = sourceDirectory.replaceFirst("^[a-zA-Z]+://", "");
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
@@ -187,7 +187,7 @@ public class YADEDirectoryMapper {
                         // Temp
                         result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
                     }
-                } else if (SOSPathUtil.isAbsoluteWindowsUNCPath(sourceDirectory)) { // \\server\share
+                } else if (SOSPathUtils.isAbsoluteWindowsUNCPath(sourceDirectory)) { // \\server\share
                     // server\share TODO trim server?
                     result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
                 } else {
@@ -206,7 +206,7 @@ public class YADEDirectoryMapper {
 
     // sourceDirectoryPathForMapping - directory path without leading path separator
     private String getTargetDirectory(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator,
-            String sourceDirectoryPathForMapping) throws SOSProviderException {
+            String sourceDirectoryPathForMapping) throws ProviderException {
         // TODO - ??? check YADE 1 - relative to the working directory? (due to directoryPath - without leading path separator)
         String targetPath = sourceDirectoryPathForMapping.isEmpty() ? "" : targetDelegator.getProvider().toPathStyle(sourceDirectoryPathForMapping);
         if (targetDelegator.getDirectory() != null) {
@@ -221,7 +221,7 @@ public class YADEDirectoryMapper {
             // if (logger.isDebugEnabled()) {
             // logger.debug("[getTargetDirectory][targetPath is empty][set to]" + targetPath);
             // }
-            throw new SOSProviderException(targetDelegator.getLogPrefix() + "Target directory can't be evaluated");
+            throw new ProviderException(targetDelegator.getLogPrefix() + "Target directory can't be evaluated");
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectory][sourceDirectoryPathForMapping=" + sourceDirectoryPathForMapping + "]targetPath=" + targetPath);
@@ -231,12 +231,12 @@ public class YADEDirectoryMapper {
     }
 
     private Set<String> getTargetDirectoriesToCreate(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator)
-            throws SOSProviderException {
+            throws ProviderException {
         if (target == null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectoriesToCreate][original]" + sourceTarget.values());
             }
-            Set<String> result = SOSPathUtil.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getProvider().getPathSeparator());
+            Set<String> result = SOSPathUtils.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getProvider().getPathSeparator());
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectoriesToCreate][deepestLevelPaths]" + result);
             }
@@ -253,7 +253,7 @@ public class YADEDirectoryMapper {
 
     public String getTargetDirectory(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
             final YADETargetProviderDelegator targetDelegator, final YADEProviderFile sourceFile, final YADEFileNameInfo fileNameInfo)
-            throws SOSProviderException {
+            throws ProviderException {
         String targetDirectory;
         if (target == null) {// target replacement is not enabled, ignore fileNameInfo
             targetDirectory = sourceTarget.get(sourceFile.getParentFullPath());
@@ -274,7 +274,7 @@ public class YADEDirectoryMapper {
 
     // if parallel transfer - access to map from different threads
     private synchronized void tryCreateTargetDirectory(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator,
-            String targetDirectory, boolean createDirectory) throws SOSProviderException {
+            String targetDirectory, boolean createDirectory) throws ProviderException {
         if (!target.contains(targetDirectory)) {
             if (createDirectory) {
                 if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirectory)) {

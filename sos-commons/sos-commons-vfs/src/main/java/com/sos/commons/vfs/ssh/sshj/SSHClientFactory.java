@@ -13,7 +13,7 @@ import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
-import com.sos.commons.vfs.exceptions.SOSAuthenticationFailedException;
+import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
@@ -71,13 +71,19 @@ public class SSHClientFactory {
         return client;
     }
 
-    private static void authenticate(SSHProviderArguments args, SSHClient client) throws Exception {
-        if (!args.getPreferredAuthentications().isEmpty()) {
-            usePreferredAuthentications(args, client);
-        } else if (!args.getRequiredAuthentications().isEmpty()) {
-            useRequiredAuthentications(args, client);
-        } else {
-            useAuthMethodAuthentication(args, client);
+    private static void authenticate(SSHProviderArguments args, SSHClient client) throws ProviderAuthenticationException {
+        try {
+            if (!args.getPreferredAuthentications().isEmpty()) {
+                usePreferredAuthentications(args, client);
+            } else if (!args.getRequiredAuthentications().isEmpty()) {
+                useRequiredAuthentications(args, client);
+            } else {
+                useAuthMethodAuthentication(args, client);
+            }
+        } catch (ProviderAuthenticationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ProviderAuthenticationException(e);
         }
     }
 
@@ -117,11 +123,11 @@ public class SSHClientFactory {
     }
 
     private static void partialAuthentication(SSHProviderArguments args, SSHClient client, net.schmizz.sshj.userauth.method.AuthMethod method)
-            throws SOSAuthenticationFailedException, UserAuthException, TransportException {
+            throws ProviderAuthenticationException, UserAuthException, TransportException {
         if (!client.getUserAuth().authenticate(args.getUser().getValue(), (Service) client.getConnection(), method, client.getTransport()
                 .getTimeoutMs())) {
             if (!client.getUserAuth().hadPartialSuccess()) {
-                throw new SOSAuthenticationFailedException();
+                throw new ProviderAuthenticationException();
             }
         }
     }

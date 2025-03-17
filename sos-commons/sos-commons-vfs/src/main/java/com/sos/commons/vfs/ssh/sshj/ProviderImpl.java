@@ -26,16 +26,17 @@ import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
-import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
-import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.ssh.commons.ASSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.exceptions.SOSSSHCommandExitViolentlyException;
@@ -58,15 +59,15 @@ public class ProviderImpl extends ASSHProvider {
     private SSHClient sshClient;
     private Map<String, Command> commands = new ConcurrentHashMap<>();
 
-    public ProviderImpl(ISOSLogger logger, SSHProviderArguments args) throws SOSProviderInitializationException {
+    public ProviderImpl(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
     }
 
     /** Overrides {@link IProvider#connect()} */
     @Override
-    public void connect() throws SOSProviderConnectException {
+    public void connect() throws ProviderConnectException {
         if (SOSString.isEmpty(getArguments().getHost().getValue())) {
-            throw new SOSProviderConnectException(new SOSRequiredArgumentMissingException("host"));
+            throw new ProviderConnectException(new SOSRequiredArgumentMissingException("host"));
         }
         try {
             getLogger().info(getConnectMsg());
@@ -80,7 +81,7 @@ public class ProviderImpl extends ASSHProvider {
             if (isConnected()) {
                 disconnect();
             }
-            throw new SOSProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+            throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
 
@@ -107,8 +108,8 @@ public class ProviderImpl extends ASSHProvider {
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
-    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
-        checkBeforeOperation("selectFiles", sshClient);
+    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
+        validatePrerequisites("selectFiles");
 
         selection = ProviderFileSelection.createIfNull(selection);
         selection.setFileTypeChecker(fileRepresentator -> {
@@ -124,7 +125,7 @@ public class ProviderImpl extends ASSHProvider {
         List<ProviderFile> result = new ArrayList<>();
         try {
             ProviderUtils.selectFiles(this, selection, directory, result);
-        } catch (SOSProviderException e) {
+        } catch (ProviderException e) {
             throw e;
         }
         return result;
@@ -148,8 +149,8 @@ public class ProviderImpl extends ASSHProvider {
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
-        checkBeforeOperation("createDirectoriesIfNotExists", sshClient, path, "path");
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
+        validatePrerequisites("createDirectoriesIfNotExists", path, "path");
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             if (ProviderUtils.exists(sftp, path)) {
@@ -158,38 +159,35 @@ public class ProviderImpl extends ASSHProvider {
             sftp.mkdirs(path);
             return true;
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     // TODO test if not exists ....
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
-    public boolean deleteIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("deleteIfExists", sshClient, path, "path");
+    public boolean deleteIfExists(String path) throws ProviderException {
+        validatePrerequisites("deleteIfExists", path, "path");
 
         try {
             try (SFTPClient sftp = sshClient.newSFTPClient()) {
                 ProviderUtils.delete(sftp, path);
                 return true;
             } catch (SOSNoSuchFileException e) {
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[deleteIfExists]not exists", getPathOperationPrefix(path));
-                }
                 return false;
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
         }
     }
 
     /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
     @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
             return null;
         }
-        checkBeforeOperation("deleteFilesIfExists", sshClient);
+        validatePrerequisites("deleteFilesIfExists");
 
         DeleteFilesResult r = new DeleteFilesResult(files.size());
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
@@ -209,18 +207,18 @@ public class ProviderImpl extends ASSHProvider {
                 }
             }
         } catch (Throwable e) {
-            new SOSProviderException(e);
+            new ProviderException(e);
         }
         return r;
     }
 
     /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
             return null;
         }
-        checkBeforeOperation("renameFilesIfSourceExists", sshClient);
+        validatePrerequisites("renameFilesIfSourceExists");
 
         RenameFilesResult r = new RenameFilesResult(files.size());
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
@@ -242,43 +240,29 @@ public class ProviderImpl extends ASSHProvider {
                 }
             }
         } catch (Throwable e) {
-            new SOSProviderException(e);
+            new ProviderException(e);
         }
         return r;
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
-    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("getFileIfExists", sshClient, path, "path");
+    public ProviderFile getFileIfExists(String path) throws ProviderException {
+        validatePrerequisites("getFileIfExists", path, "path");
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             return createProviderFile(path, sftp.stat(path));
         } catch (NoSuchFileException e) {
             return null;
         } catch (IOException e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
-    @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
-        checkBeforeOperation("rereadFileIfExists", sshClient);
-
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            return refreshFileMetadata(file, createProviderFile(file.getFullPath(), sftp.stat(file.getFullPath())));
-        } catch (NoSuchFileException e) {
-            return null;
-        } catch (IOException e) {
-            throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#getFileContentIfExists(String)} */
     @Override
-    public String getFileContentIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("getFileContentIfExists", sshClient, path, "path");
+    public String getFileContentIfExists(String path) throws ProviderException {
+        validatePrerequisites("getFileContentIfExists", path, "path");
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             if (!ProviderUtils.exists(sftp, path)) {
@@ -295,14 +279,14 @@ public class ProviderImpl extends ASSHProvider {
             }
             return baos.toString(StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#writeFile(String,String)} */
     @Override
-    public void writeFile(String path, String content) throws SOSProviderException {
-        checkBeforeOperation("writeFile", sshClient, path, "path");
+    public void writeFile(String path, String content) throws ProviderException {
+        validatePrerequisites("writeFile", path, "path");
 
         EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT, OpenMode.TRUNC);
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
@@ -310,15 +294,15 @@ public class ProviderImpl extends ASSHProvider {
                 remoteFile.write(0, content.getBytes(StandardCharsets.UTF_8), 0, content.length());
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String,long)} */
     @Override
-    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
-        checkBeforeOperation("setFileLastModifiedFromMillis", sshClient, path, path);
-        checkModificationTime(path, milliseconds);
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
+        validatePrerequisites("setFileLastModifiedFromMillis", path, path);
+        validateModificationTime(path, milliseconds);
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             FileAttributes attr = sftp.stat(path);
@@ -326,14 +310,14 @@ public class ProviderImpl extends ASSHProvider {
             FileAttributes newAttr = new FileAttributes.Builder().withAtimeMtime(attr.getAtime(), seconds).build();
             sftp.setattr(path, newAttr);
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
-    public InputStream getInputStream(String path) throws SOSProviderException {
-        checkBeforeOperation("getInputStream", sshClient, path, "path");
+    public InputStream getInputStream(String path) throws ProviderException {
+        validatePrerequisites("getInputStream", path, "path");
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         try {
@@ -359,14 +343,14 @@ public class ProviderImpl extends ASSHProvider {
             };
         } catch (Throwable e) {
             SOSClassUtil.closeQuietly(sftpRef.get());
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#getOutputStream(String,boolean)} */
     @Override
-    public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
-        checkBeforeOperation("getOutputStream", sshClient, path, "path");
+    public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
+        validatePrerequisites("getOutputStream", path, "path");
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         try {
@@ -399,7 +383,7 @@ public class ProviderImpl extends ASSHProvider {
             };
         } catch (Throwable e) {
             SOSClassUtil.closeQuietly(sftpRef.get());
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -465,36 +449,44 @@ public class ProviderImpl extends ASSHProvider {
         return r;
     }
 
+    /** Overrides {@link AProvider#validatePrerequisites(String)} */
+    @Override
+    public void validatePrerequisites(String method) throws ProviderException {
+        if (sshClient == null) {
+            throw new ProviderClientNotInitializedException(getLogPrefix() + method + "SSHClient");
+        }
+    }
+
     /** SSH Provider specific methods */
 
     /** Overrides {@link ASSHProvider#put(String, String, int)} */
     @Override
-    public void put(String source, String target, int perm) throws SOSProviderException {
+    public void put(String source, String target, int perm) throws ProviderException {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             ProviderUtils.put(sftp, source, target);
             sftp.chmod(target, perm);
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(source) + "[" + target + "][perm=" + perm + "]", e);
+            throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "][perm=" + perm + "]", e);
         }
     }
 
     /** Overrides {@link ASSHProvider#put(String, String)} */
     @Override
-    public void put(String source, String target) throws SOSProviderException {
+    public void put(String source, String target) throws ProviderException {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             ProviderUtils.put(sftp, source, target);
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
+            throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
     }
 
     /** Overrides {@link ASSHProvider#get(String, String)} */
     @Override
-    public void get(String source, String target) throws SOSProviderException {
+    public void get(String source, String target) throws ProviderException {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             sftp.get(sftp.canonicalize(source), new FileSystemFile(target));
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
+            throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
     }
 
@@ -543,19 +535,13 @@ public class ProviderImpl extends ASSHProvider {
         return command;
     }
 
-    private void checkBeforeOperation(String method, SSHClient ssh) throws SOSProviderException {
-        if (ssh == null) {
-            throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "SSHClient");
-        }
-    }
-
-    private void checkBeforeOperation(String method, SSHClient ssh, String paramValue, String msg) throws SOSProviderException {
-        checkBeforeOperation(method, ssh);
-        checkParam(method, paramValue, msg);
-    }
-
     protected ProviderFile createProviderFile(String path, FileAttributes attr) {
         return createProviderFile(path, attr.getSize(), ProviderUtils.getFileLastModifiedMillis(attr));
+    }
+
+    private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
+        validatePrerequisites(method);
+        validateArgument(method, argValue, msg);
     }
 
 }

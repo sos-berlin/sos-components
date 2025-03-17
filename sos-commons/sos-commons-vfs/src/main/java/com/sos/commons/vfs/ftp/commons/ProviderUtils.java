@@ -6,29 +6,29 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 
 public class ProviderUtils {
 
     // possible recursion
     public static List<ProviderFile> selectFiles(FTPProvider provider, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result) throws SOSProviderException {
+            List<ProviderFile> result) throws ProviderException {
         int counterAdded = 0;
         try {
             list(provider, selection, directoryPath, result, counterAdded);
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new ProviderException(e);
         }
         return result;
     }
 
     private static int list(FTPProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result, int counterAdded)
-            throws SOSProviderException {
+            throws ProviderException {
         try {
             FTPFile[] subDirInfos = provider.getClient().listFiles(directoryPath);
             for (FTPFile subResource : subDirInfos) {
@@ -38,16 +38,16 @@ public class ProviderUtils {
                 counterAdded = processListEntry(provider, selection, directoryPath, subResource, result, counterAdded);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new ProviderException(e);
         }
         return counterAdded;
     }
 
     // TODO resource.getName() - path???
     private static int processListEntry(FTPProvider provider, ProviderFileSelection selection, String parentDirectory, FTPFile resource,
-            List<ProviderFile> result, int counterAdded) throws SOSProviderException {
+            List<ProviderFile> result, int counterAdded) throws ProviderException {
 
-        String fullPath = SOSPathUtil.appendPath(parentDirectory, resource.getName());
+        String fullPath = SOSPathUtils.appendPath(parentDirectory, resource.getName());
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
                 if (selection.checkDirectory(fullPath)) {

@@ -13,9 +13,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SOSPathUtilTest {
+public class SOSPathUtilsTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSPathUtilTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSPathUtilsTest.class);
 
     @Ignore
     @Test
@@ -53,10 +53,10 @@ public class SOSPathUtilTest {
         stringPaths.add("/tmp/y/2/ä");
         stringPaths.add("/var/1");
 
-        LOGGER.info("[SOSPathUtil][String]--------------");
+        LOGGER.info("[SOSPathUtils][String]--------------");
         LOGGER.info("    [input][stringPaths]" + stringPaths);
-        LOGGER.info("    [selectTopLevelPaths][stringPaths]" + SOSPathUtil.selectTopLevelPaths(stringPaths, "/"));
-        LOGGER.info("    [selectDeepestLevelPaths]" + SOSPathUtil.selectDeepestLevelPaths(stringPaths, "/"));
+        LOGGER.info("    [selectTopLevelPaths][stringPaths]" + SOSPathUtils.selectTopLevelPaths(stringPaths, "/"));
+        LOGGER.info("    [selectDeepestLevelPaths]" + SOSPathUtils.selectDeepestLevelPaths(stringPaths, "/"));
 
         List<Path> paths = stringPaths.stream().map(p -> Path.of(p)).collect(Collectors.toList());
         LOGGER.info("[SOSPath][Path]--------------");
@@ -88,7 +88,7 @@ public class SOSPathUtilTest {
 
         for (String path : stringPaths) {
             LOGGER.info("[" + path + "]");
-            LOGGER.info("    [SOSPathUtil.normalize]" + SOSPathUtil.normalize(path));
+            LOGGER.info("    [SOSPathUtils.normalize]" + SOSPathUtils.normalize(path));
             LOGGER.info("    [Path.normalize]       " + normalizeToString(path));
         }
 
@@ -117,6 +117,10 @@ public class SOSPathUtilTest {
 
         URI uri2 = new URI(null, toResolve, null);
         LOGGER.info("[URI2][resolve][" + uri2 + "]" + uri.resolve(uri2).normalize().toString());
+
+        URI uri3 = new URI("http://example.com/");
+        LOGGER.info("[URI3][parent][" + uri3 + "]" + uri3.resolve("..").normalize().toString());
+        LOGGER.info("[URI3][parent][" + uri3 + "][getPath]" + uri3.resolve("..").normalize().getPath());
     }
 
     @Ignore
@@ -137,11 +141,11 @@ public class SOSPathUtilTest {
 
     private void paths(String path) {
         LOGGER.info("[" + path + "]");
-        LOGGER.info("    [SOSPathUtil.getName=" + SOSPathUtil.getName(path) + "][Path.getFileName=" + Path.of(path).getFileName() + "]");
-        LOGGER.info("    [SOSPathUtil.getParentPath=" + SOSPathUtil.getParentPath(path) + "][Path.getParent=" + Path.of(path).getParent() + "]");
+        LOGGER.info("    [SOSPathUtils.getName=" + SOSPathUtils.getName(path) + "][Path.getFileName=" + Path.of(path).getFileName() + "]");
+        LOGGER.info("    [SOSPathUtils.getParentPath=" + SOSPathUtils.getParentPath(path) + "][Path.getParent=" + Path.of(path).getParent() + "]");
     }
 
     private void appendPath(String path1, String path2) {
-        LOGGER.info("[" + path1 + "]append[" + path2 + "]" + SOSPathUtil.appendPath(path1, path2));
+        LOGGER.info("[" + path1 + "]append[" + path2 + "]" + SOSPathUtils.appendPath(path1, path2));
     }
 }

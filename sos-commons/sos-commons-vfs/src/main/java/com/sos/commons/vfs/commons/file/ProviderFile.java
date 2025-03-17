@@ -3,7 +3,7 @@ package com.sos.commons.vfs.commons.file;
 import java.util.TimeZone;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
 
@@ -42,7 +42,7 @@ public class ProviderFile {
             lastModifiedMillis = AProvider.DEFAULT_FILE_ATTR_VALUE;
         } else {
             fullPath = provider.toPathStyle(val);
-            name = SOSPathUtil.getName(this.fullPath);
+            name = SOSPathUtils.getName(this.fullPath);
         }
     }
 

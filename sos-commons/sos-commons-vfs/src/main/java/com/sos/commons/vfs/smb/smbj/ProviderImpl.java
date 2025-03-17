@@ -35,16 +35,18 @@ import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
-import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
-import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
+import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.smb.commons.ASMBProvider;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
@@ -55,15 +57,15 @@ public class ProviderImpl extends ASMBProvider {
 
     private boolean accessMaskMaximumAllowed = false;
 
-    public ProviderImpl(ISOSLogger logger, SMBProviderArguments args) throws SOSProviderInitializationException {
+    public ProviderImpl(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
     }
 
     /** Overrides {@link IProvider#connect()} */
     @Override
-    public void connect() throws SOSProviderConnectException {
+    public void connect() throws ProviderConnectException {
         if (SOSString.isEmpty(getArguments().getHost().getValue())) {
-            throw new SOSProviderConnectException(new SOSRequiredArgumentMissingException("host"));
+            throw new ProviderConnectException(new SOSRequiredArgumentMissingException("host"));
         }
 
         boolean connected = false;
@@ -73,14 +75,17 @@ public class ProviderImpl extends ASMBProvider {
             client = createClient();
             Connection connection = client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
             connected = true;
-            session = connection.authenticate(SMBAuthenticationContextFactory.create(getArguments()));
-
+            try {
+                session = connection.authenticate(SMBAuthenticationContextFactory.create(getArguments()));
+            } catch (Exception e) {
+                throw new ProviderAuthenticationException(e);
+            }
             getLogger().info(getConnectedMsg());
         } catch (Throwable e) {
             if (connected) {
                 disconnect();
             }
-            throw new SOSProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+            throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
 
@@ -111,8 +116,8 @@ public class ProviderImpl extends ASMBProvider {
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
-    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
-        checkBeforeOperation("selectFiles");
+    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
+        validatePrerequisites("selectFiles");
 
         selection = ProviderFileSelection.createIfNull(selection);
         selection.setFileTypeChecker(fileRepresentator -> {
@@ -128,7 +133,7 @@ public class ProviderImpl extends ASMBProvider {
         try (DiskShare share = connectShare(directory)) {
             ProviderUtils.list(this, selection, getSMBPath(directory), result, share, 0);
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new ProviderException(e);
         }
         return result;
     }
@@ -154,21 +159,21 @@ public class ProviderImpl extends ASMBProvider {
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
-        checkBeforeOperation("createDirectoriesIfNotExists", path, "path");
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
+        validatePrerequisites("createDirectoriesIfNotExists", path, "path");
 
         try (DiskShare share = connectShare(path)) {
             new SmbFiles().mkdirs(share, getSMBPath(path));
             return true;
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
-    public boolean deleteIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("deleteIfExists", path, "path");
+    public boolean deleteIfExists(String path) throws ProviderException {
+        validatePrerequisites("deleteIfExists", path, "path");
 
         try (DiskShare share = connectShare(path)) {
             FileAllInformation info = null;
@@ -184,17 +189,17 @@ public class ProviderImpl extends ASMBProvider {
             }
             return true;
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
         }
     }
 
     /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
     @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
             return null;
         }
-        checkBeforeOperation("deleteFilesIfExists");
+        validatePrerequisites("deleteFilesIfExists");
 
         DeleteFilesResult r = new DeleteFilesResult(files.size());
         try (DiskShare share = connectShare(files.iterator().next())) {// use the first element
@@ -215,18 +220,18 @@ public class ProviderImpl extends ASMBProvider {
                 }
             }
         } catch (Throwable e) {
-            new SOSProviderException(e);
+            new ProviderException(e);
         }
         return r;
     }
 
     /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
             return null;
         }
-        checkBeforeOperation("renameFilesIfSourceExists");
+        validatePrerequisites("renameFilesIfSourceExists");
 
         RenameFilesResult r = new RenameFilesResult(files.size());
         try (DiskShare share = connectShare(files.keySet().iterator().next())) {// use the first element
@@ -251,15 +256,15 @@ public class ProviderImpl extends ASMBProvider {
                 }
             }
         } catch (Throwable e) {
-            new SOSProviderException(e);
+            new ProviderException(e);
         }
         return r;
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
-    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("getFileIfExists", path, "path");
+    public ProviderFile getFileIfExists(String path) throws ProviderException {
+        validatePrerequisites("getFileIfExists", path, "path");
 
         try (DiskShare share = connectShare(path)) {
             try {
@@ -269,31 +274,14 @@ public class ProviderImpl extends ASMBProvider {
                 return null;
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
-    @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
-        checkBeforeOperation("rereadFileIfExists");
-
-        try (DiskShare share = connectShare(file.getFullPath())) {
-            try {
-                String smbPath = getSMBPath(file.getFullPath());
-                return refreshFileMetadata(file, createProviderFile(smbPath, share.getFileInformation(smbPath)));
-            } catch (SMBApiException e) {// not exists
-                return null;
-            }
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#getFileContentIfExists(String)} */
     @Override
-    public String getFileContentIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("getFileContentIfExists", path, "path");
+    public String getFileContentIfExists(String path) throws ProviderException {
+        validatePrerequisites("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
         try (InputStream is = new SMBInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path)); Reader r = new InputStreamReader(is,
@@ -303,27 +291,27 @@ public class ProviderImpl extends ASMBProvider {
         } catch (SOSNoSuchFileException e) {
             return null;
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#writeFile(String,String)} */
     @Override
-    public void writeFile(String path, String content) throws SOSProviderException {
-        checkBeforeOperation("writeFile", path, "path");
+    public void writeFile(String path, String content) throws ProviderException {
+        validatePrerequisites("writeFile", path, "path");
 
         try (OutputStream os = new SMBOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), false)) {
             os.write(content.getBytes(StandardCharsets.UTF_8));
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String,long)} */
     @Override
-    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
-        checkBeforeOperation("setFileLastModifiedFromMillis", path, path);
-        checkModificationTime(path, milliseconds);
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
+        validatePrerequisites("setFileLastModifiedFromMillis", path, path);
+        validateModificationTime(path, milliseconds);
 
         try (DiskShare share = connectShare(path)) {
             try (File file = ProviderUtils.openExistingFileWithChangeAttributeAccess(accessMaskMaximumAllowed, share, getSMBPath(path))) {
@@ -334,33 +322,40 @@ public class ProviderImpl extends ASMBProvider {
                         .getFileAttributes()));
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
-    public InputStream getInputStream(String path) throws SOSProviderException {
-        checkBeforeOperation("getInputStream", path, "path");
+    public InputStream getInputStream(String path) throws ProviderException {
+        validatePrerequisites("getInputStream", path, "path");
 
         try {
             return new SMBInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path));
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#getOutputStream(String,boolean)} */
     @Override
-    public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
-        checkBeforeOperation("getOutputStream", path, "path");
+    public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
+        validatePrerequisites("getOutputStream", path, "path");
 
         try {
             return new SMBOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), append);
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
+    }
 
+    /** Overrides {@link AProvider#validatePrerequisites(String)} */
+    @Override
+    public void validatePrerequisites(String method) throws ProviderException {
+        if (client == null || session == null) {
+            throw new ProviderClientNotInitializedException(getLogPrefix() + method + "SMBClient/SMBSession");
+        }
     }
 
     protected ProviderFile createProviderFile(String fullPath, FileIdBothDirectoryInformation info) {
@@ -495,15 +490,9 @@ public class ProviderImpl extends ASMBProvider {
                 .toEpochMillis());
     }
 
-    private void checkBeforeOperation(String method) throws SOSProviderException {
-        if (client == null || session == null) {
-            throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "SMBClient/SMBSession");
-        }
-    }
-
-    private void checkBeforeOperation(String method, String paramValue, String msg) throws SOSProviderException {
-        checkBeforeOperation(method);
-        checkParam(method, paramValue, msg);
+    private void validatePrerequisites(String method, String paramValue, String msg) throws ProviderException {
+        validatePrerequisites(method);
+        validateArgument(method, paramValue, msg);
     }
 
 }

@@ -11,7 +11,7 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 
 import net.schmizz.keepalive.KeepAlive;
 import net.schmizz.keepalive.KeepAliveRunner;
@@ -113,12 +113,12 @@ public class ProviderUtils {
 
     // possible recursion
     protected static List<ProviderFile> selectFiles(ProviderImpl provider, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result) throws SOSProviderException {
+            List<ProviderFile> result) throws ProviderException {
         int counterAdded = 0;
         try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
             list(provider, sftp, selection, directoryPath, result, counterAdded);
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new ProviderException(e);
         }
         return result;
     }
@@ -159,7 +159,7 @@ public class ProviderUtils {
     }
 
     private static int list(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            int counterAdded) throws SOSProviderException {
+            int counterAdded) throws ProviderException {
         try {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
             for (RemoteResourceInfo subResource : subDirInfos) {
@@ -169,13 +169,13 @@ public class ProviderUtils {
                 counterAdded = processListEntry(provider, sftp, selection, subResource, result, counterAdded);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new ProviderException(e);
         }
         return counterAdded;
     }
 
     private static int processListEntry(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
-            List<ProviderFile> result, int counterAdded) throws SOSProviderException {
+            List<ProviderFile> result, int counterAdded) throws ProviderException {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
                 if (selection.checkDirectory(resource.getPath())) {

@@ -26,7 +26,7 @@ import org.apache.http.entity.InputStreamEntity;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -37,71 +37,57 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.SOSProviderClientNotInitializedException;
-import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
-import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPOutputStream;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
+import com.sos.commons.vfs.webdav.jackrabbit.ProviderImpl;
 
 public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     private URI baseURI;
     private HTTPClient client;
 
-    public HTTPProvider(ISOSLogger logger, HTTPProviderArguments arguments) throws SOSProviderInitializationException {
+    public HTTPProvider(ISOSLogger logger, HTTPProviderArguments arguments) throws ProviderInitializationException {
         super(logger, arguments);
         try {
-            // can be redefined on connect if not found
-            baseURI = info();
+            // if baseURI not found, can be redefined when connecting
+            baseURI = HTTPUtils.getBaseURI(getArguments().getHost(), getArguments().getPort());
+            setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
         } catch (URISyntaxException e) {
-            throw new SOSProviderInitializationException(e);
+            throw new ProviderInitializationException(e);
         }
     }
 
     /** Overrides {@link IProvider#getPathSeparator()} */
     @Override
     public String getPathSeparator() {
-        return SOSPathUtil.PATH_SEPARATOR_UNIX;
+        return SOSPathUtils.PATH_SEPARATOR_UNIX;
     }
 
     /** Overrides {@link IProvider#isAbsolutePath(String)} */
     @Override
     public boolean isAbsolutePath(String path) {
-        return SOSPathUtil.isAbsoluteURIPath(path);
+        return SOSPathUtils.isAbsoluteURIPath(path);
     }
 
-    /** Overrides {@link IProvider#normalizePath(String)}<br/>
-     * Normalizes the given path by resolving it against the base URI and ensuring proper encoding.
-     * <p>
-     * This method ensures that both relative and absolute paths are handled correctly.<br/>
-     * It avoids using {@code new URI(String)} directly, as it would throw an exception<br/>
-     * if the input contains invalid characters (e.g., spaces, special symbols).<br/>
-     * Similarly, {@code new URL(String)} is not used for relative paths since it requires an absolute URL.
-     * </p>
-     *
-     * @param path The input path, which can be relative or absolute.
-     * @return A properly normalized and encoded URL string. */
+    /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        // return baseURI.resolve(path).normalize().toString();
-        try {
-            // new URI(null, path, null) not throw an exception if the path contains invalid characters
-            return baseURI.resolve(new URI(null, path, null)).toString();
-        } catch (URISyntaxException e) {
-            return baseURI.resolve(HTTPUtils.encodeURL(path)).normalize().toString();
-        }
+        return HTTPUtils.normalizePath(baseURI, path);
     }
 
     /** Overrides {@link IProvider#connect()} */
     @Override
-    public void connect() throws SOSProviderConnectException {
+    public void connect() throws ProviderConnectException {
         if (SOSString.isEmpty(getArguments().getHost().getValue())) {
-            throw new SOSProviderConnectException(new SOSRequiredArgumentMissingException("host"));
+            throw new ProviderConnectException(new SOSRequiredArgumentMissingException("host"));
         }
 
         try {
@@ -113,7 +99,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             getLogger().info(getConnectedMsg());
         } catch (Throwable e) {
-            throw new SOSProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+            throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
 
@@ -138,7 +124,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
-    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
+    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
         logNotImpementedMethod("selectFiles", selection == null ? "" : selection.toString());
         return List.of();
     }
@@ -152,10 +138,11 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
-            try (CloseableHttpResponse response = client.execute(new HttpGet(uri))) {
+            HttpGet request = new HttpGet(uri);
+            try (CloseableHttpResponse response = client.execute(request)) {
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
-                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                    throw new IOException(HTTPClient.getResponseStatus(request, response));
                 }
             }
             return true;
@@ -169,41 +156,45 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
-        logNotImpementedMethod("createDirectoriesIfNotExists", path);
-        return false;
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
+        if (exists(path)) {
+            return false;
+        }
+        throw new ProviderException(getPathOperationPrefix(path) + "[does not exist]a directory cannot be created via " + getArguments().getProtocol()
+                .getValue());
     }
 
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
-    public boolean deleteIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("deleteIfExists", path, "path");
+    public boolean deleteIfExists(String path) throws ProviderException {
+        validatePrerequisites("deleteIfExists", path, "path");
 
         try {
             URI uri = new URI(normalizePath(path));
-            try (CloseableHttpResponse response = client.execute(new HttpDelete(uri))) {
+            HttpDelete request = new HttpDelete(uri);
+            try (CloseableHttpResponse response = client.execute(request)) {
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
                     if (HTTPClient.isNotFound(sl)) {
                         return false;
                     }
-                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                    throw new IOException(HTTPClient.getResponseStatus(request, response));
                 }
             }
             return true;
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
         }
     }
 
     /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
     // TODO check if isDirectory
     @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
             return null;
         }
-        checkBeforeOperation("deleteFilesIfExists");
+        validatePrerequisites("deleteFilesIfExists");
 
         DeleteFilesResult r = new DeleteFilesResult(files.size());
         try {
@@ -222,18 +213,18 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 }
             }
         } catch (Throwable e) {
-            new SOSProviderException(e);
+            new ProviderException(e);
         }
         return r;
     }
 
     /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws SOSProviderException {
+    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
             return null;
         }
-        checkBeforeOperation("renameFilesIfSourceExists");
+        validatePrerequisites("renameFilesIfSourceExists");
 
         RenameFilesResult r = new RenameFilesResult(files.size());
         try {
@@ -254,48 +245,42 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 }
             }
         } catch (Throwable e) {
-            new SOSProviderException(e);
+            new ProviderException(e);
         }
         return r;
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
-    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("getFileIfExists", path, "path");
+    public ProviderFile getFileIfExists(String path) throws ProviderException {
+        validatePrerequisites("getFileIfExists", path, "path");
 
-        ProviderFile file = null;
         try {
             URI uri = new URI(normalizePath(path));
-            try (CloseableHttpResponse response = client.execute(new HttpGet(uri))) {
+            HttpGet request = new HttpGet(uri);
+            try (CloseableHttpResponse response = client.execute(request)) {
                 StatusLine sl = response.getStatusLine();
-                if (!HTTPClient.isSuccessful(sl) || !HTTPClient.isNotFound(sl)) {
-                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                if (!HTTPClient.isSuccessful(sl)) {
+                    if (HTTPClient.isNotFound(sl)) {
+                        return null;
+                    }
+                    throw new IOException(HTTPClient.getResponseStatus(request, response));
                 }
-                file = createProviderFile(uri, response);
+                return createProviderFile(uri, response);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
         }
-        return file;
+
     }
 
-    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
+    /** Overrides {@link IProvider#getFileContentIfExists(String, String)} <br/>
+     * 
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit {@link ProviderImpl#getFileContentIfExists(String)}.<br/>
+     */
     @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
-        checkBeforeOperation("rereadFileIfExists");
-
-        try {
-            return refreshFileMetadata(file, getFileIfExists(file.getFullPath()));
-        } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(file.getFullPath()), e);
-        }
-    }
-
-    /** Overrides {@link IProvider#getFileContentIfExists(String, String)} */
-    @Override
-    public String getFileContentIfExists(String path) throws SOSProviderException {
-        checkBeforeOperation("getFileContentIfExists", path, "path");
+    public String getFileContentIfExists(String path) throws ProviderException {
+        validatePrerequisites("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
         try (InputStream is = client.getHTTPInputStream(new URI(normalizePath(path))); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8);
@@ -305,89 +290,82 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         } catch (SOSNoSuchFileException e) {
             return null;
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
-    /** Overrides {@link IProvider#writeFile(String, String)} */
+    /** Overrides {@link IProvider#writeFile(String, String)}<br/>
+     * 
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit (except DavConstants.HEADER_OVERWRITE)
+     *          {@link ProviderImpl#writeFile(String,String)}.<br/>
+     */
     @Override
-    public void writeFile(String path, String content) throws SOSProviderException {
-        checkBeforeOperation("writeFile", path, "path");
+    public void writeFile(String path, String content) throws ProviderException {
+        validatePrerequisites("writeFile", path, "path");
 
         try {
             URI uri = new URI(normalizePath(path));
 
-            HttpPut httpPut = new HttpPut(uri);
-            // httpPut.setEntity(new StringEntity(content, StandardCharsets.UTF_8));
-            // httpPut.setHeader("Content-Type", "text/plain");
-            httpPut.setEntity(new ByteArrayEntity(content.getBytes(StandardCharsets.UTF_8)));
-            httpPut.setHeader("Content-Type", "application/octet-stream");
+            HttpPut request = new HttpPut(uri);
+            // request.setEntity(new StringEntity(content, StandardCharsets.UTF_8));
+            // request.setHeader("Content-Type", "text/plain");
+            request.setEntity(new ByteArrayEntity(content.getBytes(StandardCharsets.UTF_8)));
+            request.setHeader("Content-Type", "application/octet-stream");
             // The 'Content-Length' Header is automatically set when an HttpEntity is used
 
-            try (CloseableHttpResponse response = client.execute(httpPut)) {
+            try (CloseableHttpResponse response = client.execute(request)) {
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
-                    throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                    throw new IOException(HTTPClient.getResponseStatus(request, response));
                 }
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
     @Override
-    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
         logNotImpementedMethod("setFileLastModifiedFromMillis", "path=" + path + ",milliseconds=" + milliseconds);
     }
 
-    /** Overrides {@link IProvider#getInputStream(String)} */
+    /** Overrides {@link IProvider#getInputStream(String)}<br/>
+     * 
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit {@link ProviderImpl#getInputStream(String)}.<br/>
+     */
     @Override
-    public InputStream getInputStream(String path) throws SOSProviderException {
-        checkBeforeOperation("getInputStream", path, "path");
+    public InputStream getInputStream(String path) throws ProviderException {
+        validatePrerequisites("getInputStream", path, "path");
 
         try {
             return client.getHTTPInputStream(new URI(normalizePath(path)));
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
-    /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
+    /** Overrides {@link IProvider#getOutputStream(String, boolean)}<br/>
+     * 
+     * @apiNote this method is implemented in the same way as webdav/jackrabbit {@link ProviderImpl#getOutputStream(String,boolean)}.<br/>
+     */
     @Override
-    public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
-        checkBeforeOperation("getOutputStream", path, "path");
+    public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
+        validatePrerequisites("getOutputStream", path, "path");
 
         try {
-            return new HTTPOutputStream(client, new HttpPut(new URI(normalizePath(path))));
+            return new HTTPOutputStream(client, new URI(normalizePath(path)));
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
-    public URI getBaseURI() {
-        return baseURI;
-    }
-
-    private URI info() throws URISyntaxException {
-        URI baseURI;
-        String hostOrUrl = SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(getArguments().getHost().getValue());
-        if (isAbsolutePath(hostOrUrl)) {
-            baseURI = HTTPUtils.toBaseURI(hostOrUrl);
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("http://").append(hostOrUrl);
-            if (getArguments().getPort().isDirty()) {
-                sb.append(":").append(getArguments().getPort().getValue());
-            }
-            baseURI = HTTPUtils.toBaseURI(sb.toString());
+    /** Overrides {@link AProvider#validatePrerequisites(String)} */
+    @Override
+    public void validatePrerequisites(String method) throws ProviderException {
+        if (client == null) {
+            throw new ProviderClientNotInitializedException(getLogPrefix() + method + "HTTPPClient");
         }
-        setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
-        return baseURI;
-    }
-
-    private SSLArguments getSSLArguments() {
-        return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) ? ((HTTPSProviderArguments) getArguments()).getSSL() : null;
     }
 
     public HTTPAuthConfig getAuthConfig() {
@@ -395,33 +373,42 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         return new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
     }
 
+    public URI getBaseURI() {
+        return baseURI;
+    }
+
+    private SSLArguments getSSLArguments() {
+        return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) ? ((HTTPSProviderArguments) getArguments()).getSSL() : null;
+    }
+
     private void connect(URI uri) throws Exception {
-        StatusLine notFoundStatusLine = null;
-        try (CloseableHttpResponse response = client.execute(new HttpGet(baseURI))) {
+        String notFoundMsg = null;
+
+        HttpGet request = new HttpGet(uri);
+        try (CloseableHttpResponse response = client.execute(request)) {
             StatusLine sl = response.getStatusLine();
-            if (HTTPClient.isServerError(notFoundStatusLine)) {
-                throw new Exception(HTTPClient.getResponseStatus(baseURI, sl));
+            if (HTTPClient.isServerError(sl)) {
+                throw new Exception(HTTPClient.getResponseStatus(request, response));
             }
             if (HTTPClient.isNotFound(sl)) {
-                notFoundStatusLine = sl;
+                notFoundMsg = HTTPClient.getResponseStatus(request, response);
             }
         }
         // Connection successful but baseURI not found - try redefining baseURI
         // - recursive attempt with parent path
-        if (notFoundStatusLine != null) {
+        if (notFoundMsg != null) {
             if (SOSString.isEmpty(uri.getPath())) {
-                throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
+                throw new Exception(notFoundMsg);
             }
             URI parentURI = HTTPUtils.getParentURI(uri);
-            if (parentURI == null) {
-                throw new Exception(HTTPClient.getResponseStatus(uri, notFoundStatusLine));
+            if (parentURI == null || parentURI.equals(uri)) {
+                throw new Exception(notFoundMsg);
             }
             // TODO info?
-            getLogger().info("%s[connect][%s]using parent path %s ...", getLogPrefix(), HTTPClient.getResponseStatus(uri, notFoundStatusLine),
-                    parentURI);
+            getLogger().info("%s[connect][%s]using parent path %s ...", getLogPrefix(), notFoundMsg, parentURI);
+
             baseURI = parentURI;
             setAccessInfo(HTTPUtils.getAccessInfo(baseURI, getArguments().getUser().getValue()));
-
             connect(baseURI);
         }
     }
@@ -432,10 +419,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
      * @param source
      * @param target
      * @return
-     * @throws SOSProviderException */
-    private boolean renameFileIfExists(String source, String target) throws SOSProviderException {
+     * @throws ProviderException */
+    private boolean renameFileIfExists(String source, String target) throws ProviderException {
         InputStream is = null;
-        boolean result = false;
         try {
             URI sourceURI = new URI(normalizePath(source));
             URI targetURI = new URI(normalizePath(target));
@@ -450,31 +436,27 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
                 StatusLine sl = response.getStatusLine();
                 if (!HTTPClient.isSuccessful(sl)) {
-                    if (!HTTPClient.isNotFound(sl)) {
-                        throw new IOException(HTTPClient.getResponseStatus(targetURI, sl));
+                    if (HTTPClient.isNotFound(sl)) {
+                        return false;
                     }
+                    throw new IOException(HTTPClient.getResponseStatus(request, response));
                 }
             }
             deleteIfExists(source);
-            result = true;
+            return true;
         } catch (SOSNoSuchFileException e) { // is = getInputStream(s);
+            return false;
         } catch (Throwable e) {
-            throw new SOSProviderException(getPathOperationPrefix(source + "->" + target), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e.getCause());
         } finally {
             SOSClassUtil.closeQuietly(is);
         }
-        return result;
+
     }
 
-    private void checkBeforeOperation(String method) throws SOSProviderException {
-        if (client == null) {
-            throw new SOSProviderClientNotInitializedException(getLogPrefix() + method + "HTTPPClient");
-        }
-    }
-
-    private void checkBeforeOperation(String method, String paramValue, String msg) throws SOSProviderException {
-        checkBeforeOperation(method);
-        checkParam(method, paramValue, msg);
+    private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
+        validatePrerequisites(method);
+        validateArgument(method, argValue, msg);
     }
 
     private ProviderFile createProviderFile(URI uri, HttpResponse response) throws Exception {

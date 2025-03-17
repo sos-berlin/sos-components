@@ -86,4 +86,8 @@ public class YADEProviderDelegatorHelper {
         return false;
     }
 
+    public static boolean isSourceOrTargetNotConnected(IYADEProviderDelegator sourceDelegator, IYADEProviderDelegator targetDelegator) {
+        return !sourceDelegator.getProvider().isConnected() || (targetDelegator != null && !targetDelegator.getProvider().isConnected());
+    }
+
 }

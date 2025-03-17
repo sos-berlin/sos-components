@@ -2,6 +2,7 @@ package com.sos.yade.engine.handlers.operations.copymove;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.IProvider;
+import com.sos.commons.vfs.ftp.FTPProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -76,13 +77,11 @@ public class YADECopyMoveOperationsConfig {
         return true;
     }
 
-    // TODO
     private boolean isBinaryMode(IProvider provider) {
-        // if (!(provider instanceof FTPProvider)) {
-        // return true;
-        // }
-        // return ((FTPProvider) provider).isBinaryMode();
-        return true;
+        if (!(provider instanceof FTPProvider)) {
+            return true;
+        }
+        return ((FTPProvider) provider).getArguments().isBinaryTransferMode();
     }
 
     public String getIntegrityHashAlgorithm() {

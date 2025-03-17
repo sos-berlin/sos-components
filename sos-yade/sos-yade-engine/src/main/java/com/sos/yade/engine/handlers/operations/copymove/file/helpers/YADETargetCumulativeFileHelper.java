@@ -10,7 +10,7 @@ import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
@@ -100,7 +100,7 @@ public class YADETargetCumulativeFileHelper {
     }
 
     private static void decompress(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
-            String gzipFile, String outputFile) throws SOSProviderException {
+            String gzipFile, String outputFile) throws ProviderException {
 
         logger.info("%s%s[decompress][%s]->[%s]", targetDelegator.getLogPrefix(), LOG_PREFIX, gzipFile, outputFile);
         targetDelegator.getProvider().deleteIfExists(outputFile);
@@ -113,12 +113,12 @@ public class YADETargetCumulativeFileHelper {
                 os.write(buffer, 0, len);
             }
         } catch (IOException e) {
-            new SOSProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[decompress][" + gzipFile + "]->[" + outputFile + "]" + e, e);
+            new ProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[decompress][" + gzipFile + "]->[" + outputFile + "]" + e, e);
         }
     }
 
     private static void merge(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator, String inputFile,
-            String outputFile) throws SOSProviderException {
+            String outputFile) throws ProviderException {
 
         logger.info("%s%s[merge][%s]->[%s]", targetDelegator.getLogPrefix(), LOG_PREFIX, inputFile, outputFile);
 
@@ -130,12 +130,12 @@ public class YADETargetCumulativeFileHelper {
                 os.write(buffer, 0, len);
             }
         } catch (IOException e) {
-            new SOSProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[merge][" + inputFile + "]->[" + outputFile + "]" + e, e);
+            new ProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[merge][" + inputFile + "]->[" + outputFile + "]" + e, e);
         }
     }
 
     private static void compress(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
-            String inputFile, String gzipFile) throws SOSProviderException {
+            String inputFile, String gzipFile) throws ProviderException {
 
         if (logger.isDebugEnabled()) {
             logger.debug("%s%s[compress][%s]->[%s]", targetDelegator.getLogPrefix(), LOG_PREFIX, inputFile, gzipFile);
@@ -149,7 +149,7 @@ public class YADETargetCumulativeFileHelper {
                 os.write(buffer, 0, len);
             }
         } catch (IOException e) {
-            new SOSProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[compress][" + inputFile + "]->[" + gzipFile + "]" + e, e);
+            new ProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[compress][" + inputFile + "]->[" + gzipFile + "]" + e, e);
         }
     }
 

@@ -1,6 +1,6 @@
 package com.sos.yade.engine.handlers.operations.copymove.file.commons;
 
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileReplacementHelper;
 
@@ -26,7 +26,7 @@ public class YADEFileNameInfo {
     public YADEFileNameInfo(final AYADEProviderDelegator delegator, final String fileNameOrPath) {
         String formatted = delegator.getProvider().toPathStyle(fileNameOrPath);
         if (delegator.containsParentPath(formatted)) {
-            name = SOSPathUtil.getName(formatted);
+            name = SOSPathUtils.getName(formatted);
             parent = delegator.getParentPath(formatted);
             // parent is not null - due to normalized.contains(...)
             path = delegator.appendPath(parent, name);

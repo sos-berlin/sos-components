@@ -10,13 +10,14 @@ import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.smb.commons.ASMBProvider;
 import com.sos.commons.vfs.webdav.commons.AWebDAVProvider;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
@@ -25,17 +26,17 @@ public class WebDAVProvider extends ASMBProvider {
 
     private final AWebDAVProvider impl;
 
-    public WebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws SOSProviderException {
+    public WebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderException {
         impl = initialize(logger, args);
     }
 
-    private static AWebDAVProvider initialize(ISOSLogger logger, WebDAVProviderArguments args) throws SOSProviderException {
+    private static AWebDAVProvider initialize(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderException {
         return new com.sos.commons.vfs.webdav.jackrabbit.ProviderImpl(logger, args);
     }
 
     /** Overrides {@link IProvider#connect()} */
     @Override
-    public void connect() throws SOSProviderConnectException {
+    public void connect() throws ProviderConnectException {
         impl.connect();
     }
 
@@ -53,13 +54,13 @@ public class WebDAVProvider extends ASMBProvider {
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws SOSProviderException {
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
         return impl.createDirectoriesIfNotExists(path);
     }
 
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
-    public boolean deleteIfExists(String path) throws SOSProviderException {
+    public boolean deleteIfExists(String path) throws ProviderException {
         return impl.deleteIfExists(path);
     }
 
@@ -71,25 +72,25 @@ public class WebDAVProvider extends ASMBProvider {
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
-    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws SOSProviderException {
+    public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
         return impl.selectFiles(selection);
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
-    public ProviderFile getFileIfExists(String path) throws SOSProviderException {
+    public ProviderFile getFileIfExists(String path) throws ProviderException {
         return impl.getFileIfExists(path);
     }
 
     /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
     @Override
-    public ProviderFile rereadFileIfExists(ProviderFile file) throws SOSProviderException {
+    public ProviderFile rereadFileIfExists(ProviderFile file) throws ProviderException {
         return impl.rereadFileIfExists(file);
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
     @Override
-    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws SOSProviderException {
+    public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
         impl.setFileLastModifiedFromMillis(path, milliseconds);
     }
 
@@ -107,38 +108,44 @@ public class WebDAVProvider extends ASMBProvider {
 
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
-    public InputStream getInputStream(String path) throws SOSProviderException {
+    public InputStream getInputStream(String path) throws ProviderException {
         return impl.getInputStream(path);
     }
 
     /** Overrides {@link IProvider#getOutputStream(String, boolean)} */
     @Override
-    public OutputStream getOutputStream(String path, boolean append) throws SOSProviderException {
+    public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
         return impl.getOutputStream(path, append);
     }
 
     /** Overrides {@link IProvider#getFileContentIfExists(String)} */
     @Override
-    public String getFileContentIfExists(String path) throws SOSProviderException {
+    public String getFileContentIfExists(String path) throws ProviderException {
         return impl.getFileContentIfExists(path);
     }
 
     /** Overrides {@link IProvider#writeFile(String, String)} */
     @Override
-    public void writeFile(String path, String content) throws SOSProviderException {
+    public void writeFile(String path, String content) throws ProviderException {
         impl.writeFile(path, content);
     }
 
     /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
     @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+    public DeleteFilesResult deleteFilesIfExists(Collection<String> paths, boolean stopOnSingleFileError) throws ProviderException {
         return impl.deleteFilesIfExists(paths, stopOnSingleFileError);
     }
 
     /** Overrides {@link IProvider#renameFilesIfSourceExists(String, String)} */
     @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> paths, boolean stopOnSingleFileError) throws SOSProviderException {
+    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> paths, boolean stopOnSingleFileError) throws ProviderException {
         return impl.renameFilesIfSourceExists(paths, stopOnSingleFileError);
+    }
+
+    /** Overrides {@link AProvider#validatePrerequisites(String)} */
+    @Override
+    public void validatePrerequisites(String method) throws ProviderException {
+        impl.validatePrerequisites(method);
     }
 
     /* -- Additional SMB Provider specific methods ------------------------- */

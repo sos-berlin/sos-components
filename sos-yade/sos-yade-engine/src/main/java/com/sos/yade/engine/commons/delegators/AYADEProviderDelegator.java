@@ -1,6 +1,6 @@
 package com.sos.yade.engine.commons.delegators;
 
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
@@ -48,11 +48,11 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     }
 
     public String appendPath(String parent, String file) {
-        return SOSPathUtil.appendPath(parent, file, provider.getPathSeparator());
+        return SOSPathUtils.appendPath(parent, file, provider.getPathSeparator());
     }
 
     public String getParentPath(String path) {
-        return SOSPathUtil.getParentPath(path, provider.getPathSeparator());
+        return SOSPathUtils.getParentPath(path, provider.getPathSeparator());
     }
 
     public boolean containsParentPath(String path) {
@@ -83,16 +83,16 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
             /** resolved and normalized based on baseURL */
             dir = provider.normalizePath(path);
         }
-        return SOSPathUtil.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithoutTrailingSeparator(dir)
-                : SOSPathUtil.getWindowsStyleDirectoryWithoutTrailingSeparator(dir);
+        return SOSPathUtils.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtils.getUnixStyleDirectoryWithoutTrailingSeparator(dir)
+                : SOSPathUtils.getWindowsStyleDirectoryWithoutTrailingSeparator(dir);
     }
 
     private String getDirectoryPathWithTrailingPathSeparator(String path) {
         if (SOSString.isEmpty(path)) {
             return null;
         }
-        return SOSPathUtil.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtil.getUnixStyleDirectoryWithTrailingSeparator(path)
-                : SOSPathUtil.getWindowsStyleDirectoryWithTrailingSeparator(path);
+        return SOSPathUtils.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(path)
+                : SOSPathUtils.getWindowsStyleDirectoryWithTrailingSeparator(path);
     }
 
 }

@@ -10,8 +10,9 @@ import java.util.Properties;
 import java.util.function.Function;
 
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
@@ -22,9 +23,9 @@ import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
-import com.sos.commons.vfs.exceptions.SOSProviderConnectException;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
-import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public abstract class AProvider<A extends AProviderArguments> implements IProvider {
 
@@ -44,11 +45,20 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     private String logPrefix;
 
-    public AProvider(ISOSLogger logger, A arguments) throws SOSProviderInitializationException {
+    public AProvider(ISOSLogger logger, A arguments, SOSArgument<?>... additionalCredentialStoreArg) throws ProviderInitializationException {
         this.logger = logger;
         this.arguments = arguments;
+        // before proxyProvider
+        resolveCredentialStore(additionalCredentialStoreArg);
         this.proxyProvider = this.arguments == null ? null : ProxyProvider.createInstance(this.arguments.getProxy());
+
     }
+
+    /** Validates that all required global properties (e.g., client, session) are properly initialized and not null.<br/>
+     * If any of the required properties are not set, an exception will be thrown.
+     * 
+     * @throws ProviderException if any required precondition is not met (e.g., uninitialized client or session). */
+    public abstract void validatePrerequisites(String method) throws ProviderException;
 
     /** Method to set a custom providerFileCreator (a function that generates ProviderFile using the builder)<br/>
      * Overrides {@link IProvider#setProviderFileCreator(Function)} */
@@ -71,18 +81,21 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     /** Overrides {@link IProvider#ensureConnected())} */
     @Override
-    public void ensureConnected() throws SOSProviderConnectException {
+    public void ensureConnected() throws ProviderConnectException {
         if (!isConnected()) {
+            disconnect();
             connect();
         }
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(Collection)} */
     @Override
-    public boolean createDirectoriesIfNotExists(Collection<String> paths) throws SOSProviderException {
+    public boolean createDirectoriesIfNotExists(Collection<String> paths) throws ProviderException {
         if (SOSCollection.isEmpty(paths)) {
             return false;
         }
+        validatePrerequisites("createDirectoriesIfNotExists");
+
         boolean result = false;
         for (String path : paths) {
             if (createDirectoriesIfNotExists(path)) {
@@ -94,17 +107,30 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
     @Override
-    public RenameFilesResult renameFileIfSourceExists(String sourcePath, String targetPath) throws SOSProviderException {
-        checkParam("renameFileIfSourceExists", sourcePath, "sourcePath");
-        checkParam("renameFileIfSourceExists", targetPath, "targetPath");
+    public RenameFilesResult renameFileIfSourceExists(String sourcePath, String targetPath) throws ProviderException {
+        validatePrerequisites("renameFileIfSourceExists");
+        validateArgument("renameFileIfSourceExists", sourcePath, "sourcePath");
+        validateArgument("renameFileIfSourceExists", targetPath, "targetPath");
 
         return renameFilesIfSourceExists(Collections.singletonMap(sourcePath, targetPath), true);
+    }
+
+    /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
+    @Override
+    public ProviderFile rereadFileIfExists(ProviderFile file) throws ProviderException {
+        validatePrerequisites("rereadFileIfExists");
+
+        try {
+            return refreshFileMetadata(file, getFileIfExists(file.getFullPath()));
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(file.getFullPath()), e);
+        }
     }
 
     /** Overrides {@link IProvider#toPathStyle(String)} */
     @Override
     public String toPathStyle(String path) {
-        return SOSPathUtil.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtil.toUnixStyle(path) : SOSPathUtil.toWindowsStyle(path);
+        return SOSPathUtils.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtils.toUnixStyle(path) : SOSPathUtils.toWindowsStyle(path);
     }
 
     /** Overrides {@link IProvider#executeCommand(String)} */
@@ -210,7 +236,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     /** Provider (non-YADE) method */
-    public List<ProviderFile> selectFiles(String directory) throws SOSProviderException {
+    public List<ProviderFile> selectFiles(String directory) throws ProviderException {
         return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
     }
 
@@ -240,15 +266,15 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return file;
     }
 
-    public void checkParam(String method, String paramValue, String msg) throws SOSProviderException {
-        if (SOSString.isEmpty(paramValue)) {
-            throw new SOSProviderException(getLogPrefix() + "[" + method + "]" + msg + " missing");
+    public void validateArgument(String method, String argValue, String msg) throws ProviderException {
+        if (SOSString.isEmpty(argValue)) {
+            throw new ProviderException(getLogPrefix() + "[" + method + "]" + msg + " missing");
         }
     }
 
-    public void checkModificationTime(String path, long milliseconds) throws SOSProviderException {
+    public void validateModificationTime(String path, long milliseconds) throws ProviderException {
         if (!isValidModificationTime(milliseconds)) {
-            throw new SOSProviderException(getLogPrefix() + "[" + path + "][" + milliseconds + "]not valid modification time");
+            throw new ProviderException(getLogPrefix() + "[" + path + "][" + milliseconds + "]not valid modification time");
         }
     }
 
@@ -318,6 +344,27 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public void logNotImpementedMethod(String methodName, String add) {
         logger.info("%s[%s][%s][not implemented yet]%s", getLogPrefix(), getClass().getSimpleName(), methodName, add);
+    }
+
+    /** Called when credential store are successfully resolved.
+     * 
+     * This method can be overridden by subclasses to perform additional actions after credential store have been resolved. */
+    public void onCredentialStoreResolved() throws Exception {
+
+    }
+
+    private void resolveCredentialStore(SOSArgument<?>... additionalCredentialStoreArg) throws ProviderInitializationException {
+        if (arguments == null) {
+            return;
+        }
+
+        try {
+            if (ProviderCredentialStoreResolver.resolve(arguments, arguments.getProxy(), additionalCredentialStoreArg)) {
+                onCredentialStoreResolved();
+            }
+        } catch (Throwable e) {
+            throw new ProviderInitializationException(e);
+        }
     }
 
 }

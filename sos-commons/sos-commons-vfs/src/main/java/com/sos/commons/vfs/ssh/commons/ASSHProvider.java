@@ -5,13 +5,13 @@ import java.util.List;
 
 import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.ProviderCredentialStoreResolver;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
-import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
 
@@ -20,44 +20,48 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
     private String serverVersion;
 
     /** Layer for instantiating a Real Provider: SSHJ or ... */
-    public ASSHProvider() throws SOSProviderInitializationException {
+    public ASSHProvider() throws ProviderInitializationException {
         super(null, null);
     }
 
     /** Real Provider */
-    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args)
-            throws SOSProviderInitializationException {
-        super(logger, args);
-        resolveCredentialStore();
+    public ASSHProvider(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
+        super(logger, args, args == null ? null : args.getPassphrase());
         setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
                 .getPort().getDisplayValue()));
     }
 
     /** SSH Provider specific method */
-    public abstract void put(String source, String target, int perm) throws SOSProviderException;
+    public abstract void put(String source, String target, int perm) throws ProviderException;
 
     /** SSH Provider specific method */
-    public abstract void put(String source, String target) throws SOSProviderException;
+    public abstract void put(String source, String target) throws ProviderException;
 
     /** SSH Provider specific method */
-    public abstract void get(String source, String target) throws SOSProviderException;
+    public abstract void get(String source, String target) throws ProviderException;
+
+    /** Overrides {@link AProvider#onCredentialStoreResolved()} */
+    @Override
+    public void onCredentialStoreResolved() throws Exception {
+        ProviderCredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+    }
 
     /** Overrides {@link IProvider#getPathSeparator()} */
     @Override
     public String getPathSeparator() {
-        return SOSPathUtil.PATH_SEPARATOR_UNIX;
+        return SOSPathUtils.PATH_SEPARATOR_UNIX;
     }
 
     /** Overrides {@link IProvider#isAbsolutePath(String)} */
     @Override
     public boolean isAbsolutePath(String path) {
-        return SOSPathUtil.isAbsoluteFileSystemPath(path);
+        return SOSPathUtils.isAbsoluteFileSystemPath(path);
     }
 
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        if (SOSPathUtil.isAbsoluteWindowsOpenSSHPath(path)) {
+        if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(path)) {
             String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
             return toPathStyle(n);
         }
@@ -88,16 +92,6 @@ public abstract class ASSHProvider extends AProvider<SSHProviderArguments> {
             msg += Joiner.on(", ").join(additionalInfos);
         }
         return getConnectedMsg(msg);
-    }
-
-    private void resolveCredentialStore() throws SOSProviderInitializationException {
-        try {
-            if (ProviderCredentialStoreResolver.resolve(getArguments(), getArguments().getProxy(), getArguments().getPassphrase())) {
-                ProviderCredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
-            }
-        } catch (Throwable e) {
-            throw new SOSProviderInitializationException(e);
-        }
     }
 
 }

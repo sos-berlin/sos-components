@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -32,6 +33,11 @@ public class YADEEngineTest {
     private static String SSH_HOST = "sos.sos";
     private static String SSH_SOURCE_DIR = "/home/sos/test/yade_rewrite/source";
     private static String SSH_TARGET_DIR = SSH_SOURCE_DIR + "/../target";
+
+    private static String HTTP_HOST = "localhost";
+    private static int HTTP_PORT = 80;
+    private static String HTTP_SOURCE_DIR = "/yade/source";
+    private static String HTTP_TARGET_DIR = HTTP_SOURCE_DIR + "/../target";
 
     @Ignore
     @Test
@@ -91,7 +97,7 @@ public class YADEEngineTest {
 
     @Ignore
     @Test
-    public void testLocal2SFTP() {
+    public void testLocal2SSH() {
         YADEEngine yade = new YADEEngine();
         try {
             /** Common */
@@ -108,7 +114,7 @@ public class YADEEngineTest {
             sourceArgs.getRecursive().setValue(true);
 
             /** Target */
-            YADETargetArguments targetArgs = getSFTPTargetArgs();
+            YADETargetArguments targetArgs = getSSHTargetArgs();
             targetArgs.getDirectory().setValue(SSH_TARGET_DIR);
             targetArgs.getKeepModificationDate().setValue(true);
             targetArgs.getTransactional().setValue(true);
@@ -121,7 +127,7 @@ public class YADEEngineTest {
 
     @Ignore
     @Test
-    public void testSFTP2Local() {
+    public void testSSH2Local() {
         YADEEngine yade = new YADEEngine();
         try {
             /** Common */
@@ -131,7 +137,7 @@ public class YADEEngineTest {
             args.getOperation().setValue(TransferOperation.COPY);
 
             /** Source */
-            YADESourceArguments sourceArgs = getSFTPSourceArgs();
+            YADESourceArguments sourceArgs = getSSHSourceArgs();
             sourceArgs.getDirectory().setValue(SSH_SOURCE_DIR);
             sourceArgs.getRecursive().setValue(true);
 
@@ -143,6 +149,37 @@ public class YADEEngineTest {
             yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testLocal2HTTP() {
+        YADEEngine yade = new YADEEngine();
+        try {
+
+            /** Common */
+            YADEArguments args = createYADEArgs();
+            args.getParallelism().setValue(1);
+            // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            args.getOperation().setValue(TransferOperation.COPY);
+
+            /** Source */
+            YADESourceArguments sourceArgs = getLocalSourceArgs();
+            sourceArgs.getDirectory().setValue(LOCAL_SOURCE_DIR);
+            // args.getRecursive().setValue(true);
+            sourceArgs.getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            sourceArgs.getRecursive().setValue(false);
+
+            /** Target */
+            YADETargetArguments targetArgs = getHTTPTargetArgs();
+            targetArgs.getDirectory().setValue(HTTP_TARGET_DIR);
+            targetArgs.getKeepModificationDate().setValue(true);
+            targetArgs.getTransactional().setValue(false);
+
+            yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString());
         }
     }
 
@@ -174,15 +211,21 @@ public class YADEEngineTest {
         return args;
     }
 
-    private YADESourceArguments getSFTPSourceArgs() throws Exception {
+    private YADESourceArguments getSSHSourceArgs() throws Exception {
         YADESourceArguments args = createSourceArgs();
         args.setProvider(createSSHProviderArgs());
         return args;
     }
 
-    private YADETargetArguments getSFTPTargetArgs() throws Exception {
+    private YADETargetArguments getSSHTargetArgs() throws Exception {
         YADETargetArguments args = createTargetArgs();
         args.setProvider(createSSHProviderArgs());
+        return args;
+    }
+
+    private YADETargetArguments getHTTPTargetArgs() throws Exception {
+        YADETargetArguments args = createTargetArgs();
+        args.setProvider(createHTTPProviderArgs());
         return args;
     }
 
@@ -193,6 +236,14 @@ public class YADEEngineTest {
         args.getAuthMethod().setValue(SSHAuthMethod.PASSWORD);
         args.getUser().setValue("sos");
         args.getPassword().setValue("sos");
+        return args;
+    }
+
+    private HTTPProviderArguments createHTTPProviderArgs() throws Exception {
+        HTTPProviderArguments args = new HTTPProviderArguments();
+        args.applyDefaultOnNullValue();
+        args.getHost().setValue(HTTP_HOST);
+        args.getPort().setValue(HTTP_PORT);
         return args;
     }
 

@@ -11,7 +11,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /** Only String operations should be used, without nio Path(see REGEXP_ABSOLUTE_WINDOWS_OPENSSH_PATH) */
-public class SOSPathUtil {
+public class SOSPathUtils {
 
     public static final String PATH_SEPARATOR_UNIX = "/";
     public static final String PATH_SEPARATOR_WINDOWS = "\\";
@@ -204,13 +204,6 @@ public class SOSPathUtil {
         return SOSString.trimEnd(basePath, ps1) + ps2 + SOSString.trimStart(additionalPath, ps2);
     }
 
-    private static String getPathSeparator(String path, String pathSeparator) {
-        if (pathSeparator != null) {
-            return pathSeparator;
-        }
-        return path.contains(PATH_SEPARATOR_UNIX) ? PATH_SEPARATOR_UNIX : PATH_SEPARATOR_WINDOWS;
-    }
-
     /** Returns parent path without trailing separator
      * 
      * @param path
@@ -235,26 +228,12 @@ public class SOSPathUtil {
         return getDirectoryWithoutTrailingSeparator(toWindowsStyle(path), PATH_SEPARATOR_WINDOWS);
     }
 
-    private static String getDirectoryWithoutTrailingSeparator(String path, String pathSeparator) {
-        if (path == null) {
-            return null;
-        }
-        return SOSString.trimEnd(path, pathSeparator);
-    }
-
     public static String getUnixStyleDirectoryWithTrailingSeparator(String path) {
-        return getDirectoryWithTrailingSeparator(SOSPathUtil.toUnixStyle(path), PATH_SEPARATOR_UNIX);
+        return getDirectoryWithTrailingSeparator(toUnixStyle(path), PATH_SEPARATOR_UNIX);
     }
 
     public static String getWindowsStyleDirectoryWithTrailingSeparator(String path) {
-        return getDirectoryWithTrailingSeparator(SOSPathUtil.toWindowsStyle(path), PATH_SEPARATOR_WINDOWS);
-    }
-
-    private static String getDirectoryWithTrailingSeparator(String path, String pathSeparator) {
-        if (path == null) {
-            return null;
-        }
-        return path.endsWith(pathSeparator) ? path : path + pathSeparator;
+        return getDirectoryWithTrailingSeparator(toWindowsStyle(path), PATH_SEPARATOR_WINDOWS);
     }
 
     /** Selects top-level paths from a collection of path-like elements.<br />
@@ -286,8 +265,7 @@ public class SOSPathUtil {
         Set<String> result = new HashSet<>();
         Set<String> analyzed = new HashSet<>();
         // removes: duplicate entries and trailing separator
-        Set<String> normalized = paths.stream().map(e -> SOSPathUtil.getDirectoryWithoutTrailingSeparator(e.toString(), ps)).collect(Collectors
-                .toSet());
+        Set<String> normalized = paths.stream().map(e -> getDirectoryWithoutTrailingSeparator(e.toString(), ps)).collect(Collectors.toSet());
 
         // TreeSet reduces the number of iterations
         normalized = new TreeSet<>(normalized);
@@ -347,8 +325,7 @@ public class SOSPathUtil {
         }
         final String ps = getPathSeparator(paths, pathSeparator);
         // removes: duplicate entries and trailing separator
-        Set<String> normalized = paths.stream().map(e -> SOSPathUtil.getDirectoryWithoutTrailingSeparator(e.toString(), ps)).collect(Collectors
-                .toSet());
+        Set<String> normalized = paths.stream().map(e -> getDirectoryWithoutTrailingSeparator(e.toString(), ps)).collect(Collectors.toSet());
         return normalized.stream().map(Object::toString).sorted(Comparator.comparingInt(String::length).reversed()).filter(path -> normalized.stream()
                 .map(Object::toString).noneMatch(other -> other.startsWith(path + ps) && !other.equals(path))).collect(Collectors.toCollection(
                         TreeSet::new));
@@ -396,7 +373,7 @@ public class SOSPathUtil {
                 return toUnixStyle(n);
             } else if (isAbsoluteURIPath(path)) {
                 try {
-                    return new URI(path).normalize().toString();
+                    return new URI(null, path, null).normalize().toString();
                 } catch (URISyntaxException e) {
                     return path;
                 }
@@ -408,6 +385,27 @@ public class SOSPathUtil {
         String n = Path.of(path).normalize().toString();
         // Unix and UNC(\\server\share)
         return isUnixStylePathSeparator(ps) ? toUnixStyle(n) : toWindowsStyle(n);
+    }
+
+    private static String getPathSeparator(String path, String pathSeparator) {
+        if (pathSeparator != null) {
+            return pathSeparator;
+        }
+        return path.contains(PATH_SEPARATOR_UNIX) ? PATH_SEPARATOR_UNIX : PATH_SEPARATOR_WINDOWS;
+    }
+
+    private static String getDirectoryWithoutTrailingSeparator(String path, String pathSeparator) {
+        if (path == null) {
+            return null;
+        }
+        return SOSString.trimEnd(path, pathSeparator);
+    }
+
+    private static String getDirectoryWithTrailingSeparator(String path, String pathSeparator) {
+        if (path == null) {
+            return null;
+        }
+        return path.endsWith(pathSeparator) ? path : path + pathSeparator;
     }
 
     private static String getPathSeparator(Collection<?> paths, String pathSeparator) {

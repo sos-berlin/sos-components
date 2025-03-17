@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -20,15 +20,28 @@ import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetP
 public class YADEFileActionsExecuter {
 
     /** Target: ProviderFile Operations */
-    public static void renameTargetFile(ISOSLogger logger, String logPrefix, YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile)
-            throws SOSProviderException {
+    public static void renameTargetFile(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile) throws ProviderException {
         if (targetFile == null || !targetFile.needsRename()) {
             return;
         }
 
         String targetFileOldPath = targetFile.getFullPath();
         String targetFileNewPath = targetFile.getFinalFullPath();
-        targetDelegator.getProvider().renameFileIfSourceExists(targetFileOldPath, targetFileNewPath);
+
+        // TODO merge content if append and atomic
+        // if not atomic - content already appended??? if not atomic but rename?
+        boolean rename = true;
+        if (config.getTarget().isAppendEnabled() && config.getTarget().getAtomic() != null) {
+            if (targetDelegator.getProvider().exists(targetFileNewPath)) {
+                // merge in existing file
+                // delete targetFileOldPath
+                // rename=false;
+            }
+        }
+        if (rename) {
+            targetDelegator.getProvider().renameFileIfSourceExists(targetFileOldPath, targetFileNewPath);
+        }
         targetFile.setSubState(TransferEntryState.RENAMED);
         logger.info("[%s]%s[%s][renamed][%s]", logPrefix, targetDelegator.getLogPrefix(), targetFileOldPath, targetFileNewPath);
     }
@@ -81,7 +94,7 @@ public class YADEFileActionsExecuter {
     /** Source: ProviderFile Operations */
     // TODO set State? subState? how to display the source file info in the summary?
     public static void processSourceFileAfterNonTransactionalTransfer(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
-            YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile) throws SOSProviderException {
+            YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile) throws ProviderException {
         if (config.isTransactionalEnabled()) {
             return;
         }
@@ -95,7 +108,7 @@ public class YADEFileActionsExecuter {
     }
 
     private static void renameSourceFile(ISOSLogger logger, String logPrefix, YADESourceProviderDelegator sourceDelegator,
-            YADEProviderFile sourceFile) throws SOSProviderException {
+            YADEProviderFile sourceFile) throws ProviderException {
         Optional<YADEFileNameInfo> newNameInfo = YADEFileHandler.getReplacementResultIfDifferent(sourceDelegator, sourceFile);
         if (newNameInfo.isPresent()) {
             YADEFileNameInfo info = newNameInfo.get();

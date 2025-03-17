@@ -8,13 +8,9 @@ import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.apache.http.Header;
@@ -31,8 +27,9 @@ import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.DateUtils;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
@@ -65,11 +62,7 @@ public class HTTPClient implements AutoCloseable {
         }
     };
 
-    // https://datatracker.ietf.org/doc/html/rfc7232#section-2.2
-    // - not really normalized ... Last-Modified: Tue, 15 Nov 1994 12:45:26 GMT
-    // Locale.US - because of the weekdays in English (e.g. Tue)
-    private static final DateTimeFormatter LAST_MODIFIED_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).withZone(
-            ZoneOffset.UTC);
+    private static final long DEFAULT_LAST_MODIFIED = -1L;
 
     private final CloseableHttpClient client;
     private final HttpClientContext context;
@@ -159,20 +152,21 @@ public class HTTPClient implements AutoCloseable {
         SOSClassUtil.closeQuietly(client);
     }
 
-    public CloseableHttpResponse execute(HttpUriRequest request) throws ClientProtocolException, IOException {
+    public CloseableHttpResponse execute(HttpRequestBase request) throws ClientProtocolException, IOException {
         return client.execute(request, context);
     }
 
     public InputStream getHTTPInputStream(URI uri) throws Exception {
         CloseableHttpResponse response = null;
         try {
-            response = execute(new HttpGet(uri));
+            HttpGet request = new HttpGet(uri);
+            response = execute(request);
             StatusLine sl = response.getStatusLine();
             if (!HTTPClient.isSuccessful(sl)) {
                 if (HTTPClient.isNotFound(sl)) {
-                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(uri, sl)));
+                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(request, response)));
                 }
-                throw new Exception(HTTPClient.getResponseStatus(uri, sl));
+                throw new Exception(HTTPClient.getResponseStatus(request, response));
             }
             return new HTTPInputStream(response);
         } catch (Throwable e) {
@@ -197,46 +191,42 @@ public class HTTPClient implements AutoCloseable {
         return statusLine.getStatusCode() == 404;
     }
 
-    public static String getResponseStatus(String uri, StatusLine statusLine) {
-        return getResponseStatus(uri, statusLine, null);
+    public static String getResponseStatus(HttpRequestBase request, HttpResponse response) {
+        return getResponseStatus(request, response, null);
     }
 
-    public static String getResponseStatus(URI uri, StatusLine statusLine) {
-        String u = uri == null ? "" : uri.toString();
-        return getResponseStatus(u, statusLine, null);
-    }
-
-    public static String getResponseStatus(URI from, URI to, StatusLine statusLine) {
-        String u = from == null ? "" : from.toString();
-        if (to != null) {
-            u = u + "-" + to.toString();
-        }
-        return getResponseStatus(u, statusLine, null);
-    }
-
-    public static String getResponseStatus(String uri, StatusLine statusLine, Exception ex) {
-        int code = statusLine.getStatusCode();
-        String text = statusLine.getReasonPhrase();
+    private static String getResponseStatus(HttpRequestBase request, HttpResponse response, Exception ex) {
+        StatusLine sl = response.getStatusLine();
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(request.getMethod()).append("]");
+        sb.append("[").append(request.getURI()).append("]");
+        sb.append("[").append(sl.getStatusCode()).append("]");
         if (ex == null) {
-            return String.format("[%s][%s]%s", uri, code, text);
+            sb.append(getReasonPhraseOrDefault(sl));
         } else {
-            return String.format("[%s][%s][%s]%s", uri, code, text, ex);
+            sb.append("[").append(getReasonPhraseOrDefault(sl)).append("]");
+            sb.append(ex.toString());
         }
+        return sb.toString();
     }
 
     public static long getLastModifiedInMillis(HttpResponse response) {
         if (response == null) {
-            return -1L;
+            return DEFAULT_LAST_MODIFIED;
         }
         Header header = response.getFirstHeader(HttpHeaders.LAST_MODIFIED);
-        if (header == null || SOSString.isEmpty(header.getValue())) {
-            return -1L;
+        if (header == null) {
+            return DEFAULT_LAST_MODIFIED;
         }
-        try {
-            return ZonedDateTime.parse(header.getValue(), LAST_MODIFIED_FORMATTER).toInstant().toEpochMilli();
-        } catch (DateTimeParseException e) {
-            return -1L;
+        return getLastModifiedInMillis(header.getValue());
+    }
+
+    public static long getLastModifiedInMillis(String httpDate) {
+        if (SOSString.isEmpty(httpDate)) {
+            return -1l;
         }
+        Date date = DateUtils.parseDate(httpDate);
+        return date == null ? DEFAULT_LAST_MODIFIED : date.getTime();
     }
 
     private static void setSSLContext(ISOSLogger logger, SSLArguments args, String baseURLScheme, HttpClientBuilder clientBuilder) throws Exception {
@@ -325,6 +315,45 @@ public class HTTPClient implements AutoCloseable {
                         return new BasicHeader(name, value);
                     }
                 }).collect(Collectors.toList());
+    }
+
+    private static String getReasonPhraseOrDefault(StatusLine sl) {
+        String reason = sl.getReasonPhrase();
+        if (!SOSString.isEmpty(reason)) {
+            return reason;
+        }
+
+        return switch (sl.getStatusCode()) {
+        case 100 -> "Continue - The server has received the request headers and the client should proceed to send the request body.";
+        case 101 -> "Switching Protocols - The server is switching protocols as requested by the client.";
+        case 200 -> "OK - The request was successful.";
+        case 201 -> "Created - The request was successful and a resource was created.";
+        case 202 -> "Accepted - The request has been accepted for processing, but the processing is not complete.";
+        case 204 -> "No Content - The server successfully processed the request but is not returning any content.";
+        case 301 -> "Moved Permanently - The resource has been permanently moved to a new location.";
+        case 302 -> "Found - The resource has temporarily moved to a different location.";
+        case 304 -> "Not Modified - The resource has not been modified since the last request.";
+        case 400 -> "Bad Request - The server could not understand the request due to invalid syntax.";
+        case 401 -> "Unauthorized - Authentication is required and has failed or has not yet been provided.";
+        case 403 -> "Forbidden - The client does not have access rights to the content.";
+        case 404 -> "Not Found - The server can not find the requested resource.";
+        case 405 -> "Method Not Allowed - The request method is not supported for the requested resource.";
+        case 408 -> "Request Timeout - The server timed out waiting for the request.";
+        case 409 -> "Conflict - The request conflicts with the current state of the resource.";
+        case 410 -> "Gone - The resource requested is no longer available and will not be available again.";
+        case 413 -> "Payload Too Large - The request entity is larger than the server is willing to process.";
+        case 414 -> "URI Too Long - The URI requested by the client is longer than the server is willing to interpret.";
+        case 415 -> "Unsupported Media Type - The media format of the requested data is not supported by the server.";
+        case 418 -> "I'm a teapot - An April Fools' joke response code (RFC 2324).";
+        case 429 -> "Too Many Requests - The user has sent too many requests in a given amount of time.";
+        case 500 -> "Internal Server Error - The server encountered an internal error and could not complete the request.";
+        case 501 -> "Not Implemented - The server does not support the functionality required to fulfill the request.";
+        case 502 -> "Bad Gateway - The server, while acting as a gateway, received an invalid response.";
+        case 503 -> "Service Unavailable - The server is not ready to handle the request.";
+        case 504 -> "Gateway Timeout - The server, while acting as a gateway, did not receive a timely response.";
+        case 505 -> "HTTP Version Not Supported - The server does not support the HTTP protocol version used in the request.";
+        default -> "Unknown Status Code: " + sl.getStatusCode() + " - No description available.";
+        };
     }
 
 }

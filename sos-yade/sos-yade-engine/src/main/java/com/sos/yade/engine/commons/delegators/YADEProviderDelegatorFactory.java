@@ -8,7 +8,7 @@ import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.http.HTTPProvider;
@@ -84,7 +84,7 @@ public class YADEProviderDelegatorFactory {
             default:
                 throw new YADEEngineInitializationException(new SOSInvalidDataException(protocol.getName() + "=" + protocol.getValue()));
             }
-        } catch (SOSProviderException e) {
+        } catch (ProviderException e) {
             throw new YADEEngineInitializationException(e);
         }
         ((AProvider<?>) p).setSystemPropertiesFromFiles();

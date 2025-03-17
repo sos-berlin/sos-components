@@ -2,23 +2,23 @@ package com.sos.commons.vfs.exceptions;
 
 import com.sos.commons.exception.SOSException;
 
-public class SOSProviderException extends SOSException {
+public class ProviderException extends SOSException {
 
     private static final long serialVersionUID = 1L;
 
-    public SOSProviderException() {
+    public ProviderException() {
         super();
     }
 
-    public SOSProviderException(String msg) {
+    public ProviderException(String msg) {
         super(getMethodName() + msg);
     }
 
-    public SOSProviderException(Throwable cause) {
+    public ProviderException(Throwable cause) {
         super(cause == null ? null : cause.toString(), cause);
     }
 
-    public SOSProviderException(String msg, Throwable cause) {
+    public ProviderException(String msg, Throwable cause) {
         super(getMethodName() + msg + cause, cause);
     }
 

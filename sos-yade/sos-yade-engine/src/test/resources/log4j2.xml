@@ -13,7 +13,7 @@
 	</Appenders>
 
 	<Loggers>
-		<Logger name="com.sos.commons.util.common.logger"
+		<Logger name="com.sos.commons.util.loggers.impl"
 			additivity="false">
 			<AppenderRef ref="MDCConsole" />
 		</Logger>

@@ -5,7 +5,7 @@ import java.security.NoSuchAlgorithmException;
 
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -82,7 +82,7 @@ public class YADEChecksumFileHelper {
     }
 
     public static void writeTargetChecksumFile(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
-            YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile, MessageDigest targetMessageDigest) throws SOSProviderException {
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile, MessageDigest targetMessageDigest) throws ProviderException {
         if (targetMessageDigest == null) {
             return;
         }

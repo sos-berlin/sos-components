@@ -28,7 +28,7 @@ public class ProviderCredentialStoreResolver {
      * @return
      * @throws Exception */
     public static boolean resolve(AProviderArguments args, ProxyArguments proxyArgs, SOSArgument<?>... additional2resolve) throws Exception {
-        if (args.getCredentialStore() == null) {
+        if (args == null || args.getCredentialStore() == null) {
             return false;
         }
         if (args.getCredentialStore().getFile().getValue() != null && args.getCredentialStore().getKeepassDatabase() == null) {

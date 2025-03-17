@@ -2,24 +2,24 @@ package com.sos.commons.vfs.smb.commons;
 
 import java.nio.file.Path;
 
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
-import com.sos.commons.vfs.exceptions.SOSProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public abstract class ASMBProvider extends AProvider<SMBProviderArguments> {
 
     private String shareName;
 
     /** Layer for instantiating a Real Provider: SMBJ or ... */
-    public ASMBProvider() throws SOSProviderInitializationException {
+    public ASMBProvider() throws ProviderInitializationException {
         super(null, null);
     }
 
     /** Real Provider */
-    public ASMBProvider(ISOSLogger logger, SMBProviderArguments args) throws SOSProviderInitializationException {
+    public ASMBProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
         setAccessInfo();
     }
@@ -29,7 +29,7 @@ public abstract class ASMBProvider extends AProvider<SMBProviderArguments> {
      * {@linkplain https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/ffb795f3-027d-4a3c-997d-3085f2332f6f?redirectedfrom=MSDN} */
     @Override
     public String getPathSeparator() {
-        return SOSPathUtil.PATH_SEPARATOR_WINDOWS;
+        return SOSPathUtils.PATH_SEPARATOR_WINDOWS;
     }
 
     /** Overrides {@link IProvider#isAbsolutePath(String)} */
@@ -38,7 +38,7 @@ public abstract class ASMBProvider extends AProvider<SMBProviderArguments> {
         if (SOSString.isEmpty(getShareName(path))) {
             return true;
         }
-        if (SOSPathUtil.isAbsoluteWindowsUNCPath(path)) {
+        if (SOSPathUtils.isAbsoluteWindowsUNCPath(path)) {
             return true;
         }
         String p = SOSString.trimStart(toPathStyle(path), getPathSeparator());

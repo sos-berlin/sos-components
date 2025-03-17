@@ -2,8 +2,6 @@ package com.sos.yade.engine.handlers.operations.copymove.file;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Optional;
@@ -12,7 +10,7 @@ import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
@@ -81,6 +79,7 @@ public class YADEFileHandler {
                         return;
                     }
                 }
+
             }
 
             // 2) Source/Target: commands before file transfer
@@ -109,6 +108,7 @@ public class YADEFileHandler {
             int attempts = 0;
             boolean isCumulateTargetWritten = false;
 
+            boolean targetIsHTTP = targetDelegator.hasHTTPProvider();
             Instant startTime = Instant.now();
             l: while (attempts < config.getMaxRetries()) {
                 // int cumulativeFileSeperatorLength = 0;
@@ -155,18 +155,26 @@ public class YADEFileHandler {
                 } catch (Throwable e) {
                     attempts++;
 
-                    // ?
-                    if (targetFile.getSize() < sourceFile.getSize()) {
-
+                    boolean throwException = false;
+                    String throwExceptionAdd = "";
+                    if (YADEProviderDelegatorHelper.isSourceOrTargetNotConnected(sourceDelegator, targetDelegator)) {
+                        if (attempts >= config.getMaxRetries()) {
+                            throwException = true;
+                            if (config.getMaxRetries() > 1) {
+                                throwExceptionAdd = "[maximum retry attempts=" + config.getMaxRetries() + " reached]";
+                            }
+                        } else {
+                            YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
+                            YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
+                        }
+                    } else {
+                        throwException = true;
                     }
-
-                    YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
-                    YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
-
-                    if (attempts >= config.getMaxRetries()) {
-                        String add = config.getMaxRetries() <= 1 ? "" : "[maximum retry attempts=" + config.getMaxRetries() + " reached]";
-                        throw new YADEEngineTransferFileException(String.format("[%s]%s[%s]%s", logPrefix, targetDelegator.getLogPrefix(), targetFile
-                                .getFullPath(), add + e), e);
+                    if (throwException) {
+                        String msg = String.format("[%s]%s[%s]%s", logPrefix, targetDelegator.getLogPrefix(), targetFile.getFullPath(),
+                                throwExceptionAdd + e);
+                        logger.error(msg);
+                        throw new YADEEngineTransferFileException(msg, e);
                     }
                 }
             }
@@ -185,7 +193,7 @@ public class YADEFileHandler {
             // YADE1 renames after executeAfterFile command
             // Rename Target always - transactional transfer or not
             if (!useCumulativeTargetFile) {
-                YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, targetDelegator, targetFile);
+                YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, config, targetDelegator, targetFile);
                 YADEFileActionsExecuter.setTargetFileModificationDate(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
 
                 YADEChecksumFileHelper.writeTargetChecksumFile(logger, logPrefix, config, targetDelegator, targetFile, targetMessageDigest);
@@ -199,7 +207,7 @@ public class YADEFileHandler {
         }
     }
 
-    public void initializeTarget() throws SOSProviderException {
+    public void initializeTarget() throws ProviderException {
         YADEFileNameInfo fileNameInfo = getTargetFinalFilePathInfo();
 
         /** finalFileName: the final name of the file after transfer (compressed/replaced name...) */
@@ -218,6 +226,23 @@ public class YADEFileHandler {
         sourceFile.setTarget(target);
     }
 
+    public static Optional<YADEFileNameInfo> getReplacementResultIfDifferent(AYADEProviderDelegator delegator, YADEProviderFile file) {
+        return YADEFileReplacementHelper.getReplacementResultIfDifferent(delegator, file.getName(), delegator.getArgs().getReplacing().getValue(),
+                delegator.getArgs().getReplacement().getValue());
+    }
+
+    public static String getFinalFullPath(AYADEProviderDelegator delegator, YADEProviderFile file, YADEFileNameInfo newNameInfo) {
+        if (newNameInfo.isAbsolutePath()) {
+            return newNameInfo.getPath();
+        } else {
+            String finalFullPath = file.getParentFullPath();
+            if (newNameInfo.needsParent()) {
+                finalFullPath = delegator.appendPath(finalFullPath, newNameInfo.getParent());
+            }
+            return delegator.appendPath(finalFullPath, newNameInfo.getName());
+        }
+    }
+
     /** Returns the final name of the file after transfer<br/>
      * May contains a path separator and have a different path than the original path if target replacement is enabled
      * 
@@ -231,10 +256,10 @@ public class YADEFileHandler {
         // TODO check if needed - because of HTTPProvider normalized paths ...
         if (sourceDelegator.hasHTTPProvider()) {
             // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
-            //try {
-            //    fileName = URLEncoder.encode(fileName, "UTF-8");
-            //} catch (UnsupportedEncodingException e) {
-            //}
+            // try {
+            // fileName = URLEncoder.encode(fileName, "UTF-8");
+            // } catch (UnsupportedEncodingException e) {
+            // }
         }
 
         // 2) Compressed name
@@ -254,23 +279,6 @@ public class YADEFileHandler {
             info = new YADEFileNameInfo(targetDelegator, fileName);
         }
         return info;
-    }
-
-    public static Optional<YADEFileNameInfo> getReplacementResultIfDifferent(AYADEProviderDelegator delegator, YADEProviderFile file) {
-        return YADEFileReplacementHelper.getReplacementResultIfDifferent(delegator, file.getName(), delegator.getArgs().getReplacing().getValue(),
-                delegator.getArgs().getReplacement().getValue());
-    }
-
-    public static String getFinalFullPath(AYADEProviderDelegator delegator, YADEProviderFile file, YADEFileNameInfo newNameInfo) {
-        if (newNameInfo.isAbsolutePath()) {
-            return newNameInfo.getPath();
-        } else {
-            String finalFullPath = file.getParentFullPath();
-            if (newNameInfo.needsParent()) {
-                finalFullPath = delegator.appendPath(finalFullPath, newNameInfo.getParent());
-            }
-            return delegator.appendPath(finalFullPath, newNameInfo.getName());
-        }
     }
 
 }

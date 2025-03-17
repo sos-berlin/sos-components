@@ -20,49 +20,61 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.SOSProviderException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 
 public class ProviderUtils {
 
     // possible recursion
     public static List<ProviderFile> selectFiles(ProviderImpl provider, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result) throws SOSProviderException {
+            List<ProviderFile> result) throws ProviderException {
         int counterAdded = 0;
         try {
             list(provider, selection, directoryPath, result, counterAdded);
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new ProviderException(e);
         }
         return result;
     }
 
-    public static HttpPropfind createResourcePropertiesRequest(URI uri) throws IOException {
-        DavPropertyNameSet names = new DavPropertyNameSet();
-        names.add(DavPropertyName.create(DavConstants.PROPERTY_RESOURCETYPE));
-        names.add(DavPropertyName.create(DavConstants.PROPERTY_GETCONTENTLENGTH));
-        names.add(DavPropertyName.create(DavConstants.PROPERTY_GETLASTMODIFIED));
-        return new HttpPropfind(uri, names, DavConstants.DEPTH_1);
+    public static HttpPropfind createDirectoryPropertiesRequest(URI uri) throws IOException {
+        return new HttpPropfind(uri, getResourceMetadataProperties(), DavConstants.DEPTH_1);
+    }
+
+    public static HttpPropfind createFilePropertiesRequest(URI uri) throws IOException {
+        return new HttpPropfind(uri, getResourceMetadataProperties(), DavConstants.DEPTH_0);
+    }
+
+    public static MultiStatus getMuiltiStatus(HttpPropfind request, CloseableHttpResponse response) throws DavException {
+        request.checkSuccess(response);
+
+        MultiStatus result = null;
+        if (response.getStatusLine().getStatusCode() == HttpStatus.SC_MULTI_STATUS) {// 207
+            result = request.getResponseBodyAsMultiStatus(response);
+        }
+        return result;
     }
 
     public static boolean exists(HTTPClient client, URI uri) throws Exception {
-        try (CloseableHttpResponse response = client.execute(new HttpPropfind(uri, null, DavConstants.DEPTH_0))) {
+        HttpPropfind request = new HttpPropfind(uri, null, DavConstants.DEPTH_0);
+        try (CloseableHttpResponse response = client.execute(request)) {
             StatusLine sl = response.getStatusLine();
             if (!HTTPClient.isSuccessful(sl)) {
-                throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                throw new IOException(HTTPClient.getResponseStatus(request, response));
             }
             return true;
         }
     }
 
     public static void createDirectory(HTTPClient client, URI uri) throws Exception {
-        try (CloseableHttpResponse response = client.execute(new HttpMkcol(uri))) {
+        HttpMkcol request = new HttpMkcol(uri);
+        try (CloseableHttpResponse response = client.execute(request)) {
             StatusLine sl = response.getStatusLine();
             if (!HTTPClient.isSuccessful(sl)) {
-                throw new IOException(HTTPClient.getResponseStatus(uri, sl));
+                throw new IOException(HTTPClient.getResponseStatus(request, response));
             }
         }
     }
@@ -73,6 +85,10 @@ public class ProviderUtils {
 
         HttpPropfind request = new HttpPropfind(uri, names, DavConstants.DEPTH_0);
         try (CloseableHttpResponse response = client.execute(request)) {
+            StatusLine sl = response.getStatusLine();
+            if (!HTTPClient.isSuccessful(sl)) {
+                throw new IOException(HTTPClient.getResponseStatus(request, response));
+            }
             MultiStatus status = getMuiltiStatus(request, response);
             if (status == null) {
                 return false;
@@ -89,12 +105,17 @@ public class ProviderUtils {
     }
 
     private static int list(ProviderImpl provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result, int counterAdded)
-            throws SOSProviderException {
+            throws ProviderException {
         try {
-            HttpPropfind request = createResourcePropertiesRequest(new URI(provider.normalizePath(directoryPath)));
+            URI uri = new URI(provider.normalizePath(directoryPath));
+            HttpPropfind request = createDirectoryPropertiesRequest(uri);
 
             Set<String> subDirectories = new HashSet<>();
             try (CloseableHttpResponse response = provider.getClient().execute(request)) {
+                StatusLine sl = response.getStatusLine();
+                if (!HTTPClient.isSuccessful(sl)) {
+                    throw new IOException(HTTPClient.getResponseStatus(request, response));
+                }
                 MultiStatus status = getMuiltiStatus(request, response);
                 if (status != null) {
                     for (MultiStatusResponse resource : status.getResponses()) {
@@ -114,7 +135,7 @@ public class ProviderUtils {
                                 }
                             }
                         } else {
-                            if (selection.checkFileName(SOSPathUtil.getName(resource.getHref())) && selection.isValidFileType(resource)) {
+                            if (selection.checkFileName(SOSPathUtils.getName(resource.getHref())) && selection.isValidFileType(resource)) {
                                 ProviderFile file = provider.createProviderFile(resource.getHref(), response, prop);
                                 if (file == null) {
                                     if (provider.getLogger().isDebugEnabled()) {
@@ -146,19 +167,9 @@ public class ProviderUtils {
                 counterAdded = list(provider, selection, subDirectory, result, counterAdded);
             }
         } catch (Throwable e) {
-            throw new SOSProviderException(e);
+            throw new ProviderException(e);
         }
         return counterAdded;
-    }
-
-    private static MultiStatus getMuiltiStatus(HttpPropfind request, CloseableHttpResponse response) throws DavException {
-        request.checkSuccess(response);
-
-        MultiStatus result = null;
-        if (response.getStatusLine().getStatusCode() == HttpStatus.SC_MULTI_STATUS) {// 207
-            result = request.getResponseBodyAsMultiStatus(response);
-        }
-        return result;
     }
 
     /** @param set
@@ -170,6 +181,14 @@ public class ProviderUtils {
         // resourcetype node exists with a collection child node
         // return prop != null && prop.getValue() instanceof Node && DavConstants.XML_COLLECTION.equals(((Node) prop.getValue()).getLocalName());
         return prop != null && prop.getValue() != null && prop.getValue().toString().contains(DavConstants.XML_COLLECTION);
+    }
+
+    private static DavPropertyNameSet getResourceMetadataProperties() {
+        DavPropertyNameSet names = new DavPropertyNameSet();
+        names.add(DavPropertyName.create(DavConstants.PROPERTY_RESOURCETYPE));
+        names.add(DavPropertyName.create(DavConstants.PROPERTY_GETCONTENTLENGTH));
+        names.add(DavPropertyName.create(DavConstants.PROPERTY_GETLASTMODIFIED));
+        return names;
     }
 
 }

@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.sos.commons.util.SOSPathUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
@@ -181,7 +181,7 @@ public class YADEFileCommandVariablesResolver {
     }
 
     private static String getFileBaseName(String fullPath) {
-        return getOrDefault(SOSPathUtil.getName(fullPath));
+        return getOrDefault(SOSPathUtils.getName(fullPath));
     }
 
     private static String getFileParentFullPath(AYADEProviderDelegator delegator, String fullPath) {
@@ -189,7 +189,7 @@ public class YADEFileCommandVariablesResolver {
     }
 
     private static String getFileParentBaseName(AYADEProviderDelegator delegator, String fullPath) {
-        return getOrDefault(SOSPathUtil.getName(delegator.getParentPath(fullPath)));
+        return getOrDefault(SOSPathUtils.getName(delegator.getParentPath(fullPath)));
     }
 
     private static String getOrDefault(String val) {
