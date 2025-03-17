@@ -686,6 +686,23 @@ public class DependencyResolver {
                     }
                 }
             }
+            // include script
+            if(json.contains("##!include")) {
+                List<String> wfJobScriptNames = new ArrayList<String>();
+                getValuesRecursively("", jobTemplate, SCRIPT_SEARCH, wfJobScriptNames);
+                if(!wfJobScriptNames.isEmpty()) {
+                    for(String script : wfJobScriptNames) {
+                        Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+                        if (m.find()) {
+                            String scriptName = m.group(2);
+                            results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+                            if(!results.isEmpty()) {
+                                item.getReferences().add(results.get(0));
+                            }
+                        }
+                    }
+                }
+            }
             break;
         case FILEORDERSOURCE:
             // Workflow
