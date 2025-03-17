@@ -16,6 +16,9 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
 
     private ConfigurationEntry projectionsMonthAhead = new ConfigurationEntry("projections_month_ahead", "6",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    
+    private ConfigurationEntry submitOrdersIndividually = new ConfigurationEntry("submit_orders_individually", "false",
+            GlobalSettingsSectionValueType.BOOLEAN);
 
     public ConfigurationGlobalsDailyPlan() {
         int index = -1;
@@ -26,6 +29,8 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
         daysAheadPlan.setOrdering(++index);
         daysAheadSubmit.setOrdering(++index);
 
+        submitOrdersIndividually.setOrdering(++index);
+        
         projectionsMonthAhead.setOrdering(++index);
     }
 
@@ -51,5 +56,12 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
 
     public ConfigurationEntry getProjectionsMonthAhead() {
         return projectionsMonthAhead;
+    }
+    
+    public boolean getSubmitOrdersIndividually() {
+        if(submitOrdersIndividually.getValue() == null) {
+            return submitOrdersIndividually.getDefault().equalsIgnoreCase("true");
+        }
+        return submitOrdersIndividually.getValue().equalsIgnoreCase("true");
     }
 }

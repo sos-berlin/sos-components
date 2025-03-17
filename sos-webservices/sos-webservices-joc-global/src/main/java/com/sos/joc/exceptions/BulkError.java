@@ -6,6 +6,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.MarkerFactory;
 
+import com.sos.controller.model.order.FreshOrder;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.order.AddOrder;
 
@@ -36,6 +37,12 @@ public class BulkError extends Err419 {
     public Err419 get(Throwable e, JocError jocError, AddOrder startOrder) {
         setCodeAndMessage(e, jocError);
         setPath(startOrder.getWorkflowPath() + "/" + startOrder.getOrderName());
+        return this;
+    }
+    
+    public Err419 get(Throwable e, JocError jocError, FreshOrder startOrder, String controllerId) {
+        setCodeAndMessage(e, jocError, controllerId);
+        setPath(startOrder.getWorkflowPath() + "/" + startOrder.getId());
         return this;
     }
     
@@ -75,6 +82,23 @@ public class BulkError extends Err419 {
             logger.error(e.getMessage(), e);
         } else {
             logger.error(MarkerFactory.getMarker(jocError.getApiCall()), e.getMessage(), e);
+        }
+    }
+    
+    private void setCodeAndMessage(Throwable e, JocError jocError, String controllerId) {
+        if (JocException.class.isInstance(e)) {
+            setCodeAndMessage((JocException) e);
+        } else {
+            setCode(ERROR_CODE);
+            String errorMsg = ((e.getCause() != null) ? e.getCause().toString() : e.getClass().getSimpleName()) + ": " + e.getMessage();
+            setMessage(errorMsg);
+            //AUDIT_LOGGER.error(errorMsg);
+        }
+        printMetaInfo(jocError);
+        if (jocError == null || jocError.getApiCall() == null) {
+            logger.error(String.format("Controller '%s' -> %s", controllerId, e.getMessage()));
+        } else {
+            logger.error(MarkerFactory.getMarker(jocError.getApiCall()), String.format("Controller '%s' -> %s", controllerId, e.getMessage()));
         }
     }
     

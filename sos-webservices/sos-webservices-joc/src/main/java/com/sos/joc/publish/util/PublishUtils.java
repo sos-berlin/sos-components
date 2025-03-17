@@ -55,6 +55,7 @@ import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.board.PlanSchemas;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
@@ -1736,7 +1737,8 @@ public abstract class PublishUtils {
     }
     
     private static JExpression getFileOrderPattern(FileOrderSource fileOrderSource) {
-        return getOrThrowEither(JExpression.parse("{orderId: " + getFileOrderIdPattern(fileOrderSource) + ", planId: " + getFileOrderDailyPlanPlanIdPattern(fileOrderSource) + "}"));
+        return getOrThrowEither(JExpression.parse("{orderId: " + getFileOrderIdPattern(fileOrderSource) + ", planId: "
+                + getFileOrderDailyPlanPlanIdPattern(fileOrderSource) + "}"));
     }
 
     private static String getFileOrderIdPattern(FileOrderSource fileOrderSource) {
@@ -1751,13 +1753,13 @@ public abstract class PublishUtils {
     }
     
     private static String getFileOrderDailyPlanPlanIdPattern(FileOrderSource fileOrderSource) {
-        String planIdPattern = "now(format='yyyy-MM-dd', timezone='%s')";
+        String planIdPattern = "['%s', now(format='yyyy-MM-dd', timezone='%s')]";
         String timeZone = fileOrderSource.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = OrdersHelper.getDailyPlanTimeZone().getId();
         }
         fileOrderSource.setTimeZone(null);
-        return String.format(planIdPattern, timeZone);
+        return String.format(planIdPattern, PlanSchemas.defaultPlanSchemaId,  timeZone);
     }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,

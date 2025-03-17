@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -93,7 +92,6 @@ import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import scala.Function1;
-import scala.collection.JavaConverters;
 
 @Path("orders")
 public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrdersResourceModify {
@@ -418,7 +416,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         Stream.concat(jOrders.stream(), cyclicOrders).distinct().forEach(o -> {
                             Optional<JPosition> pos = CheckedResumeOrdersPositions.moveToBeginOfBlock(o, modifyOrders.getForce());
                             if (pos.isPresent()) {
-                                api.resumeOrder(o.id(), pos, Collections.emptyList(), true).thenAccept(either -> {
+                                api.resumeOrder(o.id(), pos, Collections.emptyList(), true, Optional.empty()).thenAccept(either -> {
                                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                                     if (either.isRight()) {
                                         OrdersHelper.storeAuditLogDetailsFromJOrder(o, dbAuditLog.getId(), controllerId).thenAccept(
@@ -431,14 +429,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                             }
                         });
                         if (!ordersWithEmptyPos.isEmpty()) { // use resumeOrders instead resumeOrder
-                            api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
-                                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                                if (either.isRight()) {
-                                    OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
-                                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
-                                                    controllerId));
-                                }
-                            });
+                            api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true, Optional.empty())
+                                    .thenAccept(either -> {
+                                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                        if (either.isRight()) {
+                                            OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId)
+                                                    .thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(),
+                                                            getJocError(), controllerId));
+                                        }
+                                    });
                         }
                     }
                 }
@@ -464,14 +463,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
                     orderPositions.entrySet().stream().forEach(entry -> {
                         if (entry.getValue().isPresent()) {
-                            api.resumeOrder(entry.getKey().id(), entry.getValue(), Collections.emptyList(), true).thenAccept(either -> {
-                                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                                if (either.isRight()) {
-                                    OrdersHelper.storeAuditLogDetailsFromJOrder(entry.getKey(), dbAuditLog.getId(), controllerId).thenAccept(
-                                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
-                                                    controllerId));
-                                }
-                            });
+                            api.resumeOrder(entry.getKey().id(), entry.getValue(), Collections.emptyList(), true, Optional.empty()).thenAccept(
+                                    either -> {
+                                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                        if (either.isRight()) {
+                                            OrdersHelper.storeAuditLogDetailsFromJOrder(entry.getKey(), dbAuditLog.getId(), controllerId).thenAccept(
+                                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                            controllerId));
+                                        }
+                                    });
                         } else {
                             ordersWithEmptyPos.add(entry.getKey());
                         }
@@ -483,13 +483,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                                     Collectors.toSet()));
 
                     if (!ordersWithEmptyPos.isEmpty()) {
-                        api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
-                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                            if (either.isRight()) {
-                                OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
-                                        either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-                            }
-                        });
+                        api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true, Optional.empty()).thenAccept(
+                                either -> {
+                                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                    if (either.isRight()) {
+                                        OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
+                                                either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
+                                                        controllerId));
+                                    }
+                                });
                     }
                 }
 
@@ -525,8 +527,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         JControllerApi api = ControllerApi.of(controllerId);
                         if (modifyOrders.getForce()) {
                             jOrders.stream().forEach(o -> {
-                                api.resumeOrder(o.id(), Optional.of(JPosition.apply(o.asScala().position())), Collections.emptyList(), true)
-                                        .thenAccept(either -> {
+                                api.resumeOrder(o.id(), Optional.of(JPosition.apply(o.asScala().position())), Collections.emptyList(), true, Optional
+                                        .empty()).thenAccept(either -> {
                                             ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                                             if (either.isRight()) {
                                                 OrdersHelper.storeAuditLogDetailsFromJOrder(o, dbAuditLog.getId(), controllerId).thenAccept(
@@ -542,14 +544,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                                             Collectors.toSet());
 
                             if (!ordersWithEmptyPos.isEmpty()) {
-                                api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true).thenAccept(either -> {
-                                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                                    if (either.isRight()) {
-                                        OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId).thenAccept(
-                                                either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(),
-                                                        controllerId));
-                                    }
-                                });
+                                api.resumeOrders(ordersWithEmptyPos.stream().map(JOrder::id).collect(Collectors.toSet()), true, Optional.empty())
+                                        .thenAccept(either -> {
+                                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                            if (either.isRight()) {
+                                                OrdersHelper.storeAuditLogDetailsFromJOrders(ordersWithEmptyPos, dbAuditLog.getId(), controllerId)
+                                                        .thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(),
+                                                                getJocError(), controllerId));
+                                            }
+                                        });
                             }
 
                         } else {
@@ -667,7 +670,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
         //LOGGER.info("Resume-Position: " + orderPositionOpt.map(JPosition::toString).orElse(""));
         for (OrderId orderId : orderIds) {
-            ControllerApi.of(controllerId).resumeOrder(orderId, orderPositionOpt, historyOperations, true).thenAccept(either -> {
+            ControllerApi.of(controllerId).resumeOrder(orderId, orderPositionOpt, historyOperations, true, Optional.empty()).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     OrdersHelper.storeAuditLogDetailsFromJOrder(orderId.string(), workflowName, auditLogId, controllerId).thenAccept(
@@ -859,7 +862,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         case RESUME:
             Stream<OrderId> cyclicOrders = cyclicFreshOrderIds(jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors.toSet()),
                     currentState).filter(OrdersHelper::isResumable).map(JOrder::id);
-            return ControllerApi.of(controllerId).resumeOrders(Stream.concat(oIdsStream, cyclicOrders).collect(Collectors.toSet()), true);
+            return ControllerApi.of(controllerId).resumeOrders(Stream.concat(oIdsStream, cyclicOrders).collect(Collectors.toSet()), true, Optional.empty());
 
         case SUSPEND:
             if (modifyOrders.getDeep() == Boolean.TRUE) {

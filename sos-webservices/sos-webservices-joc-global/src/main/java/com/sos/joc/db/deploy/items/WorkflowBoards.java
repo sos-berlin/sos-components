@@ -12,23 +12,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sos.controller.model.workflow.WorkflowIdAndTags;
 
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WorkflowBoards
-    extends WorkflowIdAndTags
+    extends com.sos.controller.model.workflow.WorkflowBoards
 {
 
-    @JsonProperty("postNotices")
-    private List<String> postNotices;
-    
-    @JsonProperty("expectNotices")
-    private List<String> expectNotices;
-
-    @JsonProperty("consumeNotices")
-    private List<String> consumeNotices;
-    
     @JsonProperty("noticeBoardNames")
     private List<String> noticeBoardNames;
     
@@ -40,36 +30,6 @@ public class WorkflowBoards
     @JsonIgnore
     private Map<Integer, Set<String>> topLevelPositions;
 
-    @JsonProperty("postNotices")
-    public List<String> getPostNotices() {
-        return postNotices;
-    }
-
-    @JsonProperty("postNotices")
-    public void setPostNotices(List<String> postNotices) {
-        this.postNotices = postNotices;
-    }
-    
-    @JsonProperty("expectNotices")
-    public List<String> getExpectNotices() {
-        return expectNotices;
-    }
-
-    @JsonProperty("expectNotices")
-    public void setExpectNotices(List<String> expectNotices) {
-        this.expectNotices = expectNotices;
-    }
-    
-    @JsonProperty("consumeNotices")
-    public List<String> getConsumeNotices() {
-        return consumeNotices;
-    }
-
-    @JsonProperty("consumeNotices")
-    public void setConsumeNotices(List<String> consumeNotices) {
-        this.consumeNotices = consumeNotices;
-    }
-    
     @JsonProperty("noticeBoardNames")
     public List<String> getNoticeBoardNames() {
         return noticeBoardNames;
@@ -92,32 +52,32 @@ public class WorkflowBoards
     
     @JsonIgnore
     public boolean hasPostNotice(String boardName) {
-        return postNotices != null && postNotices.contains(boardName);
+        return getPostNotices() != null && getPostNotices().contains(boardName);
     }
     
     @JsonIgnore
     public boolean hasExpectNotice(String boardName) {
-        return expectNotices != null && expectNotices.contains(boardName);
+        return getExpectNotices() != null && getExpectNotices().contains(boardName);
     }
     
     @JsonIgnore
     public boolean hasConsumeNotice(String boardName) {
-        return consumeNotices != null && consumeNotices.contains(boardName);
+        return getConsumeNotices() != null && getConsumeNotices().contains(boardName);
     }
     
     @JsonIgnore
     public int hasPostNotice() {
-        return postNotices != null && !postNotices.isEmpty() ? 1 : 0;
+        return getPostNotices() != null && !getPostNotices().isEmpty() ? 1 : 0;
     }
     
     @JsonIgnore
     public int hasExpectNotice() {
-        return expectNotices != null && !expectNotices.isEmpty() ? 2 : 0;
+        return getExpectNotices() != null && !getExpectNotices().isEmpty() ? 2 : 0;
     }
     
     @JsonIgnore
     public int hasConsumeNotice() {
-        return consumeNotices != null && !consumeNotices.isEmpty() ? 4 : 0;
+        return getConsumeNotices() != null && !getConsumeNotices().isEmpty() ? 4 : 0;
     }
     
     @JsonIgnore

@@ -2,6 +2,7 @@ package com.sos.joc.classes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -21,12 +22,19 @@ public class ProblemHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProblemHelper.class);
     private static final String UNKNOWN_KEY = "UnknownKey";
+    private static final String UNKNOWN_PATH = "UnknownPath";
 
     public static String getErrorMessage(Problem problem) {
         if (problem == null) {
             return null;
         }
         return String.format("%s%s", (problem.codeOrNull() != null) ? problem.codeOrNull().string() + ": " : "", problem.message());
+    }
+    
+    public static String getErrorMessagePrefix(String controllerId, String errorType) {
+        controllerId = controllerId == null ? "" : "[" + controllerId + "]";
+        errorType = errorType == null ? "" : errorType + ": ";
+        return controllerId + errorType;
     }
 
     public static void throwProblemIfExist(Either<Problem, ?> either) throws JocException {
@@ -47,12 +55,12 @@ public class ProblemHelper {
         postEventIfExist(either, accessToken, err, controller, true);
     }
 
-    public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller)
+    public static void postExceptionEventIfExist(Either<? extends Throwable, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
         postExceptionEventIfExist(either, accessToken, err, controller, false);
     }
 
-    public static void postExceptionEventAsHintIfExist(Either<Exception, ?> either, String accessToken, JocError err,
+    public static void postExceptionEventAsHintIfExist(Either<? extends Throwable, ?> either, String accessToken, JocError err,
             String controller) throws JocException {
         postExceptionEventIfExist(either, accessToken, err, controller, true);
     }
@@ -63,7 +71,13 @@ public class ProblemHelper {
 
     private static synchronized void postEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller,
             boolean isOnlyHint) throws JocException {
+        String logContext = MDC.get("clusterService");
         if (either == null || either.isLeft()) {
+            if (err != null) {
+                if (logContext != null) {
+                    MDC.remove("clusterService"); 
+                }
+            }
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
                 err.clearMetaInfo();
@@ -83,12 +97,21 @@ public class ProblemHelper {
                     getEventOfProblem(marker, either.getLeft(), accessToken, controller, isOnlyHint);
                 }
             }
+            if (logContext != null) {
+                MDC.put("clusterService", logContext); 
+            }
         }
     }
 
-    private static synchronized void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err,
+    private static synchronized void postExceptionEventIfExist(Either<? extends Throwable, ?> either, String accessToken, JocError err,
             String controller, boolean isOnlyHint) throws JocException {
+        String logContext = MDC.get("clusterService");
         if (either == null || either.isLeft()) {
+            if (err != null) {
+                if (logContext != null) {
+                    MDC.remove("clusterService"); 
+                }
+            }
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
                 err.clearMetaInfo();
@@ -115,6 +138,9 @@ public class ProblemHelper {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString(), isOnlyHint));
                 }
             }
+            if (logContext != null) {
+                MDC.put("clusterService", logContext); 
+            }
         }
     }
     
@@ -135,7 +161,8 @@ public class ProblemHelper {
             return new ControllerServiceUnavailableException(getErrorMessage(problem));
         default:
             // UnknownKey
-            if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
+            if (problem.codeOrNull() != null && (UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string()) || UNKNOWN_PATH.equalsIgnoreCase(problem
+                    .codeOrNull().string()))) {
                 return new ControllerObjectNotExistException(problem.message());
             }
             return new JocBadRequestException(getErrorMessage(problem));
@@ -152,32 +179,33 @@ public class ProblemHelper {
         case 409:
             // duplicate orders are ignored by controller -> 409 is no longer transmitted
             if (isOnlyHint) {
-                LOGGER.warn(marker, "ConflictWarning: " + getErrorMessage(problem));
+                LOGGER.warn(marker, getErrorMessagePrefix(controller, "ConflictWarning") + getErrorMessage(problem));
             } else {
-                LOGGER.error(marker, "ConflictError: " + getErrorMessage(problem));
+                LOGGER.error(marker, getErrorMessagePrefix(controller, "ConflictError") + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "ConflictError: " + getErrorMessage(problem), isOnlyHint);
         case 503:
             if (isOnlyHint) {
-                LOGGER.warn(marker, "ServiceUnavailableWarning: " + getErrorMessage(problem));
+                LOGGER.warn(marker, getErrorMessagePrefix(controller, "ServiceUnavailableWarning") + getErrorMessage(problem));
             } else {
-                LOGGER.error(marker, "ServiceUnavailableError: " + getErrorMessage(problem));
+                LOGGER.error(marker, getErrorMessagePrefix(controller, "ServiceUnavailableError") + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "ServiceUnavailableError: " + getErrorMessage(problem), isOnlyHint);
         default:
             // UnknownKey
-            if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
+            if (problem.codeOrNull() != null && (UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string()) || UNKNOWN_PATH.equalsIgnoreCase(problem
+                    .codeOrNull().string()))) {
                 if (isOnlyHint) {
-                    LOGGER.warn(marker, "ObjectNotExistWarning: " + getErrorMessage(problem));
+                    LOGGER.warn(marker, getErrorMessagePrefix(controller, "ObjectNotExistWarning") + getErrorMessage(problem));
                 } else {
-                    LOGGER.error(marker, "ObjectNotExistError: " + getErrorMessage(problem));
+                    LOGGER.error(marker, getErrorMessagePrefix(controller, "ObjectNotExistError") + getErrorMessage(problem));
                 }
                 return new ProblemEvent(accessToken, controller, "ObjectNotExistError: " + getErrorMessage(problem), isOnlyHint);
             }
             if (isOnlyHint) {
-                LOGGER.warn(marker, getErrorMessage(problem));
+                LOGGER.warn(marker, getErrorMessagePrefix(controller, null) + getErrorMessage(problem));
             } else {
-                LOGGER.error(marker, "BadRequestError: " + getErrorMessage(problem));
+                LOGGER.error(marker, getErrorMessagePrefix(controller, "BadRequestError") + getErrorMessage(problem));
             }
             return new ProblemEvent(accessToken, controller, "BadRequestError: " + getErrorMessage(problem), isOnlyHint);
         }
