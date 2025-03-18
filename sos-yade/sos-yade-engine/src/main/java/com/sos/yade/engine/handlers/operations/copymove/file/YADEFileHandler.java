@@ -256,7 +256,7 @@ public class YADEFileHandler {
 
         if (sourceDelegator.hasHTTPProvider()) {
             // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
-            fileName = HTTPUtils.encode(fileName);
+            fileName = HTTPUtils.asValidFileSystemName(fileName);
         }
 
         // 2) Compressed name
