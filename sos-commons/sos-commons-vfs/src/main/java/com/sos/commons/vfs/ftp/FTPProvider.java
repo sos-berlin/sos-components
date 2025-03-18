@@ -198,28 +198,23 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
      * TODO - which is better?<br/>
      * -- which retrieves the information when, for example, the current user does not have the permissions to read the file but the file still exists... */
     @Override
-    public boolean exists(String path) {
-        if (client == null || path == null) {
-            return false;
-        }
+    public boolean exists(String path) throws ProviderException {
+        validatePrerequisites("exists", path, "path");
 
         FTPProtocolReply reply = null;
         try {
             client.sendCommand(FTPCmd.SIZE, path);
             reply = new FTPProtocolReply(client);
             if (reply.isFileStatusReply()) {
-                return false;
-            }
-            if (reply.isFileUnavailableReply()) {
                 return true;
             }
-        } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists=false][reply=%s]%s", getPathOperationPrefix(path), reply, e.toString());
-            }
+            // if (reply.isFileUnavailableReply()) {
+            // return false;
+            // }
             return false;
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
-        return false;
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)}<br/>
@@ -707,7 +702,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     }
 
     /** Attempt to determine if NOT_FOUND is truly the cause in the case of FTPReply.FILE_UNAVAILABLE, rather than issues like permissions, etc. */
-    private boolean isReplyBasedOnFileNotFound(FTPProtocolReply reply, String path) {
+    private boolean isReplyBasedOnFileNotFound(FTPProtocolReply reply, String path) throws ProviderException {
         if (reply.isFileUnavailableReply()) {
             // Reply text is not analyzed due to different implementations/languages
             return exists(path);

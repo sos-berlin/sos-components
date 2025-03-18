@@ -90,10 +90,9 @@ public class ProviderImpl extends HTTPProvider {
 
     /** Overrides {@link IProvider#exists(String)} */
     @Override
-    public boolean exists(String path) {
-        if (client == null || path == null) {
-            return false;
-        }
+    public boolean exists(String path) throws ProviderException {
+        validatePrerequisites("exists", path, "path");
+
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
@@ -101,16 +100,16 @@ public class ProviderImpl extends HTTPProvider {
             ExecuteResult result = client.executeHEADOrGET(uri);
             int code = result.response().statusCode();
             if (!HTTPUtils.isSuccessful(code)) {
+                if (HTTPUtils.isNotFound(code)) {
+                    return false;
+                }
                 throw new IOException(HTTPClient.getResponseStatus(result));
             }
 
             return true;
         } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[uri=%s][exists=false]%s", getPathOperationPrefix(path), uri, e.toString());
-            }
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
-        return false;
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */

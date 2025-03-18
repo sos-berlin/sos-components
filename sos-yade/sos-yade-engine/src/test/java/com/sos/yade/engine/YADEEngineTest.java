@@ -167,6 +167,12 @@ public class YADEEngineTest {
     public void testLocal2HTTP() {
         YADEEngine yade = new YADEEngine();
         try {
+            // HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
+            boolean useLocalhost = HTTP_HOST.contains("localhost");
+            if (useLocalhost) {
+                HTTP_PORT = 8080;
+            }
+
             /** Common */
             YADEArguments args = createYADEArgs();
             args.getParallelism().setValue(10);
@@ -182,6 +188,11 @@ public class YADEEngineTest {
 
             /** Target */
             YADETargetArguments targetArgs = getHTTPTargetArgs();
+            ((HTTPProviderArguments) targetArgs.getProvider()).getImpl().setValue(Impl.JAVA);
+            if (useLocalhost) {
+                targetArgs.getProvider().getUser().setValue("yade");
+                targetArgs.getProvider().getPassword().setValue("yade");
+            }
             targetArgs.getDirectory().setValue(HTTP_TARGET_DIR);
             // targetArgs.getKeepModificationDate().setValue(true);
             targetArgs.getTransactional().setValue(true);
@@ -197,7 +208,11 @@ public class YADEEngineTest {
     public void testHTTP2Local() {
         YADEEngine yade = new YADEEngine();
         try {
-            boolean useLocalhost = false;
+            // HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
+            boolean useLocalhost = HTTP_HOST.startsWith("https://");
+            if (useLocalhost) {
+                HTTP_PORT = 8080;
+            }
 
             /** Common */
             YADEArguments args = createYADEArgs();
@@ -205,11 +220,6 @@ public class YADEEngineTest {
             args.getOperation().setValue(TransferOperation.COPY);
 
             /** Source */
-            if (useLocalhost) {
-                HTTP_PORT = 8080;
-            } else {
-                HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
-            }
             YADESourceArguments sourceArgs = getHTTPSourceArgs();
             ((HTTPProviderArguments) sourceArgs.getProvider()).getImpl().setValue(Impl.JAVA);
             if (useLocalhost) {

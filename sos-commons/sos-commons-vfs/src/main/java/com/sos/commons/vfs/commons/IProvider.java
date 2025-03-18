@@ -74,7 +74,7 @@ public interface IProvider {
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException;
 
     /** Tests whether a file/directory exists. **/
-    public boolean exists(String path);
+    public boolean exists(String path) throws ProviderException;
 
     /** Creates a directory by creating all nonexistent parent directories first.<br/>
      * No exception is thrown if the directory could not be created because it already exists.

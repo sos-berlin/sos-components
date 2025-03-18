@@ -74,12 +74,16 @@ public class YADESourceFilesPolling {
             if (!shouldSelectFiles && args.getPolling().getPollingWait4SourceFolder().getValue()) {
                 // sourceDir!=null is already checked on method begin
                 ensureConnected(logger, sourceDelegator, currentPollingTime);
-                if (sourceDelegator.getProvider().exists(sourceDelegator.getDirectory())) {
-                    shouldSelectFiles = true;
-                } else {
-                    logger.info("[%s[%s]Source directory not found. Wait for the directory due to polling mode...", logPrefix, sourceDelegator
-                            .getDirectory());
-                    shouldSelectFiles = false;
+                try {
+                    if (sourceDelegator.getProvider().exists(sourceDelegator.getDirectory())) {
+                        shouldSelectFiles = true;
+                    } else {
+                        logger.info("[%s[%s]Source directory not found. Wait for the directory due to polling mode...", logPrefix, sourceDelegator
+                                .getDirectory());
+                        shouldSelectFiles = false;
+                    }
+                } catch (Exception e) {
+                    throw new YADEEngineSourcePollingException(e);
                 }
             } else {
                 shouldSelectFiles = true;

@@ -117,20 +117,14 @@ public class ProviderImpl extends WebDAVProvider {
 
     /** Overrides {@link IProvider#exists(String)} */
     @Override
-    public boolean exists(String path) {
-        if (client == null || path == null) {
-            return false;
-        }
-        URI uri = null;
+    public boolean exists(String path) throws ProviderException {
+        validatePrerequisites("exists", path, "path");
+
         try {
-            uri = new URI(normalizePath(path));
-            return ProviderUtils.exists(client, uri);
+            return ProviderUtils.exists(client, new URI(normalizePath(path)));
         } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[uri=%s][exists=false]%s", getPathOperationPrefix(path), uri, e.toString());
-            }
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
-        return false;
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)}<br/>

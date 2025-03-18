@@ -107,16 +107,13 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
     /** Overrides {@link IProvider#exists(String)} */
     @Override
-    public boolean exists(String path) {
-        try {
-            validateArgument("exists", path, "path"); // here because should not throw any errors
+    public boolean exists(String path) throws ProviderException {
+        validateArgument("exists", path, "path");
 
+        try {
             return exists(getAbsoluteNormalizedPath(path));
         } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists=false]%s", getPathOperationPrefix(path), e.toString());
-            }
-            return false;
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 

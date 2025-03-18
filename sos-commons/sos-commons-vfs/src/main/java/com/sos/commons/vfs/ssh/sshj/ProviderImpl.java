@@ -133,18 +133,14 @@ public class ProviderImpl extends SSHProvider {
 
     /** Overrides {@link IProvider#exists(String)} */
     @Override
-    public boolean exists(String path) {
-        if (sshClient == null || path == null) {
-            return false;
-        }
+    public boolean exists(String path) throws ProviderException {
+        validatePrerequisites("exists", path, "path");
+
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             return ProviderUtils.exists(sftp, path);
         } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists=false]%s", getPathOperationPrefix(path), e.toString());
-            }
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
-        return false;
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */

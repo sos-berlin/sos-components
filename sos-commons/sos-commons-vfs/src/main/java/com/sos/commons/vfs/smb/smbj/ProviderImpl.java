@@ -140,20 +140,14 @@ public class ProviderImpl extends SMBProvider {
 
     /** Overrides {@link IProvider#exists(String)} */
     @Override
-    public boolean exists(String path) {
-        if (client == null || path == null) {
-            return false;
-        }
+    public boolean exists(String path) throws ProviderException {
+        validatePrerequisites("exists", path, "path");
 
         try (DiskShare share = connectShare(path)) {
-            // return share.fileExists(getSMBPath(path) || share.folderExists(getSMBPath(path);
-            share.getFileInformation(getSMBPath(path));
-            return true;
+            // share.getFileInformation(getSMBPath(path));
+            return share.fileExists(getSMBPath(path)) || share.folderExists(getSMBPath(path));
         } catch (Throwable e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[exists=false]%s", getPathOperationPrefix(path), e.toString());
-            }
-            return false;
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 

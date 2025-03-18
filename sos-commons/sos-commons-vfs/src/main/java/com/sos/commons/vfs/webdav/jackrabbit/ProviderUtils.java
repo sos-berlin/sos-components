@@ -64,6 +64,9 @@ public class ProviderUtils {
         try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
             int code = response.getStatusLine().getStatusCode();
             if (!HTTPUtils.isSuccessful(code)) {
+                if (HTTPUtils.isNotFound(code)) {
+                    return false;
+                }
                 throw new IOException(HTTPClient.getResponseStatus(result));
             }
             return true;
