@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -96,6 +97,11 @@ public class HTTPUtils {
         return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
+    public static String asValidFileSystemName(String input) {
+        // e.g. converts %20 to blank etc
+        return URLDecoder.decode(input, StandardCharsets.UTF_8).replaceAll("[<>:\"/\\|?*]", "_");
+    }
+
     public static boolean isSuccessful(int code) {
         if (code >= 200 && code < 300) {
             return true;
@@ -113,19 +119,6 @@ public class HTTPUtils {
 
     public static boolean isMethodNotAllowed(int code) {
         return code == 405;
-    }
-
-    @SuppressWarnings("unused")
-    // is.transferTo(OutputStream.nullOutputStream()); used
-    private static long countBytes(InputStream is) throws IOException {
-        long count = 0L;
-
-        byte[] buffer = new byte[4_096];
-        int bytesRead;
-        while ((bytesRead = is.read(buffer)) != -1) {
-            count += bytesRead;
-        }
-        return count;
     }
 
     public static String getReasonPhrase(int code) {
@@ -183,6 +176,19 @@ public class HTTPUtils {
         // or
         // variant 2) new URI(null,spec,null);
         return new URL(baseURI).toURI();
+    }
+
+    @SuppressWarnings("unused")
+    // is.transferTo(OutputStream.nullOutputStream()); used
+    private static long countBytes(InputStream is) throws IOException {
+        long count = 0L;
+
+        byte[] buffer = new byte[4_096];
+        int bytesRead;
+        while ((bytesRead = is.read(buffer)) != -1) {
+            count += bytesRead;
+        }
+        return count;
     }
 
 }

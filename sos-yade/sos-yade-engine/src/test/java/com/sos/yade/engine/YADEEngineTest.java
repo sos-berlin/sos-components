@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
+import com.sos.commons.vfs.http.commons.HTTPProviderArguments.Impl;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
@@ -196,7 +197,7 @@ public class YADEEngineTest {
     public void testHTTP2Local() {
         YADEEngine yade = new YADEEngine();
         try {
-            boolean useLocalhost = true;
+            boolean useLocalhost = false;
 
             /** Common */
             YADEArguments args = createYADEArgs();
@@ -210,6 +211,7 @@ public class YADEEngineTest {
                 HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
             }
             YADESourceArguments sourceArgs = getHTTPSourceArgs();
+            ((HTTPProviderArguments) sourceArgs.getProvider()).getImpl().setValue(Impl.JAVA);
             if (useLocalhost) {
                 sourceArgs.getFilePath().setValue(Collections.singletonList("yade/source/1.txt"));
                 sourceArgs.getProvider().getUser().setValue("yade");

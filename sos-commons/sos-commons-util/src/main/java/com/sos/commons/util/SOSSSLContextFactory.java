@@ -29,8 +29,13 @@ public class SOSSSLContextFactory {
         if (result == null) {
             // TODO throw Exception ?
         } else {
-            sslContext.init(getKeyManagers(result.getKeyStore(), result.getKeyStorePassword(), result.getKeyStoreType()), getTrustManagers(result
-                    .getTrustStore(), result.getTrustStoreType(), args.getAcceptUntrustedCertificate().isTrue()), null);
+            try {
+                sslContext.init(getKeyManagers(result.getKeyStore(), result.getKeyStorePassword(), null), getTrustManagers(result.getTrustStore(),
+                        null, args.getAcceptUntrustedCertificate().isTrue()), null);
+            } catch (Exception e) {
+                throw new Exception("[" + result.toString() + "][KeyManagerFactory.getDefaultAlgorithm()=" + KeyManagerFactory.getDefaultAlgorithm()
+                        + "]" + e, e);
+            }
         }
         if (!args.getProtocols().isEmpty()) {
             // Set explicitly supported protocols
