@@ -11,6 +11,7 @@ import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
+import com.sos.commons.vfs.http.commons.HTTPProviderArguments.Impl;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
 
@@ -19,6 +20,9 @@ public abstract class HTTPProvider extends AProvider<HTTPProviderArguments> {
     private URI baseURI;
 
     public static HTTPProvider createInstance(ISOSLogger logger, HTTPProviderArguments args) throws ProviderInitializationException {
+        if(Impl.JAVA.equals(args.getImpl().getValue())) {
+            return new com.sos.commons.vfs.http.java.ProviderImpl(logger, args);
+        }
         return new com.sos.commons.vfs.http.apache.ProviderImpl(logger, args);
     }
 

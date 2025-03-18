@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.http.apache;
+package com.sos.commons.vfs.http.java;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,20 +7,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.URI;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.InputStreamEntity;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -38,9 +30,9 @@ import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.HTTPProvider;
-import com.sos.commons.vfs.http.apache.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
+import com.sos.commons.vfs.http.java.HTTPClient.ExecuteResult;
 
 public class ProviderImpl extends HTTPProvider {
 
@@ -106,11 +98,10 @@ public class ProviderImpl extends HTTPProvider {
         try {
             uri = new URI(normalizePath(path));
 
-            try (ExecuteResult result = client.executeHEADOrGET(uri); CloseableHttpResponse response = result.getResponse()) {
-                int code = response.getStatusLine().getStatusCode();
-                if (!HTTPUtils.isSuccessful(code)) {
-                    throw new IOException(HTTPClient.getResponseStatus(result));
-                }
+            ExecuteResult result = client.executeHEADOrGET(uri);
+            int code = result.response().statusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
 
             return true;
@@ -140,14 +131,13 @@ public class ProviderImpl extends HTTPProvider {
         try {
             URI uri = new URI(normalizePath(path));
 
-            try (ExecuteResult result = client.execute(new HttpDelete(uri)); CloseableHttpResponse response = result.getResponse()) {
-                int code = response.getStatusLine().getStatusCode();
-                if (!HTTPUtils.isSuccessful(code)) {
-                    if (HTTPUtils.isNotFound(code)) {
-                        return false;
-                    }
-                    throw new IOException(HTTPClient.getResponseStatus(result));
+            ExecuteResult result = client.executeDELETE(uri);
+            int code = result.response().statusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                if (HTTPUtils.isNotFound(code)) {
+                    return false;
                 }
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
 
             return true;
@@ -227,16 +217,16 @@ public class ProviderImpl extends HTTPProvider {
         try {
             URI uri = new URI(normalizePath(path));
 
-            try (ExecuteResult result = client.execute(new HttpGet(uri)); CloseableHttpResponse response = result.getResponse()) {
-                int code = response.getStatusLine().getStatusCode();
-                if (!HTTPUtils.isSuccessful(code)) {
-                    if (HTTPUtils.isNotFound(code)) {
-                        return null;
-                    }
-                    throw new IOException(HTTPClient.getResponseStatus(result));
+            ExecuteResult result = client.executeGET(uri);
+            int code = result.response().statusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                if (HTTPUtils.isNotFound(code)) {
+                    return null;
                 }
-                return createProviderFile(uri, response);
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
+
+            return createProviderFile(uri, result.response());
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -275,18 +265,10 @@ public class ProviderImpl extends HTTPProvider {
         try {
             URI uri = new URI(normalizePath(path));
 
-            HttpPut request = new HttpPut(uri);
-            // request.setEntity(new StringEntity(content, StandardCharsets.UTF_8));
-            // request.setHeader("Content-Type", "text/plain");
-            request.setEntity(new ByteArrayEntity(content.getBytes(StandardCharsets.UTF_8)));
-            request.setHeader("Content-Type", "application/octet-stream");
-            // The 'Content-Length' Header is automatically set when an HttpEntity is used
-
-            try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
-                int code = response.getStatusLine().getStatusCode();
-                if (!HTTPUtils.isSuccessful(code)) {
-                    throw new IOException(HTTPClient.getResponseStatus(result));
-                }
+            ExecuteResult result = client.executePUT(uri, content);
+            int code = result.response().statusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -340,15 +322,15 @@ public class ProviderImpl extends HTTPProvider {
     private void connect(URI uri) throws Exception {
         String notFoundMsg = null;
 
-        try (ExecuteResult result = client.executeHEADOrGET(uri); CloseableHttpResponse response = result.getResponse()) {
-            int code = response.getStatusLine().getStatusCode();
-            if (HTTPUtils.isServerError(code)) {
-                throw new Exception(HTTPClient.getResponseStatus(result));
-            }
-            if (HTTPUtils.isNotFound(code)) {
-                notFoundMsg = HTTPClient.getResponseStatus(result);
-            }
+        ExecuteResult result = client.executeHEADOrGET(uri);
+        int code = result.response().statusCode();
+        if (HTTPUtils.isServerError(code)) {
+            throw new Exception(HTTPClient.getResponseStatus(result));
         }
+        if (HTTPUtils.isNotFound(code)) {
+            notFoundMsg = HTTPClient.getResponseStatus(result);
+        }
+
         // Connection successful but baseURI not found - try redefining baseURI
         // - recursive attempt with parent path
         if (notFoundMsg != null) {
@@ -384,21 +366,16 @@ public class ProviderImpl extends HTTPProvider {
             URI targetURI = new URI(normalizePath(target));
 
             is = client.getHTTPInputStream(sourceURI);
-            HttpPut request = new HttpPut(targetURI);
-            request.setEntity(new InputStreamEntity(is));
 
-            try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
-                SOSClassUtil.closeQuietly(is);
-                is = null;
-
-                int code = response.getStatusLine().getStatusCode();
-                if (!HTTPUtils.isSuccessful(code)) {
-                    if (HTTPUtils.isNotFound(code)) {
-                        return false;
-                    }
-                    throw new IOException(HTTPClient.getResponseStatus(result));
+            ExecuteResult result = client.executePUT(targetURI, is);
+            int code = result.response().statusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                if (HTTPUtils.isNotFound(code)) {
+                    return false;
                 }
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
+
             deleteIfExists(source);
             return true;
         } catch (SOSNoSuchFileException e) { // is = getInputStream(s);
@@ -416,25 +393,21 @@ public class ProviderImpl extends HTTPProvider {
         validateArgument(method, argValue, msg);
     }
 
-    private ProviderFile createProviderFile(URI uri, HttpResponse response) throws Exception {
-        HttpEntity entity = response.getEntity();
-        if (entity == null) {
-            return null;
-        }
-        long size = getFileSize(uri, entity);
+    private ProviderFile createProviderFile(URI uri, HttpResponse<?> response) throws Exception {
+        long size = getFileSize(uri, response);
         if (size < 0) {
             return null;
         }
         return createProviderFile(uri.toString(), size, HTTPClient.getLastModifiedInMillis(response));
     }
 
-    private long getFileSize(URI uri, HttpEntity entity) throws Exception {
-        long size = entity.getContentLength();
+    private long getFileSize(URI uri, HttpResponse<?> response) throws Exception {
+        long size = response.headers().firstValueAsLong(HTTPClient.HEADER_CONTENT_LENGTH).orElse(-1);
         if (size < 0) {// e.g. Transfer-Encoding: chunked
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug(String.format("%s[getSizeFromEntity][%s][size=%s]use InputStream", getLogPrefix(), uri, size));
+                getLogger().debug(String.format("%s[reread][%s][size=%s]use InputStream", getLogPrefix(), uri, size));
             }
-            size = HTTPClient.getFileSizeIfChunkedTransferEncoding(entity);
+            size = client.getFileSizeIfChunkedTransferEncoding(uri);
         }
         return size;
     }

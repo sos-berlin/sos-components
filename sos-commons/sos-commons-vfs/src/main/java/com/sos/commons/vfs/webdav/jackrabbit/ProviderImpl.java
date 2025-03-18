@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPut;
@@ -46,6 +45,7 @@ import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.HTTPProvider;
 import com.sos.commons.vfs.http.apache.HTTPClient;
+import com.sos.commons.vfs.http.apache.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.http.apache.HTTPOutputStream;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
@@ -178,13 +178,13 @@ public class ProviderImpl extends WebDAVProvider {
 
         try {
             HttpDelete request = new HttpDelete(new URI(normalizePath(path)));
-            try (CloseableHttpResponse response = client.execute(request)) {
-                StatusLine sl = response.getStatusLine();
-                if (!HTTPClient.isSuccessful(sl)) {
-                    if (HTTPClient.isNotFound(sl)) {
+            try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+                int code = response.getStatusLine().getStatusCode();
+                if (!HTTPUtils.isSuccessful(code)) {
+                    if (HTTPUtils.isNotFound(code)) {
                         return false;
                     }
-                    throw new IOException(HTTPClient.getResponseStatus(request, response));
+                    throw new IOException(HTTPClient.getResponseStatus(result));
                 }
             }
             return true;
@@ -263,13 +263,13 @@ public class ProviderImpl extends WebDAVProvider {
         try {
             URI uri = new URI(normalizePath(path));
             HttpPropfind request = ProviderUtils.createFilePropertiesRequest(uri);
-            try (CloseableHttpResponse response = client.execute(request)) {
-                StatusLine sl = response.getStatusLine();
-                if (!HTTPClient.isSuccessful(sl)) {
-                    if (HTTPClient.isNotFound(sl)) {
+            try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+                int code = response.getStatusLine().getStatusCode();
+                if (!HTTPUtils.isSuccessful(code)) {
+                    if (HTTPUtils.isNotFound(code)) {
                         return null;
                     }
-                    throw new IOException(HTTPClient.getResponseStatus(request, response));
+                    throw new IOException(HTTPClient.getResponseStatus(result));
                 }
                 MultiStatus status = ProviderUtils.getMuiltiStatus(request, response);
                 if (status == null) {
@@ -324,10 +324,10 @@ public class ProviderImpl extends WebDAVProvider {
             request.setHeader("Content-Type", "application/octet-stream");
             // The 'Content-Length' Header is automatically set when an HttpEntity is used
 
-            try (CloseableHttpResponse response = client.execute(request)) {
-                StatusLine sl = response.getStatusLine();
-                if (!HTTPClient.isSuccessful(sl)) {
-                    throw new IOException(HTTPClient.getResponseStatus(request, response));
+            try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+                int code = response.getStatusLine().getStatusCode();
+                if (!HTTPUtils.isSuccessful(code)) {
+                    throw new IOException(HTTPClient.getResponseStatus(result));
                 }
             }
         } catch (Throwable e) {
@@ -398,13 +398,13 @@ public class ProviderImpl extends WebDAVProvider {
         String notFoundMsg = null;
 
         HttpPropfind request = new HttpPropfind(uri, null, DavConstants.DEPTH_0);
-        try (CloseableHttpResponse response = client.execute(request)) {
-            StatusLine sl = response.getStatusLine();
-            if (HTTPClient.isServerError(sl)) {
-                throw new Exception(HTTPClient.getResponseStatus(request, response));
+        try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+            int code = response.getStatusLine().getStatusCode();
+            if (HTTPUtils.isServerError(code)) {
+                throw new Exception(HTTPClient.getResponseStatus(result));
             }
-            if (HTTPClient.isNotFound(sl)) {
-                notFoundMsg = HTTPClient.getResponseStatus(request, response);
+            if (HTTPUtils.isNotFound(code)) {
+                notFoundMsg = HTTPClient.getResponseStatus(result);
             }
         }
         // Connection successful but baseURI not found - try redefining baseURI
@@ -432,13 +432,13 @@ public class ProviderImpl extends WebDAVProvider {
             URI targetURI = new URI(normalizePath(target));
 
             HttpMove request = new HttpMove(sourceURI, targetURI, true);
-            try (CloseableHttpResponse response = client.execute(request)) {
-                StatusLine sl = response.getStatusLine();
-                if (!HTTPClient.isSuccessful(sl)) {
-                    if (HTTPClient.isNotFound(sl)) {
+            try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+                int code = response.getStatusLine().getStatusCode();
+                if (!HTTPUtils.isSuccessful(code)) {
+                    if (HTTPUtils.isNotFound(code)) {
                         return false;
                     }
-                    throw new IOException(HTTPClient.getResponseStatus(request, response));
+                    throw new IOException(HTTPClient.getResponseStatus(result));
                 }
             }
             return true;

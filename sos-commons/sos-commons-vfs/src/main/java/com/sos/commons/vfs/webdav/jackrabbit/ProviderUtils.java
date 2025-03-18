@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
@@ -25,6 +24,8 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.http.apache.HTTPClient;
+import com.sos.commons.vfs.http.apache.HTTPClient.ExecuteResult;
+import com.sos.commons.vfs.http.commons.HTTPUtils;
 
 public class ProviderUtils {
 
@@ -60,10 +61,10 @@ public class ProviderUtils {
 
     public static boolean exists(HTTPClient client, URI uri) throws Exception {
         HttpPropfind request = new HttpPropfind(uri, null, DavConstants.DEPTH_0);
-        try (CloseableHttpResponse response = client.execute(request)) {
-            StatusLine sl = response.getStatusLine();
-            if (!HTTPClient.isSuccessful(sl)) {
-                throw new IOException(HTTPClient.getResponseStatus(request, response));
+        try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+            int code = response.getStatusLine().getStatusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
             return true;
         }
@@ -71,10 +72,10 @@ public class ProviderUtils {
 
     public static void createDirectory(HTTPClient client, URI uri) throws Exception {
         HttpMkcol request = new HttpMkcol(uri);
-        try (CloseableHttpResponse response = client.execute(request)) {
-            StatusLine sl = response.getStatusLine();
-            if (!HTTPClient.isSuccessful(sl)) {
-                throw new IOException(HTTPClient.getResponseStatus(request, response));
+        try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+            int code = response.getStatusLine().getStatusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
         }
     }
@@ -84,10 +85,10 @@ public class ProviderUtils {
         names.add(DavPropertyName.create(DavConstants.PROPERTY_RESOURCETYPE));
 
         HttpPropfind request = new HttpPropfind(uri, names, DavConstants.DEPTH_0);
-        try (CloseableHttpResponse response = client.execute(request)) {
-            StatusLine sl = response.getStatusLine();
-            if (!HTTPClient.isSuccessful(sl)) {
-                throw new IOException(HTTPClient.getResponseStatus(request, response));
+        try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
+            int code = response.getStatusLine().getStatusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                throw new IOException(HTTPClient.getResponseStatus(result));
             }
             MultiStatus status = getMuiltiStatus(request, response);
             if (status == null) {
@@ -111,10 +112,10 @@ public class ProviderUtils {
             HttpPropfind request = createDirectoryPropertiesRequest(uri);
 
             Set<String> subDirectories = new HashSet<>();
-            try (CloseableHttpResponse response = provider.getClient().execute(request)) {
-                StatusLine sl = response.getStatusLine();
-                if (!HTTPClient.isSuccessful(sl)) {
-                    throw new IOException(HTTPClient.getResponseStatus(request, response));
+            try (ExecuteResult executeResult = provider.getClient().execute(request); CloseableHttpResponse response = executeResult.getResponse()) {
+                int code = response.getStatusLine().getStatusCode();
+                if (!HTTPUtils.isSuccessful(code)) {
+                    throw new IOException(HTTPClient.getResponseStatus(executeResult));
                 }
                 MultiStatus status = getMuiltiStatus(request, response);
                 if (status != null) {

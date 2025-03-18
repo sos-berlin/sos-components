@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -32,6 +31,7 @@ import org.apache.commons.net.util.TrustManagerUtils;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSJavaKeyStoreReader;
+import com.sos.commons.util.SOSJavaKeyStoreReader.SOSJavaKeyStoreResult;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
@@ -568,19 +568,19 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         if (isFTPS) {
             FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
             // FTPSClient
-            FTPSClient client = new FTPSClient(args.getSecureSocketProtocol().getValue(), args.isSecurityModeImplicit());
+            FTPSClient client = new FTPSClient(args.getProtocols().getValue(), args.isSecurityModeImplicit());
             // PROXY
             if (getProxyProvider() != null) {
                 client.setProxy(getProxyProvider().getProxy());
             }
             // TRUST MANAGER#
             if (args.getJavaKeyStore() != null) {
-                KeyStore ks = SOSJavaKeyStoreReader.load(args.getJavaKeyStore().getFile().getValue(), args.getJavaKeyStore().getPassword().getValue(),
-                        args.getJavaKeyStore().getType().getValue());
-                if (ks != null) {
-                    getLogger().info(String.format("%s[setTrustManager][keystore]type=%s,file=%s", getLogPrefix(), args.getJavaKeyStore().getType()
-                            .getValue(), args.getJavaKeyStore().getFile().getValue()));
-                    client.setTrustManager(TrustManagerUtils.getDefaultTrustManager(ks));
+                SOSJavaKeyStoreResult result = SOSJavaKeyStoreReader.read(args.getJavaKeyStore());
+                if (result != null) {
+                    if (getLogger().isDebugEnabled()) {
+                        getLogger().debug(String.format("%s[setTrustManager]%s", getLogPrefix(), result.toString()));
+                    }
+                    client.setTrustManager(TrustManagerUtils.getDefaultTrustManager(result.getTrustStore()));
                 }
             }
             return client;

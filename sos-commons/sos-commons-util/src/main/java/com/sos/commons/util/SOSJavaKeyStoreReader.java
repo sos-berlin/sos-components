@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 
 import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments.KeyStoreType;
+import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments.StoreType;
 
 public class SOSJavaKeyStoreReader {
 
@@ -16,9 +16,9 @@ public class SOSJavaKeyStoreReader {
     }
 
     private static final String SYSTEM_PROPERTY_KEYSTORE_PATH = "javax.net.ssl.keyStore";
-    private static final String SYSTEM_PROPERTY_TRUSTSTORE_PATH = "javax.net.ssl.trustStore";
-
     private static final String SYSTEM_PROPERTY_KEYSTORE_PASSWORD = "javax.net.ssl.keyStorePassword";
+
+    private static final String SYSTEM_PROPERTY_TRUSTSTORE_PATH = "javax.net.ssl.trustStore";
     private static final String SYSTEM_PROPERTY_TRUSTSTORE_PASSWORD = "javax.net.ssl.trustStorePassword";
 
     private final Type type;
@@ -27,23 +27,11 @@ public class SOSJavaKeyStoreReader {
     /** KeyStore.getInstance: JKS/PKC12... */
     private String storeType;
 
-    public SOSJavaKeyStoreReader(Type type) {
-        this(type, null, null, null);
+    private SOSJavaKeyStoreReader() {
+        this(null, null, null, null);
     }
 
-    public SOSJavaKeyStoreReader(Type type, JavaKeyStoreArguments args) {
-        this(type, args.getFile().getValue(), args.getPassword().getValue(), getType(args.getType().getValue()));
-    }
-
-    public SOSJavaKeyStoreReader(Type type, Path path) {
-        this(type, path, null, null);
-    }
-
-    public SOSJavaKeyStoreReader(Type type, Path path, String password) {
-        this(type, path, password, null);
-    }
-
-    public SOSJavaKeyStoreReader(Type type, Path path, String password, String storeType) {
+    private SOSJavaKeyStoreReader(Type type, Path path, String password, String storeType) {
         this.type = type;
         this.path = path;
         this.password = password;
@@ -51,14 +39,41 @@ public class SOSJavaKeyStoreReader {
     }
 
     public KeyStore read() throws Exception {
-        resolvePathAndPassword();
         if (path == null) {
             return null;
         }
+        resolvePathAndPassword();
         return load(path, password, storeType);
     }
 
-    public static KeyStore load(Path path, String password, KeyStoreType storeType) throws Exception {
+    public static SOSJavaKeyStoreResult read(JavaKeyStoreArguments args) throws Exception {
+        if (args == null || (args.getKeyStoreFile().isEmpty() && args.getTrustStoreFile().isEmpty())) {
+            return null;
+        }
+        SOSJavaKeyStoreResult result = new SOSJavaKeyStoreReader().new SOSJavaKeyStoreResult();
+        if (args.getTrustStoreFile().isEmpty()) {
+            SOSJavaKeyStore ks = read(Type.KEY_AND_TRUSTSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args
+                    .getKeyStoreType().getValue().name());
+            result.setKeyStoreResult(ks);
+            result.setTrustStoreResult(ks);
+        } else if (args.getKeyStoreFile().isEmpty()) {
+            SOSJavaKeyStore ks = read(Type.KEY_AND_TRUSTSTORE, args.getTrustStoreFile().getValue(), args.getTrustStorePassword().getValue(), args
+                    .getTrustStoreType().getValue().name());
+            result.setKeyStoreResult(ks);
+            result.setTrustStoreResult(ks);
+        } else {
+            SOSJavaKeyStore ks = read(Type.KEYSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args.getKeyStoreType()
+                    .getValue().name());
+            result.setKeyStoreResult(ks);
+
+            ks = read(Type.TRUSTSTORE, args.getTrustStoreFile().getValue(), args.getTrustStorePassword().getValue(), args.getTrustStoreType()
+                    .getValue().name());
+            result.setTrustStoreResult(ks);
+        }
+        return result;
+    }
+
+    public static KeyStore load(Path path, String password, StoreType storeType) throws Exception {
         return load(path, password, getType(storeType));
     }
 
@@ -78,9 +93,42 @@ public class SOSJavaKeyStoreReader {
         }
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("type").append(type);
+        if (storeType != null) {
+            sb.append(",storeType=").append(storeType);
+        }
+        if (path != null) {
+            sb.append(",path=").append(path);
+        }
+        return sb.toString();
+    }
+
+    private static SOSJavaKeyStore read(Type type, Path path, String password, String storeType) throws Exception {
+        SOSJavaKeyStoreReader reader = new SOSJavaKeyStoreReader(type, path, password, storeType);
+        reader.resolvePathAndPassword();
+
+        SOSJavaKeyStore result = new SOSJavaKeyStoreReader().new SOSJavaKeyStore();
+        result.type = reader.storeType;
+        result.keyStore = SOSJavaKeyStoreReader.load(reader.path, reader.password, reader.storeType);
+        result.path = reader.path;
+        result.password = reader.getPassword();
+        return result;
+    }
+
     public char[] getPassword() {
         // char[] pass = password == null ? "".toCharArray() : password.toCharArray();
         return password == null ? null : password.toCharArray();
+    }
+
+    public Path getPath() {
+        return path;
+    }
+
+    public String getStoreType() {
+        return storeType;
     }
 
     private void resolvePathAndPassword() {
@@ -100,7 +148,7 @@ public class SOSJavaKeyStoreReader {
         }
     }
 
-    private static String getType(KeyStoreType storeType) {
+    private static String getType(StoreType storeType) {
         return getType(storeType == null ? null : storeType.name());
     }
 
@@ -123,20 +171,94 @@ public class SOSJavaKeyStoreReader {
         }
     }
 
-    public Path getPath() {
-        return path;
+    public class SOSJavaKeyStoreResult {
+
+        private String keyStoreType;
+        private KeyStore keyStore;
+        private Path keyStorePath;
+        private char[] keyStorePassword;
+
+        private String trustStoreType;
+        private KeyStore trustStore;
+        private Path trustStorePath;
+        private char[] trustStorePassword;
+
+        public String getKeyStoreType() {
+            return keyStoreType;
+        }
+
+        public KeyStore getKeyStore() {
+            return keyStore;
+        }
+
+        public Path getKeyStorePath() {
+            return keyStorePath;
+        }
+
+        public char[] getKeyStorePassword() {
+            return keyStorePassword;
+        }
+
+        public String getTrustStoreType() {
+            return trustStoreType;
+        }
+
+        public KeyStore getTrustStore() {
+            return trustStore;
+        }
+
+        public Path getTrustStorePath() {
+            return trustStorePath;
+        }
+
+        public char[] getTrustStorePassword() {
+            return trustStorePassword;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            if (keyStorePath != null && trustStorePath != null) {
+                if (keyStorePath.equals(trustStorePath)) {
+                    sb.append("keystore/truststore ").append(keyStoreType);
+                    sb.append(" ").append(keyStorePath);
+                } else {
+                    sb.append("keystore ").append(keyStoreType);
+                    sb.append(" ").append(keyStorePath);
+                    sb.append(",truststore ").append(trustStoreType);
+                    sb.append(" ").append(trustStorePath);
+                }
+            } else if (keyStorePath != null) {
+                sb.append("keystore ").append(keyStoreType);
+                sb.append(" ").append(keyStorePath);
+            } else if (trustStorePath != null) {
+                sb.append("truststore ").append(trustStoreType);
+                sb.append(" ").append(trustStorePath);
+            }
+            return sb.toString();
+        }
+
+        private void setKeyStoreResult(SOSJavaKeyStore ks) {
+            keyStoreType = ks.type;
+            keyStorePath = ks.path;
+            keyStorePassword = ks.password;
+            keyStore = ks.keyStore;
+        }
+
+        private void setTrustStoreResult(SOSJavaKeyStore ks) {
+            trustStoreType = ks.type;
+            trustStorePath = ks.path;
+            trustStorePassword = ks.password;
+            trustStore = ks.keyStore;
+        }
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("type").append(type);
-        if (storeType != null) {
-            sb.append(",storeType=").append(storeType);
-        }
-        if (path != null) {
-            sb.append(",path=").append(path);
-        }
-        return sb.toString();
+    private class SOSJavaKeyStore {
+
+        private String type;
+        private KeyStore keyStore;
+        private Path path;
+        private char[] password;
     }
+
 }

@@ -14,9 +14,9 @@ public class FTPSProviderArguments extends FTPProviderArguments {
     private JavaKeyStoreArguments javaKeyStore;
 
     private SOSArgument<SecurityMode> securityMode = new SOSArgument<>("ftps_client_security", false, SecurityMode.EXPLICIT);
-    // SSL,TLS
+    // SSL,TLS - "TLSv1.3,TLSv1.2" ???
     // TODO YADE1 default SSL, FTPSClient.DEFAULT_PROTOCOL=TLS
-    private SOSArgument<String> secureSocketProtocol = new SOSArgument<>("ftps_protocol", false, "SSL");
+    private SOSArgument<String> protocols = new SOSArgument<>("ftps_protocol", false, "SSL");
 
     public FTPSProviderArguments() {
         getProtocol().setValue(Protocol.FTPS);
@@ -35,8 +35,8 @@ public class FTPSProviderArguments extends FTPProviderArguments {
         return SecurityMode.IMLICIT.equals(securityMode.getValue());
     }
 
-    public SOSArgument<String> getSecureSocketProtocol() {
-        return secureSocketProtocol;
+    public SOSArgument<String> getProtocols() {
+        return protocols;
     }
 
     @SuppressWarnings("unused")

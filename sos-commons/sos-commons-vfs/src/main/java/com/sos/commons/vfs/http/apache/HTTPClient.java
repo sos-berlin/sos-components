@@ -2,10 +2,10 @@ package com.sos.commons.vfs.http.apache;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URI;
-import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
@@ -28,6 +28,7 @@ import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.DateUtils;
@@ -49,11 +50,13 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSJavaKeyStoreReader;
+import com.sos.commons.util.SOSJavaKeyStoreReader.SOSJavaKeyStoreResult;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
+import com.sos.commons.vfs.http.commons.HTTPUtils;
 
 public class HTTPClient implements AutoCloseable {
 
@@ -64,10 +67,10 @@ public class HTTPClient implements AutoCloseable {
         }
     };
 
-    private static final long DEFAULT_LAST_MODIFIED = -1L;
-
     private final CloseableHttpClient client;
     private final HttpClientContext context;
+
+    private Boolean isHEADMethodAllowed;
 
     private HTTPClient(CloseableHttpClient client, HttpClientContext context) {
         this.client = client;
@@ -159,21 +162,45 @@ public class HTTPClient implements AutoCloseable {
         SOSClassUtil.closeQuietly(client);
     }
 
-    public CloseableHttpResponse execute(HttpRequestBase request) throws ClientProtocolException, IOException {
-        return client.execute(request, context);
+    public ExecuteResult execute(HttpRequestBase request) throws ClientProtocolException, IOException {
+        return new ExecuteResult(request, client.execute(request, context));
+    }
+
+    public ExecuteResult executeHEADOrGET(URI uri) throws ClientProtocolException, IOException {
+        HttpRequestBase request = null;
+        boolean isHEAD = false;
+        if (isHEADMethodAllowed == null || isHEADMethodAllowed) {
+            request = new HttpHead(uri);
+            isHEAD = true;
+        } else {
+            request = new HttpGet(uri);
+        }
+        ExecuteResult result = execute(request);
+        if (isHEAD) {
+            if (HTTPUtils.isMethodNotAllowed(result.response.getStatusLine().getStatusCode())) {
+                isHEADMethodAllowed = false;
+                result.response.close();
+
+                result = execute(new HttpGet(uri));
+            } else {
+                isHEADMethodAllowed = true;
+            }
+        }
+        return result;
     }
 
     public InputStream getHTTPInputStream(URI uri) throws Exception {
         CloseableHttpResponse response = null;
         try {
             HttpGet request = new HttpGet(uri);
-            response = execute(request);
-            StatusLine sl = response.getStatusLine();
-            if (!HTTPClient.isSuccessful(sl)) {
-                if (HTTPClient.isNotFound(sl)) {
-                    throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(request, response)));
+            ExecuteResult result = execute(request);
+            response = result.getResponse();
+            int code = response.getStatusLine().getStatusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                if (HTTPUtils.isNotFound(code)) {
+                    throw new SOSNoSuchFileException(uri.toString(), new Exception(getResponseStatus(result)));
                 }
-                throw new Exception(HTTPClient.getResponseStatus(request, response));
+                throw new Exception(getResponseStatus(result));
             }
             return new HTTPInputStream(response);
         } catch (Throwable e) {
@@ -187,46 +214,19 @@ public class HTTPClient implements AutoCloseable {
         if (entity == null) {
             return size;
         }
-
         try (InputStream is = entity.getContent()) {
-            size = 0L;
-
-            byte[] buffer = new byte[4_096];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-                size += bytesRead;
-            }
+            size = is.transferTo(OutputStream.nullOutputStream());
         }
         return size;
     }
 
-    public static boolean isSuccessful(StatusLine statusLine) {
-        int sc = statusLine.getStatusCode();
-        if (sc >= 200 && sc < 300) {
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean isServerError(StatusLine statusLine) {
-        return statusLine.getStatusCode() >= 500;
-    }
-
-    public static boolean isNotFound(StatusLine statusLine) {
-        return statusLine.getStatusCode() == 404;
-    }
-
-    public static String getResponseStatus(HttpRequestBase request, HttpResponse response) {
-        return getResponseStatus(request, response, null);
-    }
-
     public static long getLastModifiedInMillis(HttpResponse response) {
         if (response == null) {
-            return DEFAULT_LAST_MODIFIED;
+            return HTTPUtils.DEFAULT_LAST_MODIFIED;
         }
         Header header = response.getFirstHeader(HttpHeaders.LAST_MODIFIED);
         if (header == null) {
-            return DEFAULT_LAST_MODIFIED;
+            return HTTPUtils.DEFAULT_LAST_MODIFIED;
         }
         return getLastModifiedInMillis(header.getValue());
     }
@@ -236,7 +236,7 @@ public class HTTPClient implements AutoCloseable {
             return -1l;
         }
         Date date = DateUtils.parseDate(httpDate);
-        return date == null ? DEFAULT_LAST_MODIFIED : date.getTime();
+        return date == null ? HTTPUtils.DEFAULT_LAST_MODIFIED : date.getTime();
     }
 
     private static void setSSLContext(ISOSLogger logger, SSLArguments args, String baseURLScheme, HttpClientBuilder clientBuilder) throws Exception {
@@ -267,17 +267,16 @@ public class HTTPClient implements AutoCloseable {
                 if (args.getJavaKeyStore() == null) {
                     new Exception(("[HTTPClient][setSSLContext]missing Java KeyStore arguments"));
                 } else {
-                    SOSJavaKeyStoreReader r = new SOSJavaKeyStoreReader(SOSJavaKeyStoreReader.Type.KEY_AND_TRUSTSTORE, args.getJavaKeyStore());
-                    KeyStore ks = r.read();
-                    if (ks == null) {
-                        new Exception(("[HTTPClient][setSSLContext][" + r.toString() + "]KeyMaterial not found"));
+                    SOSJavaKeyStoreResult result = SOSJavaKeyStoreReader.read(args.getJavaKeyStore());
+                    if (result == null) {
+                        new Exception(("[HTTPClient][setSSLContext]KeyMaterial not found"));
                     } else {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("[HTTPClient][setSSLContext][loadKeyMaterial]" + r.getPath());
+                            logger.debug("[HTTPClient][setSSLContext][loadKeyMaterial]%s", result.toString());
                         }
 
-                        builder.loadKeyMaterial(ks, r.getPassword());
-                        builder.loadTrustMaterial(ks, null);
+                        builder.loadKeyMaterial(result.getKeyStore(), result.getKeyStorePassword());
+                        builder.loadTrustMaterial(result.getTrustStore(), null);
                     }
                 }
             }
@@ -332,58 +331,38 @@ public class HTTPClient implements AutoCloseable {
                 }).collect(Collectors.toList());
     }
 
-    private static String getResponseStatus(HttpRequestBase request, HttpResponse response, Exception ex) {
-        StatusLine sl = response.getStatusLine();
+    public static String getResponseStatus(ExecuteResult result) {
+        StatusLine sl = result.getResponse().getStatusLine();
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(request.getMethod()).append("]");
-        sb.append("[").append(request.getURI()).append("]");
+        sb.append("[").append(result.getRequest().getMethod()).append("]");
+        sb.append("[").append(result.getRequest().getURI()).append("]");
         sb.append("[").append(sl.getStatusCode()).append("]");
-        if (ex == null) {
-            sb.append(getReasonPhraseOrDefault(sl));
-        } else {
-            sb.append("[").append(getReasonPhraseOrDefault(sl)).append("]");
-            sb.append(ex.toString());
-        }
+        sb.append(SOSString.isEmpty(sl.getReasonPhrase()) ? HTTPUtils.getReasonPhrase(sl.getStatusCode()) : sl.getReasonPhrase());
         return sb.toString();
     }
 
-    private static String getReasonPhraseOrDefault(StatusLine sl) {
-        String reason = sl.getReasonPhrase();
-        if (!SOSString.isEmpty(reason)) {
-            return reason;
+    public class ExecuteResult implements AutoCloseable {
+
+        private final HttpRequestBase request;
+        private final CloseableHttpResponse response;
+
+        private ExecuteResult(HttpRequestBase request, CloseableHttpResponse response) {
+            this.request = request;
+            this.response = response;
         }
 
-        return switch (sl.getStatusCode()) {
-        case 100 -> "Continue - The server has received the request headers and the client should proceed to send the request body.";
-        case 101 -> "Switching Protocols - The server is switching protocols as requested by the client.";
-        case 200 -> "OK - The request was successful.";
-        case 201 -> "Created - The request was successful and a resource was created.";
-        case 202 -> "Accepted - The request has been accepted for processing, but the processing is not complete.";
-        case 204 -> "No Content - The server successfully processed the request but is not returning any content.";
-        case 301 -> "Moved Permanently - The resource has been permanently moved to a new location.";
-        case 302 -> "Found - The resource has temporarily moved to a different location.";
-        case 304 -> "Not Modified - The resource has not been modified since the last request.";
-        case 400 -> "Bad Request - The server could not understand the request due to invalid syntax.";
-        case 401 -> "Unauthorized - Authentication is required and has failed or has not yet been provided.";
-        case 403 -> "Forbidden - The client does not have access rights to the content.";
-        case 404 -> "Not Found - The server can not find the requested resource.";
-        case 405 -> "Method Not Allowed - The request method is not supported for the requested resource.";
-        case 408 -> "Request Timeout - The server timed out waiting for the request.";
-        case 409 -> "Conflict - The request conflicts with the current state of the resource.";
-        case 410 -> "Gone - The resource requested is no longer available and will not be available again.";
-        case 413 -> "Payload Too Large - The request entity is larger than the server is willing to process.";
-        case 414 -> "URI Too Long - The URI requested by the client is longer than the server is willing to interpret.";
-        case 415 -> "Unsupported Media Type - The media format of the requested data is not supported by the server.";
-        case 418 -> "I'm a teapot - An April Fools' joke response code (RFC 2324).";
-        case 429 -> "Too Many Requests - The user has sent too many requests in a given amount of time.";
-        case 500 -> "Internal Server Error - The server encountered an internal error and could not complete the request.";
-        case 501 -> "Not Implemented - The server does not support the functionality required to fulfill the request.";
-        case 502 -> "Bad Gateway - The server, while acting as a gateway, received an invalid response.";
-        case 503 -> "Service Unavailable - The server is not ready to handle the request.";
-        case 504 -> "Gateway Timeout - The server, while acting as a gateway, did not receive a timely response.";
-        case 505 -> "HTTP Version Not Supported - The server does not support the HTTP protocol version used in the request.";
-        default -> "Unknown Status Code: " + sl.getStatusCode() + " - No description available.";
-        };
+        public HttpRequestBase getRequest() {
+            return request;
+        }
+
+        public CloseableHttpResponse getResponse() {
+            return response;
+        }
+
+        @Override
+        public void close() throws IOException {
+
+        }
     }
 
 }

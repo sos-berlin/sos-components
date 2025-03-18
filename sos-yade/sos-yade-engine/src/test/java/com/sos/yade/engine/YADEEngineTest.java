@@ -196,7 +196,7 @@ public class YADEEngineTest {
     public void testHTTP2Local() {
         YADEEngine yade = new YADEEngine();
         try {
-            boolean useLocalhost = false;
+            boolean useLocalhost = true;
 
             /** Common */
             YADEArguments args = createYADEArgs();
@@ -359,8 +359,8 @@ public class YADEEngineTest {
 
         if (isHTTPS) {
             Path keyStore = Path.of(System.getProperty("java.home")).resolve("lib/security/cacerts");
-            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getFile().setValue(keyStore);
-            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getPassword().setValue("changeit");
+            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getKeyStoreFile().setValue(keyStore);
+            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getKeyStorePassword().setValue("changeit");
         }
 
         return args;

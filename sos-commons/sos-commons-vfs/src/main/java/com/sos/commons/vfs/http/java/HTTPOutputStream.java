@@ -1,47 +1,31 @@
-package com.sos.commons.vfs.http.apache;
+package com.sos.commons.vfs.http.java;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.http.HttpRequest;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ContentProducer;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.EntityTemplate;
-import org.apache.http.protocol.HTTP;
 
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.vfs.http.apache.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
+import com.sos.commons.vfs.http.java.HTTPClient.ExecuteResult;
 
 public class HTTPOutputStream extends OutputStream {
 
     private final HTTPClient client;
-    private final HttpEntityEnclosingRequestBase request;
+    private final HttpRequest request;
     private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
     public HTTPOutputStream(HTTPClient client, URI uri) throws IOException {
         this.client = client;
-        this.request = new HttpPut(uri);
-        this.request.addHeader(HTTP.EXPECT_DIRECTIVE, HTTP.EXPECT_CONTINUE);
 
-        EntityTemplate entity = new EntityTemplate(new ContentProducer() {
+        HttpRequest.Builder builder = client.createRequestBuilder(uri);
+        builder.header(HTTPClient.HEADER_EXPECT, HTTPClient.HEADER_EXPECT_VALUE);
 
-            @Override
-            public void writeTo(OutputStream os) throws IOException {
-                // synchronized (buffer) {
-                buffer.writeTo(os);
-                os.flush();
-                // }
-            }
-        });
-
-        entity.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
-        request.setEntity(entity);
+        this.request = builder.PUT(HttpRequest.BodyPublishers.noBody()).build();
     }
 
     /** Handling large files – instead of the HTTPOutputStream class, an additional class should be implemented/used for HTTP upload file operations
@@ -76,11 +60,13 @@ public class HTTPOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        try (ExecuteResult result = client.execute(request); CloseableHttpResponse response = result.getResponse()) {
-            int code = response.getStatusLine().getStatusCode();
-            if (!HTTPUtils.isSuccessful(code)) {
+        try {
+            ExecuteResult result = client.execute(request);
+            if (!HTTPUtils.isSuccessful(result.response().statusCode())) {
                 throw new IOException(HTTPClient.getResponseStatus(result));
             }
+        } catch (Exception e) {
+            throw new IOException(e);
         } finally {
             SOSClassUtil.closeQuietly(buffer);
             super.close();
