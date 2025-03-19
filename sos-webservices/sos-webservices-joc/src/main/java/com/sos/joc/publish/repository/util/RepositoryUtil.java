@@ -38,7 +38,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
@@ -711,64 +710,95 @@ public abstract class RepositoryUtil {
         
         dbItemsToUpdate.addAll(folders.stream().map(folder -> dbLayer.getAllInventoryConfigurationsByFolder(
                     folder.getConfiguration().getPath(), folder.getConfiguration().getRecursive()))
-                .flatMap(Collection::stream).collect(Collectors.toSet()));
+                .flatMap(Collection::stream).filter(item -> {
+                    if(filter.getCategory().equals(Category.LOCAL)) {
+                        if(localTypes.contains(item.getTypeAsEnum())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        if(rolloutTypes.contains(item.getTypeAsEnum())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                }).collect(Collectors.toSet()));
         dbItemsToUpdate.addAll(items.stream().map(item -> dbLayer.getInventoryConfigurationByNameAndType(
                 Paths.get(stripFileExtension(Paths.get(item.getConfiguration().getPath()))).getFileName().toString(),
-                item.getConfiguration().getObjectType().intValue())).filter(Objects::nonNull).collect(Collectors.toSet()));
+                item.getConfiguration().getObjectType().intValue())).filter(Objects::nonNull).filter(item -> {
+                    if(filter.getCategory().equals(Category.LOCAL)) {
+                        if(localTypes.contains(item.getTypeAsEnum())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        if(rolloutTypes.contains(item.getTypeAsEnum())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                }).collect(Collectors.toSet()));
 
         if (!dbItemsToUpdate.isEmpty()) {
             Map<ConfigurationType, Set<String>> notUpdated = new HashMap<ConfigurationType, Set<String>>();
             InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-            dbItemsToUpdate = dbItemsToUpdate.stream().map(dbItem -> {
-                boolean updated = false;
-                ConfigurationType objType = dbItem.getTypeAsEnum();
-                byte[] content = null;
-                try {
-                    Path repository = repositoryBase;
-                    if (localTypes.contains(objType)) {
-                        repository = repositoryBase.resolve("local");
-                    } else if (rolloutTypes.contains(objType)) {
-                        repository = repositoryBase.resolve("rollout");
-                    }
-                    if (dbItem.getPath().startsWith("/")) {
-                        content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(objType))));
-                    } else {
-                        content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath() + getExtension(objType))));
-
-                    }
-                    String updatedContent = null;
-                    if (!ConfigurationType.FOLDER.equals(objType)) {
-                        updatedContent = getConfiguration(content, objType);
-                    }
-                    if (updatedContent != null) {
-                        if (!JocInventory.isJsonHashEqual(dbItem.getContent(), updatedContent, dbItem.getTypeAsEnum())) {
-                            updated = true;
+            dbItemsToUpdate = dbItemsToUpdate.stream()
+                .filter(item -> (Category.LOCAL.equals(filter.getCategory()) && localTypes.contains(item.getTypeAsEnum())) ||
+                    (Category.ROLLOUT.equals(filter.getCategory()) && rolloutTypes.contains(item.getTypeAsEnum())))
+                .map(dbItem -> {
+                    boolean updated = false;
+                    ConfigurationType objType = dbItem.getTypeAsEnum();
+                    byte[] content = null;
+                    try {
+                        Path repository = repositoryBase;
+                        if (Category.LOCAL.equals(filter.getCategory())) {
+                            repository = repositoryBase.resolve("local");
+                        } else if (Category.ROLLOUT.equals(filter.getCategory())) {
+                            repository = repositoryBase.resolve("rollout");
+                        }
+                        if (dbItem.getPath().startsWith("/")) {
+                            content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(objType))));
                         } else {
-                            if(!notUpdated.containsKey(dbItem.getTypeAsEnum())) {
-                                notUpdated.put(dbItem.getTypeAsEnum(), new HashSet<String>());
+                            content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath() + getExtension(objType))));
+    
+                        }
+                        String updatedContent = null;
+                        if (!ConfigurationType.FOLDER.equals(objType)) {
+                            updatedContent = getConfiguration(content, objType);
+                        }
+                        if (updatedContent != null) {
+                            if (!JocInventory.isJsonHashEqual(dbItem.getContent(), updatedContent, dbItem.getTypeAsEnum())) {
+                                updated = true;
+                            } else {
+                                if(!notUpdated.containsKey(dbItem.getTypeAsEnum())) {
+                                    notUpdated.put(dbItem.getTypeAsEnum(), new HashSet<String>());
+                                }
+                                notUpdated.get(dbItem.getTypeAsEnum()).add(dbItem.getName());
                             }
-                            notUpdated.get(dbItem.getTypeAsEnum()).add(dbItem.getName());
+                            boolean valid = true;
+                            try {
+                                Validator.validate(objType, content, invDbLayer, null);
+                            } catch (Exception e) {
+                                valid = false;
+                            }
+                            dbItem.setContent(updatedContent);
+                            dbItem.setDeployed(false);
+                            dbItem.setReleased(false);
+                            dbItem.setValid(valid);
+                            dbItem.setModified(Date.from(Instant.now()));
                         }
-                        boolean valid = true;
-                        try {
-                            Validator.validate(objType, content, invDbLayer, null);
-                        } catch (Exception e) {
-                            valid = false;
-                        }
-                        dbItem.setContent(updatedContent);
-                        dbItem.setDeployed(false);
-                        dbItem.setReleased(false);
-                        dbItem.setValid(valid);
-                        dbItem.setModified(Date.from(Instant.now()));
+                    } catch (IOException e) {
+                        LOGGER.error("", e);
                     }
-                } catch (IOException e) {
-                    LOGGER.error("", e);
-                }
-                if(updated) {
-                    return dbItem;
-                } else {
-                    return null;
-                }
+                    if(updated) {
+                        return dbItem;
+                    } else {
+                        return null;
+                    }
             }).filter(Objects::nonNull).collect(Collectors.toSet()); 
             if(!notUpdated.isEmpty() && LOGGER.isDebugEnabled()) {
                 LOGGER.debug(notUpdated.entrySet().stream().map(entry -> {
@@ -780,9 +810,10 @@ public abstract class RepositoryUtil {
     }
     
     public static Set<DBItemInventoryConfiguration> getNewItemsToUpdate(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
+        List <ConfigurationType> localTypes = getLocalConfigurationTypes();
+        List <ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
         Set<Config> newItems = new HashSet<Config>();
         Set<DBItemInventoryConfiguration> dbItems = new HashSet<DBItemInventoryConfiguration>();
-        Map<Path, DBItemInventoryConfiguration> existingDbItems = new HashMap<Path, DBItemInventoryConfiguration>();
         Path repository = repositoryBase.resolve("rollout");
         if (Category.ROLLOUT.equals(filter.getCategory())) {
             repository = repositoryBase.resolve("rollout");
@@ -795,7 +826,10 @@ public abstract class RepositoryUtil {
                         Paths.get(cfg.getConfiguration().getPath()).getFileName().toString(), 
                         cfg.getConfiguration().getObjectType());
                 if (cfgDbItem == null) {
-                    newItems.add(cfg);
+                    if((Category.LOCAL.equals(filter.getCategory()) && localTypes.contains(cfg.getConfiguration().getObjectType())) ||
+                            (Category.ROLLOUT.equals(filter.getCategory()) && rolloutTypes.contains(cfg.getConfiguration().getObjectType()))) {
+                        newItems.add(cfg);
+                    }
                 }
             } else {
                 try {
@@ -813,19 +847,17 @@ public abstract class RepositoryUtil {
                                 newConf.setObjectType(getConfigurationTypeFromFileExtension(path));
                                 newCfg.setConfiguration(newConf);
                                 newItems.add(newCfg);
-                            } else {
-                                existingDbItems.put(path, cfgDbItem);
                             }
                         }
                     }
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOGGER.error("could not read from path " + 
+                            repository.resolve(cfg.getConfiguration().getPath().substring(1)).toString().replace('\\', '/'), e.getCause());
                 }
-                
             }
         }
         final Path repo = repository;
+        InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession()); 
         newItems.stream().forEach(newItem -> {
             ConfigurationType objType = newItem.getConfiguration().getObjectType();
             byte[] content = null;
@@ -834,13 +866,11 @@ public abstract class RepositoryUtil {
                     content = Files.readAllBytes(repo.resolve(Paths.get(newItem.getConfiguration().getPath().substring(1) + getExtension(objType))));
                 } else {
                     content = Files.readAllBytes(repo.resolve(Paths.get(newItem.getConfiguration().getPath() + getExtension(objType))));
-
                 }
                 String updatedContent = null;
                 if (!ConfigurationType.FOLDER.equals(objType)) {
                     updatedContent = getConfiguration(content, objType);
                 }
-                InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession()); 
                 if (updatedContent != null) {
                     boolean valid = true;
                     try {
@@ -854,42 +884,6 @@ public abstract class RepositoryUtil {
                 LOGGER.error("", e);
             }
         });
-        if (!existingDbItems.isEmpty()) {
-            InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession()); 
-            for (Path pathFromRepo : existingDbItems.keySet()) {
-                DBItemInventoryConfiguration existingDbItem = existingDbItems.get(pathFromRepo);
-                try {
-                    byte[] content = Files.readAllBytes(pathFromRepo);
-                    ConfigurationType type = getConfigurationTypeFromFileExtension(pathFromRepo);
-                    String updatedContent = null;
-                    if (!ConfigurationType.FOLDER.equals(type)) {
-                        updatedContent = getConfiguration(content, type);
-                    }
-                    if (updatedContent != null) {
-                        boolean valid = true;
-                        try {
-                            Validator.validate(type, content, invDbLayer, null);
-                        } catch (Exception e) {
-                            valid = false;
-                        }
-                        Path newPathWithExtension = Paths.get(pathFromRepo.toString().replace('\\', '/').substring(repository.toString().replace('\\', '/').length()));
-                        Path newPath = newPathWithExtension.getParent().resolve(stripFileExtension(newPathWithExtension.getFileName()));
-                        String newFolder = newPath.getParent().toString().replace('\\', '/');
-                        existingDbItem.setPath(newPath.toString().replace('\\', '/'));
-                        existingDbItem.setFolder(newFolder);
-                        existingDbItem.setContent(updatedContent);
-                        existingDbItem.setValid(valid);
-                        existingDbItem.setDeployed(false);
-                        existingDbItem.setReleased(false);
-                        existingDbItem.setModified(Date.from(Instant.now()));
-                        dbItems.add(existingDbItem);
-                    }
-                } catch (IOException e) {
-                    LOGGER.error("", e);
-                }
-            }
-        }
-//        dbItems.addAll(existingDbItems);
         return dbItems;
     }
 

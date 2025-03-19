@@ -89,8 +89,6 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                 try {
                     if (item.getId() == null || item.getId() == 0L) {
                         dbLayer.getSession().save(item);
-                    } else {
-                        dbLayer.getSession().update(item);
                     }
                     if(item.getFolder() != null && !item.getFolder().isEmpty() && !"/".equals(item.getFolder())) {
                         JocInventory.makeParentDirs(invDbLayer, Paths.get(item.getFolder()), ConfigurationType.FOLDER);

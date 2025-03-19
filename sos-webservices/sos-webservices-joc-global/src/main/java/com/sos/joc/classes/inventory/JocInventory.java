@@ -1630,9 +1630,13 @@ public class JocInventory {
     }
     
     public static boolean isJsonHashEqual(String json1, String json2, ConfigurationType type) throws IOException {
-        return SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(JocInventory.content2IJSObject(json1, type)))
-            .equals(SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(JocInventory.content2IJSObject(json2, type))));
+        return SOSString.hashMD5(
+                Globals.prettyPrintObjectMapper.writeValueAsString(
+                    Globals.objectMapper.readValue(json1, CLASS_MAPPING.get(type))))
+            .equals(
+                SOSString.hashMD5(
+                    Globals.prettyPrintObjectMapper.writeValueAsString(
+                        Globals.objectMapper.readValue(json2, CLASS_MAPPING.get(type)))));
     }
     
-
 }
