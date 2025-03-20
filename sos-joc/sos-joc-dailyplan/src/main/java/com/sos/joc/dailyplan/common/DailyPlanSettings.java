@@ -37,6 +37,7 @@ public class DailyPlanSettings {
     private int daysAheadPlan = 0;
     private int daysAheadSubmit = 0;
     private int projectionsMonthAhead = 0;
+    private int ageOfPlansToBeClosedAutomatically = 1;
 
     private List<String> caller;
 
@@ -183,6 +184,23 @@ public class DailyPlanSettings {
 
     public int getProjectionsMonthAhead() {
         return projectionsMonthAhead;
+    }
+    
+    public void setAgeOfPlansToBeClosedAutomatically(int val) {
+        ageOfPlansToBeClosedAutomatically = val;
+    }
+
+    public void setAgeOfPlansToBeClosedAutomatically(String val) {
+        try {
+            this.ageOfPlansToBeClosedAutomatically = Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            this.ageOfPlansToBeClosedAutomatically = 1;
+            LOGGER.warn("Could not set setting for ageOfPlansToBeClosedAutomatically: " + val);
+        }
+    }
+
+    public int getAgeOfPlansToBeClosedAutomatically() {
+        return ageOfPlansToBeClosedAutomatically;
     }
 
     public void setCaller(String val) {

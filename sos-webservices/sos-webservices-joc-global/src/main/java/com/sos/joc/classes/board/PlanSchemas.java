@@ -32,7 +32,7 @@ public class PlanSchemas {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanSchemas.class);
     public static final String defaultPlanSchemaId = "DailyPlan"; 
-    private static final Duration finishedPlanRetentionPeriod = Duration.ofDays(7L);
+    private static final Duration finishedPlanRetentionPeriod = Duration.ZERO; // Duration.ofDays(7L);
     private static final Map<String, JPlanSchema> planSchemas = Collections.unmodifiableMap(new HashMap<String, JPlanSchema>() {
 
         private static final long serialVersionUID = 1L;

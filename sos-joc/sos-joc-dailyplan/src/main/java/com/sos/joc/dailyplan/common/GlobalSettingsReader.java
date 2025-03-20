@@ -20,6 +20,7 @@ public class GlobalSettingsReader {
         settings.setDaysAheadPlan(conf.getDaysAheadPlan().getValue());
         settings.setDaysAheadSubmit(conf.getDaysAheadSubmit().getValue());
         settings.setProjectionsMonthAhead(conf.getProjectionsMonthAhead().getValue());
+        settings.setAgeOfPlansToBeClosedAutomatically(conf.getAgeOfPlansToBeClosedAutomatically().getValue());
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(settings.toString());

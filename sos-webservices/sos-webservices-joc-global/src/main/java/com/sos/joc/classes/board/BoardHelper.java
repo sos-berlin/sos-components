@@ -288,7 +288,11 @@ public class BoardHelper {
     }
     
     public static String getNoticeKeyShortString(PlannedNoticeKey pnk) {
-        return pnk.toShortString().replace(NoticeIdSeparator, "/").replace(EmptyNoticeKey, "-").replaceFirst("^Global/", "");
+        return getNoticeKeyShortString(pnk.toShortString());
+    }
+    
+    public static String getNoticeKeyShortString(String str) {
+        return str.replace(NoticeIdSeparator, "/").replace(EmptyNoticeKey, "-").replaceFirst("^Global/", "");
     }
 
 //    private static <T> Collector<T, ?, List<T>> limitingList(int limit) {

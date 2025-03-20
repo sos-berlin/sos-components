@@ -19,6 +19,9 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
     
     private ConfigurationEntry submitOrdersIndividually = new ConfigurationEntry("submit_orders_individually", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
+    
+    private ConfigurationEntry ageOfPlansToBeClosedAutomatically = new ConfigurationEntry("age_of_plans_to_be_closed_automatically", "1",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
     public ConfigurationGlobalsDailyPlan() {
         int index = -1;
@@ -30,6 +33,8 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
         daysAheadSubmit.setOrdering(++index);
 
         submitOrdersIndividually.setOrdering(++index);
+        
+        ageOfPlansToBeClosedAutomatically.setOrdering(++index);
         
         projectionsMonthAhead.setOrdering(++index);
     }
@@ -56,6 +61,10 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
 
     public ConfigurationEntry getProjectionsMonthAhead() {
         return projectionsMonthAhead;
+    }
+    
+    public ConfigurationEntry getAgeOfPlansToBeClosedAutomatically() {
+        return ageOfPlansToBeClosedAutomatically;
     }
     
     public boolean getSubmitOrdersIndividually() {
