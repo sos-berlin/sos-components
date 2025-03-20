@@ -60,7 +60,7 @@ public class PlannedBoards {
 
     public PlannedBoards(Map<BoardPath, ?> jBoards, Map<OrderId, OrderV> orders, boolean compact, Integer limit, JControllerState controllerState) {
         this.jBoards = jBoards;
-        this.orders = orders;
+        this.orders = orders == null ? Collections.emptyMap() : orders;
         this.compact = compact;
         this.controllerState = controllerState;
         this.withSysncState = true;
@@ -69,7 +69,7 @@ public class PlannedBoards {
     
     public PlannedBoards(Map<BoardPath, ?> jBoards, Map<OrderId, OrderV> orders, boolean compact, Integer limit) {
         this.jBoards = jBoards;
-        this.orders = orders;
+        this.orders = orders == null ? Collections.emptyMap() : orders;
         this.compact = compact;
         this.controllerState = null;
         this.withSysncState = false;
@@ -99,6 +99,20 @@ public class PlannedBoards {
         }
     }
     
+    @SuppressWarnings("unchecked")
+    public <T extends Board> T getPlannedBoard(T obj) {
+
+        Object pbs = jBoards.values().iterator().next();
+        if (pbs == null) {
+            return getPlannedBoard(obj, Collections.emptyList());
+        }
+        if (pbs instanceof JPlannedBoard) {
+            return getPlannedBoard(obj, Collections.singleton((JPlannedBoard) pbs));
+        } else {
+            return getPlannedBoard(obj, (Collection<JPlannedBoard>) pbs);
+        }
+    }
+    
     public Board getPlannedBoard(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
         return getPlannedBoard(dc, Board.class);
     }
@@ -107,7 +121,7 @@ public class PlannedBoards {
         return getPlannedBoard(dc, BoardDeps.class);
     }
     
-    private <T extends Board> T getPlannedBoard(T item, Collection<JPlannedBoard> pbs) throws JsonParseException, JsonMappingException, IOException {
+    private <T extends Board> T getPlannedBoard(T item, Collection<JPlannedBoard> pbs) {
 
         int numOfExpectingOrders = 0;
         int numOfAnnouncements = 0;
