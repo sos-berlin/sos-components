@@ -58,7 +58,7 @@ public class PlanHelper {
         }
         Plan plan = new Plan();
         plan.setClosed(jp.isClosed());
-        plan.setStatus(jp.asScala().status().toString());
+        //plan.setStatus(jp.asScala().status().toString());
         PlanStatus state = jp.asScala().status();
 //        if (jp.isClosed()) {
 //           if (JPlanStatus.Deleted().equals(state)) {
