@@ -23,6 +23,8 @@ import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
+import com.sos.commons.vfs.webdav.commons.WebDAVSProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -243,6 +245,86 @@ public class YADEEngineTest {
 
     @Ignore
     @Test
+    public void testLocal2WebDAV() {
+        YADEEngine yade = new YADEEngine();
+        try {
+            // HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
+            boolean useLocalhost = HTTP_HOST.contains("localhost");
+            if (useLocalhost) {
+                HTTP_PORT = 8080;
+            }
+
+            /** Common */
+            YADEArguments args = createYADEArgs();
+            args.getParallelism().setValue(10);
+            // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            args.getOperation().setValue(TransferOperation.COPY);
+
+            /** Source */
+            YADESourceArguments sourceArgs = getLocalSourceArgs();
+            sourceArgs.getDirectory().setValue(LOCAL_SOURCE_DIR);
+            // args.getRecursive().setValue(true);
+            sourceArgs.getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            sourceArgs.getRecursive().setValue(true);
+
+            /** Target */
+            YADETargetArguments targetArgs = getWebDAVTargetArgs();
+            if (useLocalhost) {
+                targetArgs.getProvider().getUser().setValue("sos");
+                targetArgs.getProvider().getPassword().setValue("sos");
+            }
+            targetArgs.getDirectory().setValue(HTTP_TARGET_DIR);
+            // targetArgs.getKeepModificationDate().setValue(true);
+            targetArgs.getTransactional().setValue(true);
+            targetArgs.getCreateDirectories().setValue(false);
+
+            yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testWebDAV2Local() {
+        YADEEngine yade = new YADEEngine();
+        try {
+            // HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
+            boolean useLocalhost = HTTP_HOST.contains("localhost");
+            if (useLocalhost) {
+                HTTP_PORT = 8080;
+            }
+
+            /** Common */
+            YADEArguments args = createYADEArgs();
+            args.getParallelism().setValue(10);
+            args.getOperation().setValue(TransferOperation.COPY);
+
+            /** Source */
+            YADESourceArguments sourceArgs = getWebDAVSourceArgs();
+            if (useLocalhost) {
+                sourceArgs.getFilePath().setValue(Collections.singletonList("yade/source/1.txt"));
+                sourceArgs.getProvider().getUser().setValue("sos");
+                sourceArgs.getProvider().getPassword().setValue("sos");
+            } else {
+                sourceArgs.getFilePath().setValue(Collections.singletonList("https://change.sos-berlin.com/browse/JS-2100?filter=14492"));
+            }
+
+            /** Target */
+            YADETargetArguments targetArgs = getLocalTargetArgs();
+            targetArgs.getDirectory().setValue(LOCAL_TARGET_DIR);
+            // targetArgs.getKeepModificationDate().setValue(true);
+            targetArgs.getTransactional().setValue(true);
+            targetArgs.getCheckSize().setValue(false);
+
+            yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
+    @Ignore
+    @Test
     public void testThread() {
         ForkJoinPool threadPool = new ForkJoinPool(10, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
 
@@ -350,6 +432,18 @@ public class YADEEngineTest {
         return args;
     }
 
+    private YADESourceArguments getWebDAVSourceArgs() throws Exception {
+        YADESourceArguments args = createSourceArgs();
+        args.setProvider(createWebDAVProviderArgs());
+        return args;
+    }
+
+    private YADETargetArguments getWebDAVTargetArgs() throws Exception {
+        YADETargetArguments args = createTargetArgs();
+        args.setProvider(createWebDAVProviderArgs());
+        return args;
+    }
+
     private SSHProviderArguments createSSHProviderArgs() throws Exception {
         SSHProviderArguments args = new SSHProviderArguments();
         args.applyDefaultIfNull();
@@ -369,10 +463,24 @@ public class YADEEngineTest {
 
         if (isHTTPS) {
             Path keyStore = Path.of(System.getProperty("java.home")).resolve("lib/security/cacerts");
-            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getKeyStoreFile().setValue(keyStore);
-            ((HTTPSProviderArguments) args).getSSL().getJavaKeyStore().getKeyStorePassword().setValue("changeit");
+            args.getSSL().getJavaKeyStore().getKeyStoreFile().setValue(keyStore);
+            args.getSSL().getJavaKeyStore().getKeyStorePassword().setValue("changeit");
         }
+        return args;
+    }
 
+    private WebDAVProviderArguments createWebDAVProviderArgs() throws Exception {
+        boolean isHTTPS = HTTP_HOST.startsWith("https://");
+        WebDAVProviderArguments args = isHTTPS ? new WebDAVSProviderArguments() : new WebDAVProviderArguments();
+        args.applyDefaultIfNull();
+        args.getHost().setValue(HTTP_HOST);
+        args.getPort().setValue(HTTP_PORT);
+
+        if (isHTTPS) {
+            Path keyStore = Path.of(System.getProperty("java.home")).resolve("lib/security/cacerts");
+            args.getSSL().getJavaKeyStore().getKeyStoreFile().setValue(keyStore);
+            args.getSSL().getJavaKeyStore().getKeyStorePassword().setValue("changeit");
+        }
         return args;
     }
 

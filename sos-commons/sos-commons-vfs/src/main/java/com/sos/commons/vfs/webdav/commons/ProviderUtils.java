@@ -167,9 +167,7 @@ public class ProviderUtils {
             String item = matcher.group(1);
             boolean isDirectory = item.contains("<d:collection/>");
             long size = extractLong(item, "<d:getcontentlength>(\\d+)</d:getcontentlength>");
-            long lastModified = extractLastModified(item);
-            String path = extractPath(item, basePath);
-            resources.add(new WebDAVResource(path, isDirectory, size, lastModified));
+            resources.add(new WebDAVResource(extractHref(item, basePath), isDirectory, size, extractLastModified(item)));
         }
         return resources;
     }
@@ -187,12 +185,12 @@ public class ProviderUtils {
         return HTTPUtils.DEFAULT_LAST_MODIFIED;
     }
 
-    private static String extractPath(String item, String basePath) {
+    private static String extractHref(String item, String basePath) {
         Matcher matcher = Pattern.compile("<d:href>(.*?)</d:href>").matcher(item);
         if (matcher.find()) {
-            String path = matcher.group(1);
-            if (path.startsWith(basePath)) {
-                return path;
+            String href = matcher.group(1);
+            if (href.startsWith(basePath)) {
+                return href;
             }
         }
         return basePath;

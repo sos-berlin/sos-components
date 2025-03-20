@@ -67,6 +67,8 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         switch (getArgs().getProvider().getProtocol().getValue()) {
         case HTTP:
         case HTTPS:
+        case WEBDAV:
+        case WEBDAVS:
             return true;
         default:
             return false;

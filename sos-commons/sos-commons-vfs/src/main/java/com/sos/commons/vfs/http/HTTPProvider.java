@@ -19,10 +19,8 @@ import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
-import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
@@ -33,12 +31,13 @@ import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
+import com.sos.commons.vfs.http.commons.HTTPAuthMethod;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.http.commons.HTTPOutputStream;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
-import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
+import com.sos.commons.vfs.webdav.WebDAVProvider;
 
 /** TODO - parallelism<br/>
  * - HTTPProvider is a Source - seems to work<br/>
@@ -87,7 +86,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             getLogger().info(getConnectMsg());
 
-            client = HTTPClient.createAuthenticatedClient(getLogger(), getBaseURI(), getAuthConfig(), getProxyProvider(), getSSLArguments(),
+            client = HTTPClient.createAuthenticatedClient(getLogger(), getBaseURI(), createAuthConfig(), getProxyProvider(), getArguments().getSSL(),
                     getArguments().getHTTPHeaders().getValue());
             connect(getBaseURI());
 
@@ -351,23 +350,11 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     /** Overrides {@link IProvider#writeFile(String, String)}<br/>
      * 
-     * @apiNote this method is implemented in the same way as webdav {@link ProviderImpl#writeFile(String,String)}.<br/>
+     * @apiNote this method is implemented in the same way as webdav {@link WebDAVProvider#writeFile(String,String)}.<br/>
      */
     @Override
     public void writeFile(String path, String content) throws ProviderException {
-        validatePrerequisites("writeFile", path, "path");
-
-        try {
-            URI uri = new URI(normalizePath(path));
-
-            ExecuteResult<Void> result = client.executePUT(uri, content, false);
-            int code = result.response().statusCode();
-            if (!HTTPUtils.isSuccessful(code)) {
-                throw new IOException(HTTPClient.getResponseStatus(result));
-            }
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
-        }
+        writeFile(path, content, false);
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
@@ -407,12 +394,16 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     }
 
     public long upload(String path, InputStream source, long sourceSize) throws ProviderException {
+        return upload(path, source, sourceSize, false);
+    }
+
+    public long upload(String path, InputStream source, long sourceSize, boolean isWebDAV) throws ProviderException {
         validatePrerequisites("upload", path, "path");
         validateArgument("upload", source, "InputStream source");
 
         try {
             URI uri = new URI(normalizePath(path));
-            ExecuteResult<Void> result = client.executePUT(uri, source, sourceSize, false);
+            ExecuteResult<Void> result = client.executePUT(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HTTPUtils.isSuccessful(code)) {
                 throw new IOException(HTTPClient.getResponseStatus(result));
@@ -437,13 +428,29 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    public HTTPAuthConfig getAuthConfig() {
-        // BASIC
-        return new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
+    public void writeFile(String path, String content, boolean isWebDAV) throws ProviderException {
+        validatePrerequisites("writeFile", path, "path");
+
+        try {
+            URI uri = new URI(normalizePath(path));
+
+            ExecuteResult<Void> result = client.executePUT(uri, content, isWebDAV);
+            int code = result.response().statusCode();
+            if (!HTTPUtils.isSuccessful(code)) {
+                throw new IOException(HTTPClient.getResponseStatus(result));
+            }
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
-    public SSLArguments getSSLArguments() {
-        return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) ? ((HTTPSProviderArguments) getArguments()).getSSL() : null;
+    public HTTPAuthConfig createAuthConfig() {
+        if (HTTPAuthMethod.NTLM.equals(getArguments().getAuthMethod().getValue())) {
+            return new HTTPAuthConfig(getLogger(), getArguments().getUser().getValue(), getArguments().getPassword().getValue(), getArguments()
+                    .getWorkstation().getValue(), getArguments().getDomain().getValue());
+        }
+        // BASIC
+        return new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
     }
 
     public URI getBaseURI() {
@@ -452,6 +459,15 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     public void setBaseURI(URI val) {
         baseURI = val;
+    }
+
+    public HTTPClient getClient() {
+        return client;
+    }
+
+    public void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
+        validatePrerequisites(method);
+        validateArgument(method, argValue, msg);
     }
 
     private void connect(URI uri) throws Exception {
@@ -483,11 +499,6 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             setAccessInfo(HTTPUtils.getAccessInfo(getBaseURI(), getArguments().getUser().getValue()));
             connect(getBaseURI());
         }
-    }
-
-    private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
-        validatePrerequisites(method);
-        validateArgument(method, argValue, msg);
     }
 
     private ProviderFile createProviderFile(URI uri, HttpResponse<?> response) throws Exception {
