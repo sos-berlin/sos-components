@@ -7,6 +7,12 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Locale;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -24,6 +30,18 @@ public class HTTPUtils {
     public static final String HEADER_WEBDAV_OVERWRITE_VALUE = "T";
 
     public static final long DEFAULT_LAST_MODIFIED = -1L;
+
+    // HTTP-date formats (RFC 1123, RFC 1036, asctime)
+    // https://datatracker.ietf.org/doc/html/rfc7232#section-2.2
+    // - not really normalized ... Last-Modified: Tue, 15 Nov 1994 12:45:26 GMT
+    // Locale.US - because of the weekdays in English (e.g. Tue)
+    private static final List<DateTimeFormatter> HTTP_DATE_FORMATTERS = List.of(
+            // RFC 1123
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).withZone(ZoneOffset.UTC),
+            // RFC 1036
+            DateTimeFormatter.ofPattern("EEE, dd-MMM-yy HH:mm:ss zzz", Locale.US).withZone(ZoneOffset.UTC),
+            // asctime
+            DateTimeFormatter.ofPattern("EEE MMM d HH:mm:ss yyyy", Locale.US).withZone(ZoneOffset.UTC));
 
     public static String getAccessInfo(URI baseURI, String username) {
         String uri = SOSString.trimEnd(baseURI.toString(), "/");
@@ -113,6 +131,19 @@ public class HTTPUtils {
     public static String getNTLMAuthToken(NTLM config) throws Exception {
 
         return null;
+    }
+
+    public static long toMillis(String httpDate) {
+        if (SOSString.isEmpty(httpDate)) {
+            return DEFAULT_LAST_MODIFIED;
+        }
+        for (DateTimeFormatter formatter : HTTP_DATE_FORMATTERS) {
+            try {
+                return ZonedDateTime.parse(httpDate, formatter).toInstant().toEpochMilli();
+            } catch (DateTimeParseException ignored) {
+            }
+        }
+        return DEFAULT_LAST_MODIFIED;
     }
 
     /** This check is sufficient if the client follows redirects.<br />

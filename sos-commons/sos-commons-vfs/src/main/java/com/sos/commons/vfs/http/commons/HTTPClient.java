@@ -10,7 +10,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -202,16 +201,7 @@ public class HTTPClient implements AutoCloseable {
         if (!header.isPresent()) {
             return HTTPUtils.DEFAULT_LAST_MODIFIED;
         }
-        return getLastModifiedInMillis(header.get());
-    }
-
-    public static long getLastModifiedInMillis(String httpDate) {
-        if (SOSString.isEmpty(httpDate)) {
-            return -1l;
-        }
-        // TODO replace org.apache.http.client.utils.DateUtils with own code
-        Date date = HTTPDateUtils.parseDate(httpDate);
-        return date == null ? HTTPUtils.DEFAULT_LAST_MODIFIED : date.getTime();
+        return HTTPUtils.toMillis(header.get());
     }
 
     public static String getResponseStatus(ExecuteResult<?> result) {

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -183,11 +182,7 @@ public class ProviderUtils {
     private static long extractLastModified(String item) {
         Matcher matcher = Pattern.compile("<d:getlastmodified>(.*?)</d:getlastmodified>").matcher(item);
         if (matcher.find()) {
-            try {
-                return Instant.parse(matcher.group(1)).toEpochMilli();
-            } catch (Exception e) {
-                return HTTPUtils.DEFAULT_LAST_MODIFIED;
-            }
+            return HTTPUtils.toMillis(matcher.group(1));
         }
         return HTTPUtils.DEFAULT_LAST_MODIFIED;
     }
