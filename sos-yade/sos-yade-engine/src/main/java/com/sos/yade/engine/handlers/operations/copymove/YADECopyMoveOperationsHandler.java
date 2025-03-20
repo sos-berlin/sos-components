@@ -277,7 +277,7 @@ public class YADECopyMoveOperationsHandler {
                 paths.entrySet().stream().forEach(m -> {
                     if (r.getErrors().containsKey(m.getKey())) {
                         // TODO rollback-failed
-                        m.getValue().getTarget().setSubState(TransferEntryState.FAILED);
+                        m.getValue().getTarget().setSubState(TransferEntryState.ROLLBACK_FAILED);
                     } else {
                         // already filtered by getTarget() != null
                         m.getValue().getTarget().setSubState(TransferEntryState.ROLLED_BACK);

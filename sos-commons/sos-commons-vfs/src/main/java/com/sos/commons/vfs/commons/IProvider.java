@@ -99,7 +99,8 @@ public interface IProvider {
      *
      * @param path the path to the file/directory to delete
      * @return {@code true} if the file/directory was deleted by this method<br/>
-     *         {@code false} if the file/directory could not be deleted because it did not exist */
+     *         {@code false} if the file/directory could not be deleted because it did not exist
+     * @throws ProviderException */
     public boolean deleteIfExists(String path) throws ProviderException;
 
     /** Deletes the specified files if they exist.<br/>
@@ -116,9 +117,10 @@ public interface IProvider {
      *
      * @param source the current path of the file
      * @param target the new path for the file
-     * @return a {@link RenameFilesResult} containing details about the rename operation, including success status and any errors
+     * @return {@code true} if the sourcePath file was renamed by this method<br/>
+     *         {@code false} if the sourcePath file could not be renamed because it did not exist
      * @throws ProviderException */
-    public RenameFilesResult renameFileIfSourceExists(String sourcePath, String targetPath) throws ProviderException;
+    public boolean renameFileIfSourceExists(String sourcePath, String targetPath) throws ProviderException;
 
     /** Renames multiple files if the source files exist.<br/>
      * Each entry in the map represents a source file path and its corresponding target path.<br/>

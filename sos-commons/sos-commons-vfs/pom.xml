@@ -34,15 +34,13 @@
 		</dependency>
 
 		<!-- 3rd Party Dependencies -->
+		<!-- Note: HTTP(S) and WEBDAV(S) use java.net.http.HttpClient - without
+		3rd	Party -->
+
 		<!-- FTP(S) -->
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-		</dependency>
-		<!-- HTTP(S)-->
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
 		</dependency>
 		<!-- SMB -->
 		<dependency>
@@ -54,16 +52,13 @@
 			<groupId>com.hierynomus</groupId>
 			<artifactId>sshj</artifactId>
 		</dependency>
-		<!-- WEBDAV(S) -->
-		<dependency>
-			<groupId>org.apache.jackrabbit</groupId>
-			<artifactId>jackrabbit-webdav</artifactId>
-		</dependency>
 
+		<!-- 
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 		</dependency>
+		-->
 
 		<dependency>
 			<groupId>org.slf4j</groupId>

@@ -237,8 +237,21 @@ public class YADEClientBannerWriter {
 
         if (totalFiles > 0 && !TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             List<String> l = new ArrayList<>();
+
+            Map<String, List<YADEProviderFile>> groupedByState = FileStateUtils.getGroupedByState(targetArgs, files, getDefaultState(args));
+            boolean needsDetails = groupedByState.keySet().stream().anyMatch(k -> k.contains(TransferEntryState.ROLLED_BACK.name()) || k.contains(
+                    TransferEntryState.FAILED.name()));
+
             FileStateUtils.getGroupedByState(targetArgs, files, getDefaultState(args)).forEach((state, fileList) -> {
                 l.add(state.toLowerCase() + "=" + fileList.size());
+
+                if (needsDetails) {
+                    logger.info(state.toLowerCase() + ":");
+                    for (YADEProviderFile file : fileList) {
+                        logger.info(" Source " + file);
+                    }
+                }
+
             });
             int size = l.size();
             if (size > 0) {

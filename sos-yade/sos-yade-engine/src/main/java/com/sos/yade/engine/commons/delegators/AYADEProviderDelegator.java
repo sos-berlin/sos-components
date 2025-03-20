@@ -13,12 +13,12 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final String directory;
     private final String directoryWithTrailingPathSeparator;
 
-    private final boolean httpProvider;
+    private final boolean isHTTP;
 
     public AYADEProviderDelegator(IProvider provider, YADESourceTargetArguments args) {
         this.provider = provider;
         this.args = args;
-        this.httpProvider = isHTTPProvider();
+        this.isHTTP = isHTTPProvider();
         this.directory = getDirectoryPath(args.getDirectory().getValue());
         this.directoryWithTrailingPathSeparator = getDirectoryPathWithTrailingPathSeparator(directory);
     }
@@ -59,8 +59,8 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return path.contains(provider.getPathSeparator());
     }
 
-    public boolean hasHTTPProvider() {
-        return httpProvider;
+    public boolean isHTTP() {
+        return isHTTP;
     }
 
     private boolean isHTTPProvider() {
@@ -79,12 +79,12 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         }
         String dir = path;
         // TODO always normalize?
-        if (httpProvider) {
-            /** resolved and normalized based on baseURL */
-            dir = provider.normalizePath(path);
-        }
-        return SOSPathUtils.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtils.getUnixStyleDirectoryWithoutTrailingSeparator(dir)
-                : SOSPathUtils.getWindowsStyleDirectoryWithoutTrailingSeparator(dir);
+        // if (isHTTP) {
+        /** resolved and normalized based on baseURL */
+        dir = provider.normalizePath(path);
+        // }
+        return SOSPathUtils.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtils.getUnixStyleDirectoryWithoutTrailingSeparator(
+                dir) : SOSPathUtils.getWindowsStyleDirectoryWithoutTrailingSeparator(dir);
     }
 
     private String getDirectoryPathWithTrailingPathSeparator(String path) {

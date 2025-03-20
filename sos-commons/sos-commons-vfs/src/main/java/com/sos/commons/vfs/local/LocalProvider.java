@@ -156,9 +156,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         DeleteFilesResult r = new DeleteFilesResult(files.size());
         l: for (String file : files) {
             try {
-                Path path = getAbsoluteNormalizedPath(file);
-                if (exists(path)) {
-                    SOSPath.delete(path);
+                if (deleteIfExists(file)) {
                     r.addSuccess();
                 } else {
                     r.addNotFound(file);
@@ -173,6 +171,24 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         return r;
     }
 
+    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    @Override
+    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
+        validateArgument("renameFileIfSourceExists", source, "source");
+        validateArgument("renameFileIfSourceExists", target, "target");
+
+        try {
+            Path p = getAbsoluteNormalizedPath(source);
+            if (exists(p)) {
+                SOSPath.renameTo(p, getAbsoluteNormalizedPath(target));
+                return true;
+            }
+            return false;
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
+        }
+    }
+
     /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
     public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
@@ -185,9 +201,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             String source = entry.getKey();
             String target = entry.getValue();
             try {
-                Path p = getAbsoluteNormalizedPath(source);
-                if (exists(p)) {
-                    SOSPath.renameTo(p, getAbsoluteNormalizedPath(target));
+                if (renameFileIfSourceExists(source, target)) {
                     r.addSuccess(source, target);
                 } else {
                     r.addNotFound(source);

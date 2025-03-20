@@ -219,6 +219,26 @@ public class ProviderImpl extends SMBProvider {
         return r;
     }
 
+    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    @Override
+    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
+        validatePrerequisites("renameFileIfSourceExists", source, "source");
+        validateArgument("renameFileIfSourceExists", target, "target");
+
+        try (DiskShare share = connectShare(source)) {
+            String sourceSMBPath = getSMBPath(source);
+            if (share.fileExists(sourceSMBPath)) {
+                try (File sourceFile = ProviderUtils.openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, sourceSMBPath)) {
+                    sourceFile.rename(getSMBPath(target), true);
+                }
+                return true;
+            }
+            return false;
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
+        }
+    }
+
     /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
     public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {

@@ -1,6 +1,9 @@
 package com.sos.commons.util;
 
 import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 
 import org.slf4j.Logger;
@@ -131,6 +134,21 @@ public class SOSClassUtil {
                 closeable.close();
             } catch (Exception e) {
             }
+        }
+    }
+
+    /** Counts the number of bytes in the given InputStream by transferring its contents to a NullOutputStream.
+     * 
+     * @apiNote It is not really needed to use try-with-resources for OutputStream.nullOutputStream(),<br/>
+     *          as it does not manage any resources.<br/>
+     *          However, the try-with-resources statement ensures that the InputStream is properly closed after the operation, avoiding resource leaks.
+     *
+     * @param inputStream The InputStream whose bytes are to be counted
+     * @return The number of bytes in the InputStream
+     * @throws IOException If an I/O error occurs */
+    public static long countBytes(InputStream inputStream) throws IOException {
+        try (OutputStream nullOutputStream = OutputStream.nullOutputStream()) {
+            return inputStream.transferTo(nullOutputStream);
         }
     }
 

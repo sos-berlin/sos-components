@@ -1,10 +1,10 @@
 package com.sos.commons.vfs.commons;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
@@ -19,7 +19,6 @@ import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
@@ -103,16 +102,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
             }
         }
         return result;
-    }
-
-    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
-    @Override
-    public RenameFilesResult renameFileIfSourceExists(String sourcePath, String targetPath) throws ProviderException {
-        validatePrerequisites("renameFileIfSourceExists");
-        validateArgument("renameFileIfSourceExists", sourcePath, "sourcePath");
-        validateArgument("renameFileIfSourceExists", targetPath, "targetPath");
-
-        return renameFilesIfSourceExists(Collections.singletonMap(sourcePath, targetPath), true);
     }
 
     /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
@@ -268,6 +257,12 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public void validateArgument(String method, String argValue, String msg) throws ProviderException {
         if (SOSString.isEmpty(argValue)) {
+            throw new ProviderException(getLogPrefix() + "[" + method + "]" + msg + " missing");
+        }
+    }
+
+    public void validateArgument(String method, InputStream argValue, String msg) throws ProviderException {
+        if (argValue == null) {
             throw new ProviderException(getLogPrefix() + "[" + method + "]" + msg + " missing");
         }
     }

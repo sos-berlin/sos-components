@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
-import com.sos.commons.vfs.http.commons.HTTPProviderArguments.Impl;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
@@ -184,11 +183,10 @@ public class YADEEngineTest {
             sourceArgs.getDirectory().setValue(LOCAL_SOURCE_DIR);
             // args.getRecursive().setValue(true);
             sourceArgs.getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
-            sourceArgs.getRecursive().setValue(false);
+            sourceArgs.getRecursive().setValue(true);
 
             /** Target */
             YADETargetArguments targetArgs = getHTTPTargetArgs();
-            ((HTTPProviderArguments) targetArgs.getProvider()).getImpl().setValue(Impl.JAVA);
             if (useLocalhost) {
                 targetArgs.getProvider().getUser().setValue("yade");
                 targetArgs.getProvider().getPassword().setValue("yade");
@@ -196,6 +194,7 @@ public class YADEEngineTest {
             targetArgs.getDirectory().setValue(HTTP_TARGET_DIR);
             // targetArgs.getKeepModificationDate().setValue(true);
             targetArgs.getTransactional().setValue(true);
+            targetArgs.getCreateDirectories().setValue(false);
 
             yade.execute(new SLF4JLogger(), args, createClientArgs(), sourceArgs, targetArgs, false);
         } catch (Throwable e) {
@@ -209,7 +208,7 @@ public class YADEEngineTest {
         YADEEngine yade = new YADEEngine();
         try {
             // HTTP_HOST = "https://change.sos-berlin.com/browse/JS-2100?filter=14492";
-            boolean useLocalhost = HTTP_HOST.startsWith("https://");
+            boolean useLocalhost = HTTP_HOST.contains("localhost");
             if (useLocalhost) {
                 HTTP_PORT = 8080;
             }
@@ -221,7 +220,6 @@ public class YADEEngineTest {
 
             /** Source */
             YADESourceArguments sourceArgs = getHTTPSourceArgs();
-            ((HTTPProviderArguments) sourceArgs.getProvider()).getImpl().setValue(Impl.JAVA);
             if (useLocalhost) {
                 sourceArgs.getFilePath().setValue(Collections.singletonList("yade/source/1.txt"));
                 sourceArgs.getProvider().getUser().setValue("yade");

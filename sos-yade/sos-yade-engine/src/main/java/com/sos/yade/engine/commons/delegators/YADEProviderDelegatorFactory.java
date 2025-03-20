@@ -68,8 +68,8 @@ public class YADEProviderDelegatorFactory {
                 break;
             case HTTP:
             case HTTPS:
-                p = HTTPProvider.createInstance(logger, (HTTPProviderArguments) providerArgs);
-                args.getParallelism().setValue(1);
+                p = new HTTPProvider(logger, (HTTPProviderArguments) providerArgs);
+                //args.getParallelism().setValue(1);
                 break;
             case SFTP:
             case SSH:
@@ -80,7 +80,7 @@ public class YADEProviderDelegatorFactory {
                 break;
             case WEBDAV:
             case WEBDAVS:
-                p = WebDAVProvider.createInstance(logger, (WebDAVProviderArguments) providerArgs);
+                p = new WebDAVProvider(logger, (WebDAVProviderArguments) providerArgs);
                 break;
             case UNKNOWN:
             default:

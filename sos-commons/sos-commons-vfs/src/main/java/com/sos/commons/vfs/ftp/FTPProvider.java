@@ -353,6 +353,27 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         return r;
     }
 
+    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    @Override
+    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
+        validatePrerequisites("renameFileIfSourceExists", source, "source");
+        validateArgument("renameFileIfSourceExists", target, "target");
+
+        try {
+            if (!client.rename(source, target)) {
+                FTPProtocolReply reply = new FTPProtocolReply(client);
+                if (isReplyBasedOnFileNotFound(reply, target)) {
+                    return false;
+                } else {
+                    throw new Exception(String.format("[failed to rename file]%s", reply));
+                }
+            }
+            return true;
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
+        }
+    }
+
     /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
     @Override
     public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {

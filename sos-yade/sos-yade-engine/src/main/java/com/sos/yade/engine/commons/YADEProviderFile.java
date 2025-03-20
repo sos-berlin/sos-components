@@ -98,6 +98,29 @@ public class YADEProviderFile extends ProviderFile {
         return subState;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (state != null) {
+            sb.append("state=").append(state);
+            sb.append(",");
+        }
+        if (subState != null) {
+            sb.append("subState=").append(subState);
+            sb.append(",");
+        }
+        sb.append(getFinalFullPath());
+        if (target != null) {
+            sb.append(", Target state=").append(target.getState());
+            if (target.getSubState() != null) {
+                sb.append(",subState=").append(target.getSubState());
+            }
+            sb.append(",").append(target.getFinalFullPath());
+
+        }
+        return sb.toString();
+    }
+
     public class Steady {
 
         private long lastCheckedSize;

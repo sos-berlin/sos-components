@@ -177,7 +177,9 @@ public class ProviderImpl extends SSHProvider {
         }
     }
 
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
+    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)}<br/>
+     * Note - deleteIfExists(String) is not used because an SFTPClient client is used to delete all files<br/>
+     */
     @Override
     public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {
@@ -208,7 +210,26 @@ public class ProviderImpl extends SSHProvider {
         return r;
     }
 
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
+    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    @Override
+    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
+        validatePrerequisites("renameFileIfSourceExists", source, "source");
+        validateArgument("renameFileIfSourceExists", target, "target");
+
+        try (SFTPClient sftp = sshClient.newSFTPClient()) {
+            if (ProviderUtils.exists(sftp, source)) {
+                ProviderUtils.rename(sftp, source, target);
+                return true;
+            }
+            return false;
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
+        }
+    }
+
+    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)}<br/>
+     * Note - renameFileIfSourceExists(String,String) is not used because an SFTPClient client is used to rename all files<br/>
+     */
     @Override
     public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
         if (files == null) {

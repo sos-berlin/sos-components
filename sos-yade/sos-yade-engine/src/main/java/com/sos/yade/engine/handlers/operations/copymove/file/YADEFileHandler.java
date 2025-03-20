@@ -11,6 +11,7 @@ import java.util.zip.GZIPOutputStream;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.commons.vfs.http.HTTPProvider;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
@@ -18,6 +19,7 @@ import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
+import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
@@ -109,77 +111,71 @@ public class YADEFileHandler {
             int attempts = 0;
             boolean isCumulateTargetWritten = false;
 
-            boolean targetIsHTTP = targetDelegator.hasHTTPProvider();
             Instant startTime = Instant.now();
-            l: while (attempts < config.getMaxRetries()) {
-                // int cumulativeFileSeperatorLength = 0;
-                try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile, useBufferedStreams);
-                        OutputStream targetOutputStream = YADEFileStreamHelper.getTargetOutputStream(config, targetDelegator, targetFile,
-                                useBufferedStreams); OutputStream targetStream = compressTarget ? new GZIPOutputStream(targetOutputStream)
-                                        : targetOutputStream) {
-                    if (attempts > 0) {
-                        YADEFileStreamHelper.skipSourceInputStreamToPosition(sourceStream, targetFile);
-                    }
 
-                    if (useCumulativeTargetFile && !isCumulateTargetWritten) {
-                        // TODO replace variables .... XML Schema description for CumulativeFileSeparator is wrong
-                        String fs = config.getTarget().getCumulate().getFileSeparator() + System.getProperty("line.separator");
-                        byte[] bytes = fs.getBytes();
-                        // cumulativeFileSeperatorLength = bytes.length;
-                        targetOutputStream.write(bytes);
-
-                        YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
-                        YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
-                        isCumulateTargetWritten = true;
-                    }
-
-                    if (sourceFile.getSize() <= 0L) {
-                        byte[] bytes = new byte[0];
-                        targetStream.write(bytes);
-
-                        YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
-                        YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
-                    } else {
-                        byte[] buffer = new byte[config.getBufferSize()];
-                        int bytesRead;
-                        while ((bytesRead = sourceStream.read(buffer)) != -1) {
-                            targetStream.write(buffer, 0, bytesRead);
-                            targetFile.updateProgressSize(bytesRead);
-
-                            YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, buffer, bytesRead, false);
-                            YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, buffer, bytesRead, compressTarget);
-                        }
-                        // YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
-                    }
-                    YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
-                    break l;
-                } catch (Throwable e) {
-                    attempts++;
-
-                    boolean throwException = false;
-                    String throwExceptionAdd = "";
-                    if (YADEProviderDelegatorHelper.isSourceOrTargetNotConnected(sourceDelegator, targetDelegator)) {
-                        if (attempts >= config.getMaxRetries()) {
-                            throwException = true;
-                            if (config.getMaxRetries() > 1) {
-                                throwExceptionAdd = "[maximum retry attempts=" + config.getMaxRetries() + " reached]";
-                            }
-                        } else {
-                            YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
-                            YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
-                        }
-                    } else {
-                        throwException = true;
-                    }
-                    if (throwException) {
-                        String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
-                                targetDelegator.getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
-                        logger.error(msg);
-                        throw new YADEEngineTransferFileException(msg, e);
+            if (targetDelegator.isHTTP()) {
+                // TODO compressing, cumulative, messageDigest, skipSourceInputStreamToPosition ...
+                l: while (attempts < config.getMaxRetries()) {
+                    try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
+                            useBufferedStreams)) {
+                        targetFile.setSize(((HTTPProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(), sourceStream, sourceFile
+                                .getSize()));
+                        break l;
+                    } catch (Throwable e) {
+                        attempts++;
+                        handleException(e, attempts, logPrefix, targetFile);
                     }
                 }
+            } else {
+                l: while (attempts < config.getMaxRetries()) {
+                    // int cumulativeFileSeperatorLength = 0;
+                    try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
+                            useBufferedStreams); OutputStream targetOutputStream = YADEFileStreamHelper.getTargetOutputStream(config, targetDelegator,
+                                    targetFile, useBufferedStreams); OutputStream targetStream = compressTarget ? new GZIPOutputStream(
+                                            targetOutputStream) : targetOutputStream) {
+                        if (attempts > 0) {
+                            YADEFileStreamHelper.skipSourceInputStreamToPosition(sourceStream, targetFile);
+                        }
+
+                        if (useCumulativeTargetFile && !isCumulateTargetWritten) {
+                            // TODO replace variables .... XML Schema description for CumulativeFileSeparator is wrong
+                            String fs = config.getTarget().getCumulate().getFileSeparator() + System.getProperty("line.separator");
+                            byte[] bytes = fs.getBytes();
+                            // cumulativeFileSeperatorLength = bytes.length;
+                            targetOutputStream.write(bytes);
+
+                            YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
+                            YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
+                            isCumulateTargetWritten = true;
+                        }
+
+                        if (sourceFile.getSize() <= 0L) {
+                            byte[] bytes = new byte[0];
+                            targetStream.write(bytes);
+
+                            YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
+                            YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
+                        } else {
+                            byte[] buffer = new byte[config.getBufferSize()];
+                            int bytesRead;
+                            while ((bytesRead = sourceStream.read(buffer)) != -1) {
+                                targetStream.write(buffer, 0, bytesRead);
+                                targetFile.updateProgressSize(bytesRead);
+
+                                YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, buffer, bytesRead, false);
+                                YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, buffer, bytesRead, compressTarget);
+                            }
+                            // YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
+                        }
+                        YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
+                        break l;
+                    } catch (Throwable e) {
+                        attempts++;
+                        handleException(e, attempts, logPrefix, targetFile);
+                    }
+                }
+                YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, compressTarget);
             }
-            YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, compressTarget);
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
             logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
@@ -254,9 +250,9 @@ public class YADEFileHandler {
         // 1) Source name
         String fileName = sourceFile.getName();
 
-        if (sourceDelegator.hasHTTPProvider()) {
+        if (sourceDelegator.isHTTP()) {
             // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
-            fileName = HTTPUtils.asValidFileSystemName(fileName);
+            fileName = HTTPUtils.toValidFileSystemName(fileName);
         }
 
         // 2) Compressed name
@@ -276,6 +272,30 @@ public class YADEFileHandler {
             info = new YADEFileNameInfo(targetDelegator, fileName);
         }
         return info;
+    }
+
+    private void handleException(Throwable e, int attempts, String logPrefix, YADETargetProviderFile targetFile) throws YADEEngineException {
+        boolean throwException = false;
+        String throwExceptionAdd = "";
+        if (YADEProviderDelegatorHelper.isSourceOrTargetNotConnected(sourceDelegator, targetDelegator)) {
+            if (attempts >= config.getMaxRetries()) {
+                throwException = true;
+                if (config.getMaxRetries() > 1) {
+                    throwExceptionAdd = "[maximum retry attempts=" + config.getMaxRetries() + " reached]";
+                }
+            } else {
+                YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
+                YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
+            }
+        } else {
+            throwException = true;
+        }
+        if (throwException) {
+            String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), targetDelegator
+                    .getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
+            logger.error(msg);
+            throw new YADEEngineTransferFileException(msg, e);
+        }
     }
 
 }

@@ -1,7 +1,6 @@
-package com.sos.commons.vfs.http.java;
+package com.sos.commons.vfs.http.commons;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
@@ -17,38 +16,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.http.client.utils.DateUtils;
-
 import com.sos.commons.exception.SOSNoSuchFileException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSSSLContextFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.proxy.ProxyProvider;
-import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
-import com.sos.commons.vfs.http.commons.HTTPUtils;
 
 public class HTTPClient implements AutoCloseable {
-
-    public static final String HEADER_CONTENT_LENGTH = "Content-Length";
-    public static final String HEADER_LAST_MODIFIED = "Last-Modified";
-    public static final String HEADER_EXPECT = "Expect";
-    public static final String HEADER_EXPECT_VALUE = "100-continue";
 
     private final HttpClient client;
 
     private Map<String, String> headers;
     private Boolean isHEADMethodAllowed;
+    // TODO how to implement not chunked transfer?
+    // Set Content-Lenght throws the java.lang.IllegalArgumentException: restricted header name: "Content-Length" Exception...
+    // System.setProperty("jdk.httpclient.allowRestrictedHeaders", "false");
+    private boolean chunkedTransfer = true;
 
-    private HTTPClient(HttpClient client) {
+    private String ntlmMAuthToken = null;
+
+    private HTTPClient(HttpClient client, String ntlmMAuthToken) {
         this.client = client;
+        this.ntlmMAuthToken = ntlmMAuthToken;
     }
 
+    /** Set followRedirects(HttpClient.Redirect.ALWAYS) to automatically follow 3xx redirects.<br/>
+     * -- Note: java.net.http.HttpClient default=NEVER, Apache HttpClient - ALWAYS<br/>
+     * - No need to manually check 3xx status codes or handle redirects. The client takes care of following redirects and processes the final resource.<br/>
+     * - Simplifies success checks (e.g., code >= 200 && code < 300) or existence checks (e.g., 404).<br/>
+     * -- Otherwise, a exists check should contain, for example, 302 (Found), 304 (Not Modified)...<br/>
+     * - No manual redirect handling required for DELETE, GET, or other operations.<br/>
+     */
     public static HTTPClient createAuthenticatedClient(ISOSLogger logger, URI baseURI, HTTPAuthConfig authConfig, ProxyProvider proxyProvider,
             SSLArguments sslArgs, List<String> defaultHeaders) throws Exception {
 
         HttpClient.Builder builder = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30));
+        builder.followRedirects(HttpClient.Redirect.ALWAYS);
+
+        String ntlmMAuthToken = null;
         if (proxyProvider == null) {
             if (authConfig.getNTLM() == null) {
                 if (!SOSString.isEmpty(authConfig.getUsername())) {
@@ -61,9 +69,7 @@ public class HTTPClient implements AutoCloseable {
                     });
                 }
             } else {
-                // credentialsProvider = new BasicCredentialsProvider();
-                // credentialsProvider.setCredentials(AuthScope.ANY, new NTCredentials(authConfig.getNTLM().getUsername(), authConfig.getPassword(),
-                // authConfig.getNTLM().getWorkstation(), authConfig.getNTLM().getDomain()));
+                ntlmMAuthToken = HTTPUtils.getNTLMAuthToken(authConfig.getNTLM());
             }
         } else {
             builder.proxy(java.net.ProxySelector.of(new InetSocketAddress(proxyProvider.getHost(), proxyProvider.getPort())));
@@ -82,7 +88,7 @@ public class HTTPClient implements AutoCloseable {
         // Client builder
         setSSLContext(logger, sslArgs, baseURI.getScheme(), builder);
 
-        HTTPClient client = new HTTPClient(builder.build());
+        HTTPClient client = new HTTPClient(builder.build(), ntlmMAuthToken);
         client.setHeaders(logger, defaultHeaders);
         return client;
     }
@@ -95,14 +101,21 @@ public class HTTPClient implements AutoCloseable {
     public HttpRequest.Builder createRequestBuilder(URI uri) {
         HttpRequest.Builder builder = HttpRequest.newBuilder().uri(uri);
         setHeaders(builder);
+        if (ntlmMAuthToken != null) {
+            builder.header("Authorization", "NTLM " + ntlmMAuthToken);
+        }
         return builder;
     }
 
-    public ExecuteResult execute(HttpRequest request) throws Exception {
-        return new ExecuteResult(request, client.send(request, HttpResponse.BodyHandlers.discarding()));
+    public ExecuteResult<Void> executeWithoutResponseBody(HttpRequest request) throws Exception {
+        return new ExecuteResult<Void>(request, client.send(request, HttpResponse.BodyHandlers.discarding()));
     }
 
-    public ExecuteResult executeHEADOrGET(URI uri) throws Exception {
+    public ExecuteResult<String> executeWithResponseBody(HttpRequest request) throws Exception {
+        return new ExecuteResult<String>(request, client.send(request, HttpResponse.BodyHandlers.ofString()));
+    }
+
+    public ExecuteResult<Void> executeHEADOrGET(URI uri) throws Exception {
         HttpRequest request = null;
         boolean isHEAD = false;
         if (isHEADMethodAllowed == null || isHEADMethodAllowed) {
@@ -111,11 +124,11 @@ public class HTTPClient implements AutoCloseable {
         } else {
             request = createGETRequest(uri);
         }
-        ExecuteResult result = execute(request);
+        ExecuteResult<Void> result = executeWithoutResponseBody(request);
         if (isHEAD) {
             if (HTTPUtils.isMethodNotAllowed(result.response.statusCode())) {
                 isHEADMethodAllowed = false;
-                result = execute(createGETRequest(uri));
+                result = executeWithoutResponseBody(createGETRequest(uri));
             } else {
                 isHEADMethodAllowed = true;
             }
@@ -123,20 +136,42 @@ public class HTTPClient implements AutoCloseable {
         return result;
     }
 
-    public ExecuteResult executeGET(URI uri) throws Exception {
-        return execute(createGETRequest(uri));
+    public ExecuteResult<Void> executeGET(URI uri) throws Exception {
+        return executeWithoutResponseBody(createGETRequest(uri));
     }
 
-    public ExecuteResult executeDELETE(URI uri) throws Exception {
-        return execute(createRequestBuilder(uri).DELETE().build());
+    public ExecuteResult<Void> executeDELETE(URI uri) throws Exception {
+        return executeWithoutResponseBody(createRequestBuilder(uri).DELETE().build());
     }
 
-    public ExecuteResult executePUT(URI uri, String content) throws Exception {
-        return execute(createRequestBuilder(uri).PUT(HttpRequest.BodyPublishers.ofByteArray(content.getBytes(StandardCharsets.UTF_8))).build());
+    public ExecuteResult<Void> executePUT(URI uri, String content, boolean isWebDAV) throws Exception {
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+
+        HttpRequest.Builder builder = createRequestBuilder(uri);
+        builder.header(HTTPUtils.HEADER_CONTENT_TYPE, HTTPUtils.HEADER_CONTENT_TYPE_BINARY);
+        withWebDAVOverwrite(builder, isWebDAV);
+        if (!chunkedTransfer) {
+            // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
+            builder.header(HTTPUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
+        }
+        return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build());
     }
 
-    public ExecuteResult executePUT(URI uri, InputStream is) throws Exception {
-        return execute(createRequestBuilder(uri).PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build());
+    public ExecuteResult<Void> executePUT(URI uri, InputStream is, long size, boolean isWebDAV) throws Exception {
+        HttpRequest.Builder builder = createRequestBuilder(uri);
+        builder.header(HTTPUtils.HEADER_CONTENT_TYPE, HTTPUtils.HEADER_CONTENT_TYPE_BINARY);
+        withWebDAVOverwrite(builder, isWebDAV);
+        if (!chunkedTransfer) {
+            // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
+            builder.header(HTTPUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
+        }
+        return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build());
+    }
+
+    public static void withWebDAVOverwrite(HttpRequest.Builder builder, boolean withWebDAVOverwrite) {
+        if (withWebDAVOverwrite) {
+            builder.header(HTTPUtils.HEADER_WEBDAV_OVERWRITE, HTTPUtils.HEADER_WEBDAV_OVERWRITE_VALUE);
+        }
     }
 
     public InputStream getHTTPInputStream(URI uri) throws Exception {
@@ -144,7 +179,7 @@ public class HTTPClient implements AutoCloseable {
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         int code = response.statusCode();
         if (!HTTPUtils.isSuccessful(code)) {
-            ExecuteResult result = new ExecuteResult(request, response);
+            ExecuteResult<?> result = new ExecuteResult<>(request, response);
             if (HTTPUtils.isNotFound(code)) {
                 throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(result)));
             }
@@ -155,7 +190,7 @@ public class HTTPClient implements AutoCloseable {
 
     public long getFileSizeIfChunkedTransferEncoding(URI uri) throws Exception {
         try (InputStream is = getHTTPInputStream(uri)) {
-            return is.transferTo(OutputStream.nullOutputStream());
+            return SOSClassUtil.countBytes(is);
         }
     }
 
@@ -163,7 +198,7 @@ public class HTTPClient implements AutoCloseable {
         if (response == null) {
             return HTTPUtils.DEFAULT_LAST_MODIFIED;
         }
-        Optional<String> header = response.headers().firstValue(HEADER_LAST_MODIFIED);
+        Optional<String> header = response.headers().firstValue(HTTPUtils.HEADER_LAST_MODIFIED);
         if (!header.isPresent()) {
             return HTTPUtils.DEFAULT_LAST_MODIFIED;
         }
@@ -175,17 +210,21 @@ public class HTTPClient implements AutoCloseable {
             return -1l;
         }
         // TODO replace org.apache.http.client.utils.DateUtils with own code
-        Date date = DateUtils.parseDate(httpDate);
+        Date date = HTTPDateUtils.parseDate(httpDate);
         return date == null ? HTTPUtils.DEFAULT_LAST_MODIFIED : date.getTime();
     }
 
-    public static String getResponseStatus(ExecuteResult result) {
+    public static String getResponseStatus(ExecuteResult<?> result) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(result.request().method()).append("]");
         sb.append("[").append(result.request().uri()).append("]");
         sb.append("[").append(result.response().statusCode()).append("]");
         sb.append(HTTPUtils.getReasonPhrase(result.response().statusCode()));
         return sb.toString();
+    }
+
+    public boolean isChunkedTransfer() {
+        return chunkedTransfer;
     }
 
     private HttpRequest createGETRequest(URI uri) {
@@ -257,12 +296,12 @@ public class HTTPClient implements AutoCloseable {
         });
     }
 
-    public class ExecuteResult {
+    public class ExecuteResult<T> {
 
         private final HttpRequest request;
-        private final HttpResponse<?> response;
+        private final HttpResponse<T> response;
 
-        private ExecuteResult(HttpRequest request, HttpResponse<?> response) {
+        private ExecuteResult(HttpRequest request, HttpResponse<T> response) {
             this.request = request;
             this.response = response;
         }
@@ -271,7 +310,7 @@ public class HTTPClient implements AutoCloseable {
             return request;
         }
 
-        public HttpResponse<?> response() {
+        public HttpResponse<T> response() {
             return response;
         }
     }
