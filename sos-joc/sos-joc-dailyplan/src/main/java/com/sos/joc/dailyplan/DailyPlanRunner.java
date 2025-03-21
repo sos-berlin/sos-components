@@ -751,23 +751,26 @@ public class DailyPlanRunner extends TimerTask {
     }
     
     // service
-    private void closeOldPlans(StartupMode startupMode, String controllerId, java.util.Calendar calendar, int ageOfPlansToBeClosedAutomatically)
-            throws SOSInvalidDataException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+    private void closeOldPlans(StartupMode startupMode, String controllerId, java.util.Calendar calendar, int ageOfPlansToBeClosedAutomatically) {
 
         if (ageOfPlansToBeClosedAutomatically > 0) {
-            calendar.add(java.util.Calendar.DATE, -1 * ageOfPlansToBeClosedAutomatically);
-            String date = SOSDate.getDateAsString(calendar);
-            LOGGER.info(String.format("[%s][closePlans][%s]older than %s", startupMode, controllerId, date));
-            PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.defaultPlanSchemaId);
-            Predicate<Map.Entry<PlanId, JPlan>> isDailyPlanPlan = e -> e.getKey().planSchemaId().equals(dailyPlanSchemaId);
-            Predicate<Map.Entry<PlanId, JPlan>> planIsOlder = e -> e.getKey().planKey().string().compareTo(date) < 1;
-            Predicate<Map.Entry<PlanId, JPlan>> isOpen = e -> !e.getValue().isClosed();
-            JControllerProxy proxy = Proxy.of(controllerId);
-            
-            proxy.currentState().toPlan().entrySet().stream().filter(isDailyPlanPlan).filter(planIsOlder).filter(isOpen).map(Map.Entry::getKey).map(
-                    pId -> JControllerCommand.changePlan(pId, JPlanStatus.Closed())).map(JControllerCommand::apply).forEach(command -> proxy.api()
-                            .executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, controllerId)));
+            try {
+                // calendar is DailyPlanHelper.getNextDayCalendar() -> (ageOfPlansToBeClosedAutomatically + 1)
+                calendar.add(java.util.Calendar.DATE, -1 * (ageOfPlansToBeClosedAutomatically + 1));
+                String date = SOSDate.getDateAsString(calendar);
+                LOGGER.info(String.format("[%s][closePlans][%s]older than %s", startupMode, controllerId, date));
+                PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.defaultPlanSchemaId);
+                Predicate<Map.Entry<PlanId, JPlan>> isDailyPlanPlan = e -> e.getKey().planSchemaId().equals(dailyPlanSchemaId);
+                Predicate<Map.Entry<PlanId, JPlan>> planIsOlder = e -> e.getKey().planKey().string().compareTo(date) < 1;
+                Predicate<Map.Entry<PlanId, JPlan>> isOpen = e -> !e.getValue().isClosed();
+                JControllerProxy proxy = Proxy.of(controllerId);
+
+                proxy.currentState().toPlan().entrySet().stream().filter(isDailyPlanPlan).filter(planIsOlder).filter(isOpen).map(Map.Entry::getKey)
+                        .map(pId -> JControllerCommand.changePlan(pId, JPlanStatus.Closed())).map(JControllerCommand::apply).forEach(command -> proxy
+                                .api().executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, controllerId)));
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s][closePlans][%s]fails: %s", startupMode, controllerId, e.toString()), e);
+            }
         }
     }
 
