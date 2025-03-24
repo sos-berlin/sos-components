@@ -3,10 +3,12 @@ package com.sos.controller.model.board;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.WorkflowTags;
 import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -26,6 +28,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "key",
     "endOfLife",
     "expectingOrders",
+    "expectingOrderIds",
     "workflowTagsPerWorkflow",
     "state"
 })
@@ -61,6 +64,14 @@ public class Notice {
     @JsonProperty("expectingOrders")
     private List<OrderV> expectingOrders = null;
     /**
+     * is empty if expectingOrders is filled
+     * 
+     */
+    @JsonProperty("expectingOrderIds")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("is empty if expectingOrders is filled")
+    private Set<String> expectingOrderIds = null;
+    /**
      * workflow tags
      * <p>
      * a map of workflowName -> tags-array
@@ -90,16 +101,18 @@ public class Notice {
      * @param workflowTagsPerWorkflow
      * @param id
      * @param state
+     * @param expectingOrderIds
      * @param key
      * @param endOfLife
      * @param expectingOrders
      */
-    public Notice(String id, String key, Date endOfLife, List<OrderV> expectingOrders, WorkflowTags workflowTagsPerWorkflow, NoticeState state) {
+    public Notice(String id, String key, Date endOfLife, List<OrderV> expectingOrders, Set<String> expectingOrderIds, WorkflowTags workflowTagsPerWorkflow, NoticeState state) {
         super();
         this.id = id;
         this.key = key;
         this.endOfLife = endOfLife;
         this.expectingOrders = expectingOrders;
+        this.expectingOrderIds = expectingOrderIds;
         this.workflowTagsPerWorkflow = workflowTagsPerWorkflow;
         this.state = state;
     }
@@ -185,6 +198,24 @@ public class Notice {
     }
 
     /**
+     * is empty if expectingOrders is filled
+     * 
+     */
+    @JsonProperty("expectingOrderIds")
+    public Set<String> getExpectingOrderIds() {
+        return expectingOrderIds;
+    }
+
+    /**
+     * is empty if expectingOrders is filled
+     * 
+     */
+    @JsonProperty("expectingOrderIds")
+    public void setExpectingOrderIds(Set<String> expectingOrderIds) {
+        this.expectingOrderIds = expectingOrderIds;
+    }
+
+    /**
      * workflow tags
      * <p>
      * a map of workflowName -> tags-array
@@ -230,7 +261,7 @@ public class Notice {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("key", key).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).append("workflowTagsPerWorkflow", workflowTagsPerWorkflow).append("state", state).toString();
+        return new ToStringBuilder(this).append("id", id).append("key", key).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).append("expectingOrderIds", expectingOrderIds).append("workflowTagsPerWorkflow", workflowTagsPerWorkflow).append("state", state).toString();
     }
 
     @Override

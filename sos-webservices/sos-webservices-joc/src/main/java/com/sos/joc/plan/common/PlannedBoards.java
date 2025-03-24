@@ -78,11 +78,11 @@ public class PlannedBoards {
     
     public PlannedBoards(BoardPath boardPath) {
         this.jBoards = Collections.singletonMap(boardPath, Collections.emptyList());
-        this.orders = Collections.emptyMap();
+        this.orders = null;
         this.compact = true;
         this.controllerState = null;
         this.withSysncState = false;
-        this.limitOrders = 0;
+        this.limitOrders = -1;
     }
     
     @SuppressWarnings("unchecked")
@@ -182,11 +182,20 @@ public class PlannedBoards {
         Notice notice = new Notice();
         notice.setId(noticeKeyShortString);
         if (!np.expectingOrderIds().isEmpty()) {
-            Stream<OrderV> expectingOrders = np.expectingOrderIds().stream().map(this.orders::get).filter(Objects::nonNull);
-            if (limitOrders > -1 && np.expectingOrderIds().size() > limitOrders) {
-                expectingOrders = expectingOrders.sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders.longValue());
+            if (this.orders != null) {
+                Stream<OrderV> expectingOrders = np.expectingOrderIds().stream().map(this.orders::get).filter(Objects::nonNull);
+                if (limitOrders > -1 && np.expectingOrderIds().size() > limitOrders) {
+                    expectingOrders = expectingOrders.sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders
+                            .longValue());
+                }
+                notice.setExpectingOrders(expectingOrders.collect(Collectors.toList()));
+            } else {
+                Stream<String> expectingOrderIds = np.expectingOrderIds().stream().map(OrderId::string);
+                if (limitOrders > -1 && np.expectingOrderIds().size() > limitOrders) {
+                    expectingOrderIds = expectingOrderIds.limit(limitOrders.longValue());
+                }
+                notice.setExpectingOrderIds(expectingOrderIds.collect(Collectors.toSet()));
             }
-            notice.setExpectingOrders(expectingOrders.collect(Collectors.toList()));
             // TODO notice.setWorkflowTagsPerWorkflow();
         }
         notice.setState(getState(NoticeStateText.EXPECTED, np.isAnnounced()));

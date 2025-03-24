@@ -42,9 +42,12 @@ import js7.data_for_java.board.JGlobalBoard;
 import js7.data_for_java.board.JPlannableBoard;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.value.JExprFunction;
 import js7.data_for_java.value.JExpression;
+import js7.data_for_java.workflow.position.JPosition;
+import js7.data_for_java.workflow.position.JWorkflowPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 
@@ -216,18 +219,17 @@ public class BoardConverter {
     }
     
     private static boolean hasConsumeOrders(JControllerState currentState, String workflowPath) {
-        return currentState.ordersBy(JOrderPredicates.byWorkflowPath(WorkflowPath.of(JocInventory.pathToName(workflowPath)))).anyMatch(
-                o -> o.workflowPosition().position().toString().contains("/consumeNotices"));
+        return currentState.ordersBy(JOrderPredicates.byWorkflowPath(WorkflowPath.of(JocInventory.pathToName(workflowPath)))).map(
+                JOrder::workflowPosition).map(JWorkflowPosition::position).map(JPosition::toString).anyMatch(s -> s.contains("/consumeNotices"));
     }
     
     private static void hasConsumeOrders(Set<WorkflowBoards> workflowsWithConsumeNotices, JControllerState currentState, String boardName) {
-        workflowsWithConsumeNotices.stream().filter(w -> w.hasConsumeNotice(boardName)).forEach(w -> {
-            if (hasConsumeOrders(currentState, w.getPath())) {
-                throw new JocBadRequestException(String.format(
-                        "Board type of '%s' cannot be changed. It is used in the Workflow '%s' that has still orders in a consumeNotices instruction",
-                        boardName, w.getPath()));
-            }
-        });
+        workflowsWithConsumeNotices.stream().filter(w -> w.hasConsumeNotice(boardName)).map(WorkflowBoards::getPath).filter(wPath -> hasConsumeOrders(
+                currentState, wPath)).findAny().map(wPath -> new JocBadRequestException(String.format(
+                        "Board type of '%s' cannot be changed. It is used in the Workflow '%s' that has still orders in a ConsumeNotices instruction",
+                        boardName, wPath))).ifPresent(ex -> {
+                            throw ex;
+                        });
     }
     
     @SuppressWarnings("unchecked")
@@ -252,19 +254,23 @@ public class BoardConverter {
     }
 
     public static CompletableFuture<Either<Problem, Response>> convert(JControllerApi api, Map<JBoardItem, JBoardItem> newOldBoards) {
+        return convert(newOldBoards).map(api::executeCommand).orElse(CompletableFuture.supplyAsync(() -> Either.right(null)));
+    }
+    
+    public static CompletableFuture<Either<Problem, Response>> convertFromDepItems(JControllerProxy proxy, Collection<DBItemDeploymentHistory> depItems) {
         try {
-            return convert(newOldBoards).map(api::executeCommand).orElse(CompletableFuture.supplyAsync(() -> Either.right(null)));
-        } catch (Exception e) {
+            return convert(proxy.api(), getNewOldBoardMapFromDepItems(depItems, proxy.currentState()));
+        } catch (Throwable e) {
             return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
         }
     }
     
-    public static CompletableFuture<Either<Problem, Response>> convertFromDepItems(JControllerProxy proxy, Collection<DBItemDeploymentHistory> depItems) {
-        return convert(proxy.api(), getNewOldBoardMapFromDepItems(depItems, proxy.currentState()));
-    }
-    
     public static CompletableFuture<Either<Problem, Response>> convertToFromControllerObjs(JControllerProxy proxy, Collection<ControllerObject> depItems) {
-        return convert(proxy.api(), getNewOldBoardMapFromControllerObjs(depItems, proxy.currentState()));
+        try {
+            return convert(proxy.api(), getNewOldBoardMapFromControllerObjs(depItems, proxy.currentState()));
+        } catch (Throwable e) {
+            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+        }
     }
 
 }

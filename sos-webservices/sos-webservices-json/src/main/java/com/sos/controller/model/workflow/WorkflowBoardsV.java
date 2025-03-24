@@ -19,14 +19,14 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "criticalOrderIds"
+    "dueOrderIds"
 })
 public class WorkflowBoardsV
     extends WorkflowBoards
 {
 
-    @JsonProperty("criticalOrderIds")
-    private Set<String> criticalOrderIds = null;
+    @JsonProperty("dueOrderIds")
+    private Set<String> dueOrderIds = null;
 
     /**
      * No args constructor for use in serialization
@@ -40,34 +40,34 @@ public class WorkflowBoardsV
      * @param expectNotices
      * @param path
      * @param versionId
-     * @param criticalOrderIds
+     * @param dueOrderIds
      * @param postNotices
      * @param consumeNotices
      * @param workflowTags
      */
-    public WorkflowBoardsV(Set<String> criticalOrderIds, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
+    public WorkflowBoardsV(Set<String> dueOrderIds, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
         super(postNotices, expectNotices, consumeNotices, workflowTags, path, versionId);
-        this.criticalOrderIds = criticalOrderIds;
+        this.dueOrderIds = dueOrderIds;
     }
 
-    @JsonProperty("criticalOrderIds")
-    public Set<String> getCriticalOrderIds() {
-        return criticalOrderIds;
+    @JsonProperty("dueOrderIds")
+    public Set<String> getDueOrderIds() {
+        return dueOrderIds;
     }
 
-    @JsonProperty("criticalOrderIds")
-    public void setCriticalOrderIds(Set<String> criticalOrderIds) {
-        this.criticalOrderIds = criticalOrderIds;
+    @JsonProperty("dueOrderIds")
+    public void setDueOrderIds(Set<String> criticalOrderIds) {
+        this.dueOrderIds = criticalOrderIds;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("criticalOrderIds", criticalOrderIds).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("dueOrderIds", dueOrderIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(criticalOrderIds).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(dueOrderIds).toHashCode();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class WorkflowBoardsV
             return false;
         }
         WorkflowBoardsV rhs = ((WorkflowBoardsV) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(criticalOrderIds, rhs.criticalOrderIds).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(dueOrderIds, rhs.dueOrderIds).isEquals();
     }
 
 }
