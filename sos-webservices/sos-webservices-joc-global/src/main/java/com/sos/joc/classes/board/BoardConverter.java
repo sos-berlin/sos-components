@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -19,9 +20,12 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
+import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.sign.model.board.Board;
@@ -31,12 +35,14 @@ import js7.base.problem.Problem;
 import js7.data.board.BoardPath;
 import js7.data.controller.ControllerCommand.Response;
 import js7.data.plan.PlanSchemaId;
+import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.board.JBoardItem;
 import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.board.JGlobalBoard;
 import js7.data_for_java.board.JPlannableBoard;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.value.JExprFunction;
 import js7.data_for_java.value.JExpression;
 import js7.proxy.javaapi.JControllerApi;
@@ -150,26 +156,33 @@ public class BoardConverter {
     
     private static Map<JBoardItem, JBoardItem> getNewOldBoardMapFromDepItems(Collection<DBItemDeploymentHistory> depItems,
             JControllerState currentState) {
-        return getNewOldBoardMapFromDepItems(depItems, currentState.pathToBoardState());
-    }
+        Map<BoardPath, JBoardState> pathToBoardState = currentState.pathToBoardState();
+        Set<WorkflowBoards> workflowsWithConsumeNotices = WorkflowRefs.getWorkflowNamesWithBoards(currentState.asScala().controllerId().string())
+                .values().stream().filter(b -> b.hasConsumeNotice() > 0).collect(Collectors.toSet());
 
-    private static Map<JBoardItem, JBoardItem> getNewOldBoardMapFromDepItems(Collection<DBItemDeploymentHistory> depItems,
-            Map<BoardPath, JBoardState> pathToBoardState) {
         Map<JBoardItem, JBoardItem> newOldBoards = new HashMap<>();
         depItems.stream().filter(i -> i.getType().equals(DeployType.NOTICEBOARD.intValue())).forEach(i -> {
-            if (i.readUpdateableContent() == null) {
-                try {
-                    i.writeUpdateableContent(Globals.objectMapper.readValue(i.getInvContent(), Board.class));
-                } catch (Exception e) {
-                    throw new DBInvalidDataException("", e);
-                }
-            }
-            Board newBoard = (Board) i.readUpdateableContent();
-
-            newBoard.setPath(i.getName());
             JBoardState oldBoard = pathToBoardState.get(BoardPath.of(i.getName()));
             if (oldBoard != null) {
-                newOldBoards.put(getJBoard(newBoard), oldBoard.board());
+                if (i.readUpdateableContent() == null) {
+                    try {
+                        i.writeUpdateableContent(Globals.objectMapper.readValue(i.getInvContent(), Board.class));
+                    } catch (Exception e) {
+                        throw new DBInvalidDataException("", e);
+                    }
+                }
+                Board newBoard = (Board) i.readUpdateableContent();
+
+                newBoard.setPath(i.getName());
+                JBoardItem jNewBoard = getJBoard(newBoard);
+                
+                // if change necessary then check if order exists in consumeNotices block
+                if ((oldBoard.asScala().isGlobal() && !jNewBoard.asScala().isGlobal()) || (!oldBoard.asScala().isGlobal() && jNewBoard.asScala()
+                        .isGlobal())) {
+                    hasConsumeOrders(workflowsWithConsumeNotices, currentState, i.getName());
+                }
+                
+                newOldBoards.put(jNewBoard, oldBoard.board());
             }
         });
         return newOldBoards;
@@ -177,22 +190,44 @@ public class BoardConverter {
     
     private static Map<JBoardItem, JBoardItem> getNewOldBoardMapFromControllerObjs(Collection<ControllerObject> cObjs,
             JControllerState currentState) {
-        return getNewOldBoardMapFromControllerObjs(cObjs, currentState.pathToBoardState());
-    }
-    
-    private static Map<JBoardItem, JBoardItem> getNewOldBoardMapFromControllerObjs(Collection<ControllerObject> cObjs,
-            Map<BoardPath, JBoardState> pathToBoardState) {
+        Map<BoardPath, JBoardState> pathToBoardState = currentState.pathToBoardState();
         Map<JBoardItem, JBoardItem> newOldBoards = new HashMap<>();
+        Set<WorkflowBoards> workflowsWithConsumeNotices = WorkflowRefs.getWorkflowNamesWithBoards(currentState.asScala().controllerId().string())
+                .values().stream().filter(b -> b.hasConsumeNotice() > 0).collect(Collectors.toSet());
+        
         cObjs.stream().filter(i -> i.getObjectType().equals(DeployType.NOTICEBOARD)).forEach(i -> {
             String boardName = JocInventory.pathToName(i.getPath());
-            Board newBoard = (Board) i.getContent();
-            newBoard.setPath(boardName);
             JBoardState oldBoard = pathToBoardState.get(BoardPath.of(boardName));
             if (oldBoard != null) {
-                newOldBoards.put(getJBoard(newBoard), oldBoard.board());
+                Board newBoard = (Board) i.getContent();
+                newBoard.setPath(boardName);
+                JBoardItem jNewBoard = getJBoard(newBoard);
+                
+                // if change necessary then check if order exists in consumeNotices block
+                if ((oldBoard.asScala().isGlobal() && !jNewBoard.asScala().isGlobal()) || (!oldBoard.asScala().isGlobal() && jNewBoard.asScala()
+                        .isGlobal())) {
+                    hasConsumeOrders(workflowsWithConsumeNotices, currentState, boardName);
+                }
+                
+                newOldBoards.put(jNewBoard, oldBoard.board());
             }
         });
         return newOldBoards;
+    }
+    
+    private static boolean hasConsumeOrders(JControllerState currentState, String workflowPath) {
+        return currentState.ordersBy(JOrderPredicates.byWorkflowPath(WorkflowPath.of(JocInventory.pathToName(workflowPath)))).anyMatch(
+                o -> o.workflowPosition().position().toString().contains("/consumeNotices"));
+    }
+    
+    private static void hasConsumeOrders(Set<WorkflowBoards> workflowsWithConsumeNotices, JControllerState currentState, String boardName) {
+        workflowsWithConsumeNotices.stream().filter(w -> w.hasConsumeNotice(boardName)).forEach(w -> {
+            if (hasConsumeOrders(currentState, w.getPath())) {
+                throw new JocBadRequestException(String.format(
+                        "Board type of '%s' cannot be changed. It is used in the Workflow '%s' that has still orders in a consumeNotices instruction",
+                        boardName, w.getPath()));
+            }
+        });
     }
     
     @SuppressWarnings("unchecked")
@@ -217,7 +252,11 @@ public class BoardConverter {
     }
 
     public static CompletableFuture<Either<Problem, Response>> convert(JControllerApi api, Map<JBoardItem, JBoardItem> newOldBoards) {
-        return convert(newOldBoards).map(api::executeCommand).orElse(CompletableFuture.supplyAsync(() -> Either.right(null)));
+        try {
+            return convert(newOldBoards).map(api::executeCommand).orElse(CompletableFuture.supplyAsync(() -> Either.right(null)));
+        } catch (Exception e) {
+            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+        }
     }
     
     public static CompletableFuture<Either<Problem, Response>> convertFromDepItems(JControllerProxy proxy, Collection<DBItemDeploymentHistory> depItems) {
