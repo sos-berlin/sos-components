@@ -1691,7 +1691,7 @@ public abstract class PublishUtils {
     }
     
     public static boolean checkCertificateIsSelfIssued(X509Certificate cert) {
-        return cert.getIssuerDN().equals(cert.getSubjectDN());
+        return cert.getIssuerX500Principal().equals(cert.getSubjectX500Principal());
     }
 
     public static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {

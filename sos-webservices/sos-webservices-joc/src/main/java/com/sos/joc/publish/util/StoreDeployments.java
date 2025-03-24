@@ -314,7 +314,7 @@ public class StoreDeployments {
                             }
                         });
                     } else {
-                        signerDN = cert.getSubjectDN().getName();
+                        signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN);
                         
@@ -353,7 +353,7 @@ public class StoreDeployments {
                             }
                         });
                     } else {
-                        signerDN = cert.getSubjectDN().getName();
+                        signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN);
                         

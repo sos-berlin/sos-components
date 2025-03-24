@@ -115,7 +115,7 @@
         <configuration>
           <source>17</source>
           <target>17</target>
-          <optimize>true</optimize>
+          <!-- <optimize>true</optimize> -->
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
         </configuration>

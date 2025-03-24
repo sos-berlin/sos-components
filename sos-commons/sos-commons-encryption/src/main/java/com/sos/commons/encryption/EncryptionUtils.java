@@ -59,9 +59,9 @@ public class EncryptionUtils {
     return new IvParameterSpec(iv);
   }
 
-  public static SecretKey generateSecretKey(int n) throws NoSuchAlgorithmException {
+  public static SecretKey generateSecretKey(int keySize) throws NoSuchAlgorithmException {
     KeyGenerator keyGenerator = KeyGenerator.getInstance(KEY_ALGORITHM);
-    keyGenerator.init(n);
+    keyGenerator.init(keySize);
     SecretKey key = keyGenerator.generateKey();
     return key;
   }

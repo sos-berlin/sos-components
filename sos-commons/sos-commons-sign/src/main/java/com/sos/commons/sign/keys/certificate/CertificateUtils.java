@@ -33,10 +33,10 @@ public abstract class CertificateUtils {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(CertificateUtils.class);
 	
-	public static String getCommonName(X509Certificate cert) throws InvalidNameException {
-	    LdapName ldapName = new LdapName(cert.getSubjectDN().toString());
-		return ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
-	}
+    public static String getCommonName(X509Certificate cert) throws InvalidNameException {
+        LdapName ldapName = new LdapName(cert.getSubjectX500Principal().getName());
+        return ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
+    }
 
 	public static void logCertificateInfo(X509Certificate certificate) {
 		if (certificate != null) {
@@ -53,15 +53,13 @@ public abstract class CertificateUtils {
 			if(!licenceCheckMessage.isEmpty()) {
 				LOGGER.info(licenceCheckMessage);
 			}
-			LOGGER.info("Subject DN: " + certificate.getSubjectDN().getName());
+			LOGGER.info("Subject DN: " + certificate.getSubjectX500Principal().getName());
             try {
 				LOGGER.info("CN: " + CertificateUtils.getCommonName(certificate));
 			} catch (InvalidNameException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
-//			String subjectPrincipalName = certificate.getSubjectX500Principal().getName();
-			LOGGER.info("Issuer DN: " + certificate.getIssuerDN().getName());
-//			String issuerPrincipalName = certificate.getIssuerX500Principal().getName();
+			LOGGER.info("Issuer DN: " + certificate.getIssuerX500Principal().getName());
 			LOGGER.info("Version: v" + certificate.getVersion());
 			LOGGER.info("Type: " + certificate.getType());
 			LOGGER.info("Serial Number: " + certificate.getSerialNumber());
