@@ -40,7 +40,7 @@ public class PlanSchemas {
         {
             put(defaultPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(defaultPlanSchemaId), 
                     JExprFunction.apply("(day) => $day >= $unknownPlansAreOpenFrom").asScala(),
-                    Collections.singletonMap("$unknownPlansAreOpenFrom", StringValue.empty())));
+                    Collections.singletonMap("unknownPlansAreOpenFrom", StringValue.empty())));
         }
     });
 
