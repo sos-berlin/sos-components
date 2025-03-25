@@ -2,6 +2,8 @@ package com.sos.joc.classes.inventory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +55,12 @@ public class PublishSemaphore {
     
     private void _remove(String accessToken) {
         if(semaphores.containsKey(accessToken)) {
-            semaphores.remove(accessToken);
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    semaphores.remove(accessToken);
+                }
+            }, TimeUnit.MINUTES.toMillis(2));
         }
     }
     
