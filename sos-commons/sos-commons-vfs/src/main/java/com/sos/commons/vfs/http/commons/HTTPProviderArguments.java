@@ -10,6 +10,8 @@ public class HTTPProviderArguments extends AProviderArguments {
 
     public static final int DEFAULT_PORT = 80;
 
+    // declared here and not in HTTSPProviderArguments, because WebDAV extends HTTPProviderArguments and uses the same implementation logic
+    // otherwise, the WebDAVSPProviderArguments should extend HTTSPProviderArguments and not the WebDAVPProviderArguments ...
     private SSLArguments ssl;
 
     // JS7 new - auth_method - not in the XML schema - currently only BASIC supported

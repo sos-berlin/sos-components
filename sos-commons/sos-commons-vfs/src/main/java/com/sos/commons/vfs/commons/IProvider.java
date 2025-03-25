@@ -174,6 +174,15 @@ public interface IProvider {
      * @throws ProviderException if an error occurs while retrieving the input stream */
     public InputStream getInputStream(String path) throws ProviderException;
 
+    /** Called after the InputStream for the given path is closed.
+     * 
+     * This method is useful for handling any cleanup tasks or signaling operations required after reading is complete.<br/>
+     * For example, in the Apache FTP implementation, this corresponds to calling {@code client.completePendingCommand()} after finishing the read process.
+     *
+     * @param path The path that was read from.
+     * @throws ProviderException If an error occurs during the post-processing. */
+    public void onInputStreamClosed(String path) throws ProviderException;
+
     /** Retrieves an {@link OutputStream} for the file at the specified path.<br/>
      * The file will be opened in append mode if the 'append' parameter is true, otherwise, it will overwrite the existing content.
      * 
@@ -182,6 +191,15 @@ public interface IProvider {
      * @return an {@link OutputStream} for writing content to the file
      * @throws ProviderException if an error occurs while retrieving the output stream */
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException;
+
+    /** Called after the OutputStream for the given path is closed.
+     * 
+     * This method is used for any finalization or cleanup tasks required after writing is complete.<br/>
+     * In the context of the Apache FTP implementation, this would be the place to call {@code client.completePendingCommand()} to finalize the FTP transaction.
+     *
+     * @param path The path that was written to.
+     * @throws ProviderException If an error occurs during the post-processing. */
+    public void onOutputStreamClosed(String path) throws ProviderException;
 
     /** Executes the specified command and returns the result.
      * 

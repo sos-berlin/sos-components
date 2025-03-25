@@ -1,5 +1,6 @@
 package com.sos.yade.engine.handlers.command;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.util.SOSString;
@@ -250,18 +251,24 @@ public class YADECommandExecutor {
             return;
         }
 
-        StringBuilder sb = new StringBuilder("[result]");
-        sb.append("[exitCode=").append(result.getExitCode()).append("]");
+        List<String> l = new ArrayList<>();
+        if (!successExitCode) {
+            l.add("exitCode=" + result.getExitCode());
+        }
         if (hasStdOut) {
-            sb.append("[std:out=").append(result.getStdOut().trim()).append("]");
+            l.add("std:out=" + result.getStdOut().trim());
         }
         if (hasStdErr) {
-            sb.append("[std:err=").append(result.getStdErr().trim()).append("]");
+            l.add("std:err=" + result.getStdErr().trim());
         }
         if (hasException) {
-            sb.append("[exception=").append(result.getException()).append("]");
+            l.add("exception=" + result.getException());
         }
-        logger.info(msg + sb);
+        if (l.size() > 1) {
+            logger.info(msg + "[result][" + String.join("][", l) + "]");
+        } else {
+            logger.info(msg + "[result]" + l.get(0));
+        }
     }
 
     /** TODO getSource/getTarget ??? */

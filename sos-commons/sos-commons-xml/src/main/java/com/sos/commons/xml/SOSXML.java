@@ -39,24 +39,40 @@ public class SOSXML {
     public static final String DEFAULT_XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     public static Document parse(StringBuilder xml) throws Exception {
-        return parse(xml.toString());
+        return parse(xml, false);
+    }
+
+    public static Document parse(StringBuilder xml, boolean namespaceAware) throws Exception {
+        return parse(xml.toString(), namespaceAware);
     }
 
     public static Document parse(String xml) throws Exception {
-        return parse(new InputSource(new StringReader(xml)));
+        return parse(xml, false);
+    }
+
+    public static Document parse(String xml, boolean namespaceAware) throws Exception {
+        return parse(new InputSource(new StringReader(xml)), namespaceAware);
     }
 
     public static Document parse(InputStream is) throws Exception {
-        return parse(new InputSource(is));
+        return parse(is, false);
+    }
+
+    public static Document parse(InputStream is, boolean namespaceAware) throws Exception {
+        return parse(new InputSource(is), namespaceAware);
     }
 
     public static Document parse(Path path) throws Exception {
-        return parse(new InputSource(Files.newInputStream(path)));
+        return parse(path, false);
     }
 
-    public static Document parse(InputSource is) throws Exception {
+    public static Document parse(Path path, boolean namespaceAware) throws Exception {
+        return parse(new InputSource(Files.newInputStream(path)), namespaceAware);
+    }
+
+    public static Document parse(InputSource is, boolean namespaceAware) throws Exception {
         try {
-            return getDocumentBuilder().parse(is);
+            return getDocumentBuilder(namespaceAware).parse(is);
         } catch (SAXException e) {
             if (e.getMessage().toUpperCase().contains("DOCTYPE")) {
                 throw new SOSXMLDoctypeException("A DOCTYPE was passed into the XML document", e);

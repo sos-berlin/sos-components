@@ -36,6 +36,10 @@ public class YADESourceTargetArguments extends ASOSArguments {
     }
 
     public YADEProviderCommandArguments getCommands() {
+        if (commands == null) {
+            commands = new YADEProviderCommandArguments();
+            commands.applyDefaultIfNullQuietly();
+        }
         return commands;
     }
 

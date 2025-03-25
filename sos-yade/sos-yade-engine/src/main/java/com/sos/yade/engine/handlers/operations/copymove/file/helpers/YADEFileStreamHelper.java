@@ -58,8 +58,37 @@ public class YADEFileStreamHelper {
             }
             targetStream.flush();
         } catch (Throwable e) {
-            logger.warn("[comressFinish][%s]%s", targetFile.getFullPath(), e.toString());
+            logger.warn("[finishTargetOutputStream][%s]%s", targetFile.getFullPath(), e.toString());
         }
+    }
+
+    public static void onStreamsClosed(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile,
+            YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws ProviderException {
+
+        ProviderException is = null;
+        ProviderException os = null;
+        try {
+            sourceDelegator.getProvider().onInputStreamClosed(sourceFile.getFullPath());
+        } catch (ProviderException e) {
+            is = e;
+        }
+        try {
+            targetDelegator.getProvider().onOutputStreamClosed(targetFile.getFullPath());
+        } catch (ProviderException e) {
+            os = e;
+        }
+        if (is != null && os != null) {
+            ProviderException combined = new ProviderException(
+                    "Error occurred during the execution of post-processing for InputStream and OutputStream closure.");
+            combined.addSuppressed(is);
+            combined.addSuppressed(os);
+            throw combined;
+        } else if (is != null) {
+            throw is;
+        } else if (os != null) {
+            throw os;
+        }
+
     }
 
 }

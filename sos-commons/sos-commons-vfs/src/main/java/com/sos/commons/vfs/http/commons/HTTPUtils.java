@@ -55,7 +55,7 @@ public class HTTPUtils {
     }
 
     /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>
-     * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePath(URI, String)}).<br>
+     * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePathEncoded(URI, String)}).<br>
      * Without a trailing slash, relative resolution may produce incorrect results.
      * 
      * See toBaseURI(String)
@@ -88,14 +88,22 @@ public class HTTPUtils {
      *
      * @param path The input path, which can be relative or absolute.
      * @return A properly normalized and encoded URL string. */
-    public static String normalizePath(URI baseURI, String path) {
-        // return baseURI.resolve(path).normalize().toString();
+    public static String normalizePathEncoded(URI baseURI, String path) {
         try {
             // new URI(null, path, null) not throw an exception if the path contains invalid characters
             return baseURI.resolve(new URI(null, path, null)).normalize().toString();
         } catch (URISyntaxException e) {
-            return baseURI.resolve(path).normalize().toString();
+            return normalizePath(baseURI, path);
         }
+    }
+
+    /** Normalizes the given path by resolving it against the base URI - without encoding
+     * 
+     * @param baseURI
+     * @param path
+     * @return */
+    public static String normalizePath(URI baseURI, String path) {
+        return baseURI.resolve(path).normalize().toString();
     }
 
     public static URI getParentURI(final URI uri) {
@@ -103,23 +111,36 @@ public class HTTPUtils {
             return null;
         }
         // root or no path information available
-        if (uri.getPath() == null || uri.getPath().equals("/")) {
+        if (SOSString.isEmpty(uri.getPath()) || uri.getPath().equals("/")) {
             return uri;
         }
         // uri.getPath().substring(0, uri.getPath().lastIndexOf('/'));
         // new URI(uri.getScheme(), uri.getHost(), newPath, null, null)
-        try {
-            // must end with / to enable resolution, otherwise incorrect result
-            URI normalizedUri = uri.getPath().endsWith("/") ? uri : new URI(uri.toString() + "/");
-            return normalizedUri.resolve("..").normalize();
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("[URISyntaxException]" + uri, e);
+
+        // must end with / to enable resolution, otherwise incorrect result
+        URI directoryUri = ensureDirectoryURI(uri);
+        return directoryUri.resolve("..").normalize();
+    }
+
+    public static URI ensureDirectoryURI(URI uri) {
+        if (uri.getPath() != null && !uri.getPath().endsWith("/")) {
+            return URI.create(uri.toString() + "/");
         }
+        return uri;
     }
 
     public static String encode(String input) {
         // URLEncoder.encode converts blank to +
         return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    public static String decode(URI uri) {
+        return decode(uri.toString());
+    }
+
+    public static String decode(String uri) {
+        // e.g. converts %20 to blank etc
+        return URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8);
     }
 
     public static String toValidFileSystemName(String input) {
@@ -349,7 +370,7 @@ public class HTTPUtils {
     }
 
     /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>
-     * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePath(URI, String)}).<br>
+     * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePathEncoded(URI, String)}).<br>
      * Without a trailing slash, relative resolution may produce incorrect results.
      * 
      * @param spec Absolute HTTP path

@@ -7,11 +7,11 @@ import com.hierynomus.smbj.share.DiskShare;
 import com.hierynomus.smbj.share.File;
 import com.sos.commons.util.SOSClassUtil;
 
-public class SMBOutputStream extends OutputStream {
+public class SMBJOutputStream extends OutputStream {
 
     private final DiskShare share;
     private final File file;
-    private final OutputStream fileOutputStream;
+    private final OutputStream os;
 
     /** @param accessMaskMaximumAllowed
      * @param share
@@ -19,25 +19,30 @@ public class SMBOutputStream extends OutputStream {
      *            match the expected format.
      * @param append
      * @throws IOException */
-    public SMBOutputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final String smbPath, boolean append) throws IOException {
+    public SMBJOutputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final String smbPath, boolean append) throws IOException {
         this.share = share;
-        this.file = ProviderUtils.openFileWithWriteAccess(accessMaskMaximumAllowed, share, smbPath, append);
-        this.fileOutputStream = file.getOutputStream(append);
+        this.file = SMBJProviderUtils.openFileWithWriteAccess(accessMaskMaximumAllowed, share, smbPath, append);
+        this.os = file.getOutputStream(append);
     }
 
     @Override
     public void write(int b) throws IOException {
-        fileOutputStream.write(b);
+        os.write(b);
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        fileOutputStream.write(b, off, len);
+        os.write(b, off, len);
+    }
+
+    @Override
+    public void flush() throws IOException {
+        os.flush();
     }
 
     @Override
     public void close() throws IOException {
-        SOSClassUtil.closeQuietly(fileOutputStream);
+        SOSClassUtil.closeQuietly(os);
         SOSClassUtil.closeQuietly(file);
         SOSClassUtil.closeQuietly(share);
 

@@ -22,6 +22,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
+import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
@@ -30,8 +31,6 @@ import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
-import com.sos.commons.vfs.http.commons.HTTPAuthConfig;
-import com.sos.commons.vfs.http.commons.HTTPAuthMethod;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.http.commons.HTTPOutputStream;
@@ -39,9 +38,15 @@ import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 
-/** TODO - parallelism<br/>
- * - HTTPProvider is a Source - seems to work<br/>
- * - HTTPProvider is a Target - doesn't work */
+/** TODO<br/>
+ * - Parallelism<br/>
+ * -- HTTPProvider is a Source - seems to work<br/>
+ * -- HTTPProvider is a Target - doesn't work<br/>
+ * - How to implement not chunked transfer?<br/>
+ * -- set Content-Lenght throws the java.lang.IllegalArgumentException: restricted header name: "Content-Length" Exception...<br/>
+ * - When using an HTTP Proxy, the exception "[411]Length Required" is thrown....<br/>
+ * -- [411]Length Required - Server rejected the request because the Content-Length header field is not defined and the server requires<br/>
+ */
 public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     private HTTPClient client;
@@ -73,7 +78,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return HTTPUtils.normalizePath(baseURI, path);
+        return HTTPUtils.normalizePathEncoded(baseURI, path);
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -86,8 +91,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             getLogger().info(getConnectMsg());
 
-            client = HTTPClient.createAuthenticatedClient(getLogger(), getBaseURI(), createAuthConfig(), getProxyProvider(), getArguments().getSSL(),
-                    getArguments().getHTTPHeaders().getValue());
+            client = HTTPClient.createAuthenticatedClient(this);
             connect(getBaseURI());
 
             getLogger().info(getConnectedMsg());
@@ -129,7 +133,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
         URI uri = null;
         try {
-            uri = new URI(normalizePath(path));
+            uri = new URI(normalizePathEncoded(path));
 
             ExecuteResult<Void> result = client.executeHEADOrGET(uri);
             int code = result.response().statusCode();
@@ -162,7 +166,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("deleteIfExists", path, "path");
 
         try {
-            URI uri = new URI(normalizePath(path));
+            URI uri = new URI(normalizePathEncoded(path));
 
             ExecuteResult<Void> result = client.executeDELETE(uri);
             int code = result.response().statusCode();
@@ -236,8 +240,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             deleteIfExists(target);
 
-            URI sourceURI = new URI(normalizePath(source));
-            URI targetURI = new URI(normalizePath(target));
+            URI sourceURI = new URI(normalizePathEncoded(source));
+            URI targetURI = new URI(normalizePathEncoded(target));
 
             ExecuteResult<Void> result;
             int code;
@@ -310,7 +314,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getFileIfExists", path, "path");
 
         try {
-            URI uri = new URI(normalizePath(path));
+            URI uri = new URI(normalizePathEncoded(path));
 
             ExecuteResult<Void> result = client.executeGET(uri);
             int code = result.response().statusCode();
@@ -337,8 +341,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
-        try (InputStream is = client.getHTTPInputStream(new URI(normalizePath(path))); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8);
-                BufferedReader br = new BufferedReader(r)) {
+        try (InputStream is = client.getHTTPInputStream(new URI(normalizePathEncoded(path))); Reader r = new InputStreamReader(is,
+                StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
             return content.toString();
         } catch (SOSNoSuchFileException e) {
@@ -372,7 +376,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getInputStream", path, "path");
 
         try {
-            return client.getHTTPInputStream(new URI(normalizePath(path)));
+            return client.getHTTPInputStream(new URI(normalizePathEncoded(path)));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -387,7 +391,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
-            return new HTTPOutputStream(client, new URI(normalizePath(path)), false);
+            return new HTTPOutputStream(client, new URI(normalizePathEncoded(path)), false);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -402,7 +406,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validateArgument("upload", source, "InputStream source");
 
         try {
-            URI uri = new URI(normalizePath(path));
+            URI uri = new URI(normalizePathEncoded(path));
             ExecuteResult<Void> result = client.executePUT(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HTTPUtils.isSuccessful(code)) {
@@ -432,7 +436,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("writeFile", path, "path");
 
         try {
-            URI uri = new URI(normalizePath(path));
+            URI uri = new URI(normalizePathEncoded(path));
 
             ExecuteResult<Void> result = client.executePUT(uri, content, isWebDAV);
             int code = result.response().statusCode();
@@ -442,15 +446,6 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
-    }
-
-    public HTTPAuthConfig createAuthConfig() {
-        if (HTTPAuthMethod.NTLM.equals(getArguments().getAuthMethod().getValue())) {
-            return new HTTPAuthConfig(getLogger(), getArguments().getUser().getValue(), getArguments().getPassword().getValue(), getArguments()
-                    .getWorkstation().getValue(), getArguments().getDomain().getValue());
-        }
-        // BASIC
-        return new HTTPAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
     }
 
     public URI getBaseURI() {
@@ -468,6 +463,14 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     public void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
         validatePrerequisites(method);
         validateArgument(method, argValue, msg);
+    }
+
+    public String normalizePathEncoded(String path) {
+        return HTTPUtils.normalizePathEncoded(baseURI, path);
+    }
+
+    public boolean isSecureConnectionEnabled() {
+        return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) || Protocol.WEBDAVS.equals(getArguments().getProtocol().getValue());
     }
 
     private void connect(URI uri) throws Exception {

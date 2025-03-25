@@ -32,11 +32,9 @@ public abstract class ASOSArguments {
             if (current.getName() == null) {
                 continue;
             }
-            if (current.getDefaultValue() != null) {
-                if (current.getValue() == null || current.getValue().equals(current.getDefaultValue())) {
-                    current.setValue(current.getDefaultValue());
-                    f.set(this, current);
-                }
+            if (current.getDefaultValue() != null && current.isEmpty()) {
+                current.setValue(current.getDefaultValue());
+                f.set(this, current);
             }
         }
     }

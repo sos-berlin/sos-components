@@ -58,10 +58,10 @@ public class YADEFileHandler {
     public void run(boolean useCumulativeTargetFile) throws YADEEngineTransferFileException {
         this.sourceFile.resetSteady();
 
+        String logPrefix = config.getParallelism() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
+                .currentThread().getName();
+        YADETargetProviderFile targetFile = null;
         try {
-            String logPrefix = config.getParallelism() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
-                    .currentThread().getName();
-            YADETargetProviderFile targetFile;
             // 1) Target - initialize/get Target file
             if (useCumulativeTargetFile) {
                 targetFile = config.getTarget().getCumulate().getFile();
@@ -123,7 +123,7 @@ public class YADEFileHandler {
                         break l;
                     } catch (Throwable e) {
                         attempts++;
-                        handleException(e, attempts, logPrefix, targetFile);
+                        handleException(logPrefix, targetFile, e, attempts);
                     }
                 }
             } else {
@@ -135,6 +135,7 @@ public class YADEFileHandler {
                                             targetOutputStream) : targetOutputStream) {
                         if (attempts > 0) {
                             YADEFileStreamHelper.skipSourceInputStreamToPosition(sourceStream, targetFile);
+                            // if skip is not used - targetFile.getBytesProcessed() should be reset
                         }
 
                         if (useCumulativeTargetFile && !isCumulateTargetWritten) {
@@ -171,7 +172,9 @@ public class YADEFileHandler {
                         break l;
                     } catch (Throwable e) {
                         attempts++;
-                        handleException(e, attempts, logPrefix, targetFile);
+                        handleException(logPrefix, targetFile, e, attempts);
+                    } finally {
+                        YADEFileStreamHelper.onStreamsClosed(logger, sourceDelegator, sourceFile, targetDelegator, targetFile);
                     }
                 }
                 YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, compressTarget);
@@ -200,7 +203,7 @@ public class YADEFileHandler {
         } catch (YADEEngineTransferFileException e) {
             throw e;
         } catch (Throwable e) {
-            throw new YADEEngineTransferFileException(e);
+            throwException(logPrefix, targetFile, e, "");
         }
     }
 
@@ -274,7 +277,7 @@ public class YADEFileHandler {
         return info;
     }
 
-    private void handleException(Throwable e, int attempts, String logPrefix, YADETargetProviderFile targetFile) throws YADEEngineException {
+    private void handleException(String logPrefix, YADETargetProviderFile targetFile, Throwable e, int attempts) throws YADEEngineException {
         boolean throwException = false;
         String throwExceptionAdd = "";
         if (YADEProviderDelegatorHelper.isSourceOrTargetNotConnected(sourceDelegator, targetDelegator)) {
@@ -291,11 +294,20 @@ public class YADEFileHandler {
             throwException = true;
         }
         if (throwException) {
+            throwException(logPrefix, targetFile, e, throwExceptionAdd);
+        } else {
             String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), targetDelegator
                     .getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
-            logger.error(msg);
-            throw new YADEEngineTransferFileException(msg, e);
+            logger.warn(msg);
         }
+    }
+
+    private void throwException(String logPrefix, YADETargetProviderFile targetFile, Throwable e, String throwExceptionAdd)
+            throws YADEEngineTransferFileException {
+        String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), targetDelegator
+                .getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
+        logger.error(msg);
+        throw new YADEEngineTransferFileException(msg, e);
     }
 
 }

@@ -13,6 +13,7 @@ import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
@@ -50,7 +51,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         // before proxyProvider
         resolveCredentialStore(additionalCredentialStoreArg);
         this.proxyProvider = this.arguments == null ? null : ProxyProvider.createInstance(this.arguments.getProxy());
-
     }
 
     /** Validates that all required global properties (e.g., client, session) are properly initialized and not null.<br/>
@@ -120,6 +120,18 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     @Override
     public String toPathStyle(String path) {
         return SOSPathUtils.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtils.toUnixStyle(path) : SOSPathUtils.toWindowsStyle(path);
+    }
+
+    /** Overrides {@link IProvider#onInputStreamClosed(String)} */
+    @Override
+    public void onInputStreamClosed(String path) throws ProviderException {
+
+    }
+
+    /** Overrides {@link IProvider#onOutputStreamClosed(String)} */
+    @Override
+    public void onOutputStreamClosed(String path) throws ProviderException {
+
     }
 
     /** Overrides {@link IProvider#executeCommand(String)} */
@@ -335,6 +347,17 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public static boolean isValidModificationTime(long milliseconds) {
         return milliseconds > 0;
+    }
+
+    public void logIfHostnameVerificationDisabled(SSLArguments args) {
+        if (!args.getVerifyCertificateHostname().isTrue()) {
+            logger.info("*********************** Security warning *********************************************************************");
+            logger.info("YADE option \"%s\" is currently \"false\" for %s connections. ", args.getVerifyCertificateHostname().getName(),
+                    getArguments().getProtocol().getValue());
+            logger.info("The certificate verification process will not verify the DNS name of the certificate presented by the server,");
+            logger.info(" with the hostname of the server used by the YADE client connection.");
+            logger.info("**************************************************************************************************************");
+        }
     }
 
     public void logNotImpementedMethod(String methodName, String add) {

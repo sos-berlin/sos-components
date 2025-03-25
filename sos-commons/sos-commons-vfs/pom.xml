@@ -29,6 +29,12 @@
 
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-xml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-credentialstore</artifactId>
 			<version>${project.version}</version>
 		</dependency>

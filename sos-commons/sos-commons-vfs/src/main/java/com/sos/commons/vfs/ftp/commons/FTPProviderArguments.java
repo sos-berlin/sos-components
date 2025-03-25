@@ -30,6 +30,11 @@ public class FTPProviderArguments extends AProviderArguments {
         getUser().setRequired(true);
     }
 
+    // internal use to avoid calling the default empty FTPProviderArguments constructor when initializing FTPSProviderArguments
+    protected FTPProviderArguments(Object dummy) {
+        getUser().setRequired(true);
+    }
+
     public boolean isBinaryTransferMode() {
         return TransferMode.BINARY.equals(transferMode.getValue());
     }

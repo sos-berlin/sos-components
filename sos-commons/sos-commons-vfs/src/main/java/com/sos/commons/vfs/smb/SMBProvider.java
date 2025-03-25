@@ -15,7 +15,7 @@ public abstract class SMBProvider extends AProvider<SMBProviderArguments> {
     private String shareName;
 
     public static SMBProvider createInstance(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
-        return new com.sos.commons.vfs.smb.smbj.ProviderImpl(logger, args);
+        return new com.sos.commons.vfs.smb.smbj.SMBJProviderImpl(logger, args);
     }
 
     protected SMBProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {

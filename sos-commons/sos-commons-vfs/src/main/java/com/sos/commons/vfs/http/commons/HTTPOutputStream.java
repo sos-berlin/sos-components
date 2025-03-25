@@ -31,6 +31,11 @@ public class HTTPOutputStream extends OutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         buffer.write(b, off, len);
     }
+    
+    @Override
+    public void flush() throws IOException {
+        buffer.flush();
+    }
 
     @Override
     public void close() throws IOException {

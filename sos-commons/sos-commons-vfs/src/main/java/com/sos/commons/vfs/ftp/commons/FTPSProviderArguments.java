@@ -3,7 +3,7 @@ package com.sos.commons.vfs.ftp.commons;
 import org.apache.commons.net.ftp.FTPSClient;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
+import com.sos.commons.util.arguments.impl.SSLArguments;
 
 public class FTPSProviderArguments extends FTPProviderArguments {
 
@@ -11,45 +11,41 @@ public class FTPSProviderArguments extends FTPProviderArguments {
         EXPLICIT, IMLICIT;
     }
 
-    private JavaKeyStoreArguments javaKeyStore;
+    private SSLArguments ssl;
 
     private SOSArgument<SecurityMode> securityMode = new SOSArgument<>("ftps_client_security", false, SecurityMode.EXPLICIT);
-    // SSL,TLS - "TLSv1.3,TLSv1.2" ???
-    // TODO YADE1 default SSL, FTPSClient.DEFAULT_PROTOCOL=TLS
-    private SOSArgument<String> protocols = new SOSArgument<>("ftps_protocol", false, "SSL");
 
     public FTPSProviderArguments() {
+        super(null);// use super dummy,no-op constructor
         getProtocol().setValue(Protocol.FTPS);
-        getUser().setRequired(true);
+    }
+
+    public SSLArguments getSSL() {
+        if (ssl == null) {
+            ssl = new SSLArguments();
+            ssl.applyDefaultIfNullQuietly();
+        }
+        return ssl;
+    }
+
+    public void setSSL(SSLArguments val) {
+        ssl = val;
     }
 
     @Override
     public SOSArgument<Integer> getPort() {
-        if (getPort().isEmpty()) {
-            getPort().setValue(isSecurityModeImplicit() ? Integer.valueOf(FTPSClient.DEFAULT_FTPS_PORT) : Integer.valueOf(DEFAULT_PORT));
+        if (super.getPort().isEmpty()) {
+            super.getPort().setValue(isSecurityModeImplicit() ? Integer.valueOf(FTPSClient.DEFAULT_FTPS_PORT) : Integer.valueOf(DEFAULT_PORT));
         }
-        return getPort();
+        return super.getPort();
     }
 
     public boolean isSecurityModeImplicit() {
         return SecurityMode.IMLICIT.equals(securityMode.getValue());
     }
 
-    public SOSArgument<String> getProtocols() {
-        return protocols;
-    }
-
-    @SuppressWarnings("unused")
-    private SOSArgument<SecurityMode> getSecurityMode() {
+    public SOSArgument<SecurityMode> getSecurityMode() {
         return securityMode;
-    }
-
-    public JavaKeyStoreArguments getJavaKeyStore() {
-        return javaKeyStore;
-    }
-
-    public void setJavaKeyStore(JavaKeyStoreArguments val) {
-        javaKeyStore = val;
     }
 
 }

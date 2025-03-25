@@ -1,5 +1,6 @@
 package com.sos.commons.vfs.ftp.commons;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -13,7 +14,7 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 
-public class ProviderUtils {
+public class FTPProviderUtils {
 
     // possible recursion
     public static List<ProviderFile> selectFiles(FTPProvider provider, ProviderFileSelection selection, String directoryPath,
@@ -28,26 +29,26 @@ public class ProviderUtils {
     }
 
     private static int list(FTPProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result, int counterAdded)
-            throws ProviderException {
-        try {
-            FTPFile[] subDirInfos = provider.getClient().listFiles(directoryPath);
-            for (FTPFile subResource : subDirInfos) {
-                if (selection.maxFilesExceeded(counterAdded)) {
-                    return counterAdded;
-                }
-                counterAdded = processListEntry(provider, selection, directoryPath, subResource, result, counterAdded);
+            throws Exception {
+        FTPFile[] subDirInfos = provider.getClient().listFiles(directoryPath);
+        FTPProtocolReply reply = new FTPProtocolReply(provider.getClient());
+        if (!reply.isPositiveReply()) {
+            throw new IOException(reply.toString());
+        }
+        for (FTPFile subResource : subDirInfos) {
+            if (selection.maxFilesExceeded(counterAdded)) {
+                return counterAdded;
             }
-        } catch (Throwable e) {
-            throw new ProviderException(e);
+            counterAdded = processListEntry(provider, selection, directoryPath, subResource, result, counterAdded);
         }
         return counterAdded;
     }
 
     // TODO resource.getName() - path???
     private static int processListEntry(FTPProvider provider, ProviderFileSelection selection, String parentDirectory, FTPFile resource,
-            List<ProviderFile> result, int counterAdded) throws ProviderException {
+            List<ProviderFile> result, int counterAdded) throws Exception {
 
-        String fullPath = SOSPathUtils.appendPath(parentDirectory, resource.getName());
+        String fullPath = SOSPathUtils.appendPath(parentDirectory, resource.getName(), provider.getPathSeparator());
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
                 if (selection.checkDirectory(fullPath)) {
@@ -94,6 +95,10 @@ public class ProviderUtils {
 
     public static void deleteDirectoryFilesRecursively(FTPClient client, String pathSeparator, String path) throws Exception {
         FTPFile[] children = client.listFiles(path);
+        FTPProtocolReply reply = new FTPProtocolReply(client);
+        if (!reply.isPositiveReply()) {
+            throw new IOException(reply.toString());
+        }
         if (!SOSCollection.isEmpty(children)) {
             for (FTPFile child : children) {
                 String childPath = path + pathSeparator + child.getName();

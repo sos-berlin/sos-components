@@ -33,7 +33,7 @@ import net.schmizz.sshj.userauth.method.PasswordResponseProvider;
 import net.schmizz.sshj.userauth.password.PasswordFinder;
 import net.schmizz.sshj.userauth.password.Resource;
 
-public class SSHClientFactory {
+public class SSHJClientFactory {
 
     protected static SSHClient createAuthenticatedClient(SSHProviderArguments args, ProxyProvider proxyProvider) throws Exception {
         /** 1) Create */

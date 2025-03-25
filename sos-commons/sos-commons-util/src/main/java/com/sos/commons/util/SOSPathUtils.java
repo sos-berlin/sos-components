@@ -117,6 +117,14 @@ public class SOSPathUtils {
         return path.matches(REGEXP_ABSOLUTE_WINDOWS_UNC_PATH);
     }
 
+    public static String toAbsoluteUnixPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return path;
+        }
+        String n = toUnixStyle(Path.of(path).normalize().toString());
+        return n.startsWith("/") ? n : "/" + n;
+    }
+
     /** Returns:<br/>
      * path=null: null<br/>
      * path="/": null<br/>

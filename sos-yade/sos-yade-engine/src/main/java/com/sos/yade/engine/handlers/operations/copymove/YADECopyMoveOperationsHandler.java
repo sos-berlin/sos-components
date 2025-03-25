@@ -244,7 +244,7 @@ public class YADECopyMoveOperationsHandler {
                     if (y.getTarget() == null) {
                         // set state on sourceFile for Summary if target was not initialized(e.g. error occurs in a previous file)
                         y.setState(TransferEntryState.SELECTED);
-                        y.setSubState(TransferEntryState.ROLLED_BACK);
+                        y.setSubState(TransferEntryState.ABORTED);
                         return null;
                     }
                     return y.getTarget().isTransferredOrTransferring() ? y : null;

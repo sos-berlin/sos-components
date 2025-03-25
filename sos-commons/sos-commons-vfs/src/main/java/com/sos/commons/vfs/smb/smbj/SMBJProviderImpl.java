@@ -50,14 +50,14 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.smb.SMBProvider;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
-public class ProviderImpl extends SMBProvider {
+public class SMBJProviderImpl extends SMBProvider {
 
     private SMBClient client = null;
     private Session session = null;
 
     private boolean accessMaskMaximumAllowed = false;
 
-    public ProviderImpl(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
+    public SMBJProviderImpl(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
     }
 
@@ -125,13 +125,15 @@ public class ProviderImpl extends SMBProvider {
                 return false;
             }
             FileIdBothDirectoryInformation r = (FileIdBothDirectoryInformation) fileRepresentator;
-            return (!ProviderUtils.isDirectory(r) && getArguments().getValidFileTypes().getValue().contains(FileType.REGULAR));
+            return (!SMBJProviderUtils.isDirectory(r) && getArguments().getValidFileTypes().getValue().contains(FileType.REGULAR));
         });
 
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
         List<ProviderFile> result = new ArrayList<>();
         try (DiskShare share = connectShare(directory)) {
-            ProviderUtils.list(this, selection, getSMBPath(directory), result, share, 0);
+            SMBJProviderUtils.list(this, selection, getSMBPath(directory), result, share, 0);
+        } catch (ProviderException e) {
+            throw e;
         } catch (Throwable e) {
             throw new ProviderException(e);
         }
@@ -158,6 +160,9 @@ public class ProviderImpl extends SMBProvider {
 
         try (DiskShare share = connectShare(path)) {
             new SmbFiles().mkdirs(share, getSMBPath(path));
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+            }
             return true;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -176,7 +181,7 @@ public class ProviderImpl extends SMBProvider {
             } catch (SMBApiException e) {
                 return false;// not exists
             }
-            if (ProviderUtils.isDirectory(info)) {
+            if (SMBJProviderUtils.isDirectory(info)) {
                 share.rmdir(getSMBPath(path), true);
             } else {
                 share.rm(getSMBPath(path));
@@ -228,7 +233,7 @@ public class ProviderImpl extends SMBProvider {
         try (DiskShare share = connectShare(source)) {
             String sourceSMBPath = getSMBPath(source);
             if (share.fileExists(sourceSMBPath)) {
-                try (File sourceFile = ProviderUtils.openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, sourceSMBPath)) {
+                try (File sourceFile = SMBJProviderUtils.openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, sourceSMBPath)) {
                     sourceFile.rename(getSMBPath(target), true);
                 }
                 return true;
@@ -255,7 +260,7 @@ public class ProviderImpl extends SMBProvider {
                 try {
                     String sourceSMBPath = getSMBPath(source);
                     if (share.fileExists(sourceSMBPath)) {
-                        try (File sourceFile = ProviderUtils.openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, sourceSMBPath)) {
+                        try (File sourceFile = SMBJProviderUtils.openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, sourceSMBPath)) {
                             sourceFile.rename(getSMBPath(target), true);
                             r.addSuccess();
                         }
@@ -298,7 +303,7 @@ public class ProviderImpl extends SMBProvider {
         validatePrerequisites("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
-        try (InputStream is = new SMBInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path)); Reader r = new InputStreamReader(is,
+        try (InputStream is = new SMBJInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path)); Reader r = new InputStreamReader(is,
                 StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
             return content.toString();
@@ -314,7 +319,7 @@ public class ProviderImpl extends SMBProvider {
     public void writeFile(String path, String content) throws ProviderException {
         validatePrerequisites("writeFile", path, "path");
 
-        try (OutputStream os = new SMBOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), false)) {
+        try (OutputStream os = new SMBJOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), false)) {
             os.write(content.getBytes(StandardCharsets.UTF_8));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -328,7 +333,7 @@ public class ProviderImpl extends SMBProvider {
         validateModificationTime(path, milliseconds);
 
         try (DiskShare share = connectShare(path)) {
-            try (File file = ProviderUtils.openExistingFileWithChangeAttributeAccess(accessMaskMaximumAllowed, share, getSMBPath(path))) {
+            try (File file = SMBJProviderUtils.openExistingFileWithChangeAttributeAccess(accessMaskMaximumAllowed, share, getSMBPath(path))) {
                 FileBasicInformation info = file.getFileInformation().getBasicInformation();
                 FileTime lastModified = FileTime.ofEpochMillis(milliseconds);
                 // sets lastWriteTime,changeTime to lastModified
@@ -346,7 +351,7 @@ public class ProviderImpl extends SMBProvider {
         validatePrerequisites("getInputStream", path, "path");
 
         try {
-            return new SMBInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path));
+            return new SMBJInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -358,7 +363,7 @@ public class ProviderImpl extends SMBProvider {
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
-            return new SMBOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), append);
+            return new SMBJOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), append);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }

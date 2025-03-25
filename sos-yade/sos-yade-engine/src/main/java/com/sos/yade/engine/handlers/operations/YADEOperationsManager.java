@@ -29,7 +29,7 @@ public class YADEOperationsManager {
             List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator, AtomicBoolean cancel) throws Exception {
 
         Instant start = Instant.now();
-        logger.info("[%s]start...", args.getOperation().getValue());
+        //logger.info("[%s]start...", args.getOperation().getValue());
 
         TransferOperation operation = args.getOperation().getValue();
         switch (operation) {

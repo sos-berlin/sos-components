@@ -18,12 +18,19 @@ import com.sos.commons.util.arguments.impl.SSLArguments;
 
 public class SOSSSLContextFactory {
 
+    /** TLS (Transport Layer Security) is the successor to SSL (Secure Sockets Layer) and is now considered the secure standard.<br/>
+     * - SSL is outdated and considered insecure (especially SSLv2 and SSLv3)<br/>
+     * - TLS (starting from TLSv1.2 and TLSv1.3) is more secure and is used in modern systems <br/>
+     */
+    public static final String DEFAULT_PROTOCOL = "TLS";
+
     public static SSLContext create(SSLArguments args) throws Exception {
         if (args == null) {
             throw new SOSMissingDataException("SSLArguments");
         }
         // Standard TLS without enforcing a specific protocol
-        SSLContext sslContext = SSLContext.getInstance("TLS");
+        // This can include TLSv1.0, TLSv1.1, TLSv1.2, TLSv1.3, depending on the supported version in the Java environment.
+        SSLContext sslContext = SSLContext.getInstance(DEFAULT_PROTOCOL);
 
         SOSJavaKeyStoreResult result = SOSJavaKeyStoreReader.read(args.getJavaKeyStore());
         if (result == null) {
@@ -38,8 +45,12 @@ public class SOSSSLContextFactory {
             }
         }
         if (!args.getProtocols().isEmpty()) {
-            // Set explicitly supported protocols
-            sslContext.createSSLEngine().setEnabledProtocols(args.getProtocols().getValue().stream().toArray(String[]::new));
+            // Remove "TLS", accepts only e.g. "TLSv1.1", "TLSv1.2", "TLSv1.3" ...
+            String[] filtered = args.getProtocols().getValue().stream().filter(p -> !DEFAULT_PROTOCOL.equalsIgnoreCase(p)).toArray(String[]::new);
+            if (filtered.length > 0) {
+                // Set explicitly supported protocols: e.g. "TLSv1.2", "TLSv1.3"
+                sslContext.createSSLEngine().setEnabledProtocols(filtered);
+            }
         }
         return sslContext;
     }

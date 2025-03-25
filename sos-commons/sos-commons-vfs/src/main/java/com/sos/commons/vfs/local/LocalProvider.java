@@ -3,7 +3,6 @@ package com.sos.commons.vfs.local;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.UnknownHostException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -128,6 +127,9 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                 return false;
             }
             Files.createDirectories(p);
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+            }
             return true;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -471,14 +473,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     }
 
     private void setAccessInfo() {
-        try {
-            getArguments().getHost().setValue(SOSShell.getHostname());
-        } catch (UnknownHostException e) {
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[setHostname]%s", getLogPrefix(), e.toString());
-            }
-        }
-        getArguments().getUser().setValue(SOSShell.getUsername());
         setAccessInfo(String.format("%s@%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue()));
     }
 

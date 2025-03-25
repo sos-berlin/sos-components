@@ -20,8 +20,8 @@ import com.sos.commons.vfs.http.HTTPProvider;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.http.commons.HTTPUtils;
-import com.sos.commons.vfs.webdav.commons.ProviderUtils;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
+import com.sos.commons.vfs.webdav.commons.WebDAVProviderUtils;
 import com.sos.commons.vfs.webdav.commons.WebDAVResource;
 
 public class WebDAVProvider extends HTTPProvider {
@@ -39,7 +39,7 @@ public class WebDAVProvider extends HTTPProvider {
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
         List<ProviderFile> result = new ArrayList<>();
         try {
-            ProviderUtils.selectFiles(this, selection, directory, result);
+            WebDAVProviderUtils.selectFiles(this, selection, directory, result);
         } catch (ProviderException e) {
             throw e;
         }
@@ -52,7 +52,7 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("exists", path, "path");
 
         try {
-            return ProviderUtils.exists(getClient(), new URI(normalizePath(path)));
+            return WebDAVProviderUtils.exists(getClient(), new URI(normalizePathEncoded(path)));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -73,24 +73,24 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("createDirectoriesIfNotExists", path, "path");
 
         try {
-            URI uri = new URI(normalizePath(path));
-            if (ProviderUtils.directoryExists(getClient(), uri)) {
+            URI uri = new URI(normalizePathEncoded(path));
+            if (WebDAVProviderUtils.directoryExists(this, uri)) {
                 return false; // already exists
             }
 
-            Deque<URI> toCreate = new ArrayDeque<>();
+            Deque<URI> parentsToCreate = new ArrayDeque<>();
             URI parent = HTTPUtils.getParentURI(uri);
-            while (parent != null && !parent.equals(uri) && !ProviderUtils.directoryExists(getClient(), parent)) {
-                toCreate.push(parent);
+            while (parent != null && !parent.equals(uri) && !WebDAVProviderUtils.directoryExists(this, parent)) {
+                parentsToCreate.push(parent);
                 parent = HTTPUtils.getParentURI(parent);
             }
-
-            boolean created = false;
-            while (!toCreate.isEmpty()) {
-                ProviderUtils.createDirectory(getClient(), toCreate.pop());
-                created = true;
+            // create parent directories
+            while (!parentsToCreate.isEmpty()) {
+                WebDAVProviderUtils.createDirectory(this, parentsToCreate.pop());
             }
-            return created;
+            // create given directory
+            WebDAVProviderUtils.createDirectory(this, uri);
+            return true;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -102,8 +102,8 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("renameFileIfSourceExists", source, "source");
         validateArgument("renameFileIfSourceExists", target, "target");
         try {
-            URI sourceURI = new URI(normalizePath(source));
-            URI targetURI = new URI(normalizePath(target));
+            URI sourceURI = new URI(normalizePathEncoded(source));
+            URI targetURI = new URI(normalizePathEncoded(target));
 
             HttpRequest.Builder builder = getClient().createRequestBuilder(sourceURI);
             builder.header("Destination", targetURI.toString());
@@ -127,7 +127,7 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("getFileIfExists", path, "path");
 
         try {
-            return createProviderFile(ProviderUtils.getResource(getClient(), new URI(normalizePath(path))));
+            return createProviderFile(WebDAVProviderUtils.getResource(this, new URI(normalizePathEncoded(path))));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -157,7 +157,8 @@ public class WebDAVProvider extends HTTPProvider {
         if (resource.getSize() < 0) {
             return null;
         }
-        return createProviderFile(resource.getHref(), resource.getSize(), resource.getLastModifiedInMillis());
+        return createProviderFile(HTTPUtils.decode(resource.getURI()), resource.getSize(), resource.getLastModifiedInMillis());
+        // return createProviderFile(resource.getURI().toString(), resource.getSize(), resource.getLastModifiedInMillis());
     }
 
 }

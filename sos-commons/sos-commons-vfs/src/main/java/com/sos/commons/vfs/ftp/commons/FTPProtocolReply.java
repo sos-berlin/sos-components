@@ -49,6 +49,14 @@ public class FTPProtocolReply {
         return FTPReply.isPositiveCompletion(code);
     }
 
+    public int getCode() {
+        return code;
+    }
+
+    public String getText() {
+        return text;
+    }
+
     @Override
     public String toString() {
         return "[" + code + "]" + text;

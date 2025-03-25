@@ -24,7 +24,7 @@ import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.sftp.SFTPException;
 import net.schmizz.sshj.xfer.FileSystemFile;
 
-public class ProviderUtils {
+public class SSHJProviderUtils {
 
     protected static boolean is(ISOSLogger logger, String logPrefix, SFTPClient sftp, String path, FileMode.Type type) {
         try {
@@ -112,7 +112,7 @@ public class ProviderUtils {
     }
 
     // possible recursion
-    protected static List<ProviderFile> selectFiles(ProviderImpl provider, ProviderFileSelection selection, String directoryPath,
+    protected static List<ProviderFile> selectFiles(SSHJProviderImpl provider, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws ProviderException {
         int counterAdded = 0;
         try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
@@ -158,8 +158,8 @@ public class ProviderUtils {
         sftp.rmdir(path);
     }
 
-    private static int list(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            int counterAdded) throws ProviderException {
+    private static int list(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
+            List<ProviderFile> result, int counterAdded) throws ProviderException {
         try {
             List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
             for (RemoteResourceInfo subResource : subDirInfos) {
@@ -168,13 +168,15 @@ public class ProviderUtils {
                 }
                 counterAdded = processListEntry(provider, sftp, selection, subResource, result, counterAdded);
             }
+            return counterAdded;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Throwable e) {
             throw new ProviderException(e);
         }
-        return counterAdded;
     }
 
-    private static int processListEntry(ProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
+    private static int processListEntry(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
             List<ProviderFile> result, int counterAdded) throws ProviderException {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {

@@ -20,9 +20,8 @@ import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSSSLContextFactory;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
+import com.sos.commons.vfs.http.HTTPProvider;
 
 public class HTTPClient implements AutoCloseable {
 
@@ -49,14 +48,14 @@ public class HTTPClient implements AutoCloseable {
      * -- Otherwise, a exists check should contain, for example, 302 (Found), 304 (Not Modified)...<br/>
      * - No manual redirect handling required for DELETE, GET, or other operations.<br/>
      */
-    public static HTTPClient createAuthenticatedClient(ISOSLogger logger, URI baseURI, HTTPAuthConfig authConfig, ProxyProvider proxyProvider,
-            SSLArguments sslArgs, List<String> defaultHeaders) throws Exception {
+    public static HTTPClient createAuthenticatedClient(HTTPProvider provider) throws Exception {
+        HTTPAuthConfig authConfig = createAuthConfig(provider);
 
         HttpClient.Builder builder = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30));
         builder.followRedirects(HttpClient.Redirect.ALWAYS);
 
         String ntlmMAuthToken = null;
-        if (proxyProvider == null) {
+        if (provider.getProxyProvider() == null) {
             if (authConfig.getNTLM() == null) {
                 if (!SOSString.isEmpty(authConfig.getUsername())) {
                     builder.authenticator(new Authenticator() {
@@ -71,24 +70,29 @@ public class HTTPClient implements AutoCloseable {
                 ntlmMAuthToken = HTTPUtils.getNTLMAuthToken(authConfig.getNTLM());
             }
         } else {
-            builder.proxy(java.net.ProxySelector.of(new InetSocketAddress(proxyProvider.getHost(), proxyProvider.getPort())));
-            if (proxyProvider.hasUserAndPassword()) {
+            builder.proxy(java.net.ProxySelector.of(new InetSocketAddress(provider.getProxyProvider().getHost(), provider.getProxyProvider()
+                    .getPort())));
+
+            if (provider.getProxyProvider().hasUserAndPassword()) {
                 builder.authenticator(new Authenticator() {
 
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(proxyProvider.getUser(), proxyProvider.getPassword().toCharArray());
+                        return new PasswordAuthentication(provider.getProxyProvider().getUser(), provider.getProxyProvider().getPassword()
+                                .toCharArray());
                     }
                 });
             }
 
         }
 
-        // Client builder
-        setSSLContext(logger, sslArgs, baseURI.getScheme(), builder);
+        if (provider.isSecureConnectionEnabled()) {
+            provider.logIfHostnameVerificationDisabled(provider.getArguments().getSSL());
+            builder.sslContext(SOSSSLContextFactory.create(provider.getArguments().getSSL()));
+        }
 
         HTTPClient client = new HTTPClient(builder.build(), ntlmMAuthToken);
-        client.setHeaders(logger, defaultHeaders);
+        client.setHeaders(provider.getLogger(), provider.getArguments().getHTTPHeaders().getValue());
         return client;
     }
 
@@ -217,31 +221,21 @@ public class HTTPClient implements AutoCloseable {
         return chunkedTransfer;
     }
 
+    private static HTTPAuthConfig createAuthConfig(HTTPProvider provider) {
+        if (HTTPAuthMethod.NTLM.equals(provider.getArguments().getAuthMethod().getValue())) {
+            return new HTTPAuthConfig(provider.getLogger(), provider.getArguments().getUser().getValue(), provider.getArguments().getPassword()
+                    .getValue(), provider.getArguments().getWorkstation().getValue(), provider.getArguments().getDomain().getValue());
+        }
+        // BASIC
+        return new HTTPAuthConfig(provider.getArguments().getUser().getValue(), provider.getArguments().getPassword().getValue());
+    }
+
     private HttpRequest createGETRequest(URI uri) {
         return createRequestBuilder(uri).GET().build();
     }
 
     private HttpRequest createHEADRequest(URI uri) {
         return createRequestBuilder(uri).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
-    }
-
-    private static void setSSLContext(ISOSLogger logger, SSLArguments args, String baseURLScheme, HttpClient.Builder builder) throws Exception {
-        if (baseURLScheme.equalsIgnoreCase("https")) {
-            if (args == null) {
-                throw new Exception(("[HTTPClient][setSSLContext]missing SSLArguments"));
-            }
-
-            if (!args.getVerifyCertificateHostname().isTrue()) {
-                // clientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-
-                logger.info("*********************** Security warning *********************************************************************");
-                logger.info("YADE option \"%s\" is currently \"false\". ", args.getVerifyCertificateHostname().getName());
-                logger.info("The certificate verification process will not verify the DNS name of the certificate presented by the server,");
-                logger.info("with the hostname of the server in the URL used by the YADE client.");
-                logger.info("**************************************************************************************************************");
-            }
-            builder.sslContext(SOSSSLContextFactory.create(args));
-        }
     }
 
     private void setHeaders(ISOSLogger logger, List<String> defaultHeaders) {

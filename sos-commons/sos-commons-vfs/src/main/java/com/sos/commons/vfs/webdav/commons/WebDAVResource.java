@@ -1,21 +1,23 @@
 package com.sos.commons.vfs.webdav.commons;
 
+import java.net.URI;
+
 public class WebDAVResource {
 
-    private final String href;
+    private final URI uri;
     private final boolean isDirectory;
     private final long size;
     private final long lastModifiedInMillis;
 
-    public WebDAVResource(String href, boolean isDirectory, long size, long lastModifiedInMillis) {
-        this.href = href;
+    public WebDAVResource(URI uri, boolean isDirectory, long size, long lastModifiedInMillis) {
+        this.uri = uri;
         this.isDirectory = isDirectory;
         this.size = size;
         this.lastModifiedInMillis = lastModifiedInMillis;
     }
 
-    public String getHref() {
-        return href;
+    public URI getURI() {
+        return uri;
     }
 
     public boolean isDirectory() {
@@ -33,7 +35,7 @@ public class WebDAVResource {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("href=").append(href);
+        sb.append("uri=").append(uri);
         sb.append("isDirectory=").append(isDirectory);
         sb.append("size=").append(size);
         sb.append("lastModifiedInMillis=").append(lastModifiedInMillis);

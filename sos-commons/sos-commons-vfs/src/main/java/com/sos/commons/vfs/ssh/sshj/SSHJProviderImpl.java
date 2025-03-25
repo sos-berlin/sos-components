@@ -54,12 +54,12 @@ import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.xfer.FileSystemFile;
 
-public class ProviderImpl extends SSHProvider {
+public class SSHJProviderImpl extends SSHProvider {
 
     private SSHClient sshClient;
     private Map<String, Command> commands = new ConcurrentHashMap<>();
 
-    public ProviderImpl(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
+    public SSHJProviderImpl(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
     }
 
@@ -72,11 +72,11 @@ public class ProviderImpl extends SSHProvider {
         try {
             getLogger().info(getConnectMsg());
 
-            sshClient = SSHClientFactory.createAuthenticatedClient(getArguments(), getProxyProvider());
+            sshClient = SSHJClientFactory.createAuthenticatedClient(getArguments(), getProxyProvider());
             setServerVersion(sshClient.getTransport().getServerVersion());
             getServerInfo();
 
-            getLogger().info(getConnectedMsg(ProviderUtils.getConnectedInfos(sshClient)));
+            getLogger().info(getConnectedMsg(SSHJProviderUtils.getConnectedInfos(sshClient)));
         } catch (Throwable e) {
             if (isConnected()) {
                 disconnect();
@@ -124,7 +124,7 @@ public class ProviderImpl extends SSHProvider {
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
         List<ProviderFile> result = new ArrayList<>();
         try {
-            ProviderUtils.selectFiles(this, selection, directory, result);
+            SSHJProviderUtils.selectFiles(this, selection, directory, result);
         } catch (ProviderException e) {
             throw e;
         }
@@ -137,7 +137,7 @@ public class ProviderImpl extends SSHProvider {
         validatePrerequisites("exists", path, "path");
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            return ProviderUtils.exists(sftp, path);
+            return SSHJProviderUtils.exists(sftp, path);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -149,10 +149,13 @@ public class ProviderImpl extends SSHProvider {
         validatePrerequisites("createDirectoriesIfNotExists", path, "path");
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            if (ProviderUtils.exists(sftp, path)) {
+            if (SSHJProviderUtils.exists(sftp, path)) {
                 return false;
             }
             sftp.mkdirs(path);
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+            }
             return true;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -167,7 +170,7 @@ public class ProviderImpl extends SSHProvider {
 
         try {
             try (SFTPClient sftp = sshClient.newSFTPClient()) {
-                ProviderUtils.delete(sftp, path);
+                SSHJProviderUtils.delete(sftp, path);
                 return true;
             } catch (SOSNoSuchFileException e) {
                 return false;
@@ -191,8 +194,8 @@ public class ProviderImpl extends SSHProvider {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
             l: for (String file : files) {
                 try {
-                    if (ProviderUtils.exists(sftp, file)) {
-                        ProviderUtils.delete(sftp, file);
+                    if (SSHJProviderUtils.exists(sftp, file)) {
+                        SSHJProviderUtils.delete(sftp, file);
                         r.addSuccess();
                     } else {
                         r.addNotFound(file);
@@ -217,8 +220,8 @@ public class ProviderImpl extends SSHProvider {
         validateArgument("renameFileIfSourceExists", target, "target");
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            if (ProviderUtils.exists(sftp, source)) {
-                ProviderUtils.rename(sftp, source, target);
+            if (SSHJProviderUtils.exists(sftp, source)) {
+                SSHJProviderUtils.rename(sftp, source, target);
                 return true;
             }
             return false;
@@ -243,8 +246,8 @@ public class ProviderImpl extends SSHProvider {
                 String source = entry.getKey();
                 String target = entry.getValue();
                 try {
-                    if (ProviderUtils.exists(sftp, source)) {
-                        ProviderUtils.rename(sftp, source, target);
+                    if (SSHJProviderUtils.exists(sftp, source)) {
+                        SSHJProviderUtils.rename(sftp, source, target);
                         r.addSuccess(source, target);
                     } else {
                         r.addNotFound(source);
@@ -282,7 +285,7 @@ public class ProviderImpl extends SSHProvider {
         validatePrerequisites("getFileContentIfExists", path, "path");
 
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            if (!ProviderUtils.exists(sftp, path)) {
+            if (!SSHJProviderUtils.exists(sftp, path)) {
                 return null;
             }
 
@@ -480,7 +483,7 @@ public class ProviderImpl extends SSHProvider {
     @Override
     public void put(String source, String target, int perm) throws ProviderException {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            ProviderUtils.put(sftp, source, target);
+            SSHJProviderUtils.put(sftp, source, target);
             sftp.chmod(target, perm);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "][perm=" + perm + "]", e);
@@ -491,7 +494,7 @@ public class ProviderImpl extends SSHProvider {
     @Override
     public void put(String source, String target) throws ProviderException {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            ProviderUtils.put(sftp, source, target);
+            SSHJProviderUtils.put(sftp, source, target);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
@@ -553,7 +556,7 @@ public class ProviderImpl extends SSHProvider {
     }
 
     protected ProviderFile createProviderFile(String path, FileAttributes attr) {
-        return createProviderFile(path, attr.getSize(), ProviderUtils.getFileLastModifiedMillis(attr));
+        return createProviderFile(path, attr.getSize(), SSHJProviderUtils.getFileLastModifiedMillis(attr));
     }
 
     private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {

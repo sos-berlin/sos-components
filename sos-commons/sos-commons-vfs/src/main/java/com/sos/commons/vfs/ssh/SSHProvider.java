@@ -22,7 +22,7 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
     private String serverVersion;
 
     public static SSHProvider createInstance(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
-        return new com.sos.commons.vfs.ssh.sshj.ProviderImpl(logger, args);
+        return new com.sos.commons.vfs.ssh.sshj.SSHJProviderImpl(logger, args);
     }
 
     protected SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
@@ -65,7 +65,7 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
             String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
             return toPathStyle(n);
         }
-        return toPathStyle(Path.of(path).normalize().toString());
+        return SOSPathUtils.toAbsoluteUnixPath(path);
     }
 
     public SSHServerInfo getServerInfo() {

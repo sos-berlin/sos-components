@@ -32,7 +32,7 @@ public class YADEProviderDelegatorFactory {
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
     public static YADESourceProviderDelegator createSourceDelegator(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs)
             throws YADEEngineInitializationException {
-        return new YADESourceProviderDelegator(initializeProvider(logger, "Source", args, sourceArgs.getProvider()), sourceArgs);
+        return new YADESourceProviderDelegator(initializeProvider(logger, args, sourceArgs.getProvider(), false), sourceArgs);
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
@@ -41,11 +41,13 @@ public class YADEProviderDelegatorFactory {
         if (!YADEArgumentsHelper.needTargetProvider(args)) {
             return null;
         }
-        return new YADETargetProviderDelegator(initializeProvider(logger, "Target", args, targetArgs.getProvider()), targetArgs);
+        return new YADETargetProviderDelegator(initializeProvider(logger, args, targetArgs.getProvider(), true), targetArgs);
     }
 
-    private static IProvider initializeProvider(ISOSLogger logger, String identifier, YADEArguments args, AProviderArguments providerArgs)
+    private static IProvider initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, boolean isTarget)
             throws YADEEngineInitializationException {
+
+        String identifier = isTarget ? "Target" : "Source";
         if (providerArgs == null) {
             throw new YADEEngineInitializationException(new SOSMissingDataException("[" + identifier + "]YADEProviderArguments"));
         }
@@ -69,7 +71,9 @@ public class YADEProviderDelegatorFactory {
             case HTTP:
             case HTTPS:
                 p = new HTTPProvider(logger, (HTTPProviderArguments) providerArgs);
-                //args.getParallelism().setValue(1);
+                if (isTarget) {
+                    args.getParallelism().setValue(1);
+                }
                 break;
             case SFTP:
             case SSH:
@@ -81,6 +85,9 @@ public class YADEProviderDelegatorFactory {
             case WEBDAV:
             case WEBDAVS:
                 p = new WebDAVProvider(logger, (WebDAVProviderArguments) providerArgs);
+                if (isTarget) {
+                    args.getParallelism().setValue(1);
+                }
                 break;
             case UNKNOWN:
             default:
