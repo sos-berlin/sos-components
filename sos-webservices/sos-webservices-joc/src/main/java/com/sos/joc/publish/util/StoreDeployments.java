@@ -32,6 +32,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.board.BoardConverter;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
+import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -234,6 +235,11 @@ public class StoreDeployments {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
+            try {
+                PublishSemaphore.release(accessToken);
+            } catch (Exception e) {
+                // DO NOTHING if semaphore release failed
+            }
         }
     }
 

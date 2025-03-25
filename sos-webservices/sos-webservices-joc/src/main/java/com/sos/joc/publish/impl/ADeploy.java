@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JsonConverter;
+import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
@@ -67,6 +69,10 @@ public abstract class ADeploy extends JOCResourceImpl {
 
     public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession,
             DBItemJocAuditLog dbAuditlog, String account, JocSecurityLevel secLvl, String apiCall) throws Exception {
+        if (PublishSemaphore.getQueueLength(xAccessToken) == 0) {
+            TimeUnit.MILLISECONDS.sleep(50);
+        }
+        PublishSemaphore.tryAcquire(xAccessToken);
         
         Set<String> allowedControllerIds = Collections.emptySet();
         allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
