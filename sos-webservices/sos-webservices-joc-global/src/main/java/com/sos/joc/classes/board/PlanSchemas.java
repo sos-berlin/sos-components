@@ -39,8 +39,8 @@ public class PlanSchemas {
 
         {
             put(defaultPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(defaultPlanSchemaId), 
-                    Optional.of(JExprFunction.apply("(day) => $day < $thresholdDay").asScala()),
-                    Collections.singletonMap("thresholdDay", StringValue.empty())));
+                    JExprFunction.apply("(day) => $day >= $unknownPlansAreOpenFrom").asScala(),
+                    Collections.singletonMap("$unknownPlansAreOpenFrom", StringValue.empty())));
         }
     });
 
@@ -89,7 +89,7 @@ public class PlanSchemas {
     }
     
     private static Map<Boolean, List<JPlanSchema>> getGroupedPlanSchemas(JControllerState currentState) {
-        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.planIsClosedFunction(), ps
+        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.unknownPlanIsOpenFunction(), ps
                 .namedValues());
         Set<JPlanSchema> knownPlanSchemas = currentState.idToPlanSchemaState().values().stream().filter(p -> !p.asScala().isGlobal()).map(
                 JPlanSchemaState::item).map(cloneWithoutRevision).collect(Collectors.toSet());

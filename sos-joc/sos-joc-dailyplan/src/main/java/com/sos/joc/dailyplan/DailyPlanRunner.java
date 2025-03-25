@@ -766,8 +766,12 @@ public class DailyPlanRunner extends TimerTask {
                 JControllerProxy proxy = Proxy.of(controllerId);
 
                 proxy.currentState().toPlan().entrySet().stream().filter(isDailyPlanPlan).filter(planIsOlder).filter(isOpen).map(Map.Entry::getKey)
-                        .map(pId -> JControllerCommand.changePlan(pId, JPlanStatus.Closed())).map(JControllerCommand::apply).forEach(command -> proxy
-                                .api().executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, controllerId)));
+                        .map(pId -> {
+                            LOGGER.info(String.format("[%s][closePlan][%s]try %s/%s", startupMode, controllerId, PlanSchemas.defaultPlanSchemaId, pId
+                                    .planKey().string()));
+                            return JControllerCommand.changePlan(pId, JPlanStatus.Closed());
+                        }).map(JControllerCommand::apply).forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper
+                                .postProblemEventIfExist(e, null, null, controllerId)));
             } catch (Exception e) {
                 LOGGER.error(String.format("[%s][closePlans][%s]fails: %s", startupMode, controllerId, e.toString()), e);
             }
