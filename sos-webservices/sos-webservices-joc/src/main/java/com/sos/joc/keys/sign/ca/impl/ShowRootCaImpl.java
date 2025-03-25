@@ -50,7 +50,7 @@ public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
                 jocKeyPair.setCertificate(dbCert.getPem());
                 jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.fromValue(dbCert.getKeyAlgorithm()).name());
                 jocKeyPair.setKeyType(JocKeyType.fromValue(dbCert.getKeyType()).name());
-                jocKeyPair.setKeyID(certificate.getSubjectDN().getName());
+                jocKeyPair.setKeyID(certificate.getSubjectX500Principal().getName());
                 jocKeyPair.setValidUntil(certificate.getNotAfter());
             }
             return JOCDefaultResponse.responseStatus200(jocKeyPair);

@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WorkflowBoards
-    extends com.sos.controller.model.workflow.WorkflowBoards
+    extends com.sos.controller.model.workflow.WorkflowBoardsV
 {
 
     @JsonProperty("noticeBoardNames")
@@ -28,7 +28,14 @@ public class WorkflowBoards
      * 
      */
     @JsonIgnore
-    private Map<Integer, Set<String>> topLevelPositions;
+    private Map<String, Set<String>> topLevelPositions;
+    
+    @JsonIgnore
+    private Map<String, Set<String>> postPositions;
+    @JsonIgnore
+    private Map<String, Set<String>> expectPositions;
+    @JsonIgnore
+    private Map<String, Set<String>> consumePositions;
 
     @JsonProperty("noticeBoardNames")
     public List<String> getNoticeBoardNames() {
@@ -41,13 +48,43 @@ public class WorkflowBoards
     }
     
     @JsonIgnore
-    public Map<Integer, Set<String>> getTopLevelPositions() {
+    public Map<String, Set<String>> getTopLevelPositions() {
         return topLevelPositions;
     }
 
     @JsonIgnore
-    public void setTopLevelPositions(Map<Integer, Set<String>> topLevelPositions) {
+    public void setTopLevelPositions(Map<String, Set<String>> topLevelPositions) {
         this.topLevelPositions = topLevelPositions;
+    }
+    
+    @JsonIgnore
+    public Map<String, Set<String>> getPostPositions() {
+        return postPositions;
+    }
+
+    @JsonIgnore
+    public void setPostPositions(Map<String, Set<String>> postPositions) {
+        this.postPositions = postPositions;
+    }
+    
+    @JsonIgnore
+    public Map<String, Set<String>> getExpectPositions() {
+        return expectPositions;
+    }
+
+    @JsonIgnore
+    public void setExpectPositions(Map<String, Set<String>> expectPositions) {
+        this.expectPositions = expectPositions;
+    }
+    
+    @JsonIgnore
+    public Map<String, Set<String>> getConsumePositions() {
+        return consumePositions;
+    }
+
+    @JsonIgnore
+    public void setConsumePositions(Map<String, Set<String>> consumePositions) {
+        this.consumePositions = consumePositions;
     }
     
     @JsonIgnore

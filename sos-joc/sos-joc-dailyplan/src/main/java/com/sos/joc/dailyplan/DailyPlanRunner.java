@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -51,9 +52,12 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.board.PlanSchemas;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
@@ -87,6 +91,13 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+
+import js7.data.plan.PlanId;
+import js7.data.plan.PlanSchemaId;
+import js7.data_for_java.controller.JControllerCommand;
+import js7.data_for_java.plan.JPlan;
+import js7.data_for_java.plan.JPlanStatus;
+import js7.proxy.javaapi.JControllerProxy;
 
 public class DailyPlanRunner extends TimerTask {
 
@@ -180,6 +191,9 @@ public class DailyPlanRunner extends TimerTask {
 
             java.util.Calendar savCalendar = java.util.Calendar.getInstance();
             savCalendar.setTime(calendar.getTime());
+            
+            int ageOfPlansToBeClosedAutomatically = settings.getAgeOfPlansToBeClosedAutomatically();
+            
             for (ControllerConfiguration conf : controllers) {
                 String controllerId = conf.getCurrent().getId();
 
@@ -227,7 +241,16 @@ public class DailyPlanRunner extends TimerTask {
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
                     settings.setDailyPlanDate(dailyPlanCalendar.getTime());
                 }
+                
+                dailyPlanCalendar.setTime(savCalendar.getTime());
+                settings.setDailyPlanDate(dailyPlanCalendar.getTime());
+                
+                closeOldPlans(startupMode, controllerId, dailyPlanCalendar, ageOfPlansToBeClosedAutomatically);
 
+            }
+            
+            if (ageOfPlansToBeClosedAutomatically == 0) {
+                LOGGER.info(String.format("[%s][closePlans][skip] because of daily plan settings", startupMode));
             }
         } catch (SOSHibernateException | IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException
                 | JocConfigurationException | DBOpenSessionException e) {
@@ -723,6 +746,30 @@ public class DailyPlanRunner extends TimerTask {
                 submitOrders(startupMode, controllerId, plannedOrders, submissionForDate, null, "");
                 // not log end because asynchronous
                 // LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit end", controllerId, date, submissionForDate));
+            }
+        }
+    }
+    
+    // service
+    private void closeOldPlans(StartupMode startupMode, String controllerId, java.util.Calendar calendar, int ageOfPlansToBeClosedAutomatically) {
+
+        if (ageOfPlansToBeClosedAutomatically > 0) {
+            try {
+                // calendar is DailyPlanHelper.getNextDayCalendar() -> (ageOfPlansToBeClosedAutomatically + 1)
+                calendar.add(java.util.Calendar.DATE, -1 * (ageOfPlansToBeClosedAutomatically + 1));
+                String date = SOSDate.getDateAsString(calendar);
+                LOGGER.info(String.format("[%s][closePlans][%s]older than %s", startupMode, controllerId, date));
+                PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.defaultPlanSchemaId);
+                Predicate<Map.Entry<PlanId, JPlan>> isDailyPlanPlan = e -> e.getKey().planSchemaId().equals(dailyPlanSchemaId);
+                Predicate<Map.Entry<PlanId, JPlan>> planIsOlder = e -> e.getKey().planKey().string().compareTo(date) < 1;
+                Predicate<Map.Entry<PlanId, JPlan>> isOpen = e -> !e.getValue().isClosed();
+                JControllerProxy proxy = Proxy.of(controllerId);
+
+                proxy.currentState().toPlan().entrySet().stream().filter(isDailyPlanPlan).filter(planIsOlder).filter(isOpen).map(Map.Entry::getKey)
+                        .map(pId -> JControllerCommand.changePlan(pId, JPlanStatus.Closed())).map(JControllerCommand::apply).forEach(command -> proxy
+                                .api().executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, controllerId)));
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s][closePlans][%s]fails: %s", startupMode, controllerId, e.toString()), e);
             }
         }
     }

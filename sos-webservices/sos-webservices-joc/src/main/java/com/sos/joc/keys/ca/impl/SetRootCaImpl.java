@@ -47,7 +47,7 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             keyPair.setPrivateKey(setRootCaFilter.getPrivateKey());
             keyPair.setCertificate(setRootCaFilter.getCertificate());
             X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-            keyPair.setKeyID(cert.getSubjectDN().getName());
+            keyPair.setKeyID(cert.getSubjectX500Principal().getName());
             keyPair.setValidUntil(cert.getNotAfter());
             keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
             keyPair.setKeyType(JocKeyType.CA.name());

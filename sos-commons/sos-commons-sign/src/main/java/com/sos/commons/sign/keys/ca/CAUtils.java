@@ -267,7 +267,7 @@ public abstract class CAUtils {
         }
         LdapName altSourceIssuerDN = null;
         if (alternativeSource != null) {
-            altSourceIssuerDN = new LdapName(alternativeSource.getIssuerDN().getName());
+            altSourceIssuerDN = new LdapName(alternativeSource.getIssuerX500Principal().getName());
         }
         String dnQualifier = null;
         String commonName = null;
@@ -298,31 +298,31 @@ public abstract class CAUtils {
         if (dn != null && dn.contains("OU=")) {
             organizationUnits = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
                     .collect(Collectors.toList());
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("OU=")) {
+        } else if (alternativeSource != null && alternativeSource.getIssuerX500Principal().getName().contains("OU=")) {
             organizationUnits = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue()
                     .toString()).collect(Collectors.toList());
         }
         if (dn != null && dn.contains("O=")) {
             organization = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("O=")) {
+        } else if (alternativeSource != null && alternativeSource.getIssuerX500Principal().getName().contains("O=")) {
             organization = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue()
                     .toString();
         }
         if (dn != null && dn.contains("C=")) {
             countryCode = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("C=")) {
+        } else if (alternativeSource != null && alternativeSource.getIssuerX500Principal().getName().contains("C=")) {
             countryCode = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue()
                     .toString();
         }
         if (dn != null && dn.contains("L=")) {
             locality = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("L=")) {
+        } else if (alternativeSource != null && alternativeSource.getIssuerX500Principal().getName().contains("L=")) {
             locality = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue()
                     .toString();
         }
         if (dn != null && dn.contains("ST=")) {
             state = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("ST")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("ST=")) {
+        } else if (alternativeSource != null && alternativeSource.getIssuerX500Principal().getName().contains("ST=")) {
             state = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("ST")).findFirst().get().getValue().toString();
         }
         if (organizationUnits != null) {

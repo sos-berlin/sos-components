@@ -19,6 +19,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.inventory.WorkflowConverter;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 
 public class DeployedWorkflowWithBoards {
 
@@ -44,7 +45,7 @@ public class DeployedWorkflowWithBoards {
     public WorkflowBoards mapToWorkflowBoardsWithTopLevelPositions() {
         try {
             WorkflowBoards wb = init();
-            Map<Integer, Set<String>> topLevelPositions = new HashMap<>();
+            Map<String, Set<String>> topLevelPositions = new HashMap<>();
             if (workflowJson != null && wb.hasConsumeNotice() + wb.hasExpectNotice() > 0) {
                 Workflow w = WorkflowConverter.convertInventoryWorkflow(workflowJson, Workflow.class);
                 List<Instruction> instructions = w.getInstructions();
@@ -58,7 +59,7 @@ public class DeployedWorkflowWithBoards {
                                 String cnsNamesExpr = cns.getNoticeBoardNames();
                                 Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
                                 if (cnsNames != null && !cnsNames.isEmpty()) {
-                                    topLevelPositions.put(i, cnsNames);
+                                    topLevelPositions.put(i + "", cnsNames);
                                 }
                                 break;
                             case EXPECT_NOTICES:
@@ -66,7 +67,7 @@ public class DeployedWorkflowWithBoards {
                                 String ensNamesExpr = ens.getNoticeBoardNames();
                                 Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
                                 if (ensNames != null && !ensNames.isEmpty()) {
-                                    topLevelPositions.put(i, ensNames);
+                                    topLevelPositions.put(i + "", ensNames);
                                 }
                                 break;
                             default:
@@ -77,6 +78,19 @@ public class DeployedWorkflowWithBoards {
                 }
             }
             wb.setTopLevelPositions(topLevelPositions);
+            return wb;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    public WorkflowBoards mapToWorkflowBoardsWithPositions() {
+        try {
+            WorkflowBoards wb = init();
+            if (workflowJson != null && wb.hasConsumeNotice() + wb.hasExpectNotice() + wb.hasPostNotice() > 0) {
+                Workflow w = WorkflowConverter.convertInventoryWorkflow(workflowJson, Workflow.class);
+                wb = WorkflowsHelper.setWorkflowBoardTopLevelPositions(w.getInstructions(), wb);
+            }
             return wb;
         } catch (Exception e) {
             return null;

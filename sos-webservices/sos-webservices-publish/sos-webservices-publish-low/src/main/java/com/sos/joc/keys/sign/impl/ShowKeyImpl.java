@@ -138,7 +138,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                 } 
                 if (jocKeyPair.getCertificate() != null) {
                     X509Certificate cert = KeyUtil.getX509Certificate(jocKeyPair.getCertificate());
-                    jocKeyPair.setKeyID(cert.getSubjectDN().getName());
+                    jocKeyPair.setKeyID(cert.getSubjectX500Principal().getName());
                     jocKeyPair.setValidUntil(cert.getNotAfter());
                 }
                 if (jocKeyPair.getValidUntil() == null) {

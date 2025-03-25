@@ -51,7 +51,7 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
             jocKeyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
             jocKeyPair.setKeyType(JocKeyType.CA.name());
             X509Certificate x509Cert = (X509Certificate)cert;
-            jocKeyPair.setKeyID(x509Cert.getSubjectDN().getName());
+            jocKeyPair.setKeyID(x509Cert.getSubjectX500Principal().getName());
             jocKeyPair.setValidUntil(x509Cert.getNotAfter());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             // store private key to the db

@@ -58,7 +58,7 @@ public class ClientCertificateHandler {
         } else {
             this.clientCertificate = clientCertificateChain[0];
             if (clientCertificate != null) {
-                this.subjectDN = clientCertificate.getSubjectDN().getName();
+                this.subjectDN = clientCertificate.getSubjectX500Principal().getName();
 
                 LdapName ldapName = new LdapName(subjectDN);
                 ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().ifPresent(o -> this.clientCN = o
@@ -74,7 +74,7 @@ public class ClientCertificateHandler {
     private String createResponse200(String cipherSuiteName, Integer keySize) {
         StringBuilder jsonStrb = new StringBuilder();
         jsonStrb.append("{\n");
-        jsonStrb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getIssuerDN().getName()));
+        jsonStrb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getIssuerX500Principal().getName()));
         jsonStrb.append(String.format("  \"SubjectDN\" : \"%1$s\",\n", subjectDN));
         /*
          * KeyUsage ::= BIT STRING { digitalSignature (0), nonRepudiation (1), keyEncipherment (2), dataEncipherment (3), keyAgreement (4), keyCertSign (5),

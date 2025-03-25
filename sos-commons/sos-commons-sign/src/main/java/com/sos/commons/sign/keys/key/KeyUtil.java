@@ -43,9 +43,11 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,6 +65,7 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
@@ -312,7 +315,7 @@ public abstract class KeyUtil {
   private static PGPSecretKey exportSecretKey(KeyPair pair, String identity, char[] passPhrase, Long secondsToExpire) throws PGPException {
     // org.bouncycastle.openpgp.PGPException: only SHA1 supported for key checksum calculations.
     PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
-    PGPKeyPair keyPair = new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, pair, new Date());
+    PGPKeyPair keyPair = new JcaPGPKeyPair(4, PGPPublicKey.RSA_GENERAL, pair, new Date());
     PGPSignatureSubpacketVector subpacketVector = null;
     if (secondsToExpire != null) {
       PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
@@ -389,6 +392,7 @@ public abstract class KeyUtil {
 
   // checks if the provided KeyPair contains an ASCII representation of a PGP, RSA or ECDSA key
   public static boolean isKeyPairValid(JocKeyPair keyPair) {
+      List<Exception> storedExceptions = new ArrayList<Exception>();
     if (keyPair.getPrivateKey() != null) {
       if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
         try {
@@ -399,7 +403,8 @@ public abstract class KeyUtil {
             return false;
           }
         } catch (IOException | IllegalArgumentException | PGPException e) {
-          return false;
+            storedExceptions.add(e);
+            return false;
         }
       } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
         try {
@@ -418,10 +423,12 @@ public abstract class KeyUtil {
               return false;
             }
           } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e1) {
-            return false;
+              storedExceptions.add(e);
+              return false;
           }
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-          return false;
+            storedExceptions.add(e);
+            return false;
         }
       } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
         try {
@@ -432,7 +439,8 @@ public abstract class KeyUtil {
             return false;
           }
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-          return false;
+            storedExceptions.add(e);
+            return false;
         }
       }
     } else if (keyPair.getPublicKey() != null) {
@@ -445,7 +453,8 @@ public abstract class KeyUtil {
             return false;
           }
         } catch (IOException | PGPException e) {
-          return false;
+            storedExceptions.add(e);
+            return false;
         }
       } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
         try {
@@ -456,7 +465,8 @@ public abstract class KeyUtil {
             return false;
           }
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-          return false;
+            storedExceptions.add(e);
+            return false;
         }
       } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
         try {
@@ -467,19 +477,31 @@ public abstract class KeyUtil {
             return false;
           }
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-          return false;
+            storedExceptions.add(e);
+            return false;
         }
       }
     } else if (keyPair.getCertificate() != null) {
       try {
         X509Certificate cert = getX509Certificate(keyPair.getCertificate());
         if (cert != null) {
-          return true;
+            return true;
         } else {
-          return false;
+            return false;
         }
-      } catch (CertificateException | UnsupportedEncodingException e) {
-        return false;
+      } catch (CertificateException | IOException e) {
+          storedExceptions.add(e);
+          try {
+              X509Certificate cert = getX509CertificateBC(keyPair.getCertificate());
+              if (cert != null) {
+                  return true;
+              } else {
+                  return false;
+              }
+        } catch (CertificateException | IOException e1) {
+            storedExceptions.add(e);
+            return false;
+        }
       }
     }
     return false;
@@ -928,6 +950,7 @@ public abstract class KeyUtil {
     PEMKeyPair pemKeyPair = pemEncryptedKeyPair.decryptKeyPair(keyDecryptorProvider);
     final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
     privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+    pemParser.close();
     return privKey;
   }
 
@@ -962,21 +985,25 @@ public abstract class KeyUtil {
           kf = KeyFactory.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
           privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
         }
+      } finally {
+          pemParser.close();
       }
       return privKey;
-    } else {
-      PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) readObject;
-      PEMDecryptorProvider keyDecryptorProvider = new BcPEMDecryptorProvider(keyPasswd.toCharArray());
-      PEMKeyPair pemKeyPair = pemEncryptedKeyPair.decryptKeyPair(keyDecryptorProvider);
-      final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
-      try { // RSA
-        privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
-      } catch (Exception e) {
-        kf = KeyFactory.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
-        privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+      } else {
+          PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) readObject;
+          PEMDecryptorProvider keyDecryptorProvider = new BcPEMDecryptorProvider(keyPasswd.toCharArray());
+          PEMKeyPair pemKeyPair = pemEncryptedKeyPair.decryptKeyPair(keyDecryptorProvider);
+          final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
+          try { // RSA
+            privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+          } catch (Exception e) {
+            kf = KeyFactory.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+            privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+          } finally {
+              pemParser.close();
+          }
+          return privKey;
       }
-      return privKey;
-    }
   }
 
   public static PrivateKey getPrivateRSAKeyFromString(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
@@ -1131,6 +1158,27 @@ public abstract class KeyUtil {
   public static Certificate getCertificate(InputStream certificate) throws CertificateException {
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
     return cf.generateCertificate(certificate);
+  }
+
+  public static X509Certificate getX509CertificateBC(String certificate) throws CertificateException, IOException {
+      InputStream certificateStream = IOUtils.toInputStream(certificate, StandardCharsets.UTF_8);
+      return getX509CertificateBC(certificateStream);
+    }
+
+  public static X509Certificate getX509CertificateBC(Path certificate) throws CertificateException, IOException {
+    InputStream certificatePathStream = Files.newInputStream(certificate);
+    return getX509CertificateBC(certificatePathStream);
+  }
+
+  public static X509Certificate getX509CertificateBC(InputStream certificate) throws CertificateException, IOException {
+      Security.addProvider(new BouncyCastleProvider());
+      PEMParser pemParser = new PEMParser(new InputStreamReader(certificate));
+      try {
+        JcaX509CertificateConverter x509Converter = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider());
+        return x509Converter.getCertificate((X509CertificateHolder) pemParser.readObject());
+    } finally {
+        pemParser.close();
+    }
   }
 
   public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String account, String signatureAlgorithm,

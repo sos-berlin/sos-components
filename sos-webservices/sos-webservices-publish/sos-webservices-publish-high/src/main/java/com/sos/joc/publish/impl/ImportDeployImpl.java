@@ -372,7 +372,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     }
                 });
             } else {
-                signerDN = cert.getSubjectDN().getName();
+                signerDN = cert.getSubjectX500Principal().getName();
                 Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
                         toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
                                 : SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN);
@@ -410,7 +410,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                   }
               });
             } else {
-                signerDN = cert.getSubjectDN().getName();
+                signerDN = cert.getSubjectX500Principal().getName();
                 Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
                         toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
                                 : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN);

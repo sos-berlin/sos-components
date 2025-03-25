@@ -1812,17 +1812,12 @@ public class OrdersHelper {
             return null;
         }
         String[] posArr = pos.split("/:");
-        List<Object> posList = null;
-        if (posArr.length == 1) {
-            posList = Collections.singletonList(Integer.valueOf(posArr[0]));
-        } else {
-            posList = new ArrayList<>();
-            for (int i = 0; i < posArr.length; i++) {
-                if (i % 2 == 0) {
-                    posList.add(Integer.valueOf(posArr[i]));
-                } else {
-                    posList.add(posArr[i]);
-                }
+        List<Object> posList = new ArrayList<>(posArr.length);
+        for (int i = 0; i < posArr.length; i++) {
+            if (i % 2 == 0) {
+                posList.add(Integer.valueOf(posArr[i]));
+            } else {
+                posList.add(posArr[i]);
             }
         }
         return posList;

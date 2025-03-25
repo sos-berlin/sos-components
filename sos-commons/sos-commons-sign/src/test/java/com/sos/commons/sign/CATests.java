@@ -90,16 +90,11 @@ public class CATests {
             LOGGER.trace("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
             X509Certificate c = ((X509Certificate)rootCertificate);
             List<String> usages = c.getExtendedKeyUsage();
-            LOGGER.info("IssuerDN: " + c.getIssuerDN().getName());
             LOGGER.info("X500Principal IssuerDN: " + c.getIssuerX500Principal().getName());
-            LOGGER.info("SubjectDN: " + c.getSubjectDN().getName());
             LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName());
-//            public static final String RFC1779 = "RFC1779";
-//            public static final String CANONICAL = "CANONICAL";
             LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779));
             LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.CANONICAL));
             LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779, Collections.singletonMap("2.5.4.46", "DN")));
-
             if (usages != null) {
                 for (String usage : usages) {
                     LOGGER.trace("Usage: " + usage);
@@ -144,8 +139,8 @@ public class CATests {
             LOGGER.trace("user certificate was successfully verified.");
             LOGGER.trace("\nUser certificate credentials:\n" + userCertificate.toString());
             List<String> usages = ((X509Certificate)userCertificate).getExtendedKeyUsage();
-            LOGGER.trace("IssuerDN: " + ((X509Certificate)userCertificate).getIssuerDN().toString());
-            LOGGER.trace("SubjectDN: " + ((X509Certificate)userCertificate).getSubjectDN().toString());
+            LOGGER.trace("IssuerDN: " + ((X509Certificate)userCertificate).getIssuerX500Principal().toString());
+            LOGGER.trace("SubjectDN: " + ((X509Certificate)userCertificate).getSubjectX500Principal().toString());
             if (usages != null) {
                 for (String usage : usages) {
                     LOGGER.trace("Usage: " + usage);
@@ -346,7 +341,7 @@ public class CATests {
         String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Berlin, C=DE";
         LdapName ldapNameDN = new LdapName(dn);
         for (Rdn rdn : ldapNameDN.getRdns()) {
-            LOGGER.trace(rdn.getType() + " : " + rdn.getValue());
+            LOGGER.info(rdn.getType() + " : " + rdn.getValue());
         }
     }
 

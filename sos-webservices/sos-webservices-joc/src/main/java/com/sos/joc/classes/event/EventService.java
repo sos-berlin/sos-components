@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.agent.AgentClusterWatch;
+import com.sos.joc.classes.board.BoardHelper;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ClusterWatch;
@@ -122,6 +123,7 @@ import js7.data.order.OrderEvent.OrderSuspensionMarked;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderEvent.OrderTransferred;
 import js7.data.order.OrderId;
+import js7.data.plan.PlanEvent;
 import js7.data.subagent.SubagentBundleId;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent;
@@ -146,10 +148,10 @@ public class EventService {
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAddedX.class, OrderProcessed.class, OrderSuspended$.class,
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, OrderPrompted.class,
-            OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, OrderStopped$.class, OrderSleeping.class, 
+            OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, OrderStopped$.class, OrderSleeping.class, OrderOrderAdded.class,  
             VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, 
             NoticeEvent.class, OrderLocksAcquired.class, OrderLocksQueued.class, OrderLocksReleased.class, OrderNoticeEvent.class, 
-            OrderTransferred.class, SubagentItemStateEvent.class);
+            OrderTransferred.class, SubagentItemStateEvent.class, PlanEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<IEventObject> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -676,6 +678,8 @@ public class EventService {
                 uncoupledSubagents.remove(subagentPath);
             } else if (evt instanceof NoticeEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
+            } else if (evt instanceof PlanEvent) {
+                createPlanEvent(eventId, ((PlanEvent) key).toString());
             }
 
         } catch (Exception e) {
@@ -856,6 +860,15 @@ public class EventService {
 
     private EventSnapshot createWorkflowUpdatedEvent(long eventId, String path) {
         return createWorkflowEvent(eventId, path, "WorkflowUpdated");
+    }
+    
+    private EventSnapshot createPlanEvent(long eventId, String path) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        evt.setEventType("PlanUpdated");
+        evt.setPath(BoardHelper.getNoticeKeyShortString(path));
+        evt.setObjectType(EventType.PLAN);
+        return evt;
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {

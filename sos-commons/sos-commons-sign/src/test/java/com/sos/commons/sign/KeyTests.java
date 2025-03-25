@@ -1239,7 +1239,7 @@ public class KeyTests {
         LOGGER.trace("*********  create X.509 certifcate Object from File  *******************************************");
         X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
         assertNotNull(certificate);
-        String subjectDN = certificate.getSubjectDN().getName();
+        String subjectDN = certificate.getSubjectX500Principal().getName();
         // get CN with bouncy castle
         X500Name x500Name = new JcaX509CertificateHolder(certificate).getSubject();
         RDN cn = x500Name.getRDNs(BCStyle.CN)[0];

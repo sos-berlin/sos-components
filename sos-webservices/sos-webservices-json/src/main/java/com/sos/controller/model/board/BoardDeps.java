@@ -9,8 +9,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.board.BoardType;
-import com.sos.inventory.model.deploy.DeployType;
-import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -26,8 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "postingWorkflows",
     "expectingWorkflows",
-    "consumingWorkflows",
-    "predictingOrders"
+    "consumingWorkflows"
 })
 public class BoardDeps
     extends Board
@@ -39,8 +36,6 @@ public class BoardDeps
     private List<WorkflowIdAndTags> expectingWorkflows = null;
     @JsonProperty("consumingWorkflows")
     private List<WorkflowIdAndTags> consumingWorkflows = null;
-    @JsonProperty("predictingOrders")
-    private List<OrderV> predictingOrders = null;
 
     /**
      * No args constructor for use in serialization
@@ -59,7 +54,6 @@ public class BoardDeps
      * @param expectOrderToNoticeId
      * @param title
      * @param consumingWorkflows
-     * @param predictingOrders
      * @param versionDate
      * @param version
      * @param endOfLife
@@ -72,12 +66,11 @@ public class BoardDeps
      * @param documentationName
      * @param numOfAnnouncements
      */
-    public BoardDeps(List<WorkflowIdAndTags> postingWorkflows, List<WorkflowIdAndTags> expectingWorkflows, List<WorkflowIdAndTags> consumingWorkflows, List<OrderV> predictingOrders, String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
+    public BoardDeps(List<WorkflowIdAndTags> postingWorkflows, List<WorkflowIdAndTags> expectingWorkflows, List<WorkflowIdAndTags> consumingWorkflows, String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
         super(path, versionDate, state, numOfNotices, numOfAnnouncements, numOfPostedNotices, numOfExpectedNotices, numOfExpectingOrders, notices, boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
         this.postingWorkflows = postingWorkflows;
         this.expectingWorkflows = expectingWorkflows;
         this.consumingWorkflows = consumingWorkflows;
-        this.predictingOrders = predictingOrders;
     }
 
     @JsonProperty("postingWorkflows")
@@ -110,24 +103,14 @@ public class BoardDeps
         this.consumingWorkflows = consumingWorkflows;
     }
 
-    @JsonProperty("predictingOrders")
-    public List<OrderV> getPredictingOrders() {
-        return predictingOrders;
-    }
-
-    @JsonProperty("predictingOrders")
-    public void setPredictingOrders(List<OrderV> predictingOrders) {
-        this.predictingOrders = predictingOrders;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("postingWorkflows", postingWorkflows).append("expectingWorkflows", expectingWorkflows).append("consumingWorkflows", consumingWorkflows).append("predictingOrders", predictingOrders).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("postingWorkflows", postingWorkflows).append("expectingWorkflows", expectingWorkflows).append("consumingWorkflows", consumingWorkflows).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectingWorkflows).append(consumingWorkflows).append(predictingOrders).append(postingWorkflows).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectingWorkflows).append(consumingWorkflows).append(postingWorkflows).toHashCode();
     }
 
     @Override
@@ -139,7 +122,7 @@ public class BoardDeps
             return false;
         }
         BoardDeps rhs = ((BoardDeps) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectingWorkflows, rhs.expectingWorkflows).append(consumingWorkflows, rhs.consumingWorkflows).append(predictingOrders, rhs.predictingOrders).append(postingWorkflows, rhs.postingWorkflows).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectingWorkflows, rhs.expectingWorkflows).append(consumingWorkflows, rhs.consumingWorkflows).append(postingWorkflows, rhs.postingWorkflows).isEquals();
     }
 
 }

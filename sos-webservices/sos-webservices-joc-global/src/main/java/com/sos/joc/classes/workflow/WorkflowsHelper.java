@@ -75,6 +75,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
@@ -295,6 +296,37 @@ public class WorkflowsHelper {
         Set<Position> positions = new LinkedHashSet<Position>();
         setWorkflowAddOrderPositions(pos, pos.length, instructions, positions);
         return positions;
+    }
+    
+    public static WorkflowBoards setWorkflowBoardTopLevelPositions(List<Instruction> instructions) {
+        return setWorkflowBoardPositions(instructions, 1, null);
+    }
+    
+    public static WorkflowBoards setWorkflowBoardPositions(List<Instruction> instructions) {
+        return setWorkflowBoardPositions(instructions, 0, null);
+    }
+    
+    public static WorkflowBoards setWorkflowBoardTopLevelPositions(List<Instruction> instructions, WorkflowBoards wb) {
+        return setWorkflowBoardPositions(instructions, 1, wb);
+    }
+    
+    public static WorkflowBoards setWorkflowBoardPositions(List<Instruction> instructions, WorkflowBoards wb) {
+        return setWorkflowBoardPositions(instructions, 0, wb);
+    }
+    
+    private static WorkflowBoards setWorkflowBoardPositions(List<Instruction> instructions, int level, WorkflowBoards wb) {
+        Object[] pos = {};
+        Map<String, Set<String>> boardPostPositions = new HashMap<>();
+        Map<String, Set<String>> boardExpectPositions = new HashMap<>();
+        Map<String, Set<String>> boardConsumePositions = new HashMap<>();
+        setWorkflowBoardPositions(pos, instructions, level, boardPostPositions, boardExpectPositions, boardConsumePositions);
+        if (wb == null) {
+            wb = new WorkflowBoards();
+        }
+        wb.setPostPositions(boardPostPositions);
+        wb.setExpectPositions(boardExpectPositions);
+        wb.setConsumePositions(boardConsumePositions);
+        return wb;
     }
 
     public static Requirements removeFinals(Workflow workflow) {
@@ -1256,6 +1288,139 @@ public class WorkflowsHelper {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         updateWorkflowBoardname(oldNewBoardNames, opts.getBlock().getInstructions());
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
+    private static void setWorkflowBoardPositions(Object[] parentPosition, List<Instruction> insts, int level, Map<String, Set<String>> boardPostPositions,
+            Map<String, Set<String>> boardExpectPositions, Map<String, Set<String>> boardConsumePositions) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                if (level > 0 && parentPosition.length/2 >= level) {
+                    continue;
+                }
+                Object[] pos = extendArray(parentPosition, i);
+                pos[parentPosition.length] = i;
+                Instruction inst = insts.get(i);
+                Position p = new Position();
+                p.setPosition(Arrays.asList(pos));
+                p.setPositionString(getJPositionString(p.getPosition()));
+                p.setType(inst.getTYPE().value().replace("Execute.Named", "Job"));
+                p.setLabel(inst.getLabel());
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for (Branch b : f.getBranches()) {
+                        if (b.getWorkflow() != null) {
+                            setWorkflowBoardPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), level, boardPostPositions,
+                                    boardExpectPositions, boardConsumePositions);
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), level, boardPostPositions, boardExpectPositions,
+                                boardConsumePositions);
+                    }
+                    if (ie.getElse() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), level, boardPostPositions, boardExpectPositions,
+                                boardConsumePositions);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        int caseIndex = 1;
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                String cI = caseIndex == 1 ? "" : "+" + caseIndex;
+                                caseIndex++;
+                                setWorkflowBoardPositions(extendArray(pos, "then" + cI), when.getThen().getInstructions(), level, boardPostPositions,
+                                        boardExpectPositions, boardConsumePositions);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), level, boardPostPositions, boardExpectPositions,
+                                boardConsumePositions);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), level, boardPostPositions, boardExpectPositions,
+                                boardConsumePositions);
+                    }
+                    if (tc.getCatch() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case OPTIONS:
+                    Options o = inst.cast();
+                    if (o.getBlock() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "options"), o.getBlock().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "stickySubagent"), ss.getSubworkflow().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    String cnsNamesExpr = cns.getNoticeBoardNames();
+                    Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
+                    if (cnsNames != null && !cnsNames.isEmpty()) {
+                        boardConsumePositions.put(p.getPositionString(), cnsNames);
+                    }
+                    if (cns.getSubworkflow() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case EXPECT_NOTICES:
+                    ExpectNotices ens = inst.cast();
+                    String ensNamesExpr = ens.getNoticeBoardNames();
+                    Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
+                    if (ensNames != null && !ensNames.isEmpty()) {
+                        boardExpectPositions.put(p.getPositionString(), ensNames);
+                    }
+                    break;
+                case POST_NOTICES:
+                    PostNotices pns = inst.cast();
+                    if (pns.getNoticeBoardNames() != null && !pns.getNoticeBoardNames().isEmpty()) {
+                        boardPostPositions.put(p.getPositionString(), pns.getNoticeBoardNames().stream().collect(Collectors.toSet()));
                     }
                     break;
                 default:

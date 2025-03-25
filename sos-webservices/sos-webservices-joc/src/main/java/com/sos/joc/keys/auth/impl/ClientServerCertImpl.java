@@ -138,7 +138,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                 } catch (CertificateException | UnsupportedEncodingException e) {
                     return null;
                 }
-            }).filter(Objects::nonNull).map(cert -> cert.getSubjectDN().getName()).collect(Collectors.toList());
+            }).filter(Objects::nonNull).map(cert -> cert.getSubjectX500Principal().getName()).collect(Collectors.toList());
         } else if (token.getControllerId() != null) {
             List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(token.getControllerId());
             for (DBItemInventoryJSInstance controller : controllers) {
@@ -146,7 +146,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                     try {
                         if(controller.getCertificate() != null && !controller.getCertificate().isEmpty()) {
                             X509Certificate cert = KeyUtil.getX509Certificate(controller.getCertificate());
-                            dNs.add(cert.getSubjectDN().getName());
+                            dNs.add(cert.getSubjectX500Principal().getName());
                         }
                     } catch (CertificateException | UnsupportedEncodingException e) {}
                 }
