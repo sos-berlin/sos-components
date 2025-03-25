@@ -237,6 +237,7 @@ public class StoreDeployments {
             Globals.disconnect(newHibernateSession);
             try {
                 PublishSemaphore.release(accessToken);
+                PublishSemaphore.remove(accessToken);
             } catch (Exception e) {
                 // DO NOTHING if semaphore release failed
             }
