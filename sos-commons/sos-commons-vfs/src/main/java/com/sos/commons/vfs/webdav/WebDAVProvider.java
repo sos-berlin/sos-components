@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -19,7 +20,6 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.HTTPProvider;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
-import com.sos.commons.vfs.http.commons.HTTPUtils;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderUtils;
 import com.sos.commons.vfs.webdav.commons.WebDAVResource;
@@ -37,13 +37,13 @@ public class WebDAVProvider extends HTTPProvider {
 
         selection = ProviderFileSelection.createIfNull(selection);
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
-        List<ProviderFile> result = new ArrayList<>();
         try {
+            List<ProviderFile> result = new ArrayList<>();
             WebDAVProviderUtils.selectFiles(this, selection, directory, result);
-        } catch (ProviderException e) {
-            throw e;
+            return result;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(directory), e);
         }
-        return result;
     }
 
     /** Overrides {@link IProvider#exists(String)} */
@@ -79,10 +79,10 @@ public class WebDAVProvider extends HTTPProvider {
             }
 
             Deque<URI> parentsToCreate = new ArrayDeque<>();
-            URI parent = HTTPUtils.getParentURI(uri);
+            URI parent = SOSHTTPUtils.getParentURI(uri);
             while (parent != null && !parent.equals(uri) && !WebDAVProviderUtils.directoryExists(this, parent)) {
                 parentsToCreate.push(parent);
-                parent = HTTPUtils.getParentURI(parent);
+                parent = SOSHTTPUtils.getParentURI(parent);
             }
             // create parent directories
             while (!parentsToCreate.isEmpty()) {
@@ -109,8 +109,8 @@ public class WebDAVProvider extends HTTPProvider {
             builder.header("Destination", targetURI.toString());
             ExecuteResult<Void> result = getClient().executeWithoutResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
             int code = result.response().statusCode();
-            if (!HTTPUtils.isSuccessful(code)) {
-                if (HTTPUtils.isNotFound(code)) {
+            if (!SOSHTTPUtils.isSuccessful(code)) {
+                if (SOSHTTPUtils.isNotFound(code)) {
                     return false;
                 }
                 throw new IOException(HTTPClient.getResponseStatus(result));
@@ -152,13 +152,11 @@ public class WebDAVProvider extends HTTPProvider {
         if (resource == null) {
             return null;
         }
-
         // TODO chunked?
         if (resource.getSize() < 0) {
             return null;
         }
-        return createProviderFile(HTTPUtils.decode(resource.getURI()), resource.getSize(), resource.getLastModifiedInMillis());
-        // return createProviderFile(resource.getURI().toString(), resource.getSize(), resource.getLastModifiedInMillis());
+        return createProviderFile(SOSHTTPUtils.decode(resource.getURI()), resource.getSize(), resource.getLastModifiedInMillis());
     }
 
 }

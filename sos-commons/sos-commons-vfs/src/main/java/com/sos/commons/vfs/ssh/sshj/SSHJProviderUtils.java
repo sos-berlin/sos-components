@@ -11,7 +11,6 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.ProviderException;
 
 import net.schmizz.keepalive.KeepAlive;
 import net.schmizz.keepalive.KeepAliveRunner;
@@ -113,12 +112,10 @@ public class SSHJProviderUtils {
 
     // possible recursion
     protected static List<ProviderFile> selectFiles(SSHJProviderImpl provider, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result) throws ProviderException {
+            List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
         try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
             list(provider, sftp, selection, directoryPath, result, counterAdded);
-        } catch (Throwable e) {
-            throw new ProviderException(e);
         }
         return result;
     }
@@ -159,25 +156,19 @@ public class SSHJProviderUtils {
     }
 
     private static int list(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result, int counterAdded) throws ProviderException {
-        try {
-            List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
-            for (RemoteResourceInfo subResource : subDirInfos) {
-                if (selection.maxFilesExceeded(counterAdded)) {
-                    return counterAdded;
-                }
-                counterAdded = processListEntry(provider, sftp, selection, subResource, result, counterAdded);
+            List<ProviderFile> result, int counterAdded) throws Exception {
+        List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
+        for (RemoteResourceInfo subResource : subDirInfos) {
+            if (selection.maxFilesExceeded(counterAdded)) {
+                return counterAdded;
             }
-            return counterAdded;
-        } catch (ProviderException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new ProviderException(e);
+            counterAdded = processListEntry(provider, sftp, selection, subResource, result, counterAdded);
         }
+        return counterAdded;
     }
 
     private static int processListEntry(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
-            List<ProviderFile> result, int counterAdded) throws ProviderException {
+            List<ProviderFile> result, int counterAdded) throws Exception {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
                 if (selection.checkDirectory(resource.getPath())) {

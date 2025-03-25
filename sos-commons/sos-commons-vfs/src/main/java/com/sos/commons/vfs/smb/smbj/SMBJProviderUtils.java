@@ -15,7 +15,6 @@ import com.hierynomus.smbj.share.DiskShare;
 import com.hierynomus.smbj.share.File;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.ProviderException;
 
 public class SMBJProviderUtils {
 
@@ -102,49 +101,42 @@ public class SMBJProviderUtils {
         return share.openFile(smbPath, ams, fa, sa, SMB2CreateDisposition.FILE_OPEN, co);
     }
 
-    protected static int list(SMBJProviderImpl provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            DiskShare share, int counterAdded) throws ProviderException {
-        try {
-            List<FileIdBothDirectoryInformation> infos = share.list(directoryPath);
-            for (FileIdBothDirectoryInformation info : infos) {
-                if (selection.maxFilesExceeded(counterAdded)) {
-                    return counterAdded;
-                }
+    protected static int selectFiles(SMBJProviderImpl provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
+            DiskShare share, int counterAdded) throws Exception {
+        List<FileIdBothDirectoryInformation> infos = share.list(directoryPath);
+        for (FileIdBothDirectoryInformation info : infos) {
+            if (selection.maxFilesExceeded(counterAdded)) {
+                return counterAdded;
+            }
 
-                String name = info.getFileName();
-                if (name == null || ".".equals(name) || "..".equals(name)) {
-                    continue;
-                }
-                String fullPath = directoryPath.isEmpty() ? name : directoryPath + provider.getPathSeparator() + name;
-                if (isDirectory(info)) {
-                    if (selection.getConfig().isRecursive()) {
-                        if (selection.checkDirectory(fullPath)) {
-                            counterAdded = list(provider, selection, fullPath, result, share, counterAdded);
-                        }
+            String name = info.getFileName();
+            if (name == null || ".".equals(name) || "..".equals(name)) {
+                continue;
+            }
+            String fullPath = directoryPath.isEmpty() ? name : directoryPath + provider.getPathSeparator() + name;
+            if (isDirectory(info)) {
+                if (selection.getConfig().isRecursive()) {
+                    if (selection.checkDirectory(fullPath)) {
+                        counterAdded = selectFiles(provider, selection, fullPath, result, share, counterAdded);
                     }
-                } else {
-                    if (selection.checkFileName(name) && selection.isValidFileType(info)) {
-                        ProviderFile file = provider.createProviderFile(fullPath, info);
-                        if (selection.checkProviderFileMinMaxSize(file)) {
-                            counterAdded++;
+                }
+            } else {
+                if (selection.checkFileName(name) && selection.isValidFileType(info)) {
+                    ProviderFile file = provider.createProviderFile(fullPath, info);
+                    if (selection.checkProviderFileMinMaxSize(file)) {
+                        counterAdded++;
 
-                            file.setIndex(counterAdded);
-                            result.add(file);
+                        file.setIndex(counterAdded);
+                        result.add(file);
 
-                            if (provider.getLogger().isDebugEnabled()) {
-                                provider.getLogger().debug(provider.getPathOperationPrefix(file.getFullPath()) + "added");
-                            }
+                        if (provider.getLogger().isDebugEnabled()) {
+                            provider.getLogger().debug(provider.getPathOperationPrefix(file.getFullPath()) + "added");
                         }
                     }
                 }
             }
-            return counterAdded;
-
-        } catch (ProviderException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new ProviderException(e);
         }
+        return counterAdded;
     }
 
     protected static boolean isDirectory(FileIdBothDirectoryInformation info) {

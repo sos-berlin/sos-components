@@ -186,9 +186,14 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         });
 
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
-        List<ProviderFile> result = new ArrayList<>();
-        FTPProviderUtils.selectFiles(this, selection, directory, result);
-        return result;
+
+        try {
+            List<ProviderFile> result = new ArrayList<>();
+            FTPProviderUtils.selectFiles(this, selection, directory, result);
+            return result;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(directory), e);
+        }
     }
 
     /** Overrides {@link IProvider#exists(String)}<br/>

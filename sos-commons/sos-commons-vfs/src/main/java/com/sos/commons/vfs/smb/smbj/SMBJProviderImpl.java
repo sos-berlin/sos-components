@@ -129,15 +129,13 @@ public class SMBJProviderImpl extends SMBProvider {
         });
 
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
-        List<ProviderFile> result = new ArrayList<>();
         try (DiskShare share = connectShare(directory)) {
-            SMBJProviderUtils.list(this, selection, getSMBPath(directory), result, share, 0);
-        } catch (ProviderException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new ProviderException(e);
+            List<ProviderFile> result = new ArrayList<>();
+            SMBJProviderUtils.selectFiles(this, selection, getSMBPath(directory), result, share, 0);
+            return result;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(directory), e);
         }
-        return result;
     }
 
     /** Overrides {@link IProvider#exists(String)} */
@@ -303,8 +301,8 @@ public class SMBJProviderImpl extends SMBProvider {
         validatePrerequisites("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
-        try (InputStream is = new SMBJInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path)); Reader r = new InputStreamReader(is,
-                StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
+        try (InputStream is = new SMBJInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path)); Reader r = new InputStreamReader(
+                is, StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
             return content.toString();
         } catch (SOSNoSuchFileException e) {

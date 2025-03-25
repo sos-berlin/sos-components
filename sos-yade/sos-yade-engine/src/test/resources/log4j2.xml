@@ -22,11 +22,12 @@
 			<AppenderRef ref="DefaultConsole" />
 		</Root>
 
-		<Logger name="net" level="trace" />
 		<Logger name="net.schmizz" level="info" />
 		<Logger
 			name="net.schmizz.sshj.connection.channel.direct.SessionChannel"
 			level="warn" />
+		<Logger name="com.hierynomus.smbj" level="warn" />
+		
 		<Logger name="com.sos" level="info" />
 	</Loggers>
 </Configuration>

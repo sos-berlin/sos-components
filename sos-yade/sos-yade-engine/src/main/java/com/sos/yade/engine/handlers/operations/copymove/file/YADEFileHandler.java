@@ -9,10 +9,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.http.HTTPProvider;
-import com.sos.commons.vfs.http.commons.HTTPUtils;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
@@ -255,7 +255,7 @@ public class YADEFileHandler {
 
         if (sourceDelegator.isHTTP()) {
             // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
-            fileName = HTTPUtils.toValidFileSystemName(fileName);
+            fileName = SOSHTTPUtils.toValidFileSystemName(fileName);
         }
 
         // 2) Compressed name

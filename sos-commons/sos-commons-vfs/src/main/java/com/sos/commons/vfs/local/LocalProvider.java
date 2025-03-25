@@ -95,13 +95,17 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         });
 
         Path directory = Paths.get(selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory());
-        List<ProviderFile> result;
-        if (selection.getConfig().isRecursive()) {
-            result = selectFilesRecursive(selection, directory);
-        } else {
-            result = selectFilesNonRecursive(selection, directory);
+        try {
+            List<ProviderFile> result;
+            if (selection.getConfig().isRecursive()) {
+                result = selectFilesRecursive(selection, directory);
+            } else {
+                result = selectFilesNonRecursive(selection, directory);
+            }
+            return result;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(directory.toString()), e);
         }
-        return result;
     }
 
     /** Overrides {@link IProvider#exists(String)} */
@@ -348,19 +352,39 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         return attr.lastModifiedTime().to(TimeUnit.MILLISECONDS);
     }
 
-    private List<ProviderFile> selectFilesRecursive(ProviderFileSelection selection, Path directory) throws ProviderException {
+    private List<ProviderFile> selectFilesRecursive(ProviderFileSelection selection, Path directory) throws Exception {
         boolean isDebugEnabled = getLogger().isDebugEnabled();
         boolean isTraceEnabled = getLogger().isTraceEnabled();
 
         List<ProviderFile> result = new ArrayList<>();
 
-        try {
-            Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
 
-                int counterAdded = 0;
+            int counterAdded = 0;
 
-                @Override
-                public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) {
+            @Override
+            public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) {
+                if (selection.maxFilesExceeded(counterAdded)) {
+                    if (isDebugEnabled) {
+                        getLogger().debug(String.format("%s[skip][preVisitDirectory][maxFiles=%s]exceeded", getPathOperationPrefix(path.toString()),
+                                selection.getConfig().getMaxFiles()));
+                    }
+                    // return result;
+                    return FileVisitResult.TERMINATE;
+                }
+                if (selection.checkDirectory(path.toAbsolutePath().toString())) {
+                    return FileVisitResult.CONTINUE;
+                }
+                if (isDebugEnabled) {
+                    getLogger().debug(String.format("%s[preVisitDirectory][match][excludedDirectories=%s]", getPathOperationPrefix(path.toString()),
+                            selection.getConfig().getExcludedDirectoriesPattern().pattern()));
+                }
+                return FileVisitResult.SKIP_SUBTREE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                if (!attrs.isDirectory()) {
                     if (selection.maxFilesExceeded(counterAdded)) {
                         if (isDebugEnabled) {
                             getLogger().debug(String.format("%s[skip][preVisitDirectory][maxFiles=%s]exceeded", getPathOperationPrefix(path
@@ -369,60 +393,36 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                         // return result;
                         return FileVisitResult.TERMINATE;
                     }
-                    if (selection.checkDirectory(path.toAbsolutePath().toString())) {
-                        return FileVisitResult.CONTINUE;
+                    if (isTraceEnabled) {
+                        getLogger().trace(String.format("%s[visitFile]", getPathOperationPrefix(path.toString())));
                     }
-                    if (isDebugEnabled) {
-                        getLogger().debug(String.format("%s[preVisitDirectory][match][excludedDirectories=%s]", getPathOperationPrefix(path
-                                .toString()), selection.getConfig().getExcludedDirectoriesPattern().pattern()));
-                    }
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
+                    String fileName = path.getFileName().toString();
+                    if (selection.checkFileName(fileName)) {
+                        BasicFileAttributes attr = readFileAttributes(path);
+                        if (selection.isValidFileType(attr)) {
+                            ProviderFile file = createProviderFile(path, attr);
+                            if (file != null) {
+                                if (selection.checkProviderFileMinMaxSize(file)) {
+                                    counterAdded++;
+                                    file.setIndex(counterAdded);
+                                    result.add(file);
 
-                @Override
-                public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
-                    if (!attrs.isDirectory()) {
-                        if (selection.maxFilesExceeded(counterAdded)) {
-                            if (isDebugEnabled) {
-                                getLogger().debug(String.format("%s[skip][preVisitDirectory][maxFiles=%s]exceeded", getPathOperationPrefix(path
-                                        .toString()), selection.getConfig().getMaxFiles()));
-                            }
-                            // return result;
-                            return FileVisitResult.TERMINATE;
-                        }
-                        if (isTraceEnabled) {
-                            getLogger().trace(String.format("%s[visitFile]", getPathOperationPrefix(path.toString())));
-                        }
-                        String fileName = path.getFileName().toString();
-                        if (selection.checkFileName(fileName)) {
-                            BasicFileAttributes attr = readFileAttributes(path);
-                            if (selection.isValidFileType(attr)) {
-                                ProviderFile file = createProviderFile(path, attr);
-                                if (file != null) {
-                                    if (selection.checkProviderFileMinMaxSize(file)) {
-                                        counterAdded++;
-                                        file.setIndex(counterAdded);
-                                        result.add(file);
-
-                                        if (isDebugEnabled) {
-                                            getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
-                                        }
+                                    if (isDebugEnabled) {
+                                        getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
                                     }
                                 }
                             }
                         }
                     }
-                    return FileVisitResult.CONTINUE;
                 }
-            });
-        } catch (IOException e) {
-            throw new ProviderException(e);
-        }
+                return FileVisitResult.CONTINUE;
+            }
+        });
         return result;
     }
 
     // TODO write to ProviderFileSelectioResult instead to log
-    private List<ProviderFile> selectFilesNonRecursive(ProviderFileSelection selection, Path directory) throws ProviderException {
+    private List<ProviderFile> selectFilesNonRecursive(ProviderFileSelection selection, Path directory) throws Exception {
         boolean isDebugEnabled = getLogger().isDebugEnabled();
         boolean isTraceEnabled = getLogger().isTraceEnabled();
 
@@ -466,8 +466,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                     }
                 }
             }
-        } catch (IOException e) {
-            throw new ProviderException(e);
         }
         return result;
     }
