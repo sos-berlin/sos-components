@@ -57,6 +57,7 @@ import com.sos.commons.vfs.ftp.commons.FTPProviderUtils;
 import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
 
 /** TODO FTPS FileZilla<br/>
+ * https://issues.apache.org/jira/browse/NET-408<br/>
  * - as Target (write files) - [425]425 Unable to build data connection: TLS session of data connection not resumed.<br/>
  * - as Source (list etc) - no result - Error: TLS session of data connection not resumed + 425<br/>
  */
@@ -185,9 +186,14 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         });
 
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
-        List<ProviderFile> result = new ArrayList<>();
-        FTPProviderUtils.selectFiles(this, selection, directory, result);
-        return result;
+
+        try {
+            List<ProviderFile> result = new ArrayList<>();
+            FTPProviderUtils.selectFiles(this, selection, directory, result);
+            return result;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(directory), e);
+        }
     }
 
     /** Overrides {@link IProvider#exists(String)}<br/>

@@ -20,10 +20,11 @@ public class SMBYADEEngineTest {
     public static String HOST = "localhost";
     public static int PORT = 445;
     public static String USER = "sos";
+    public static String PASSWORD = "sos";
     public static String DOMAIN = null;
     public static String SHARE_NAME = null;
 
-    public static String SOURCE_DIR = "yade/source";
+    public static String SOURCE_DIR = "/sos/yade/SMB/source";
     public static String TARGET_DIR = SOURCE_DIR + "/../target";
 
     @Ignore
@@ -31,9 +32,10 @@ public class SMBYADEEngineTest {
     public void testLocal2SMB() {
         YADEEngine yade = new YADEEngine();
         try {
+
             /** Common */
             YADEArguments args = YADEEngineTest.createYADEArgs();
-            args.getParallelism().setValue(1);
+            args.getParallelism().setValue(10);
             // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             args.getOperation().setValue(TransferOperation.COPY);
 
@@ -60,9 +62,10 @@ public class SMBYADEEngineTest {
     public void testSMB2Local() {
         YADEEngine yade = new YADEEngine();
         try {
+
             /** Common */
             YADEArguments args = YADEEngineTest.createYADEArgs();
-            args.getParallelism().setValue(1);
+            args.getParallelism().setValue(10);
             // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             args.getOperation().setValue(TransferOperation.COPY);
 
@@ -101,9 +104,7 @@ public class SMBYADEEngineTest {
         args.getDomain().setValue(DOMAIN);
         args.getShareName().setValue(SHARE_NAME);
         args.getUser().setValue(USER);
-        if (USER != null) {
-            args.getPassword().setValue("sos");
-        }
+        args.getPassword().setValue(PASSWORD);
         args.applyDefaultIfNull();
         return args;
     }

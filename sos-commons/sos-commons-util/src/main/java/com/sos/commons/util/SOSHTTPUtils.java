@@ -1,9 +1,7 @@
-package com.sos.commons.vfs.http.commons;
+package com.sos.commons.util;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -14,12 +12,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Locale;
 
-import com.sos.commons.util.SOSPathUtils;
-import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.vfs.http.commons.HTTPAuthConfig.NTLM;
-
-public class HTTPUtils {
+public class SOSHTTPUtils {
 
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_TYPE_BINARY = "application/octet-stream";
@@ -49,30 +42,8 @@ public class HTTPUtils {
             return uri;
         } else {
             // HTTP Format: https://user:pass@example.com:8443/path/to/resource
-            // HTTPProvider Format: [user]https://example.com:8443/path/to/resource
+            // SOSHTTPUtils Format: [user]https://example.com:8443/path/to/resource
             return "[" + username + "]" + uri;
-        }
-    }
-
-    /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>
-     * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePathEncoded(URI, String)}).<br>
-     * Without a trailing slash, relative resolution may produce incorrect results.
-     * 
-     * See toBaseURI(String)
-     * 
-     * @throws MalformedURLException */
-    public static URI getBaseURI(SOSArgument<String> hostArg, SOSArgument<Integer> portArg) throws Exception {
-        String hostOrUrl = SOSPathUtils.toUnixStyle(hostArg.getValue());
-        if (SOSPathUtils.isAbsoluteURIPath(hostOrUrl)) {
-            return toBaseURI(hostOrUrl);
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("http://").append(hostOrUrl);
-            if (portArg.isDirty()) {
-                sb.append(":").append(portArg.getValue());
-            }
-            sb.append("/");
-            return toBaseURI(sb.toString());
         }
     }
 
@@ -148,13 +119,7 @@ public class HTTPUtils {
         return URLDecoder.decode(input, StandardCharsets.UTF_8).replaceAll("[<>:\"/\\|?*]", "_");
     }
 
-    // TODO use smbj NTLMAuthenticator ...
-    public static String getNTLMAuthToken(NTLM config) throws Exception {
-
-        return null;
-    }
-
-    public static long toMillis(String httpDate) {
+    public static long httpDateToMillis(String httpDate) {
         if (SOSString.isEmpty(httpDate)) {
             return DEFAULT_LAST_MODIFIED;
         }
@@ -367,29 +332,6 @@ public class HTTPUtils {
         case 999 -> "[?]Non-standard";
         default -> null;
         };
-    }
-
-    /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>
-     * Ensures that the URI ends with '/' to allow correct resolution (see {@link HTTPUtils#normalizePathEncoded(URI, String)}).<br>
-     * Without a trailing slash, relative resolution may produce incorrect results.
-     * 
-     * @param spec Absolute HTTP path
-     * @return URI
-     * @throws URISyntaxException
-     * @throws MalformedURLException */
-    private static URI toBaseURI(final String spec) throws Exception {
-        String baseURI = spec;
-        if (!baseURI.endsWith("/")) {
-            if (baseURI.contains("?")) {// with query parameters
-                baseURI = SOSPathUtils.getParentPath(baseURI);
-            }
-            baseURI = baseURI + "/";
-        }
-        // ensuring proper encoding
-        // variant 1) new URL
-        // or
-        // variant 2) new URI(null,spec,null);
-        return new URL(baseURI).toURI();
     }
 
 }

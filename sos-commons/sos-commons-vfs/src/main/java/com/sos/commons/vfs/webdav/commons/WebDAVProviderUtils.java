@@ -12,13 +12,12 @@ import java.util.Set;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
-import com.sos.commons.vfs.http.commons.HTTPUtils;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 import com.sos.commons.xml.SOSXML;
 
@@ -26,21 +25,17 @@ public class WebDAVProviderUtils {
 
     // possible recursion
     public static List<ProviderFile> selectFiles(WebDAVProvider provider, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result) throws ProviderException {
+            List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
-        try {
-            list(provider, selection, directoryPath, result, counterAdded);
-        } catch (Throwable e) {
-            throw new ProviderException(e);
-        }
+        list(provider, selection, directoryPath, result, counterAdded);
         return result;
     }
 
     public static boolean exists(HTTPClient client, URI uri) throws Exception {
         ExecuteResult<String> result = client.executeWithResponseBody(createPROPFINDRequest(client, uri, "0"));
         int code = result.response().statusCode();
-        if (!HTTPUtils.isSuccessful(code)) {
-            if (HTTPUtils.isNotFound(code)) {
+        if (!SOSHTTPUtils.isSuccessful(code)) {
+            if (SOSHTTPUtils.isNotFound(code)) {
                 return false;
             }
             throw new IOException(HTTPClient.getResponseStatus(result));
@@ -51,7 +46,7 @@ public class WebDAVProviderUtils {
     public static void createDirectory(WebDAVProvider provider, URI uri) throws Exception {
         HttpRequest.Builder builder = provider.getClient().createRequestBuilder(uri);
         ExecuteResult<Void> result = provider.getClient().executeWithoutResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
-        if (!HTTPUtils.isSuccessful(result.response().statusCode())) {
+        if (!SOSHTTPUtils.isSuccessful(result.response().statusCode())) {
             throw new IOException(HTTPClient.getResponseStatus(result));
         }
         if (provider.getLogger().isDebugEnabled()) {
@@ -68,8 +63,8 @@ public class WebDAVProviderUtils {
         String depth = "0";
         ExecuteResult<String> result = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), uri, depth));
         int code = result.response().statusCode();
-        if (!HTTPUtils.isSuccessful(code)) {
-            if (HTTPUtils.isNotFound(code)) {
+        if (!SOSHTTPUtils.isSuccessful(code)) {
+            if (SOSHTTPUtils.isNotFound(code)) {
                 return null;
             }
             throw new IOException(HTTPClient.getResponseStatus(result));
@@ -79,67 +74,62 @@ public class WebDAVProviderUtils {
     }
 
     private static int list(WebDAVProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            int counterAdded) throws ProviderException {
-        try {
-            URI directoryURI = HTTPUtils.ensureDirectoryURI(new URI(provider.normalizePath(directoryPath)));
+            int counterAdded) throws Exception {
 
-            // not use Depth infinity - maybe not supported by the server and possible timeouts to get all levels ...
-            String depth = "1";
-            ExecuteResult<String> executeResult = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(),
-                    directoryURI, depth));
-            int code = executeResult.response().statusCode();
-            if (!HTTPUtils.isSuccessful(code)) {
-                if (HTTPUtils.isNotFound(code)) {
-                    return 0;
-                }
-                throw new IOException(HTTPClient.getResponseStatus(executeResult));
+        URI directoryURI = SOSHTTPUtils.ensureDirectoryURI(new URI(provider.normalizePath(directoryPath)));
+
+        // not use Depth infinity - maybe not supported by the server and possible timeouts to get all levels ...
+        String depth = "1";
+        ExecuteResult<String> executeResult = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), directoryURI,
+                depth));
+        int code = executeResult.response().statusCode();
+        if (!SOSHTTPUtils.isSuccessful(code)) {
+            if (SOSHTTPUtils.isNotFound(code)) {
+                return 0;
             }
-
-            Set<String> subDirectories = new HashSet<>();
-            for (WebDAVResource resource : parseWebDAVResources(provider, directoryURI, depth, executeResult)) {
-                if (selection.maxFilesExceeded(counterAdded)) {
-                    return counterAdded;
-                }
-                if (resource.isDirectory()) {
-                    if (selection.getConfig().isRecursive()) {
-                        if (selection.checkDirectory(resource.getURI().toString())) {
-                            subDirectories.add(resource.getURI().toString());
-                        }
-                    }
-                } else {
-                    if (selection.checkFileName(SOSPathUtils.getName(resource.getURI().toString())) && selection.isValidFileType(resource)) {
-                        ProviderFile file = provider.createProviderFile(resource);
-                        if (file == null) {
-                            if (provider.getLogger().isDebugEnabled()) {
-                                provider.getLogger().debug(provider.getPathOperationPrefix(resource.getURI().toString()) + "[skip]" + resource);
-                            }
-                        } else {
-                            if (selection.checkProviderFileMinMaxSize(file)) {
-                                counterAdded++;
-
-                                file.setIndex(counterAdded);
-                                result.add(file);
-
-                                if (provider.getLogger().isDebugEnabled()) {
-                                    provider.getLogger().debug(provider.getPathOperationPrefix(file.getFullPath()) + "added");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            for (String subDirectory : subDirectories) {
-                if (selection.maxFilesExceeded(counterAdded)) {
-                    return counterAdded;
-                }
-                counterAdded = list(provider, selection, subDirectory, result, counterAdded);
-            }
-            return counterAdded;
-        } catch (ProviderException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new ProviderException(e);
+            throw new IOException(HTTPClient.getResponseStatus(executeResult));
         }
+
+        Set<String> subDirectories = new HashSet<>();
+        for (WebDAVResource resource : parseWebDAVResources(provider, directoryURI, depth, executeResult)) {
+            if (selection.maxFilesExceeded(counterAdded)) {
+                return counterAdded;
+            }
+            if (resource.isDirectory()) {
+                if (selection.getConfig().isRecursive()) {
+                    if (selection.checkDirectory(resource.getURI().toString())) {
+                        subDirectories.add(resource.getURI().toString());
+                    }
+                }
+            } else {
+                if (selection.checkFileName(SOSPathUtils.getName(resource.getURI().toString())) && selection.isValidFileType(resource)) {
+                    ProviderFile file = provider.createProviderFile(resource);
+                    if (file == null) {
+                        if (provider.getLogger().isDebugEnabled()) {
+                            provider.getLogger().debug(provider.getPathOperationPrefix(resource.getURI().toString()) + "[skip]" + resource);
+                        }
+                    } else {
+                        if (selection.checkProviderFileMinMaxSize(file)) {
+                            counterAdded++;
+
+                            file.setIndex(counterAdded);
+                            result.add(file);
+
+                            if (provider.getLogger().isDebugEnabled()) {
+                                provider.getLogger().debug(provider.getPathOperationPrefix(file.getFullPath()) + "added");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (String subDirectory : subDirectories) {
+            if (selection.maxFilesExceeded(counterAdded)) {
+                return counterAdded;
+            }
+            counterAdded = list(provider, selection, subDirectory, result, counterAdded);
+        }
+        return counterAdded;
     }
 
     private static HttpRequest createPROPFINDRequest(HTTPClient client, URI uri, String depth) {
@@ -201,10 +191,10 @@ public class WebDAVProviderUtils {
                 continue;
             }
 
-            URI resourceURI = URI.create(HTTPUtils.normalizePathEncoded(uri, resourceHref));
+            URI resourceURI = URI.create(SOSHTTPUtils.normalizePathEncoded(uri, resourceHref));
             boolean resourceIsDirectory = extractIsDirectory(response);
             if (!responseOfURISelfChecked && !depth.equals("0") && resourceIsDirectory) {
-                if (HTTPUtils.ensureDirectoryURI(uri).equals(HTTPUtils.ensureDirectoryURI(resourceURI))) {
+                if (SOSHTTPUtils.ensureDirectoryURI(uri).equals(SOSHTTPUtils.ensureDirectoryURI(resourceURI))) {
                     responseOfURISelfChecked = true;
                     continue;
                 }
@@ -218,7 +208,7 @@ public class WebDAVProviderUtils {
     private static String extractHref(Element response) {
         NodeList nodes = response.getElementsByTagNameNS("*", "href");
         if (nodes.getLength() > 0) {
-            return HTTPUtils.decode(nodes.item(0).getTextContent());
+            return SOSHTTPUtils.decode(nodes.item(0).getTextContent());
         }
         return null;
     }
@@ -246,9 +236,9 @@ public class WebDAVProviderUtils {
     private static long extractLastModified(Element response) {
         NodeList nodes = response.getElementsByTagNameNS("*", "getlastmodified");
         if (nodes.getLength() > 0) {
-            return HTTPUtils.toMillis(nodes.item(0).getTextContent());
+            return SOSHTTPUtils.httpDateToMillis(nodes.item(0).getTextContent());
         }
-        return HTTPUtils.DEFAULT_LAST_MODIFIED;
+        return SOSHTTPUtils.DEFAULT_LAST_MODIFIED;
     }
 
 }

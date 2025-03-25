@@ -18,6 +18,7 @@ import java.util.Optional;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.SOSSSLContextFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -67,7 +68,7 @@ public class HTTPClient implements AutoCloseable {
                     });
                 }
             } else {
-                ntlmMAuthToken = HTTPUtils.getNTLMAuthToken(authConfig.getNTLM());
+                ntlmMAuthToken = HTTPProviderUtils.getNTLMAuthToken(authConfig.getNTLM());
             }
         } else {
             builder.proxy(java.net.ProxySelector.of(new InetSocketAddress(provider.getProxyProvider().getHost(), provider.getProxyProvider()
@@ -129,7 +130,7 @@ public class HTTPClient implements AutoCloseable {
         }
         ExecuteResult<Void> result = executeWithoutResponseBody(request);
         if (isHEAD) {
-            if (HTTPUtils.isMethodNotAllowed(result.response.statusCode())) {
+            if (SOSHTTPUtils.isMethodNotAllowed(result.response.statusCode())) {
                 isHEADMethodAllowed = false;
                 result = executeWithoutResponseBody(createGETRequest(uri));
             } else {
@@ -151,29 +152,29 @@ public class HTTPClient implements AutoCloseable {
         byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
 
         HttpRequest.Builder builder = createRequestBuilder(uri);
-        builder.header(HTTPUtils.HEADER_CONTENT_TYPE, HTTPUtils.HEADER_CONTENT_TYPE_BINARY);
+        builder.header(SOSHTTPUtils.HEADER_CONTENT_TYPE, SOSHTTPUtils.HEADER_CONTENT_TYPE_BINARY);
         withWebDAVOverwrite(builder, isWebDAV);
         if (!chunkedTransfer) {
             // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
-            builder.header(HTTPUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
+            builder.header(SOSHTTPUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
         }
         return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build());
     }
 
     public ExecuteResult<Void> executePUT(URI uri, InputStream is, long size, boolean isWebDAV) throws Exception {
         HttpRequest.Builder builder = createRequestBuilder(uri);
-        builder.header(HTTPUtils.HEADER_CONTENT_TYPE, HTTPUtils.HEADER_CONTENT_TYPE_BINARY);
+        builder.header(SOSHTTPUtils.HEADER_CONTENT_TYPE, SOSHTTPUtils.HEADER_CONTENT_TYPE_BINARY);
         withWebDAVOverwrite(builder, isWebDAV);
         if (!chunkedTransfer) {
             // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
-            builder.header(HTTPUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
+            builder.header(SOSHTTPUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
         }
         return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build());
     }
 
     public static void withWebDAVOverwrite(HttpRequest.Builder builder, boolean withWebDAVOverwrite) {
         if (withWebDAVOverwrite) {
-            builder.header(HTTPUtils.HEADER_WEBDAV_OVERWRITE, HTTPUtils.HEADER_WEBDAV_OVERWRITE_VALUE);
+            builder.header(SOSHTTPUtils.HEADER_WEBDAV_OVERWRITE, SOSHTTPUtils.HEADER_WEBDAV_OVERWRITE_VALUE);
         }
     }
 
@@ -181,9 +182,9 @@ public class HTTPClient implements AutoCloseable {
         HttpRequest request = createGETRequest(uri);
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         int code = response.statusCode();
-        if (!HTTPUtils.isSuccessful(code)) {
+        if (!SOSHTTPUtils.isSuccessful(code)) {
             ExecuteResult<?> result = new ExecuteResult<>(request, response);
-            if (HTTPUtils.isNotFound(code)) {
+            if (SOSHTTPUtils.isNotFound(code)) {
                 throw new SOSNoSuchFileException(uri.toString(), new Exception(HTTPClient.getResponseStatus(result)));
             }
             throw new Exception(HTTPClient.getResponseStatus(result));
@@ -199,13 +200,13 @@ public class HTTPClient implements AutoCloseable {
 
     public static long getLastModifiedInMillis(HttpResponse<?> response) {
         if (response == null) {
-            return HTTPUtils.DEFAULT_LAST_MODIFIED;
+            return SOSHTTPUtils.DEFAULT_LAST_MODIFIED;
         }
-        Optional<String> header = response.headers().firstValue(HTTPUtils.HEADER_LAST_MODIFIED);
+        Optional<String> header = response.headers().firstValue(SOSHTTPUtils.HEADER_LAST_MODIFIED);
         if (!header.isPresent()) {
-            return HTTPUtils.DEFAULT_LAST_MODIFIED;
+            return SOSHTTPUtils.DEFAULT_LAST_MODIFIED;
         }
-        return HTTPUtils.toMillis(header.get());
+        return SOSHTTPUtils.httpDateToMillis(header.get());
     }
 
     public static String getResponseStatus(ExecuteResult<?> result) {
@@ -213,7 +214,7 @@ public class HTTPClient implements AutoCloseable {
         sb.append("[").append(result.request().method()).append("]");
         sb.append("[").append(result.request().uri()).append("]");
         sb.append("[").append(result.response().statusCode()).append("]");
-        sb.append(HTTPUtils.getReasonPhrase(result.response().statusCode()));
+        sb.append(SOSHTTPUtils.getReasonPhrase(result.response().statusCode()));
         return sb.toString();
     }
 

@@ -122,13 +122,13 @@ public class SSHJProviderImpl extends SSHProvider {
         });
 
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
-        List<ProviderFile> result = new ArrayList<>();
         try {
+            List<ProviderFile> result = new ArrayList<>();
             SSHJProviderUtils.selectFiles(this, selection, directory, result);
-        } catch (ProviderException e) {
-            throw e;
+            return result;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(directory), e);
         }
-        return result;
     }
 
     /** Overrides {@link IProvider#exists(String)} */

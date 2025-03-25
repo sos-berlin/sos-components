@@ -11,20 +11,15 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 
 public class FTPProviderUtils {
 
     // possible recursion
     public static List<ProviderFile> selectFiles(FTPProvider provider, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result) throws ProviderException {
+            List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
-        try {
-            list(provider, selection, directoryPath, result, counterAdded);
-        } catch (Throwable e) {
-            throw new ProviderException(e);
-        }
+        list(provider, selection, directoryPath, result, counterAdded);
         return result;
     }
 
