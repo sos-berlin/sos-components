@@ -124,6 +124,7 @@ import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderEvent.OrderTransferred;
 import js7.data.order.OrderId;
 import js7.data.plan.PlanEvent;
+import js7.data.plan.PlanId;
 import js7.data.subagent.SubagentBundleId;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent;
@@ -679,7 +680,7 @@ public class EventService {
             } else if (evt instanceof NoticeEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             } else if (evt instanceof PlanEvent) {
-                createPlanEvent(eventId, ((PlanEvent) key).toString());
+                createPlanEvent(eventId, (PlanId) key);
             }
 
         } catch (Exception e) {
@@ -862,11 +863,15 @@ public class EventService {
         return createWorkflowEvent(eventId, path, "WorkflowUpdated");
     }
     
-    private EventSnapshot createPlanEvent(long eventId, String path) {
+    private EventSnapshot createPlanEvent(long eventId, PlanId pId) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
         evt.setEventType("PlanUpdated");
-        evt.setPath(BoardHelper.getNoticeKeyShortString(path));
+        if (PlanId.Global.equals(pId)) {
+            evt.setPath("Global");
+        } else {
+            evt.setPath(pId.planSchemaId().string() + "/" + pId.planKey().string());
+        }
         evt.setObjectType(EventType.PLAN);
         return evt;
     }
