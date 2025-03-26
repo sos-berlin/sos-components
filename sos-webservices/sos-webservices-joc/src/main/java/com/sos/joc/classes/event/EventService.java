@@ -681,7 +681,7 @@ public class EventService {
             } else if (evt instanceof NoticeEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             } else if (evt instanceof PlanEvent) {
-                createPlanEvent(eventId, (PlanId) key);
+                addEvent(createPlanEvent(eventId, (PlanId) key));
             }
 
         } catch (Exception e) {

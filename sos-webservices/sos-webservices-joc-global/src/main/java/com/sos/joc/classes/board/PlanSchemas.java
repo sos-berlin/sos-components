@@ -31,16 +31,17 @@ import reactor.core.publisher.Flux;
 public class PlanSchemas {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanSchemas.class);
-    public static final String defaultPlanSchemaId = "DailyPlan"; 
+    public static final String DailyPlanPlanSchemaId = "DailyPlan"; 
+    public static final String DailyPlanThresholdKey = "unknownPlansAreOpenFrom"; 
     private static final Duration finishedPlanRetentionPeriod = Duration.ZERO; // Duration.ofDays(7L);
     private static final Map<String, JPlanSchema> planSchemas = Collections.unmodifiableMap(new HashMap<String, JPlanSchema>() {
 
         private static final long serialVersionUID = 1L;
 
         {
-            put(defaultPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(defaultPlanSchemaId), 
-                    JExprFunction.apply("(day) => $day >= $unknownPlansAreOpenFrom").asScala(),
-                    Collections.singletonMap("unknownPlansAreOpenFrom", StringValue.empty())));
+            put(DailyPlanPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(DailyPlanPlanSchemaId), 
+                    JExprFunction.apply("(day) => $day >= $" + DailyPlanThresholdKey).asScala(),
+                    Collections.singletonMap(DailyPlanThresholdKey, StringValue.empty())));
         }
     });
 
@@ -80,11 +81,11 @@ public class PlanSchemas {
     }
     
     public static boolean dailyPlanPlanSchemaExists(JControllerState currentState) {
-        return currentState.idToPlanSchemaState().containsKey(PlanSchemaId.of(defaultPlanSchemaId));
+        return currentState.idToPlanSchemaState().containsKey(PlanSchemaId.of(DailyPlanPlanSchemaId));
     }
     
     public static PlanSchemaId getDailyPlanPlanSchemaIfExists(JControllerState currentState) {
-        PlanSchemaId id = PlanSchemaId.of(defaultPlanSchemaId);
+        PlanSchemaId id = PlanSchemaId.of(DailyPlanPlanSchemaId);
         return currentState.idToPlanSchemaState().containsKey(id) ? id : PlanSchemaId.Global;
     }
     
