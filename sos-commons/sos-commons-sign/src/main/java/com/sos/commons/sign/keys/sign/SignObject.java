@@ -28,6 +28,7 @@ import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
@@ -58,6 +59,7 @@ public class SignObject {
 	public static String signPGP(InputStream privateKey, InputStream original, String passPhrase) throws IOException, PGPException {
 	    Security.addProvider(new BouncyCastleProvider());
 		PGPSecretKey secretKey = KeyUtil.readSecretKey(privateKey);
+		PGPPublicKey publicKey = secretKey.getPublicKey();
 		PGPPrivateKey pgpPrivateKey = null;
 		if (passPhrase != null) {
 			pgpPrivateKey = secretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder()
@@ -66,8 +68,8 @@ public class SignObject {
 			pgpPrivateKey = secretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder()
 					.setProvider(BouncyCastleProvider.PROVIDER_NAME).build("".toCharArray()));
 		}
-		final PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(
-				pgpPrivateKey.getPublicKeyPacket().getAlgorithm(), PGPUtil.SHA256));
+        final PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(
+                pgpPrivateKey.getPublicKeyPacket().getAlgorithm(), PGPUtil.SHA256), publicKey);
 		signatureGenerator.init(PGPSignature.CANONICAL_TEXT_DOCUMENT, pgpPrivateKey);
 
 		ByteArrayOutputStream signatureOutput = new ByteArrayOutputStream();
