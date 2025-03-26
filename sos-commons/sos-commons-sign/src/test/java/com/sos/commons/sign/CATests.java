@@ -90,11 +90,11 @@ public class CATests {
             LOGGER.trace("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
             X509Certificate c = ((X509Certificate)rootCertificate);
             List<String> usages = c.getExtendedKeyUsage();
-            LOGGER.info("X500Principal IssuerDN: " + c.getIssuerX500Principal().getName());
-            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName());
-            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779));
-            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.CANONICAL));
-            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779, Collections.singletonMap("2.5.4.46", "DN")));
+            LOGGER.trace("X500Principal IssuerDN: " + c.getIssuerX500Principal().getName());
+            LOGGER.trace("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName());
+            LOGGER.trace("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779));
+            LOGGER.trace("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.CANONICAL));
+            LOGGER.trace("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779, Collections.singletonMap("2.5.4.46", "DN")));
             if (usages != null) {
                 for (String usage : usages) {
                     LOGGER.trace("Usage: " + usage);
@@ -341,7 +341,7 @@ public class CATests {
         String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Berlin, C=DE";
         LdapName ldapNameDN = new LdapName(dn);
         for (Rdn rdn : ldapNameDN.getRdns()) {
-            LOGGER.info(rdn.getType() + " : " + rdn.getValue());
+            LOGGER.trace(rdn.getType() + " : " + rdn.getValue());
         }
     }
 
