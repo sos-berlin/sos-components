@@ -21,7 +21,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;

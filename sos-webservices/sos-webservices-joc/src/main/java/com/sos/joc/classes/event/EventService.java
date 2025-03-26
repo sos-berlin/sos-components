@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.agent.AgentClusterWatch;
-import com.sos.joc.classes.board.BoardHelper;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.JOCEvent;
@@ -74,8 +74,8 @@ import com.sos.monitoring.notification.NotificationType;
 
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent;
-import js7.data.board.NoticeEvent;
 import js7.data.board.BoardPath;
+import js7.data.board.NoticeEvent;
 import js7.data.cluster.ClusterEvent;
 import js7.data.cluster.ClusterWatchProblems;
 import js7.data.controller.ControllerEvent;
@@ -124,6 +124,7 @@ import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderEvent.OrderTransferred;
 import js7.data.order.OrderId;
 import js7.data.plan.PlanEvent;
+import js7.data.plan.PlanId;
 import js7.data.subagent.SubagentBundleId;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent;
@@ -547,6 +548,7 @@ public class EventService {
                         orders.put(mainOrderId, w);
                     }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
+                    addEvent(createWorkflowPlanEvent(eventId, w, optOrder));
                     if (evt instanceof OrderProcessingStarted || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
                         addEvent(createTaskEventOfOrder(eventId, w));
                     } else if (evt instanceof OrderLockEvent) {
@@ -679,7 +681,7 @@ public class EventService {
             } else if (evt instanceof NoticeEvent) {
                 addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             } else if (evt instanceof PlanEvent) {
-                createPlanEvent(eventId, ((PlanEvent) key).toString());
+                createPlanEvent(eventId, (PlanId) key);
             }
 
         } catch (Exception e) {
@@ -722,6 +724,23 @@ public class EventService {
 
     private EventSnapshot createWorkflowEventOfOrder(long eventId, WorkflowId workflowId) {
         return createWorkflowEvent(eventId, workflowId, "WorkflowStateChanged");
+    }
+    
+    private EventSnapshot createWorkflowPlanEvent(long eventId, WorkflowId workflowId, JOrder jOrder) {
+        if (WorkflowRefs.getWorkflowNamesWithBoards(controllerId, workflowId.getPath()) != null) {
+            PlanId pId = jOrder.asScala().planId();
+            EventSnapshot evt = new EventSnapshot();
+            evt.setEventId(eventId);
+            evt.setEventType("WorkflowPlanChanged");
+            if (PlanId.Global.equals(pId)) {
+                evt.setPath("Global");
+            } else {
+                evt.setPath(pId.planSchemaId().string() + "/" + pId.planKey().string());
+            }
+            evt.setObjectType(EventType.PLAN);
+            return evt;
+        }
+        return null;
     }
 
     private EventSnapshot createWorkflowEvent(long eventId, WorkflowId workflowId, String eventType) {
@@ -862,11 +881,15 @@ public class EventService {
         return createWorkflowEvent(eventId, path, "WorkflowUpdated");
     }
     
-    private EventSnapshot createPlanEvent(long eventId, String path) {
+    private EventSnapshot createPlanEvent(long eventId, PlanId pId) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
         evt.setEventType("PlanUpdated");
-        evt.setPath(BoardHelper.getNoticeKeyShortString(path));
+        if (PlanId.Global.equals(pId)) {
+            evt.setPath("Global");
+        } else {
+            evt.setPath(pId.planSchemaId().string() + "/" + pId.planKey().string());
+        }
         evt.setObjectType(EventType.PLAN);
         return evt;
     }

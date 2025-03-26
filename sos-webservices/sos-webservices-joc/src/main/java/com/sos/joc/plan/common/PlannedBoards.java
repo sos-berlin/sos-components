@@ -46,6 +46,7 @@ public class PlannedBoards {
     private final JControllerState controllerState;
     private final boolean withSysncState;
     private final Integer limitOrders;
+    private final boolean withExpectingOrderIds;
     
     private static final Map<NoticeStateText, Integer> severities = Collections.unmodifiableMap(new HashMap<NoticeStateText, Integer>() {
 
@@ -65,6 +66,7 @@ public class PlannedBoards {
         this.controllerState = controllerState;
         this.withSysncState = true;
         this.limitOrders = limit == null ? limitOrdersDefault : limit;
+        this.withExpectingOrderIds = false;
     }
     
     public PlannedBoards(Map<BoardPath, ?> jBoards, Map<OrderId, OrderV> orders, boolean compact, Integer limit) {
@@ -74,15 +76,27 @@ public class PlannedBoards {
         this.controllerState = null;
         this.withSysncState = false;
         this.limitOrders = limit == null ? limitOrdersDefault : limit;
+        this.withExpectingOrderIds = false;
+    }
+    
+    public PlannedBoards(Map<BoardPath, ?> jBoards, boolean withExpectingOrderIds, boolean compact, Integer limit) {
+        this.jBoards = jBoards;
+        this.orders = Collections.emptyMap();
+        this.compact = compact;
+        this.controllerState = null;
+        this.withSysncState = false;
+        this.limitOrders = limit == null ? limitOrdersDefault : limit;
+        this.withExpectingOrderIds = withExpectingOrderIds;
     }
     
     public PlannedBoards(BoardPath boardPath) {
         this.jBoards = Collections.singletonMap(boardPath, Collections.emptyList());
-        this.orders = null;
+        this.orders = Collections.emptyMap();
         this.compact = true;
         this.controllerState = null;
         this.withSysncState = false;
         this.limitOrders = -1;
+        this.withExpectingOrderIds = false;
     }
     
     @SuppressWarnings("unchecked")
@@ -182,14 +196,14 @@ public class PlannedBoards {
         Notice notice = new Notice();
         notice.setId(noticeKeyShortString);
         if (!np.expectingOrderIds().isEmpty()) {
-            if (this.orders != null) {
+            if (this.orders != null && !this.orders.isEmpty()) {
                 Stream<OrderV> expectingOrders = np.expectingOrderIds().stream().map(this.orders::get).filter(Objects::nonNull);
                 if (limitOrders > -1 && np.expectingOrderIds().size() > limitOrders) {
                     expectingOrders = expectingOrders.sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders
                             .longValue());
                 }
                 notice.setExpectingOrders(expectingOrders.collect(Collectors.toList()));
-            } else {
+            } else if (withExpectingOrderIds) {
                 Stream<String> expectingOrderIds = np.expectingOrderIds().stream().map(OrderId::string);
                 if (limitOrders > -1 && np.expectingOrderIds().size() > limitOrders) {
                     expectingOrderIds = expectingOrderIds.limit(limitOrders.longValue());
