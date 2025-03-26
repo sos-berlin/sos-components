@@ -114,7 +114,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
     
     private List<Err419> release(ReleaseFilter in, JocError jocError, boolean withDeletionOfEmptyFolders, String accessToken) throws Exception {
-        /* TODO: 
+        /* 
          * - acquire semaphore 
          * - cancel orders of renamed schedules (orders related to old schedule name)
          * - cancel orders
@@ -124,7 +124,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
          * - acquire semaphore a second time
          * - call release again with postDeployReleasables
          * - recreate orders
-         * - release semaphore (remove?!)
+         * - release semaphore final time and remove it
          * */
         PublishSemaphore.tryAcquire(accessToken);
         SOSHibernateSession session = null;
@@ -278,7 +278,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
                 if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
-                    bulkErrors.addAll(updateReleasedFolder(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
+                    bulkErrors.addAll(updateReleasedFolder(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging, preDeploy));
                     JocInventory.postEvent(conf.getFolder());
                 } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
                     throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Realeasable Object': %s", conf.getPath(), conf
@@ -286,15 +286,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 } else if (!conf.getValid()) {
                     throw new ControllerInvalidResponseDataException(String.format("%s is not valid", conf.getPath()));
                 } else {
-                    if(preDeploy) {
-                        if(preDeployReleasables.contains(conf.getTypeAsEnum())) {
-                            bulkErrors.addAll(updateReleasedObject(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
-                        }
-                    } else {
-                        if(postDeployReleasables.contains(conf.getTypeAsEnum())) {
-                            bulkErrors.addAll(updateReleasedObject(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
-                        }
+                    if ((preDeploy && !preDeployReleasables.contains(conf.getTypeAsEnum())) || 
+                            (!preDeploy && !postDeployReleasables.contains(conf.getTypeAsEnum()))) {
+                        continue;
                     }
+                    bulkErrors.addAll(updateReleasedObject(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
                     JocInventory.postEvent(conf.getFolder());
                 }
             } catch (Exception ex) {
@@ -338,7 +334,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private List<Err419> updateReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, Map<String, Workflow> cachedWorkflows,
-            DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging) throws SOSHibernateException, JsonParseException,
+            DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean preDeploy) throws SOSHibernateException, JsonParseException,
             JsonMappingException, IOException {
         List<Err419> errors = new ArrayList<>();
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes(), false);
@@ -348,7 +344,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             // createAuditLog(conf, conf.getTypeAsEnum(), auditLogger, auditParams);
             conf.setAuditLogId(dbAuditLog.getId());
             for (DBItemInventoryConfiguration item : folderContent) {
-                if (item.getReleased() || !item.getValid()) {
+                if (item.getReleased() || !item.getValid()
+                        || (preDeploy && !preDeployReleasables.contains(item.getTypeAsEnum()))
+                        || (!preDeploy && !postDeployReleasables.contains(item.getTypeAsEnum()))) {
                     continue;
                 }
                 errors.addAll(updateReleasedObject(item, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
