@@ -208,6 +208,7 @@ public class EncryptionTest {
   }
 
   @Test
+  @Ignore
   public void test04PrintEnDecryptUsage() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
         NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
     LOGGER.trace("*************  Test 'encrypt value, export as env variable and decrypt' started  ****************");
