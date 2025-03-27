@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 
 import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments.StoreType;
+import com.sos.commons.util.arguments.impl.JavaKeyStoreType;
 
 public class SOSJavaKeyStoreReader {
 
@@ -73,7 +73,7 @@ public class SOSJavaKeyStoreReader {
         return result;
     }
 
-    public static KeyStore load(Path path, String password, StoreType storeType) throws Exception {
+    public static KeyStore load(Path path, String password, JavaKeyStoreType storeType) throws Exception {
         return load(path, password, getType(storeType));
     }
 
@@ -148,7 +148,7 @@ public class SOSJavaKeyStoreReader {
         }
     }
 
-    private static String getType(StoreType storeType) {
+    private static String getType(JavaKeyStoreType storeType) {
         return getType(storeType == null ? null : storeType.name());
     }
 

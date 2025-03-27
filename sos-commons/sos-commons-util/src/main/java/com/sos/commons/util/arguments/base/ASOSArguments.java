@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
+import com.sos.commons.util.arguments.impl.SSLArguments;
 
 public abstract class ASOSArguments {
 
@@ -39,7 +41,7 @@ public abstract class ASOSArguments {
         }
     }
 
-    public <T> void applyDefaultIfNullQuietly() {
+    public void applyDefaultIfNullQuietly() {
         try {
             applyDefaultIfNull();
         } catch (Exception e) {
@@ -74,6 +76,43 @@ public abstract class ASOSArguments {
             l.add(current);
         }
         return l;
+    }
+
+    /** Included Argument classes:<br/>
+     * If an Argument class has not only Argument fields, but fields that are themselves an instance of ASOSArguments<br/>
+     * Examples: {@link SSLArguments#getJavaKeyStore()}
+     * 
+     * @return
+     * @throws Exception */
+    public List<ASOSArguments> getIncludedArgumentsIfNotNull() throws Exception {
+        getArgumentFields();
+        List<ASOSArguments> l = new ArrayList<>();
+
+        List<Field> included = SOSReflection.getAllDeclaredFields(getClass()).stream().filter(f -> ASOSArguments.class.isAssignableFrom(f.getType()))
+                .collect(Collectors.toList());
+        for (Field f : included) {
+            f.setAccessible(true);
+            Object include = f.get(this);
+            if (include != null) {
+                l.add((ASOSArguments) include);
+            }
+        }
+        return l;
+    }
+
+    public static long asMillis(SOSArgument<String> arg) {
+        return asSeconds(arg, 0L) * 1_000;
+    }
+
+    public static long asSeconds(SOSArgument<String> arg, long defaultValue) {
+        if (arg.getValue() == null) {
+            return defaultValue;
+        }
+        try {
+            return SOSDate.resolveAge("s", arg.getValue()).longValue();
+        } catch (Throwable e) {
+            return defaultValue;
+        }
     }
 
     private SOSArgument<?> find(List<SOSArgument<?>> args, String name) {

@@ -3,7 +3,9 @@ package com.sos.yade.engine.commons.arguments;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 
 public class YADESourceArguments extends YADESourceTargetArguments {
 
@@ -91,6 +93,14 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         return filePath;
     }
 
+    public void setFilePath(String val) {
+        if (SOSString.isEmpty(val)) {
+            filePath.setValue(null);
+        } else {
+            filePath.setValue(YADEArgumentsHelper.stringListValue(val, ";"));
+        }
+    }
+
     public SOSArgument<Path> getFileList() {
         return fileList;
     }
@@ -109,6 +119,13 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     public SOSArgument<ZeroByteTransfer> getZeroByteTransfer() {
         return zeroByteTransfer;
+    }
+
+    public void setZeroByteTransfer(String val) {
+        if (SOSString.isEmpty(val)) {
+            return;
+        }
+        zeroByteTransfer.setValue(ZeroByteTransfer.valueOf(val.trim().toUpperCase()));
     }
 
     public SOSArgument<Integer> getMaxFiles() {

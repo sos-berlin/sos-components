@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.vfs.commons.AProviderArguments;
@@ -28,13 +29,17 @@ public class SSHProviderArguments extends AProviderArguments {
     private SOSArgument<List<SSHAuthMethod>> requiredAuthentications = new SOSArgument<>("required_authentications", false);
 
     // Socket connect timeout in seconds based on socket.connect
-    private SOSArgument<Integer> connectTimeout = new SOSArgument<>("connect_timeout", false, 0);
+    /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
+    private SOSArgument<String> connectTimeout = new SOSArgument<>("connect_timeout", false, "0s");
     // Socket timeout SO_TIMEOUT in seconds based on socket.setSoTimeout
-    private SOSArgument<Integer> socketTimeout = new SOSArgument<>("socket_timeout", false, 0);
+    /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
+    private SOSArgument<String> socketTimeout = new SOSArgument<>("socket_timeout", false, "0s");
 
     // KeepAlive - timeout interval in seconds
-    // ?TODO server_alive_count_max
-    private SOSArgument<Integer> serverAliveInterval = new SOSArgument<>("server_alive_interval", false);
+    /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
+    private SOSArgument<String> serverAliveInterval = new SOSArgument<>("server_alive_interval", false);
+    // SSHJ default - 5 (if KeepAlive is set)
+    private SOSArgument<Integer> serverAliveCountMax = new SOSArgument<>("server_alive_count_max", false);
 
     private SOSArgument<Boolean> strictHostkeyChecking = new SOSArgument<>("strict_hostkey_checking", false, false);
     private SOSArgument<Path> hostkeyLocation = new SOSArgument<>("hostkey_location", false);
@@ -72,24 +77,32 @@ public class SSHProviderArguments extends AProviderArguments {
         return requiredAuthentications;
     }
 
-    public SOSArgument<Integer> getConnectTimeout() {
+    public SOSArgument<String> getConnectTimeout() {
         return connectTimeout;
     }
 
-    public Integer getConnectTimeoutAsMs() {
-        return asMs(connectTimeout);
+    public int getConnectTimeoutAsMillis() {
+        return (int) asMillis(connectTimeout);
     }
 
-    public SOSArgument<Integer> getSocketTimeout() {
+    public SOSArgument<String> getSocketTimeout() {
         return socketTimeout;
     }
 
-    public Integer getSocketTimeoutAsMs() {
-        return asMs(socketTimeout);
+    public int getSocketTimeoutAsMillis() {
+        return (int) asMillis(socketTimeout);
     }
 
-    public SOSArgument<Integer> getServerAliveInterval() {
+    public SOSArgument<String> getServerAliveInterval() {
         return serverAliveInterval;
+    }
+
+    public int getServerAliveIntervalAsSeconds() {
+        return (int) asSeconds(authFile, 0L);
+    }
+
+    public SOSArgument<Integer> getServerAliveCountMax() {
+        return serverAliveCountMax;
     }
 
     public SOSArgument<Boolean> getStrictHostkeyChecking() {

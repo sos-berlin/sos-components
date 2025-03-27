@@ -29,6 +29,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     /** CommandBeforeFile include="PostPreProcessing-Variables" */
     // TODO new name: commands_before_file - YADE 1 support multiple commands but the name is pre_command instead of pre_commands
     private SOSArgument<List<String>> commandsBeforeFile = new SOSArgument<>("pre_command", false);
+
     /** CommandBeforeFile YADE-471 */
     // TODO new name: ??? command_before_file_enable_for_skipped or
     // - "command_before_file_for_skipped"
@@ -43,6 +44,9 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     // - "command_after_file_for_skipped" - !!! opposite meaning than the current implementation...
     private SOSArgument<Boolean> commandsAfterFileDisableForSkipped = new SOSArgument<>("post_command_disable_for_skipped_transfer", false, Boolean
             .valueOf(false));
+
+    // Specifies the commands to be executed for each file on the server after the transfer but before a Rename.
+    private SOSArgument<List<String>> commandsBeforeRename = new SOSArgument<>("tfn_post_command", false);
 
     public SOSArgument<String> getCommandDelimiter() {
         return commandDelimiter;
@@ -102,6 +106,14 @@ public class YADEProviderCommandArguments extends ASOSArguments {
 
     public SOSArgument<Boolean> getCommandsAfterFileDisableForSkipped() {
         return commandsAfterFileDisableForSkipped;
+    }
+
+    public SOSArgument<List<String>> getCommandsBeforeRename() {
+        return commandsBeforeRename;
+    }
+
+    public void setCommandsBeforeRename(String val) {
+        commandsBeforeRename.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
     }
 
 }

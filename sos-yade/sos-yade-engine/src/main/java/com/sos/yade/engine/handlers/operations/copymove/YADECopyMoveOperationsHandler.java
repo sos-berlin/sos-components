@@ -24,6 +24,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
+import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADETargetCumulativeFileHelper;
 
@@ -205,6 +206,15 @@ public class YADECopyMoveOperationsHandler {
 
                 if (paths.size() > 0) {
                     try {
+                        if (YADECommandExecutor.isCommandBeforeRenameEnabled(sourceDelegator.getArgs().getCommands())) {
+                            for (ProviderFile pf : sourceFiles) {
+                                YADEProviderFile f = (YADEProviderFile) pf;
+                                if (f.needsRename()) {
+                                    YADECommandExecutor.executeBeforeRename(logger, sourceDelegator, sourceDelegator, targetDelegator, f);
+                                }
+                            }
+                        }
+
                         RenameFilesResult r = sourceDelegator.getProvider().renameFilesIfSourceExists(paths, false);
                         if (r.hasErrors()) {
                             logger.error("%s[renameResult]%s", sourceDelegator.getLogPrefix(), r);

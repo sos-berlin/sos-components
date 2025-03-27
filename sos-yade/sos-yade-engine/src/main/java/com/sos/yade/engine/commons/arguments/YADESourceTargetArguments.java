@@ -19,6 +19,13 @@ public class YADESourceTargetArguments extends ASOSArguments {
     private SOSArgument<String> replacement = new SOSArgument<>("replacement", false);
     private SOSArgument<String> replacing = new SOSArgument<>("replacing", false);
 
+    /** - Integrity Hash ------- */
+    /** COPY/MOVE operations<br/>
+     * Same algorithm for Source and Target - currently only md5 is supported<br/>
+     * Source -> CheckIntegrityHash, Target -> CreateIntegrityHashFile<br/>
+     * Argument name is based on XML schema definition */
+    private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("security_hash_type", false, "md5");
+
     public boolean isRetryOnConnectionErrorEnabled() {
         return connectionErrorRetryCountMax.getValue() != null && connectionErrorRetryCountMax.getValue().intValue() > 0;
     }
@@ -65,6 +72,10 @@ public class YADESourceTargetArguments extends ASOSArguments {
 
     public SOSArgument<String> getReplacing() {
         return replacing;
+    }
+
+    public SOSArgument<String> getIntegrityHashAlgorithm() {
+        return integrityHashAlgorithm;
     }
 
 }

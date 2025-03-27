@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
@@ -27,14 +26,6 @@ public class YADEArgumentsHelper {
             return null;
         }
         return String.join(listValueDelimiter, arg.getValue());
-    }
-
-    public static long getIntervalInSeconds(SOSArgument<String> arg, long defaultValue) {
-        try {
-            return SOSDate.resolveAge("s", arg.getValue()).longValue();
-        } catch (Throwable e) {
-            return defaultValue;
-        }
     }
 
     public static boolean needTargetProvider(YADEArguments args) throws YADEEngineInitializationException {
@@ -60,6 +51,9 @@ public class YADEArgumentsHelper {
     }
 
     public static String toString(ISOSLogger logger, String prefix, ASOSArguments args) {
+        if (args == null) {
+            return prefix + "null";
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(prefix);
         sb.append("[").append(args.getClass().getSimpleName()).append("]");
@@ -75,6 +69,18 @@ public class YADEArgumentsHelper {
         } catch (Throwable e) {
             logger.warn(sb + e.toString());
         }
+        try {
+            List<ASOSArguments> included = args.getIncludedArgumentsIfNotNull();
+            if (included != null) {
+                for (ASOSArguments include : included) {
+                    sb.append(",").append(toString(logger, include.getClass().getSimpleName(), include));
+                }
+            }
+
+        } catch (Exception e) {
+            sb.append(e.toString());
+        }
+
         return sb.toString();
     }
 }

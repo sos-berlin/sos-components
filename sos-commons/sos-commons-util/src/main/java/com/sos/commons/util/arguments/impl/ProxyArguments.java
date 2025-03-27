@@ -13,8 +13,9 @@ public class ProxyArguments extends ASOSArguments {
     private SOSArgument<Integer> port = new SOSArgument<>("proxy_port", false, -1);
     private SOSArgument<String> user = new SOSArgument<>("proxy_user", false);
     private SOSArgument<String> password = new SOSArgument<>("proxy_password", false, DisplayMode.MASKED);
-    /** Socket connect timeout in seconds based on socket.connect */
-    private SOSArgument<Integer> connectTimeout = new SOSArgument<>("proxy_connect_timeout", false, 30);
+    /** Socket connect timeout in seconds based on socket.connect<br/>
+     * see {@link ASOSArguments#asSeconds(SOSArgument, long) */
+    private SOSArgument<String> connectTimeout = new SOSArgument<>("proxy_connect_timeout", false, "30s");
 
     public SOSArgument<java.net.Proxy.Type> getType() {
         return type;
@@ -37,7 +38,7 @@ public class ProxyArguments extends ASOSArguments {
     }
 
     /** Socket connect timeout in seconds based on socket.connect */
-    public SOSArgument<Integer> getConnectTimeout() {
+    public SOSArgument<String> getConnectTimeout() {
         return connectTimeout;
     }
 }

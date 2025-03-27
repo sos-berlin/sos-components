@@ -7,7 +7,11 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -84,25 +88,75 @@ public class SOSXML {
         }
     }
 
-    public static List<Element> getChildElemens(Node node) {
-        return getChildElemens(node, null);
+    public static List<Element> getChildElemens(Node parentNode) {
+        return getChildElemens(parentNode, null, ArrayList::new);
     }
 
-    public static List<Element> getChildElemens(Node node, String childName) {
-        if (node == null) {
+    public static List<Element> getChildElemens(Node parentNode, String childName) {
+        return getChildElemens(parentNode, childName, ArrayList::new);
+    }
+
+    /** Examples: getChildElemens(parentNode, ArrayList::new)
+     * 
+     * @param <C>
+     * @param parentNode
+     * @param collectionFactory
+     * @return */
+    public static <C extends Collection<Element>> C getChildElemens(Node parentNode, Supplier<C> collectionFactory) {
+        return getChildElemens(parentNode, null, collectionFactory);
+    }
+
+    /** Examples: getChildElemens(parentNode, childName, ArrayList::new)
+     * 
+     * @param <C>
+     * @param parentNode
+     * @param childName
+     * @param collectionFactory
+     * @return */
+    public static <C extends Collection<Element>> C getChildElemens(Node parentNode, String childName, Supplier<C> collectionFactory) {
+        if (parentNode == null) {
             return null;
         }
-        List<Element> result = new ArrayList<>();
-        NodeList nl = node.getChildNodes();
+        C result = collectionFactory.get();
+        NodeList nl = parentNode.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
-                if (childName == null) {
+                if (childName == null || n.getNodeName().equals(childName)) {
                     result.add((Element) n);
-                } else {
-                    if (n.getNodeName().equals(childName)) {
-                        result.add((Element) n);
-                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static Map<String, Element> getChildElementsMap(Node parentNode) {
+        return getChildElementsMap(parentNode, null, HashMap::new);
+    }
+
+    public static Map<String, Element> getChildElementsMap(Node parentNode, String childName) {
+        return getChildElementsMap(parentNode, childName, HashMap::new);
+    }
+
+    /** Examples: getChildElementsMap(parentNode, childName, LinkedHashMap::new)
+     * 
+     * @param <M>
+     * @param parentNode
+     * @param childName
+     * @param mapFactory
+     * @return */
+    public static <M extends Map<String, Element>> M getChildElementsMap(Node parentNode, String childName, Supplier<M> mapFactory) {
+        if (parentNode == null) {
+            return null;
+        }
+
+        M result = mapFactory.get();
+        NodeList nl = parentNode.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                if (childName == null || n.getNodeName().equals(childName)) {
+                    result.put(n.getNodeName(), (Element) n);
                 }
             }
         }

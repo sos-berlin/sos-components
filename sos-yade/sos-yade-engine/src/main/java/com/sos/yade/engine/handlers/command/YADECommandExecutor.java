@@ -157,6 +157,26 @@ public class YADECommandExecutor {
         }
     }
 
+    public static void executeBeforeRename(ISOSLogger logger, IYADEProviderDelegator delegator, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile file) throws YADEEngineCommandException {
+        YADEProviderCommandArguments args = getArgs(delegator);
+        if (isCommandBeforeRenameEnabled(args, file)) {
+            SOSArgument<List<String>> arg = args.getCommandsBeforeRename();
+            executeFileCommands(logger, delegator, args, arg, file, sourceDelegator, targetDelegator);
+        }
+    }
+
+    public static boolean isCommandBeforeRenameEnabled(YADEProviderCommandArguments args) {
+        return args != null && !args.getCommandsBeforeRename().isEmpty();
+    }
+
+    public static boolean isCommandBeforeRenameEnabled(YADEProviderCommandArguments args, YADEProviderFile file) {
+        if (!isCommandBeforeRenameEnabled(args)) {
+            return false;
+        }
+        return !file.isSkipped() || !args.getCommandsAfterFileDisableForSkipped().isTrue();
+    }
+
     // -- Help-Methods
     private static YADEProviderCommandArguments getArgs(IYADEProviderDelegator delegator) {
         if (delegator == null || delegator.getArgs() == null) {

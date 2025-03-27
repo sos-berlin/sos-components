@@ -46,7 +46,8 @@ public class SOSSSLContextFactory {
         }
         if (!args.getProtocols().isEmpty()) {
             // Remove "TLS", accepts only e.g. "TLSv1.1", "TLSv1.2", "TLSv1.3" ...
-            String[] filtered = args.getProtocols().getValue().stream().filter(p -> !DEFAULT_PROTOCOL.equalsIgnoreCase(p)).toArray(String[]::new);
+            String[] filtered = args.getProtocols().getValue().stream().filter(p -> !DEFAULT_PROTOCOL.equalsIgnoreCase(p) && !"SSL".equalsIgnoreCase(
+                    p)).toArray(String[]::new);
             if (filtered.length > 0) {
                 // Set explicitly supported protocols: e.g. "TLSv1.2", "TLSv1.3"
                 sslContext.createSSLEngine().setEnabledProtocols(filtered);

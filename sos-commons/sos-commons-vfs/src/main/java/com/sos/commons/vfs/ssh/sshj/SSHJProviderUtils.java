@@ -66,12 +66,12 @@ public class SSHJProviderUtils {
                     .getTimeout()));
         }
         if (ssh.getConnection() != null) {
-            KeepAlive r = ssh.getConnection().getKeepAlive();
-            if (r.getKeepAliveInterval() > 0) {
-                if (r instanceof KeepAliveRunner) {
-                    msg.add("KeepAliveInterval=" + r.getKeepAliveInterval() + "s, MaxAliveCount=" + ((KeepAliveRunner) r).getMaxAliveCount());
+            KeepAlive ka = ssh.getConnection().getKeepAlive();
+            if (ka.getKeepAliveInterval() > 0) {
+                if (ka instanceof KeepAliveRunner) {
+                    msg.add("KeepAliveInterval=" + ka.getKeepAliveInterval() + "s, MaxAliveCount=" + ((KeepAliveRunner) ka).getMaxAliveCount());
                 } else {
-                    msg.add("KeepAliveInterval=" + r.getKeepAliveInterval() + "s");
+                    msg.add("KeepAliveInterval=" + ka.getKeepAliveInterval() + "s");
                 }
             }
         }

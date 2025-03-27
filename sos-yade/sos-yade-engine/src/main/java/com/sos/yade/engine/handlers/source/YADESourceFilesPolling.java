@@ -4,12 +4,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourcePollingArguments;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.commons.helpers.YADEClientHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourcePollingException;
@@ -186,13 +186,13 @@ public class YADESourceFilesPolling {
     }
 
     private void initMethod() {
-        interval = YADEArgumentsHelper.getIntervalInSeconds(args.getPolling().getPollInterval(), YADESourcePollingArguments.DEFAULT_POLL_INTERVAL);
+        interval = ASOSArguments.asSeconds(args.getPolling().getPollInterval(), YADESourcePollingArguments.DEFAULT_POLL_INTERVAL);
         timeout = getPollTimeout();
 
         if (isPollingServer()) {
             if (args.getPolling().getPollingServerDuration().getValue() != null && !args.getPolling().getPollingServerPollForever().isTrue()) {
                 method = PollingMethod.ServerDuration;
-                serverDuration = YADEArgumentsHelper.getIntervalInSeconds(args.getPolling().getPollingServerDuration(),
+                serverDuration = ASOSArguments.asSeconds(args.getPolling().getPollingServerDuration(),
                         YADESourcePollingArguments.DEFAULT_POLL_INTERVAL);
             } else {
                 method = PollingMethod.Forever;

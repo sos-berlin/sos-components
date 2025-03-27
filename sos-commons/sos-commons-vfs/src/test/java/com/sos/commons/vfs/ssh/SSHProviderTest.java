@@ -382,7 +382,7 @@ public class SSHProviderTest {
         args.getPort().setValue(1080);
         args.getUser().setValue("proxy_user");
         args.getPassword().setValue("12345");
-        args.getConnectTimeout().setValue(30);
+        args.getConnectTimeout().setValue("30s");
         return args;
     }
 

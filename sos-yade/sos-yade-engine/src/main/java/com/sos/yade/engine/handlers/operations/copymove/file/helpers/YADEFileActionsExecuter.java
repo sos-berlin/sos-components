@@ -4,13 +4,13 @@ import java.util.Optional;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileSizeException;
+import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
@@ -21,7 +21,7 @@ public class YADEFileActionsExecuter {
 
     /** Target: ProviderFile Operations */
     public static void renameTargetFile(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
-            YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile) throws ProviderException {
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile) throws Exception {
         if (targetFile == null || !targetFile.needsRename()) {
             return;
         }
@@ -40,6 +40,8 @@ public class YADEFileActionsExecuter {
             }
         }
         if (rename) {
+            YADECommandExecutor.executeBeforeRename(logger, targetDelegator, sourceDelegator, targetDelegator, targetFile);
+
             targetDelegator.getProvider().renameFileIfSourceExists(targetFileOldPath, targetFileNewPath);
         }
         targetFile.setSubState(TransferEntryState.RENAMED);
@@ -94,7 +96,7 @@ public class YADEFileActionsExecuter {
     /** Source: ProviderFile Operations */
     // TODO set State? subState? how to display the source file info in the summary?
     public static void processSourceFileAfterNonTransactionalTransfer(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
-            YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile) throws ProviderException {
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile) throws Exception {
         if (config.isTransactionalEnabled()) {
             return;
         }
@@ -103,17 +105,19 @@ public class YADEFileActionsExecuter {
             sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath());
             sourceFile.setState(TransferEntryState.MOVED);
         } else if (config.getSource().isReplacementEnabled()) {
-            renameSourceFile(logger, logPrefix, sourceDelegator, sourceFile);
+            renameSourceFile(logger, logPrefix, sourceDelegator, targetDelegator, sourceFile);
         }
     }
 
     private static void renameSourceFile(ISOSLogger logger, String logPrefix, YADESourceProviderDelegator sourceDelegator,
-            YADEProviderFile sourceFile) throws ProviderException {
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile) throws Exception {
         Optional<YADEFileNameInfo> newNameInfo = YADEFileHandler.getReplacementResultIfDifferent(sourceDelegator, sourceFile);
         if (newNameInfo.isPresent()) {
             YADEFileNameInfo info = newNameInfo.get();
             sourceFile.setFinalFullPath(sourceDelegator, YADEFileHandler.getFinalFullPath(sourceDelegator, sourceFile, info));
             sourceDelegator.getDirectoryMapper().tryCreateSourceDirectory(logger, sourceDelegator, sourceFile, info);
+
+            YADECommandExecutor.executeBeforeRename(logger, sourceDelegator, sourceDelegator, targetDelegator, sourceFile);
 
             // rename
             sourceDelegator.getProvider().renameFileIfSourceExists(sourceFile.getFullPath(), sourceFile.getFinalFullPath());

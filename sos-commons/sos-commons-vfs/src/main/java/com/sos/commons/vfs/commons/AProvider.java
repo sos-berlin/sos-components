@@ -166,36 +166,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return null;
     }
 
-    public void setSystemPropertiesFromFiles() {
-        if (SOSCollection.isEmpty(getArguments().getSystemPropertyFiles().getValue())) {
-            return;
-        }
-        String method = "setSystemPropertiesFromFiles";
-        logger.info("%s[%s][files]", getLogPrefix(), method, SOSString.join(getArguments().getSystemPropertyFiles().getValue(), ",", f -> f
-                .toString()));
-        Properties p = new Properties();
-        for (Path file : getArguments().getSystemPropertyFiles().getValue()) {
-            if (Files.exists(file) && Files.isRegularFile(file)) {
-                try (BufferedReader reader = Files.newBufferedReader(file)) {
-                    p.load(reader);
-                    logger.info("[%s][%s]loaded", method, file);
-                } catch (Throwable e) {
-                    logger.warn("[%s][%s][failed]%s", method, file, e.toString());
-                }
-            } else {
-                logger.warn("[%s][%s]does not exist or is not a regular file", method, file);
-            }
-        }
-
-        for (String n : p.stringPropertyNames()) {
-            String v = p.getProperty(n);
-            if (logger.isDebugEnabled()) {
-                logger.debug("[%s]%s=%s", method, n, v);
-            }
-            System.setProperty(n, v);
-        }
-    }
-
     public Properties getConfigurationPropertiesFromFiles() {
         if (SOSCollection.isEmpty(getArguments().getConfigurationFiles().getValue())) {
             return null;

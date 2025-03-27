@@ -1,6 +1,7 @@
 package com.sos.yade.engine.commons.arguments;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.arguments.base.ASOSArguments;
@@ -17,6 +18,8 @@ public class YADEClientArguments extends ASOSArguments {
     // YADE1 - resultListFile - used only in the YADE JOB - contains the file path - the same as result_set_file_name...
     // private SOSArgument<Path> resultListFile = new SOSArgument<>("result_list_file", false);
     private SOSArgument<Path> resultSetFileName = new SOSArgument<>("result_set_file_name", false);
+
+    private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("system_property_files", false);
 
     /** - Banner ------- */
     private SOSArgument<Path> bannerHeader = new SOSArgument<>("banner_header", false);
@@ -50,6 +53,10 @@ public class YADEClientArguments extends ASOSArguments {
 
     public SOSArgument<Path> getResultSetFileName() {
         return resultSetFileName;
+    }
+
+    public SOSArgument<List<Path>> getSystemPropertyFiles() {
+        return systemPropertyFiles;
     }
 
     public SOSArgument<Path> getBannerHeader() {

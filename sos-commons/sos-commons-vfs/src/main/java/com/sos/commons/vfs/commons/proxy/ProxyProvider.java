@@ -27,7 +27,7 @@ public class ProxyProvider {
     private final int port;
     private final String user;
     private final String password;
-    private final int connectTimeout;// milliseconds
+    private final int connectTimeoutAsMillis;
 
     private Charset charset = Charset.defaultCharset();
 
@@ -47,7 +47,7 @@ public class ProxyProvider {
         this.port = getPort(args.getType(), args.getPort());
         this.user = args.getUser().getValue();
         this.password = args.getPassword().getValue();
-        this.connectTimeout = AProviderArguments.asMs(args.getConnectTimeout());
+        this.connectTimeoutAsMillis = (int) AProviderArguments.asMillis(args.getConnectTimeout());
 
         this.proxy = new java.net.Proxy(args.getType().getValue(), new InetSocketAddress(this.host, this.port));
     }
@@ -76,8 +76,8 @@ public class ProxyProvider {
         return password;
     }
 
-    public int getConnectTimeout() {
-        return connectTimeout;
+    public int getConnectTimeoutAsMillis() {
+        return connectTimeoutAsMillis;
     }
 
     public void setCharset(Charset val) {
@@ -101,7 +101,7 @@ public class ProxyProvider {
             sb.append(",password=").append(DisplayMode.MASKED.getValue());
         }
         sb.append(",charset=").append(charset);
-        sb.append(",connectTimeout=").append(connectTimeout).append("ms");
+        sb.append(",getConnectTimeoutAsMillis=").append(getConnectTimeoutAsMillis());
         sb.append("]");
         return sb.toString();
     }

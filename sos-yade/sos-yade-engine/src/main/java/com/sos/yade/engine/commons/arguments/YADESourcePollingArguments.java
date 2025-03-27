@@ -1,8 +1,9 @@
 package com.sos.yade.engine.commons.arguments;
 
+import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 
-public class YADESourcePollingArguments {
+public class YADESourcePollingArguments extends ASOSArguments{
 
     public static final long DEFAULT_POLL_INTERVAL = 60L;// seconds
 

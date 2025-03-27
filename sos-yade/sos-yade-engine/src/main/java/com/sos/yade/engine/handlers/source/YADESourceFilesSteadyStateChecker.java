@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
-import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.commons.helpers.YADEClientHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourceSteadyFilesException;
 
@@ -27,7 +27,7 @@ public class YADESourceFilesSteadyStateChecker {
         }
         boolean steady = true;
         int total = args.getCheckSteadyCount().getValue().intValue();
-        long interval = YADEArgumentsHelper.getIntervalInSeconds(args.getCheckSteadyStateInterval(), 1);
+        long interval = ASOSArguments.asSeconds(args.getCheckSteadyStateInterval(), 1L);
 
         ml: for (int i = 0; i < total; i++) {
             steady = true;

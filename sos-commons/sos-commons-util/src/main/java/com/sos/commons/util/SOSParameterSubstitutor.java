@@ -15,9 +15,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//import org.apache.commons.lang3.text.StrSubstitutor;
+// import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.text.StringSubstitutor;
-
+import org.apache.commons.text.lookup.StringLookup;
 
 public class SOSParameterSubstitutor {
 
@@ -123,6 +123,28 @@ public class SOSParameterSubstitutor {
             l.add(m.group(1));
         }
         return l;
+    }
+
+    private class SOSCaseInsensitivStrLookup<V> implements StringLookup {
+
+        private final Map<String, V> map;
+
+        SOSCaseInsensitivStrLookup(final Map<String, V> map) {
+            this.map = map;
+        }
+
+        @Override
+        public String lookup(final String key) {
+            String lowercaseKey = key.toLowerCase();
+            if (map == null) {
+                return null;
+            }
+            final V obj = map.get(lowercaseKey);
+            if (obj == null) {
+                return null;
+            }
+            return obj.toString();
+        }
     }
 
 }

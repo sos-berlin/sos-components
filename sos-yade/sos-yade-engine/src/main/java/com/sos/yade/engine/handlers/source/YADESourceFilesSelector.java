@@ -45,10 +45,10 @@ public class YADESourceFilesSelector {
             YADETargetProviderDelegator targetDelegator) {
         // Note: YADE1 uses only the source getCheckIntegrityHash argument ...
         if (sourceDelegator.getArgs().getCheckIntegrityHash().isTrue()) {
-            return args.getIntegrityHashAlgorithm().getValue();
+            return sourceDelegator.getArgs().getIntegrityHashAlgorithm().getValue();
         }
         if (targetDelegator != null && targetDelegator.getArgs().getCreateIntegrityHashFile().isTrue()) {
-            return args.getIntegrityHashAlgorithm().getValue();
+            return targetDelegator.getArgs().getIntegrityHashAlgorithm().getValue();
         }
         return null;
     }

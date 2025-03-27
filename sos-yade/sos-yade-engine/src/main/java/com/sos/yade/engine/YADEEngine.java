@@ -93,7 +93,10 @@ public class YADEEngine {
             /** 2) Check/Initialize configuration */
             YADEArgumentsChecker.validateOrExit(logger, args, clientArgs, sourceArgs, targetArgs);
 
-            // Source/Target: create provider delegator
+            /** 3) Set System properties */
+            YADEClientHelper.setSystemPropertiesFromFiles(logger, clientArgs);
+
+            /** 4) Source/Target: create provider delegator */
             sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, args, sourceArgs);
             targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, args, targetArgs);
         } catch (YADEEngineInitializationException e) {
@@ -110,38 +113,39 @@ public class YADEEngine {
         // All steps may trigger an exception
         if (!sourceArgs.isPollingEnabled()) {
             try {
-                /** 3) Source: connect */
+                /** 5) Source: connect */
                 YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
 
-                /** 4) Source: execute commands before operation */
+                /** 6) Source: execute commands before operation */
                 YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator);
 
-                /** 5) Source: select files */
+                /** 7) Source: select files */
                 files = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                /** 6) Source: check files steady state */
+                /** 8) Source: check files steady state */
                 YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                /** 7) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                /** 9) Source: check zeroByteFiles, forceFiles, resultSet conditions */
                 YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, clientArgs, files);
 
                 if (!files.isEmpty()) {
-                    /** 8) Target: connect */
+                    /** 10) Target: connect */
                     YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
-                    /** 9) Target: execute commands before operation */
+                    /** 11) Target: execute commands before operation */
                     YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
-                    /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
+                    /** 12) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                     operationDuration = YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator, cancel);
                 }
 
-                /** 11) Source/Target: execute commands after operation on success */
+                /** 13) Source/Target: execute commands after operation on success */
                 YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
             } catch (Throwable e) {
                 onError(logger, sourceDelegator, targetDelegator, exception);
                 exception = e;
             } finally {
+                /** 14) Finalize */
                 onFinally(logger, operationDuration, args, clientArgs, sourceDelegator, targetDelegator, files, exception, true);
             }
         } else {
@@ -152,38 +156,39 @@ public class YADEEngine {
 
                 sourcePolling.incrementCycleCounter();
                 try {
-                    /** 3) Source: connect/reconnect */
+                    /** 5) Source: connect/reconnect */
                     sourcePolling.ensureConnected(logger, sourceDelegator);
 
-                    /** 4) Source: execute commands before operation */
+                    /** 6) Source: execute commands before operation */
                     YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator);
 
-                    /** 5) Source: select files */
+                    /** 7) Source: select files */
                     files = sourcePolling.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                    /** 6) Source: check files steady state */
+                    /** 8) Source: check files steady state */
                     YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                    /** 7) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                    /** 9) Source: check zeroByteFiles, forceFiles, resultSet conditions */
                     YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, clientArgs, files);
 
                     if (!files.isEmpty()) {
-                        /** 8) Target: connect */
+                        /** 10) Target: connect */
                         YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
-                        /** 9) Target: execute commands before operation */
+                        /** 11) Target: execute commands before operation */
                         YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
-                        /** 10) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
+                        /** 12) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                         operationDuration = YADEOperationsManager.process(logger, args, clientArgs, sourceDelegator, files, targetDelegator, cancel);
                     }
 
-                    /** 11) Source/Target: execute commands after operation on success */
+                    /** 13) Source/Target: execute commands after operation on success */
                     YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
                 } catch (Throwable e) {
                     onError(logger, sourceDelegator, targetDelegator, exception);
                     exception = e;
                 } finally {
+                    /** 14) Finalize */
                     boolean startNextPollingCycle = sourcePolling.startNextPollingCycle(logger);
                     onFinally(logger, operationDuration, args, clientArgs, sourceDelegator, targetDelegator, files, exception,
                             !startNextPollingCycle);

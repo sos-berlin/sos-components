@@ -7,13 +7,9 @@ import com.sos.commons.util.arguments.impl.SSLArguments;
 
 public class FTPSProviderArguments extends FTPProviderArguments {
 
-    public enum SecurityMode {
-        EXPLICIT, IMLICIT;
-    }
-
     private SSLArguments ssl;
 
-    private SOSArgument<SecurityMode> securityMode = new SOSArgument<>("ftps_client_security", false, SecurityMode.EXPLICIT);
+    private SOSArgument<FTPSSecurityMode> securityMode = new SOSArgument<>("ftps_client_security", false, FTPSSecurityMode.EXPLICIT);
 
     public FTPSProviderArguments() {
         super(null);// use super dummy,no-op constructor
@@ -41,10 +37,10 @@ public class FTPSProviderArguments extends FTPProviderArguments {
     }
 
     public boolean isSecurityModeImplicit() {
-        return SecurityMode.IMLICIT.equals(securityMode.getValue());
+        return FTPSSecurityMode.IMLICIT.equals(securityMode.getValue());
     }
 
-    public SOSArgument<SecurityMode> getSecurityMode() {
+    public SOSArgument<FTPSSecurityMode> getSecurityMode() {
         return securityMode;
     }
 

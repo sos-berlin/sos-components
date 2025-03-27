@@ -1,5 +1,6 @@
 package com.sos.yade.engine.commons.helpers;
 
+import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
@@ -28,7 +29,7 @@ public class YADEProviderDelegatorHelper {
 
         // with retry
         int maxRetries = args.getConnectionErrorRetryCountMax().getValue().intValue();
-        long retryInterval = YADEArgumentsHelper.getIntervalInSeconds(args.getConnectionErrorRetryInterval(), 0);
+        long retryInterval = ASOSArguments.asSeconds(args.getConnectionErrorRetryInterval(), 0L);
         for (int retryCounter = 0; retryCounter <= maxRetries; retryCounter++) {
             try {
                 delegator.getProvider().ensureConnected();

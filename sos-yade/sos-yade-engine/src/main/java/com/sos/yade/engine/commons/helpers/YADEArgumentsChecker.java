@@ -73,9 +73,24 @@ public class YADEArgumentsChecker {
 
     private static void checkSourceTargetArguments(YADEArguments args, YADESourceArguments sourceArgs, YADETargetArguments targetArgs,
             boolean needTargetProvider) throws YADEEngineInitializationException {
-        if (sourceArgs.getCheckIntegrityHash().isTrue() || (needTargetProvider && targetArgs.getCreateIntegrityHashFile().isTrue())) {
+        String sourceAlg = sourceArgs.getCheckIntegrityHash().isTrue() ? sourceArgs.getIntegrityHashAlgorithm().getValue() : null;
+        String targetAlg = needTargetProvider && targetArgs.getCreateIntegrityHashFile().isTrue() ? targetArgs.getIntegrityHashAlgorithm().getValue()
+                : null;
+
+        if (sourceAlg != null || targetAlg != null) {
             try {
-                MessageDigest.getInstance(args.getIntegrityHashAlgorithm().getValue());
+                if (sourceAlg != null && targetAlg != null) {
+                    if (sourceAlg.equals(targetAlg)) {
+                        MessageDigest.getInstance(sourceAlg);
+                    } else {
+                        MessageDigest.getInstance(sourceAlg);
+                        MessageDigest.getInstance(targetAlg);
+                    }
+                } else if (sourceAlg != null) {
+                    MessageDigest.getInstance(sourceAlg);
+                } else if (targetAlg != null) {
+                    MessageDigest.getInstance(targetAlg);
+                }
             } catch (NoSuchAlgorithmException e) {
                 throw new YADEEngineInitializationException(e);
             }

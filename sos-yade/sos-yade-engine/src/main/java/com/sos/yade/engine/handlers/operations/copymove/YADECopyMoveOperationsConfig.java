@@ -28,7 +28,9 @@ public class YADECopyMoveOperationsConfig {
         this.source = new Source(sourceDelegator);
         this.target = new Target(targetDelegator);
 
-        this.integrityHashAlgorithm = args.getIntegrityHashAlgorithm().getValue();
+        // integrityHashAlgorithm - Note: currently source/target only supports md5
+        // - TODO - different treatment of integrityHashAlgorithm for source and target
+        this.integrityHashAlgorithm = sourceDelegator.getArgs().getIntegrityHashAlgorithm().getValue();
         this.bufferSize = args.getBufferSize().getValue().intValue();
         this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
         this.parallelism = getParallelism(args, sourceFilesSize);

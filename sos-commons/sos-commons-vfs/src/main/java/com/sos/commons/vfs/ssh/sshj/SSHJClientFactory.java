@@ -18,6 +18,7 @@ import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
 import net.schmizz.keepalive.KeepAliveProvider;
+import net.schmizz.keepalive.KeepAliveRunner;
 import net.schmizz.sshj.Config;
 import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
@@ -44,14 +45,18 @@ public class SSHJClientFactory {
         authenticate(args, client);
         /** 4) Post-Connect Keep Alive */
         if (!args.getServerAliveInterval().isEmpty()) {
-            client.getConnection().getKeepAlive().setKeepAliveInterval(args.getServerAliveInterval().getValue());
+            client.getConnection().getKeepAlive().setKeepAliveInterval(args.getServerAliveIntervalAsSeconds());
+            if (!args.getServerAliveCountMax().isEmpty()) {
+                // NOTE - KeepAliveRunner - is only available if KeepAliveProvider.KEEP_ALIVE is used, otherwise it is an instance of SSHJ Heartbeater
+                ((KeepAliveRunner) client.getConnection().getKeepAlive()).setMaxAliveCount(args.getServerAliveCountMax().getValue().intValue());
+            }
         }
         return client;
     }
 
     private static SSHClient create(SSHProviderArguments args, ProxyProvider proxyProvider) throws Exception {
         Config config = new DefaultConfig();
-        // Keep Alive Provider
+        // Keep Alive Provider - see NOTE above about KeepAliveRunner
         if (!args.getServerAliveInterval().isEmpty()) {
             config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
         }
@@ -62,8 +67,8 @@ public class SSHJClientFactory {
         // CHARSET
         client.setRemoteCharset(args.getRemoteCharset().getValue());
         // TIMEOUT
-        client.setTimeout(args.getSocketTimeoutAsMs());
-        client.setConnectTimeout(args.getConnectTimeoutAsMs());
+        client.setTimeout(args.getSocketTimeoutAsMillis());
+        client.setConnectTimeout(args.getConnectTimeoutAsMillis());
         // PROXY
         if (proxyProvider != null) {
             client.setSocketFactory(new ProxySocketFactory(proxyProvider));

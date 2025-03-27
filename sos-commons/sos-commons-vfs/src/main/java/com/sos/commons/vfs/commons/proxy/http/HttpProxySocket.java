@@ -28,7 +28,7 @@ public class HttpProxySocket extends Socket {
 
     @Override
     public void connect(final SocketAddress endpoint, final int timeout) throws IOException {
-        super.connect(provider.getProxy().address(), provider.getConnectTimeout());
+        super.connect(provider.getProxy().address(), provider.getConnectTimeoutAsMillis());
 
         String basicAuth = null;
         if (!SOSString.isEmpty(provider.getUser())) {

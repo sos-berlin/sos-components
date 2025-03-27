@@ -193,13 +193,14 @@ public class YADEFileHandler {
             // YADE1 renames after executeAfterFile command
             // Rename Target always - transactional transfer or not
             if (!useCumulativeTargetFile) {
-                YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, config, targetDelegator, targetFile);
+                YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, config, sourceDelegator, targetDelegator, targetFile);
                 YADEFileActionsExecuter.setTargetFileModificationDate(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
 
                 YADEChecksumFileHelper.writeTargetChecksumFile(logger, logPrefix, config, targetDelegator, targetFile, targetMessageDigest);
             }
             // Source
-            YADEFileActionsExecuter.processSourceFileAfterNonTransactionalTransfer(logger, logPrefix, config, sourceDelegator, sourceFile);
+            YADEFileActionsExecuter.processSourceFileAfterNonTransactionalTransfer(logger, logPrefix, config, sourceDelegator, targetDelegator,
+                    sourceFile);
         } catch (YADEEngineTransferFileException e) {
             throw e;
         } catch (Throwable e) {

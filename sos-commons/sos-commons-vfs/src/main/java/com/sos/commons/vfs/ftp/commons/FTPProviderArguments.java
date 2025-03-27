@@ -1,5 +1,6 @@
 package com.sos.commons.vfs.ftp.commons;
 
+import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.commons.AProviderArguments;
 
@@ -12,7 +13,8 @@ public class FTPProviderArguments extends AProviderArguments {
     protected static final int DEFAULT_PORT = 21;
 
     // seconds
-    private SOSArgument<Integer> connectTimeout = new SOSArgument<>("connect_timeout", false, Integer.valueOf(0));
+    /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
+    private SOSArgument<String> connectTimeout = new SOSArgument<>("connect_timeout", false, "0s");
     // KeepAlive - timeout interval in seconds
     // ?TODO server_alive_count_max
     private SOSArgument<Long> serverAliveInterval = new SOSArgument<>("server_alive_interval", false, Long.valueOf(180));// YADE1 default
@@ -43,12 +45,12 @@ public class FTPProviderArguments extends AProviderArguments {
         return serverAliveInterval;
     }
 
-    public SOSArgument<Integer> getConnectTimeout() {
+    public SOSArgument<String> getConnectTimeout() {
         return connectTimeout;
     }
 
-    public int getConnectTimeoutAsMs() {
-        return asMs(connectTimeout);
+    public int getConnectTimeoutAsMillis() {
+        return (int) asMillis(connectTimeout);
     }
 
     public SOSArgument<Boolean> getProtocolCommandListener() {

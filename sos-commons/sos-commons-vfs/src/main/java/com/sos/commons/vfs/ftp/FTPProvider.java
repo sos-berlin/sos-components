@@ -645,7 +645,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
     private void applyPreConnectSettings(FTPClient client) {
         setProtocolCommandListener(client);
-        client.setConnectTimeout(getArguments().getConnectTimeoutAsMs());
+        client.setConnectTimeout(getArguments().getConnectTimeoutAsMillis());
         client.setAutodetectUTF8(true);
     }
 

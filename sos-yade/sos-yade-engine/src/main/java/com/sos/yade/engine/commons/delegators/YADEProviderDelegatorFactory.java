@@ -4,7 +4,6 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
@@ -96,7 +95,6 @@ public class YADEProviderDelegatorFactory {
         } catch (ProviderException e) {
             throw new YADEEngineInitializationException(e);
         }
-        ((AProvider<?>) p).setSystemPropertiesFromFiles();
         return p;
     }
 }

@@ -42,7 +42,6 @@ public abstract class AProviderArguments extends ASOSArguments {
     private SOSArgument<String> user = new SOSArgument<>("user", false);
     private SOSArgument<String> password = new SOSArgument<>("password", false, DisplayMode.MASKED);
 
-    private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("system_property_files", false);
     private SOSArgument<List<Path>> configurationFiles = new SOSArgument<>("configuration_files", false);
 
     // JS7
@@ -85,20 +84,12 @@ public abstract class AProviderArguments extends ASOSArguments {
         return password;
     }
 
-    public SOSArgument<List<Path>> getSystemPropertyFiles() {
-        return systemPropertyFiles;
-    }
-
     public SOSArgument<List<Path>> getConfigurationFiles() {
         return configurationFiles;
     }
 
     public SOSArgument<EnumSet<FileType>> getValidFileTypes() {
         return validFileTypes;
-    }
-
-    public static int asMs(SOSArgument<Integer> arg) {
-        return arg.getValue() == null ? 0 : arg.getValue() * 1_000;
     }
 
 }

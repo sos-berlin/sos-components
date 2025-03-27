@@ -1,0 +1,71 @@
+package com.sos.yade.engine.commons.arguments;
+
+import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.yade.commons.Yade.TransferOperation;
+
+public class YADEJumpArguments extends ASOSArguments {
+
+    public enum JumpPlatform {
+        UNIX, WINDOWS
+    }
+
+    private SSHProviderArguments provider;
+    private YADEProviderCommandArguments commands;
+
+    /** COPYFROMINTERNET/COPYTOINTERNET/... */
+    private SOSArgument<TransferOperation> operation = new SOSArgument<>("operation", true);
+    private SOSArgument<String> directory = new SOSArgument<>("dir", false);
+    private SOSArgument<JumpPlatform> platform = new SOSArgument<>("platform", false);
+
+    private SOSArgument<String> yadeClientCommand = new SOSArgument<>("yade_client_command", false);
+
+    public SSHProviderArguments getProvider() {
+        if (provider == null) {
+            provider = new SSHProviderArguments();
+            provider.applyDefaultIfNullQuietly();
+        }
+        return provider;
+    }
+
+    public void setProvider(SSHProviderArguments val) {
+        provider = val;
+    }
+
+    public YADEProviderCommandArguments getCommands() {
+        if (commands == null) {
+            commands = new YADEProviderCommandArguments();
+            commands.applyDefaultIfNullQuietly();
+        }
+        return commands;
+    }
+
+    public void setCommands(YADEProviderCommandArguments val) {
+        commands = val;
+    }
+
+    public SOSArgument<TransferOperation> getOperation() {
+        return operation;
+    }
+
+    public SOSArgument<String> getDirectory() {
+        return directory;
+    }
+
+    public SOSArgument<JumpPlatform> getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String val) {
+        if (SOSString.isEmpty(val)) {
+            return;
+        }
+        platform.setValue(JumpPlatform.valueOf(val.trim().toUpperCase()));
+    }
+
+    public SOSArgument<String> getYADEClientCommand() {
+        return yadeClientCommand;
+    }
+}

@@ -400,4 +400,5 @@ public class SOSString {
         }
         return collection.stream().map(transformation).collect(Collectors.joining(delimiter));
     }
+
 }

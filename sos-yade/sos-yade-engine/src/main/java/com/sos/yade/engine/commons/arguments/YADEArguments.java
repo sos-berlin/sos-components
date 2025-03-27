@@ -14,7 +14,7 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<String> profile = new SOSArgument<>("profile", false);
 
     /** - Meta info ------- */
-    /** COPY, MOVE, GETLIST, RENAME */
+    /** COPY/MOVE/GETLIST/RENAME */
     private SOSArgument<TransferOperation> operation = new SOSArgument<>("operation", true);
 
     /** - JS7 History ------- */
@@ -37,13 +37,6 @@ public class YADEArguments extends ASOSArguments {
     /** COPY/MOVE operations: the buffer size(bytes) for reading the Source file/writing the Target file */
     private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(32 * 1_024));
 
-    /** - Integrity Hash ------- */
-    /** COPY/MOVE operations<br/>
-     * Same algorithm for Source and Target - currently only md5 is supported<br/>
-     * Source -> CheckIntegrityHash, Target -> CreateIntegrityHashFile<br/>
-     * Argument name is based on XML schema definition */
-    private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("security_hash_type", false, "md5");
-
     // YADE 1 used in code but not defined in schema...
     // private SOSArgument<Boolean> skipTransfer = new SOSArgument<>("skip_transfer", false, Boolean.valueOf(false));
 
@@ -65,10 +58,6 @@ public class YADEArguments extends ASOSArguments {
 
     public SOSArgument<Integer> getBufferSize() {
         return bufferSize;
-    }
-
-    public SOSArgument<String> getIntegrityHashAlgorithm() {
-        return integrityHashAlgorithm;
     }
 
     public SOSArgument<Integer> getParallelism() {
