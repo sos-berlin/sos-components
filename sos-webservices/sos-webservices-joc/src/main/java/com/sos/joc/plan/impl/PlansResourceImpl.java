@@ -126,8 +126,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
     }
     
     private com.sos.joc.model.plan.Plan getPlanIds(PlanId pId, JPlan jp, PlansFilter filter) {
-        filter.setNoticeSpaceKeys(null);
-        filter.setPlanSchemaIds(null);
+        filter.setNoticeBoardPaths(null);
         return PlanHelper.getFilteredPlan(pId, jp, filter);
     }
     
