@@ -1456,17 +1456,20 @@ public class OrdersHelper {
         ZonedDateTime zonedNow = ZonedDateTime.of(LocalDateTime.now(zoneId), ZoneId.systemDefault());
         String orderId = String.format("#%s#T%s-%s", datetimeFormatter.format(zonedNow), getUniqueOrderId(zonedNow), order.getOrderName());
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), planSchemaId,
-                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission);
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission, order.getPlanId());
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, PlanSchemaId planSchemaId, Map<String, Value> args,
             Optional<Instant> scheduledFor, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition,
-            boolean forceJobAdmission) {
+            boolean forceJobAdmission, PlanId planId) {
         if (blockPosition == null) {
             blockPosition = JBranchPath.empty();
         }
-        return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(planSchemaId, orderId.string()), true, forceJobAdmission,
-                blockPosition, startPos, endPoss);
+        js7.data.plan.PlanId pId = getDailyPlanPlanId(planSchemaId, orderId.string());
+        if (planId != null) {
+            pId = getPlanId(planId);
+        }
+        return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, pId, true, forceJobAdmission, blockPosition, startPos, endPoss);
     }
     
     private static PlanKey getDailyPlanPlanKey(String orderId) {
@@ -1478,6 +1481,17 @@ public class OrdersHelper {
             return new js7.data.plan.PlanId(planSchemaId, PlanKey.Global);
         }
         return new js7.data.plan.PlanId(planSchemaId, getDailyPlanPlanKey(orderId));
+    }
+    
+    public static js7.data.plan.PlanId getPlanId(PlanId planId) {
+        return getPlanId(PlanSchemaId.of(planId.getPlanSchemaId()), planId.getNoticeSpaceKey());
+    }
+    
+    public static js7.data.plan.PlanId getPlanId(PlanSchemaId planSchemaId, String noticeSpaceKey) {
+        if (planSchemaId.equals(PlanSchemaId.Global)) {
+            return new js7.data.plan.PlanId(planSchemaId, PlanKey.Global);
+        }
+        return new js7.data.plan.PlanId(planSchemaId, PlanKey.of(noticeSpaceKey));
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {

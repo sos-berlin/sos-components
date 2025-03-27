@@ -89,7 +89,8 @@ public class DeployedWorkflowWithBoards {
             WorkflowBoards wb = init();
             if (workflowJson != null && wb.hasConsumeNotice() + wb.hasExpectNotice() + wb.hasPostNotice() > 0) {
                 Workflow w = WorkflowConverter.convertInventoryWorkflow(workflowJson, Workflow.class);
-                wb = WorkflowsHelper.setWorkflowBoardTopLevelPositions(w.getInstructions(), wb);
+                //wb = WorkflowsHelper.setWorkflowBoardTopLevelPositions(w.getInstructions(), wb);
+                wb = WorkflowsHelper.setWorkflowBoardPositions(w.getInstructions(), wb);
             }
             return wb;
         } catch (Exception e) {

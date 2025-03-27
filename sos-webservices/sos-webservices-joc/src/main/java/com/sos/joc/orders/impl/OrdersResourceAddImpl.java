@@ -43,6 +43,7 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocAccessDeniedException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
@@ -63,6 +64,7 @@ import js7.data.plan.PlanSchemaId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.plan.JPlan;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.position.JBranchPath;
 import js7.data_for_java.workflow.position.JPositionOrLabel;
@@ -196,6 +198,24 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 
                         startPos = OrdersHelper.getStartPosition(order.getStartPosition(), labelMap, reachablePositions);
                         endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), labelMap, reachablePositions);
+                    }
+                    
+                    if (order.getPlanId() != null) {
+                        if (!currentState.idToPlanSchemaState().containsKey(PlanSchemaId.of(order.getPlanId().getPlanSchemaId()))) {
+                            throw new JocBadRequestException(String.format("Unknown plan schema ID in plan ID: %s/%s", order.getPlanId()
+                                    .getPlanSchemaId(), order.getPlanId().getNoticeSpaceKey()));
+                        }
+                        if (order.getPlanId().getPlanSchemaId().equals(PlanSchemas.DailyPlanPlanSchemaId)) {
+                            if (!order.getPlanId().getNoticeSpaceKey().matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
+                                throw new JocBadRequestException(String.format("Invalid notice space key in plan ID: %s/%s", order.getPlanId()
+                                        .getPlanSchemaId(), order.getPlanId().getNoticeSpaceKey()));
+                            }
+                        }
+                        JPlan jPlan = currentState.plan(OrdersHelper.getPlanId(order.getPlanId())).getOrElse((JPlan) null);
+                        if (jPlan != null && jPlan.isClosed()) {
+                            throw new JocBadRequestException(String.format("Plan '%s/%s' is closed", order.getPlanId().getPlanSchemaId(), order
+                                    .getPlanId().getNoticeSpaceKey()));
+                        }
                     }
                     
                     // TODO check if endPos not before startPos
