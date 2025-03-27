@@ -548,7 +548,7 @@ public class EventService {
                         orders.put(mainOrderId, w);
                     }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
-                    addEvent(createWorkflowPlanEvent(eventId, w, optOrder));
+                    addEvent(createWorkflowPlanEvent(evt, eventId, w, optOrder));
                     if (evt instanceof OrderProcessingStarted || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
                         addEvent(createTaskEventOfOrder(eventId, w));
                     } else if (evt instanceof OrderLockEvent) {
@@ -726,19 +726,24 @@ public class EventService {
         return createWorkflowEvent(eventId, workflowId, "WorkflowStateChanged");
     }
     
-    private EventSnapshot createWorkflowPlanEvent(long eventId, WorkflowId workflowId, JOrder jOrder) {
+    private EventSnapshot createWorkflowPlanEvent(Event evt, long eventId, WorkflowId workflowId, JOrder jOrder) {
         if (WorkflowRefs.getWorkflowNamesWithBoards(controllerId, workflowId.getPath()) != null) {
-            PlanId pId = jOrder.asScala().planId();
-            EventSnapshot evt = new EventSnapshot();
-            evt.setEventId(eventId);
-            evt.setEventType("WorkflowPlanChanged");
-            if (PlanId.Global.equals(pId)) {
-                evt.setPath("Global");
-            } else {
-                evt.setPath(pId.planSchemaId().string() + "/" + pId.planKey().string());
+            if ((evt instanceof OrderNoticeEvent) || (evt instanceof OrderAddedX) || (evt instanceof OrderSuspended$)
+                    || (evt instanceof OrderStopped$) || (evt instanceof OrderBroken) || (evt instanceof OrderFailed) || (evt instanceof OrderResumed)
+                    || (evt instanceof OrderPrompted) || (evt instanceof OrderPromptAnswered)) {
+                PlanId pId = jOrder.asScala().planId();
+                EventSnapshot event = new EventSnapshot();
+                event.setEventId(eventId);
+                event.setEventType("WorkflowPlanChanged");
+                if (PlanId.Global.equals(pId)) {
+                    event.setPath("Global");
+                } else {
+                    event.setPath(pId.planSchemaId().string() + "/" + pId.planKey().string());
+                }
+                event.setObjectType(EventType.PLAN);
+                event.setWorkflow(workflowId);
+                return event;
             }
-            evt.setObjectType(EventType.PLAN);
-            return evt;
         }
         return null;
     }
