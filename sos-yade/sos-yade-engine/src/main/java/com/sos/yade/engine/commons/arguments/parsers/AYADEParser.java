@@ -5,6 +5,7 @@ import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.exceptions.YADEEngineSettingsParserException;
 
 public abstract class AYADEParser {
 
@@ -25,7 +26,7 @@ public abstract class AYADEParser {
         this.sourceArgs.applyDefaultIfNullQuietly();
     }
 
-    public abstract AYADEParser parse(Object... args) throws Exception;
+    public abstract AYADEParser parse(Object... args) throws YADEEngineSettingsParserException;
 
     public YADEArguments getArgs() {
         return args;
