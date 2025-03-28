@@ -229,7 +229,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         return new JobArgumentValueIterator(this, prefix);
     }
 
-    private void setArgumentType() throws Exception {
+    protected void setArgumentType() throws Exception {
         try {
             setArgumentType(getClazzType());
         } catch (Throwable e) {

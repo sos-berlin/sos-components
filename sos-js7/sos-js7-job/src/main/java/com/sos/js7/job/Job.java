@@ -602,6 +602,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             return;
         }
         arg.setClazzType(((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+        arg.setArgumentType();
     }
 
     private <V> void setDeclaredArgumentValueType(JobArgument<V> arg, Object val) throws Exception {
@@ -621,6 +622,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                 arg.setClazzType(Object.class);
             }
         }
+        arg.setArgumentType();
     }
 
     private <V> void setDeclaredArgumentValueSource(JobArgument<V> arg, List<String> allNames) {
