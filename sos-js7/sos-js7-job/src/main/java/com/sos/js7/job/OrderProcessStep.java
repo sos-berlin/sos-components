@@ -520,6 +520,10 @@ public class OrderProcessStep<A extends JobArguments> {
         return JobHelper.asNameValueMap(allArguments);
     }
 
+    public Map<String, String> getAllArgumentsAsNameValueStringMap() {
+        return JobHelper.asNameValueStringMap(allArguments);
+    }
+
     public Map<String, Object> getUndeclaredArgumentsAsNameValueMap() {
         return JobHelper.asNameValueMap(getAllArguments(Type.UNDECLARED));
     }

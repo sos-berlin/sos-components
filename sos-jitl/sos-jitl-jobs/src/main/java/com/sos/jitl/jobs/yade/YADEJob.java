@@ -13,8 +13,8 @@ public class YADEJob extends Job<YADEJobArguments> {
 
         // Parse Settings XML
         YADEXMLParser parser = new YADEXMLParser().parse(args.getSettings().getValue(), args.getProfile().getValue(), step
-                .getUndeclaredArgumentsAsNameValueStringMap(), args.getSettingsReplacerCaseSensitive().getValue(), args
-                        .getSettingsReplacerKeepUnresolved().getValue());
+                .getAllArgumentsAsNameValueStringMap(), args.getSettingsReplacerCaseSensitive().getValue(), args.getSettingsReplacerKeepUnresolved()
+                        .getValue());
 
         // Set YADE parallelism from the Job Argument
         parser.getArgs().getParallelism().setValue(args.getParallelism().getValue());
