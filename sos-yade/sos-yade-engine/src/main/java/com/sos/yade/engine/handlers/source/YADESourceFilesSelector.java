@@ -133,8 +133,8 @@ public class YADESourceFilesSelector {
         l: for (String singleFile : singleFiles) {
             counter++;
             if (maxFiles > -1 && counterAdded >= maxFiles) {
-                logger.info("%s[%s][%s][skip]due to %s=%s", lp, counter, singleFile, args.getMaxFiles().getName(), maxFiles);
-                continue l;
+                logger.info("%s[%s][%s][break]due to %s=%s", lp, counter, singleFile, args.getMaxFiles().getName(), maxFiles);
+                break l;
             }
             String path = singleFile;
             if (sourceDelegator.getDirectory() != null) {
