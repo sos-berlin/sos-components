@@ -25,7 +25,7 @@ public abstract class AYADEParser {
         this.sourceArgs.applyDefaultIfNullQuietly();
     }
 
-    public abstract void parse(Object... args) throws Exception;
+    public abstract AYADEParser parse(Object... args) throws Exception;
 
     public YADEArguments getArgs() {
         return args;

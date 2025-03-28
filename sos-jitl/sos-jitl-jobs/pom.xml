@@ -18,16 +18,16 @@
 			<artifactId>sos-js7-job</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-    <dependency>
+		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
 			<artifactId>js7-launcher-for-java_3</artifactId>
 			<scope>provided</scope>
 		</dependency>
-    <dependency>
-      <groupId>com.sos-berlin.js7.engine</groupId>
-      <artifactId>js7-data-for-java_3</artifactId>
-      <scope>provided</scope>
-    </dependency>
+		<dependency>
+			<groupId>com.sos-berlin.js7.engine</groupId>
+			<artifactId>js7-data-for-java_3</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-credentialstore</artifactId>
@@ -38,16 +38,21 @@
 			<artifactId>sos-commons-mail</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-commons-xml</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-webservices-json</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-xml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-webservices-json</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-yade-engine</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>com.typesafe</groupId>

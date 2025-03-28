@@ -22,8 +22,8 @@ public class YADEXMLParserTest {
     public void testParseFile() {
 
         try {
-            String settingsFile = "D:\\YADE-rewrite.xml";
-            String profile = "copy_localhost_sftp";
+            String settingsFile = "xyz";
+            String profile = "xyz";
 
             Instant start = Instant.now();
             YADEXMLParser parser = new YADEXMLParser();

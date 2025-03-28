@@ -1,12 +1,13 @@
 package com.sos.yade.engine.commons.arguments.parsers.xml;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.util.SOSEnvVariableReplacer;
+import com.sos.commons.util.SOSMapVariableReplacer;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
@@ -18,16 +19,24 @@ public class YADEXMLParser extends AYADEParser {
 
     private SOSXMLXPath xpath;
     private Element root;
-    private SOSEnvVariableReplacer envVarReplacer;
+    private SOSMapVariableReplacer varReplacer;
 
     public YADEXMLParser() {
         super();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void parse(Object... args) throws Exception {
-        if (args == null || args.length != 2) {
-            throw new SOSMissingDataException("settingsFile,profile");
+    /** Parameters:<br/>
+     * - 1) Path settings<br/>
+     * - 2) String profile<br/>
+     * - 3) Map<String,String> replacerMap<br/>
+     * - 4) boolean replacerCaseSensitive<br/>
+     * - 5) boolean replacerKeepUnresolved<br/>
+     */
+    public YADEXMLParser parse(Object... args) throws Exception {
+        if (args == null || args.length != 5) {
+            throw new SOSMissingDataException("settingsFile,profile,replacerMap,replaceCaseSensitive,replacerKeepUnresolvedVariables");
         }
         if (args[0] == null || !(args[0] instanceof Path)) {
             throw new SOSMissingDataException("settingsFile");
@@ -35,6 +44,7 @@ public class YADEXMLParser extends AYADEParser {
         if (args[1] == null || !(args[1] instanceof String)) {
             throw new SOSMissingDataException("profile");
         }
+        // args[2],args[3],args[4] see below varReplacer
 
         getArgs().getSettings().setValue((Path) args[0]);
         getArgs().getProfile().setValue((String) args[1]);
@@ -47,8 +57,10 @@ public class YADEXMLParser extends AYADEParser {
             throw new Exception("[profile=" + getArgs().getProfile().getValue() + "]not found");
         }
 
-        envVarReplacer = new SOSEnvVariableReplacer(System.getenv(), false, true);
+        // Map<String, String> map = System.getenv();
+        varReplacer = new SOSMapVariableReplacer((Map<String, String>) args[2], (Boolean) args[3], (Boolean) args[4]);
         YADEXMLProfileHelper.parse(this, profile);
+        return this;
     }
 
     protected Element getRoot() {
@@ -60,7 +72,7 @@ public class YADEXMLParser extends AYADEParser {
     }
 
     protected String getValue(Node node) {
-        return envVarReplacer.replaceAllVars(SOSXML.getTrimmedValue(node));
+        return varReplacer.replaceAllVars(SOSXML.getTrimmedValue(node));
     }
 
     protected void setIntegerArgumentValue(SOSArgument<Integer> arg, Node node) {

@@ -167,6 +167,14 @@ public class JobHelper {
                 .getValue()));
     }
 
+    public static Map<String, String> asNameValueStringMap(Map<String, JobArgument<?>> map) {
+        if (map == null || map.size() == 0) {
+            return Collections.emptyMap();
+        }
+        return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
+                .getValue().toString()));
+    }
+
     @SuppressWarnings("unused")
     private static Map<String, Object> asNameValueMap(JobArguments o) {
         List<Field> fields = getJobArgumentFields(o);

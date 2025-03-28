@@ -7,6 +7,7 @@ import java.util.List;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
@@ -51,6 +52,9 @@ public class YADEXMLProfileHelper {
 
     private static void parseOperation(YADEXMLParser impl, Node operation) throws Exception {
         Node node = impl.getXPath().selectNode(operation, "*[1]"); // first child
+        if (node == null) {
+            throw new SOSMissingDataException("Profiles/Profile profile_id=" + impl.getArgs().getProfile().getValue() + "/Operation/<Child Node>");
+        }
         String operationIdentifier = node.getNodeName();
         switch (operationIdentifier) {
         case "Copy":
@@ -150,9 +154,9 @@ public class YADEXMLProfileHelper {
                 String nodeName = n.getNodeName();
                 // e.g. CopyTargetFragmentRef
                 if (nodeName.equals(operationIdentifier + "TargetFragmentRef")) {
-                    parseFragmentRef(impl, n, true);
+                    parseFragmentRef(impl, n, false);
                 } else if (nodeName.equals("Alternative" + operationIdentifier + "TargetFragmentRef")) {
-                    parseAlternativeFragmentRef(impl, n, true);
+                    parseAlternativeFragmentRef(impl, n, false);
                 } else if (nodeName.equals("Directory")) {
                     impl.setStringArgumentValue(impl.getTargetArgs().getDirectory(), n);
                 } else if (nodeName.equals("TargetFileOptions")) {
@@ -195,33 +199,39 @@ public class YADEXMLProfileHelper {
         }
 
         AProviderArguments providerArgs = null;
-        switch (ref.getNodeName()) {
+        // e.g. ref=CopySourceFragmentRef, refRef SFTPFragmentRef
+        Node refRef = impl.getXPath().selectNode(ref, "*[1]"); // first child
+        if (refRef == null) {
+            throw new SOSMissingDataException("Profiles/Profile profile_id=" + impl.getArgs().getProfile().getValue() + "/../" + ref.getNodeName()
+                    + "/<Child Node>");
+        }
+        switch (refRef.getNodeName()) {
         case "LocalSource":
-            providerArgs = parseFragmentRefLocal(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefLocal(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "LocalTarget":
-            providerArgs = parseFragmentRefLocal(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefLocal(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "SFTPFragmentRef":
-            providerArgs = parseFragmentRefSFTP(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefSFTP(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "FTPFragmentRef":
-            providerArgs = parseFragmentRefFTP(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefFTP(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "FTPSFragmentRef":
-            providerArgs = parseFragmentRefFTPS(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefFTPS(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "HTTPFragmentRef":
-            providerArgs = parseFragmentRefHTTP(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefHTTP(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "HTTPSFragmentRef":
-            providerArgs = parseFragmentRefHTTPS(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefHTTPS(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "SMBFragmentRef":
-            providerArgs = parseFragmentRefSMB(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefSMB(impl, refRef, isSource, sourceTargetArgs);
             break;
         case "WebDAVFragmentRef":
-            providerArgs = parseFragmentRefWebDAV(impl, ref, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefWebDAV(impl, refRef, isSource, sourceTargetArgs);
             break;
         }
         if (isSource) {

@@ -524,6 +524,10 @@ public class OrderProcessStep<A extends JobArguments> {
         return JobHelper.asNameValueMap(getAllArguments(Type.UNDECLARED));
     }
 
+    public Map<String, String> getUndeclaredArgumentsAsNameValueStringMap() {
+        return JobHelper.asNameValueStringMap(getAllArguments(Type.UNDECLARED));
+    }
+
     public Map<String, Object> getOrderArgumentsAsNameValueMap() {
         if (internalStep == null) {
             return Collections.emptyMap();

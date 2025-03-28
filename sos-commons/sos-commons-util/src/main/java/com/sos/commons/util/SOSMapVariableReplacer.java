@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class SOSEnvVariableReplacer {
+public class SOSMapVariableReplacer {
 
     // ${VAR},$VAR
     private static final String REGEX_ENV_VAR_UNIX = "\\$\\{([\\p{L}\\p{N}_.-]+)\\}|\\$([\\p{L}\\p{N}_.-]+)";
@@ -18,27 +18,27 @@ public class SOSEnvVariableReplacer {
 
     private final Map<String, String> map;
     private final boolean caseSensitive;
-    private final boolean keepUnresolvedVariables;
+    private final boolean keepUnresolved;
 
     /** If a variable can't be replaced, this variable will not be modified and will return the original value<br/>
      * -- Example: input=Hi %USERNAME% - %NOT_EXISTS, output=Hi Fritz Tester - %NOT_EXISTS%<br/>
      */
-    public SOSEnvVariableReplacer(Map<String, String> map, boolean caseSensitive) {
+    public SOSMapVariableReplacer(Map<String, String> map, boolean caseSensitive) {
         this(map, caseSensitive, true);
     }
 
     /** @param map
      * @param caseSensitive
-     * @param keepUnresolvedVariables <br/>
+     * @param keepUnresolved <br/>
      *            - true(default) - (Windows-like) If a variable can't be replaced, this variable will not be modified and will return the original value<br/>
      *            -- Example: input=Hi %USERNAME% - %NOT_EXISTS, output=Hi Fritz Tester - %NOT_EXISTS%<br/>
      *            - false - (Unix-like) If a variable can't be replaced, this variable will be modified to empty<br/>
      *            -- Example: input=Hi %USERNAME% - %NOT_EXISTS, output=Hi Fritz Tester - <br/>
      */
-    public SOSEnvVariableReplacer(Map<String, String> map, boolean caseSensitive, boolean keepUnresolvedVariables) {
+    public SOSMapVariableReplacer(Map<String, String> map, boolean caseSensitive, boolean keepUnresolved) {
         this.map = caseSensitive ? map : prepareEnvMapForCaseInsensitive(map);
         this.caseSensitive = caseSensitive;
-        this.keepUnresolvedVariables = keepUnresolvedVariables;
+        this.keepUnresolved = keepUnresolved;
     }
 
     /** Replaces only Unix-style environment variables like ${VAR} and $VAR */
@@ -67,7 +67,7 @@ public class SOSEnvVariableReplacer {
             String varName = getVarName(matcher);
             String replacement = caseSensitive ? map.get(varName) : map.get(varName.toLowerCase());
             if (replacement == null) {
-                if (keepUnresolvedVariables) {
+                if (keepUnresolved) {
                     // If the variable is not found in the map, return the original value (e.g., %NOT_EXISTS%)
                     replacement = matcher.group(0);
                 } else {

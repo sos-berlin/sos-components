@@ -6,7 +6,7 @@ import com.sos.yade.engine.commons.arguments.parsers.AYADEParser;
 public class YADECLIPraser extends AYADEParser {
 
     @Override
-    public void parse(Object... args) throws Exception {
+    public YADECLIPraser parse(Object... args) throws Exception {
         if (args == null || args.length != 1) {
             throw new SOSMissingDataException("cliArgs");
         }
@@ -15,6 +15,8 @@ public class YADECLIPraser extends AYADEParser {
         }
 
         String[] cliArgs = (String[]) args[0];
+
+        return this;
     }
 
 }

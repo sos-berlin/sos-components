@@ -7,9 +7,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SOSEnvVariableReplacerTest {
+public class SOSMapVariableReplacerTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSEnvVariableReplacerTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSMapVariableReplacerTest.class);
 
     @Ignore
     @Test
@@ -19,7 +19,7 @@ public class SOSEnvVariableReplacerTest {
         String unix = "Hi ${USERNAME} - $Computername123 - $NOT_EXISTS";
         String all = "[WINDOWS]" + win + "[UNIX]" + unix;
 
-        SOSEnvVariableReplacer r = new SOSEnvVariableReplacer(env, true);
+        SOSMapVariableReplacer r = new SOSMapVariableReplacer(env, true);
         LOGGER.info("[caseSensitive=true, keepUnresolvedVariables=true]");
         LOGGER.info(String.format("    [WINDOWS]%s", r.replaceWindowsVars(win)));
         LOGGER.info(String.format("    [UNIX]%s", r.replaceUnixVars(unix)));
@@ -27,14 +27,14 @@ public class SOSEnvVariableReplacerTest {
 
         LOGGER.info("[caseSensitive=true, keepUnresolvedVariables=true]");
         win = "Hi %Username% - %COMPUTERname% - %NOT_EXISTS%";
-        r = new SOSEnvVariableReplacer(env, false);
+        r = new SOSMapVariableReplacer(env, false);
         LOGGER.info(String.format("    [WINDOWS]%s", r.replaceWindowsVars(win)));
         LOGGER.info(String.format("    [UNIX]%s", r.replaceUnixVars(unix)));
         LOGGER.info(String.format("    [ALL]%s", r.replaceAllVars(all)));
 
         LOGGER.info("[caseSensitive=false, keepUnresolvedVariables=false]");
         win = "Hi %Username% - %COMPUTERname% - %NOT_EXISTS%";
-        r = new SOSEnvVariableReplacer(env, false, false);
+        r = new SOSMapVariableReplacer(env, false, false);
         LOGGER.info(String.format("    [WINDOWS]%s", r.replaceWindowsVars(win)));
         LOGGER.info(String.format("    [UNIX]%s", r.replaceUnixVars(unix)));
         LOGGER.info(String.format("    [ALL]%s", r.replaceAllVars(all)));
