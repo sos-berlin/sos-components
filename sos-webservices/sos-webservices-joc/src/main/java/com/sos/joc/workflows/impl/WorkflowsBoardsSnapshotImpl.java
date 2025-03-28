@@ -111,6 +111,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             // only with clone: wbsMap.keySet().removeIf(wn -> !canAdd(WorkflowPaths.getPath(wn), permittedFolders));
             
             Map<WorkflowPath, List<JOrder>> criticalOrdersPerWorkflow = getCriticalOrdersPerWorkflow(orderIds, wbsMap.keySet());
+            Map<WorkflowPath, Set<String>> expectedlOrderIdsPerWorkflow = getExpectingOrdersPerWorkflow(orderIds, wbsMap.keySet());
             
             JRepo jRepo = currentState.repo();
             Predicate<WorkflowBoards> onlySynchronized = w -> jRepo == null ? true : jRepo.pathToCheckedWorkflow(WorkflowPath.of(JocInventory
@@ -126,7 +127,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
                 AtomicInteger numOfAnnouncements = new AtomicInteger(0);
                 AtomicInteger numOfExpectedNotices = new AtomicInteger(0);
                 AtomicInteger numOfPostedNotices = new AtomicInteger(0);
-                AtomicInteger numOfExpectingOrders = new AtomicInteger(0);
+                //AtomicInteger numOfExpectingOrders = new AtomicInteger(0);
                 if (w.getNoticeBoardNames() != null) {
                     w.getNoticeBoardNames().stream().map(bName -> pbs.getAdditionalProperties().get(bName)).filter(Objects::nonNull).forEach(
                             pBoard -> {
@@ -139,16 +140,18 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
                                 if (pBoard.getNumOfPostedNotices() != null) {
                                     numOfPostedNotices.addAndGet(pBoard.getNumOfPostedNotices());
                                 }
-                                if (pBoard.getNumOfExpectingOrders() != null) {
-                                    numOfExpectingOrders.addAndGet(pBoard.getNumOfExpectingOrders());
-                                }
+//                                if (pBoard.getNumOfExpectingOrders() != null) {
+//                                    numOfExpectingOrders.addAndGet(pBoard.getNumOfExpectingOrders());
+//                                }
                             });
                     w.setNoticeBoardNames(null);
                 }
                 w.setNumOfAnnouncements(numOfAnnouncements.get());
                 w.setNumOfExpectedNotices(numOfExpectedNotices.get());
                 w.setNumOfPostedNotices(numOfPostedNotices.get());
-                w.setNumOfExpectingOrders(numOfExpectingOrders.get());
+                w.setExpectingOrderIds(expectedlOrderIdsPerWorkflow.getOrDefault(WorkflowPath.of(JocInventory.pathToName(w.getPath())), Collections
+                        .emptySet()));
+                w.setNumOfExpectingOrders(w.getExpectingOrderIds().size());
 
                 if (w.hasConsumeNotice() > 0) {
                     consumingWorkflows.add(w);
@@ -224,6 +227,13 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
 
         return currentState.ordersBy(stateFilter).filter(o -> workflowNames.contains(o.workflowId().path().string())).collect(Collectors.groupingBy(
                 o -> o.workflowId().path()));
+    }
+    
+    private Map<WorkflowPath, Set<String>> getExpectingOrdersPerWorkflow(Set<OrderId> orderIds, Set<String> workflowNames) {
+        Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.byOrderState(Order.ExpectingNotices.class);
+        stateFilter = JOrderPredicates.and(stateFilter, JOrderPredicates.byOrderIdPredicate(oId -> orderIds.contains(oId)));
+        return currentState.ordersBy(stateFilter).filter(o -> workflowNames.contains(o.workflowId().path().string())).collect(Collectors.groupingBy(
+                o -> o.workflowId().path(), Collectors.mapping(o -> o.id().string(), Collectors.toSet())));
     }
 
     private static Stream<JPlan> get(PlansFilter filter, JControllerState currentState) throws Exception {
