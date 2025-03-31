@@ -176,7 +176,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                         }
                     }
                 }
-                updated = newDBFolderItems;
+//                updated = newDBFolderItems;
                 oldDBFolderContent = newDBFolderItems;
 //                Map<ConfigurationType, Map<String, String>> oldToNewName = (!in.getShallowCopy()) ? oldDBFolderContent.stream().filter(
 //                        item -> typesForReferences.contains(item.getType())).collect(Collectors.groupingBy(
