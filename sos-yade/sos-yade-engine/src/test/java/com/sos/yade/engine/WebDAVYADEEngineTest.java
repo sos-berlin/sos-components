@@ -11,10 +11,8 @@ import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVSProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.commons.arguments.YADEArguments;
-import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
-import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.arguments.parsers.YADEUnitTestArgumentsSetter;
 
 public class WebDAVYADEEngineTest {
 
@@ -36,30 +34,30 @@ public class WebDAVYADEEngineTest {
             PORT = 9080;
 
             /** Common */
-            YADEArguments args = YADEEngineTest.createYADEArgs();
-            args.getParallelism().setValue(10);
-            // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
-            args.getOperation().setValue(TransferOperation.COPY);
+            YADEUnitTestArgumentsSetter argsSetter = YADEEngineTest.createYADEUnitTestArgumentsSetter();
+            argsSetter.getArgs().getParallelism().setValue(10);
+            // argsSetter.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            argsSetter.getArgs().getOperation().setValue(TransferOperation.COPY);
+            argsSetter.getArgs().getTransactional().setValue(true);
 
             /** Source */
-            YADESourceArguments sourceArgs = LocalYADEEngineTest.createSourceArgs();
-            sourceArgs.getDirectory().setValue(LocalYADEEngineTest.SOURCE_DIR);
-            sourceArgs.getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
-            sourceArgs.getRecursive().setValue(true);
+            argsSetter.getSourceArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
+            argsSetter.getSourceArgs().getDirectory().setValue(LocalYADEEngineTest.SOURCE_DIR);
+            argsSetter.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            argsSetter.getSourceArgs().getRecursive().setValue(true);
 
             /** Target */
-            YADETargetArguments targetArgs = createTargetArgs();
-            // targetArgs.getProvider().getUser().setValue("sos");
-            // targetArgs.getProvider().getPassword().setValue("sos");
+            argsSetter.getTargetArgs().setProvider(createProviderArgs());
+            // argsSetter.getTargetArgs().getProvider().getUser().setValue("sos");
+            // argsSetter.getTargetArgs().getProvider().getPassword().setValue("sos");
 
-            // targetArgs.getProvider().setProxy(createHTTPProxyArguments());
+            // argsSetter.getTargetArgs().getProvider().setProxy(createHTTPProxyArguments());
 
-            targetArgs.getDirectory().setValue(TARGET_DIR);
-            // targetArgs.getKeepModificationDate().setValue(true);
-            targetArgs.getTransactional().setValue(true);
-            targetArgs.getCreateDirectories().setValue(true);
+            argsSetter.getTargetArgs().getDirectory().setValue(TARGET_DIR);
+            // argsSetter.getTargetArgs().getKeepModificationDate().setValue(true);
+            argsSetter.getTargetArgs().getCreateDirectories().setValue(true);
 
-            yade.execute(new SLF4JLogger(), args, YADEEngineTest.createClientArgs(), sourceArgs, targetArgs, false);
+            yade.execute(new SLF4JLogger(), argsSetter, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -74,43 +72,33 @@ public class WebDAVYADEEngineTest {
             boolean useFilestash = HOST.contains("https://webdav.filestash.app");
 
             /** Common */
-            YADEArguments args = YADEEngineTest.createYADEArgs();
-            args.getParallelism().setValue(1);
-            args.getOperation().setValue(TransferOperation.COPY);
+            YADEUnitTestArgumentsSetter argsSetter = YADEEngineTest.createYADEUnitTestArgumentsSetter();
+            argsSetter.getArgs().getParallelism().setValue(10);
+            // argsSetter.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            argsSetter.getArgs().getOperation().setValue(TransferOperation.COPY);
+            argsSetter.getArgs().getTransactional().setValue(true);
 
             /** Source */
-            YADESourceArguments sourceArgs = createSourceArgs();
+            argsSetter.getSourceArgs().setProvider(createProviderArgs());
             if (useFilestash) {
-                sourceArgs.getDirectory().setValue(".");
-                sourceArgs.getRecursive().setValue(true);
+                argsSetter.getSourceArgs().getDirectory().setValue(".");
+                argsSetter.getSourceArgs().getRecursive().setValue(true);
             } else {
-                sourceArgs.getProvider().getUser().setValue("sos");
-                sourceArgs.getProvider().getPassword().setValue("sos");
+                argsSetter.getSourceArgs().getProvider().getUser().setValue("sos");
+                argsSetter.getSourceArgs().getProvider().getPassword().setValue("sos");
             }
 
             /** Target */
-            YADETargetArguments targetArgs = LocalYADEEngineTest.createTargetArgs();
-            targetArgs.getDirectory().setValue(LocalYADEEngineTest.TARGET_DIR);
-            // targetArgs.getKeepModificationDate().setValue(true);
-            targetArgs.getTransactional().setValue(true);
-            targetArgs.getCheckSize().setValue(false);
+            argsSetter.getTargetArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
+            argsSetter.getTargetArgs().getDirectory().setValue(LocalYADEEngineTest.TARGET_DIR);
 
-            yade.execute(new SLF4JLogger(), args, YADEEngineTest.createClientArgs(), sourceArgs, targetArgs, false);
+            // argsSetter.getTargetArgs().getKeepModificationDate().setValue(true);
+            argsSetter.getTargetArgs().getCheckSize().setValue(false);
+
+            yade.execute(new SLF4JLogger(), argsSetter, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
-    }
-
-    public static YADESourceArguments createSourceArgs() throws Exception {
-        YADESourceArguments args = YADEEngineTest.createSourceArgs();
-        args.setProvider(createProviderArgs());
-        return args;
-    }
-
-    public static YADETargetArguments createTargetArgs() throws Exception {
-        YADETargetArguments args = YADEEngineTest.createTargetArgs();
-        args.setProvider(createProviderArgs());
-        return args;
     }
 
     public static WebDAVProviderArguments createProviderArgs() throws Exception {

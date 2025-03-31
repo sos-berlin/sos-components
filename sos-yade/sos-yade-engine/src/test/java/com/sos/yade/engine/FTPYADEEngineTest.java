@@ -13,10 +13,8 @@ import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.commons.arguments.YADEArguments;
-import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
-import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.arguments.parsers.YADEUnitTestArgumentsSetter;
 
 public class FTPYADEEngineTest {
 
@@ -35,25 +33,25 @@ public class FTPYADEEngineTest {
         try {
 
             /** Common */
-            YADEArguments args = YADEEngineTest.createYADEArgs();
-            args.getParallelism().setValue(10);
-            // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
-            args.getOperation().setValue(TransferOperation.COPY);
+            YADEUnitTestArgumentsSetter argsSetter = YADEEngineTest.createYADEUnitTestArgumentsSetter();
+            argsSetter.getArgs().getParallelism().setValue(10);
+            // argsSetter.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            argsSetter.getArgs().getOperation().setValue(TransferOperation.COPY);
+            argsSetter.getArgs().getTransactional().setValue(true);
 
             /** Source */
-            YADESourceArguments sourceArgs = LocalYADEEngineTest.createSourceArgs();
-            sourceArgs.getDirectory().setValue(LocalYADEEngineTest.SOURCE_DIR);
-            sourceArgs.getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
-            sourceArgs.getRecursive().setValue(true);
+            argsSetter.getSourceArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
+            argsSetter.getSourceArgs().getDirectory().setValue(LocalYADEEngineTest.SOURCE_DIR);
+            argsSetter.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            argsSetter.getSourceArgs().getRecursive().setValue(true);
 
             /** Target */
-            YADETargetArguments targetArgs = createTargetArgs();
-            targetArgs.getDirectory().setValue(TARGET_DIR);
-            targetArgs.getKeepModificationDate().setValue(true);
-            targetArgs.getTransactional().setValue(true);
-            targetArgs.getCommands().getCommandsBeforeOperation().setValue(Collections.singletonList("FEAT"));
+            argsSetter.getTargetArgs().setProvider(createProviderArgs());
+            argsSetter.getTargetArgs().getDirectory().setValue(TARGET_DIR);
+            argsSetter.getTargetArgs().getKeepModificationDate().setValue(true);
+            argsSetter.getTargetArgs().getCommands().getCommandsBeforeOperation().setValue(Collections.singletonList("FEAT"));
 
-            yade.execute(new SLF4JLogger(), args, YADEEngineTest.createClientArgs(), sourceArgs, targetArgs, false);
+            yade.execute(new SLF4JLogger(), argsSetter, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -67,40 +65,29 @@ public class FTPYADEEngineTest {
             // SOURCE_DIR = "/source";
 
             /** Common */
-            YADEArguments args = YADEEngineTest.createYADEArgs();
-            args.getParallelism().setValue(1);
-            // args.getBufferSize().setValue(Integer.valueOf(128 * 1_024));
-            args.getOperation().setValue(TransferOperation.COPY);
+            YADEUnitTestArgumentsSetter argsSetter = YADEEngineTest.createYADEUnitTestArgumentsSetter();
+            argsSetter.getArgs().getParallelism().setValue(10);
+            // argsSetter.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            argsSetter.getArgs().getOperation().setValue(TransferOperation.COPY);
+            argsSetter.getArgs().getTransactional().setValue(true);
 
             /** Source */
-            YADESourceArguments sourceArgs = createSourceArgs();
-            sourceArgs.getDirectory().setValue(SOURCE_DIR);
-            sourceArgs.getRecursive().setValue(true);
+            argsSetter.getSourceArgs().setProvider(createProviderArgs());
+            argsSetter.getSourceArgs().getDirectory().setValue(SOURCE_DIR);
+            argsSetter.getSourceArgs().getRecursive().setValue(true);
 
             /** Target */
-            YADETargetArguments targetArgs = LocalYADEEngineTest.createTargetArgs();
-            targetArgs.getDirectory().setValue(LocalYADEEngineTest.TARGET_DIR);
-            targetArgs.getKeepModificationDate().setValue(true);
+            argsSetter.getTargetArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
+            argsSetter.getTargetArgs().getDirectory().setValue(LocalYADEEngineTest.TARGET_DIR);
+            argsSetter.getTargetArgs().getKeepModificationDate().setValue(true);
 
-            yade.execute(new SLF4JLogger(), args, YADEEngineTest.createClientArgs(), sourceArgs, targetArgs, false);
+            yade.execute(new SLF4JLogger(), argsSetter, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
     }
 
-    public static YADESourceArguments createSourceArgs() throws Exception {
-        YADESourceArguments args = YADEEngineTest.createSourceArgs();
-        args.setProvider(createProviderArgs());
-        return args;
-    }
-
-    public static YADETargetArguments createTargetArgs() throws Exception {
-        YADETargetArguments args = YADEEngineTest.createTargetArgs();
-        args.setProvider(createProviderArgs());
-        return args;
-    }
-
-    private static FTPProviderArguments createProviderArgs() throws Exception {
+    public static FTPProviderArguments createProviderArgs() throws Exception {
         FTPProviderArguments args = isFTPS ? new FTPSProviderArguments() : new FTPProviderArguments();
         args.getHost().setValue(HOST);
         args.getPort().setValue(PORT);

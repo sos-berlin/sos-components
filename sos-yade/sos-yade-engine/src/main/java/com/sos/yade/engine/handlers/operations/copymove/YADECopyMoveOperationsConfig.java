@@ -19,6 +19,7 @@ public class YADECopyMoveOperationsConfig {
     private final int bufferSize;
     private final int maxRetries;
     private final int parallelism;
+    private final boolean transactional;
     private final boolean checkFileSize;
 
     public YADECopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args,
@@ -34,6 +35,7 @@ public class YADECopyMoveOperationsConfig {
         this.bufferSize = args.getBufferSize().getValue().intValue();
         this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
         this.parallelism = getParallelism(args, sourceFilesSize);
+        this.transactional = args.getTransactional().isTrue();
         this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
     }
 
@@ -43,10 +45,6 @@ public class YADECopyMoveOperationsConfig {
 
     private boolean isCopyOperation() {
         return TransferOperation.COPY.equals(operation);
-    }
-
-    public boolean isTransactionalEnabled() {
-        return getTarget().getAtomic() != null && getTarget().getAtomic().transactional;
     }
 
     private int getMaxRetries(final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
@@ -117,6 +115,10 @@ public class YADECopyMoveOperationsConfig {
 
     public boolean isCheckFileSizeEnabled() {
         return checkFileSize;
+    }
+
+    public boolean isTransactionalEnabled() {
+        return transactional;
     }
 
     public Source getSource() {
@@ -210,14 +212,12 @@ public class YADECopyMoveOperationsConfig {
         }
 
         private Atomic initializeAtomic(final YADETargetProviderDelegator targetDelegator) {
-            boolean transactional = targetDelegator.getArgs().getTransactional().isTrue();
             String prefix = targetDelegator.getArgs().getAtomicPrefix().getValue();
             String suffix = targetDelegator.getArgs().getAtomicSuffix().getValue();
-
             if (!transactional && SOSString.isEmpty(prefix) && SOSString.isEmpty(suffix)) {
                 return null;
             }
-            return new Atomic(transactional, prefix, suffix);
+            return new Atomic(prefix, suffix);
         }
 
         public Cumulate getCumulate() {
@@ -356,22 +356,16 @@ public class YADECopyMoveOperationsConfig {
 
     public class Atomic {
 
-        private final boolean transactional;
         private final String prefix;
         private final String suffix;
 
-        private Atomic(boolean transactional, String prefix, String suffix) {
-            this.transactional = transactional;
+        private Atomic(String prefix, String suffix) {
             this.prefix = getOrDefault(prefix, "");
             this.suffix = this.prefix.isEmpty() ? getOrDefault(suffix, "~") : getOrDefault(suffix, "");
         }
 
         private static String getOrDefault(String val, String defaultVal) {
             return val == null ? defaultVal : val.trim();
-        }
-
-        public boolean isTransactionalEnabled() {
-            return transactional;
         }
 
         public String getPrefix() {

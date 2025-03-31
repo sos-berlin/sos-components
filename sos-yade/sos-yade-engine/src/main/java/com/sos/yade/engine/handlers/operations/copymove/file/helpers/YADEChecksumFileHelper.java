@@ -55,42 +55,44 @@ public class YADEChecksumFileHelper {
     }
 
     /** Checks a checksum file on the Source system and deletes the transferred Target file if the checksum does not match */
-    public static void checkSourceChecksum(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
+    public static void checkSourceIntegrityHash(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
             YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator,
             YADETargetProviderFile targetFile, MessageDigest sourceMessageDigest) throws Exception {
         if (sourceMessageDigest == null) {
             return;
         }
-        String sourceChecksumFile = sourceFile.getFullPath() + config.getIntegrityHashFileExtensionWithDot();
-        String sourceChecksum = sourceDelegator.getProvider().getFileContentIfExists(sourceChecksumFile);
+        String sourceIntegrityHashFile = sourceFile.getFullPath() + config.getIntegrityHashFileExtensionWithDot();
+        sourceFile.setIntegrityHash(sourceDelegator.getProvider().getFileContentIfExists(sourceIntegrityHashFile));
 
-        String msg = String.format("%s]%s[%s", logPrefix, sourceDelegator.getLogPrefix(), sourceChecksumFile);
-        if (sourceChecksum == null) {
-            logger.info("[%s][checksum]file not found", msg);
+        String msg = String.format("%s]%s[%s", logPrefix, sourceDelegator.getLogPrefix(), sourceIntegrityHashFile);
+        if (sourceFile.getIntegrityHash() == null) {
+            logger.info("[%s][integrity hash]file not found", msg);
             return;
         }
         String checksum = toHexString(sourceMessageDigest);
-        if (sourceChecksum.equals(checksum)) {
-            logger.info("[%s][checksum]matches", msg);
+        if (sourceFile.getIntegrityHash().equals(checksum)) {
+            logger.info("[%s][integrity hash]matches", msg);
         } else {
             targetDelegator.getProvider().deleteIfExists(targetFile.getFullPath());
             targetFile.setState(TransferEntryState.ROLLED_BACK);
-            logger.info("[%s][%s][calculated=%s][checksum does not match]target file %s deleted", msg, sourceChecksum, checksum, targetFile
-                    .getFullPath());
-            throw new YADEEngineTransferFileIntegrityHashViolationException(String.format("[%s][%s][calculated]%s", msg, sourceChecksum, checksum));
+            logger.info("[%s][%s][calculated=%s][integrity hash does not match]target file %s deleted", msg, sourceFile.getIntegrityHash(), checksum,
+                    targetFile.getFullPath());
+            throw new YADEEngineTransferFileIntegrityHashViolationException(String.format("[%s][%s][calculated]%s", msg, sourceFile
+                    .getIntegrityHash(), checksum));
         }
     }
 
-    public static void writeTargetChecksumFile(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
+    public static void writeTargetIntegrityHashFile(ISOSLogger logger, String logPrefix, YADECopyMoveOperationsConfig config,
             YADETargetProviderDelegator targetDelegator, YADEProviderFile targetFile, MessageDigest targetMessageDigest) throws ProviderException {
         if (targetMessageDigest == null) {
             return;
         }
 
+        targetFile.setIntegrityHash(toHexString(targetMessageDigest));
         String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
-        targetDelegator.getProvider().writeFile(path, toHexString(targetMessageDigest));
+        targetDelegator.getProvider().writeFile(path, targetFile.getIntegrityHash());
 
-        logger.info("[%s]%s[%s][checksum]file written", logPrefix, targetDelegator.getLogPrefix(), path);
+        logger.info("[%s]%s[%s][integrity hash]file written", logPrefix, targetDelegator.getLogPrefix(), path);
     }
 
     private static String toHexString(MessageDigest digest) {

@@ -1,19 +1,22 @@
 package com.sos.yade.engine.commons.arguments.parsers.xml;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Map;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSMapVariableReplacer;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
-import com.sos.yade.engine.commons.arguments.parsers.AYADEParser;
+import com.sos.yade.engine.commons.arguments.parsers.AYADEArgumentsSetter;
 import com.sos.yade.engine.exceptions.YADEEngineSettingsParserException;
 
-public class YADEXMLParser extends AYADEParser {
+public class YADEXMLArgumentsSetter extends AYADEArgumentsSetter {
 
     // private String jobResource;
 
@@ -21,7 +24,7 @@ public class YADEXMLParser extends AYADEParser {
     private Element root;
     private SOSMapVariableReplacer varReplacer;
 
-    public YADEXMLParser() {
+    public YADEXMLArgumentsSetter() {
         super();
     }
 
@@ -34,22 +37,23 @@ public class YADEXMLParser extends AYADEParser {
      * - 4) boolean replacerCaseSensitive<br/>
      * - 5) boolean replacerKeepUnresolved<br/>
      */
-    public YADEXMLParser parse(Object... args) throws YADEEngineSettingsParserException {
-        if (args == null || args.length != 5) {
+    public YADEXMLArgumentsSetter set(ISOSLogger logger, Object... params) throws YADEEngineSettingsParserException {
+        if (params == null || params.length != 5) {
             throw new YADEEngineSettingsParserException(
                     "missing settingsFile,profile,replacerMap,replaceCaseSensitive,replacerKeepUnresolvedVariables");
         }
-        if (args[0] == null || !(args[0] instanceof Path)) {
+        if (params[0] == null || !(params[0] instanceof Path)) {
             throw new YADEEngineSettingsParserException("missing settingsFile");
         }
-        if (args[1] == null || !(args[1] instanceof String)) {
+        if (params[1] == null || !(params[1] instanceof String)) {
             throw new YADEEngineSettingsParserException("missing profile");
         }
         try {
-            // args[2],args[3],args[4] see below varReplacer
+            getArgs().getStart().setValue(Instant.now());
 
-            getArgs().getSettings().setValue((Path) args[0]);
-            getArgs().getProfile().setValue((String) args[1]);
+            getArgs().getSettings().setValue((Path) params[0]);
+            getArgs().getProfile().setValue((String) params[1]);
+            // params[2],params[3],params[4] see below varReplacer
 
             root = SOSXML.parse(getArgs().getSettings().getValue()).getDocumentElement();
             xpath = SOSXML.newXPath();
@@ -60,10 +64,18 @@ public class YADEXMLParser extends AYADEParser {
             }
 
             // Map<String, String> map = System.getenv();
-            varReplacer = new SOSMapVariableReplacer((Map<String, String>) args[2], (Boolean) args[3], (Boolean) args[4]);
+            varReplacer = new SOSMapVariableReplacer((Map<String, String>) params[2], (Boolean) params[3], (Boolean) params[4]);
             YADEXMLProfileHelper.parse(this, profile);
+            if (logger.isDebugEnabled()) {
+                logger.debug("[%s][set][duration]%s", YADEXMLArgumentsSetter.class.getSimpleName(), SOSDate.getDuration(getArgs().getStart()
+                        .getValue(), Instant.now()));
+            }
         } catch (Throwable e) {
             throw new YADEEngineSettingsParserException(e.toString(), e);
+        } finally {
+            root = null;
+            xpath = null;
+            varReplacer = null;
         }
         return this;
     }

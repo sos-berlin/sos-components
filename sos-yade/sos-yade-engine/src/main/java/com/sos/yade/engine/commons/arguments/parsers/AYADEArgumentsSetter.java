@@ -1,5 +1,6 @@
 package com.sos.yade.engine.commons.arguments.parsers;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
@@ -7,7 +8,7 @@ import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.exceptions.YADEEngineSettingsParserException;
 
-public abstract class AYADEParser {
+public abstract class AYADEArgumentsSetter {
 
     private final YADEArguments args;
     private final YADEClientArguments clientArgs;
@@ -16,7 +17,7 @@ public abstract class AYADEParser {
     private YADETargetArguments targetArgs;
     private YADEJumpArguments jumpArgs;
 
-    public AYADEParser() {
+    public AYADEArgumentsSetter() {
         this.args = new YADEArguments();
         this.clientArgs = new YADEClientArguments();
         this.sourceArgs = new YADESourceArguments();
@@ -26,7 +27,17 @@ public abstract class AYADEParser {
         this.sourceArgs.applyDefaultIfNullQuietly();
     }
 
-    public abstract AYADEParser parse(Object... args) throws YADEEngineSettingsParserException;
+    // currently only for UnitTests
+    protected AYADEArgumentsSetter(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs, YADETargetArguments targetArgs,
+            YADEJumpArguments jumpArgs) {
+        this.args = args;
+        this.clientArgs = clientArgs;
+        this.sourceArgs = sourceArgs;
+        this.targetArgs = targetArgs;
+        this.jumpArgs = jumpArgs;
+    }
+
+    public abstract AYADEArgumentsSetter set(ISOSLogger logger, Object... params) throws YADEEngineSettingsParserException;
 
     public YADEArguments getArgs() {
         return args;
