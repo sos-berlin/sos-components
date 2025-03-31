@@ -37,6 +37,7 @@ import com.sos.js7.job.OrderProcessStepLogger;
 
 public class SSHJob extends Job<SSHJobArguments> {
 
+    private static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
     private SOSParameterSubstitutor parameterSubstitutor = new SOSParameterSubstitutor();
 
     @Override
@@ -48,7 +49,7 @@ public class SSHJob extends Job<SSHJobArguments> {
             providerArgs.setProxy(step.getIncludedArguments(ProxyArguments.class));
         }
         SSHProvider provider = SSHProvider.createInstance(step.getLogger(), providerArgs);
-        step.addCancelableResource(provider);
+        step.addCancelableResource(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER, provider);
 
         SSHJobArguments jobArgs = step.getDeclaredArguments();
 
@@ -191,6 +192,22 @@ public class SSHJob extends Job<SSHJobArguments> {
                 SSHJobUtil.checkStdErr(result.getStdErr(), jobArgs, logger);
                 SSHJobUtil.checkExitCode(result.getExitCode(), jobArgs, step.getOutcome(), logger);
             }
+        }
+    }
+
+    @Override
+    public void onOrderProcessCancel(OrderProcessStep<SSHJobArguments> step) throws Exception {
+        String jobName = null;
+        try {
+            jobName = step.getJobName();
+            Object o = step.getCancelableResources().get(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER);
+            if (o != null) {
+                SSHProvider p = (SSHProvider) o;
+                step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][ssh]" + p.cancelCommands());
+                p.disconnect();
+            }
+        } catch (Throwable e) {
+            step.getLogger().error(String.format("[%s][job name=%s][cancelSSHProvider]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }
 

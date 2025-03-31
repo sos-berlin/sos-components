@@ -15,13 +15,13 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.db.common.CancelableDatabaseJob;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
-import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
 
-public class PLSQLJob extends Job<PLSQLJobArguments> {
+public class PLSQLJob extends CancelableDatabaseJob<PLSQLJobArguments> {
 
     private static final String STD_OUT_OUTPUT = "std_out_output";
     private static final String DBMS_OUTPUT = "dbms_output";
@@ -40,7 +40,7 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
         try {
             factory = getHibernateFactory(step);
             session = factory.openStatelessSession(PLSQLJob.class.getSimpleName());
-            step.addCancelableResource(session);
+            addCancelableResource(step, session);
             process(step, session);
         } catch (Throwable e) {
             throw e;

@@ -1,7 +1,6 @@
 package com.sos.js7.job;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +18,6 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
@@ -27,7 +25,6 @@ import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument.Type;
 import com.sos.js7.job.JobArguments.LogLevel;
@@ -52,10 +49,6 @@ import js7.launcher.forjava.internal.BlockingInternalJob.JobContext;
 import scala.collection.JavaConverters;
 
 public class OrderProcessStep<A extends JobArguments> {
-
-    protected static final String CANCELABLE_RESOURCE_NAME_HIBERNATE = "hibernate";
-    protected static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
-    protected static final String CANCELABLE_RESOURCE_NAME_SQL_CONNECTION = "sql_connection";
 
     private static final String INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH = "js7Workflow.path";
 
@@ -250,27 +243,14 @@ public class OrderProcessStep<A extends JobArguments> {
         init(arguments);
     }
 
-    public void addCancelableResource(SOSHibernateSession session) {
-        addCancelableResource(CANCELABLE_RESOURCE_NAME_HIBERNATE, session);
-    }
-
-    public void addCancelableResource(SSHProvider provider) {
-        addCancelableResource(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER, provider);
-    }
-
-    @SuppressWarnings("unused")
-    private void addCancelableResource(Connection conn) {
-        addCancelableResource(CANCELABLE_RESOURCE_NAME_SQL_CONNECTION, conn);
-    }
-
-    private void addCancelableResource(String identifier, Object o) {
+    public void addCancelableResource(String identifier, Object o) {
         if (cancelableResources == null) {
             cancelableResources = new HashMap<>();
         }
         cancelableResources.put(identifier, o);
     }
 
-    protected Map<String, Object> getCancelableResources() {
+    public Map<String, Object> getCancelableResources() {
         return cancelableResources;
     }
 

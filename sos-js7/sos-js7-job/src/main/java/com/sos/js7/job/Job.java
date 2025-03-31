@@ -6,7 +6,6 @@ import static io.vavr.control.Either.right;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,10 +20,8 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
-import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.js7.job.JobArguments.MockLevel;
 import com.sos.js7.job.ValueSource.ValueSourceType;
 import com.sos.js7.job.exception.JobArgumentException;
@@ -41,7 +38,8 @@ import js7.launcher.forjava.internal.BlockingInternalJob;
 public abstract class Job<A extends JobArguments> implements BlockingInternalJob {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
-    private static final String OPERATION_CANCEL_KILL = "cancel/kill";
+    
+    public static final String OPERATION_CANCEL_KILL = "cancel/kill";
 
     private JobEnvironment<A> jobEnvironment;
 
@@ -203,87 +201,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         } catch (Throwable e) {
             jobStep.getLogger().error(String.format("[%s][job name=%s][onOrderProcessCancel]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
-
         jobStep.cancelExecuteJobs();
-
-        if (jobStep.getCancelableResources() != null) {
-            cancelHibernate(jobStep, jobName);
-            cancelSSHProvider(jobStep, jobName);
-            // cancelSQLConnection(jobStep, jobName);
-        }
-    }
-
-    private void cancelHibernate(OrderProcessStep<A> jobStep, String jobName) {
-        try {
-            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_HIBERNATE);
-            if (o != null) {
-                SOSHibernateSession s = (SOSHibernateSession) o;
-                boolean doRollback = false;
-                if (s.getCurrentStatement() != null) {
-                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]cancel statement ...");
-                    try {
-                        s.getCurrentStatement().cancel();
-                    } catch (Throwable ex) {
-                        jobStep.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][cancel statement]" + ex.toString(), ex);
-                    }
-                    doRollback = true;
-                }
-                Connection conn = s.getConnection();
-                // Rollback if the current statement is canceled.
-                // Otherwise, rollback execution waits until the current statement completes.
-                if (doRollback) {
-                    try {
-                        jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]connection rollback ...");
-                        conn.rollback();
-                    } catch (Throwable ex) {
-                        jobStep.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][connection rollback]" + ex.toString(), ex);
-                    }
-                } else {
-                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL
-                            + "][hibernate][connection rollback][skip]because the current statement is no more active");
-                }
-                try {
-                    conn.abort(Runnable::run);
-                } catch (Throwable ex) {
-                    jobStep.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][connection abort]" + ex.toString(), ex);
-                }
-                // close session and factory
-                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]close...");
-                s.getFactory().close(s);
-                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]completed");
-            }
-        } catch (Throwable e) {
-            jobStep.getLogger().error(String.format("[%s][job name=%s][cancelHibernate]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
-        }
-    }
-
-    private void cancelSSHProvider(OrderProcessStep<A> jobStep, String jobName) {
-        try {
-            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_SSH_PROVIDER);
-            if (o != null) {
-                SSHProvider p = (SSHProvider) o;
-                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][ssh]" + p.cancelCommands());
-                p.disconnect();
-            }
-        } catch (Throwable e) {
-            jobStep.getLogger().error(String.format("[%s][job name=%s][cancelSSHProvider]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
-        }
-    }
-
-    // TODO currently not used(candidate PLSQLJob) because abort is asynchronous and conn.close() is synchronous (waiting for execution is completed)
-    // PLSQLJob is cancelled when the Thread is interrupted.
-    @SuppressWarnings("unused")
-    private void cancelSQLConnection(OrderProcessStep<A> jobStep, String jobName) {
-        try {
-            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_SQL_CONNECTION);
-            if (o != null) {
-                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]abort sql connection ...");
-                // ((Connection) o).close();
-                ((Connection) o).abort(Runnable::run);
-            }
-        } catch (Throwable e) {
-            jobStep.getLogger().error(String.format("[%s][job name=%s][cancelSQLConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
-        }
     }
 
     private String getJobName(OrderProcessStep<A> jobStep) {

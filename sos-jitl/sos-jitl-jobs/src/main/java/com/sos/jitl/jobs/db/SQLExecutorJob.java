@@ -12,16 +12,16 @@ import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
+import com.sos.jitl.jobs.db.common.CancelableDatabaseJob;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
-import com.sos.js7.job.Job;
 import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepOutcome;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
-public class SQLExecutorJob extends Job<SQLExecutorJobArguments> {
+public class SQLExecutorJob extends CancelableDatabaseJob<SQLExecutorJobArguments> {
 
     public SQLExecutorJob(JobContext jobContext) {
         super(jobContext);
@@ -36,7 +36,7 @@ public class SQLExecutorJob extends Job<SQLExecutorJobArguments> {
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
             session = factory.openStatelessSession();
-            step.addCancelableResource(session);
+            addCancelableResource(step, session);
             process(step, session);
             step.getLogger().info("result: " + step.getOutcome().getVariables());
         } catch (Throwable e) {
