@@ -44,6 +44,11 @@ public class PublishSemaphore {
         getInstance()._remove(accessToken);
     }
     
+    
+    public static int availablePermits(String accessToken) {
+        return getInstance()._availablePermits(accessToken);
+    }
+    
     private boolean _tryAcquire(String accessToken) throws InterruptedException {
         semaphores.putIfAbsent(accessToken, new Semaphore(1));
         return semaphores.get(accessToken).tryAcquire(WAIT_TIMEOUT, TimeUnit.SECONDS);
@@ -62,6 +67,13 @@ public class PublishSemaphore {
                 }
             }, TimeUnit.MINUTES.toMillis(2));
         }
+    }
+    
+    private int _availablePermits(String accessToken) {
+        if (semaphores.containsKey(accessToken)) {
+            return semaphores.get(accessToken).availablePermits();
+        }
+        return -1;
     }
     
     private int _getQueueLength(String accessToken) {
