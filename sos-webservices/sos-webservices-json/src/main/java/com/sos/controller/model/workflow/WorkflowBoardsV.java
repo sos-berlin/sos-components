@@ -25,7 +25,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "numOfAnnouncements",
     "numOfPostedNotices",
     "numOfExpectedNotices",
-    "numOfExpectingOrders"
+    "numOfExpectingOrders",
+    "expectingOrderIds"
 })
 public class WorkflowBoardsV
     extends WorkflowBoards
@@ -69,6 +70,9 @@ public class WorkflowBoardsV
      */
     @JsonProperty("numOfExpectingOrders")
     private Integer numOfExpectingOrders;
+    @JsonProperty("expectingOrderIds")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> expectingOrderIds = null;
 
     /**
      * No args constructor for use in serialization
@@ -80,19 +84,20 @@ public class WorkflowBoardsV
     /**
      * 
      * @param expectNotices
-     * @param path
      * @param numOfExpectedNotices
-     * @param versionId
-     * @param numOfExpectingOrders
-     * @param futureDueOrderIds
      * @param numOfPostedNotices
      * @param postNotices
      * @param consumeNotices
+     * @param expectingOrderIds
+     * @param path
+     * @param versionId
+     * @param numOfExpectingOrders
+     * @param futureDueOrderIds
      * @param workflowTags
      * @param presentDueOrderIds
      * @param numOfAnnouncements
      */
-    public WorkflowBoardsV(Set<String> presentDueOrderIds, Set<String> futureDueOrderIds, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
+    public WorkflowBoardsV(Set<String> presentDueOrderIds, Set<String> futureDueOrderIds, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, Set<String> expectingOrderIds, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
         super(postNotices, expectNotices, consumeNotices, workflowTags, path, versionId);
         this.presentDueOrderIds = presentDueOrderIds;
         this.futureDueOrderIds = futureDueOrderIds;
@@ -100,6 +105,7 @@ public class WorkflowBoardsV
         this.numOfPostedNotices = numOfPostedNotices;
         this.numOfExpectedNotices = numOfExpectedNotices;
         this.numOfExpectingOrders = numOfExpectingOrders;
+        this.expectingOrderIds = expectingOrderIds;
     }
 
     @JsonProperty("presentDueOrderIds")
@@ -210,14 +216,24 @@ public class WorkflowBoardsV
         this.numOfExpectingOrders = numOfExpectingOrders;
     }
 
+    @JsonProperty("expectingOrderIds")
+    public Set<String> getExpectingOrderIds() {
+        return expectingOrderIds;
+    }
+
+    @JsonProperty("expectingOrderIds")
+    public void setExpectingOrderIds(Set<String> expectingOrderIds) {
+        this.expectingOrderIds = expectingOrderIds;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("presentDueOrderIds", presentDueOrderIds).append("futureDueOrderIds", futureDueOrderIds).append("numOfAnnouncements", numOfAnnouncements).append("numOfPostedNotices", numOfPostedNotices).append("numOfExpectedNotices", numOfExpectedNotices).append("numOfExpectingOrders", numOfExpectingOrders).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("presentDueOrderIds", presentDueOrderIds).append("futureDueOrderIds", futureDueOrderIds).append("numOfAnnouncements", numOfAnnouncements).append("numOfPostedNotices", numOfPostedNotices).append("numOfExpectedNotices", numOfExpectedNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("expectingOrderIds", expectingOrderIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(numOfExpectedNotices).append(numOfExpectingOrders).append(futureDueOrderIds).append(numOfPostedNotices).append(presentDueOrderIds).append(numOfAnnouncements).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(numOfExpectedNotices).append(numOfExpectingOrders).append(futureDueOrderIds).append(numOfPostedNotices).append(expectingOrderIds).append(presentDueOrderIds).append(numOfAnnouncements).toHashCode();
     }
 
     @Override
@@ -229,7 +245,7 @@ public class WorkflowBoardsV
             return false;
         }
         WorkflowBoardsV rhs = ((WorkflowBoardsV) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(numOfExpectedNotices, rhs.numOfExpectedNotices).append(numOfExpectingOrders, rhs.numOfExpectingOrders).append(futureDueOrderIds, rhs.futureDueOrderIds).append(numOfPostedNotices, rhs.numOfPostedNotices).append(presentDueOrderIds, rhs.presentDueOrderIds).append(numOfAnnouncements, rhs.numOfAnnouncements).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(numOfExpectedNotices, rhs.numOfExpectedNotices).append(numOfExpectingOrders, rhs.numOfExpectingOrders).append(futureDueOrderIds, rhs.futureDueOrderIds).append(numOfPostedNotices, rhs.numOfPostedNotices).append(expectingOrderIds, rhs.expectingOrderIds).append(presentDueOrderIds, rhs.presentDueOrderIds).append(numOfAnnouncements, rhs.numOfAnnouncements).isEquals();
     }
 
 }

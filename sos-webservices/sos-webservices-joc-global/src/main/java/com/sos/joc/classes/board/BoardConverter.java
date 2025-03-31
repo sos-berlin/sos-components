@@ -75,11 +75,11 @@ public class BoardConverter {
                 ef = JExprFunction.apply("(noticeKey) => [ '" + getDailyPlanDate() + "', $noticeKey ]");
             }
             return JControllerCommand.apply(JControllerCommand.changeGlobalToPlannableBoard(((JPlannableBoard) newBoard).asScala(), PlanSchemaId.of(
-                    "DailyPlan"), ef));
+                    PlanSchemas.DailyPlanPlanSchemaId), ef));
         } else if (!oldBoard.asScala().isGlobal() && newBoard.asScala().isGlobal()) {
             JExprFunction ef = JExprFunction.apply("(planKey, noticeKey) => \"$planKey$noticeKey\"");
             return JControllerCommand.apply(JControllerCommand.changePlannableToGlobalBoard(((JGlobalBoard) newBoard).asScala(), PlanSchemaId.of(
-                    "DailyPlan"), ef));
+                    PlanSchemas.DailyPlanPlanSchemaId), ef));
         }
 
         return null;
@@ -263,6 +263,18 @@ public class BoardConverter {
         } catch (Throwable e) {
             return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
         }
+//        try {
+//            Map<JBoardItem, JBoardItem> newOldBoards = getNewOldBoardMapFromDepItems(depItems, proxy.currentState());
+//            return convert(proxy.api(), newOldBoards).thenApply(e -> {
+//                if (e.isRight()) {
+//                    return Either.right(newOldBoards.keySet().stream().map(JBoardItem::path).map(BoardPath::string).collect(Collectors.toSet()));
+//                } else {
+//                    return Either.left(e.getLeft());
+//                }
+//            });
+//        } catch (Throwable e) {
+//            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+//        }
     }
     
     public static CompletableFuture<Either<Problem, Response>> convertToFromControllerObjs(JControllerProxy proxy, Collection<ControllerObject> depItems) {
@@ -271,6 +283,18 @@ public class BoardConverter {
         } catch (Throwable e) {
             return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
         }
+//        try {
+//            Map<JBoardItem, JBoardItem> newOldBoards = getNewOldBoardMapFromControllerObjs(depItems, proxy.currentState());
+//            return convert(proxy.api(), newOldBoards).thenApply(e -> {
+//                if (e.isRight()) {
+//                    return Either.right(newOldBoards.keySet().stream().map(JBoardItem::path).map(BoardPath::string).collect(Collectors.toSet()));
+//                } else {
+//                    return Either.left(e.getLeft());
+//                }
+//            });
+//        } catch (Throwable e) {
+//            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+//        }
     }
 
 }

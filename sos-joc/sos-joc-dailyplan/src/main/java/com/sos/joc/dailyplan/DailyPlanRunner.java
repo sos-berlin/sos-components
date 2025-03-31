@@ -3,6 +3,9 @@ package com.sos.joc.dailyplan;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TimerTask;
@@ -28,9 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
-
 import com.fasterxml.jackson.databind.JsonMappingException;
-
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
@@ -94,8 +96,11 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 
 import js7.data.plan.PlanId;
 import js7.data.plan.PlanSchemaId;
+import js7.data.value.StringValue;
+import js7.data.value.Value;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.plan.JPlan;
+import js7.data_for_java.plan.JPlanSchemaState;
 import js7.data_for_java.plan.JPlanStatus;
 import js7.proxy.javaapi.JControllerProxy;
 
@@ -242,10 +247,8 @@ public class DailyPlanRunner extends TimerTask {
                     settings.setDailyPlanDate(dailyPlanCalendar.getTime());
                 }
                 
-                dailyPlanCalendar.setTime(savCalendar.getTime());
-                settings.setDailyPlanDate(dailyPlanCalendar.getTime());
-                
-                closeOldPlans(startupMode, controllerId, dailyPlanCalendar, ageOfPlansToBeClosedAutomatically);
+                closeOldPlans(startupMode, controllerId, ageOfPlansToBeClosedAutomatically);
+                setUnknownPlansAreOpenFromDate(startupMode, controllerId);
 
             }
             
@@ -751,23 +754,25 @@ public class DailyPlanRunner extends TimerTask {
     }
     
     // service
-    private void closeOldPlans(StartupMode startupMode, String controllerId, java.util.Calendar calendar, int ageOfPlansToBeClosedAutomatically) {
+    private void closeOldPlans(StartupMode startupMode, String controllerId, int ageOfPlansToBeClosedAutomatically) {
 
         if (ageOfPlansToBeClosedAutomatically > 0) {
             try {
-                // calendar is DailyPlanHelper.getNextDayCalendar() -> (ageOfPlansToBeClosedAutomatically + 1)
-                calendar.add(java.util.Calendar.DATE, -1 * (ageOfPlansToBeClosedAutomatically + 1));
-                String date = SOSDate.getDateAsString(calendar);
+                LocalDate ld = LocalDate.now(ZoneOffset.UTC);
+                if (ageOfPlansToBeClosedAutomatically > 1) {
+                    ld = ld.minusDays(Integer.valueOf(ageOfPlansToBeClosedAutomatically - 1).longValue());
+                }
+                String date = ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
                 LOGGER.info(String.format("[%s][closePlans][%s]older than %s", startupMode, controllerId, date));
-                PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.defaultPlanSchemaId);
+                PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.DailyPlanPlanSchemaId);
                 Predicate<Map.Entry<PlanId, JPlan>> isDailyPlanPlan = e -> e.getKey().planSchemaId().equals(dailyPlanSchemaId);
-                Predicate<Map.Entry<PlanId, JPlan>> planIsOlder = e -> e.getKey().planKey().string().compareTo(date) < 1;
+                Predicate<Map.Entry<PlanId, JPlan>> planIsOlder = e -> e.getKey().planKey().string().compareTo(date) < 0;
                 Predicate<Map.Entry<PlanId, JPlan>> isOpen = e -> !e.getValue().isClosed();
                 JControllerProxy proxy = Proxy.of(controllerId);
 
                 proxy.currentState().toPlan().entrySet().stream().filter(isDailyPlanPlan).filter(planIsOlder).filter(isOpen).map(Map.Entry::getKey)
                         .map(pId -> {
-                            LOGGER.info(String.format("[%s][closePlan][%s]try %s/%s", startupMode, controllerId, PlanSchemas.defaultPlanSchemaId, pId
+                            LOGGER.info(String.format("[%s][closePlan][%s]try %s/%s", startupMode, controllerId, PlanSchemas.DailyPlanPlanSchemaId, pId
                                     .planKey().string()));
                             return JControllerCommand.changePlan(pId, JPlanStatus.Closed());
                         }).map(JControllerCommand::apply).forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper
@@ -776,6 +781,35 @@ public class DailyPlanRunner extends TimerTask {
                 LOGGER.error(String.format("[%s][closePlans][%s]fails: %s", startupMode, controllerId, e.toString()), e);
             }
         }
+    }
+    
+    // service
+    private void setUnknownPlansAreOpenFromDate(StartupMode startupMode, String controllerId) {
+
+            try {
+                LocalDate ld = LocalDate.now(ZoneOffset.UTC);
+                ld = ld.minusMonths(1l);
+                String date = ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
+                
+                LOGGER.info(String.format("[%s][unknownPlansAreOpenFrom][%s] %s", startupMode, controllerId, date));
+                PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.DailyPlanPlanSchemaId);
+                JControllerProxy proxy = Proxy.of(controllerId);
+                
+                JPlanSchemaState schemaState = proxy.currentState().idToPlanSchemaState().get(dailyPlanSchemaId);
+                Value val = schemaState.namedValues().get(PlanSchemas.DailyPlanThresholdKey);
+                if (val != null) {
+                    String oldValue = val.toStringValueString().getOrElse(null);
+                    if (oldValue == null || (oldValue != null && oldValue.compareTo(date) < 0)) {
+                        schemaState.namedValues().put(PlanSchemas.DailyPlanThresholdKey, StringValue.of(date));
+                        proxy.api().executeCommand(JControllerCommand.apply(JControllerCommand.changePlanSchema(dailyPlanSchemaId, Optional.of(
+                                schemaState.namedValues()), Optional.empty()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null,
+                                        controllerId));
+                    }
+                }
+
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s][unknownPlansAreOpenFrom][%s]fails: %s", startupMode, controllerId, e.toString()), e);
+            }
     }
 
     private Calendar getWorkingDaysCalendar(String controllerId, String calendarName) throws DBMissingDataException, JsonParseException,

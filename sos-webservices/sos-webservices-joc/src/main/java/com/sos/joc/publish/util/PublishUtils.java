@@ -1759,7 +1759,7 @@ public abstract class PublishUtils {
             timeZone = OrdersHelper.getDailyPlanTimeZone().getId();
         }
         fileOrderSource.setTimeZone(null);
-        return String.format(planIdPattern, PlanSchemas.defaultPlanSchemaId,  timeZone);
+        return String.format(planIdPattern, PlanSchemas.DailyPlanPlanSchemaId,  timeZone);
     }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,

@@ -173,7 +173,7 @@ public class DependencyResolver {
                     .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
             Set<DBItemInventoryConfiguration> wfJobTemplates = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
                     .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
-            resolveIncludeScriptByWorkflow(cfg, wfWorkflows);
+//            resolveIncludeScriptByWorkflow(cfg, wfWorkflows);
             resolveIncludeScriptByJobTemplate(cfg, wfJobTemplates);
             break;
         case WORKINGDAYSCALENDAR:
@@ -1268,7 +1268,7 @@ public class DependencyResolver {
         if (jsonObj.containsKey(searchKey)) {
             JsonArray params = jsonObj.getJsonArray(searchKey);
             for (int i = 0; i < params.size(); i++) {
-                String value = params.get(i).toString();
+                String value = params.getString(i);
                 if(value != null) {
                     foundValues.add(value);
                 }
