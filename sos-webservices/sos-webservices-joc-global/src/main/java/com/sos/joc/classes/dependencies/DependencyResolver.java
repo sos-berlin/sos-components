@@ -174,7 +174,7 @@ public class DependencyResolver {
             Set<DBItemInventoryConfiguration> wfJobTemplates = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
                     .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
 //            resolveIncludeScriptByWorkflow(cfg, wfWorkflows);
-            resolveIncludeScriptByJobTemplate(cfg, wfJobTemplates);
+//            resolveIncludeScriptByJobTemplate(cfg, wfJobTemplates);
             break;
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
