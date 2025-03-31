@@ -70,9 +70,10 @@ public abstract class ADeploy extends JOCResourceImpl {
     public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession,
             DBItemJocAuditLog dbAuditlog, String account, JocSecurityLevel secLvl, String apiCall) throws Exception {
         if (PublishSemaphore.getQueueLength(xAccessToken) == 0) {
-            TimeUnit.MILLISECONDS.sleep(50);
+            TimeUnit.MILLISECONDS.sleep(100);
         }
         PublishSemaphore.tryAcquire(xAccessToken);
+        LOGGER.info("PublishSemaphore acquired by DEPLOY");
         
         Set<String> allowedControllerIds = Collections.emptySet();
         allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
