@@ -127,7 +127,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
          * - release semaphore final time and remove it
          * */
         PublishSemaphore.tryAcquire(accessToken);
-        LOGGER.info("PublishSemaphore acquired first time by RELEASE");
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -172,11 +171,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             } catch (Exception e) {
                 // DO NOTHING if semaphore release failed
             }
-//            if (PublishSemaphore.getQueueLength(accessToken) != 0) {
+            if (PublishSemaphore.availablePermits(accessToken) == 1) {
                 TimeUnit.MILLISECONDS.sleep(100);
-//            }
+            }
             PublishSemaphore.tryAcquire(accessToken);
-            LOGGER.info("PublishSemaphore acquired second time by RELEASE");
             Globals.beginTransaction(session);
             // call update for postDeploy 
             if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
