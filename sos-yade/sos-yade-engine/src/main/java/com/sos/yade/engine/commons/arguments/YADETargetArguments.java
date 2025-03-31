@@ -12,7 +12,6 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     private SOSArgument<Boolean> checkSize = new SOSArgument<>("check_size", false, Boolean.valueOf(true));
     private SOSArgument<Boolean> overwriteFiles = new SOSArgument<>("overwrite_files", false, Boolean.valueOf(true));
 
-    private SOSArgument<Boolean> transactional = new SOSArgument<>("transactional", false, Boolean.valueOf(false));
     private SOSArgument<Boolean> appendFiles = new SOSArgument<>("append_files", false, Boolean.valueOf(false));
 
     private SOSArgument<Boolean> keepModificationDate = new SOSArgument<>("keep_modification_date", false, Boolean.valueOf(false));
@@ -83,10 +82,6 @@ public class YADETargetArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getAppendFiles() {
         return appendFiles;
-    }
-
-    public SOSArgument<Boolean> getTransactional() {
-        return transactional;
     }
 
     public SOSArgument<Boolean> getCreateIntegrityHashFile() {

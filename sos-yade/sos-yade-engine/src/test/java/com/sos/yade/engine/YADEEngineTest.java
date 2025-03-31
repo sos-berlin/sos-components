@@ -22,6 +22,7 @@ import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.arguments.parsers.YADEUnitTestArgumentsSetter;
 
 public class YADEEngineTest {
 
@@ -33,12 +34,9 @@ public class YADEEngineTest {
     public void test() {
         YADEEngine yade = new YADEEngine();
         try {
-            YADEArguments args = null;
-            YADEClientArguments clientArgs = null;
-            YADESourceArguments sourceArgs = null;
-            YADETargetArguments targetArgs = null;
+            YADEUnitTestArgumentsSetter argsSetter = new YADEUnitTestArgumentsSetter(null, null, null, null, null);
 
-            yade.execute(new SLF4JLogger(), args, clientArgs, sourceArgs, targetArgs, false);
+            yade.execute(new SLF4JLogger(), argsSetter, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString());
         }
@@ -101,28 +99,20 @@ public class YADEEngineTest {
         LOGGER.info("[END]" + ex);
     }
 
-    public static YADEArguments createYADEArgs() throws Exception {
+    public static YADEUnitTestArgumentsSetter createYADEUnitTestArgumentsSetter() throws Exception {
         YADEArguments args = new YADEArguments();
         args.applyDefaultIfNull();
-        return args;
-    }
 
-    public static YADEClientArguments createClientArgs() throws Exception {
-        YADEClientArguments args = new YADEClientArguments();
-        args.applyDefaultIfNull();
-        return args;
-    }
+        YADEClientArguments clientArgs = new YADEClientArguments();
+        clientArgs.applyDefaultIfNull();
 
-    public static YADESourceArguments createSourceArgs() throws Exception {
-        YADESourceArguments args = new YADESourceArguments();
-        args.applyDefaultIfNull();
-        return args;
-    }
+        YADESourceArguments sourceArgs = new YADESourceArguments();
+        sourceArgs.applyDefaultIfNull();
 
-    public static YADETargetArguments createTargetArgs() throws Exception {
-        YADETargetArguments args = new YADETargetArguments();
-        args.applyDefaultIfNull();
-        return args;
+        YADETargetArguments targetArgs = new YADETargetArguments();
+        targetArgs.applyDefaultIfNull();
+
+        return new YADEUnitTestArgumentsSetter(args, clientArgs, sourceArgs, targetArgs, null);
     }
 
     public static ProxyArguments createHTTPProxyArguments() throws Exception {

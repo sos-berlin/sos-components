@@ -1,6 +1,7 @@
 package com.sos.yade.engine.commons.arguments;
 
 import java.nio.file.Path;
+import java.time.Instant;
 
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
@@ -17,10 +18,6 @@ public class YADEArguments extends ASOSArguments {
     /** COPY/MOVE/GETLIST/RENAME */
     private SOSArgument<TransferOperation> operation = new SOSArgument<>("operation", true);
 
-    /** - JS7 History ------- */
-    // TODO set default ...
-    private SOSArgument<String> returnValues = new SOSArgument<>("return-values", false);
-
     /** - Transfer adjustments ------- */
 
     /** COPY/MOVE operations: transfer files in parallel<br/>
@@ -34,11 +31,18 @@ public class YADEArguments extends ASOSArguments {
      */
     private SOSArgument<Integer> parallelism = new SOSArgument<>("parallelism", false, Integer.valueOf(1));
 
+    /** COPY/MOVE operations */
+    private SOSArgument<Boolean> transactional = new SOSArgument<>("transactional", false, Boolean.valueOf(false));
+
     /** COPY/MOVE operations: the buffer size(bytes) for reading the Source file/writing the Target file */
     private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(32 * 1_024));
 
     // YADE 1 used in code but not defined in schema...
     // private SOSArgument<Boolean> skipTransfer = new SOSArgument<>("skip_transfer", false, Boolean.valueOf(false));
+
+    /** internal usage */
+    private SOSArgument<Instant> start = new SOSArgument<>(null, false);
+    private SOSArgument<Instant> end = new SOSArgument<>(null, false);
 
     public SOSArgument<Path> getSettings() {
         return settings;
@@ -52,19 +56,27 @@ public class YADEArguments extends ASOSArguments {
         return operation;
     }
 
-    public SOSArgument<String> getReturnValues() {
-        return returnValues;
-    }
-
-    public SOSArgument<Integer> getBufferSize() {
-        return bufferSize;
-    }
-
     public SOSArgument<Integer> getParallelism() {
         return parallelism;
     }
 
     public boolean isParallelismEnabled() {
         return !parallelism.isEmpty() && parallelism.getValue() > 1;
+    }
+
+    public SOSArgument<Boolean> getTransactional() {
+        return transactional;
+    }
+
+    public SOSArgument<Integer> getBufferSize() {
+        return bufferSize;
+    }
+
+    public SOSArgument<Instant> getStart() {
+        return start;
+    }
+
+    public SOSArgument<Instant> getEnd() {
+        return end;
     }
 }

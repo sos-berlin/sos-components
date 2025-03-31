@@ -3,6 +3,12 @@ package com.sos.yade.commons;
 import java.util.HashMap;
 import java.util.Map;
 
+/** TODO Rename all classes in YADE<br/>
+ * - due to serialization/compatibility with YADE 1 this is currently not possible<br/>
+ * -- TODO check - is that correct?<br/>
+ * - alternative:<br/>
+ * -- JS7 can use another argument in addition to JOB_ARGUMENT_NAME_RETURN_VALUES,<br/>
+ * --- such as yade_history, and check both */
 public class Yade {
 
     public static final String JOB_ARGUMENT_NAME_RETURN_VALUES = "yade_return_values";

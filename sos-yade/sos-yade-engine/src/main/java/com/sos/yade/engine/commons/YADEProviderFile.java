@@ -18,6 +18,8 @@ public class YADEProviderFile extends ProviderFile {
     /** after possible rename etc. */
     private String finalFullPath;
 
+    private String integrityHash;
+
     public YADEProviderFile(AYADEProviderDelegator delegator, String fullPath, long size, long lastModifiedMillis,
             YADEDirectoryMapper directoryMapper, boolean checkSteady) {
         super(delegator.getProvider(), fullPath, size, lastModifiedMillis);
@@ -98,6 +100,14 @@ public class YADEProviderFile extends ProviderFile {
         return subState;
     }
 
+    public void setIntegrityHash(String val) {
+        integrityHash = val;
+    }
+
+    public String getIntegrityHash() {
+        return integrityHash;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -109,11 +119,19 @@ public class YADEProviderFile extends ProviderFile {
             sb.append("subState=").append(subState.name().toLowerCase());
             sb.append(",");
         }
+        if (integrityHash != null) {
+            sb.append("integrityHash=").append(integrityHash);
+            sb.append(",");
+        }
         sb.append(getFinalFullPath());
         if (target != null) {
             sb.append(", Target state=").append(target.getState().name().toLowerCase());
             if (target.getSubState() != null) {
                 sb.append(",subState=").append(target.getSubState().name().toLowerCase());
+            }
+            if (target.getIntegrityHash() != null) {
+                sb.append("integrityHash=").append(target.getIntegrityHash());
+                sb.append(",");
             }
             sb.append(",").append(target.getFinalFullPath());
 

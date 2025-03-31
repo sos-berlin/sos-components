@@ -185,7 +185,7 @@ public class YADEFileHandler {
                     targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize(), SOSDate.getDuration(startTime, Instant.now()));
 
             YADEFileActionsExecuter.checkTargetFileSize(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
-            YADEChecksumFileHelper.checkSourceChecksum(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile,
+            YADEChecksumFileHelper.checkSourceIntegrityHash(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile,
                     sourceMessageDigest);
 
             YADECommandExecutor.executeAfterFile(logger, sourceDelegator, targetDelegator, sourceFile);
@@ -196,7 +196,7 @@ public class YADEFileHandler {
                 YADEFileActionsExecuter.renameTargetFile(logger, logPrefix, config, sourceDelegator, targetDelegator, targetFile);
                 YADEFileActionsExecuter.setTargetFileModificationDate(logger, logPrefix, config, sourceFile, targetDelegator, targetFile);
 
-                YADEChecksumFileHelper.writeTargetChecksumFile(logger, logPrefix, config, targetDelegator, targetFile, targetMessageDigest);
+                YADEChecksumFileHelper.writeTargetIntegrityHashFile(logger, logPrefix, config, targetDelegator, targetFile, targetMessageDigest);
             }
             // Source
             YADEFileActionsExecuter.processSourceFileAfterNonTransactionalTransfer(logger, logPrefix, config, sourceDelegator, targetDelegator,

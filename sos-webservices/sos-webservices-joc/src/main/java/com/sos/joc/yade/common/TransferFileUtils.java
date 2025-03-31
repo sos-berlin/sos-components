@@ -1,5 +1,6 @@
 package com.sos.joc.yade.common;
 
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.yade.DBItemYadeFile;
@@ -27,10 +28,10 @@ public class TransferFileUtils {
         file.setIntegrityHash(item.getIntegrityHash());
         file.setModificationDate(item.getModificationDate());
         file.setSize(item.getSize());
-        file.setSourceName(getBasenameFromPath(item.getSourcePath()));
+        file.setSourceName(SOSPathUtils.getName(item.getSourcePath()));
         file.setSourcePath(item.getSourcePath());
         if (!SOSString.isEmpty(item.getTargetPath())) {
-            file.setTargetName(getBasenameFromPath(item.getTargetPath()));
+            file.setTargetName(SOSPathUtils.getName(item.getTargetPath()));
         }
         file.setState(getState(item.getState()));
         file.setSurveyDate(item.getModificationDate());
@@ -158,10 +159,4 @@ public class TransferFileUtils {
         }
         return null;
     }
-
-    private static String getBasenameFromPath(String path) {
-        int li = path.lastIndexOf("/");
-        return li > -1 ? path.substring(li + 1) : path;
-    }
-
 }

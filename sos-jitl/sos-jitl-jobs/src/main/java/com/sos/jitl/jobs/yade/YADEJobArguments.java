@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import com.sos.commons.util.SOSMapVariableReplacer;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
+import com.sos.js7.job.OrderProcessStepOutcomeVariable;
+import com.sos.yade.commons.Yade;
 
 public class YADEJobArguments extends JobArguments {
 
@@ -35,6 +37,10 @@ public class YADEJobArguments extends JobArguments {
     private JobArgument<Boolean> settingsReplacerCaseSensitive = new JobArgument<>("settings_replacer_case_sensitive", false, Boolean.valueOf(true));
     private JobArgument<Boolean> settingsReplacerKeepUnresolved = new JobArgument<>("settings_replacer_keep_unresolved", false, Boolean.valueOf(
             true));
+
+    /** Job Outcome ------------------------------------------------------- */
+    // YADE History
+    private OrderProcessStepOutcomeVariable<String> history = new OrderProcessStepOutcomeVariable<String>(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES);
 
     public YADEJobArguments() {
     }
@@ -81,6 +87,11 @@ public class YADEJobArguments extends JobArguments {
 
     public JobArgument<Boolean> getSettingsReplacerKeepUnresolved() {
         return settingsReplacerKeepUnresolved;
+    }
+
+    /** Outcome ---------------------------- */
+    public OrderProcessStepOutcomeVariable<String> getHistory() {
+        return history;
     }
 
 }

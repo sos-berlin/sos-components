@@ -13,9 +13,9 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 
-public class YADEXMLParserTest {
+public class YADEXMLArgumentsSetterTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(YADEXMLParserTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(YADEXMLArgumentsSetterTest.class);
 
     @Ignore
     @Test
@@ -26,15 +26,15 @@ public class YADEXMLParserTest {
             String profile = "xyz";
 
             Instant start = Instant.now();
-            YADEXMLParser parser = new YADEXMLParser();
-            parser.parse(Path.of(settingsFile), profile);
+            YADEXMLArgumentsSetter argsSetter = new YADEXMLArgumentsSetter();
+            argsSetter.set(new SLF4JLogger(), Path.of(settingsFile), profile);
             LOGGER.info("[duration]" + SOSDate.getDuration(start, Instant.now()));
 
             ISOSLogger logger = new SLF4JLogger();
-            LOGGER.info(YADEArgumentsHelper.toString(logger, "[YADE]", parser.getArgs()));
-            LOGGER.info(YADEArgumentsHelper.toString(logger, "[CLIENT]", parser.getClientArgs()));
-            LOGGER.info(YADEArgumentsHelper.toString(logger, "[SOURCE]", parser.getSourceArgs()));
-            LOGGER.info(YADEArgumentsHelper.toString(logger, "[TARGET]", parser.getTargetArgs()));
+            LOGGER.info(YADEArgumentsHelper.toString(logger, "[YADE]", argsSetter.getArgs()));
+            LOGGER.info(YADEArgumentsHelper.toString(logger, "[CLIENT]", argsSetter.getClientArgs()));
+            LOGGER.info(YADEArgumentsHelper.toString(logger, "[SOURCE]", argsSetter.getSourceArgs()));
+            LOGGER.info(YADEArgumentsHelper.toString(logger, "[TARGET]", argsSetter.getTargetArgs()));
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }

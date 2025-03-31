@@ -49,7 +49,7 @@ public class YADEClientBannerWriter {
         StringBuilder sb = new StringBuilder(LOG_PREFIX_TRANSFER_ARGUMENS);
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
         if (targetArgs != null) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getTransactional()));
+            sb.append(",").append(YADEArgumentsHelper.toString(args.getTransactional()));
         }
         if (!args.getSettings().isEmpty()) {
             sb.append(",").append(YADEArgumentsHelper.toString(args.getSettings()));
@@ -222,14 +222,15 @@ public class YADEClientBannerWriter {
         }
     }
 
-    public static void writeSummary(ISOSLogger logger, Instant totalStart, Duration operationDuration, YADEArguments args,
-            YADETargetArguments targetArgs, List<ProviderFile> files, Throwable error) {
+    public static void writeSummary(ISOSLogger logger, YADEArguments args, Duration operationDuration, YADETargetArguments targetArgs,
+            List<ProviderFile> files, Throwable error) {
         logger.info(SEPARATOR_LINE);
 
+        args.getEnd().setValue(Instant.now());
         int totalFiles = files == null ? 0 : files.size();
 
         StringBuilder sb = new StringBuilder("[Summary]");
-        sb.append("total_duration=").append(SOSDate.getDuration(totalStart, Instant.now()));
+        sb.append("total_duration=").append(SOSDate.getDuration(args.getStart().getValue(), args.getEnd().getValue()));
         if (operationDuration != null) {
             sb.append("(operation=").append(SOSDate.getDuration(operationDuration)).append(")");
         }

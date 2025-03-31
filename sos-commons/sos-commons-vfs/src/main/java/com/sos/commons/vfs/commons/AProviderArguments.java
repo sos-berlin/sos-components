@@ -12,7 +12,9 @@ import com.sos.commons.util.arguments.impl.ProxyArguments;
 
 public abstract class AProviderArguments extends ASOSArguments {
 
-    // TODO see sos.yade.commons.Yade.TransferProtocol
+    /** see sos.yade.commons.Yade.TransferProtocol<br/>
+     * YADE uses its own integer values ​​for storage in the database<br/>
+     * TODO - YADE should use these values */
     public enum Protocol {
 
         UNKNOWN(0), LOCAL(10), FTP(20), FTPS(21), SFTP(30), SSH(31), HTTP(40), HTTPS(41), WEBDAV(50), WEBDAVS(51), SMB(60);

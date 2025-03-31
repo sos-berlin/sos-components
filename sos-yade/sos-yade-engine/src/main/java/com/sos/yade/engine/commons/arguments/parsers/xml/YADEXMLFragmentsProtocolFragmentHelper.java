@@ -27,8 +27,8 @@ import com.sos.commons.xml.SOSXML;
 
 public class YADEXMLFragmentsProtocolFragmentHelper {
 
-    protected static FTPProviderArguments parseFTP(YADEXMLParser impl, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(impl, ref, isSource, "FTP");
+    protected static FTPProviderArguments parseFTP(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(argsSetter, ref, isSource, "FTP");
 
         FTPProviderArguments args = new FTPProviderArguments();
         args.applyDefaultIfNullQuietly();
@@ -39,19 +39,19 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "BasicConnection":
-                    parseBasicConnection(impl, args, n);
+                    parseBasicConnection(argsSetter, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(impl, args, n);
+                    parseBasicAuthentication(argsSetter, args, n);
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(impl, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
                     break;
                 case "ProxyForFTP":
-                    parseProxy(impl, args, n);
+                    parseProxy(argsSetter, args, n);
                     break;
                 case "ConnectTimeout":
-                    impl.setStringArgumentValue(args.getConnectTimeout(), n);
+                    argsSetter.setStringArgumentValue(args.getConnectTimeout(), n);
                     break;
                 }
             }
@@ -59,8 +59,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static FTPSProviderArguments parseFTPS(YADEXMLParser impl, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(impl, ref, isSource, "FTPS");
+    protected static FTPSProviderArguments parseFTPS(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(argsSetter, ref, isSource, "FTPS");
 
         FTPSProviderArguments args = new FTPSProviderArguments();
         args.applyDefaultIfNullQuietly();
@@ -71,25 +71,25 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "BasicConnection":
-                    parseBasicConnection(impl, args, n);
+                    parseBasicConnection(argsSetter, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(impl, args, n);
+                    parseBasicAuthentication(argsSetter, args, n);
                     break;
                 case "FTPSClientSecurity":
-                    parseFTPSClientSecurity(impl, args, n);
+                    parseFTPSClientSecurity(argsSetter, args, n);
                     break;
                 case "FTPSProtocol":
-                    args.getSSL().getProtocols().setValue(Arrays.asList(impl.getValue(n)));
+                    args.getSSL().getProtocols().setValue(Arrays.asList(argsSetter.getValue(n)));
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(impl, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
                     break;
                 case "ProxyForFTPS":
-                    parseProxy(impl, args, n);
+                    parseProxy(argsSetter, args, n);
                     break;
                 case "ConnectTimeout":
-                    impl.setStringArgumentValue(args.getConnectTimeout(), n);
+                    argsSetter.setStringArgumentValue(args.getConnectTimeout(), n);
                     break;
                 }
             }
@@ -97,8 +97,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static HTTPProviderArguments parseHTTP(YADEXMLParser impl, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(impl, ref, isSource, "HTTP");
+    protected static HTTPProviderArguments parseHTTP(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(argsSetter, ref, isSource, "HTTP");
 
         HTTPProviderArguments args = new HTTPProviderArguments();
         args.applyDefaultIfNullQuietly();
@@ -109,19 +109,19 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "URLConnection":
-                    parseURLConnection(impl, args, n);
+                    parseURLConnection(argsSetter, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(impl, args, n);
+                    parseBasicAuthentication(argsSetter, args, n);
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(impl, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
                     break;
                 case "ProxyForHTTP":
-                    parseProxy(impl, args, n);
+                    parseProxy(argsSetter, args, n);
                     break;
                 case "HTTPHeaders":
-                    parseHTTPHeaders(impl, args, n);
+                    parseHTTPHeaders(argsSetter, args, n);
                     break;
                 }
             }
@@ -129,8 +129,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static HTTPSProviderArguments parseHTTPS(YADEXMLParser impl, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(impl, ref, isSource, "HTTPS");
+    protected static HTTPSProviderArguments parseHTTPS(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(argsSetter, ref, isSource, "HTTPS");
 
         HTTPSProviderArguments args = new HTTPSProviderArguments();
         args.applyDefaultIfNullQuietly();
@@ -141,28 +141,28 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "URLConnection":
-                    parseURLConnection(impl, args, n);
+                    parseURLConnection(argsSetter, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(impl, args, n);
+                    parseBasicAuthentication(argsSetter, args, n);
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(impl, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
                     break;
                 case "ProxyForHTTP":
-                    parseProxy(impl, args, n);
+                    parseProxy(argsSetter, args, n);
                     break;
                 case "HTTPHeaders":
-                    parseHTTPHeaders(impl, args, n);
+                    parseHTTPHeaders(argsSetter, args, n);
                     break;
                 case "AcceptUntrustedCertificate":
-                    impl.setBooleanArgumentValue(args.getSSL().getAcceptUntrustedCertificate(), n);
+                    argsSetter.setBooleanArgumentValue(args.getSSL().getAcceptUntrustedCertificate(), n);
                     break;
                 case "DisableCertificateHostnameVerification":
-                    impl.setOppositeBooleanArgumentValue(args.getSSL().getVerifyCertificateHostname(), n);
+                    argsSetter.setOppositeBooleanArgumentValue(args.getSSL().getVerifyCertificateHostname(), n);
                     break;
                 case "KeyStore":
-                    parseKeyStrore(impl, args.getSSL(), n);
+                    parseKeyStrore(argsSetter, args.getSSL(), n);
                     break;
                 }
             }
@@ -170,8 +170,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static SSHProviderArguments parseSFTP(YADEXMLParser impl, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(impl, ref, isSource, "SFTP");
+    protected static SSHProviderArguments parseSFTP(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(argsSetter, ref, isSource, "SFTP");
 
         SSHProviderArguments args = new SSHProviderArguments();
         args.applyDefaultIfNullQuietly();
@@ -182,37 +182,37 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "BasicConnection":
-                    parseBasicConnection(impl, args, n);
+                    parseBasicConnection(argsSetter, args, n);
                     break;
                 case "SSHAuthentication":
-                    parseSFTPSSHAuthentication(impl, args, n);
+                    parseSFTPSSHAuthentication(argsSetter, args, n);
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(impl, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(impl, ref, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsSetter, ref, isSource);
                     break;
                 case "ProxyForSFTP":
-                    parseProxy(impl, args, n);
+                    parseProxy(argsSetter, args, n);
                     break;
                 case "StrictHostkeyChecking":
-                    impl.setBooleanArgumentValue(args.getStrictHostkeyChecking(), n);
+                    argsSetter.setBooleanArgumentValue(args.getStrictHostkeyChecking(), n);
                     break;
                 case "ConfigurationFiles":
-                    parseConfigurationFiles(impl, args, n);
+                    parseConfigurationFiles(argsSetter, args, n);
                     break;
                 case "ServerAliveInterval":
-                    impl.setStringArgumentValue(args.getServerAliveInterval(), n);
+                    argsSetter.setStringArgumentValue(args.getServerAliveInterval(), n);
                     break;
                 case "ServerAliveCountMax":
-                    impl.setIntegerArgumentValue(args.getServerAliveCountMax(), n);
+                    argsSetter.setIntegerArgumentValue(args.getServerAliveCountMax(), n);
                     break;
                 case "ConnectTimeout":
-                    impl.setStringArgumentValue(args.getConnectTimeout(), n);
+                    argsSetter.setStringArgumentValue(args.getConnectTimeout(), n);
                     break;
                 case "ChannelConnectTimeout":
-                    impl.setStringArgumentValue(args.getSocketTimeout(), n);
+                    argsSetter.setStringArgumentValue(args.getSocketTimeout(), n);
                     break;
                 }
             }
@@ -220,8 +220,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static SMBProviderArguments parseSMB(YADEXMLParser impl, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(impl, ref, isSource, "SMB");
+    protected static SMBProviderArguments parseSMB(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(argsSetter, ref, isSource, "SMB");
 
         SMBProviderArguments args = new SMBProviderArguments();
         args.applyDefaultIfNullQuietly();
@@ -232,16 +232,16 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Hostname":
-                    impl.setStringArgumentValue(args.getHost(), n);
+                    argsSetter.setStringArgumentValue(args.getHost(), n);
                     break;
                 case "SMBAuthentication":
-                    parseSMBAuthentication(impl, args, n);
+                    parseSMBAuthentication(argsSetter, args, n);
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(impl, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
                     break;
                 case "ConfigurationFiles":
-                    parseConfigurationFiles(impl, args, n);
+                    parseConfigurationFiles(argsSetter, args, n);
                     break;
                 }
             }
@@ -249,9 +249,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static WebDAVProviderArguments parseWebDAV(YADEXMLParser impl, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(impl, ref, isSource, "WebDAV");
-        String url = impl.getValue(impl.getXPath().selectNode(fragment, "URLConnection/URL"));
+    protected static WebDAVProviderArguments parseWebDAV(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(argsSetter, ref, isSource, "WebDAV");
+        String url = argsSetter.getValue(argsSetter.getXPath().selectNode(fragment, "URLConnection/URL"));
         if (url == null) {
             return null;
         }
@@ -266,25 +266,25 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "BasicAuthentication":
-                    parseBasicAuthentication(impl, args, n);
+                    parseBasicAuthentication(argsSetter, args, n);
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(impl, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
                     break;
                 case "ProxyForWebDAV":
-                    parseProxy(impl, args, n);
+                    parseProxy(argsSetter, args, n);
                     break;
                 case "AcceptUntrustedCertificate":
-                    impl.setBooleanArgumentValue(args.getSSL().getAcceptUntrustedCertificate(), n);
+                    argsSetter.setBooleanArgumentValue(args.getSSL().getAcceptUntrustedCertificate(), n);
                     break;
                 case "DisableCertificateHostnameVerification":
-                    impl.setOppositeBooleanArgumentValue(args.getSSL().getVerifyCertificateHostname(), n);
+                    argsSetter.setOppositeBooleanArgumentValue(args.getSSL().getVerifyCertificateHostname(), n);
                     break;
                 case "KeyStore":
-                    parseKeyStrore(impl, args.getSSL(), n);
+                    parseKeyStrore(argsSetter, args.getSSL(), n);
                     break;
                 case "HTTPHeaders":
-                    parseHTTPHeaders(impl, args, n);
+                    parseHTTPHeaders(argsSetter, args, n);
                     break;
                 }
             }
@@ -292,7 +292,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static void parseHTTPHeaders(YADEXMLParser impl, HTTPProviderArguments args, Node headers) throws Exception {
+    protected static void parseHTTPHeaders(YADEXMLArgumentsSetter argsSetter, HTTPProviderArguments args, Node headers) throws Exception {
         NodeList nl = headers.getChildNodes();
         args.getHTTPHeaders().setValue(new ArrayList<>());
         for (int i = 0; i < nl.getLength(); i++) {
@@ -300,79 +300,80 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "HTTPHeader":
-                    args.getHTTPHeaders().getValue().add(impl.getValue(n));
+                    args.getHTTPHeaders().getValue().add(argsSetter.getValue(n));
                     break;
                 }
             }
         }
     }
 
-    protected static Node getProtocolFragment(YADEXMLParser impl, Node ref, boolean isSource, String fragmentPrefix) throws Exception {
+    protected static Node getProtocolFragment(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource, String fragmentPrefix) throws Exception {
         String exp = "Fragments/ProtocolFragments/" + fragmentPrefix + "Fragment[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
-        Node node = impl.getXPath().selectNode(impl.getRoot(), exp);
+        Node node = argsSetter.getXPath().selectNode(argsSetter.getRoot(), exp);
         if (node == null) {
-            throw new SOSMissingDataException("[profile=" + impl.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target") + "]["
-                    + exp + "]referenced Protocol fragment not found");
+            throw new SOSMissingDataException("[profile=" + argsSetter.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target")
+                    + "][" + exp + "]referenced Protocol fragment not found");
         }
         return node;
     }
 
-    protected static void parseBasicConnection(YADEXMLParser impl, AProviderArguments args, Node basicConnection) throws Exception {
+    protected static void parseBasicConnection(YADEXMLArgumentsSetter argsSetter, AProviderArguments args, Node basicConnection) throws Exception {
         NodeList nl = basicConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Hostname":
-                    impl.setStringArgumentValue(args.getHost(), n);
+                    argsSetter.setStringArgumentValue(args.getHost(), n);
                     break;
                 case "Port":
-                    impl.setIntegerArgumentValue(args.getPort(), n);
+                    argsSetter.setIntegerArgumentValue(args.getPort(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseBasicAuthentication(YADEXMLParser impl, AProviderArguments args, Node basicAuthentication) throws Exception {
+    private static void parseBasicAuthentication(YADEXMLArgumentsSetter argsSetter, AProviderArguments args, Node basicAuthentication)
+            throws Exception {
         NodeList nl = basicAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Account":
-                    impl.setStringArgumentValue(args.getUser(), n);
+                    argsSetter.setStringArgumentValue(args.getUser(), n);
                     break;
                 case "Password":
-                    impl.setStringArgumentValue(args.getPassword(), n);
+                    argsSetter.setStringArgumentValue(args.getPassword(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseURLConnection(YADEXMLParser impl, AProviderArguments args, Node urlConnection) throws Exception {
+    private static void parseURLConnection(YADEXMLArgumentsSetter argsSetter, AProviderArguments args, Node urlConnection) throws Exception {
         NodeList nl = urlConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "URL":
-                    impl.setStringArgumentValue(args.getHost(), n);
+                    argsSetter.setStringArgumentValue(args.getHost(), n);
                     break;
                 }
             }
         }
     }
 
-    protected static void parseConfigurationFiles(YADEXMLParser impl, AProviderArguments args, Node configurationFiles) {
+    protected static void parseConfigurationFiles(YADEXMLArgumentsSetter argsSetter, AProviderArguments args, Node configurationFiles) {
         List<Path> files = new ArrayList<>();
 
         NodeList nl = configurationFiles.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE && "ConfigurationFile".equals(n.getNodeName())) {
-                files.add(Path.of(impl.getValue(n)));
+                files.add(Path.of(argsSetter.getValue(n)));
             }
         }
 
@@ -381,7 +382,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    protected static void parseProxy(YADEXMLParser impl, AProviderArguments args, Node proxy) throws Exception {
+    protected static void parseProxy(YADEXMLArgumentsSetter argsSetter, AProviderArguments args, Node proxy) throws Exception {
         NodeList nl = proxy.getChildNodes();
         int len = nl.getLength();
         if (len > 0) {
@@ -393,15 +394,15 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     switch (n.getNodeName()) {
                     case "HTTPProxy":
                         proxyArgs.getType().setValue(java.net.Proxy.Type.HTTP);
-                        parseProxy(impl, proxyArgs, n);
+                        parseProxy(argsSetter, proxyArgs, n);
                         break;
                     case "SOCKS4Proxy":
                         proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
-                        parseProxy(impl, proxyArgs, n);
+                        parseProxy(argsSetter, proxyArgs, n);
                         break;
                     case "SOCKS5Proxy":
                         proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
-                        parseProxy(impl, proxyArgs, n);
+                        parseProxy(argsSetter, proxyArgs, n);
                         break;
                     }
                 }
@@ -410,183 +411,185 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseProxy(YADEXMLParser impl, ProxyArguments args, Node proxy) throws Exception {
+    private static void parseProxy(YADEXMLArgumentsSetter argsSetter, ProxyArguments args, Node proxy) throws Exception {
         NodeList nl = proxy.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "BasicConnection":
-                    parseProxyBasicConnection(impl, args, n);
+                    parseProxyBasicConnection(argsSetter, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseProxyBasicAuthentication(impl, args, n);
+                    parseProxyBasicAuthentication(argsSetter, args, n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseProxyBasicConnection(YADEXMLParser impl, ProxyArguments args, Node basicConnection) throws Exception {
+    private static void parseProxyBasicConnection(YADEXMLArgumentsSetter argsSetter, ProxyArguments args, Node basicConnection) throws Exception {
         NodeList nl = basicConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Hostname":
-                    impl.setStringArgumentValue(args.getHost(), n);
+                    argsSetter.setStringArgumentValue(args.getHost(), n);
                     break;
                 case "Port":
-                    impl.setIntegerArgumentValue(args.getPort(), n);
+                    argsSetter.setIntegerArgumentValue(args.getPort(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseProxyBasicAuthentication(YADEXMLParser impl, ProxyArguments args, Node basicAuthentication) throws Exception {
+    private static void parseProxyBasicAuthentication(YADEXMLArgumentsSetter argsSetter, ProxyArguments args, Node basicAuthentication)
+            throws Exception {
         NodeList nl = basicAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Account":
-                    impl.setStringArgumentValue(args.getUser(), n);
+                    argsSetter.setStringArgumentValue(args.getUser(), n);
                     break;
                 case "Password":
-                    impl.setStringArgumentValue(args.getPassword(), n);
+                    argsSetter.setStringArgumentValue(args.getPassword(), n);
                     break;
                 }
             }
         }
     }
 
-    protected static void parseSFTPSSHAuthentication(YADEXMLParser impl, SSHProviderArguments args, Node sshAuthentication) {
+    protected static void parseSFTPSSHAuthentication(YADEXMLArgumentsSetter argsSetter, SSHProviderArguments args, Node sshAuthentication) {
         NodeList nl = sshAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Account":
-                    impl.setStringArgumentValue(args.getUser(), n);
+                    argsSetter.setStringArgumentValue(args.getUser(), n);
                     break;
                 case "AuthenticationMethodPassword":
-                    parseSFTPSSHAuthenticationMethodPassword(impl, args, n);
+                    parseSFTPSSHAuthenticationMethodPassword(argsSetter, args, n);
                     break;
                 case "AuthenticationMethodPublickey":
-                    parseSFTPSSHAuthenticationMethodPublickey(impl, args, n);
+                    parseSFTPSSHAuthenticationMethodPublickey(argsSetter, args, n);
                     break;
                 case "AuthenticationMethodKeyboardInteractive":
-                    // ignore - not implemented yet
+                    // ignore - not argsSetteremented yet
                     break;
                 case "PreferredAuthentications":
-                    args.getPreferredAuthentications().setValue(SSHAuthMethod.fromString(impl.getValue(n)));
+                    args.getPreferredAuthentications().setValue(SSHAuthMethod.fromString(argsSetter.getValue(n)));
                     break;
                 case "RequiredAuthentications":
-                    args.getRequiredAuthentications().setValue(SSHAuthMethod.fromString(impl.getValue(n)));
+                    args.getRequiredAuthentications().setValue(SSHAuthMethod.fromString(argsSetter.getValue(n)));
                     break;
                 }
             }
         }
     }
 
-    private static void parseSFTPSSHAuthenticationMethodPassword(YADEXMLParser impl, SSHProviderArguments args, Node methodPassword) {
+    private static void parseSFTPSSHAuthenticationMethodPassword(YADEXMLArgumentsSetter argsSetter, SSHProviderArguments args, Node methodPassword) {
         NodeList nl = methodPassword.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Password":
-                    impl.setStringArgumentValue(args.getPassword(), n);
+                    argsSetter.setStringArgumentValue(args.getPassword(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSFTPSSHAuthenticationMethodPublickey(YADEXMLParser impl, SSHProviderArguments args, Node methodPublickey) {
+    private static void parseSFTPSSHAuthenticationMethodPublickey(YADEXMLArgumentsSetter argsSetter, SSHProviderArguments args,
+            Node methodPublickey) {
         NodeList nl = methodPublickey.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "AuthenticationFile":
-                    impl.setStringArgumentValue(args.getAuthFile(), n);
+                    argsSetter.setStringArgumentValue(args.getAuthFile(), n);
                     break;
                 case "Passphrase":
-                    impl.setStringArgumentValue(args.getPassphrase(), n);
+                    argsSetter.setStringArgumentValue(args.getPassphrase(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseFTPSClientSecurity(YADEXMLParser impl, FTPSProviderArguments args, Node clientSecurity) {
+    private static void parseFTPSClientSecurity(YADEXMLArgumentsSetter argsSetter, FTPSProviderArguments args, Node clientSecurity) {
         NodeList nl = clientSecurity.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "SecurityMode":
-                    FTPSSecurityMode securityMode = FTPSSecurityMode.fromString(impl.getValue(n));
+                    FTPSSecurityMode securityMode = FTPSSecurityMode.fromString(argsSetter.getValue(n));
                     if (securityMode != null) {
                         args.getSecurityMode().setValue(securityMode);
                     }
                     break;
                 case "KeyStoreType":
-                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(impl.getValue(n));
+                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsSetter.getValue(n));
                     if (keyStoreType != null) {
                         args.getSSL().getJavaKeyStore().getKeyStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "KeyStoreFile":
-                    args.getSSL().getJavaKeyStore().getKeyStoreFile().setValue(Path.of(impl.getValue(n)));
+                    args.getSSL().getJavaKeyStore().getKeyStoreFile().setValue(Path.of(argsSetter.getValue(n)));
                     break;
                 case "KeyStorePassword":
-                    impl.setStringArgumentValue(args.getSSL().getJavaKeyStore().getKeyStorePassword(), n);
+                    argsSetter.setStringArgumentValue(args.getSSL().getJavaKeyStore().getKeyStorePassword(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSMBAuthentication(YADEXMLParser impl, SMBProviderArguments args, Node smbAuthentication) {
+    private static void parseSMBAuthentication(YADEXMLArgumentsSetter argsSetter, SMBProviderArguments args, Node smbAuthentication) {
         NodeList nl = smbAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Account":
-                    impl.setStringArgumentValue(args.getUser(), n);
+                    argsSetter.setStringArgumentValue(args.getUser(), n);
                     break;
                 case "Domain":
-                    impl.setStringArgumentValue(args.getDomain(), n);
+                    argsSetter.setStringArgumentValue(args.getDomain(), n);
                     break;
                 case "Password":
-                    impl.setStringArgumentValue(args.getPassword(), n);
+                    argsSetter.setStringArgumentValue(args.getPassword(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseKeyStrore(YADEXMLParser impl, SSLArguments args, Node keyStore) {
+    private static void parseKeyStrore(YADEXMLArgumentsSetter argsSetter, SSLArguments args, Node keyStore) {
         NodeList nl = keyStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "KeyStoreType":
-                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(impl.getValue(n));
+                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsSetter.getValue(n));
                     if (keyStoreType != null) {
                         args.getJavaKeyStore().getKeyStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "KeyStoreFile":
-                    args.getJavaKeyStore().getKeyStoreFile().setValue(Path.of(impl.getValue(n)));
+                    args.getJavaKeyStore().getKeyStoreFile().setValue(Path.of(argsSetter.getValue(n)));
                     break;
                 case "KeyStorePassword":
-                    impl.setStringArgumentValue(args.getJavaKeyStore().getKeyStorePassword(), n);
+                    argsSetter.setStringArgumentValue(args.getJavaKeyStore().getKeyStorePassword(), n);
                     break;
                 }
             }
