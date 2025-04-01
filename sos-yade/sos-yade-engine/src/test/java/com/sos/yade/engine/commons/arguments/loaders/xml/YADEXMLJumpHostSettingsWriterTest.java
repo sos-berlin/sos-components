@@ -13,9 +13,9 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 
-public class YADEXMLJumpSettingsWriterTest {
+public class YADEXMLJumpHostSettingsWriterTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(YADEXMLJumpSettingsWriterTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(YADEXMLJumpHostSettingsWriterTest.class);
 
     @Ignore
     @Test
@@ -36,7 +36,7 @@ public class YADEXMLJumpSettingsWriterTest {
             LOGGER.info(YADEArgumentsHelper.toString(logger, "[SOURCE]", argsLoader.getSourceArgs()));
             LOGGER.info(YADEArgumentsHelper.toString(logger, "[TARGET]", argsLoader.getTargetArgs()));
 
-            LOGGER.info(YADEXMLJumpSettingsWriter.fromJumpToInternet(argsLoader, "jump_dir", "my_profile", false));
+            LOGGER.info(YADEXMLJumpHostSettingsWriter.fromJumpToInternet(argsLoader, "jump_dir", "my_profile", false));
 
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);

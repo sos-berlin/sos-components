@@ -1,90 +1,17 @@
 package com.sos.yade.engine.commons.arguments.loaders.xml;
 
 import java.nio.file.Path;
-import java.util.UUID;
 
-import com.sos.commons.util.SOSPathUtils;
-import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
-import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
-import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 
 /** TODO Not supported for SFTPFragment: <ZlibCompression> <ZlibCompressionLevel>1</ZlibCompressionLevel> </ZlibCompression> */
-public class YADEXMLJumpSettingsWriter {
+public class YADEXMLJumpHostSettingsWriter {
 
     private static final String SFTPFRAGMENT_NAME = "sftp";
-    private static final String PROFILE_ID_JUMP_TO_INTERNET = "jump_to_internet";
-
-    private String jumpConfigDirectory;
-    private String jumpDataDirectory;
-
-    private String uuid;
-
-    private String profileId;
-
-    public YADEXMLJumpSettingsWriter() {
-
-    }
-
-    public void execute(ISOSLogger logger, AYADEArgumentsLoader argsLoader) {
-        if (argsLoader == null || argsLoader.getJumpArguments() == null) {
-            return;
-        }
-        String jumpBaseDirectory = getJumpDirectory(argsLoader);
-        jumpConfigDirectory = jumpBaseDirectory + "/config";
-        jumpDataDirectory = jumpBaseDirectory + "/data";
-
-    }
-
-    private String getJumpDirectory(AYADEArgumentsLoader argsLoader) {
-        return SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(argsLoader.getJumpArguments().getDirectory().getValue()) + "jade-dmz-"
-                + getUUID();
-    }
-
-    private String getUUID() {
-        if (uuid == null) {
-            uuid = UUID.randomUUID().toString();
-        }
-        return uuid;
-    }
-
-    private void modifyArguments(AYADEArgumentsLoader argsLoader, String jumpDirectory) {
-        YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
-        YADETargetArguments targetArgs = argsLoader.getTargetArgs();
-
-        // Source -> DMZ(jumpDirectory) -> Internet
-        if (argsLoader.getJumpArguments().getIsSource().isTrue()) {
-            // Source - defined Source
-            // Target - DMZ (Jump Host instead of defined Target)
-            // PostTransfer commands -
-
-            StringBuilder jumpCmd = new StringBuilder();
-            jumpCmd.append(argsLoader.getJumpArguments().getYADEClientCommand().getValue());
-            jumpCmd.append(" ").append("-operation=").append(argsLoader.getArgs().getOperation().getValue());
-            jumpCmd.append(" ").append("-source_dir=\"").append(argsLoader.getSourceArgs().getDirectory().getValue()).append("\"");
-            jumpCmd.append(" ").append("-target_dir=\"").append(jumpDirectory).append("\"");
-            if (!argsLoader.getJumpArguments().getPlatform().isEmpty()) {
-                jumpCmd.append(" ").append("-platform=\"").append(argsLoader.getJumpArguments().getPlatform().getValue()).append("\"");
-            }
-            if (argsLoader.getArgs().getTransactional().isTrue()) {
-                jumpCmd.append(" ").append("-transactional=true");
-            }
-        }
-    }
-
-    private void createSourceToDMZ(AYADEArgumentsLoader argsLoader, String jumpDirectory) {
-        YADESourceArguments sourceArgsX = argsLoader.getSourceArgs();
-
-        YADEArguments args = argsLoader.getArgs().clone();
-        args.getProfile().setValue(null);
-        args.getSettings().setValue(null);
-
-    }
 
     /** Original: Source -> Jump -> Target(Internet)<br/>
      * 1) The YADE Client is executed with a "settings.xml" file and transfers files to Jump<br/>

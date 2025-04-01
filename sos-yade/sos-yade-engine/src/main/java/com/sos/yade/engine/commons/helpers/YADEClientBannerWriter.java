@@ -10,14 +10,18 @@ import java.util.stream.Collectors;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.addons.jump.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
+import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 
@@ -29,18 +33,18 @@ public class YADEClientBannerWriter {
     private static final String LOG_PREFIX_CLIENT_ARGUMENS = "[Client]";
 
     // TODO use String.format
-    public static void writeHeader(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourcesArgs,
-            YADETargetArguments targetArgs, boolean writeYADEBanner) {
+    public static void writeHeader(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) {
         if (writeYADEBanner) {
             logger.info(SEPARATOR_LINE);
             logger.info("*    YADE    - Managed File Transfer (www.sos-berlin.com)    *");
             logger.info("*    Version - xyz                                           *");
             logger.info(SEPARATOR_LINE);
         }
-        writeTransferHeader(logger, args, targetArgs);
-        writeClientHeader(logger, clientArgs);
-        writeSourceHeader(logger, sourcesArgs);
-        writeTargetHeader(logger, targetArgs);
+        writeTransferHeader(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());
+        writeClientHeader(logger, argsLoader.getClientArgs());
+        writeSourceHeader(logger, argsLoader.getSourceArgs());
+        writeJumpHeader(logger, argsLoader.getJumpArguments());
+        writeTargetHeader(logger, argsLoader.getTargetArgs());
 
         logger.info(SEPARATOR_LINE);
     }
@@ -176,6 +180,23 @@ public class YADEClientBannerWriter {
         if (logger.isDebugEnabled()) {
             logger.debug(YADEArgumentsHelper.toString(logger, YADESourceProviderDelegator.LOG_PREFIX, sourceArgs));
             logger.debug(YADEArgumentsHelper.toString(logger, YADESourceProviderDelegator.LOG_PREFIX, sourceArgs.getProvider()));
+        }
+    }
+
+    private static void writeJumpHeader(ISOSLogger logger, YADEJumpArguments jumpArgs) {
+        if (jumpArgs == null) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder(YADEEngineJumpHostAddon.LOG_PREFIX);
+        sb.append(YADEArgumentsHelper.toString(jumpArgs.getProvider().getProtocol()));
+        sb.append(",").append(SSHProvider.getAccessInfo(jumpArgs.getProvider()));
+        sb.append(",command=").append(jumpArgs.getYADEClientCommand().getDisplayValue());
+
+        logger.info(sb);
+        if (logger.isDebugEnabled()) {
+            logger.debug(YADEArgumentsHelper.toString(logger, YADEEngineJumpHostAddon.LOG_PREFIX, jumpArgs));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADEEngineJumpHostAddon.LOG_PREFIX, jumpArgs.getProvider()));
         }
     }
 

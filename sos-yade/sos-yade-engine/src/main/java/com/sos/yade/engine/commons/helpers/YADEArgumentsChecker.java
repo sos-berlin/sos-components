@@ -9,22 +9,22 @@ import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
+import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEArgumentsChecker {
 
-    public static void validateOrExit(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArguments, YADESourceArguments sourceArgs,
-            YADETargetArguments targetArgs) throws YADEEngineInitializationException {
+    public static void validateOrExit(ISOSLogger logger, AYADEArgumentsLoader argsLoader) throws YADEEngineInitializationException {
 
-        boolean needTargetProvider = checkCommonArguments(args, clientArguments);
-        checkClientArguments(args, clientArguments, needTargetProvider);
-        checkSourceArguments(sourceArgs);
-        checkTargetArguments(args, targetArgs, needTargetProvider);
-        checkSourceTargetArguments(args, sourceArgs, targetArgs, needTargetProvider);
+        boolean needTargetProvider = checkCommonArguments(argsLoader.getArgs(), argsLoader.getClientArgs());
+        checkClientArguments(argsLoader.getArgs(), argsLoader.getClientArgs(), needTargetProvider);
+        checkSourceArguments(argsLoader.getSourceArgs());
+        checkTargetArguments(argsLoader.getArgs(), argsLoader.getTargetArgs(), needTargetProvider);
+        checkSourceTargetArguments(argsLoader.getArgs(), argsLoader.getSourceArgs(), argsLoader.getTargetArgs(), needTargetProvider);
 
-        adjustSourceArguments(logger, sourceArgs);
-        adjustTargetArguments(logger, sourceArgs, targetArgs, needTargetProvider);
+        adjustSourceArguments(logger, argsLoader.getSourceArgs());
+        adjustTargetArguments(logger, argsLoader.getSourceArgs(), argsLoader.getTargetArgs(), needTargetProvider);
     }
 
     private static boolean checkCommonArguments(YADEArguments args, YADEClientArguments clientArgs) throws YADEEngineInitializationException {

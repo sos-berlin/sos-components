@@ -2,10 +2,13 @@ package com.sos.yade.engine;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.yade.engine.addons.IYADEEngineExecutionAddon;
+import com.sos.yade.engine.addons.jump.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.delegators.YADEProviderDelegatorFactory;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -71,26 +74,31 @@ public class YADEEngine {
 
     private AtomicBoolean cancel = new AtomicBoolean(false);
 
+    /** a JumpHost add-on when Jump configuration is enabled */
+    private Optional<IYADEEngineExecutionAddon> addon = Optional.empty();
+
     public YADEEngine() {
     }
 
     public List<ProviderFile> execute(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) throws YADEEngineException {
 
-        YADESourceProviderDelegator sourceDelegator = null;
-        YADETargetProviderDelegator targetDelegator = null;
+        final YADESourceProviderDelegator sourceDelegator;
+        final YADETargetProviderDelegator targetDelegator;
         try {
+
             /** 1) Write transfer configuration */
-            YADEClientBannerWriter.writeHeader(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), argsLoader.getSourceArgs(), argsLoader
-                    .getTargetArgs(), writeYADEBanner);
+            YADEClientBannerWriter.writeHeader(logger, argsLoader, writeYADEBanner);
 
             /** 2) Check/Initialize configuration */
-            YADEArgumentsChecker.validateOrExit(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), argsLoader.getSourceArgs(), argsLoader
-                    .getTargetArgs());
+            YADEArgumentsChecker.validateOrExit(logger, argsLoader);
 
             /** 3) Set System properties */
             YADEClientHelper.setSystemPropertiesFromFiles(logger, argsLoader.getClientArgs());
 
-            /** 4) Source/Target: create provider delegator */
+            /** 4) Initialize and invoke a JumpHost add-on when Jump configuration is enabled */
+            invokeAddonIfPresentOnBeforeDelegatorInitialized(logger, argsLoader);
+
+            /** 5) Source/Target: create provider delegator */
             sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, argsLoader.getArgs(), argsLoader.getSourceArgs());
             targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());
         } catch (YADEEngineInitializationException e) {
@@ -107,34 +115,40 @@ public class YADEEngine {
         // All steps may trigger an exception
         if (!argsLoader.getSourceArgs().isPollingEnabled()) {
             try {
-                /** 5) Source: connect */
+                /** 6) Source: connect */
                 YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
 
-                /** 6) Source: execute commands before operation */
+                /** 7) Invoke a JumpHost add-on when Jump configuration is enabled */
+                addon.ifPresent(a -> a.onAfterSourceDelegatorConnected(sourceDelegator));
+
+                /** 8) Source: execute commands before operation */
                 YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator);
 
-                /** 7) Source: select files */
+                /** 9) Source: select files */
                 files = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                /** 8) Source: check files steady state */
+                /** 10) Source: check files steady state */
                 YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                /** 9) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                /** 11) Source: check zeroByteFiles, forceFiles, resultSet conditions */
                 YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
 
                 if (!files.isEmpty()) {
-                    /** 10) Target: connect */
+                    /** 12) Target: connect */
                     YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
-                    /** 11) Target: execute commands before operation */
+                    /** 13) Invoke a JumpHost add-on when Jump configuration is enabled */
+                    addon.ifPresent(a -> a.onAfterTargetDelegatorConnected(targetDelegator));
+
+                    /** 14) Target: execute commands before operation */
                     YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
-                    /** 12) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
+                    /** 15) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                     operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
                             files, targetDelegator, cancel);
                 }
 
-                /** 13) Source/Target: execute commands after operation on success */
+                /** 16) Source/Target: execute commands after operation on success */
                 YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
             } catch (Throwable e) {
                 onError(logger, sourceDelegator, targetDelegator, exception);
@@ -145,46 +159,60 @@ public class YADEEngine {
             }
         } else {
             YADESourceFilesPolling sourcePolling = new YADESourceFilesPolling(sourceDelegator);
+            boolean addonExecutedAfterSourceDelegatorConnected = false;
+            boolean addonExecutedAfterTargetDelegatorConnected = false;
             pl: while (true) {
                 exception = null;
                 operationDuration = null;
 
                 sourcePolling.incrementCycleCounter();
                 try {
-                    /** 5) Source: connect/reconnect */
+                    /** 6) Source: connect/reconnect */
                     sourcePolling.ensureConnected(logger, sourceDelegator);
 
-                    /** 6) Source: execute commands before operation */
+                    /** 7) Invoke a JumpHost add-on when Jump configuration is enabled */
+                    if (!addonExecutedAfterSourceDelegatorConnected) {
+                        addon.ifPresent(a -> a.onAfterSourceDelegatorConnected(sourceDelegator));
+                        addonExecutedAfterSourceDelegatorConnected = true;
+                    }
+
+                    /** 8) Source: execute commands before operation */
                     YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator);
 
-                    /** 7) Source: select files */
+                    /** 9) Source: select files */
                     files = sourcePolling.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                    /** 8) Source: check files steady state */
+                    /** 10) Source: check files steady state */
                     YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                    /** 9) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                    /** 11) Source: check zeroByteFiles, forceFiles, resultSet conditions */
                     YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
 
                     if (!files.isEmpty()) {
-                        /** 10) Target: connect */
+                        /** 12) Target: connect */
                         YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
-                        /** 11) Target: execute commands before operation */
+                        /** 13) Invoke a JumpHost add-on when Jump configuration is enabled */
+                        if (!addonExecutedAfterTargetDelegatorConnected) {
+                            addon.ifPresent(a -> a.onAfterTargetDelegatorConnected(targetDelegator));
+                            addonExecutedAfterTargetDelegatorConnected = true;
+                        }
+
+                        /** 14) Target: execute commands before operation */
                         YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
-                        /** 12) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
+                        /** 15) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                         operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
                                 files, targetDelegator, cancel);
                     }
 
-                    /** 13) Source/Target: execute commands after operation on success */
+                    /** 16) Source/Target: execute commands after operation on success */
                     YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
                 } catch (Throwable e) {
                     onError(logger, sourceDelegator, targetDelegator, exception);
                     exception = e;
                 } finally {
-                    /** 14) Finalize */
+                    /** 17) Finalize */
                     boolean startNextPollingCycle = sourcePolling.startNextPollingCycle(logger);
                     onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, files, exception, !startNextPollingCycle);
                     if (!startNextPollingCycle) {
@@ -194,6 +222,11 @@ public class YADEEngine {
             }
         }
         return files;
+    }
+
+    private void invokeAddonIfPresentOnBeforeDelegatorInitialized(ISOSLogger logger, AYADEArgumentsLoader argsLoader) {
+        this.addon = Optional.ofNullable(YADEEngineJumpHostAddon.initialize(logger, argsLoader));
+        addon.ifPresent(a -> a.onBeforeDelegatorInitialized(logger, argsLoader));
     }
 
     private void onError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
@@ -213,6 +246,8 @@ public class YADEEngine {
         // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
         r.logIfErrorOnErrorLevel(logger);
         // r.logIfErrorOnInfoLevel(logger);
+
+        addon.ifPresent(a -> a.onBeforeDelegatorDisconnected(sourceDelegator, disconnectSource, targetDelegator));
 
         if (disconnectSource) {
             YADEProviderDelegatorHelper.disconnect(sourceDelegator);

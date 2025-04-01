@@ -27,8 +27,7 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
 
     protected SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
         super(logger, args, args == null ? null : args.getPassphrase());
-        setAccessInfo(String.format("%s@%s:%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(), getArguments()
-                .getPort().getDisplayValue()));
+        setAccessInfo(getAccessInfo(getArguments()));
     }
 
     /** SSH Provider specific method */
@@ -92,6 +91,10 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
             msg += Joiner.on(", ").join(additionalInfos);
         }
         return getConnectedMsg(msg);
+    }
+
+    public static String getAccessInfo(SSHProviderArguments args) {
+        return String.format("%s@%s:%s", args.getUser().getDisplayValue(), args.getHost().getDisplayValue(), args.getPort().getDisplayValue());
     }
 
 }
