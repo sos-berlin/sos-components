@@ -56,12 +56,20 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return commandsBeforeOperation;
     }
 
+    public String getCommandsBeforeOperationAsString() {
+        return getCommandsAsString(commandsBeforeOperation);
+    }
+
     public void setCommandsBeforeOperation(String val) {
         commandsBeforeOperation.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
     }
 
     public SOSArgument<List<String>> getCommandsAfterOperationOnSuccess() {
         return commandsAfterOperationOnSuccess;
+    }
+
+    public String getCommandsAfterOperationOnSuccessAsString() {
+        return getCommandsAsString(commandsAfterOperationOnSuccess);
     }
 
     public void setCommandsAfterOperationOnSuccess(String val) {
@@ -72,6 +80,10 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return commandsAfterOperationOnError;
     }
 
+    public String getCommandsAfterOperationOnErrorAsString() {
+        return getCommandsAsString(commandsAfterOperationOnError);
+    }
+
     public void setCommandsAfterOperationOnError(String val) {
         commandsAfterOperationOnError.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
     }
@@ -80,12 +92,20 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return commandsAfterOperationFinal;
     }
 
+    public String getCommandsAfterOperationFinalAsString() {
+        return getCommandsAsString(commandsAfterOperationFinal);
+    }
+
     public void setCommandsAfterOperationFinal(String val) {
         commandsAfterOperationFinal.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
     }
 
     public SOSArgument<List<String>> getCommandsBeforeFile() {
         return commandsBeforeFile;
+    }
+
+    public String getCommandsBeforeFileAsString() {
+        return getCommandsAsString(commandsBeforeFile);
     }
 
     public void setCommandsBeforeFile(String val) {
@@ -100,6 +120,10 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return commandsAfterFile;
     }
 
+    public String getCommandsAfterFileAsString() {
+        return getCommandsAsString(commandsAfterFile);
+    }
+
     public void setCommandsAfterFile(String val) {
         commandsAfterFile.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
     }
@@ -112,8 +136,28 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return commandsBeforeRename;
     }
 
+    public String getCommandsBeforeRenameAsString() {
+        return getCommandsAsString(commandsBeforeRename);
+    }
+
     public void setCommandsBeforeRename(String val) {
         commandsBeforeRename.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+    }
+
+    public boolean isPreProcessingEnabled() {
+        return commandsBeforeFile.isDirty() || commandsBeforeOperation.isDirty();
+    }
+
+    public boolean isPostProcessingEnabled() {
+        return commandsAfterFile.isDirty() || commandsAfterOperationOnSuccess.isDirty() || commandsAfterOperationOnError.isDirty()
+                || commandsAfterOperationFinal.isDirty() || commandsBeforeRename.isDirty();
+    }
+
+    private String getCommandsAsString(SOSArgument<List<String>> arg) {
+        if (arg.getValue() == null) {
+            return null;
+        }
+        return String.join(commandDelimiter.getValue(), arg.getValue());
     }
 
 }

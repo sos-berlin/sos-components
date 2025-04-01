@@ -1,4 +1,4 @@
-package com.sos.yade.engine.commons.arguments.parsers;
+package com.sos.yade.engine.commons.arguments.loaders;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
@@ -6,9 +6,9 @@ import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
-import com.sos.yade.engine.exceptions.YADEEngineSettingsParserException;
+import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
 
-public abstract class AYADEArgumentsSetter {
+public abstract class AYADEArgumentsLoader {
 
     private final YADEArguments args;
     private final YADEClientArguments clientArgs;
@@ -17,7 +17,7 @@ public abstract class AYADEArgumentsSetter {
     private YADETargetArguments targetArgs;
     private YADEJumpArguments jumpArgs;
 
-    public AYADEArgumentsSetter() {
+    public AYADEArgumentsLoader() {
         this.args = new YADEArguments();
         this.clientArgs = new YADEClientArguments();
         this.sourceArgs = new YADESourceArguments();
@@ -28,7 +28,7 @@ public abstract class AYADEArgumentsSetter {
     }
 
     // currently only for UnitTests
-    protected AYADEArgumentsSetter(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs, YADETargetArguments targetArgs,
+    protected AYADEArgumentsLoader(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs, YADETargetArguments targetArgs,
             YADEJumpArguments jumpArgs) {
         this.args = args;
         this.clientArgs = clientArgs;
@@ -37,7 +37,7 @@ public abstract class AYADEArgumentsSetter {
         this.jumpArgs = jumpArgs;
     }
 
-    public abstract AYADEArgumentsSetter set(ISOSLogger logger, Object... params) throws YADEEngineSettingsParserException;
+    public abstract AYADEArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException;
 
     public YADEArguments getArgs() {
         return args;

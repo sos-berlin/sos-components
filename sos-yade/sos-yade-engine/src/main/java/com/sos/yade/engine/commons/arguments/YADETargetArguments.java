@@ -56,6 +56,10 @@ public class YADETargetArguments extends YADESourceTargetArguments {
         return atomicSuffix;
     }
 
+    public boolean isAtomicityEnabled() {
+        return atomicPrefix.isDirty() || atomicSuffix.isDirty();
+    }
+
     public SOSArgument<String> getCumulativeFileName() {
         return cumulativeFileName;
     }
@@ -68,8 +72,16 @@ public class YADETargetArguments extends YADESourceTargetArguments {
         return cumulativeFileDelete;
     }
 
+    public boolean isCumulateFilesEnabled() {
+        return !cumulativeFileName.isEmpty() && !cumulativeFileSeparator.isEmpty();
+    }
+
     public SOSArgument<String> getCompressedFileExtension() {
         return compressedFileExtension;
+    }
+
+    public boolean isCompressFilesEnabled() {
+        return !compressedFileExtension.isEmpty();
     }
 
     public SOSArgument<Boolean> getCheckSize() {

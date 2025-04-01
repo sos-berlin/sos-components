@@ -1,4 +1,4 @@
-package com.sos.yade.engine.commons.arguments.parsers.xml;
+package com.sos.yade.engine.commons.arguments.loaders.xml;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -10,12 +10,12 @@ import com.sos.commons.xml.SOSXML;
 
 public class YADEXMLFragmentsCredentialStoreFragmentHelper {
 
-    protected static void parse(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource, AProviderArguments providerArgs) throws Exception {
+    protected static void parse(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource, AProviderArguments providerArgs) throws Exception {
         String exp = "Fragments/CredentialStoreFragments[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
-        Node fragment = argsSetter.getXPath().selectNode(argsSetter.getRoot(), exp);
+        Node fragment = argsLoader.getXPath().selectNode(argsLoader.getRoot(), exp);
         if (fragment == null) {
-            throw new SOSMissingDataException("[profile=" + argsSetter.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target") + "]["
-                    + exp + "]referenced CredentialStore fragment not found");
+            throw new SOSMissingDataException("[profile=" + argsLoader.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target")
+                    + "][" + exp + "]referenced CredentialStore fragment not found");
         }
 
         NodeList nl = fragment.getChildNodes();
@@ -28,13 +28,13 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "CSFile":
-                        argsSetter.setStringArgumentValue(csArgs.getFile(), n);
+                        argsLoader.setStringArgumentValue(csArgs.getFile(), n);
                         break;
                     case "CSAuthentication":
-                        parseCSAuthentication(argsSetter, n, csArgs);
+                        parseCSAuthentication(argsLoader, n, csArgs);
                         break;
                     case "CSEntryPath":
-                        argsSetter.setStringArgumentValue(csArgs.getEntryPath(), n);
+                        argsLoader.setStringArgumentValue(csArgs.getEntryPath(), n);
                         break;
                     case "CSExportAttachment":
                         // ignored
@@ -50,24 +50,24 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
         }
     }
 
-    private static void parseCSAuthentication(YADEXMLArgumentsSetter argsSetter, Node csAuthentication, CredentialStoreArguments csArgs) {
+    private static void parseCSAuthentication(YADEXMLArgumentsLoader argsLoader, Node csAuthentication, CredentialStoreArguments csArgs) {
         NodeList nl = csAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "PasswordAuthentication":
-                    parseCSAuthenticationPasswordAuthentication(argsSetter, n, csArgs);
+                    parseCSAuthenticationPasswordAuthentication(argsLoader, n, csArgs);
                     break;
                 case "KeyFileAuthentication":
-                    parseCSAuthenticationKeyFileAuthentication(argsSetter, n, csArgs);
+                    parseCSAuthenticationKeyFileAuthentication(argsLoader, n, csArgs);
                     break;
                 }
             }
         }
     }
 
-    private static void parseCSAuthenticationPasswordAuthentication(YADEXMLArgumentsSetter argsSetter, Node passwordAuthentication,
+    private static void parseCSAuthenticationPasswordAuthentication(YADEXMLArgumentsLoader argsLoader, Node passwordAuthentication,
             CredentialStoreArguments csArgs) {
         NodeList nl = passwordAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -75,24 +75,25 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CSPassword":
-                    argsSetter.setStringArgumentValue(csArgs.getPassword(), n);
+                    argsLoader.setStringArgumentValue(csArgs.getPassword(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseCSAuthenticationKeyFileAuthentication(YADEXMLArgumentsSetter argsSetter, Node keyFileAuthentication, CredentialStoreArguments csArgs) {
+    private static void parseCSAuthenticationKeyFileAuthentication(YADEXMLArgumentsLoader argsLoader, Node keyFileAuthentication,
+            CredentialStoreArguments csArgs) {
         NodeList nl = keyFileAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CSKeyFile":
-                    argsSetter.setStringArgumentValue(csArgs.getKeyFile(), n);
+                    argsLoader.setStringArgumentValue(csArgs.getKeyFile(), n);
                     break;
                 case "CSPassword":
-                    argsSetter.setStringArgumentValue(csArgs.getPassword(), n);
+                    argsLoader.setStringArgumentValue(csArgs.getPassword(), n);
                     break;
                 }
             }

@@ -1,4 +1,4 @@
-package com.sos.yade.engine.commons.arguments.parsers;
+package com.sos.yade.engine.commons.arguments.loaders;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
@@ -6,17 +6,17 @@ import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
-import com.sos.yade.engine.exceptions.YADEEngineSettingsParserException;
+import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
 
-public class YADEUnitTestArgumentsSetter extends AYADEArgumentsSetter {
+public class YADEUnitTestArgumentsLoader extends AYADEArgumentsLoader {
 
-    public YADEUnitTestArgumentsSetter(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs,
+    public YADEUnitTestArgumentsLoader(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs,
             YADETargetArguments targetArgs, YADEJumpArguments jumpArgs) {
         super(args, clientArgs, sourceArgs, targetArgs, jumpArgs);
     }
 
     @Override
-    public YADEUnitTestArgumentsSetter set(ISOSLogger logger, Object... params) throws YADEEngineSettingsParserException {
+    public YADEUnitTestArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException {
 
         return this;
     }

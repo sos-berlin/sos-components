@@ -13,7 +13,7 @@ import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
-import com.sos.yade.engine.commons.arguments.parsers.YADEUnitTestArgumentsSetter;
+import com.sos.yade.engine.commons.arguments.loaders.YADEUnitTestArgumentsLoader;
 
 public class HTTPYADEEngineTest {
 
@@ -36,29 +36,29 @@ public class HTTPYADEEngineTest {
             }
 
             /** Common */
-            YADEUnitTestArgumentsSetter argsSetter = YADEEngineTest.createYADEUnitTestArgumentsSetter();
-            argsSetter.getArgs().getParallelism().setValue(10);
-            // argsSetter.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
-            argsSetter.getArgs().getOperation().setValue(TransferOperation.COPY);
-            argsSetter.getArgs().getTransactional().setValue(true);
+            YADEUnitTestArgumentsLoader argsLoader = YADEEngineTest.createYADEUnitTestArgumentsLoader();
+            argsLoader.getArgs().getParallelism().setValue(10);
+            // argsLoader.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
+            argsLoader.getArgs().getTransactional().setValue(true);
 
             /** Source */
-            argsSetter.getSourceArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
-            argsSetter.getSourceArgs().getDirectory().setValue(LocalYADEEngineTest.SOURCE_DIR);
-            argsSetter.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
-            argsSetter.getSourceArgs().getRecursive().setValue(true);
+            argsLoader.getSourceArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
+            argsLoader.getSourceArgs().getDirectory().setValue(LocalYADEEngineTest.SOURCE_DIR);
+            argsLoader.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            argsLoader.getSourceArgs().getRecursive().setValue(true);
 
             /** Target */
-            argsSetter.getTargetArgs().setProvider(createProviderArgs());
+            argsLoader.getTargetArgs().setProvider(createProviderArgs());
             if (useLocalhost) {
-                argsSetter.getTargetArgs().getProvider().getUser().setValue("yade");
-                argsSetter.getTargetArgs().getProvider().getPassword().setValue("yade");
+                argsLoader.getTargetArgs().getProvider().getUser().setValue("yade");
+                argsLoader.getTargetArgs().getProvider().getPassword().setValue("yade");
             }
-            argsSetter.getTargetArgs().getDirectory().setValue(TARGET_DIR);
-            // argsSetter.getTargetArgs().getKeepModificationDate().setValue(true);
-            argsSetter.getTargetArgs().getCreateDirectories().setValue(false);
+            argsLoader.getTargetArgs().getDirectory().setValue(TARGET_DIR);
+            // argsLoader.getTargetArgs().getKeepModificationDate().setValue(true);
+            argsLoader.getTargetArgs().getCreateDirectories().setValue(false);
 
-            yade.execute(new SLF4JLogger(), argsSetter, false);
+            yade.execute(new SLF4JLogger(), argsLoader, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -76,30 +76,30 @@ public class HTTPYADEEngineTest {
             }
 
             /** Common */
-            YADEUnitTestArgumentsSetter argsSetter = YADEEngineTest.createYADEUnitTestArgumentsSetter();
-            argsSetter.getArgs().getParallelism().setValue(10);
-            // argsSetter.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
-            argsSetter.getArgs().getOperation().setValue(TransferOperation.COPY);
-            argsSetter.getArgs().getTransactional().setValue(true);
+            YADEUnitTestArgumentsLoader argsLoader = YADEEngineTest.createYADEUnitTestArgumentsLoader();
+            argsLoader.getArgs().getParallelism().setValue(10);
+            // argsLoader.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
+            argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
+            argsLoader.getArgs().getTransactional().setValue(true);
 
             /** Source */
-            argsSetter.getSourceArgs().setProvider(createProviderArgs());
+            argsLoader.getSourceArgs().setProvider(createProviderArgs());
             if (useLocalhost) {
-                argsSetter.getSourceArgs().getFilePath().setValue(Collections.singletonList("yade/source/1.txt"));
-                argsSetter.getSourceArgs().getProvider().getUser().setValue("yade");
-                argsSetter.getSourceArgs().getProvider().getPassword().setValue("yade");
+                argsLoader.getSourceArgs().getFilePath().setValue(Collections.singletonList("yade/source/1.txt"));
+                argsLoader.getSourceArgs().getProvider().getUser().setValue("yade");
+                argsLoader.getSourceArgs().getProvider().getPassword().setValue("yade");
             } else {
-                argsSetter.getSourceArgs().getFilePath().setValue(Collections.singletonList(
+                argsLoader.getSourceArgs().getFilePath().setValue(Collections.singletonList(
                         "https://change.sos-berlin.com/browse/JS-2100?filter=14492"));
             }
 
             /** Target */
-            argsSetter.getTargetArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
-            argsSetter.getTargetArgs().getDirectory().setValue(LocalYADEEngineTest.TARGET_DIR);
-            // argsSetter.getTargetArgs().getKeepModificationDate().setValue(true);
-            argsSetter.getTargetArgs().getCheckSize().setValue(false);
+            argsLoader.getTargetArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
+            argsLoader.getTargetArgs().getDirectory().setValue(LocalYADEEngineTest.TARGET_DIR);
+            // argsLoader.getTargetArgs().getKeepModificationDate().setValue(true);
+            argsLoader.getTargetArgs().getCheckSize().setValue(false);
 
-            yade.execute(new SLF4JLogger(), argsSetter, false);
+            yade.execute(new SLF4JLogger(), argsLoader, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }

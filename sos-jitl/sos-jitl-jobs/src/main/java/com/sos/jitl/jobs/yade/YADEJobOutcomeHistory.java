@@ -19,25 +19,25 @@ import com.sos.yade.commons.result.YadeTransferResultSerializer;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
-import com.sos.yade.engine.commons.arguments.parsers.AYADEArgumentsSetter;
+import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 
 public class YADEJobOutcomeHistory {
 
-    public static String get(AYADEArgumentsSetter argsSetter, List<ProviderFile> files, Throwable exception) throws Exception {
+    public static String get(AYADEArgumentsLoader argsLoader, List<ProviderFile> files, Throwable exception) throws Exception {
         YadeTransferResult result = new YadeTransferResult();
 
-        result.setSource(getProviderResult(argsSetter.getSourceArgs()));
-        result.setTarget(getProviderResult(argsSetter.getTargetArgs()));
-        result.setJump(getJumpResult(argsSetter.getJumpArguments()));
+        result.setSource(getProviderResult(argsLoader.getSourceArgs()));
+        result.setTarget(getProviderResult(argsLoader.getTargetArgs()));
+        result.setJump(getJumpResult(argsLoader.getJumpArguments()));
 
-        result.setSettings(getSettings(argsSetter.getArgs().getSettings()));
-        result.setProfile(argsSetter.getArgs().getProfile().getValue());
-        result.setOperation(getOperation(argsSetter.getArgs().getOperation()));
+        result.setSettings(getSettings(argsLoader.getArgs().getSettings()));
+        result.setProfile(argsLoader.getArgs().getProfile().getValue());
+        result.setOperation(getOperation(argsLoader.getArgs().getOperation()));
 
-        result.setStart(argsSetter.getArgs().getStart().getValue());
-        result.setEnd(argsSetter.getArgs().getEnd().getValue());
+        result.setStart(argsLoader.getArgs().getStart().getValue());
+        result.setEnd(argsLoader.getArgs().getEnd().getValue());
 
-        result.setEntries(getEntries(argsSetter, files));
+        result.setEntries(getEntries(argsLoader, files));
 
         if (exception != null) {
             result.setErrorMessage(exception.getMessage());
@@ -91,7 +91,7 @@ public class YADEJobOutcomeHistory {
         return arg.isEmpty() ? TransferOperation.UNKNOWN.value() : arg.getValue().value();// LowerCase
     }
 
-    private static List<YadeTransferResultEntry> getEntries(AYADEArgumentsSetter argsSetter, List<ProviderFile> files) {
+    private static List<YadeTransferResultEntry> getEntries(AYADEArgumentsLoader argsLoader, List<ProviderFile> files) {
         if (SOSCollection.isEmpty(files)) {
             return null;
         }

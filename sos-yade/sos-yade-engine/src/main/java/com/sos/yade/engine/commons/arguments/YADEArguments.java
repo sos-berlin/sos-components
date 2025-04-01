@@ -79,4 +79,19 @@ public class YADEArguments extends ASOSArguments {
     public SOSArgument<Instant> getEnd() {
         return end;
     }
+
+    public YADEArguments clone() {
+        YADEArguments args = new YADEArguments();
+        args.applyDefaultIfNullQuietly();
+
+        args.getSettings().setValue(settings.getValue());
+        args.getProfile().setValue(profile.getValue());
+        args.getOperation().setValue(operation.getValue());
+        args.getParallelism().setValue(parallelism.getValue());
+        args.getTransactional().setValue(transactional.getValue());
+        args.getBufferSize().setValue(bufferSize.getValue());
+        args.getStart().setValue(start.getValue());
+        args.getEnd().setValue(end.getValue());
+        return args;
+    }
 }

@@ -41,4 +41,8 @@ public class ProxyArguments extends ASOSArguments {
     public SOSArgument<String> getConnectTimeout() {
         return connectTimeout;
     }
+
+    public boolean isHTTP() {
+        return java.net.Proxy.Type.HTTP.equals(type.getValue());
+    }
 }

@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.yade.engine.commons.arguments.parsers.AYADEArgumentsSetter;
+import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.delegators.YADEProviderDelegatorFactory;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
@@ -74,25 +74,25 @@ public class YADEEngine {
     public YADEEngine() {
     }
 
-    public List<ProviderFile> execute(ISOSLogger logger, AYADEArgumentsSetter argsSetter, boolean writeYADEBanner) throws YADEEngineException {
+    public List<ProviderFile> execute(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) throws YADEEngineException {
 
         YADESourceProviderDelegator sourceDelegator = null;
         YADETargetProviderDelegator targetDelegator = null;
         try {
             /** 1) Write transfer configuration */
-            YADEClientBannerWriter.writeHeader(logger, argsSetter.getArgs(), argsSetter.getClientArgs(), argsSetter.getSourceArgs(), argsSetter
+            YADEClientBannerWriter.writeHeader(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), argsLoader.getSourceArgs(), argsLoader
                     .getTargetArgs(), writeYADEBanner);
 
             /** 2) Check/Initialize configuration */
-            YADEArgumentsChecker.validateOrExit(logger, argsSetter.getArgs(), argsSetter.getClientArgs(), argsSetter.getSourceArgs(), argsSetter
+            YADEArgumentsChecker.validateOrExit(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), argsLoader.getSourceArgs(), argsLoader
                     .getTargetArgs());
 
             /** 3) Set System properties */
-            YADEClientHelper.setSystemPropertiesFromFiles(logger, argsSetter.getClientArgs());
+            YADEClientHelper.setSystemPropertiesFromFiles(logger, argsLoader.getClientArgs());
 
             /** 4) Source/Target: create provider delegator */
-            sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, argsSetter.getArgs(), argsSetter.getSourceArgs());
-            targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsSetter.getArgs(), argsSetter.getTargetArgs());
+            sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, argsLoader.getArgs(), argsLoader.getSourceArgs());
+            targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());
         } catch (YADEEngineInitializationException e) {
             throw e;
         } catch (Throwable e) {
@@ -103,9 +103,9 @@ public class YADEEngine {
         Throwable exception = null;
         List<ProviderFile> files = null;
 
-        String sourceExcludedFileExtension = YADESourceFilesSelector.getExcludedFileExtension(argsSetter.getArgs(), sourceDelegator, targetDelegator);
+        String sourceExcludedFileExtension = YADESourceFilesSelector.getExcludedFileExtension(argsLoader.getArgs(), sourceDelegator, targetDelegator);
         // All steps may trigger an exception
-        if (!argsSetter.getSourceArgs().isPollingEnabled()) {
+        if (!argsLoader.getSourceArgs().isPollingEnabled()) {
             try {
                 /** 5) Source: connect */
                 YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
@@ -120,7 +120,7 @@ public class YADEEngine {
                 YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
                 /** 9) Source: check zeroByteFiles, forceFiles, resultSet conditions */
-                YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsSetter.getClientArgs(), files);
+                YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
 
                 if (!files.isEmpty()) {
                     /** 10) Target: connect */
@@ -130,7 +130,7 @@ public class YADEEngine {
                     YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
                     /** 12) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
-                    operationDuration = YADEOperationsManager.process(logger, argsSetter.getArgs(), argsSetter.getClientArgs(), sourceDelegator,
+                    operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
                             files, targetDelegator, cancel);
                 }
 
@@ -141,7 +141,7 @@ public class YADEEngine {
                 exception = e;
             } finally {
                 /** 14) Finalize */
-                onFinally(logger, argsSetter, operationDuration, sourceDelegator, targetDelegator, files, exception, true);
+                onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, files, exception, true);
             }
         } else {
             YADESourceFilesPolling sourcePolling = new YADESourceFilesPolling(sourceDelegator);
@@ -164,7 +164,7 @@ public class YADEEngine {
                     YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
                     /** 9) Source: check zeroByteFiles, forceFiles, resultSet conditions */
-                    YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsSetter.getClientArgs(), files);
+                    YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
 
                     if (!files.isEmpty()) {
                         /** 10) Target: connect */
@@ -174,7 +174,7 @@ public class YADEEngine {
                         YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
 
                         /** 12) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
-                        operationDuration = YADEOperationsManager.process(logger, argsSetter.getArgs(), argsSetter.getClientArgs(), sourceDelegator,
+                        operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
                                 files, targetDelegator, cancel);
                     }
 
@@ -186,7 +186,7 @@ public class YADEEngine {
                 } finally {
                     /** 14) Finalize */
                     boolean startNextPollingCycle = sourcePolling.startNextPollingCycle(logger);
-                    onFinally(logger, argsSetter, operationDuration, sourceDelegator, targetDelegator, files, exception, !startNextPollingCycle);
+                    onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, files, exception, !startNextPollingCycle);
                     if (!startNextPollingCycle) {
                         break pl;
                     }
@@ -205,7 +205,7 @@ public class YADEEngine {
         // r.logIfErrorOnInfoLevel(logger);
     }
 
-    private void onFinally(ISOSLogger logger, AYADEArgumentsSetter argsSetter, Duration operationDuration,
+    private void onFinally(ISOSLogger logger, AYADEArgumentsLoader argsLoader, Duration operationDuration,
             YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, List<ProviderFile> files, Throwable exception,
             boolean disconnectSource) throws YADEEngineException {
         /** Source/Target: execute commands after operation final */
@@ -221,14 +221,14 @@ public class YADEEngine {
 
         if (exception == null) {
             try {
-                YADEClientHelper.writeResultSet(logger, argsSetter.getArgs().getOperation().getValue(), argsSetter.getClientArgs(), files);
+                YADEClientHelper.writeResultSet(logger, argsLoader.getArgs().getOperation().getValue(), argsLoader.getClientArgs(), files);
             } catch (Throwable e) {
                 exception = e;
             }
         }
 
         // sendNotifications
-        YADEClientBannerWriter.writeSummary(logger, argsSetter.getArgs(), operationDuration, targetDelegator == null ? null : targetDelegator
+        YADEClientBannerWriter.writeSummary(logger, argsLoader.getArgs(), operationDuration, targetDelegator == null ? null : targetDelegator
                 .getArgs(), files, exception);
 
         // disconnectSource means - YADE execution(one-time operation or polling) is completed

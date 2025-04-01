@@ -4,7 +4,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
-import com.sos.yade.commons.Yade.TransferOperation;
 
 public class YADEJumpArguments extends ASOSArguments {
 
@@ -16,11 +15,13 @@ public class YADEJumpArguments extends ASOSArguments {
     private YADEProviderCommandArguments commands;
 
     /** COPYFROMINTERNET/COPYTOINTERNET/... */
-    private SOSArgument<TransferOperation> operation = new SOSArgument<>("operation", true);
     private SOSArgument<String> directory = new SOSArgument<>("dir", false);
     private SOSArgument<JumpPlatform> platform = new SOSArgument<>("platform", false);
 
     private SOSArgument<String> yadeClientCommand = new SOSArgument<>("yade_client_command", false);
+
+    /** internal usage */
+    private SOSArgument<Boolean> isSource = new SOSArgument<>(null, false);
 
     public SSHProviderArguments getProvider() {
         if (provider == null) {
@@ -46,10 +47,6 @@ public class YADEJumpArguments extends ASOSArguments {
         commands = val;
     }
 
-    public SOSArgument<TransferOperation> getOperation() {
-        return operation;
-    }
-
     public SOSArgument<String> getDirectory() {
         return directory;
     }
@@ -67,5 +64,9 @@ public class YADEJumpArguments extends ASOSArguments {
 
     public SOSArgument<String> getYADEClientCommand() {
         return yadeClientCommand;
+    }
+
+    public SOSArgument<Boolean> getIsSource() {
+        return isSource;
     }
 }

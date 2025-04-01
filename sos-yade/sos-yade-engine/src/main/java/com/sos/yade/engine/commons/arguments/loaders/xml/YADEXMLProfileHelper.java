@@ -1,4 +1,4 @@
-package com.sos.yade.engine.commons.arguments.parsers.xml;
+package com.sos.yade.engine.commons.arguments.loaders.xml;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -9,6 +9,7 @@ import org.w3c.dom.NodeList;
 
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSComparisonOperator;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
@@ -18,23 +19,24 @@ import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
+import com.sos.commons.xml.SOSXML;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADESourcePollingArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public class YADEXMLProfileHelper {
 
-    protected static void parse(YADEXMLArgumentsSetter argsSetter, Node profile) throws Exception {
+    protected static void parse(YADEXMLArgumentsLoader argsLoader, Node profile) throws Exception {
         NodeList nl = profile.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Operation":
-                    parseOperation(argsSetter, n);
+                    parseOperation(argsLoader, n);
                     break;
                 case "SystemPropertyFiles":
-                    parseSystemPropertyFiles(argsSetter, n);
+                    parseSystemPropertyFiles(argsLoader, n);
                     break;
                 case "Client":
                 case "JobScheduler":
@@ -50,38 +52,38 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseOperation(YADEXMLArgumentsSetter argsSetter, Node operation) throws Exception {
-        Node node = argsSetter.getXPath().selectNode(operation, "*[1]"); // first child
+    private static void parseOperation(YADEXMLArgumentsLoader argsLoader, Node operation) throws Exception {
+        Node node = argsLoader.getXPath().selectNode(operation, "*[1]"); // first child
         if (node == null) {
-            throw new SOSMissingDataException("Profiles/Profile profile_id=" + argsSetter.getArgs().getProfile().getValue()
+            throw new SOSMissingDataException("Profiles/Profile profile_id=" + argsLoader.getArgs().getProfile().getValue()
                     + "/Operation/<Child Node>");
         }
         String operationIdentifier = node.getNodeName();
         switch (operationIdentifier) {
         case "Copy":
-            argsSetter.getArgs().getOperation().setValue(TransferOperation.COPY);
-            parseOperationOnSourceTarget(argsSetter, node, operationIdentifier);
+            argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
+            parseOperationOnSourceTarget(argsLoader, node, operationIdentifier);
             break;
         case "Move":
-            argsSetter.getArgs().getOperation().setValue(TransferOperation.MOVE);
-            parseOperationOnSourceTarget(argsSetter, node, operationIdentifier);
+            argsLoader.getArgs().getOperation().setValue(TransferOperation.MOVE);
+            parseOperationOnSourceTarget(argsLoader, node, operationIdentifier);
             break;
         case "Remove":
-            argsSetter.getArgs().getOperation().setValue(TransferOperation.REMOVE);
-            argsSetter.nullifyTargetArgs();
-            parseOperationOnSource(argsSetter, node, operationIdentifier);
+            argsLoader.getArgs().getOperation().setValue(TransferOperation.REMOVE);
+            argsLoader.nullifyTargetArgs();
+            parseOperationOnSource(argsLoader, node, operationIdentifier);
             break;
         case "GetList":
-            argsSetter.getArgs().getOperation().setValue(TransferOperation.GETLIST);
-            argsSetter.nullifyTargetArgs();
-            parseOperationOnSource(argsSetter, node, operationIdentifier);
+            argsLoader.getArgs().getOperation().setValue(TransferOperation.GETLIST);
+            argsLoader.nullifyTargetArgs();
+            parseOperationOnSource(argsLoader, node, operationIdentifier);
             break;
         default:
             throw new Exception("[" + node.getNodeName() + "]Unknown Operation");
         }
     }
 
-    private static void parseSystemPropertyFiles(YADEXMLArgumentsSetter argsSetter, Node systemPropertyFiles) {
+    private static void parseSystemPropertyFiles(YADEXMLArgumentsLoader argsLoader, Node systemPropertyFiles) {
         NodeList nl = systemPropertyFiles.getChildNodes();
         if (nl == null) {
             return;
@@ -90,16 +92,16 @@ public class YADEXMLProfileHelper {
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE && "SystemPropertyFile".equals(n.getNodeName())) {
-                files.add(Path.of(argsSetter.getValue(n)));
+                files.add(Path.of(argsLoader.getValue(n)));
             }
         }
         if (files.size() > 0) {
-            argsSetter.getClientArgs().getSystemPropertyFiles().setValue(files);
+            argsLoader.getClientArgs().getSystemPropertyFiles().setValue(files);
         }
     }
 
-    private static void parseOperationOnSourceTarget(YADEXMLArgumentsSetter argsSetter, Node operation, String operationIdentifier) throws Exception {
-        argsSetter.initializeTargetArgsIfNull();
+    private static void parseOperationOnSourceTarget(YADEXMLArgumentsLoader argsLoader, Node operation, String operationIdentifier) throws Exception {
+        argsLoader.initializeTargetArgsIfNull();
 
         NodeList nl = operation.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -107,29 +109,29 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 String nodeName = n.getNodeName();
                 if (nodeName.equals(operationIdentifier + "Source")) {
-                    parseSource(argsSetter, n, operationIdentifier);
+                    parseSource(argsLoader, n, operationIdentifier);
                 } else if (nodeName.equals(operationIdentifier + "Target")) {
-                    parseTarget(argsSetter, n, operationIdentifier);
+                    parseTarget(argsLoader, n, operationIdentifier);
                 } else if (nodeName.equals("TransferOptions")) {
-                    parseTransferOptions(argsSetter, n);
+                    parseTransferOptions(argsLoader, n);
                 }
             }
         }
     }
 
-    private static void parseOperationOnSource(YADEXMLArgumentsSetter argsSetter, Node operation, String operationIdentifier) throws Exception {
+    private static void parseOperationOnSource(YADEXMLArgumentsLoader argsLoader, Node operation, String operationIdentifier) throws Exception {
         NodeList nl = operation.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 if (n.getNodeName().equals(operationIdentifier + "Source")) {
-                    parseSource(argsSetter, n, operationIdentifier);
+                    parseSource(argsLoader, n, operationIdentifier);
                 }
             }
         }
     }
 
-    private static void parseSource(YADEXMLArgumentsSetter argsSetter, Node sourceOperation, String operationIdentifier) throws Exception {
+    private static void parseSource(YADEXMLArgumentsLoader argsLoader, Node sourceOperation, String operationIdentifier) throws Exception {
         NodeList nl = sourceOperation.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -137,17 +139,17 @@ public class YADEXMLProfileHelper {
                 String nodeName = n.getNodeName();
                 // e.g. CopySourceFragmentRef
                 if (nodeName.equals(operationIdentifier + "SourceFragmentRef")) {
-                    parseFragmentRef(argsSetter, n, true);
+                    parseFragmentRef(argsLoader, n, true);
                 } else if (nodeName.equals("Alternative" + operationIdentifier + "SourceFragmentRef")) {
-                    parseAlternativeFragmentRef(argsSetter, n, true);
+                    parseAlternativeFragmentRef(argsLoader, n, true);
                 } else if (nodeName.equals("SourceFileOptions")) {
-                    parseSourceOptions(argsSetter, n);
+                    parseSourceOptions(argsLoader, n);
                 }
             }
         }
     }
 
-    private static void parseTarget(YADEXMLArgumentsSetter argsSetter, Node targetOperation, String operationIdentifier) throws Exception {
+    private static void parseTarget(YADEXMLArgumentsLoader argsLoader, Node targetOperation, String operationIdentifier) throws Exception {
         NodeList nl = targetOperation.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -155,94 +157,94 @@ public class YADEXMLProfileHelper {
                 String nodeName = n.getNodeName();
                 // e.g. CopyTargetFragmentRef
                 if (nodeName.equals(operationIdentifier + "TargetFragmentRef")) {
-                    parseFragmentRef(argsSetter, n, false);
+                    parseFragmentRef(argsLoader, n, false);
                 } else if (nodeName.equals("Alternative" + operationIdentifier + "TargetFragmentRef")) {
-                    parseAlternativeFragmentRef(argsSetter, n, false);
+                    parseAlternativeFragmentRef(argsLoader, n, false);
                 } else if (nodeName.equals("Directory")) {
-                    argsSetter.setStringArgumentValue(argsSetter.getTargetArgs().getDirectory(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getDirectory(), n);
                 } else if (nodeName.equals("TargetFileOptions")) {
-                    parseTargetOptions(argsSetter, n);
+                    parseTargetOptions(argsLoader, n);
                 }
             }
         }
     }
 
-    private static void parseTransferOptions(YADEXMLArgumentsSetter argsSetter, Node transferOptions) throws Exception {
+    private static void parseTransferOptions(YADEXMLArgumentsLoader argsLoader, Node transferOptions) throws Exception {
         NodeList nl = transferOptions.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "BufferSize":
-                    argsSetter.setIntegerArgumentValue(argsSetter.getArgs().getBufferSize(), n);
+                    argsLoader.setIntegerArgumentValue(argsLoader.getArgs().getBufferSize(), n);
                     break;
                 case "Transactional":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getArgs().getTransactional(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getArgs().getTransactional(), n);
                     break;
                 case "RetryOnConnectionError":
-                    parseTransferOptionsRetryOnConnectionError(argsSetter, n);
+                    parseTransferOptionsRetryOnConnectionError(argsLoader, n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseAlternativeFragmentRef(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
-        // YADEEngine - not argsSetteremented
+    private static void parseAlternativeFragmentRef(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
+        // YADEEngine - not argsLoaderemented
     }
 
-    private static void parseFragmentRef(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource) throws Exception {
+    private static void parseFragmentRef(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
         YADESourceTargetArguments sourceTargetArgs;
         if (isSource) {
-            sourceTargetArgs = argsSetter.getSourceArgs();
+            sourceTargetArgs = argsLoader.getSourceArgs();
         } else {
-            sourceTargetArgs = argsSetter.getTargetArgs();
+            sourceTargetArgs = argsLoader.getTargetArgs();
         }
 
         AProviderArguments providerArgs = null;
         // e.g. ref=CopySourceFragmentRef, refRef SFTPFragmentRef
-        Node refRef = argsSetter.getXPath().selectNode(ref, "*[1]"); // first child
+        Node refRef = argsLoader.getXPath().selectNode(ref, "*[1]"); // first child
         if (refRef == null) {
-            throw new SOSMissingDataException("Profiles/Profile profile_id=" + argsSetter.getArgs().getProfile().getValue() + "/../" + ref
+            throw new SOSMissingDataException("Profiles/Profile profile_id=" + argsLoader.getArgs().getProfile().getValue() + "/../" + ref
                     .getNodeName() + "/<Child Node>");
         }
         switch (refRef.getNodeName()) {
         case "LocalSource":
-            providerArgs = parseFragmentRefLocal(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefLocal(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "LocalTarget":
-            providerArgs = parseFragmentRefLocal(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefLocal(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "SFTPFragmentRef":
-            providerArgs = parseFragmentRefSFTP(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefSFTP(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "FTPFragmentRef":
-            providerArgs = parseFragmentRefFTP(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefFTP(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "FTPSFragmentRef":
-            providerArgs = parseFragmentRefFTPS(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefFTPS(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "HTTPFragmentRef":
-            providerArgs = parseFragmentRefHTTP(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefHTTP(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "HTTPSFragmentRef":
-            providerArgs = parseFragmentRefHTTPS(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefHTTPS(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "SMBFragmentRef":
-            providerArgs = parseFragmentRefSMB(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefSMB(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         case "WebDAVFragmentRef":
-            providerArgs = parseFragmentRefWebDAV(argsSetter, refRef, isSource, sourceTargetArgs);
+            providerArgs = parseFragmentRefWebDAV(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
         }
         if (isSource) {
-            argsSetter.getSourceArgs().setProvider(providerArgs);
+            argsLoader.getSourceArgs().setProvider(providerArgs);
         } else {
-            argsSetter.getTargetArgs().setProvider(providerArgs);
+            argsLoader.getTargetArgs().setProvider(providerArgs);
         }
     }
 
-    private static LocalProviderArguments parseFragmentRefLocal(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static LocalProviderArguments parseFragmentRefLocal(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
         LocalProviderArguments args = new LocalProviderArguments();
         args.applyDefaultIfNullQuietly();
@@ -253,19 +255,19 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "LocalPreProcessing":
-                    parseFragmentRefPreProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "LocalPostProcessing":
-                    parseFragmentRefPostProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "ProcessingCommandDelimiter":
-                    argsSetter.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
+                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsSetter, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
                 }
             }
@@ -273,25 +275,25 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static FTPProviderArguments parseFragmentRefFTP(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static FTPProviderArguments parseFragmentRefFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        FTPProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseFTP(argsSetter, ref, isSource);
+        FTPProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseFTP(argsLoader, ref, isSource);
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FTPPreProcessing":
-                    parseFragmentRefPreProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "FTPPostProcessing":
-                    parseFragmentRefPostProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "ProcessingCommandDelimiter":
-                    argsSetter.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
+                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 }
             }
@@ -299,25 +301,25 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static FTPSProviderArguments parseFragmentRefFTPS(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static FTPSProviderArguments parseFragmentRefFTPS(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        FTPSProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseFTPS(argsSetter, ref, isSource);
+        FTPSProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseFTPS(argsLoader, ref, isSource);
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FTPPreProcessing":
-                    parseFragmentRefPreProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "FTPPostProcessing":
-                    parseFragmentRefPostProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "ProcessingCommandDelimiter":
-                    argsSetter.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
+                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 }
             }
@@ -325,19 +327,19 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static HTTPProviderArguments parseFragmentRefHTTP(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static HTTPProviderArguments parseFragmentRefHTTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        HTTPProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseHTTP(argsSetter, ref, isSource);
+        HTTPProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseHTTP(argsLoader, ref, isSource);
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 case "HTTPHeaders":
-                    YADEXMLFragmentsProtocolFragmentHelper.parseHTTPHeaders(argsSetter, args, n);
+                    YADEXMLFragmentsProtocolFragmentHelper.parseHTTPHeaders(argsLoader, args, n);
                     break;
                 }
             }
@@ -345,19 +347,19 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static HTTPSProviderArguments parseFragmentRefHTTPS(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static HTTPSProviderArguments parseFragmentRefHTTPS(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        HTTPSProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseHTTPS(argsSetter, ref, isSource);
+        HTTPSProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseHTTPS(argsLoader, ref, isSource);
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 case "HTTPHeaders":
-                    YADEXMLFragmentsProtocolFragmentHelper.parseHTTPHeaders(argsSetter, args, n);
+                    YADEXMLFragmentsProtocolFragmentHelper.parseHTTPHeaders(argsLoader, args, n);
                     break;
                 }
             }
@@ -365,25 +367,25 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static SSHProviderArguments parseFragmentRefSFTP(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static SSHProviderArguments parseFragmentRefSFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        SSHProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseSFTP(argsSetter, ref, isSource);
+        SSHProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseSFTP(argsLoader, ref, isSource);
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "SFTPPreProcessing":
-                    parseFragmentRefPreProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "SFTPPostProcessing":
-                    parseFragmentRefPostProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "ProcessingCommandDelimiter":
-                    argsSetter.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
+                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 case "ZlibCompression":
                     args.getUseZlibCompression().setValue(Boolean.valueOf(true));
@@ -394,25 +396,25 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static SMBProviderArguments parseFragmentRefSMB(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static SMBProviderArguments parseFragmentRefSMB(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        SMBProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseSMB(argsSetter, ref, isSource);
+        SMBProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseSMB(argsLoader, ref, isSource);
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "SMBPreProcessing":
-                    parseFragmentRefPreProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "SMBPostProcessing":
-                    parseFragmentRefPostProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "ProcessingCommandDelimiter":
-                    argsSetter.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
+                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 }
             }
@@ -420,19 +422,19 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static WebDAVProviderArguments parseFragmentRefWebDAV(YADEXMLArgumentsSetter argsSetter, Node ref, boolean isSource,
+    private static WebDAVProviderArguments parseFragmentRefWebDAV(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        WebDAVProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseWebDAV(argsSetter, ref, isSource);
+        WebDAVProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseWebDAV(argsLoader, ref, isSource);
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "WebDAVPostProcessing":
-                    parseFragmentRefPostProcessing(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
                     break;
                 case "Rename":
-                    parseFragmentRefRename(argsSetter, n, sourceTargetArgs);
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
                     break;
                 }
             }
@@ -440,132 +442,132 @@ public class YADEXMLProfileHelper {
         return args;
     }
 
-    private static void parseSourceOptions(YADEXMLArgumentsSetter argsSetter, Node sourceFileOptions) throws Exception {
+    private static void parseSourceOptions(YADEXMLArgumentsLoader argsLoader, Node sourceFileOptions) throws Exception {
         NodeList nl = sourceFileOptions.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Selection":
-                    parseSourceOptionSelection(argsSetter, n);
+                    parseSourceOptionSelection(argsLoader, n);
                     break;
                 case "CheckSteadyState":
-                    parseSourceOptionCheckSteadyState(argsSetter, n);
+                    parseSourceOptionCheckSteadyState(argsLoader, n);
                     break;
                 case "Directives":
-                    parseSourceOptionDirectives(argsSetter, n);
+                    parseSourceOptionDirectives(argsLoader, n);
                     break;
                 case "Polling":
-                    parseSourceOptionPolling(argsSetter, n);
+                    parseSourceOptionPolling(argsLoader, n);
                     break;
                 case "ResultSet":
-                    parseSourceOptionResultSet(argsSetter, n);
+                    parseSourceOptionResultSet(argsLoader, n);
                     break;
                 case "MaxFiles":
-                    argsSetter.setIntegerArgumentValue(argsSetter.getSourceArgs().getMaxFiles(), n);
+                    argsLoader.setIntegerArgumentValue(argsLoader.getSourceArgs().getMaxFiles(), n);
                     break;
                 case "CheckIntegrityHash":
-                    parseSourceOptionCheckIntegrityHash(argsSetter, n);
+                    parseSourceOptionCheckIntegrityHash(argsLoader, n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSourceOptionSelection(YADEXMLArgumentsSetter argsSetter, Node selection) throws Exception {
+    private static void parseSourceOptionSelection(YADEXMLArgumentsLoader argsLoader, Node selection) throws Exception {
         NodeList nl = selection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FilePathSelection":
-                    parseSourceOptionSelectionFilePath(argsSetter, n);
+                    parseSourceOptionSelectionFilePath(argsLoader, n);
                     break;
                 case "FileSpecSelection":
-                    parseSourceOptionSelectionFileSpec(argsSetter, n);
+                    parseSourceOptionSelectionFileSpec(argsLoader, n);
                     break;
                 case "FileListSelection":
-                    parseSourceOptionSelectionFileList(argsSetter, n);
+                    parseSourceOptionSelectionFileList(argsLoader, n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSourceOptionSelectionFilePath(YADEXMLArgumentsSetter argsSetter, Node selection) throws Exception {
+    private static void parseSourceOptionSelectionFilePath(YADEXMLArgumentsLoader argsLoader, Node selection) throws Exception {
         NodeList nl = selection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FilePath":
-                    argsSetter.getSourceArgs().setFilePath(argsSetter.getValue(n));
+                    argsLoader.getSourceArgs().setFilePath(argsLoader.getValue(n));
                     break;
                 case "Directory":
-                    argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getDirectory(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getDirectory(), n);
                     break;
                 case "Recursive":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getSourceArgs().getRecursive(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getSourceArgs().getRecursive(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSourceOptionSelectionFileSpec(YADEXMLArgumentsSetter argsSetter, Node selection) throws Exception {
+    private static void parseSourceOptionSelectionFileSpec(YADEXMLArgumentsLoader argsLoader, Node selection) throws Exception {
         NodeList nl = selection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FileSpec":
-                    argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getFileSpec(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getFileSpec(), n);
                     break;
                 case "Directory":
-                    argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getDirectory(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getDirectory(), n);
                     break;
                 case "ExcludedDirectories":
-                    argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getExcludedDirectories(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getExcludedDirectories(), n);
                     break;
                 case "Recursive":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getSourceArgs().getRecursive(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getSourceArgs().getRecursive(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSourceOptionSelectionFileList(YADEXMLArgumentsSetter argsSetter, Node selection) throws Exception {
+    private static void parseSourceOptionSelectionFileList(YADEXMLArgumentsLoader argsLoader, Node selection) throws Exception {
         NodeList nl = selection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FileList":
-                    argsSetter.setPathArgumentValue(argsSetter.getSourceArgs().getFileList(), n);
+                    argsLoader.setPathArgumentValue(argsLoader.getSourceArgs().getFileList(), n);
                     break;
                 case "Directory":
-                    argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getDirectory(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getDirectory(), n);
                     break;
                 case "Recursive":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getSourceArgs().getRecursive(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getSourceArgs().getRecursive(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSourceOptionCheckSteadyState(YADEXMLArgumentsSetter argsSetter, Node steadyState) throws Exception {
+    private static void parseSourceOptionCheckSteadyState(YADEXMLArgumentsLoader argsLoader, Node steadyState) throws Exception {
         NodeList nl = steadyState.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CheckSteadyStateInterval":
-                    argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getCheckSteadyStateInterval(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getCheckSteadyStateInterval(), n);
                     break;
                 case "CheckSteadyStateCount":
-                    argsSetter.setIntegerArgumentValue(argsSetter.getSourceArgs().getCheckSteadyCount(), n);
+                    argsLoader.setIntegerArgumentValue(argsLoader.getSourceArgs().getCheckSteadyCount(), n);
                     break;
                 case "CheckSteadyStateErrorState":// for JS1 job chain
                     break;
@@ -574,24 +576,24 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseSourceOptionDirectives(YADEXMLArgumentsSetter argsSetter, Node directives) throws Exception {
+    private static void parseSourceOptionDirectives(YADEXMLArgumentsLoader argsLoader, Node directives) throws Exception {
         NodeList nl = directives.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "DisableErrorOnNoFilesFound":
-                    argsSetter.setOppositeBooleanArgumentValue(argsSetter.getSourceArgs().getForceFiles(), n);
+                    argsLoader.setOppositeBooleanArgumentValue(argsLoader.getSourceArgs().getForceFiles(), n);
                     break;
                 case "TransferZeroByteFiles":
-                    argsSetter.getSourceArgs().setZeroByteTransfer(argsSetter.getValue(n));
+                    argsLoader.getSourceArgs().setZeroByteTransfer(argsLoader.getValue(n));
                     break;
                 }
             }
         }
     }
 
-    private static void parseSourceOptionPolling(YADEXMLArgumentsSetter argsSetter, Node polling) throws Exception {
+    private static void parseSourceOptionPolling(YADEXMLArgumentsLoader argsLoader, Node polling) throws Exception {
         NodeList nl = polling.getChildNodes();
         int len = nl.getLength();
         if (len > 0) {
@@ -602,37 +604,37 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "PollInterval":
-                        argsSetter.setStringArgumentValue(pollingArgs.getPollInterval(), n);
+                        argsLoader.setStringArgumentValue(pollingArgs.getPollInterval(), n);
                         break;
                     case "PollTimeout":
-                        argsSetter.setIntegerArgumentValue(pollingArgs.getPollTimeout(), n);
+                        argsLoader.setIntegerArgumentValue(pollingArgs.getPollTimeout(), n);
                         break;
                     case "MinFiles":
-                        argsSetter.setIntegerArgumentValue(pollingArgs.getPollMinFiles(), n);
+                        argsLoader.setIntegerArgumentValue(pollingArgs.getPollMinFiles(), n);
                         break;
                     case "WaitForSourceFolder":
-                        argsSetter.setBooleanArgumentValue(pollingArgs.getWaitingForLateComers(), n);
+                        argsLoader.setBooleanArgumentValue(pollingArgs.getWaitingForLateComers(), n);
                         break;
                     case "PollErrorState":
                         // YADE 1 - YADE Job API
                         break;
                     case "PollingServer":
-                        argsSetter.setBooleanArgumentValue(pollingArgs.getPollingServer(), n);
+                        argsLoader.setBooleanArgumentValue(pollingArgs.getPollingServer(), n);
                         break;
                     case "PollingServerDuration":
-                        argsSetter.setStringArgumentValue(pollingArgs.getPollingServerDuration(), n);
+                        argsLoader.setStringArgumentValue(pollingArgs.getPollingServerDuration(), n);
                         break;
                     case "PollForever":
-                        argsSetter.setBooleanArgumentValue(pollingArgs.getPollingServerPollForever(), n);
+                        argsLoader.setBooleanArgumentValue(pollingArgs.getPollingServerPollForever(), n);
                         break;
                     }
                 }
             }
-            argsSetter.getSourceArgs().setPolling(pollingArgs);
+            argsLoader.getSourceArgs().setPolling(pollingArgs);
         }
     }
 
-    private static void parseSourceOptionResultSet(YADEXMLArgumentsSetter argsSetter, Node resultSet) throws Exception {
+    private static void parseSourceOptionResultSet(YADEXMLArgumentsLoader argsLoader, Node resultSet) throws Exception {
         NodeList nl = resultSet.getChildNodes();
         int len = nl.getLength();
         if (len > 0) {
@@ -641,10 +643,10 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "ResultSetFile":
-                        argsSetter.setPathArgumentValue(argsSetter.getClientArgs().getResultSetFileName(), n);
+                        argsLoader.setPathArgumentValue(argsLoader.getClientArgs().getResultSetFileName(), n);
                         break;
                     case "CheckResultSetCount":
-                        parseSourceOptionResultSetCheckCount(argsSetter, n);
+                        parseSourceOptionResultSetCheckCount(argsLoader, n);
                         break;
                     case "EmptyResultSetState":
                         // YADE 1 - YADE Job API
@@ -655,7 +657,7 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseSourceOptionResultSetCheckCount(YADEXMLArgumentsSetter argsSetter, Node resultSetCheckCount) throws Exception {
+    private static void parseSourceOptionResultSetCheckCount(YADEXMLArgumentsLoader argsLoader, Node resultSetCheckCount) throws Exception {
         NodeList nl = resultSetCheckCount.getChildNodes();
         int len = nl.getLength();
         if (len > 0) {
@@ -664,12 +666,12 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "ExpectedResultSetCount":
-                        argsSetter.setIntegerArgumentValue(argsSetter.getClientArgs().getExpectedSizeOfResultSet(), n);
+                        argsLoader.setIntegerArgumentValue(argsLoader.getClientArgs().getExpectedSizeOfResultSet(), n);
                         break;
                     case "RaiseErrorIfResultSetIs":
-                        SOSComparisonOperator comparisonOperator = SOSComparisonOperator.fromString(argsSetter.getValue(n));
+                        SOSComparisonOperator comparisonOperator = SOSComparisonOperator.fromString(argsLoader.getValue(n));
                         if (comparisonOperator != null) {
-                            argsSetter.getClientArgs().getRaiseErrorIfResultSetIs().setValue(comparisonOperator);
+                            argsLoader.getClientArgs().getRaiseErrorIfResultSetIs().setValue(comparisonOperator);
                         }
                         break;
                     }
@@ -678,8 +680,8 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseSourceOptionCheckIntegrityHash(YADEXMLArgumentsSetter argsSetter, Node checkIntegrityHash) throws Exception {
-        argsSetter.getSourceArgs().getCheckIntegrityHash().setValue(Boolean.valueOf(true));
+    private static void parseSourceOptionCheckIntegrityHash(YADEXMLArgumentsLoader argsLoader, Node checkIntegrityHash) throws Exception {
+        argsLoader.getSourceArgs().getCheckIntegrityHash().setValue(Boolean.valueOf(true));
 
         NodeList nl = checkIntegrityHash.getChildNodes();
         int len = nl.getLength();
@@ -689,7 +691,7 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "HashAlgorithm":
-                        argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getIntegrityHashAlgorithm(), n);
+                        argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getIntegrityHashAlgorithm(), n);
                         break;
                     }
                 }
@@ -697,97 +699,97 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseTargetOptions(YADEXMLArgumentsSetter argsSetter, Node targetFileOptions) throws Exception {
+    private static void parseTargetOptions(YADEXMLArgumentsLoader argsLoader, Node targetFileOptions) throws Exception {
         NodeList nl = targetFileOptions.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "AppendFiles":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getTargetArgs().getAppendFiles(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getTargetArgs().getAppendFiles(), n);
                     break;
                 case "Atomicity":
-                    parseTargetOptionAtomicity(argsSetter, n);
+                    parseTargetOptionAtomicity(argsLoader, n);
                     break;
                 case "CheckSize":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getTargetArgs().getCheckSize(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getTargetArgs().getCheckSize(), n);
                     break;
                 case "CumulateFiles":
-                    parseTargetOptionCumulateFiles(argsSetter, n);
+                    parseTargetOptionCumulateFiles(argsLoader, n);
                     break;
                 case "CompressFiles":
-                    parseTargetOptionCompressFiles(argsSetter, n);
+                    parseTargetOptionCompressFiles(argsLoader, n);
                     break;
                 case "CreateIntegrityHashFile":
-                    parseTargetOptionCreateIntegrityHashFile(argsSetter, n);
+                    parseTargetOptionCreateIntegrityHashFile(argsLoader, n);
                     break;
                 case "KeepModificationDate":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getTargetArgs().getKeepModificationDate(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getTargetArgs().getKeepModificationDate(), n);
                     break;
                 case "DisableMakeDirectories":
-                    argsSetter.setOppositeBooleanArgumentValue(argsSetter.getTargetArgs().getCreateDirectories(), n);
+                    argsLoader.setOppositeBooleanArgumentValue(argsLoader.getTargetArgs().getCreateDirectories(), n);
                     break;
                 case "DisableOverwriteFiles":
-                    argsSetter.setOppositeBooleanArgumentValue(argsSetter.getTargetArgs().getOverwriteFiles(), n);
+                    argsLoader.setOppositeBooleanArgumentValue(argsLoader.getTargetArgs().getOverwriteFiles(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseTargetOptionAtomicity(YADEXMLArgumentsSetter argsSetter, Node atomicity) throws Exception {
+    private static void parseTargetOptionAtomicity(YADEXMLArgumentsLoader argsLoader, Node atomicity) throws Exception {
         NodeList nl = atomicity.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "AtomicPrefix":
-                    argsSetter.setStringArgumentValue(argsSetter.getTargetArgs().getAtomicPrefix(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getAtomicPrefix(), n);
                     break;
                 case "AtomicSuffix":
-                    argsSetter.setStringArgumentValue(argsSetter.getTargetArgs().getAtomicSuffix(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getAtomicSuffix(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseTargetOptionCumulateFiles(YADEXMLArgumentsSetter argsSetter, Node cumulateFiles) throws Exception {
+    private static void parseTargetOptionCumulateFiles(YADEXMLArgumentsLoader argsLoader, Node cumulateFiles) throws Exception {
         NodeList nl = cumulateFiles.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CumulativeFileSeparator":
-                    argsSetter.setStringArgumentValue(argsSetter.getTargetArgs().getCumulativeFileSeparator(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getCumulativeFileSeparator(), n);
                     break;
                 case "CumulativeFilename":
-                    argsSetter.setStringArgumentValue(argsSetter.getTargetArgs().getCumulativeFileName(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getCumulativeFileName(), n);
                     break;
                 case "CumulativeFileDelete":
-                    argsSetter.setBooleanArgumentValue(argsSetter.getTargetArgs().getCumulativeFileDelete(), n);
+                    argsLoader.setBooleanArgumentValue(argsLoader.getTargetArgs().getCumulativeFileDelete(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseTargetOptionCompressFiles(YADEXMLArgumentsSetter argsSetter, Node compressFiles) throws Exception {
+    private static void parseTargetOptionCompressFiles(YADEXMLArgumentsLoader argsLoader, Node compressFiles) throws Exception {
         NodeList nl = compressFiles.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CompressedFileExtension":
-                    argsSetter.setStringArgumentValue(argsSetter.getTargetArgs().getCompressedFileExtension(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getCompressedFileExtension(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseTargetOptionCreateIntegrityHashFile(YADEXMLArgumentsSetter argsSetter, Node createIntegrityHashFile) throws Exception {
-        argsSetter.getTargetArgs().getCreateIntegrityHashFile().setValue(Boolean.valueOf(true));
+    private static void parseTargetOptionCreateIntegrityHashFile(YADEXMLArgumentsLoader argsLoader, Node createIntegrityHashFile) throws Exception {
+        argsLoader.getTargetArgs().getCreateIntegrityHashFile().setValue(Boolean.valueOf(true));
 
         NodeList nl = createIntegrityHashFile.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -795,14 +797,14 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "HashAlgorithm":
-                    argsSetter.setStringArgumentValue(argsSetter.getTargetArgs().getIntegrityHashAlgorithm(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getIntegrityHashAlgorithm(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseFragmentRefRename(YADEXMLArgumentsSetter argsSetter, Node rename, YADESourceTargetArguments sourceTargetArgs)
+    private static void parseFragmentRefRename(YADEXMLArgumentsLoader argsLoader, Node rename, YADESourceTargetArguments sourceTargetArgs)
             throws Exception {
         NodeList nl = rename.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -810,17 +812,17 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "ReplaceWhat":
-                    argsSetter.setStringArgumentValue(sourceTargetArgs.getReplacing(), n);
+                    argsLoader.setStringArgumentValue(sourceTargetArgs.getReplacing(), n);
                     break;
                 case "ReplaceWith":
-                    argsSetter.setStringArgumentValue(sourceTargetArgs.getReplacement(), n);
+                    argsLoader.setStringArgumentValue(sourceTargetArgs.getReplacement(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseFragmentRefPreProcessing(YADEXMLArgumentsSetter argsSetter, Node preProcessing,
+    private static void parseFragmentRefPreProcessing(YADEXMLArgumentsLoader argsLoader, Node preProcessing,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
         NodeList nl = preProcessing.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -828,17 +830,21 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CommandBeforeFile":
-                    sourceTargetArgs.getCommands().setCommandsBeforeFile(argsSetter.getValue(n));
+                    String attrVal = SOSXML.getAttributeValue(n, "enable_for_skipped_transfer");
+                    if (!SOSString.isEmpty(attrVal)) {
+                        sourceTargetArgs.getCommands().getCommandsBeforeFileEnableForSkipped().setValue(Boolean.parseBoolean(attrVal));
+                    }
+                    sourceTargetArgs.getCommands().setCommandsBeforeFile(argsLoader.getValue(n));
                     break;
                 case "CommandBeforeOperation":
-                    sourceTargetArgs.getCommands().setCommandsBeforeOperation(argsSetter.getValue(n));
+                    sourceTargetArgs.getCommands().setCommandsBeforeOperation(argsLoader.getValue(n));
                     break;
                 }
             }
         }
     }
 
-    private static void parseFragmentRefPostProcessing(YADEXMLArgumentsSetter argsSetter, Node postProcessing,
+    private static void parseFragmentRefPostProcessing(YADEXMLArgumentsLoader argsLoader, Node postProcessing,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
         NodeList nl = postProcessing.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -846,39 +852,43 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CommandAfterFile":
-                    sourceTargetArgs.getCommands().setCommandsAfterFile(argsSetter.getValue(n));
+                    String attrVal = SOSXML.getAttributeValue(n, "disable_for_skipped_transfer");
+                    if (!SOSString.isEmpty(attrVal)) {
+                        sourceTargetArgs.getCommands().getCommandsAfterFileDisableForSkipped().setValue(Boolean.parseBoolean(attrVal));
+                    }
+                    sourceTargetArgs.getCommands().setCommandsAfterFile(argsLoader.getValue(n));
                     break;
                 case "CommandAfterOperationOnSuccess":
-                    sourceTargetArgs.getCommands().setCommandsAfterOperationOnSuccess(argsSetter.getValue(n));
+                    sourceTargetArgs.getCommands().setCommandsAfterOperationOnSuccess(argsLoader.getValue(n));
                     break;
                 case "CommandAfterOperationOnError":
-                    sourceTargetArgs.getCommands().setCommandsAfterOperationOnError(argsSetter.getValue(n));
+                    sourceTargetArgs.getCommands().setCommandsAfterOperationOnError(argsLoader.getValue(n));
                     break;
                 case "CommandAfterOperationFinal":
-                    sourceTargetArgs.getCommands().setCommandsAfterOperationFinal(argsSetter.getValue(n));
+                    sourceTargetArgs.getCommands().setCommandsAfterOperationFinal(argsLoader.getValue(n));
                     break;
                 case "CommandBeforeRename":
-                    sourceTargetArgs.getCommands().setCommandsBeforeRename(argsSetter.getValue(n));
+                    sourceTargetArgs.getCommands().setCommandsBeforeRename(argsLoader.getValue(n));
                     break;
                 }
             }
         }
     }
 
-    private static void parseTransferOptionsRetryOnConnectionError(YADEXMLArgumentsSetter argsSetter, Node retryOnConnectionError) throws Exception {
+    private static void parseTransferOptionsRetryOnConnectionError(YADEXMLArgumentsLoader argsLoader, Node retryOnConnectionError) throws Exception {
         NodeList nl = retryOnConnectionError.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "RetryCountMax":
-                    argsSetter.setIntegerArgumentValue(argsSetter.getSourceArgs().getConnectionErrorRetryCountMax(), n);
-                    argsSetter.getTargetArgs().getConnectionErrorRetryCountMax().setValue(argsSetter.getSourceArgs().getConnectionErrorRetryCountMax()
+                    argsLoader.setIntegerArgumentValue(argsLoader.getSourceArgs().getConnectionErrorRetryCountMax(), n);
+                    argsLoader.getTargetArgs().getConnectionErrorRetryCountMax().setValue(argsLoader.getSourceArgs().getConnectionErrorRetryCountMax()
                             .getValue());
                     break;
                 case "RetryInterval":
-                    argsSetter.setStringArgumentValue(argsSetter.getSourceArgs().getConnectionErrorRetryInterval(), n);
-                    argsSetter.getTargetArgs().getConnectionErrorRetryInterval().setValue(argsSetter.getSourceArgs().getConnectionErrorRetryInterval()
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getConnectionErrorRetryInterval(), n);
+                    argsLoader.getTargetArgs().getConnectionErrorRetryInterval().setValue(argsLoader.getSourceArgs().getConnectionErrorRetryInterval()
                             .getValue());
                     break;
                 }

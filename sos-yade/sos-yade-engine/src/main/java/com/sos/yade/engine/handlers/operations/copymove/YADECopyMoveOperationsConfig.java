@@ -1,6 +1,5 @@
 package com.sos.yade.engine.handlers.operations.copymove;
 
-import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.ftp.FTPProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
@@ -198,26 +197,24 @@ public class YADECopyMoveOperationsConfig {
         }
 
         private Cumulate initializeCumulate(final YADETargetProviderDelegator targetDelegator, Compress compress, Atomic atomic) {
-            if (targetDelegator.getArgs().getCumulativeFileName().isEmpty() || targetDelegator.getArgs().getCumulativeFileSeparator().isEmpty()) {
+            if (!targetDelegator.getArgs().isCumulateFilesEnabled()) {
                 return null;
             }
             return new Cumulate(targetDelegator, compress, atomic);
         }
 
         private Compress initializeCompress(final YADETargetProviderDelegator targetDelegator) {
-            if (targetDelegator.getArgs().getCompressedFileExtension().isEmpty()) {
+            if (!targetDelegator.getArgs().isCompressFilesEnabled()) {
                 return null;
             }
             return new Compress(targetDelegator.getArgs().getCompressedFileExtension().getValue());
         }
 
         private Atomic initializeAtomic(final YADETargetProviderDelegator targetDelegator) {
-            String prefix = targetDelegator.getArgs().getAtomicPrefix().getValue();
-            String suffix = targetDelegator.getArgs().getAtomicSuffix().getValue();
-            if (!transactional && SOSString.isEmpty(prefix) && SOSString.isEmpty(suffix)) {
+            if (!transactional && !targetDelegator.getArgs().isAtomicityEnabled()) {
                 return null;
             }
-            return new Atomic(prefix, suffix);
+            return new Atomic(targetDelegator.getArgs().getAtomicPrefix().getValue(), targetDelegator.getArgs().getAtomicSuffix().getValue());
         }
 
         public Cumulate getCumulate() {

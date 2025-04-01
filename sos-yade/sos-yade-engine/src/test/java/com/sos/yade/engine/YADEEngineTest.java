@@ -22,7 +22,7 @@ import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
-import com.sos.yade.engine.commons.arguments.parsers.YADEUnitTestArgumentsSetter;
+import com.sos.yade.engine.commons.arguments.loaders.YADEUnitTestArgumentsLoader;
 
 public class YADEEngineTest {
 
@@ -30,13 +30,13 @@ public class YADEEngineTest {
 
     @Ignore
     @Test
-    // TODO parse/set arguments
+    // TODO load arguments
     public void test() {
         YADEEngine yade = new YADEEngine();
         try {
-            YADEUnitTestArgumentsSetter argsSetter = new YADEUnitTestArgumentsSetter(null, null, null, null, null);
+            YADEUnitTestArgumentsLoader argsLoader = new YADEUnitTestArgumentsLoader(null, null, null, null, null);
 
-            yade.execute(new SLF4JLogger(), argsSetter, false);
+            yade.execute(new SLF4JLogger(), argsLoader, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString());
         }
@@ -99,7 +99,7 @@ public class YADEEngineTest {
         LOGGER.info("[END]" + ex);
     }
 
-    public static YADEUnitTestArgumentsSetter createYADEUnitTestArgumentsSetter() throws Exception {
+    public static YADEUnitTestArgumentsLoader createYADEUnitTestArgumentsLoader() throws Exception {
         YADEArguments args = new YADEArguments();
         args.applyDefaultIfNull();
 
@@ -112,7 +112,7 @@ public class YADEEngineTest {
         YADETargetArguments targetArgs = new YADETargetArguments();
         targetArgs.applyDefaultIfNull();
 
-        return new YADEUnitTestArgumentsSetter(args, clientArgs, sourceArgs, targetArgs, null);
+        return new YADEUnitTestArgumentsLoader(args, clientArgs, sourceArgs, targetArgs, null);
     }
 
     public static ProxyArguments createHTTPProxyArguments() throws Exception {
