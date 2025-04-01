@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -101,8 +102,42 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
                     }
                     return bd;
                 });
-            }).collect(Collectors.toMap(PlannedBoard::getName, Function.identity(), (b1, b2) -> b1)));
-            //.collect(Collectors.groupingBy(PlannedBoard::getName)));
+            }).collect(Collectors.groupingBy(PlannedBoard::getName, Collectors.collectingAndThen(Collectors.toList(), b -> b.stream().reduce(
+                    new PlannedBoard(), (pb, nextPb) -> {
+                        pb.setBoardType(nextPb.getBoardType());
+                        pb.setName(nextPb.getName());
+                        if (pb.getPlanId() == null) {
+                            pb.setPlanId(nextPb.getPlanId());
+                        } else if (pb.getPlanId() != null && !pb.getPlanId().equals(nextPb.getPlanId())) {
+                            pb.getPlanId().setNoticeSpaceKey(null);
+                        }
+                        if (pb.getNumOfNotices() == null) {
+                            pb.setNumOfNotices(0);
+                        }
+                        pb.setNumOfNotices(pb.getNumOfNotices() + Optional.ofNullable(nextPb.getNumOfNotices()).orElse(0));
+                        if (pb.getNumOfAnnouncements() == null) {
+                            pb.setNumOfAnnouncements(0);
+                        }
+                        pb.setNumOfAnnouncements(pb.getNumOfAnnouncements() + Optional.ofNullable(nextPb.getNumOfAnnouncements()).orElse(0));
+                        if (pb.getNumOfExpectedNotices() == null) {
+                            pb.setNumOfExpectedNotices(0);
+                        }
+                        pb.setNumOfExpectedNotices(pb.getNumOfExpectedNotices() + Optional.ofNullable(nextPb.getNumOfExpectedNotices()).orElse(0));
+                        if (pb.getNumOfExpectingOrders() == null) {
+                            pb.setNumOfExpectingOrders(0);
+                        }
+                        pb.setNumOfExpectingOrders(pb.getNumOfExpectingOrders() + Optional.ofNullable(nextPb.getNumOfExpectingOrders()).orElse(0));
+                        if (pb.getNumOfPostedNotices() == null) {
+                            pb.setNumOfPostedNotices(0);
+                        }
+                        pb.setNumOfPostedNotices(pb.getNumOfPostedNotices() + Optional.ofNullable(nextPb.getNumOfPostedNotices()).orElse(0));
+                        if (pb.getNotices() == null) {
+                            pb.setNotices(new ArrayList<>());
+                        }
+                        pb.getNotices().addAll(Optional.ofNullable(nextPb.getNotices()).orElse(Collections.emptyList()));
+
+                        return pb;
+                    })))));
             
             entity.setNoticeBoards(pbs);
             
