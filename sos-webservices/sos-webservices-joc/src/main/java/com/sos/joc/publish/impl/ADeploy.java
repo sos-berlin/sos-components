@@ -268,6 +268,12 @@ public abstract class ADeploy extends JOCResourceImpl {
                                 .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
                                 .map(workflow -> workflow.getName()).collect(Collectors.toList())
                         );
+                    orderFilter.getWorkflowPaths().addAll(
+                            renamedOriginalHistoryEntries.stream()
+                            .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
+                            .map(workflow -> workflow.getName()).collect(Collectors.toList())
+                        );
+
                     if(orderFilter.getWorkflowPaths() != null && !orderFilter.getWorkflowPaths().isEmpty()) {
                         try {
                             CompletableFuture<Either<Problem, Void>> cancelOrderResponse =

@@ -22,9 +22,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "presentDueOrderIds",
     "futureDueOrderIds",
-    "numOfAnnouncements",
-    "numOfPostedNotices",
-    "numOfExpectedNotices",
     "numOfExpectingOrders",
     "expectingOrderIds"
 })
@@ -38,30 +35,6 @@ public class WorkflowBoardsV
     @JsonProperty("futureDueOrderIds")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> futureDueOrderIds = null;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfAnnouncements")
-    private Integer numOfAnnouncements;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfPostedNotices")
-    private Integer numOfPostedNotices;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfExpectedNotices")
-    private Integer numOfExpectedNotices;
     /**
      * non negative integer
      * <p>
@@ -84,8 +57,6 @@ public class WorkflowBoardsV
     /**
      * 
      * @param expectNotices
-     * @param numOfExpectedNotices
-     * @param numOfPostedNotices
      * @param postNotices
      * @param consumeNotices
      * @param expectingOrderIds
@@ -95,15 +66,11 @@ public class WorkflowBoardsV
      * @param futureDueOrderIds
      * @param workflowTags
      * @param presentDueOrderIds
-     * @param numOfAnnouncements
      */
-    public WorkflowBoardsV(Set<String> presentDueOrderIds, Set<String> futureDueOrderIds, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, Set<String> expectingOrderIds, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
+    public WorkflowBoardsV(Set<String> presentDueOrderIds, Set<String> futureDueOrderIds, Integer numOfExpectingOrders, Set<String> expectingOrderIds, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
         super(postNotices, expectNotices, consumeNotices, workflowTags, path, versionId);
         this.presentDueOrderIds = presentDueOrderIds;
         this.futureDueOrderIds = futureDueOrderIds;
-        this.numOfAnnouncements = numOfAnnouncements;
-        this.numOfPostedNotices = numOfPostedNotices;
-        this.numOfExpectedNotices = numOfExpectedNotices;
         this.numOfExpectingOrders = numOfExpectingOrders;
         this.expectingOrderIds = expectingOrderIds;
     }
@@ -126,72 +93,6 @@ public class WorkflowBoardsV
     @JsonProperty("futureDueOrderIds")
     public void setFutureDueOrderIds(Set<String> futureDueOrderIds) {
         this.futureDueOrderIds = futureDueOrderIds;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfAnnouncements")
-    public Integer getNumOfAnnouncements() {
-        return numOfAnnouncements;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfAnnouncements")
-    public void setNumOfAnnouncements(Integer numOfAnnouncements) {
-        this.numOfAnnouncements = numOfAnnouncements;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfPostedNotices")
-    public Integer getNumOfPostedNotices() {
-        return numOfPostedNotices;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfPostedNotices")
-    public void setNumOfPostedNotices(Integer numOfPostedNotices) {
-        this.numOfPostedNotices = numOfPostedNotices;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfExpectedNotices")
-    public Integer getNumOfExpectedNotices() {
-        return numOfExpectedNotices;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfExpectedNotices")
-    public void setNumOfExpectedNotices(Integer numOfExpectedNotices) {
-        this.numOfExpectedNotices = numOfExpectedNotices;
     }
 
     /**
@@ -228,12 +129,12 @@ public class WorkflowBoardsV
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("presentDueOrderIds", presentDueOrderIds).append("futureDueOrderIds", futureDueOrderIds).append("numOfAnnouncements", numOfAnnouncements).append("numOfPostedNotices", numOfPostedNotices).append("numOfExpectedNotices", numOfExpectedNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("expectingOrderIds", expectingOrderIds).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("presentDueOrderIds", presentDueOrderIds).append("futureDueOrderIds", futureDueOrderIds).append("numOfExpectingOrders", numOfExpectingOrders).append("expectingOrderIds", expectingOrderIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(numOfExpectedNotices).append(numOfExpectingOrders).append(futureDueOrderIds).append(numOfPostedNotices).append(expectingOrderIds).append(presentDueOrderIds).append(numOfAnnouncements).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(numOfExpectingOrders).append(futureDueOrderIds).append(expectingOrderIds).append(presentDueOrderIds).toHashCode();
     }
 
     @Override
@@ -245,7 +146,7 @@ public class WorkflowBoardsV
             return false;
         }
         WorkflowBoardsV rhs = ((WorkflowBoardsV) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(numOfExpectedNotices, rhs.numOfExpectedNotices).append(numOfExpectingOrders, rhs.numOfExpectingOrders).append(futureDueOrderIds, rhs.futureDueOrderIds).append(numOfPostedNotices, rhs.numOfPostedNotices).append(expectingOrderIds, rhs.expectingOrderIds).append(presentDueOrderIds, rhs.presentDueOrderIds).append(numOfAnnouncements, rhs.numOfAnnouncements).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(numOfExpectingOrders, rhs.numOfExpectingOrders).append(futureDueOrderIds, rhs.futureDueOrderIds).append(expectingOrderIds, rhs.expectingOrderIds).append(presentDueOrderIds, rhs.presentDueOrderIds).isEquals();
     }
 
 }

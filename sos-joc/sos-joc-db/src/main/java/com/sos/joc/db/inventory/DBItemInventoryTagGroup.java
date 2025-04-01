@@ -63,7 +63,7 @@ public class DBItemInventoryTagGroup extends DBItem implements IDBItemTag {
 
     @Transient
     public void setGroupId(Long val) {
-        id = val;
+        //id = val;
     }
 
     public Integer getOrdering() {

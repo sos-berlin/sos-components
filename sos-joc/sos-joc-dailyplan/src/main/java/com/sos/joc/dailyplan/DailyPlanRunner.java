@@ -791,7 +791,7 @@ public class DailyPlanRunner extends TimerTask {
                 ld = ld.minusMonths(1l);
                 String date = ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
                 
-                LOGGER.info(String.format("[%s][unknownPlansAreOpenFrom][%s] %s", startupMode, controllerId, date));
+                LOGGER.info(String.format("[%s][unknownPlansCanBeOpenFrom][%s] %s", startupMode, controllerId, date));
                 PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.DailyPlanPlanSchemaId);
                 JControllerProxy proxy = Proxy.of(controllerId);
                 

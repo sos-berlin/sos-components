@@ -11,18 +11,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.board.PlannedBoard;
 import com.sos.inventory.model.board.BoardType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowRefs;
@@ -58,9 +59,11 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
     // private static final Logger LOGGER = LoggerFactory.getLogger(PlansResourceImpl2.class);
     private static final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
     private JControllerState currentState = null;
+    private Map<String, Set<String>> orderTags = Collections.emptyMap();
 
     @Override
     public JOCDefaultResponse postWorkflowBoards(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
@@ -113,6 +116,12 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             Map<WorkflowPath, List<JOrder>> criticalOrdersPerWorkflow = getCriticalOrdersPerWorkflow(orderIds, wbsMap.keySet());
             Map<WorkflowPath, Set<String>> expectedlOrderIdsPerWorkflow = getExpectingOrdersPerWorkflow(orderIds, wbsMap.keySet());
             
+            if (!criticalOrdersPerWorkflow.isEmpty() || !expectedlOrderIdsPerWorkflow.isEmpty()) {
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                orderTags = OrderTags.getTagsByOrderIds(controllerId, Stream.concat(expectedlOrderIdsPerWorkflow.values().stream().flatMap(Set::stream),
+                        criticalOrdersPerWorkflow.values().stream().flatMap(List::stream).map(JOrder::id).map(OrderId::string)), connection);
+            }
+            
             JRepo jRepo = currentState.repo();
             Predicate<WorkflowBoards> onlySynchronized = w -> jRepo == null ? true : jRepo.pathToCheckedWorkflow(WorkflowPath.of(JocInventory
                     .pathToName(w.getPath()))).isRight();
@@ -124,31 +133,28 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             
             wbsMap.values().stream().filter(w -> canAdd(w.getPath(), permittedFolders)).filter(onlySynchronized).forEach(w -> {
 
-                AtomicInteger numOfAnnouncements = new AtomicInteger(0);
-                AtomicInteger numOfExpectedNotices = new AtomicInteger(0);
-                AtomicInteger numOfPostedNotices = new AtomicInteger(0);
-                //AtomicInteger numOfExpectingOrders = new AtomicInteger(0);
-                if (w.getNoticeBoardNames() != null) {
-                    w.getNoticeBoardNames().stream().map(bName -> pbs.getAdditionalProperties().get(bName)).filter(Objects::nonNull).forEach(
-                            pBoard -> {
-                                if (pBoard.getNumOfAnnouncements() != null) {
-                                    numOfAnnouncements.addAndGet(pBoard.getNumOfAnnouncements());
-                                }
-                                if (pBoard.getNumOfExpectedNotices() != null) {
-                                    numOfExpectedNotices.addAndGet(pBoard.getNumOfExpectedNotices());
-                                }
-                                if (pBoard.getNumOfPostedNotices() != null) {
-                                    numOfPostedNotices.addAndGet(pBoard.getNumOfPostedNotices());
-                                }
-//                                if (pBoard.getNumOfExpectingOrders() != null) {
-//                                    numOfExpectingOrders.addAndGet(pBoard.getNumOfExpectingOrders());
+//                AtomicInteger numOfAnnouncements = new AtomicInteger(0);
+//                AtomicInteger numOfExpectedNotices = new AtomicInteger(0);
+//                AtomicInteger numOfPostedNotices = new AtomicInteger(0);
+//                if (w.getNoticeBoardNames() != null) {
+//                    w.getNoticeBoardNames().stream().map(bName -> pbs.getAdditionalProperties().get(bName)).filter(Objects::nonNull).forEach(
+//                            pBoard -> {
+//                                if (pBoard.getNumOfAnnouncements() != null) {
+//                                    numOfAnnouncements.addAndGet(pBoard.getNumOfAnnouncements());
 //                                }
-                            });
-                    w.setNoticeBoardNames(null);
-                }
-                w.setNumOfAnnouncements(numOfAnnouncements.get());
-                w.setNumOfExpectedNotices(numOfExpectedNotices.get());
-                w.setNumOfPostedNotices(numOfPostedNotices.get());
+//                                if (pBoard.getNumOfExpectedNotices() != null) {
+//                                    numOfExpectedNotices.addAndGet(pBoard.getNumOfExpectedNotices());
+//                                }
+//                                if (pBoard.getNumOfPostedNotices() != null) {
+//                                    numOfPostedNotices.addAndGet(pBoard.getNumOfPostedNotices());
+//                                }
+//                            });
+//                    w.setNoticeBoardNames(null);
+//                }
+                w.setNoticeBoardNames(null);
+//                w.setNumOfAnnouncements(numOfAnnouncements.get());
+//                w.setNumOfExpectedNotices(numOfExpectedNotices.get());
+//                w.setNumOfPostedNotices(numOfPostedNotices.get());
                 w.setExpectingOrderIds(expectedlOrderIdsPerWorkflow.getOrDefault(WorkflowPath.of(JocInventory.pathToName(w.getPath())), Collections
                         .emptySet()));
                 w.setNumOfExpectingOrders(w.getExpectingOrderIds().size());
@@ -190,6 +196,8 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
         }
     }
 
@@ -260,7 +268,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
-                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, null, null, surveyDateMillis, zoneId);
+                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
                 } catch (Exception e) {
                     return null;
                 }
@@ -288,7 +296,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
-                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, null, null, surveyDateMillis, zoneId);
+                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
                 } catch (Exception e) {
                     return null;
                 }

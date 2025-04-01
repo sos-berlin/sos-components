@@ -111,7 +111,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             session = Globals.createSosHibernateStatelessConnection(API_CALL_IDS);
 
             entity.setPlans(currentState.toPlan().entrySet().stream().map(e -> getPlanIds(e.getKey(), e.getValue(), filter)).filter(Objects::nonNull)
-                    .collect(Collectors.toList()));
+                    .peek(plan -> plan.setOrders(null)).collect(Collectors.toList()));
 
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
