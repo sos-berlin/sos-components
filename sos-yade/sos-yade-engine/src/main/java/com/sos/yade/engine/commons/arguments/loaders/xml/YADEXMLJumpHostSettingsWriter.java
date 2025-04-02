@@ -13,11 +13,8 @@ public class YADEXMLJumpHostSettingsWriter {
 
     private static final String SFTPFRAGMENT_NAME = "sftp";
 
-    /** Original: Source -> Jump -> Target(Internet)<br/>
-     * 1) The YADE Client is executed with a "settings.xml" file and transfers files to Jump<br/>
-     * 2) YADE Client Post-Processing command:<br/>
-     * - The Jump YADE client is called with this "jump_settings.xml" file to transfer the files from Jump to the Target */
-    public static String fromJumpToInternet(AYADEArgumentsLoader argsLoader, String profileId, String jumpDataDirectory, boolean transactional) {
+    public static String fromJumpHostToTarget(AYADEArgumentsLoader argsLoader, String profileId, String jumpHostDataDirectory,
+            boolean transactional) {
         YADETargetArguments targetArgs = argsLoader.getTargetArgs();
 
         StringBuilder sb = new StringBuilder();
@@ -29,7 +26,7 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("</Fragments>");
         /** Profile ----------------------------- */
         sb.append("<Profiles>");
-        sb.append(generateProfile(argsLoader.getArgs(), targetArgs, profileId, jumpDataDirectory, transactional));
+        sb.append(generateFromJumpHostProfile(argsLoader.getArgs(), targetArgs, profileId, jumpHostDataDirectory, transactional));
         sb.append("</Profiles>");
         sb.append("</Configurations>");
         return sb.toString();
@@ -165,8 +162,8 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfile(YADEArguments args, YADETargetArguments targetArgs, String profileId, String jumpDataDirectory,
-            boolean transactional) {
+    private static StringBuilder generateFromJumpHostProfile(YADEArguments args, YADETargetArguments targetArgs, String profileId,
+            String jumpDataDirectory, boolean transactional) {
         StringBuilder sb = new StringBuilder();
         sb.append("<Profile profile_id=").append(attrValue(profileId)).append(">");
         sb.append("<Operation>");

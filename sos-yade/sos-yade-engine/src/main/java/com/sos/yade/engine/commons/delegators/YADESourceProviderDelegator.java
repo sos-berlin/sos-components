@@ -9,20 +9,20 @@ import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 /** @apiNote all operations */
 public class YADESourceProviderDelegator extends AYADEProviderDelegator {
 
-    private final static String IDENTIFIER = "Source";
-    public final static String LOG_PREFIX = "[" + IDENTIFIER + "]";
+    public final static String IDENTIFIER = "Source";
 
     private final YADEDirectoryMapper directoryMapper;
 
-    public YADESourceProviderDelegator(IProvider provider, YADESourceArguments args) {
-        super(provider, args);
+    public YADESourceProviderDelegator(IProvider provider, YADESourceArguments args, String label) {
+        super(provider, args, label == null ? IDENTIFIER : label);
 
         // set YADE specific ProviderContext
+        final String providerLogPrefix = getLogPrefix();
         provider.setContext(new AProviderContext() {
 
             @Override
             public String getLogPrefix() {
-                return LOG_PREFIX;
+                return providerLogPrefix;
             }
         });
         directoryMapper = new YADEDirectoryMapper();
@@ -43,13 +43,4 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
         return (YADESourceArguments) super.getArgs();
     }
 
-    @Override
-    public String getIdentifier() {
-        return IDENTIFIER;
-    }
-
-    @Override
-    public String getLogPrefix() {
-        return LOG_PREFIX;
-    }
 }

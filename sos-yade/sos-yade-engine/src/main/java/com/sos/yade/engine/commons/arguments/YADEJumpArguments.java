@@ -21,7 +21,7 @@ public class YADEJumpArguments extends ASOSArguments {
     private SOSArgument<String> yadeClientCommand = new SOSArgument<>("yade_client_command", false);
 
     /** internal usage */
-    private SOSArgument<Boolean> isSource = new SOSArgument<>(null, false);
+    private SOSArgument<Boolean> configuredOnSource = new SOSArgument<>(null, false);
 
     public SSHProviderArguments getProvider() {
         if (provider == null) {
@@ -66,7 +66,11 @@ public class YADEJumpArguments extends ASOSArguments {
         return yadeClientCommand;
     }
 
-    public SOSArgument<Boolean> getIsSource() {
-        return isSource;
+    public SOSArgument<Boolean> getConfiguredOnSource() {
+        return configuredOnSource;
+    }
+
+    public boolean isConfiguredOnSource() {
+        return configuredOnSource.isTrue();
     }
 }

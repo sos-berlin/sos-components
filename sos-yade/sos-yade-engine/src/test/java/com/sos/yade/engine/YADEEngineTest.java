@@ -56,6 +56,7 @@ public class YADEEngineTest {
             // Execute YADE Transfer
             YADEEngine engine = new YADEEngine();
             List<ProviderFile> files = engine.execute(logger, argsLoader, false);
+            LOGGER.info("[files]" + files);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }

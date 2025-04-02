@@ -7,18 +7,18 @@ import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 /** @apiNote COPY/MOVE operations */
 public class YADETargetProviderDelegator extends AYADEProviderDelegator {
 
-    private final static String IDENTIFIER = "Target";
-    public final static String LOG_PREFIX = "[" + IDENTIFIER + "]";
+    public final static String IDENTIFIER = "Target";
 
-    public YADETargetProviderDelegator(IProvider provider, YADETargetArguments args) {
-        super(provider, args);
+    public YADETargetProviderDelegator(IProvider provider, YADETargetArguments args, String label) {
+        super(provider, args, label == null ? IDENTIFIER : label);
 
         // set YADE specific ProviderContext
+        final String providerLogPrefix = getLogPrefix();
         provider.setContext(new AProviderContext() {
 
             @Override
             public String getLogPrefix() {
-                return LOG_PREFIX;
+                return providerLogPrefix;
             }
         });
     }
@@ -26,15 +26,5 @@ public class YADETargetProviderDelegator extends AYADEProviderDelegator {
     @Override
     public YADETargetArguments getArgs() {
         return (YADETargetArguments) super.getArgs();
-    }
-
-    @Override
-    public String getIdentifier() {
-        return IDENTIFIER;
-    }
-
-    @Override
-    public String getLogPrefix() {
-        return LOG_PREFIX;
     }
 }

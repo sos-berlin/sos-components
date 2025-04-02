@@ -1,5 +1,6 @@
 package com.sos.yade.engine.commons.arguments;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.util.arguments.base.ASOSArguments;
@@ -13,40 +14,38 @@ public class YADEProviderCommandArguments extends ASOSArguments {
 
     // -- Operation related ------------------------------
     /** CommandBeforeOperation */
-    // TODO new name: commands_before_operation
-    private SOSArgument<List<String>> commandsBeforeOperation = new SOSArgument<>("pre_transfer_commands", false);
+    // YADE1 name: pre_transfer_commands
+    private SOSArgument<List<String>> commandsBeforeOperation = new SOSArgument<>("commands_before_operation", false);
     /** CommandAfterOperationOnSuccess */
-    // TODO new name: commands_after_operation
-    private SOSArgument<List<String>> commandsAfterOperationOnSuccess = new SOSArgument<>("post_transfer_commands", false);
+    // YADE1 name: post_transfer_commands
+    private SOSArgument<List<String>> commandsAfterOperationOnSuccess = new SOSArgument<>("commands_after_operation_on_success", false);
     /** CommandAfterOperationOnError YADE-406 */
-    // TODO new name: commands_after_operation_on_error
-    private SOSArgument<List<String>> commandsAfterOperationOnError = new SOSArgument<>("post_transfer_commands_on_error", false);
+    // YADE1 name: post_transfer_commands_on_error
+    private SOSArgument<List<String>> commandsAfterOperationOnError = new SOSArgument<>("commands_after_operation_on_error", false);
     /** CommandAfterOperationFinal YADE-406 */
-    // TODO new name: commands_after_operation_final
-    private SOSArgument<List<String>> commandsAfterOperationFinal = new SOSArgument<>("post_transfer_commands_final", false);
+    // YADE1 name: post_transfer_commands_final
+    private SOSArgument<List<String>> commandsAfterOperationFinal = new SOSArgument<>("commands_after_operation_final", false);
 
     // -- File related ------------------------------
     /** CommandBeforeFile include="PostPreProcessing-Variables" */
-    // TODO new name: commands_before_file - YADE 1 support multiple commands but the name is pre_command instead of pre_commands
-    private SOSArgument<List<String>> commandsBeforeFile = new SOSArgument<>("pre_command", false);
+    // YADE1 name: pre_command - YADE 1 support multiple commands but the name is pre_command instead of pre_commands
+    private SOSArgument<List<String>> commandsBeforeFile = new SOSArgument<>("commands_before_file", false);
 
     /** CommandBeforeFile YADE-471 */
-    // TODO new name: ??? command_before_file_enable_for_skipped or
-    // - "command_before_file_for_skipped"
-    private SOSArgument<Boolean> commandsBeforeFileEnableForSkipped = new SOSArgument<>("pre_command_enable_for_skipped_transfer", false, Boolean
-            .valueOf(false));
+    // YADE1 name: pre_command_enable_for_skipped_transfer
+    private SOSArgument<Boolean> commandsBeforeFileEnableForSkipped = new SOSArgument<>("commands_before_file_enable_for_skipped_transfer", false,
+            Boolean.valueOf(false));
 
     /** CommandAfterFile include="PostPreProcessing-Variables" */
-    // TODO new name: command_after_file ??? support multiple commands
-    private SOSArgument<List<String>> commandsAfterFile = new SOSArgument<>("post_command", false);
+    // YADE1 name: post_command
+    private SOSArgument<List<String>> commandsAfterFile = new SOSArgument<>("commands_after_file", false);
     /** CommandAfterFile YADE-471 */
-    // TODO new name: command_after_file_disable_for_skipped (like YADE1) or
-    // - "command_after_file_for_skipped" - !!! opposite meaning than the current implementation...
-    private SOSArgument<Boolean> commandsAfterFileDisableForSkipped = new SOSArgument<>("post_command_disable_for_skipped_transfer", false, Boolean
-            .valueOf(false));
-
+    // YADE1 name: post_command_disable_for_skipped_transfer
+    private SOSArgument<Boolean> commandsAfterFileDisableForSkipped = new SOSArgument<>("commands_after_file_disable_for_skipped_transfer", false,
+            Boolean.valueOf(false));
+    // YADE1 name: tfn_post_command
     // Specifies the commands to be executed for each file on the server after the transfer but before a Rename.
-    private SOSArgument<List<String>> commandsBeforeRename = new SOSArgument<>("tfn_post_command", false);
+    private SOSArgument<List<String>> commandsBeforeRename = new SOSArgument<>("commands_before_rename", false);
 
     public SOSArgument<String> getCommandDelimiter() {
         return commandDelimiter;
@@ -60,8 +59,8 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return getCommandsAsString(commandsBeforeOperation);
     }
 
-    public void setCommandsBeforeOperation(String val) {
-        commandsBeforeOperation.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+    public void setCommandsBeforeOperation(String commands) {
+        commandsBeforeOperation.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
     }
 
     public SOSArgument<List<String>> getCommandsAfterOperationOnSuccess() {
@@ -72,8 +71,15 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return getCommandsAsString(commandsAfterOperationOnSuccess);
     }
 
-    public void setCommandsAfterOperationOnSuccess(String val) {
-        commandsAfterOperationOnSuccess.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+    public void setCommandsAfterOperationOnSuccess(String commands) {
+        commandsAfterOperationOnSuccess.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
+    }
+
+    public void addCommandAfterOperationOnSuccess(String command) {
+        if (commandsAfterOperationOnSuccess.getValue() == null) {
+            commandsAfterOperationOnSuccess.setValue(new ArrayList<>());
+        }
+        commandsAfterOperationOnSuccess.getValue().add(command);
     }
 
     public SOSArgument<List<String>> getCommandsAfterOperationOnError() {
@@ -84,8 +90,8 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return getCommandsAsString(commandsAfterOperationOnError);
     }
 
-    public void setCommandsAfterOperationOnError(String val) {
-        commandsAfterOperationOnError.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+    public void setCommandsAfterOperationOnError(String commands) {
+        commandsAfterOperationOnError.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
     }
 
     public SOSArgument<List<String>> getCommandsAfterOperationFinal() {
@@ -96,8 +102,8 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return getCommandsAsString(commandsAfterOperationFinal);
     }
 
-    public void setCommandsAfterOperationFinal(String val) {
-        commandsAfterOperationFinal.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+    public void setCommandsAfterOperationFinal(String commands) {
+        commandsAfterOperationFinal.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
     }
 
     public SOSArgument<List<String>> getCommandsBeforeFile() {
@@ -108,8 +114,8 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         return getCommandsAsString(commandsBeforeFile);
     }
 
-    public void setCommandsBeforeFile(String val) {
-        commandsBeforeFile.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+    public void setCommandsBeforeFile(String commands) {
+        commandsBeforeFile.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
     }
 
     public SOSArgument<Boolean> getCommandsBeforeFileEnableForSkipped() {

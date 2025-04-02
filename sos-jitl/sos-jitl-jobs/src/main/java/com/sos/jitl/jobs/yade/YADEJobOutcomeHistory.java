@@ -28,7 +28,7 @@ public class YADEJobOutcomeHistory {
 
         result.setSource(getProviderResult(argsLoader.getSourceArgs()));
         result.setTarget(getProviderResult(argsLoader.getTargetArgs()));
-        result.setJump(getJumpResult(argsLoader.getJumpArguments()));
+        result.setJump(getJumpResult(argsLoader.getJumpArgs()));
 
         result.setSettings(getSettings(argsLoader.getArgs().getSettings()));
         result.setProfile(argsLoader.getArgs().getProfile().getValue());

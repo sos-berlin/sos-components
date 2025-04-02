@@ -82,8 +82,8 @@ public class YADEFileActionsExecuter {
             return;
         }
         if (sourceFile.getSize() != targetFile.getSize()) {
-            String msg = String.format("[%s][%s=%s, Bytes=%s][%s=%s, Bytes=%s]", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
-                    sourceFile.getSize(), targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize());
+            String msg = String.format("[%s][%s=%s, Bytes=%s][%s=%s, Bytes=%s]", logPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
+                    sourceFile.getSize(), targetDelegator.getLabel(), targetFile.getFullPath(), targetFile.getSize());
 
             targetDelegator.getProvider().deleteIfExists(targetFile.getFullPath());
             targetFile.setState(TransferEntryState.ROLLED_BACK);

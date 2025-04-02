@@ -36,7 +36,7 @@ public class YADEXMLJumpHostSettingsWriterTest {
             LOGGER.info(YADEArgumentsHelper.toString(logger, "[SOURCE]", argsLoader.getSourceArgs()));
             LOGGER.info(YADEArgumentsHelper.toString(logger, "[TARGET]", argsLoader.getTargetArgs()));
 
-            LOGGER.info(YADEXMLJumpHostSettingsWriter.fromJumpToInternet(argsLoader, "jump_dir", "my_profile", false));
+            LOGGER.info(YADEXMLJumpHostSettingsWriter.fromJumpHostToTarget(argsLoader, "jump_dir", "my_profile", false));
 
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);

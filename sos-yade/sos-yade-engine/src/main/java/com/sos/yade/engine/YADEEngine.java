@@ -2,13 +2,11 @@ package com.sos.yade.engine;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.yade.engine.addons.IYADEEngineExecutionAddon;
-import com.sos.yade.engine.addons.jump.YADEEngineJumpHostAddon;
+import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.delegators.YADEProviderDelegatorFactory;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -74,16 +72,14 @@ public class YADEEngine {
 
     private AtomicBoolean cancel = new AtomicBoolean(false);
 
-    /** a JumpHost add-on when Jump configuration is enabled */
-    private Optional<IYADEEngineExecutionAddon> addon = Optional.empty();
-
     public YADEEngine() {
     }
 
     public List<ProviderFile> execute(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) throws YADEEngineException {
 
-        final YADESourceProviderDelegator sourceDelegator;
-        final YADETargetProviderDelegator targetDelegator;
+        YADESourceProviderDelegator sourceDelegator;
+        YADETargetProviderDelegator targetDelegator;
+        YADEEngineJumpHostAddon jumpHostAddon;
         try {
 
             /** 1) Write transfer configuration */
@@ -96,11 +92,16 @@ public class YADEEngine {
             YADEClientHelper.setSystemPropertiesFromFiles(logger, argsLoader.getClientArgs());
 
             /** 4) Initialize and invoke a JumpHost add-on when Jump configuration is enabled */
-            invokeAddonIfPresentOnBeforeDelegatorInitialized(logger, argsLoader);
+            jumpHostAddon = YADEEngineJumpHostAddon.initialize(logger, argsLoader);
+            if (jumpHostAddon != null) {
+                jumpHostAddon.onBeforeDelegatorInitialized();
+            }
 
             /** 5) Source/Target: create provider delegator */
-            sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, argsLoader.getArgs(), argsLoader.getSourceArgs());
-            targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());
+            sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, argsLoader.getArgs(), argsLoader.getSourceArgs(),
+                    jumpHostAddon);
+            targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsLoader.getArgs(), argsLoader.getTargetArgs(),
+                    jumpHostAddon);
         } catch (YADEEngineInitializationException e) {
             throw e;
         } catch (Throwable e) {
@@ -119,7 +120,9 @@ public class YADEEngine {
                 YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
 
                 /** 7) Invoke a JumpHost add-on when Jump configuration is enabled */
-                addon.ifPresent(a -> a.onAfterSourceDelegatorConnected(sourceDelegator));
+                if (jumpHostAddon != null) {
+                    jumpHostAddon.onAfterSourceDelegatorConnected(sourceDelegator);
+                }
 
                 /** 8) Source: execute commands before operation */
                 YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator);
@@ -138,7 +141,9 @@ public class YADEEngine {
                     YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
                     /** 13) Invoke a JumpHost add-on when Jump configuration is enabled */
-                    addon.ifPresent(a -> a.onAfterTargetDelegatorConnected(targetDelegator));
+                    if (jumpHostAddon != null) {
+                        jumpHostAddon.onAfterTargetDelegatorConnected(targetDelegator);
+                    }
 
                     /** 14) Target: execute commands before operation */
                     YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
@@ -155,7 +160,7 @@ public class YADEEngine {
                 exception = e;
             } finally {
                 /** 14) Finalize */
-                onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, files, exception, true);
+                onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, jumpHostAddon, files, exception, true);
             }
         } else {
             YADESourceFilesPolling sourcePolling = new YADESourceFilesPolling(sourceDelegator);
@@ -171,8 +176,8 @@ public class YADEEngine {
                     sourcePolling.ensureConnected(logger, sourceDelegator);
 
                     /** 7) Invoke a JumpHost add-on when Jump configuration is enabled */
-                    if (!addonExecutedAfterSourceDelegatorConnected) {
-                        addon.ifPresent(a -> a.onAfterSourceDelegatorConnected(sourceDelegator));
+                    if (jumpHostAddon != null && !addonExecutedAfterSourceDelegatorConnected) {
+                        jumpHostAddon.onAfterSourceDelegatorConnected(sourceDelegator);
                         addonExecutedAfterSourceDelegatorConnected = true;
                     }
 
@@ -193,8 +198,8 @@ public class YADEEngine {
                         YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
                         /** 13) Invoke a JumpHost add-on when Jump configuration is enabled */
-                        if (!addonExecutedAfterTargetDelegatorConnected) {
-                            addon.ifPresent(a -> a.onAfterTargetDelegatorConnected(targetDelegator));
+                        if (jumpHostAddon != null && !addonExecutedAfterTargetDelegatorConnected) {
+                            jumpHostAddon.onAfterTargetDelegatorConnected(targetDelegator);
                             addonExecutedAfterTargetDelegatorConnected = true;
                         }
 
@@ -214,7 +219,8 @@ public class YADEEngine {
                 } finally {
                     /** 17) Finalize */
                     boolean startNextPollingCycle = sourcePolling.startNextPollingCycle(logger);
-                    onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, files, exception, !startNextPollingCycle);
+                    onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, jumpHostAddon, files, exception,
+                            !startNextPollingCycle);
                     if (!startNextPollingCycle) {
                         break pl;
                     }
@@ -222,11 +228,6 @@ public class YADEEngine {
             }
         }
         return files;
-    }
-
-    private void invokeAddonIfPresentOnBeforeDelegatorInitialized(ISOSLogger logger, AYADEArgumentsLoader argsLoader) {
-        this.addon = Optional.ofNullable(YADEEngineJumpHostAddon.initialize(logger, argsLoader));
-        addon.ifPresent(a -> a.onBeforeDelegatorInitialized(logger, argsLoader));
     }
 
     private void onError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
@@ -239,15 +240,17 @@ public class YADEEngine {
     }
 
     private void onFinally(ISOSLogger logger, AYADEArgumentsLoader argsLoader, Duration operationDuration,
-            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, List<ProviderFile> files, Throwable exception,
-            boolean disconnectSource) throws YADEEngineException {
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEEngineJumpHostAddon jumpHostAddon,
+            List<ProviderFile> files, Throwable exception, boolean disconnectSource) throws YADEEngineException {
         /** Source/Target: execute commands after operation final */
         YADECommandResult r = YADECommandExecutor.executeAfterOperationFinal(logger, sourceDelegator, targetDelegator, exception);
         // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
         r.logIfErrorOnErrorLevel(logger);
         // r.logIfErrorOnInfoLevel(logger);
 
-        addon.ifPresent(a -> a.onBeforeDelegatorDisconnected(sourceDelegator, disconnectSource, targetDelegator));
+        if (jumpHostAddon != null) {
+            jumpHostAddon.onBeforeDelegatorDisconnected(sourceDelegator, targetDelegator, disconnectSource);
+        }
 
         if (disconnectSource) {
             YADEProviderDelegatorHelper.disconnect(sourceDelegator);

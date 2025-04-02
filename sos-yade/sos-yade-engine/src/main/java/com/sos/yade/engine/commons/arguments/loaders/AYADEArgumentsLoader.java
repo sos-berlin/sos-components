@@ -55,7 +55,11 @@ public abstract class AYADEArgumentsLoader {
         return targetArgs;
     }
 
-    public YADEJumpArguments getJumpArguments() {
+    public void setTargetArgs(YADETargetArguments val) {
+        targetArgs = val;
+    }
+
+    public YADEJumpArguments getJumpArgs() {
         return jumpArgs;
     }
 

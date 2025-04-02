@@ -77,5 +77,8 @@ public class YADESourceTargetArguments extends ASOSArguments {
     public SOSArgument<String> getIntegrityHashAlgorithm() {
         return integrityHashAlgorithm;
     }
+    
+    
+    
 
 }

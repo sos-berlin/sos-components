@@ -10,14 +10,19 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final IProvider provider;
     private final YADESourceTargetArguments args;
 
+    private final String label;
+    private final String logPrefix;
+
     private final String directory;
     private final String directoryWithTrailingPathSeparator;
 
     private final boolean isHTTP;
 
-    public AYADEProviderDelegator(IProvider provider, YADESourceTargetArguments args) {
+    public AYADEProviderDelegator(IProvider provider, YADESourceTargetArguments args, String label) {
         this.provider = provider;
         this.args = args;
+        this.label = label;
+        this.logPrefix = "[" + label + "]";
         this.isHTTP = isHTTPProvider();
         this.directory = getDirectoryPath(args.getDirectory().getValue());
         this.directoryWithTrailingPathSeparator = getDirectoryPathWithTrailingPathSeparator(directory);
@@ -33,6 +38,18 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     @Override
     public YADESourceTargetArguments getArgs() {
         return args;
+    }
+
+    /** Overrides {@link IYADEProviderDelegator#getLabel()} */
+    @Override
+    public String getLabel() {
+        return label;
+    }
+
+    /** Overrides {@link IYADEProviderDelegator#getLogPrefix()} */
+    @Override
+    public String getLogPrefix() {
+        return logPrefix;
     }
 
     /** Overrides {@link IYADEProviderDelegator#getDirectory()} */

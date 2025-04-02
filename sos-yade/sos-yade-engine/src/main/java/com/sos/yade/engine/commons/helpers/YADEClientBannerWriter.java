@@ -13,7 +13,7 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
-import com.sos.yade.engine.addons.jump.YADEEngineJumpHostAddon;
+import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -29,8 +29,8 @@ public class YADEClientBannerWriter {
 
     private static final String SEPARATOR_LINE = "**************************************************************";
 
-    private static final String LOG_PREFIX_TRANSFER_ARGUMENS = "[Transfer]";
-    private static final String LOG_PREFIX_CLIENT_ARGUMENS = "[Client]";
+    private static final String IDENTIFIER_TRANSFER_ARGUMENS = "Transfer";
+    private static final String IDENTIFIER_CLIENT_ARGUMENS = "Client";
 
     // TODO use String.format
     public static void writeHeader(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) {
@@ -43,14 +43,15 @@ public class YADEClientBannerWriter {
         writeTransferHeader(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());
         writeClientHeader(logger, argsLoader.getClientArgs());
         writeSourceHeader(logger, argsLoader.getSourceArgs());
-        writeJumpHeader(logger, argsLoader.getJumpArguments());
+        writeJumpHeader(logger, argsLoader.getJumpArgs());
         writeTargetHeader(logger, argsLoader.getTargetArgs());
 
         logger.info(SEPARATOR_LINE);
     }
 
     private static void writeTransferHeader(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs) {
-        StringBuilder sb = new StringBuilder(LOG_PREFIX_TRANSFER_ARGUMENS);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(IDENTIFIER_TRANSFER_ARGUMENS).append("]");
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
         if (targetArgs != null) {
             sb.append(",").append(YADEArgumentsHelper.toString(args.getTransactional()));
@@ -66,7 +67,7 @@ public class YADEClientBannerWriter {
         }
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, LOG_PREFIX_TRANSFER_ARGUMENS, args));
+            logger.debug(YADEArgumentsHelper.toString(logger, IDENTIFIER_TRANSFER_ARGUMENS, args));
         }
     }
 
@@ -98,15 +99,16 @@ public class YADEClientBannerWriter {
         }
 
         if (l.size() > 0) {
-            logger.info(LOG_PREFIX_CLIENT_ARGUMENS + String.join(",", l));
+            logger.info("[" + IDENTIFIER_CLIENT_ARGUMENS + "]" + String.join(",", l));
         }
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, LOG_PREFIX_CLIENT_ARGUMENS, clientArgs));
+            logger.debug(YADEArgumentsHelper.toString(logger, IDENTIFIER_CLIENT_ARGUMENS, clientArgs));
         }
     }
 
     private static void writeSourceHeader(ISOSLogger logger, YADESourceArguments sourceArgs) {
-        StringBuilder sb = new StringBuilder(YADESourceProviderDelegator.LOG_PREFIX);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(YADESourceProviderDelegator.IDENTIFIER).append("]");
         sb.append(YADEArgumentsHelper.toString(sourceArgs.getProvider().getProtocol()));
         sb.append(",source_dir=").append(sourceArgs.getDirectory().getDisplayValue());
 
@@ -178,8 +180,8 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceProviderDelegator.LOG_PREFIX, sourceArgs));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceProviderDelegator.LOG_PREFIX, sourceArgs.getProvider()));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceProviderDelegator.IDENTIFIER, sourceArgs));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceProviderDelegator.IDENTIFIER, sourceArgs.getProvider()));
         }
     }
 
@@ -188,15 +190,16 @@ public class YADEClientBannerWriter {
             return;
         }
 
-        StringBuilder sb = new StringBuilder(YADEEngineJumpHostAddon.LOG_PREFIX);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(YADEEngineJumpHostAddon.IDENTIFIER).append("]");
         sb.append(YADEArgumentsHelper.toString(jumpArgs.getProvider().getProtocol()));
         sb.append(",").append(SSHProvider.getAccessInfo(jumpArgs.getProvider()));
         sb.append(",command=").append(jumpArgs.getYADEClientCommand().getDisplayValue());
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, YADEEngineJumpHostAddon.LOG_PREFIX, jumpArgs));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADEEngineJumpHostAddon.LOG_PREFIX, jumpArgs.getProvider()));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADEEngineJumpHostAddon.IDENTIFIER, jumpArgs));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADEEngineJumpHostAddon.IDENTIFIER, jumpArgs.getProvider()));
         }
     }
 
@@ -205,7 +208,8 @@ public class YADEClientBannerWriter {
             return;
         }
 
-        StringBuilder sb = new StringBuilder(YADETargetProviderDelegator.LOG_PREFIX);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(YADETargetProviderDelegator.IDENTIFIER).append("]");
         sb.append(YADEArgumentsHelper.toString(targetArgs.getProvider().getProtocol()));
         sb.append(",target_dir=").append(targetArgs.getDirectory().getDisplayValue());
         sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCreateDirectories()));
@@ -238,8 +242,8 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetProviderDelegator.LOG_PREFIX, targetArgs));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetProviderDelegator.LOG_PREFIX, targetArgs.getProvider()));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetProviderDelegator.IDENTIFIER, targetArgs));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetProviderDelegator.IDENTIFIER, targetArgs.getProvider()));
         }
     }
 

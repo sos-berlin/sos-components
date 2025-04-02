@@ -75,7 +75,7 @@ public class YADEFileHandler {
                     if (targetDelegator.getProvider().exists(targetFile.getFinalFullPath())) {
                         targetFile.setState(TransferEntryState.NOT_OVERWRITTEN);
 
-                        logger.info("[%s][skipped][DisableOverwriteFiles=true]%s=%s", logPrefix, targetDelegator.getIdentifier(), targetFile
+                        logger.info("[%s][skipped][DisableOverwriteFiles=true]%s=%s", logPrefix, targetDelegator.getLabel(), targetFile
                                 .getFinalFullPath());
 
                         YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, targetFile);
@@ -90,12 +90,12 @@ public class YADEFileHandler {
             targetFile.setState(TransferEntryState.TRANSFERRING);
             // TODO config.getParallelMaxThreads() == 1 - make it sense if parallel because of random order?
             if (config.getParallelism() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
-                logger.info("[%s][%s][%s,bytes=%s][%s][%s]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), sourceFile
-                        .getSize(), targetDelegator.getIdentifier(), targetFile.getFullPath());
+                logger.info("[%s][%s][%s,bytes=%s][%s][%s]start...", logPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(), sourceFile
+                        .getSize(), targetDelegator.getLabel(), targetFile.getFullPath());
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[%s][%s][%s,bytes=%s][%s][%s]start...", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
-                            sourceFile.getSize(), targetDelegator.getIdentifier(), targetFile.getFullPath());
+                    logger.debug("[%s][%s][%s,bytes=%s][%s][%s]start...", logPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(), sourceFile
+                            .getSize(), targetDelegator.getLabel(), targetFile.getFullPath());
                 }
             }
 
@@ -181,8 +181,8 @@ public class YADEFileHandler {
             }
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
-            logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(),
-                    targetDelegator.getIdentifier(), targetFile.getFullPath(), targetFile.getSize(), SOSDate.getDuration(startTime, Instant.now()));
+            logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", logPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
+                    targetDelegator.getLabel(), targetFile.getFullPath(), targetFile.getSize(), SOSDate.getDuration(startTime, Instant.now()));
 
             YADEFileActionsExecuter.checkTargetFileSize(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile);
             YADEChecksumFileHelper.checkSourceIntegrityHash(logger, logPrefix, config, sourceDelegator, sourceFile, targetDelegator, targetFile,
@@ -297,7 +297,7 @@ public class YADEFileHandler {
         if (throwException) {
             throwException(logPrefix, targetFile, e, throwExceptionAdd);
         } else {
-            String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), targetDelegator
+            String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator
                     .getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
             logger.warn(msg);
         }
@@ -305,7 +305,7 @@ public class YADEFileHandler {
 
     private void throwException(String logPrefix, YADETargetProviderFile targetFile, Throwable e, String throwExceptionAdd)
             throws YADEEngineTransferFileException {
-        String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getIdentifier(), sourceFile.getFullPath(), targetDelegator
+        String msg = String.format("[%s][%s=%s]%s[%s]%s", logPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator
                 .getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
         logger.error(msg);
         throw new YADEEngineTransferFileException(msg, e);
