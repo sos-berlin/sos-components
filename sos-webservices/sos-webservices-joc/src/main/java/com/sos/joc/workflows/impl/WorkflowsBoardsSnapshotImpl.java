@@ -106,6 +106,8 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
                     new PlannedBoard(), (pb, nextPb) -> {
                         pb.setBoardType(nextPb.getBoardType());
                         pb.setName(nextPb.getName());
+                        pb.setTYPE(null);
+                        pb.setVersion(null);
                         if (pb.getPlanId() == null) {
                             pb.setPlanId(nextPb.getPlanId());
                         } else if (pb.getPlanId() != null && !pb.getPlanId().equals(nextPb.getPlanId())) {
