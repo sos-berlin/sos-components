@@ -220,7 +220,7 @@ public abstract class ADeploy extends JOCResourceImpl {
             if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                 // filter regarding folder permissions
                 List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                        .filter(draft -> canAdd(draft.getPath(), permittedFolders))
+                        .filter(draft -> canAdd(draft.getPath(), permittedFolders)).map(dbItem -> cloneToNew(dbItem))
                         .peek(item -> {
                             try {
                                 item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(controllerId, item.getPath(), item
@@ -423,4 +423,26 @@ public abstract class ADeploy extends JOCResourceImpl {
         }
     }
     
+    private static DBItemDeploymentHistory cloneToNew(DBItemDeploymentHistory oldItem) {
+        DBItemDeploymentHistory newItem = new DBItemDeploymentHistory();
+        newItem.setAccount(oldItem.getAccount());
+        newItem.setAuditlogId(oldItem.getAuditlogId());
+        newItem.setCommitId(oldItem.getCommitId());
+        newItem.setContent(oldItem.getContent());
+        newItem.setControllerId(oldItem.getControllerId());
+        newItem.setControllerInstanceId(oldItem.getControllerInstanceId());
+        newItem.setDeploymentDate(oldItem.getDeploymentDate());
+        newItem.setFolder(oldItem.getFolder());
+        newItem.setInvContent(oldItem.getInvContent());
+        newItem.setInventoryConfigurationId(oldItem.getInventoryConfigurationId());
+        newItem.setName(oldItem.getName());
+        newItem.setOperation(oldItem.getOperation());
+        newItem.setPath(oldItem.getPath());
+        newItem.setSignedContent(oldItem.getSignedContent());
+        newItem.setState(oldItem.getState());
+        newItem.setTitle(oldItem.getTitle());
+        newItem.setType(oldItem.getType());
+        newItem.setVersion(oldItem.getVersion());
+        return newItem;
+    }
 }
