@@ -1,8 +1,10 @@
 package com.sos.yade.engine;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -15,14 +17,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.YADEUnitTestArgumentsLoader;
+import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLArgumentsLoader;
 
 public class YADEEngineTest {
 
@@ -30,15 +36,28 @@ public class YADEEngineTest {
 
     @Ignore
     @Test
-    // TODO load arguments
     public void test() {
-        YADEEngine yade = new YADEEngine();
+        Path settings = Path.of("xyz");
+        String profile = "xyz";
+        Map<String, String> map = System.getenv();
+        boolean settingsReplacerCaseSensitive = true;
+        boolean settingsReplacerKeepUnresolved = true;
+        int parallelism = 1;
         try {
-            YADEUnitTestArgumentsLoader argsLoader = new YADEUnitTestArgumentsLoader(null, null, null, null, null);
+            ISOSLogger logger = new SLF4JLogger();
 
-            yade.execute(new SLF4JLogger(), argsLoader, false);
+            // Load Arguments from Settings XML
+            AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
+                    settingsReplacerKeepUnresolved);
+
+            // Set YADE parallelism from the Job Argument
+            argsLoader.getArgs().getParallelism().setValue(parallelism);
+
+            // Execute YADE Transfer
+            YADEEngine engine = new YADEEngine();
+            List<ProviderFile> files = engine.execute(logger, argsLoader, false);
         } catch (Throwable e) {
-            LOGGER.error(e.toString());
+            LOGGER.error(e.toString(), e);
         }
     }
 

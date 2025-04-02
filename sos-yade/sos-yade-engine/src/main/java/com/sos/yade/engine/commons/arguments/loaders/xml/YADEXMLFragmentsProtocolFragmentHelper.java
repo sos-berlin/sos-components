@@ -465,6 +465,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
     protected static void parseSFTPSSHAuthentication(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node sshAuthentication) {
         NodeList nl = sshAuthentication.getChildNodes();
+
+        SSHAuthMethod authMethod = null;
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
@@ -474,12 +476,15 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "AuthenticationMethodPassword":
                     parseSFTPSSHAuthenticationMethodPassword(argsLoader, args, n);
+                    authMethod = SSHAuthMethod.PASSWORD;
                     break;
                 case "AuthenticationMethodPublickey":
                     parseSFTPSSHAuthenticationMethodPublickey(argsLoader, args, n);
+                    authMethod = SSHAuthMethod.PUBLICKEY;
                     break;
                 case "AuthenticationMethodKeyboardInteractive":
                     // ignore - not argsLoaderemented yet
+                    authMethod = SSHAuthMethod.KEYBOARD_INTERACTIVE;
                     break;
                 case "PreferredAuthentications":
                     args.getPreferredAuthentications().setValue(SSHAuthMethod.fromString(argsLoader.getValue(n)));
@@ -490,6 +495,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 }
             }
         }
+        args.getAuthMethod().setValue(authMethod);
     }
 
     private static void parseSFTPSSHAuthenticationMethodPassword(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node methodPassword) {
