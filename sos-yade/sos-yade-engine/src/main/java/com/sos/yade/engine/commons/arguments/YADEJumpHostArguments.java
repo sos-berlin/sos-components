@@ -5,7 +5,9 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
-public class YADEJumpArguments extends ASOSArguments {
+public class YADEJumpHostArguments extends ASOSArguments {
+
+    public static final String LABEL = "Jump";
 
     public enum JumpPlatform {
         UNIX, WINDOWS

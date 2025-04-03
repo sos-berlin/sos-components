@@ -9,6 +9,7 @@ import com.sos.commons.util.arguments.base.SOSArgument;
 
 public class YADEClientArguments extends ASOSArguments {
 
+    public final static String LABEL = "Client";
     /** - Result ------- */
     // YADE 1 - alias - create_result_list - declared but not used
     // private SOSArgument<Boolean> createResultSet = new SOSArgument<>("create_result_set", false, Boolean.valueOf(false));

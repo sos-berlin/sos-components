@@ -2032,7 +2032,7 @@ public class HistoryModel {
 
         StringBuilder result = new StringBuilder();
         result.append(prefix).append("Log file ");
-        result.append("(uncompressed size=").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(") ");
+        result.append("(uncompressed size=").append(SOSShell.formatBytes(fileSizeUncomressed)).append(") ");
         result.append("will be moved because exception:").append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
         result.append(SOSClassUtil.getStackTrace(t));
         result.append(JocClusterUtil.HISTORY_LOG_NEW_LINE);

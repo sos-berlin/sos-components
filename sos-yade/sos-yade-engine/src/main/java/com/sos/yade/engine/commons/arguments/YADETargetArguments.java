@@ -5,6 +5,8 @@ import com.sos.commons.util.arguments.base.SOSArgument;
 /** COPY/MOVE operations arguments */
 public class YADETargetArguments extends YADESourceTargetArguments {
 
+    public final static String LABEL = "Target";
+
     /** Create missing directories on the Target */
     private SOSArgument<Boolean> createDirectories = new SOSArgument<>("make_dirs", false, Boolean.valueOf(true));
 
@@ -39,6 +41,10 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments<br/>
      * Argument name is based on XML schema definition */
     private SOSArgument<Boolean> createIntegrityHashFile = new SOSArgument<>("create_security_hash_file", false, Boolean.valueOf(false));
+
+    public YADETargetArguments() {
+        getLabel().setValue(LABEL);
+    }
 
     public SOSArgument<Boolean> getCreateDirectories() {
         return createDirectories;

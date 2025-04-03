@@ -26,6 +26,9 @@ public class YADESourceTargetArguments extends ASOSArguments {
      * Argument name is based on XML schema definition */
     private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("security_hash_type", false, "md5");
 
+    /** Internal Argument - Source/Target/Jump */
+    private SOSArgument<String> label = new SOSArgument<>(null, false);
+
     public boolean isRetryOnConnectionErrorEnabled() {
         return connectionErrorRetryCountMax.getValue() != null && connectionErrorRetryCountMax.getValue().intValue() > 0;
     }
@@ -77,8 +80,9 @@ public class YADESourceTargetArguments extends ASOSArguments {
     public SOSArgument<String> getIntegrityHashAlgorithm() {
         return integrityHashAlgorithm;
     }
-    
-    
-    
+
+    public SOSArgument<String> getLabel() {
+        return label;
+    }
 
 }

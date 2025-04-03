@@ -35,7 +35,8 @@ public class YADEXMLJumpHostSettingsWriter {
     private static String generateFragments(SSHProviderArguments providerArgs) {
         StringBuilder sb = new StringBuilder();
         /** SFTP Protocol Fragment ----------------------------- */
-        sb.append("<ProtocolFragments><SFTPFragment name=").append(attrValue(SFTPFRAGMENT_NAME)).append(">");
+        sb.append("<ProtocolFragments>");
+        sb.append("<SFTPFragment name=").append(attrValue(SFTPFRAGMENT_NAME)).append(" label=").append(attrValue(SFTPFRAGMENT_NAME)).append(">");
         sb.append(generateFragmentsSFTPFragmentBasicConnection(providerArgs.getHost(), providerArgs.getPort()));
         // SSHAuthentication
         sb.append("<SSHAuthentication>");

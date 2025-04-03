@@ -44,7 +44,7 @@ public class JocClusterUtil {
     public static int mb2bytes(int mb) {
         return mb * 1_024 * 1_024;
     }
-    
+
     /** An variable is referenced as "${VAR}" */
     public static String resolveVars(String cmd) {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor();
@@ -65,7 +65,7 @@ public class JocClusterUtil {
             banner.append("MAXIMUM SIZE OF ").append(exceededMBSize).append(" MB ");
             banner.append("AND IS TRUNCATED TO 100 KB.");
         } else {
-            banner.append("LOG OUTPUT ").append(SOSShell.byteCountToDisplaySize(fileSizeUncomressed)).append(" EXCEEDS ");
+            banner.append("LOG OUTPUT ").append(SOSShell.formatBytes(fileSizeUncomressed)).append(" EXCEEDS ");
             banner.append("APPLICABLE SIZE OF ").append(exceededMBSize).append(" MB ");
             banner.append("AND IS TRUNCATED TO THE FIRST AND LAST 100 KB.");
 

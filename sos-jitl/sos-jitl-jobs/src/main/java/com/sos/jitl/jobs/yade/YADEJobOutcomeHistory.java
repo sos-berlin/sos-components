@@ -17,7 +17,7 @@ import com.sos.yade.commons.result.YadeTransferResultEntry;
 import com.sos.yade.commons.result.YadeTransferResultProtocol;
 import com.sos.yade.commons.result.YadeTransferResultSerializer;
 import com.sos.yade.engine.commons.YADEProviderFile;
-import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
+import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 
@@ -28,7 +28,7 @@ public class YADEJobOutcomeHistory {
 
         result.setSource(getProviderResult(argsLoader.getSourceArgs()));
         result.setTarget(getProviderResult(argsLoader.getTargetArgs()));
-        result.setJump(getJumpResult(argsLoader.getJumpArgs()));
+        result.setJump(getJumpResult(argsLoader.getJumpHostArgs()));
 
         result.setSettings(getSettings(argsLoader.getArgs().getSettings()));
         result.setProfile(argsLoader.getArgs().getProfile().getValue());
@@ -58,7 +58,7 @@ public class YADEJobOutcomeHistory {
         return result;
     }
 
-    private static YadeTransferResultProtocol getJumpResult(YADEJumpArguments args) {
+    private static YadeTransferResultProtocol getJumpResult(YADEJumpHostArguments args) {
         if (args == null || args.getProvider() == null) {
             return null;
         }

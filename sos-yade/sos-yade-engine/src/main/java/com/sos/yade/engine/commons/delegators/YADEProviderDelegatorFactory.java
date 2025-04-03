@@ -20,7 +20,6 @@ import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
-import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
@@ -30,28 +29,27 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 public class YADEProviderDelegatorFactory {
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADESourceProviderDelegator createSourceDelegator(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs,
-            YADEEngineJumpHostAddon jumpHostAddon) throws YADEEngineInitializationException {
-        String label = jumpHostAddon == null ? null : jumpHostAddon.getNewLabelForSourceDelegator();
-        return new YADESourceProviderDelegator(initializeProvider(logger, args, sourceArgs.getProvider(), false), sourceArgs, label);
+    public static YADESourceProviderDelegator createSourceDelegator(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs)
+            throws YADEEngineInitializationException {
+        return new YADESourceProviderDelegator(initializeProvider(logger, args, sourceArgs.getProvider(), sourceArgs.getLabel().getValue(), false),
+                sourceArgs);
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
-    public static YADETargetProviderDelegator createTargetDelegator(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs,
-            YADEEngineJumpHostAddon jumpHostAddon) throws YADEEngineInitializationException {
+    public static YADETargetProviderDelegator createTargetDelegator(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs)
+            throws YADEEngineInitializationException {
         if (!YADEArgumentsHelper.needTargetProvider(args)) {
             return null;
         }
-        String label = jumpHostAddon == null ? null : jumpHostAddon.getNewLabelForTargetDelegator();
-        return new YADETargetProviderDelegator(initializeProvider(logger, args, targetArgs.getProvider(), true), targetArgs, label);
+        return new YADETargetProviderDelegator(initializeProvider(logger, args, targetArgs.getProvider(), targetArgs.getLabel().getValue(), true),
+                targetArgs);
     }
 
-    private static IProvider initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, boolean isTarget)
-            throws YADEEngineInitializationException {
+    private static IProvider initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, String delegatorLabel,
+            boolean isTarget) throws YADEEngineInitializationException {
 
         if (providerArgs == null) {
-            String identifier = isTarget ? YADETargetProviderDelegator.IDENTIFIER : YADESourceProviderDelegator.IDENTIFIER;
-            throw new YADEEngineInitializationException(new SOSMissingDataException("[" + identifier + "]YADEProviderArguments"));
+            throw new YADEEngineInitializationException(new SOSMissingDataException("[" + delegatorLabel + "]YADEProviderArguments"));
         }
 
         SOSArgument<Protocol> protocol = providerArgs.getProtocol();

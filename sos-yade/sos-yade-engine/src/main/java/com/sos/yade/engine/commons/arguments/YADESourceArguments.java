@@ -9,6 +9,8 @@ import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 
 public class YADESourceArguments extends YADESourceTargetArguments {
 
+    public final static String LABEL = "Source";
+
     public static enum ZeroByteTransfer {
         YES, NO, STRICT, RELAXED;
     }
@@ -52,6 +54,10 @@ public class YADESourceArguments extends YADESourceTargetArguments {
      * COPY/MOVE operations: check transferred Target file against an integrity hash file(md5) placed on the Source Argument name is based on XML schema
      * definition */
     private SOSArgument<Boolean> checkIntegrityHash = new SOSArgument<>("check_security_hash", false, Boolean.valueOf(false));
+
+    public YADESourceArguments() {
+        getLabel().setValue(LABEL);
+    }
 
     public boolean isSingleFilesSelection() {
         return isFilePathEnabled() || isFileListEnabled();

@@ -126,7 +126,7 @@ public class YADEFileReplacementHelper {
     public static void main(String[] args) {
         try {
             AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SLF4JLogger(), new LocalProviderArguments()),
-                    new YADESourceArguments(), null);
+                    new YADESourceArguments());
 
             YADEProviderFile file = new YADEProviderFile(delegator, "/tmp/1abc12def123.TXT", 0, 0, null, false);
             /** 1) Change File Name */

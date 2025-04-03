@@ -18,10 +18,10 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     private final boolean isHTTP;
 
-    public AYADEProviderDelegator(IProvider provider, YADESourceTargetArguments args, String label) {
+    public AYADEProviderDelegator(IProvider provider, YADESourceTargetArguments args) {
         this.provider = provider;
         this.args = args;
-        this.label = label;
+        this.label = args.getLabel().getValue();
         this.logPrefix = "[" + label + "]";
         this.isHTTP = isHTTPProvider();
         this.directory = getDirectoryPath(args.getDirectory().getValue());

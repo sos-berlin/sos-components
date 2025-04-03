@@ -50,12 +50,12 @@ public class YADEArgumentsHelper {
         return arg.getName() + "=" + arg.getDisplayValue();
     }
 
-    public static String toString(ISOSLogger logger, String identifier, ASOSArguments args) {
+    public static String toString(ISOSLogger logger, String label, ASOSArguments args) {
         if (args == null) {
-            return "[" + identifier + "]null";
+            return "[" + label + "]null";
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(identifier).append("]");
+        sb.append("[").append(label).append("]");
         sb.append("[").append(args.getClass().getSimpleName()).append("]");
         boolean add = false;
         try {

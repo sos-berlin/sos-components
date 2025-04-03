@@ -9,6 +9,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.impl.JavaKeyStoreType;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.arguments.impl.SSLArguments;
@@ -173,6 +174,18 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     protected static SSHProviderArguments parseSFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
         Node fragment = getProtocolFragment(argsLoader, ref, isSource, "SFTP");
 
+        // Label example:
+        // – A label has been set internally for a JumpHost YADE execution - see YADEXMLJumpHostSettingsWriter
+        // – If set, the JumpHost YADE Client uses this label (e.g., Jump) for the SSHProvider logging instead of Source/Target
+        String label = SOSXML.getAttributeValue(fragment, YADEXMLArgumentsLoader.SFTPFRAGMENT_INTERNAL_ATTRIBUTE_LABEL);
+        if (!SOSString.isEmpty(label)) {
+            if (isSource) {
+                argsLoader.getSourceArgs().getLabel().setValue(label);
+            } else {
+                argsLoader.getTargetArgs().getLabel().setValue(label);
+            }
+        }
+
         SSHProviderArguments args = new SSHProviderArguments();
         args.applyDefaultIfNullQuietly();
 
@@ -334,38 +347,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseBasicAuthentication(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node basicAuthentication)
-            throws Exception {
-        NodeList nl = basicAuthentication.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                switch (n.getNodeName()) {
-                case "Account":
-                    argsLoader.setStringArgumentValue(args.getUser(), n);
-                    break;
-                case "Password":
-                    argsLoader.setStringArgumentValue(args.getPassword(), n);
-                    break;
-                }
-            }
-        }
-    }
-
-    private static void parseURLConnection(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node urlConnection) throws Exception {
-        NodeList nl = urlConnection.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                switch (n.getNodeName()) {
-                case "URL":
-                    argsLoader.setStringArgumentValue(args.getHost(), n);
-                    break;
-                }
-            }
-        }
-    }
-
     protected static void parseConfigurationFiles(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node configurationFiles) {
         List<Path> files = new ArrayList<>();
 
@@ -408,6 +389,73 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 }
             }
             args.setProxy(proxyArgs);
+        }
+    }
+
+    protected static void parseSFTPSSHAuthentication(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node sshAuthentication) {
+        NodeList nl = sshAuthentication.getChildNodes();
+
+        SSHAuthMethod authMethod = null;
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Account":
+                    argsLoader.setStringArgumentValue(args.getUser(), n);
+                    break;
+                case "AuthenticationMethodPassword":
+                    parseSFTPSSHAuthenticationMethodPassword(argsLoader, args, n);
+                    authMethod = SSHAuthMethod.PASSWORD;
+                    break;
+                case "AuthenticationMethodPublickey":
+                    parseSFTPSSHAuthenticationMethodPublickey(argsLoader, args, n);
+                    authMethod = SSHAuthMethod.PUBLICKEY;
+                    break;
+                case "AuthenticationMethodKeyboardInteractive":
+                    // ignore - not argsLoaderemented yet
+                    authMethod = SSHAuthMethod.KEYBOARD_INTERACTIVE;
+                    break;
+                case "PreferredAuthentications":
+                    args.getPreferredAuthentications().setValue(SSHAuthMethod.fromString(argsLoader.getValue(n)));
+                    break;
+                case "RequiredAuthentications":
+                    args.getRequiredAuthentications().setValue(SSHAuthMethod.fromString(argsLoader.getValue(n)));
+                    break;
+                }
+            }
+        }
+        args.getAuthMethod().setValue(authMethod);
+    }
+
+    private static void parseBasicAuthentication(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node basicAuthentication)
+            throws Exception {
+        NodeList nl = basicAuthentication.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Account":
+                    argsLoader.setStringArgumentValue(args.getUser(), n);
+                    break;
+                case "Password":
+                    argsLoader.setStringArgumentValue(args.getPassword(), n);
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void parseURLConnection(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node urlConnection) throws Exception {
+        NodeList nl = urlConnection.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "URL":
+                    argsLoader.setStringArgumentValue(args.getHost(), n);
+                    break;
+                }
+            }
         }
     }
 
@@ -461,41 +509,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 }
             }
         }
-    }
-
-    protected static void parseSFTPSSHAuthentication(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node sshAuthentication) {
-        NodeList nl = sshAuthentication.getChildNodes();
-
-        SSHAuthMethod authMethod = null;
-        for (int i = 0; i < nl.getLength(); i++) {
-            Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                switch (n.getNodeName()) {
-                case "Account":
-                    argsLoader.setStringArgumentValue(args.getUser(), n);
-                    break;
-                case "AuthenticationMethodPassword":
-                    parseSFTPSSHAuthenticationMethodPassword(argsLoader, args, n);
-                    authMethod = SSHAuthMethod.PASSWORD;
-                    break;
-                case "AuthenticationMethodPublickey":
-                    parseSFTPSSHAuthenticationMethodPublickey(argsLoader, args, n);
-                    authMethod = SSHAuthMethod.PUBLICKEY;
-                    break;
-                case "AuthenticationMethodKeyboardInteractive":
-                    // ignore - not argsLoaderemented yet
-                    authMethod = SSHAuthMethod.KEYBOARD_INTERACTIVE;
-                    break;
-                case "PreferredAuthentications":
-                    args.getPreferredAuthentications().setValue(SSHAuthMethod.fromString(argsLoader.getValue(n)));
-                    break;
-                case "RequiredAuthentications":
-                    args.getRequiredAuthentications().setValue(SSHAuthMethod.fromString(argsLoader.getValue(n)));
-                    break;
-                }
-            }
-        }
-        args.getAuthMethod().setValue(authMethod);
     }
 
     private static void parseSFTPSSHAuthenticationMethodPassword(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node methodPassword) {

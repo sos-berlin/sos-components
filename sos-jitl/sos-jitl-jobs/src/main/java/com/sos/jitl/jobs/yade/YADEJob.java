@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.yade;
 
 import java.util.List;
 
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
@@ -13,6 +14,9 @@ public class YADEJob extends Job<YADEJobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<YADEJobArguments> step) throws Exception {
+        // TODO to remove
+        long startMemory = SOSShell.getUsedMemory();
+
         YADEJobArguments args = step.getDeclaredArguments();
         AYADEArgumentsLoader argsLoader = null;
         List<ProviderFile> files = null;
@@ -36,7 +40,9 @@ public class YADEJob extends Job<YADEJobArguments> {
             exception = e;
             throw e;
         } finally {
+            step.getLogger().info("[Memory used][before serialize for history]" + SOSShell.formatBytes(SOSShell.getUsedMemory() - startMemory));
             setOutcomeHistory(step, args, argsLoader, files, exception);
+            step.getLogger().info("[Memory used][total]" + SOSShell.formatBytes(SOSShell.getUsedMemory() - startMemory));
         }
     }
 

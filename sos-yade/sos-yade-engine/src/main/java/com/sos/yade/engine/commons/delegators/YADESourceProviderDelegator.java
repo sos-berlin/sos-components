@@ -9,12 +9,10 @@ import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 /** @apiNote all operations */
 public class YADESourceProviderDelegator extends AYADEProviderDelegator {
 
-    public final static String IDENTIFIER = "Source";
-
     private final YADEDirectoryMapper directoryMapper;
 
-    public YADESourceProviderDelegator(IProvider provider, YADESourceArguments args, String label) {
-        super(provider, args, label == null ? IDENTIFIER : label);
+    public YADESourceProviderDelegator(IProvider provider, YADESourceArguments args) {
+        super(provider, args);
 
         // set YADE specific ProviderContext
         final String providerLogPrefix = getLogPrefix();

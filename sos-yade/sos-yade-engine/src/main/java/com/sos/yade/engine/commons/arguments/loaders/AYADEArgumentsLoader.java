@@ -3,7 +3,7 @@ package com.sos.yade.engine.commons.arguments.loaders;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
-import com.sos.yade.engine.commons.arguments.YADEJumpArguments;
+import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
@@ -15,7 +15,7 @@ public abstract class AYADEArgumentsLoader {
     private final YADESourceArguments sourceArgs;
 
     private YADETargetArguments targetArgs;
-    private YADEJumpArguments jumpArgs;
+    private YADEJumpHostArguments jumpHostArgs;
 
     public AYADEArgumentsLoader() {
         this.args = new YADEArguments();
@@ -29,12 +29,12 @@ public abstract class AYADEArgumentsLoader {
 
     // currently only for UnitTests
     protected AYADEArgumentsLoader(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs, YADETargetArguments targetArgs,
-            YADEJumpArguments jumpArgs) {
+            YADEJumpHostArguments jumpHostArgs) {
         this.args = args;
         this.clientArgs = clientArgs;
         this.sourceArgs = sourceArgs;
         this.targetArgs = targetArgs;
-        this.jumpArgs = jumpArgs;
+        this.jumpHostArgs = jumpHostArgs;
     }
 
     public abstract AYADEArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException;
@@ -59,8 +59,8 @@ public abstract class AYADEArgumentsLoader {
         targetArgs = val;
     }
 
-    public YADEJumpArguments getJumpArgs() {
-        return jumpArgs;
+    public YADEJumpHostArguments getJumpHostArgs() {
+        return jumpHostArgs;
     }
 
     public void nullifyTargetArgs() {
@@ -74,10 +74,10 @@ public abstract class AYADEArgumentsLoader {
         }
     }
 
-    public void initializeJumpArgsIfNull() {
-        if (jumpArgs == null) {
-            jumpArgs = new YADEJumpArguments();
-            jumpArgs.applyDefaultIfNullQuietly();
+    public void initializeJumpHostArgsIfNull() {
+        if (jumpHostArgs == null) {
+            jumpHostArgs = new YADEJumpHostArguments();
+            jumpHostArgs.applyDefaultIfNullQuietly();
         }
     }
 }

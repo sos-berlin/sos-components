@@ -98,10 +98,8 @@ public class YADEEngine {
             }
 
             /** 5) Source/Target: create provider delegator */
-            sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, argsLoader.getArgs(), argsLoader.getSourceArgs(),
-                    jumpHostAddon);
-            targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsLoader.getArgs(), argsLoader.getTargetArgs(),
-                    jumpHostAddon);
+            sourceDelegator = YADEProviderDelegatorFactory.createSourceDelegator(logger, argsLoader.getArgs(), argsLoader.getSourceArgs());
+            targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());
         } catch (YADEEngineInitializationException e) {
             throw e;
         } catch (Throwable e) {

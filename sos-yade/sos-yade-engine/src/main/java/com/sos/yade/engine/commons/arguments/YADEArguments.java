@@ -7,8 +7,9 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.yade.commons.Yade.TransferOperation;
 
-// TODO Jump as separated Include JumpTransferArguments when DMZ
 public class YADEArguments extends ASOSArguments {
+
+    public final static String LABEL = "Transfer";
 
     /** - Fragment ------- */
     private SOSArgument<Path> settings = new SOSArgument<>("settings", false);

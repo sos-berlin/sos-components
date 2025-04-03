@@ -18,7 +18,9 @@ import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
 
 public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
 
-    // private String jobResource;
+    // optional internal attribute to set a logging label on Source/Target when used as a Jump Host
+    // e.g. SFTPFragment name="..." label="Jump"
+    public static final String SFTPFRAGMENT_INTERNAL_ATTRIBUTE_LABEL = "label";
 
     private SOSXMLXPath xpath;
     private Element root;

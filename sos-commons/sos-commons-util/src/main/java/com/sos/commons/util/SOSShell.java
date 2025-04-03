@@ -239,9 +239,9 @@ public class SOSShell {
         sb.append("[vm=").append(runtimeBean.getVmVendor()).append(" ").append(runtimeBean.getVmName()).append("]");
         sb.append("[available processors=").append(Runtime.getRuntime().availableProcessors()).append("]");
         sb.append("[memory ");
-        sb.append("max=").append(byteCountToDisplaySize(Runtime.getRuntime().maxMemory()));
-        sb.append(",total=").append(byteCountToDisplaySize(Runtime.getRuntime().totalMemory()));
-        sb.append(",free=").append(byteCountToDisplaySize(Runtime.getRuntime().freeMemory()));
+        sb.append("max=").append(formatBytes(Runtime.getRuntime().maxMemory()));
+        sb.append(",total=").append(formatBytes(Runtime.getRuntime().totalMemory()));
+        sb.append(",free=").append(formatBytes(Runtime.getRuntime().freeMemory()));
         sb.append("]");
         sb.append("[input arguments=").append(runtimeBean.getInputArguments()).append("]");
         return sb.toString();
@@ -284,19 +284,14 @@ public class SOSShell {
         return command;
     }
 
-    public static String byteCountToDisplaySize(long bytes) {
-        String msg = "no limit";
-        if (bytes != Long.MAX_VALUE) {
-            try {
-                DecimalFormat df = new DecimalFormat("#,###.##");
-                float sizeKb = 1024.0f;
-                float sizeMb = sizeKb * sizeKb;
-                msg = df.format(bytes / sizeMb) + " MB";
-            } catch (Throwable e) {
-                msg = String.valueOf(bytes) + " B";
-            }
+    public static String formatBytes(long bytes) {
+        if (bytes < 1024) {
+            return bytes + " B";
         }
-        return msg;
+        int unit = 1024;
+        String[] units = { "KB", "MB", "GB", "TB" };
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        return new DecimalFormat("#,##0.00").format(bytes / Math.pow(unit, exp)) + " " + units[exp - 1];
     }
 
     public static void printCpuLoad() {
@@ -326,5 +321,10 @@ public class SOSShell {
         } catch (Throwable e) {
             logger.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
+    }
+
+    public static long getUsedMemory() {
+        Runtime runtime = Runtime.getRuntime();
+        return runtime.totalMemory() - runtime.freeMemory();
     }
 }

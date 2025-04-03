@@ -7,10 +7,8 @@ import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 /** @apiNote COPY/MOVE operations */
 public class YADETargetProviderDelegator extends AYADEProviderDelegator {
 
-    public final static String IDENTIFIER = "Target";
-
-    public YADETargetProviderDelegator(IProvider provider, YADETargetArguments args, String label) {
-        super(provider, args, label == null ? IDENTIFIER : label);
+    public YADETargetProviderDelegator(IProvider provider, YADETargetArguments args) {
+        super(provider, args);
 
         // set YADE specific ProviderContext
         final String providerLogPrefix = getLogPrefix();
