@@ -729,9 +729,9 @@ public class EventService {
     
     private EventSnapshot createWorkflowPlanEvent(Event evt, long eventId, WorkflowId workflowId, JOrder jOrder) {
         if (WorkflowRefs.getWorkflowNamesWithBoards(controllerId, JocInventory.pathToName(workflowId.getPath())) != null) {
-            if ((evt instanceof OrderNoticeEvent) || (evt instanceof OrderAddedX) || (evt instanceof OrderSuspended$)
-                    || (evt instanceof OrderStopped$) || (evt instanceof OrderBroken) || (evt instanceof OrderFailed) || (evt instanceof OrderResumed)
-                    || (evt instanceof OrderPrompted) || (evt instanceof OrderPromptAnswered)) {
+            if ((evt instanceof OrderNoticeEvent) || (evt instanceof OrderSuspended$) || (evt instanceof OrderStopped$)
+                    || (evt instanceof OrderBroken) || (evt instanceof OrderFailed) || (evt instanceof OrderResumed) || (evt instanceof OrderPrompted)
+                    || (evt instanceof OrderPromptAnswered)) {
                 PlanId pId = jOrder.asScala().planId();
                 EventSnapshot event = new EventSnapshot();
                 event.setEventId(eventId);
