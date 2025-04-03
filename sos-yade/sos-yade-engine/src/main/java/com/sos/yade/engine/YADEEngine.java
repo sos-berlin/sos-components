@@ -228,6 +228,14 @@ public class YADEEngine {
         return files;
     }
 
+    /** Other thread */
+    public void cancel(ISOSLogger logger) {
+        logger.info("[cancel]...");
+        cancel.set(true);
+
+        // TODO wait ...
+    }
+
     private void onError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
             Throwable exception) {
         /** Source/Target: execute commands after operation on error */

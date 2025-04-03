@@ -30,7 +30,7 @@ public class SOSMapVariableReplacer {
     /** @param map
      * @param caseSensitive
      * @param keepUnresolved <br/>
-     *            - true(default) - (Windows-like) If a variable can't be replaced, this variable will not be modified and will return the original value<br/>
+     *            - true - (Windows-like) If a variable can't be replaced, this variable will not be modified and will return the original value<br/>
      *            -- Example: input=Hi %USERNAME% - %NOT_EXISTS, output=Hi Fritz Tester - %NOT_EXISTS%<br/>
      *            - false - (Unix-like) If a variable can't be replaced, this variable will be modified to empty<br/>
      *            -- Example: input=Hi %USERNAME% - %NOT_EXISTS, output=Hi Fritz Tester - <br/>

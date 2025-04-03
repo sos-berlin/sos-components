@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSVersionInfo;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.ssh.SSHProvider;
@@ -31,7 +32,7 @@ public class YADEClientBannerWriter {
         if (writeYADEBanner) {
             logger.info(SEPARATOR_LINE);
             logger.info("*    YADE    - Managed File Transfer (www.sos-berlin.com)    *");
-            logger.info("*    Version - xyz                                           *");
+            logger.info("*    Version - " + SOSVersionInfo.VERSION_STRING + "       *");
             logger.info(SEPARATOR_LINE);
         }
         writeTransferHeader(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());

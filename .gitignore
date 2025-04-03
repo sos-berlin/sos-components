@@ -9,3 +9,4 @@
 /pojogen/sos-raml/src/main/resources/com/sos/monitoring/*
 /sos-webservices/sos-webservices-server/src/main/resources/joc/joc.properties
 /sos-webservices/sos-webservices-server/src/main/resources/joc/joc.*.properties
+/sos-commons/sos-commons-util/src/main/java/com/sos/commons/util/SOSVersionInfo.java
