@@ -1450,13 +1450,21 @@ public class OrdersHelper {
 
     public static JFreshOrder mapToFreshOrder(AddOrder order, PlanSchemaId planSchemaId, Optional<Instant> scheduledFor, ZoneId zoneId,
             Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
+        String orderId = getOrderId(order, zoneId);
+        return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), planSchemaId,
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission, order.getPlanId());
+    }
+    
+    private static String getOrderId(AddOrder order, ZoneId zoneId) {
         if (zoneId == null) {
             zoneId = getDailyPlanTimeZone();
         }
         ZonedDateTime zonedNow = ZonedDateTime.of(LocalDateTime.now(zoneId), ZoneId.systemDefault());
-        String orderId = String.format("#%s#T%s-%s", datetimeFormatter.format(zonedNow), getUniqueOrderId(zonedNow), order.getOrderName());
-        return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), planSchemaId,
-                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission, order.getPlanId());
+        return String.format("#%s#T%s-%s", datetimeFormatter.format(zonedNow), getUniqueOrderId(zonedNow), order.getOrderName());
+    }
+    
+    public static PlanKey getDefaultDailyPlanPlanKey(AddOrder order, ZoneId zoneId) {
+        return getDailyPlanPlanKey(getOrderId(order, zoneId));
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, PlanSchemaId planSchemaId, Map<String, Value> args,

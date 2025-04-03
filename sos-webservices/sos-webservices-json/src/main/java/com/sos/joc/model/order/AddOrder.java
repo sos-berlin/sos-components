@@ -35,6 +35,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "blockPosition",
     "forceJobAdmission",
     "planId",
+    "openClosedPlan",
     "tags"
 })
 public class AddOrder {
@@ -93,6 +94,8 @@ public class AddOrder {
      */
     @JsonProperty("planId")
     private PlanId planId;
+    @JsonProperty("openClosedPlan")
+    private Boolean openClosedPlan = false;
     /**
      * tags
      * <p>
@@ -281,6 +284,16 @@ public class AddOrder {
         this.planId = planId;
     }
 
+    @JsonProperty("openClosedPlan")
+    public Boolean getOpenClosedPlan() {
+        return openClosedPlan;
+    }
+
+    @JsonProperty("openClosedPlan")
+    public void setOpenClosedPlan(Boolean openClosedPlan) {
+        this.openClosedPlan = openClosedPlan;
+    }
+
     /**
      * tags
      * <p>
@@ -305,12 +318,12 @@ public class AddOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).append("planId", planId).append("tags", tags).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).append("planId", planId).append("openClosedPlan", openClosedPlan).append("tags", tags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(endPositions).append(workflowPath).append(scheduledFor).append(blockPosition).append(timeZone).append(forceJobAdmission).append(arguments).append(planId).append(startPosition).append(orderName).append(tags).toHashCode();
+        return new HashCodeBuilder().append(openClosedPlan).append(workflowPath).append(blockPosition).append(timeZone).append(startPosition).append(tags).append(endPositions).append(scheduledFor).append(forceJobAdmission).append(arguments).append(planId).append(orderName).toHashCode();
     }
 
     @Override
@@ -322,7 +335,7 @@ public class AddOrder {
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().append(endPositions, rhs.endPositions).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).append(blockPosition, rhs.blockPosition).append(timeZone, rhs.timeZone).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(planId, rhs.planId).append(startPosition, rhs.startPosition).append(orderName, rhs.orderName).append(tags, rhs.tags).isEquals();
+        return new EqualsBuilder().append(openClosedPlan, rhs.openClosedPlan).append(workflowPath, rhs.workflowPath).append(blockPosition, rhs.blockPosition).append(timeZone, rhs.timeZone).append(startPosition, rhs.startPosition).append(tags, rhs.tags).append(endPositions, rhs.endPositions).append(scheduledFor, rhs.scheduledFor).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(planId, rhs.planId).append(orderName, rhs.orderName).isEquals();
     }
 
 }

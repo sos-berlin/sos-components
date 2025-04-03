@@ -60,6 +60,7 @@ import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
+import js7.data.plan.PlanKey;
 import js7.data.plan.PlanSchemaId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
@@ -207,15 +208,26 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         }
                         if (order.getPlanId().getPlanSchemaId().equals(PlanSchemas.DailyPlanPlanSchemaId)) {
                             if (!order.getPlanId().getNoticeSpaceKey().matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
-                                throw new JocBadRequestException(String.format("Invalid notice space key in plan ID: %s/%s", order.getPlanId()
+                                throw new JocBadRequestException(String.format("Invalid notice space key (format: yyyy-mm-dd) in plan ID: %s/%s", order.getPlanId()
                                         .getPlanSchemaId(), order.getPlanId().getNoticeSpaceKey()));
                             }
                         }
-                        JPlan jPlan = currentState.plan(OrdersHelper.getPlanId(order.getPlanId())).getOrElse((JPlan) null);
+                        JPlan jPlan = currentState.toPlan().get(OrdersHelper.getPlanId(order.getPlanId()));
                         if (jPlan != null && jPlan.isClosed()) {
-                            throw new JocBadRequestException(String.format("Plan '%s/%s' is closed", order.getPlanId().getPlanSchemaId(), order
-                                    .getPlanId().getNoticeSpaceKey()));
+                            if (order.getOpenClosedPlan() != Boolean.TRUE) {
+                                throw new JocBadRequestException(String.format("Plan '%s/%s' is closed", order.getPlanId().getPlanSchemaId(), order
+                                        .getPlanId().getNoticeSpaceKey()));
+                            }
                         }
+                        //no new daily plan plans in the past 
+                        if (jPlan == null && order.getPlanId().getPlanSchemaId().equals(PlanSchemas.DailyPlanPlanSchemaId)) {
+                            PlanKey pk = OrdersHelper.getDefaultDailyPlanPlanKey(order, zoneId);
+                            if (order.getPlanId().getNoticeSpaceKey().compareTo(pk.string()) < 0) {
+                                throw new JocBadRequestException(String.format("Creating a new plan '%s/%s' in the past is not allowed", order
+                                        .getPlanId().getPlanSchemaId(), order.getPlanId().getNoticeSpaceKey()));
+                            }
+                        }
+                        
                     }
                     
                     // TODO check if endPos not before startPos
