@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,6 +200,11 @@ public class DeleteDeployments {
         processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate, null, null, null);
     }
     
+    private static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
+            String accessToken, JocError jocError, String cancelOrderDate, String commitId2) {
+        processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate, null, commitId2, null);
+    }
+    
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
             String accessToken, JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2, Set<String> fileOrderSourceNames) {
         SOSHibernateSession newHibernateSession = null;
@@ -212,18 +218,23 @@ public class DeleteDeployments {
                 // updateRepo command is atomic, therefore all items are rejected
 
                 // get all already optimistically stored entries for the commit
-                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+                List<DBItemDeploymentHistory> currentOptimisticEntries = dbLayer.getDepHistory(commitId);
+                List<DBItemDeploymentHistory> previousOptimisticEntries = dbLayer.getDepHistory(commitId2);
+                List<DBItemDeploymentHistory> optimisticEntries = Stream
+                        .concat(currentOptimisticEntries.stream(), previousOptimisticEntries.stream()).collect(Collectors.toList());
                
                 // update all previously optimistically stored entries with the error message and change the state
                 Map<Integer, Set<DBItemInventoryConfigurationTrash>> itemsFromTrashByType = 
                         new HashMap<Integer, Set<DBItemInventoryConfigurationTrash>>();
                 InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                 for(DBItemDeploymentHistory optimistic : optimisticEntries) {
-                    optimistic.setErrorMessage(either.getLeft().message());
-                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
-                    optimistic.setDeleteDate(null);
-                    dbLayer.getSession().update(optimistic);
-                    // TODO: restore related inventory configuration - Recover and remove from trash
+                    if(currentOptimisticEntries.contains(optimistic)) {
+                        optimistic.setErrorMessage(either.getLeft().message());
+                        optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
+                        optimistic.setDeleteDate(null);
+                        dbLayer.getSession().update(optimistic);
+                    }
+                    // restore related inventory configuration - Recover and remove from trash
                     if(itemsFromTrashByType.containsKey(optimistic.getType())) {
                         itemsFromTrashByType.get(optimistic.getType())
                             .add(invDbLayer.getTrashConfiguration(optimistic.getPath(), optimistic.getType()));
@@ -264,58 +275,18 @@ public class DeleteDeployments {
                     JControllerProxy proxy = Proxy.of(controllerId);
                     Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(fos -> OrderWatchPath.of(fos)).collect(Collectors.toSet());
                     for (int second = 0; second < 10; second++) {
+                        if (!proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
+                            // file order source is deleted
+                            break;
+                        }
                         try {
-                            if (second < 9 && !proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
-                                // file order source is deleted
-                                break;
-                            }
-                            TimeUnit.SECONDS.sleep(1L);
+                            TimeUnit.MILLISECONDS.sleep(200L);
                         } catch (Exception e) {}
                     }
-                    
                     UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId)
-                    .thenAccept(either2 -> {
-                        processAfterDelete(either2, controllerId, account, commitId2, accessToken, jocError, cancelOrderDate);
-                    });
-                }
-                if(cancelOrderDate != null) {
-                    newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
-                    final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-                    DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-                    DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
-                    DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
-                    orderFilter.setControllerIds(Collections.singletonList(controllerId));
-                    if("now".equals(cancelOrderDate)) {
-                        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
-                        orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
-                    } else {
-                        orderFilter.setDailyPlanDateFrom(cancelOrderDate);
-                    }
-                    List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                    orderFilter.setWorkflowPaths(optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
-                                .map(workflow -> workflow.getName()).collect(Collectors.toList()));
-                    try {
-                        CompletableFuture<Either<Problem, Void>> cancelOrderResponse =
-                                cancelOrderImpl.cancelOrders(orderFilter, accessToken, false, false)
-                                .getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
-                            cancelOrderResponse.thenAccept(either2 -> {
-                                if(either2.isRight()) {
-                                    try {
-                                        boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, accessToken, false, false, false);
-                                        if (!successful) {
-                                            LOGGER.warn("Order delete failed due to missing permission.");
-                                        }
-                                    } catch (SOSHibernateException e) {
-                                        LOGGER.warn("delete of planned orders in db failed.", e.getMessage());
-                                    }
-                                } else {
-                                    LOGGER.warn("Order cancel failed due to missing permission.");
-                                }
+                            .thenAccept(either2 -> {
+                                processAfterDelete(either2, controllerId, account, commitId2, accessToken, jocError, cancelOrderDate, commitId);
                             });
-                    } catch (Exception e) {
-                        LOGGER.warn(e.getMessage());
-                    }
-
                 }
             }
         } catch (Exception e) {

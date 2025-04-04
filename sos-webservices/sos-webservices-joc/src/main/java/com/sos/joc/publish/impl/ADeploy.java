@@ -314,40 +314,45 @@ public abstract class ADeploy extends JOCResourceImpl {
             }
         }
         // Delete from all known controllers
+        // set new versionId for second round (delete items)
         final String commitIdForDelete = UUID.randomUUID().toString();
-        final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
+        final String commitIdForDeleteFileOrderSources = UUID.randomUUID().toString();
         Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
-        Map<String, List<DBItemDeploymentHistory>> itemsFromFolderToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
-        List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = Collections.emptyList();
-        List<DBItemDeploymentHistory> filteredItemsFromFolderToDelete = Collections.emptyList();
+
+        Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
+//        List<DBItemDeploymentHistory> itemsToDelete = Collections.emptyList();
+//        List<DBItemDeploymentHistory> fileOrderSourceItemsToDelete = Collections.emptyList();
         // loop 1: store db entries optimistically
         for (String controllerId : allowedControllerIds) {
+            List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = new ArrayList<DBItemDeploymentHistory>();
             folderPermissions.setSchedulerId(controllerId);
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             // store history entries for delete operation optimistically
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                filteredDepHistoryItemsToDelete = depHistoryDBItemsToDeployDelete.stream()
-                        .filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList());
-                invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                DeleteDeployments.storeNewDepHistoryEntries(dbLayer, filteredDepHistoryItemsToDelete, commitIdForDelete, account ,dbAuditlog.getId())));
+                filteredDepHistoryItemsToDelete.addAll(depHistoryDBItemsToDeployDelete.stream()
+                        .filter(history -> canAdd(history.getPath(), permittedFolders))
+                        .collect(Collectors.toList()));
             }
             if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
                 // first filter for folder permissions
-                // remember filtered items for later
-                filteredItemsFromFolderToDelete = itemsFromFolderToDelete.stream()
-                        .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders)).collect(Collectors.toList());
                 // second filter for not already deleted
-                final List<DBItemDeploymentHistory> itemsToDelete = filteredItemsFromFolderToDelete.stream()
-                        .filter(item -> item.getControllerId().equals(controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-                        .collect(Collectors.toList());
-                itemsFromFolderToDeletePerController.put(controllerId, itemsToDelete);
-                // store history entries for delete operation optimistically
-                invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder, account, dbAuditlog.getId())));
-                //audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
+                // remember filtered items for later
+                filteredDepHistoryItemsToDelete.addAll(itemsFromFolderToDelete.stream()
+                        .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders))
+                        .filter(item -> item.getControllerId().equals(controllerId) 
+                                && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
+                        .collect(Collectors.toList()));
             }
+            Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToDelete.stream()
+                    .collect(Collectors.groupingBy(fos -> ConfigurationType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+            // store history entries for delete operation optimistically
+            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(true), commitIdForDeleteFileOrderSources, account ,dbAuditlog.getId())));
+            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(false), commitIdForDelete, account ,dbAuditlog.getId())));
+            itemsToDeletePerController.put(controllerId, filteredDepHistoryItemsToDelete);
         }
-        // delete configurations optimistically
+        // delete configurations optimistically from inventory
         List<Configuration> folders = null;
         if (foldersToDelete != null) {
             folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
@@ -356,21 +361,24 @@ public abstract class ADeploy extends JOCResourceImpl {
                 getJocError(), dbAuditlog.getId(), false);
         // loop 2: send commands to controllers
         for (String controllerId : allowedControllerIds) {
-            if (filteredDepHistoryItemsToDelete != null && !filteredDepHistoryItemsToDelete.isEmpty()) {
-                // set new versionId for second round (delete items)
-                // call updateRepo command via Proxy of given controllers
-                final List<DBItemDeploymentHistory> toDelete = filteredDepHistoryItemsToDelete;
-                UpdateItemUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
-                    DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(), deployFilter.getAddOrdersDateFrom());
-                });
+            // call updateRepo command via Proxy of given controllers
+            if(itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
+                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToDeletePerController.get(controllerId).stream()
+                        .collect(Collectors.groupingBy(fos -> ConfigurationType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+               if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
+                   UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSources, allItemsToDelete.get(true), controllerId)
+                   .thenAccept(either -> {
+                       DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDeleteFileOrderSources, xAccessToken, 
+                               getJocError(), deployFilter.getAddOrdersDateFrom(), allItemsToDelete.get(false), commitIdForDelete, 
+                               allItemsToDelete.get(true).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
+                   });
+               } else if(allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
+                   UpdateItemUtils.updateItemsDelete(commitIdForDelete, allItemsToDelete.get(false), controllerId).thenAccept(either -> {
+                       DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(),
+                               deployFilter.getAddOrdersDateFrom());
+                   });
+               }
             }
-            // process folder to Delete
-            if (filteredItemsFromFolderToDelete != null && !filteredItemsFromFolderToDelete.isEmpty()) {
-                UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
-                    .thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(), deployFilter.getAddOrdersDateFrom());
-                    }); 
-            } 
         }
     }
     
