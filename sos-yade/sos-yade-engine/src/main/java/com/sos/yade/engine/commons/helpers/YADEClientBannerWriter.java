@@ -27,12 +27,11 @@ public class YADEClientBannerWriter {
 
     private static final String SEPARATOR_LINE = "**************************************************************";
 
-    // TODO use String.format
     public static void writeHeader(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) {
         if (writeYADEBanner) {
             logger.info(SEPARATOR_LINE);
-            logger.info("*    YADE    - Managed File Transfer (www.sos-berlin.com)    *");
-            logger.info("*    Version - " + SOSVersionInfo.VERSION_STRING + "       *");
+            logger.info(String.format("*    YADE    - %-46s%s", "Managed File Transfer (www.sos-berlin.com)", "*"));
+            logger.info(String.format("*    Version - %-46s%s", SOSVersionInfo.VERSION_STRING, "*"));
             logger.info(SEPARATOR_LINE);
         }
         writeTransferHeader(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());

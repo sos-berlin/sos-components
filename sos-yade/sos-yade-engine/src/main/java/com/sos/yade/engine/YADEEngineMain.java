@@ -30,6 +30,7 @@ public class YADEEngineMain {
                     main.engine.cancel(main.logger);
                 }
             } catch (Throwable e) {
+                e.printStackTrace();
                 Thread.currentThread().interrupt();
             }
         }));
@@ -43,20 +44,21 @@ public class YADEEngineMain {
             // CLI Arguments
             Map<String, String> cliArgs = SOSCLIArgumentsParser.parse(args);
             if (cliArgs.size() < 2) {
-                throw new YADEEngineSettingsLoadException("missing -" + YADEArguments.ARG_SETTINGS + ",-" + YADEArguments.ARG_PROFILE);
+                throw new YADEEngineSettingsLoadException("missing -" + YADEArguments.STARTUP_ARG_SETTINGS + ",-"
+                        + YADEArguments.STARTUP_ARG_PROFILE);
             }
-            Path settings = Path.of(getRequiredArgumentValue(cliArgs, YADEArguments.ARG_SETTINGS));
-            String profile = getRequiredArgumentValue(cliArgs, YADEArguments.ARG_PROFILE);
-            Boolean settingsReplacerCaseSensitive = getBooleanValue(cliArgs, YADEArguments.ARG_SETTINGS_REPLACER_CASE_SENSITIVE,
-                    YADEArguments.ARG_SETTINGS_REPLACER_CASE_SENSITIVE_DEFAULT);
-            Boolean settingsReplacerKeepUnresolved = getBooleanValue(cliArgs, YADEArguments.ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED,
-                    YADEArguments.ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
+            Path settings = Path.of(getRequiredArgumentValue(cliArgs, YADEArguments.STARTUP_ARG_SETTINGS));
+            String profile = getRequiredArgumentValue(cliArgs, YADEArguments.STARTUP_ARG_PROFILE);
+            Boolean settingsReplacerCaseSensitive = getBooleanValue(cliArgs, YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE,
+                    YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE_DEFAULT);
+            Boolean settingsReplacerKeepUnresolved = getBooleanValue(cliArgs, YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED,
+                    YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
 
             // Load XML Settings file configuration
             YADEXMLArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, System.getenv(),
                     settingsReplacerCaseSensitive, settingsReplacerKeepUnresolved);
 
-            argsLoader.getArgs().getParallelism().setValue(getIntegerValue(cliArgs, YADEArguments.ARG_PARALLELISM, "1"));
+            argsLoader.getArgs().getParallelism().setValue(getIntegerValue(cliArgs, YADEArguments.STARTUP_ARG_PARALLELISM, "1"));
             // Overrides some settings with the CLI Arguments
             applyOverrides(argsLoader, cliArgs);
 
@@ -75,13 +77,13 @@ public class YADEEngineMain {
 
     private void applyOverrides(AYADEArgumentsLoader argsLoader, Map<String, String> args) {
         // Source
-        setOptionalStringArgument(argsLoader.getSourceArgs().getDirectory(), args, YADEArguments.ARG_SOURCE_DIR);
-        setOptionalStringArgument(argsLoader.getSourceArgs().getExcludedDirectories(), args, YADEArguments.ARG_SOURCE_EXCLUDED_DIRECTORIES);
-        setOptionalPathArgument(argsLoader.getSourceArgs().getFileList(), args, YADEArguments.ARG_SOURCE_FILE_LIST);
-        setOptionalSourceFilePath(argsLoader.getSourceArgs(), args, YADEArguments.ARG_SOURCE_FILE_PATH);
-        setOptionalStringArgument(argsLoader.getSourceArgs().getFileSpec(), args, YADEArguments.ARG_SOURCE_FILE_SPEC);
+        setOptionalStringArgument(argsLoader.getSourceArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_SOURCE_DIR);
+        setOptionalStringArgument(argsLoader.getSourceArgs().getExcludedDirectories(), args, YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES);
+        setOptionalPathArgument(argsLoader.getSourceArgs().getFileList(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST);
+        setOptionalSourceFilePath(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH);
+        setOptionalStringArgument(argsLoader.getSourceArgs().getFileSpec(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
         // Target
-        setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.ARG_TARGET_DIR);
+        setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
     }
 
     private String getRequiredArgumentValue(Map<String, String> args, String name) throws YADEEngineSettingsLoadException {
