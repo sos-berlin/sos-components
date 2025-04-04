@@ -1833,7 +1833,7 @@ public class OrdersHelper {
         if (pos == null || pos.isEmpty()) {
             return null;
         }
-        String[] posArr = pos.split("/:");
+        String[] posArr = pos.split("[:/]");
         List<Object> posList = new ArrayList<>(posArr.length);
         for (int i = 0; i < posArr.length; i++) {
             if (i % 2 == 0) {
