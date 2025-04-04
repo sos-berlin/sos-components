@@ -22,7 +22,9 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.schedule.CycleSchedule;
 import com.sos.inventory.model.instruction.schedule.Periodic;
+import com.sos.inventory.model.instruction.schedule.Repeat;
 import com.sos.inventory.model.instruction.schedule.Scheme;
+import com.sos.inventory.model.instruction.schedule.Ticking;
 import com.sos.inventory.model.job.AdmissionTimePeriod;
 import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.DailyPeriod;
@@ -187,13 +189,14 @@ public class RunTimeHelper {
             return in;
         }
 
-        Periodic p = new Periodic();
-        p.setPeriod(3_600L);// 1h
-        // TODO
+        Repeat r;
         if (j.getRunTime().getStartMins().getValue().size() == 60) {
-            p.setOffsets(Collections.singletonList(60L));
+            r = new Ticking(60L);
         } else {
+            Periodic p = new Periodic();
+            p.setPeriod(3_600L);// 1h
             p.setOffsets(j.getRunTime().getStartMins().getValue().stream().map(e -> Long.valueOf(e * 60L)).collect(Collectors.toList()));
+            r = p;
         }
 
         DailyPeriod dp = new DailyPeriod();
@@ -206,7 +209,7 @@ public class RunTimeHelper {
             dp.setDuration(86_400L);
         }
 
-        CycleSchedule cs = new CycleSchedule(Collections.singletonList(new Scheme(p, new AdmissionTimeScheme(Collections.singletonList(dp)))));
+        CycleSchedule cs = new CycleSchedule(Collections.singletonList(new Scheme(r, new AdmissionTimeScheme(Collections.singletonList(dp)))));
 
         if (btch != null) {
             if (btch.getTryPostNotices() != null) {

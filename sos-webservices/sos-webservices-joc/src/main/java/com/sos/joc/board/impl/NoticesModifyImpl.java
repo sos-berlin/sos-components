@@ -81,7 +81,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             } else { //deprecated
                 
                 final String board = JocInventory.pathToName(in.getNoticeBoardPath());
-                if (proxy.currentState().pathToBoard().get(BoardPath.of(board)) == null) {
+                if (proxy.currentState().pathToBoardState().get(BoardPath.of(board)) == null) {
                     throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Board '" + board + "'");
                 }
                 proxy.api().executeCommand(JControllerCommand.batch(in.getNoticeIds().stream().map(n -> BoardHelper.getNoticeId(n, board)).map(
@@ -170,7 +170,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             storeAuditLog(in.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             JControllerProxy proxy = Proxy.of(controllerId);
-            Set<BoardPath> boardPaths = proxy.currentState().pathToBoard().keySet();
+            Set<BoardPath> boardPaths = proxy.currentState().pathToBoardState().keySet();
             Instant now = Instant.now();
             Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
             

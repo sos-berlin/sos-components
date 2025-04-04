@@ -22,6 +22,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.agent.AgentClusterWatch;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxy;
@@ -727,10 +728,10 @@ public class EventService {
     }
     
     private EventSnapshot createWorkflowPlanEvent(Event evt, long eventId, WorkflowId workflowId, JOrder jOrder) {
-        if (WorkflowRefs.getWorkflowNamesWithBoards(controllerId, workflowId.getPath()) != null) {
-            if ((evt instanceof OrderNoticeEvent) || (evt instanceof OrderAddedX) || (evt instanceof OrderSuspended$)
-                    || (evt instanceof OrderStopped$) || (evt instanceof OrderBroken) || (evt instanceof OrderFailed) || (evt instanceof OrderResumed)
-                    || (evt instanceof OrderPrompted) || (evt instanceof OrderPromptAnswered)) {
+        if (WorkflowRefs.getWorkflowNamesWithBoards(controllerId, JocInventory.pathToName(workflowId.getPath())) != null) {
+            if ((evt instanceof OrderNoticeEvent) || (evt instanceof OrderSuspended$) || (evt instanceof OrderStopped$)
+                    || (evt instanceof OrderBroken) || (evt instanceof OrderFailed) || (evt instanceof OrderResumed) || (evt instanceof OrderPrompted)
+                    || (evt instanceof OrderPromptAnswered)) {
                 PlanId pId = jOrder.asScala().planId();
                 EventSnapshot event = new EventSnapshot();
                 event.setEventId(eventId);
