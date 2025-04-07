@@ -742,7 +742,7 @@ public class EventService {
                     event.setPath(pId.planSchemaId().string() + "/" + pId.planKey().string());
                 }
                 event.setObjectType(EventType.PLAN);
-                event.setWorkflow(workflowId);
+                //event.setWorkflow(workflowId);
                 return event;
             }
         }
