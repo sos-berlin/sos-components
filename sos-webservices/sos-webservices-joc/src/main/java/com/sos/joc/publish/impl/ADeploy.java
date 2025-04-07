@@ -320,8 +320,6 @@ public abstract class ADeploy extends JOCResourceImpl {
         Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
 
         Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
-//        List<DBItemDeploymentHistory> itemsToDelete = Collections.emptyList();
-//        List<DBItemDeploymentHistory> fileOrderSourceItemsToDelete = Collections.emptyList();
         // loop 1: store db entries optimistically
         for (String controllerId : allowedControllerIds) {
             List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = new ArrayList<DBItemDeploymentHistory>();
@@ -364,7 +362,7 @@ public abstract class ADeploy extends JOCResourceImpl {
             // call updateRepo command via Proxy of given controllers
             if(itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
                 Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToDeletePerController.get(controllerId).stream()
-                        .collect(Collectors.groupingBy(fos -> ConfigurationType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                        .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
                if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSources, allItemsToDelete.get(true), controllerId)
                    .thenAccept(either -> {

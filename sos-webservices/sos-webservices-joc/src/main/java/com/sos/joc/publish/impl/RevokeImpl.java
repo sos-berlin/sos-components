@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -98,55 +100,53 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             LOGGER.trace("*** collecting items finished ***" + collectingItemsFinished);
             // Delete from all allowed controllers from filter
             final String commitIdForRevoke = UUID.randomUUID().toString();
-            final String commitIdForRevokeFromFolder = UUID.randomUUID().toString();
-            List<DBItemDeploymentHistory> filteredDepHistoryItemsToRevoke = Collections.emptyList();
-            List<DBItemDeploymentHistory> filteredItemsFromFolderToRevoke = Collections.emptyList();
+            final String commitIdForRevokeFileOrderSources = UUID.randomUUID().toString();
+            Map<String, List<DBItemDeploymentHistory>> itemsToRevokePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
             // loop 1: store db entries optimistically
             for (String controllerId : controllerIds) {
-                if (!allowedControllerIds.contains(controllerId)) {
-                    continue;
-                }
-            	folderPermissions.setSchedulerId(controllerId);
+                List<DBItemDeploymentHistory> filteredDepHistoryItemsToRevoke = new ArrayList<DBItemDeploymentHistory>();
+                folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 // store history entries for delete operation optimistically
                 if (depHistoryDBItemsToRevoke != null && !depHistoryDBItemsToRevoke.isEmpty()) {
-                	filteredDepHistoryItemsToRevoke = depHistoryDBItemsToRevoke.stream()
-                			.filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList());
-                	DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, filteredDepHistoryItemsToRevoke, commitIdForRevoke, dbAuditlog.getId(), account);
+                    filteredDepHistoryItemsToRevoke.addAll(depHistoryDBItemsToRevoke.stream()
+                            .filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList()));
                 }
                 if (itemsPerControllerToRevokeFromFolder != null && !itemsPerControllerToRevokeFromFolder.isEmpty()) {
                     if(itemsPerControllerToRevokeFromFolder.containsKey(controllerId)) {
-                        // first filter for folder permissions
-                        // remember filtered items for later
-                        filteredItemsFromFolderToRevoke = itemsPerControllerToRevokeFromFolder.get(controllerId).stream()
-                                .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders)).collect(Collectors.toList());
-                        // second filter for not already deleted
-                        final List<DBItemDeploymentHistory> itemsToDelete = filteredItemsFromFolderToRevoke.stream()
-                                .filter(item -> item.getControllerId().equals(controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-                                .collect(Collectors.toList());
-                        itemsPerControllerToRevokeFromFolder.put(controllerId, itemsToDelete);
-                        // store history entries for delete operation optimistically
-                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, itemsToDelete, commitIdForRevokeFromFolder, dbAuditlog.getId(), account);
+                        filteredDepHistoryItemsToRevoke.addAll(itemsPerControllerToRevokeFromFolder.get(controllerId).stream()
+                                .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders))
+                                .filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
+                                .collect(Collectors.toList()));
                     }
                 }
+                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream()
+                        .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(true), commitIdForRevokeFileOrderSources, dbAuditlog.getId(), account);
+                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, dbAuditlog.getId(), account);
+                itemsToRevokePerController.put(controllerId, filteredDepHistoryItemsToRevoke);
             }
             // loop 2: send commands to controllers
             for (String controllerId : allowedControllerIds) {
-                if (filteredDepHistoryItemsToRevoke != null && !filteredDepHistoryItemsToRevoke.isEmpty()) {
-                    // set new versionId for second round (delete items)
-                    // call updateRepo command via Proxy of given controllers
-                    final List<DBItemDeploymentHistory> toRevoke = filteredDepHistoryItemsToRevoke;
-                    UpdateItemUtils.updateItemsDelete(commitIdForRevoke, toRevoke, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError(), revokeFilter.getCancelOrdersDateFrom());
-                    });
-                }
-                // process folder to Delete
-                if (filteredItemsFromFolderToRevoke != null && !filteredItemsFromFolderToRevoke.isEmpty()) {
-                    UpdateItemUtils.updateItemsDelete(commitIdForRevokeFromFolder, itemsPerControllerToRevokeFromFolder.get(controllerId), controllerId)
+                if(itemsToRevokePerController.get(controllerId) != null && !itemsToRevokePerController.get(controllerId).isEmpty()) {
+                    Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToRevokePerController.get(controllerId).stream()
+                            .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                    if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
+                        UpdateItemUtils.updateItemsDelete(commitIdForRevokeFileOrderSources, allItemsToDelete.get(true), controllerId)
                         .thenAccept(either -> {
-                            DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevokeFromFolder, getAccessToken(), getJocError(), revokeFilter.getCancelOrdersDateFrom());
-                        }); 
-                } 
+                            DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevokeFileOrderSources, xAccessToken, 
+                                    getJocError(), allItemsToDelete.get(false), commitIdForRevoke, 
+                                    allItemsToDelete.get(true).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
+                        });
+                        
+                    } else if(allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
+                        UpdateItemUtils.updateItemsDelete(commitIdForRevoke, allItemsToDelete.get(false), controllerId)
+                        .thenAccept(either -> {
+                            DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError());
+                        });
+                        
+                    }
+                }
             }
             Date deployWSFinished = Date.from(Instant.now());
             LOGGER.trace("*** revoke finished ***" + deployWSFinished);
