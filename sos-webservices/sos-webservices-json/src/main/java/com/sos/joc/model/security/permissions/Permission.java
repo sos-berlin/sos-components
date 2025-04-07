@@ -32,7 +32,7 @@ public class Permission {
     @JsonProperty("permissionPath")
     private String permissionPath;
     @JsonProperty("excluded")
-    private Boolean excluded;
+    private Boolean excluded = false;
 
     /**
      * No args constructor for use in serialization
