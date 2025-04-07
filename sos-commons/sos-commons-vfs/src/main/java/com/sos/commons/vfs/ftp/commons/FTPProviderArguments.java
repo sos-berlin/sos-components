@@ -3,6 +3,7 @@ package com.sos.commons.vfs.ftp.commons;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public class FTPProviderArguments extends AProviderArguments {
 
@@ -35,6 +36,12 @@ public class FTPProviderArguments extends AProviderArguments {
     // internal use to avoid calling the default empty FTPProviderArguments constructor when initializing FTPSProviderArguments
     protected FTPProviderArguments(Object dummy) {
         getUser().setRequired(true);
+    }
+
+    /** Overrides {@link AProviderArguments#getAccessInfo() */
+    @Override
+    public String getAccessInfo() throws ProviderInitializationException {
+        return String.format("%s@%s:%s", getUser().getDisplayValue(), getHost().getDisplayValue(), getPort().getDisplayValue());
     }
 
     public boolean isBinaryTransferMode() {

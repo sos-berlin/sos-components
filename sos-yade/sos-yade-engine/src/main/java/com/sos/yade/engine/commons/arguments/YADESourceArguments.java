@@ -40,7 +40,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     /** - Steady state ------- */
     // YADE 1 private SOSArgument<Boolean> checkSteadyStateOfFiles = new SOSArgument<>("check_steady_state_of_files", false, Boolean.valueOf(false));
-    private SOSArgument<String> checkSteadyStateInterval = new SOSArgument<>("check_steady_state_interval", false, null);
+    private SOSArgument<String> checkSteadyStateInterval = new SOSArgument<>("check_steady_state_interval", false);
     private SOSArgument<Integer> checkSteadyCount = new SOSArgument<>("check_steady_count", false, Integer.valueOf(10));
 
     /** - Zero Byte files handling ------- */
@@ -79,6 +79,10 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         return polling != null && polling.getPollTimeout().getValue() != null;
     }
 
+    public boolean isDirectivesEnabled() {
+        return forceFiles.isDirty() || zeroByteTransfer.isDirty();
+    }
+
     public YADESourcePollingArguments getPolling() {
         return polling;
     }
@@ -97,6 +101,13 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     public SOSArgument<List<String>> getFilePath() {
         return filePath;
+    }
+
+    public String getFilePathAsString() {
+        if (filePath.getValue() == null) {
+            return null;
+        }
+        return String.join(";", filePath.getValue());
     }
 
     public void setFilePath(String val) {

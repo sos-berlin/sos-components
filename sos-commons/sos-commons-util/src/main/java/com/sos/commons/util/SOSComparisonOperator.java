@@ -55,6 +55,10 @@ public enum SOSComparisonOperator {
         this.aliases = new HashSet<>(Arrays.asList(aliases));
     }
 
+    public String getFirstAlias() {
+        return aliases.iterator().next();
+    }
+
     public abstract boolean compare(int actualValue, int expectedValue);
 
     public static SOSComparisonOperator fromString(String operator) {

@@ -69,7 +69,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     public FTPProvider(ISOSLogger logger, FTPProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
         isFTPS = Protocol.FTPS.equals(getArguments().getProtocol().getValue());
-        setAccessInfo();
+        setAccessInfo(args.getAccessInfo());
     }
 
     /** Overrides {@link IProvider#getPathSeparator()} */
@@ -580,17 +580,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
     public FTPClient getClient() {
         return client;
-    }
-
-    private void setAccessInfo() {
-        String ftpsInfo = "";
-        if (isFTPS) {
-            FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
-            ftpsInfo = "[" + String.join(",", args.getSSL().getProtocols().getValue()) + " " + args.getSecurityMode().getValue().name().toLowerCase()
-                    + "]";
-        }
-        setAccessInfo(String.format("%s%s@%s:%s", ftpsInfo, getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue(),
-                getArguments().getPort().getDisplayValue()));
     }
 
     private FTPClient createClient() throws Exception {

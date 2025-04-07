@@ -3,6 +3,7 @@ package com.sos.yade.engine.commons.delegators;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.IProvider;
+import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
@@ -78,6 +79,10 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     public boolean isHTTP() {
         return isHTTP;
+    }
+
+    public boolean isJumpHost() {
+        return YADEJumpHostArguments.LABEL.equals(label);
     }
 
     private boolean isHTTPProvider() {

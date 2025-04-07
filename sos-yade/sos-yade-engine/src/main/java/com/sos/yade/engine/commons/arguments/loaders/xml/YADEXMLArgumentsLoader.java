@@ -62,7 +62,8 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
 
             Node profile = xpath.selectNode(root, "Profiles/Profile[@profile_id='" + getArgs().getProfile().getValue() + "']");
             if (profile == null) {
-                throw new Exception("[profile=" + getArgs().getProfile().getValue() + "]not found");
+                throw new YADEEngineSettingsLoadException("[" + getArgs().getSettings().getValue() + "][profile=" + getArgs().getProfile().getValue()
+                        + "]not found");
             }
 
             // Map<String, String> map = System.getenv();
@@ -72,6 +73,8 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
                 logger.debug("[%s][set][duration]%s", YADEEngineSettingsLoadException.class.getSimpleName(), SOSDate.getDuration(getArgs().getStart()
                         .getValue(), Instant.now()));
             }
+        } catch (YADEEngineSettingsLoadException e) {
+            throw e;
         } catch (Throwable e) {
             throw new YADEEngineSettingsLoadException(e.toString(), e);
         } finally {

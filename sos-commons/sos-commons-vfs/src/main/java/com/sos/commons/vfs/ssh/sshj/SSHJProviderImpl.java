@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
@@ -81,7 +82,7 @@ public class SSHJProviderImpl extends SSHProvider {
             if (isConnected()) {
                 disconnect();
             }
-            throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+            throw new ProviderConnectException(String.format("%s[%s]", getLogPrefix(), getAccessInfo()), e);
         }
     }
 
@@ -490,7 +491,7 @@ public class SSHJProviderImpl extends SSHProvider {
         }
     }
 
-    /** Overrides {@link ASSHProvider#put(String, String)} */
+    /** Overrides {@link SSHProvider#put(String, String)} */
     @Override
     public void put(String source, String target) throws ProviderException {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
@@ -500,7 +501,7 @@ public class SSHJProviderImpl extends SSHProvider {
         }
     }
 
-    /** Overrides {@link ASSHProvider#get(String, String)} */
+    /** Overrides {@link SSHProvider#get(String, String)} */
     @Override
     public void get(String source, String target) throws ProviderException {
         try (SFTPClient sftp = sshClient.newSFTPClient()) {
@@ -510,8 +511,60 @@ public class SSHJProviderImpl extends SSHProvider {
         }
     }
 
+    /** Overrides {@link SSHProvider#deleteDirectory(String)} */
+    @Override
+    public boolean deleteDirectory(String directory) throws ProviderException {
+        if (getServerInfo().isWindowsShell()) {
+            return deleteWindowsDirectory(directory);
+        }
+        return deleteUnixDirectory(directory);
+    }
+
+    /** Overrides {@link SSHProvider#deleteUnixDirectory(String)} */
+    @Override
+    public boolean deleteUnixDirectory(String directory) throws ProviderException {
+        if (SOSString.isEmpty(directory)) {
+            return false;
+        }
+        String dir = toPathStyle(directory);
+        // String command = "[ -d \"" + dir + "\" ] && rm -rf \"" + dir + "\"";
+        SOSCommandResult r = executeCommand("rm -f -R \"" + dir + "\"");
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug(getPathOperationPrefix(dir) + "[deleteUnixDirectory]" + r);
+        }
+        if (r.hasError()) {
+            return deleteIfExists(dir);
+        }
+        return true;
+    }
+
+    /** Overrides {@link SSHProvider#deleteWindowsDirectory(String)} */
+    @Override
+    public boolean deleteWindowsDirectory(String directory) throws ProviderException {
+        if (SOSString.isEmpty(directory)) {
+            return false;
+        }
+        String dir = SOSPathUtils.toWindowsStyle(directory);
+        if (dir.startsWith("\\")) {// Windows OpenSSH after SOSPathUtils.toWindowsStyle
+            dir = dir.substring(1);
+        }
+        // String command = "if exist \"" + dir + "\" ( rd /s /q \"" + dir + "\" )";
+        SOSCommandResult r = executeCommand("rmdir /s /q \"" + dir + "\"");
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug(getPathOperationPrefix(dir) + "[deleteWindowsDirectory]" + r);
+        }
+        if (r.hasError()) {
+            return deleteIfExists(dir);
+        }
+        return true;
+    }
+
     public SSHClient getSSHClient() {
         return sshClient;
+    }
+
+    protected ProviderFile createProviderFile(String path, FileAttributes attr) {
+        return createProviderFile(path, attr.getSize(), SSHJProviderUtils.getFileLastModifiedMillis(attr));
     }
 
     private synchronized String createCommandIdentifier() {
@@ -544,7 +597,7 @@ public class SSHJProviderImpl extends SSHProvider {
 
             StringBuilder envs = new StringBuilder();
             for (Map.Entry<String, String> entry : env.getLocalEnvs().entrySet()) {
-                if (getServerInfo().hasWindowsShell()) {
+                if (getServerInfo().isWindowsShell()) {
                     envs.append(String.format("set %s=%s&", entry.getKey(), entry.getValue()));
                 } else {
                     envs.append(String.format("export \"%s=%s\";", entry.getKey(), entry.getValue()));
@@ -553,10 +606,6 @@ public class SSHJProviderImpl extends SSHProvider {
             command = envs.toString() + command;
         }
         return command;
-    }
-
-    protected ProviderFile createProviderFile(String path, FileAttributes attr) {
-        return createProviderFile(path, attr.getSize(), SSHJProviderUtils.getFileLastModifiedMillis(attr));
     }
 
     private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {

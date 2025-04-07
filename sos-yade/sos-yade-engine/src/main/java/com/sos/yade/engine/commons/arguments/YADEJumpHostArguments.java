@@ -3,6 +3,7 @@ package com.sos.yade.engine.commons.arguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
 public class YADEJumpHostArguments extends ASOSArguments {
@@ -57,6 +58,14 @@ public class YADEJumpHostArguments extends ASOSArguments {
         return platform;
     }
 
+    public boolean isPlatformEnabled() {
+        return !platform.isEmpty();
+    }
+
+    public boolean isWindowsPlatform() {
+        return isPlatformEnabled() && JumpPlatform.WINDOWS.equals(platform.getValue());
+    }
+
     public void setPlatform(String val) {
         if (SOSString.isEmpty(val)) {
             return;
@@ -74,5 +83,9 @@ public class YADEJumpHostArguments extends ASOSArguments {
 
     public boolean isConfiguredOnSource() {
         return configuredOnSource.isTrue();
+    }
+
+    public String getAccessInfo() throws ProviderInitializationException {
+        return provider == null ? null : provider.getAccessInfo();
     }
 }

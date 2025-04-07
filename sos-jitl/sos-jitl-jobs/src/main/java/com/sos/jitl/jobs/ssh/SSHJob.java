@@ -66,7 +66,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         /** steps - read agent environment variables - export some of them - execute command, script, remote script - set return values */
         try {
             provider.connect();
-            isWindowsShell = provider.getServerInfo().hasWindowsShell();
+            isWindowsShell = provider.getServerInfo().isWindowsShell();
             delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
             if (jobArgs.getCommandDelimiter().isDirty()) {
                 delimiter = jobArgs.getCommandDelimiter().getValue();

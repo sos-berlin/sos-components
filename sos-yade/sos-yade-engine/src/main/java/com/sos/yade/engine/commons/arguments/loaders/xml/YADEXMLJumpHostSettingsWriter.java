@@ -4,7 +4,11 @@ import java.nio.file.Path;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
+import com.sos.yade.engine.addons.YADEEngineJumpHostAddon.JumpHostConfig;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.arguments.YADEClientArguments;
+import com.sos.yade.engine.commons.arguments.YADESourceArguments;
+import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 
@@ -13,26 +17,38 @@ public class YADEXMLJumpHostSettingsWriter {
 
     private static final String SFTPFRAGMENT_NAME = "sftp";
 
-    public static String fromJumpHostToTarget(AYADEArgumentsLoader argsLoader, String profileId, String jumpHostDataDirectory,
-            boolean transactional) {
+    public static String fromSourceToJumpHost(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
+        YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
+
+        StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
+        StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
+                .getTargetArgs(), config);
+        return generateConfiguration(fragments, profile).toString();
+    }
+
+    public static String fromJumpHostToTarget(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADETargetArguments targetArgs = argsLoader.getTargetArgs();
 
+        StringBuilder fragments = generateFragments((SSHProviderArguments) targetArgs.getProvider());
+        StringBuilder profile = generateProfileJumpHostToTarget(argsLoader.getArgs(), targetArgs, config);
+        return generateConfiguration(fragments, profile).toString();
+    }
+
+    private static StringBuilder generateConfiguration(StringBuilder fragments, StringBuilder profile) {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.append("<Configurations>");
-        /** Fragments (SFTP ProtocolFragment and e.g. CredentialStoreFragment) ----------------------------- */
         sb.append("<Fragments>");
-        sb.append(generateFragments((SSHProviderArguments) targetArgs.getProvider()));
+        sb.append(fragments);
         sb.append("</Fragments>");
-        /** Profile ----------------------------- */
         sb.append("<Profiles>");
-        sb.append(generateFromJumpHostProfile(argsLoader.getArgs(), targetArgs, profileId, jumpHostDataDirectory, transactional));
+        sb.append(profile);
         sb.append("</Profiles>");
         sb.append("</Configurations>");
-        return sb.toString();
+        return sb;
     }
 
-    private static String generateFragments(SSHProviderArguments providerArgs) {
+    private static StringBuilder generateFragments(SSHProviderArguments providerArgs) {
         StringBuilder sb = new StringBuilder();
         /** SFTP Protocol Fragment ----------------------------- */
         sb.append("<ProtocolFragments>");
@@ -95,7 +111,7 @@ public class YADEXMLJumpHostSettingsWriter {
         if (providerArgs.getConfigurationFiles().isDirty()) {
             sb.append("<ConfigurationFiles>");
             for (Path configurationFile : providerArgs.getConfigurationFiles().getValue()) {
-                sb.append("<ConfigurationFile>").append(configurationFile).append("</ConfigurationFile>");
+                sb.append("<ConfigurationFile>").append(cdata(configurationFile.toString())).append("</ConfigurationFile>");
             }
             sb.append("</ConfigurationFiles>");
         }
@@ -134,7 +150,7 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("</CredentialStoreFragment>");
             sb.append("</CredentialStoreFragments>");
         }
-        return sb.toString();
+        return sb;
     }
 
     private static StringBuilder generateFragmentsSFTPFragmentBasicConnection(SOSArgument<String> host, SOSArgument<Integer> port) {
@@ -163,37 +179,206 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateFromJumpHostProfile(YADEArguments args, YADETargetArguments targetArgs, String profileId,
-            String jumpDataDirectory, boolean transactional) {
+    private static StringBuilder generateProfileSourceToJumpHost(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs,
+            YADETargetArguments targetArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<Profile profile_id=").append(attrValue(profileId)).append(">");
+        sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
         sb.append("<Operation>");
-
         sb.append("<Copy>");
-        // Source (Jump)
+
+        // Source (SFTPFragment) -----------------------
         sb.append("<CopySource>");
-        sb.append("<CopySourceFragmentRef><LocalSource /></CopySourceFragmentRef>");
-        sb.append("<SourceFileOptions><Selection><FileSpecSelection>");
-        sb.append("<FileSpec><![CDATA[.*]]></FileSpec><Directory>").append(cdata(jumpDataDirectory)).append("</Directory>");
-        sb.append("</FileSpecSelection></Selection></SourceFileOptions>");
+        sb.append("<CopySourceFragmentRef>").append(generateProfileTargetSFTPFragmentRef(sourceArgs)).append("</CopySourceFragmentRef>");
+        sb.append("<SourceFileOptions>");
+        // Source - Selection
+        sb.append("<Selection>");
+        if (config.getSourceToJumpHost().getFileList() != null) {
+            sb.append("<FileListSelection>");
+            sb.append("<FileList>").append(cdata(config.getSourceToJumpHost().getFileList().getJumpHostFile())).append("</FileList>");
+            if (!sourceArgs.getDirectory().isEmpty()) {
+                sb.append("<Directory>").append(cdata(sourceArgs.getDirectory().getValue())).append("</Directory>");
+            }
+            if (sourceArgs.getRecursive().isTrue()) {
+                sb.append("<Recursive>true</Recursive>");
+            }
+            sb.append("</FileListSelection>");
+        } else if (sourceArgs.isFilePathEnabled()) {
+            sb.append("<FilePathSelection>");
+            sb.append("<FilePath>").append(cdata(sourceArgs.getFilePathAsString())).append("</FilePath>");
+            if (!sourceArgs.getDirectory().isEmpty()) {
+                sb.append("<Directory>").append(cdata(sourceArgs.getDirectory().getValue())).append("</Directory>");
+            }
+            if (sourceArgs.getRecursive().isTrue()) {
+                sb.append("<Recursive>true</Recursive>");
+            }
+            sb.append("</FilePathSelection>");
+        } else {
+            sb.append("<FileSpecSelection>");
+            sb.append("<FileSpec>").append(cdata(sourceArgs.getFileSpec().getValue())).append("</FileSpec>");
+            if (!sourceArgs.getDirectory().isEmpty()) {
+                sb.append("<Directory>").append(cdata(sourceArgs.getDirectory().getValue())).append("</Directory>");
+            }
+            if (!sourceArgs.getExcludedDirectories().isEmpty()) {
+                sb.append("<ExcludedDirectories>").append(cdata(sourceArgs.getExcludedDirectories().getValue())).append("</ExcludedDirectories>");
+            }
+            if (sourceArgs.getRecursive().isTrue()) {
+                sb.append("<Recursive>true</Recursive>");
+            }
+            sb.append("</FileSpecSelection>");
+        }
+        sb.append("</Selection>");
+        // Source - CheckSteadyState
+        if (sourceArgs.isCheckSteadyStateEnabled()) {
+            sb.append("<CheckSteadyState>");
+            sb.append("<CheckSteadyStateInterval>");
+            sb.append(cdata(sourceArgs.getCheckSteadyStateInterval().getValue()));
+            sb.append("</CheckSteadyStateInterval>");
+            if (!sourceArgs.getCheckSteadyCount().isEmpty()) {
+                sb.append("<CheckSteadyStateCount>");
+                sb.append(sourceArgs.getCheckSteadyCount().getValue());
+                sb.append("</CheckSteadyStateCount>");
+            }
+            sb.append("</CheckSteadyState>");
+        }
+        // Source - Directives
+        if (sourceArgs.isDirectivesEnabled()) {
+            sb.append("<Directives>");
+            if (sourceArgs.getForceFiles().isDirty()) {
+                sb.append("<DisableErrorOnNoFilesFound>");
+                sb.append(!sourceArgs.getForceFiles().getValue());
+                sb.append("</DisableErrorOnNoFilesFound>");
+            }
+            if (sourceArgs.getZeroByteTransfer().isDirty()) {
+                sb.append("<TransferZeroByteFiles>");
+                sb.append(cdata(sourceArgs.getZeroByteTransfer().getValue().name()));
+                sb.append("</TransferZeroByteFiles>");
+            }
+            sb.append("</Directives>");
+        }
+        // Source - Polling
+        if (sourceArgs.isPollingEnabled()) {
+            sb.append("<Polling>");
+            if (sourceArgs.getPolling().getPollInterval().isDirty()) {
+                sb.append("<PollInterval>");
+                sb.append(cdata(sourceArgs.getPolling().getPollInterval().getValue()));
+                sb.append("</PollInterval>");
+            }
+            if (sourceArgs.getPolling().getPollTimeout().isDirty()) {
+                sb.append("<PollTimeout>");
+                sb.append(sourceArgs.getPolling().getPollTimeout().getValue());
+                sb.append("</PollTimeout>");
+            }
+            if (sourceArgs.getPolling().getPollMinFiles().isDirty()) {
+                sb.append("<MinFiles>");
+                sb.append(sourceArgs.getPolling().getPollMinFiles().getValue());
+                sb.append("</MinFiles>");
+            }
+            if (sourceArgs.getPolling().getWaitingForLateComers().isDirty()) {
+                sb.append("<WaitForSourceFolder>");
+                sb.append(sourceArgs.getPolling().getWaitingForLateComers().getValue());
+                sb.append("</WaitForSourceFolder>");
+            }
+            if (sourceArgs.getPolling().getPollingServer().isDirty()) {
+                sb.append("<PollingServer>");
+                sb.append(sourceArgs.getPolling().getPollingServer().getValue());
+                sb.append("</PollingServer>");
+            }
+            if (sourceArgs.getPolling().getPollingServerDuration().isDirty()) {
+                sb.append("<PollingServerDuration>");
+                sb.append(cdata(sourceArgs.getPolling().getPollingServerDuration().getValue()));
+                sb.append("</PollingServerDuration>");
+            }
+            if (sourceArgs.getPolling().getPollingServerPollForever().isDirty()) {
+                sb.append("<PollForever>");
+                sb.append(sourceArgs.getPolling().getPollingServerPollForever().getValue());
+                sb.append("</PollForever>");
+            }
+            sb.append("</Polling>");
+        }
+        if (config.getSourceToJumpHost().getResultSetFile() != null) {
+            sb.append("<ResultSet>");
+            sb.append("<ResultSetFile>").append(cdata(config.getSourceToJumpHost().getResultSetFile().getJumpHostFile())).append("</ResultSetFile>");
+            if (clientArgs.isCheckResultSetCountEnabled()) {
+                sb.append("<CheckResultSetCount>");
+                if (clientArgs.getExpectedSizeOfResultSet().isDirty()) {
+                    sb.append("<ExpectedResultSetCount>");
+                    sb.append(clientArgs.getExpectedSizeOfResultSet().getValue());
+                    sb.append("</ExpectedResultSetCount>");
+                }
+                if (clientArgs.getRaiseErrorIfResultSetIs().isDirty()) {
+                    sb.append("<RaiseErrorIfResultSetIs>");
+                    sb.append(cdata(clientArgs.getRaiseErrorIfResultSetIs().getValue().getFirstAlias()));
+                    sb.append("</RaiseErrorIfResultSetIs>");
+                }
+                sb.append("</CheckResultSetCount>");
+            }
+            sb.append("</ResultSet>");
+
+        }
+        sb.append("</SourceFileOptions>");
         sb.append("</CopySource>");
+        // Target (Jump) ----------------------------------
+        sb.append(generateJumpHostLocalCopyTarget(targetArgs, config));
+        // TransferOptions
+        sb.append(generateProfileTransferOptions(args, sourceArgs, config));
+
+        sb.append("</Copy>");
+        sb.append("</Operation>");
+        sb.append("</Profile>");
+        return sb;
+    }
+
+    private static StringBuilder generateProfileJumpHostToTarget(YADEArguments args, YADETargetArguments targetArgs, JumpHostConfig config) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
+        sb.append("<Operation>");
+        sb.append("<Copy>");
+
+        // Source (Jump)
+        sb.append(generateJumpHostLocalCopySource(config));
         // Target
         sb.append("<CopyTarget>");
         sb.append("<CopyTargetFragmentRef>").append(generateProfileTargetSFTPFragmentRef(targetArgs)).append("</CopyTargetFragmentRef>");
         if (targetArgs.getDirectory().isDirty()) {
             sb.append("<Directory>").append(cdata(targetArgs.getDirectory().getValue())).append("</Directory>");
         }
-        sb.append(generateProfileTargetFileOptions(targetArgs));
+        sb.append(generateProfileTargetFileOptions(targetArgs, config));
         sb.append("</CopyTarget>");
-        sb.append(generateProfileTransferOptions(args, targetArgs, transactional));
-        sb.append("</Copy>");
+        // TransferOptions
+        sb.append(generateProfileTransferOptions(args, targetArgs, config));
 
+        sb.append("</Copy>");
         sb.append("</Operation>");
         sb.append("</Profile>");
         return sb;
     }
 
-    private static StringBuilder generateProfileTargetSFTPFragmentRef(YADETargetArguments args) {
+    private static StringBuilder generateJumpHostLocalCopySource(JumpHostConfig config) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<CopySource>");
+        sb.append("<CopySourceFragmentRef><LocalSource /></CopySourceFragmentRef>");
+        sb.append("<SourceFileOptions>");
+        sb.append("<Selection>");
+        sb.append("<FileSpecSelection>");
+        sb.append("<FileSpec><![CDATA[.*]]></FileSpec><Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        sb.append("</FileSpecSelection>");
+        sb.append("</Selection>");
+        sb.append("</SourceFileOptions>");
+        sb.append("</CopySource>");
+        return sb;
+    }
+
+    private static StringBuilder generateJumpHostLocalCopyTarget(YADETargetArguments targetArgs, JumpHostConfig config) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<CopyTarget>");
+        sb.append("<CopyTargetFragmentRef><LocalSource /></CopyTargetFragmentRef>");
+        sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        sb.append("<KeepModificationDate>").append(targetArgs.getKeepModificationDate().getValue()).append("</KeepModificationDate>");
+        sb.append("</CopyTarget>");
+        return sb;
+    }
+
+    private static StringBuilder generateProfileTargetSFTPFragmentRef(YADESourceTargetArguments args) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SFTPFragmentRef ref=").append(attrValue(SFTPFRAGMENT_NAME)).append(">");
         // Pre-Processing
@@ -262,19 +447,19 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfileTargetFileOptions(YADETargetArguments args) {
+    private static StringBuilder generateProfileTargetFileOptions(YADETargetArguments args, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<TargetFileOptions>");
         if (args.getAppendFiles().isDirty()) {
             sb.append("<AppendFiles>").append(args.getAppendFiles().getValue()).append("</AppendFiles>");
         }
-        if (args.isAtomicityEnabled()) {
+        if (config.isAtomicEnabled()) {
             sb.append("<Atomicity>");
-            if (args.getAtomicPrefix().isDirty()) {
-                sb.append("<AtomicPrefix>").append(cdata(args.getAtomicPrefix().getValue())).append("</AtomicPrefix>");
+            if (config.getAtomicPrefix() != null) {
+                sb.append("<AtomicPrefix>").append(cdata(config.getAtomicPrefix())).append("</AtomicPrefix>");
             }
-            if (args.getAtomicSuffix().isDirty()) {
-                sb.append("<AtomicSuffix>").append(cdata(args.getAtomicSuffix().getValue())).append("</AtomicSuffix>");
+            if (config.getAtomicSuffix() != null) {
+                sb.append("<AtomicSuffix>").append(cdata(config.getAtomicSuffix())).append("</AtomicSuffix>");
             }
             sb.append("</Atomicity>");
         }
@@ -305,17 +490,18 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfileTransferOptions(YADEArguments args, YADETargetArguments targetArgs, boolean transactional) {
+    private static StringBuilder generateProfileTransferOptions(YADEArguments args, YADESourceTargetArguments sourceTargetArgs,
+            JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<TransferOptions>");
-        sb.append("<Transactional>").append(transactional).append("</Transactional>");
+        sb.append("<Transactional>").append(config.isTransactional()).append("</Transactional>");
         if (args.getBufferSize().isDirty()) {
             sb.append("<BufferSize>").append(args.getBufferSize().getValue()).append("</BufferSize>");
         }
-        if (targetArgs.isRetryOnConnectionErrorEnabled()) {
+        if (sourceTargetArgs.isRetryOnConnectionErrorEnabled()) {
             sb.append("<RetryOnConnectionError>");
-            sb.append("<RetryCountMax>").append(targetArgs.getConnectionErrorRetryCountMax().getValue()).append("</RetryCountMax>");
-            sb.append("<RetryInterval>").append(cdata(targetArgs.getConnectionErrorRetryInterval().getValue())).append("</RetryInterval>");
+            sb.append("<RetryCountMax>").append(sourceTargetArgs.getConnectionErrorRetryCountMax().getValue()).append("</RetryCountMax>");
+            sb.append("<RetryInterval>").append(cdata(sourceTargetArgs.getConnectionErrorRetryInterval().getValue())).append("</RetryInterval>");
             sb.append("</RetryOnConnectionError>");
         }
         sb.append("</TransferOptions>");

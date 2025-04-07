@@ -20,7 +20,7 @@ public abstract class SMBProvider extends AProvider<SMBProviderArguments> {
 
     protected SMBProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
-        setAccessInfo();
+        setAccessInfo(getArguments().getAccessInfo());
     }
 
     /** Overrides {@link IProvider#getPathSeparator()}<br/>
@@ -72,28 +72,4 @@ public abstract class SMBProvider extends AProvider<SMBProviderArguments> {
         }
         return shareName;
     }
-
-    private void setAccessInfo() {
-        String authMethod = "";
-        String user = getArguments().getUser().getDisplayValue();
-        switch (getArguments().getAuthMethod().getValue()) {
-        case BASIC:
-            if (SOSString.isEmpty(user)) {
-                user = "anonymous";
-            }
-            break;
-        case KERBEROS:
-        case SPNEGO:
-        default:
-            authMethod = "[" + getArguments().getAuthMethod().getValue().name() + "]";
-            if (SOSString.isEmpty(user)) {
-                user = "[sso]";
-            }
-            break;
-        }
-        String domain = getArguments().getDomain().isEmpty() ? "" : " (" + getArguments().getDomain().getValue() + ")";
-        setAccessInfo(String.format("%s%s@%s:%s%s", authMethod, user, getArguments().getHost().getDisplayValue(), getArguments().getPort()
-                .getDisplayValue(), domain));
-    }
-
 }

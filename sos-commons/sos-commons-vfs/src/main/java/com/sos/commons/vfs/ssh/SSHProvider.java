@@ -27,7 +27,7 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
 
     protected SSHProvider(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
         super(logger, args, args == null ? null : args.getPassphrase());
-        setAccessInfo(getAccessInfo(getArguments()));
+        setAccessInfo(getArguments() == null ? null : getArguments().getAccessInfo());
     }
 
     /** SSH Provider specific method */
@@ -38,6 +38,15 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
 
     /** SSH Provider specific method */
     public abstract void get(String source, String target) throws ProviderException;
+
+    /** SSH Provider specific method */
+    public abstract boolean deleteDirectory(String directory) throws ProviderException;
+
+    /** SSH Provider specific method */
+    public abstract boolean deleteWindowsDirectory(String directory) throws ProviderException;
+
+    /** SSH Provider specific method */
+    public abstract boolean deleteUnixDirectory(String directory) throws ProviderException;
 
     /** Overrides {@link AProvider#onCredentialStoreResolved()} */
     @Override
@@ -92,9 +101,4 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
         }
         return getConnectedMsg(msg);
     }
-
-    public static String getAccessInfo(SSHProviderArguments args) {
-        return String.format("%s@%s:%s", args.getUser().getDisplayValue(), args.getHost().getDisplayValue(), args.getPort().getDisplayValue());
-    }
-
 }

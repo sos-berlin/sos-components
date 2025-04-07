@@ -184,7 +184,7 @@ public class YADECopyMoveOperationsHandler {
                         logger.error("%s[deleteResult]%s", sourceDelegator.getLogPrefix(), r);
                         throw new YADEEngineOperationException(String.format("%s[deleteFiles]%s", sourceDelegator.getLogPrefix(), r));
                     }
-                    logger.info("%s[deleteResult]%s", sourceDelegator.getLogPrefix(), r);
+                    logger.info("%s[deleted]%s", sourceDelegator.getLogPrefix(), r);
                     if (logger.isDebugEnabled()) {
                         logger.debug("%s[to delete]%s", sourceDelegator.getLogPrefix(), paths);
                     }

@@ -1,10 +1,13 @@
 package com.sos.commons.vfs.http.commons;
 
+import java.net.URI;
 import java.util.List;
 
+import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public class HTTPProviderArguments extends AProviderArguments {
 
@@ -23,9 +26,26 @@ public class HTTPProviderArguments extends AProviderArguments {
     // JS7 new - if WebDAVAuthMethod.NTLM
     private SOSArgument<String> workstation = new SOSArgument<>("workstation", false);
 
+    /** Internal usage */
+    private SOSArgument<URI> baseURI = new SOSArgument<>(null, false);
+
     public HTTPProviderArguments() {
         getProtocol().setValue(Protocol.HTTP);
         getPort().setDefaultValue(DEFAULT_PORT);
+    }
+
+    /** Overrides {@link AProviderArguments#getAccessInfo() */
+    @Override
+    public String getAccessInfo() throws ProviderInitializationException {
+        if (baseURI.getValue() == null) {
+            // if baseURI not found, can be redefined when connecting
+            try {
+                setBaseURI(HTTPProviderUtils.getBaseURI(getHost(), getPort()));
+            } catch (Exception e) {
+                throw new ProviderInitializationException(e);
+            }
+        }
+        return SOSHTTPUtils.getAccessInfo(baseURI.getValue(), getUser().getValue());
     }
 
     public SSLArguments getSSL() {
@@ -56,4 +76,11 @@ public class HTTPProviderArguments extends AProviderArguments {
         return workstation;
     }
 
+    public void setBaseURI(URI val) {
+        baseURI.setValue(val);
+    }
+
+    public URI getBaseURI() {
+        return baseURI.getValue();
+    }
 }

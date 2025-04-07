@@ -44,6 +44,10 @@ public class YADEClientArguments extends ASOSArguments {
         return mailOnEmptyFiles;
     }
 
+    public boolean isCheckResultSetCountEnabled() {
+        return expectedSizeOfResultSet.isDirty() || raiseErrorIfResultSetIs.isDirty();
+    }
+
     public SOSArgument<Integer> getExpectedSizeOfResultSet() {
         return expectedSizeOfResultSet;
     }

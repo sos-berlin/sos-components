@@ -6,6 +6,13 @@ import java.util.Map;
 
 public class SOSCLIArgumentsParser {
 
+    public static Map<String, String> parse(String args) {
+        if (args == null) {
+            return new LinkedHashMap<>();
+        }
+        return parse(args.trim().split(" (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"));
+    }
+
     public static Map<String, String> parse(String[] args) {
         final Map<String, String> arguments = new LinkedHashMap<>();
         if (args == null || args.length == 0) {
@@ -28,7 +35,10 @@ public class SOSCLIArgumentsParser {
     }
 
     public static void main(String[] args) {
-        Map<String, String> result = SOSCLIArgumentsParser.parse(new String[] { "-name=\"Fritz Tester\"", "--age=30", "-city=Berlin", "--flag" });
+        Map<String, String> result = SOSCLIArgumentsParser.parse(new String[] { "-name=\"Fritz Tester\"", "--age=30", "--city=Berlin", "--flag" });
+        System.out.println(result);
+
+        result = SOSCLIArgumentsParser.parse("-name=\"Fritz Tester\" --age=30 --city=Berlin      --flag");
         System.out.println(result);
     }
 }

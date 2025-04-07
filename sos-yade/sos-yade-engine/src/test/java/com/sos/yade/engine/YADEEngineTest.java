@@ -39,6 +39,7 @@ public class YADEEngineTest {
     public void test() {
         Path settings = Path.of("xyz");
         String profile = "xyz";
+
         Map<String, String> map = System.getenv();
         boolean settingsReplacerCaseSensitive = true;
         boolean settingsReplacerKeepUnresolved = true;
@@ -55,7 +56,7 @@ public class YADEEngineTest {
 
             // Execute YADE Transfer
             YADEEngine engine = new YADEEngine();
-            List<ProviderFile> files = engine.execute(logger, argsLoader, false);
+            List<ProviderFile> files = engine.execute(logger, argsLoader, true);
             LOGGER.info("[files]" + files);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);

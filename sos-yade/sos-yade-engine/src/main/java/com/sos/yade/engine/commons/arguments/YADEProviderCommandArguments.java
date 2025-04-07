@@ -63,6 +63,13 @@ public class YADEProviderCommandArguments extends ASOSArguments {
         commandsBeforeOperation.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
     }
 
+    public void addCommandBeforeOperation(String command) {
+        if (commandsBeforeOperation.getValue() == null) {
+            commandsBeforeOperation.setValue(new ArrayList<>());
+        }
+        commandsBeforeOperation.getValue().add(command);
+    }
+
     public SOSArgument<List<String>> getCommandsAfterOperationOnSuccess() {
         return commandsAfterOperationOnSuccess;
     }

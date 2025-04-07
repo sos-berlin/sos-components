@@ -102,7 +102,7 @@ public class SSHServerInfo {
         return serverVersion;
     }
 
-    public boolean hasWindowsShell() {
+    public boolean isWindowsShell() {
         return shell.equals(Shell.WINDOWS);
     }
 

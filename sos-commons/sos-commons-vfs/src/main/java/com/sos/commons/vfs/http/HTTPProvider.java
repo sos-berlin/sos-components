@@ -36,7 +36,6 @@ import com.sos.commons.vfs.http.commons.HTTPClient;
 import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.http.commons.HTTPOutputStream;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
-import com.sos.commons.vfs.http.commons.HTTPProviderUtils;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 
 /** TODO<br/>
@@ -51,14 +50,11 @@ import com.sos.commons.vfs.webdav.WebDAVProvider;
 public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     private HTTPClient client;
-    private URI baseURI;
 
     public HTTPProvider(ISOSLogger logger, HTTPProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
         try {
-            // if baseURI not found, can be redefined when connecting
-            setBaseURI(HTTPProviderUtils.getBaseURI(getArguments().getHost(), getArguments().getPort()));
-            setAccessInfo(SOSHTTPUtils.getAccessInfo(getBaseURI(), getArguments().getUser().getValue()));
+            setAccessInfo(getArguments().getAccessInfo());
         } catch (Exception e) {
             throw new ProviderInitializationException(e);
         }
@@ -79,7 +75,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return SOSHTTPUtils.normalizePathEncoded(baseURI, path);
+        return SOSHTTPUtils.normalizePathEncoded(getArguments().getBaseURI(), path);
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -93,7 +89,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             getLogger().info(getConnectMsg());
 
             client = HTTPClient.createAuthenticatedClient(this);
-            connect(getBaseURI());
+            connect(getArguments().getBaseURI());
 
             getLogger().info(getConnectedMsg());
         } catch (Throwable e) {
@@ -449,14 +445,6 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    public URI getBaseURI() {
-        return baseURI;
-    }
-
-    public void setBaseURI(URI val) {
-        baseURI = val;
-    }
-
     public HTTPClient getClient() {
         return client;
     }
@@ -467,7 +455,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     }
 
     public String normalizePathEncoded(String path) {
-        return SOSHTTPUtils.normalizePathEncoded(baseURI, path);
+        return SOSHTTPUtils.normalizePathEncoded(getArguments().getBaseURI(), path);
     }
 
     public boolean isSecureConnectionEnabled() {
@@ -499,9 +487,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             // TODO info?
             getLogger().info("%s[connect][%s]using parent path %s ...", getLogPrefix(), notFoundMsg, parentURI);
 
-            setBaseURI(parentURI);
-            setAccessInfo(SOSHTTPUtils.getAccessInfo(getBaseURI(), getArguments().getUser().getValue()));
-            connect(getBaseURI());
+            getArguments().setBaseURI(parentURI);
+            setAccessInfo(getArguments().getAccessInfo());
+            connect(getArguments().getBaseURI());
         }
     }
 

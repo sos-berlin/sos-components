@@ -4,6 +4,10 @@ public class YADEEngineTargetConnectionException extends YADEEngineConnectionExc
 
     private static final long serialVersionUID = 1L;
 
+    public YADEEngineTargetConnectionException(String msg, Throwable ex) {
+        super(msg, ex);
+    }
+
     public YADEEngineTargetConnectionException(Throwable ex) {
         super(ex);
     }

@@ -9,6 +9,7 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public abstract class AProviderArguments extends ASOSArguments {
 
@@ -33,6 +34,8 @@ public abstract class AProviderArguments extends ASOSArguments {
     public enum FileType {
         REGULAR, SYMLINK
     }
+
+    public abstract String getAccessInfo() throws ProviderInitializationException;
 
     private CredentialStoreArguments credentialStore;
     private ProxyArguments proxy;

@@ -3,15 +3,17 @@ package com.sos.yade.engine.commons.helpers;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineJumpHostConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineTargetConnectionException;
 
 public class YADEProviderDelegatorHelper {
 
-    public static void ensureConnected(ISOSLogger logger, IYADEProviderDelegator delegator) throws YADEEngineConnectionException {
+    public static void ensureConnected(ISOSLogger logger, AYADEProviderDelegator delegator) throws YADEEngineConnectionException {
         if (delegator == null) {
             return;
         }
@@ -56,21 +58,24 @@ public class YADEProviderDelegatorHelper {
         }
     }
 
-    private static void throwConnectionException(IYADEProviderDelegator delegator, Throwable e) throws YADEEngineConnectionException {
+    private static void throwConnectionException(AYADEProviderDelegator delegator, Throwable e) throws YADEEngineConnectionException {
         YADEEngineConnectionException ex = getConnectionException(delegator, e);
         if (ex != null) {
             throw ex;
         }
     }
 
-    public static YADEEngineConnectionException getConnectionException(IYADEProviderDelegator delegator, Throwable ex) {
+    public static YADEEngineConnectionException getConnectionException(AYADEProviderDelegator delegator, Throwable ex) {
         if (delegator == null) {
             return null;
+        }
+        if (delegator.isJumpHost()) {
+            return new YADEEngineJumpHostConnectionException(ex.getMessage(), ex.getCause());
         }
         if (delegator instanceof YADESourceProviderDelegator) {
             return new YADEEngineSourceConnectionException(ex.getCause());
         }
-        return new YADEEngineTargetConnectionException(ex.getCause());
+        return new YADEEngineTargetConnectionException(ex.getMessage(), ex.getCause());
     }
 
     public static boolean isConnectionException(Throwable cause) {

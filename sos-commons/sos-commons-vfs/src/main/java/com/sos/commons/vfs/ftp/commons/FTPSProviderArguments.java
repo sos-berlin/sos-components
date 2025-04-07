@@ -4,6 +4,8 @@ import org.apache.commons.net.ftp.FTPSClient;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.impl.SSLArguments;
+import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public class FTPSProviderArguments extends FTPProviderArguments {
 
@@ -34,6 +36,13 @@ public class FTPSProviderArguments extends FTPProviderArguments {
             super.getPort().setValue(isSecurityModeImplicit() ? Integer.valueOf(FTPSClient.DEFAULT_FTPS_PORT) : Integer.valueOf(DEFAULT_PORT));
         }
         return super.getPort();
+    }
+
+    /** Overrides {@link AProviderArguments#getAccessInfo() */
+    @Override
+    public String getAccessInfo() throws ProviderInitializationException {
+        String ftpsInfo = "[" + String.join(",", getSSL().getProtocols().getValue()) + " " + getSecurityMode().getValue().name().toLowerCase() + "]";
+        return String.format("%s%s", ftpsInfo, super.getAccessInfo());
     }
 
     public boolean isSecurityModeImplicit() {

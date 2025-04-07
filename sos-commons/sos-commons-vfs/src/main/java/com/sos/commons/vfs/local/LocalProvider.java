@@ -42,7 +42,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
     public LocalProvider(ISOSLogger logger, LocalProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
-        setAccessInfo();
+        setAccessInfo(getArguments().getAccessInfo());
     }
 
     /** Overrides {@link IProvider#getPathSeparator()} */
@@ -469,9 +469,4 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         }
         return result;
     }
-
-    private void setAccessInfo() {
-        setAccessInfo(String.format("%s@%s", getArguments().getUser().getDisplayValue(), getArguments().getHost().getDisplayValue()));
-    }
-
 }

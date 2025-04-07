@@ -102,7 +102,9 @@ public class YADEFileActionsExecuter {
         }
 
         if (config.isMoveOperation()) {
-            sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath());
+            if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath())) {
+                logger.info("[%s][%s][%s]deleted", logPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath());
+            }
             sourceFile.setState(TransferEntryState.MOVED);
         } else if (config.getSource().isReplacementEnabled()) {
             renameSourceFile(logger, logPrefix, sourceDelegator, targetDelegator, sourceFile);

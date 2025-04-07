@@ -8,6 +8,7 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public class SSHProviderArguments extends AProviderArguments {
 
@@ -55,6 +56,12 @@ public class SSHProviderArguments extends AProviderArguments {
         getProtocol().setDefaultValue(Protocol.SFTP);
         getPort().setDefaultValue(DEFAULT_PORT);
         getUser().setRequired(true);
+    }
+
+    /** Overrides {@link AProviderArguments#getAccessInfo() */
+    @Override
+    public String getAccessInfo() throws ProviderInitializationException {
+        return String.format("%s@%s:%s", getUser().getDisplayValue(), getHost().getDisplayValue(), getPort().getDisplayValue());
     }
 
     public SOSArgument<SSHAuthMethod> getAuthMethod() {

@@ -12,8 +12,8 @@ public abstract class AYADEArgumentsLoader {
 
     private final YADEArguments args;
     private final YADEClientArguments clientArgs;
-    private final YADESourceArguments sourceArgs;
-
+    
+    private YADESourceArguments sourceArgs;
     private YADETargetArguments targetArgs;
     private YADEJumpHostArguments jumpHostArgs;
 
@@ -49,6 +49,10 @@ public abstract class AYADEArgumentsLoader {
 
     public YADESourceArguments getSourceArgs() {
         return sourceArgs;
+    }
+
+    public void setSourceArgs(YADESourceArguments val) {
+        sourceArgs = val;
     }
 
     public YADETargetArguments getTargetArgs() {
