@@ -40,9 +40,9 @@ public class YADEArgumentsChecker {
     private static void checkClientArguments(YADEArguments args, YADEClientArguments clientArgs, boolean needTargetProvider)
             throws YADEEngineInitializationException {
         if (!needTargetProvider && TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
-            if (clientArgs == null || clientArgs.getResultSetFileName().isEmpty()) {
-                throw new YADEEngineInitializationException("[" + TransferOperation.GETLIST + "]Missing \"" + clientArgs.getResultSetFileName()
-                        .getName() + "\" argument");
+            if (clientArgs == null || clientArgs.getResultSetFile().isEmpty()) {
+                throw new YADEEngineInitializationException("[" + TransferOperation.GETLIST + "]Missing \"" + clientArgs.getResultSetFile().getName()
+                        + "\" argument");
             }
         }
     }

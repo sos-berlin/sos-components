@@ -243,9 +243,9 @@ public class YADEXMLJumpHostSettingsWriter {
         // Source - Directives
         if (sourceArgs.isDirectivesEnabled()) {
             sb.append("<Directives>");
-            if (sourceArgs.getForceFiles().isDirty()) {
+            if (sourceArgs.getErrorOnNoFilesFound().isDirty()) {
                 sb.append("<DisableErrorOnNoFilesFound>");
-                sb.append(!sourceArgs.getForceFiles().getValue());
+                sb.append(!sourceArgs.getErrorOnNoFilesFound().getValue());
                 sb.append("</DisableErrorOnNoFilesFound>");
             }
             if (sourceArgs.getZeroByteTransfer().isDirty()) {
@@ -300,9 +300,9 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<ResultSetFile>").append(cdata(config.getSourceToJumpHost().getResultSetFile().getJumpHostFile())).append("</ResultSetFile>");
             if (clientArgs.isCheckResultSetCountEnabled()) {
                 sb.append("<CheckResultSetCount>");
-                if (clientArgs.getExpectedSizeOfResultSet().isDirty()) {
+                if (clientArgs.getExpectedResultSetCount().isDirty()) {
                     sb.append("<ExpectedResultSetCount>");
-                    sb.append(clientArgs.getExpectedSizeOfResultSet().getValue());
+                    sb.append(clientArgs.getExpectedResultSetCount().getValue());
                     sb.append("</ExpectedResultSetCount>");
                 }
                 if (clientArgs.getRaiseErrorIfResultSetIs().isDirty()) {
@@ -313,8 +313,16 @@ public class YADEXMLJumpHostSettingsWriter {
                 sb.append("</CheckResultSetCount>");
             }
             sb.append("</ResultSet>");
-
         }
+        if (sourceArgs.getMaxFiles().isDirty()) {
+            sb.append("<MaxFiles>").append(sourceArgs.getMaxFiles().getValue()).append("</MaxFiles>");
+        }
+        if (sourceArgs.getCheckIntegrityHash().isTrue()) {
+            sb.append("<CheckIntegrityHash>");
+            sb.append("<HashAlgorithm>").append(cdata(sourceArgs.getIntegrityHashAlgorithm().getValue())).append("</HashAlgorithm>");
+            sb.append("</CheckIntegrityHash>");
+        }
+
         sb.append("</SourceFileOptions>");
         sb.append("</CopySource>");
         // Target (Jump) ----------------------------------
@@ -360,7 +368,9 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<SourceFileOptions>");
         sb.append("<Selection>");
         sb.append("<FileSpecSelection>");
-        sb.append("<FileSpec><![CDATA[.*]]></FileSpec><Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        sb.append("<FileSpec><![CDATA[.*]]></FileSpec>");
+        sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        sb.append("<Recursive>true</Recursive>");
         sb.append("</FileSpecSelection>");
         sb.append("</Selection>");
         sb.append("</SourceFileOptions>");

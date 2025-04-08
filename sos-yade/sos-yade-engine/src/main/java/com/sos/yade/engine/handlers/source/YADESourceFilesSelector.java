@@ -225,7 +225,7 @@ public class YADESourceFilesSelector {
         logger.info("%s%sfound=%s", sourceDelegator.getLogPrefix(), sb, sourceFiles.size());
 
         checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
-        checkFileListSize(sourceDelegator, clientArgs, sourceFiles);
+        checkFileListSize(logger, sourceDelegator, clientArgs, sourceFiles);
     }
 
     private static void checkZeroByteFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)
@@ -286,26 +286,28 @@ public class YADESourceFilesSelector {
         return result;
     }
 
-    private static int checkFileListSize(YADESourceProviderDelegator sourceDelegator, YADEClientArguments clientArgs, List<ProviderFile> sourceFiles)
-            throws YADEEngineSourceFilesSelectorException {
+    private static int checkFileListSize(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEClientArguments clientArgs,
+            List<ProviderFile> sourceFiles) throws YADEEngineSourceFilesSelectorException {
         int size = sourceFiles == null ? 0 : sourceFiles.size();
 
-        if (size == 0 && sourceDelegator.getArgs().getForceFiles().getValue()) {
+        if (size == 0 && sourceDelegator.getArgs().getErrorOnNoFilesFound().getValue()) {
             throw new YADEEngineSourceFilesSelectorException(String.format("%s[%s=true]No files found", sourceDelegator.getLogPrefix(),
-                    sourceDelegator.getArgs().getForceFiles().getName()));
+                    sourceDelegator.getArgs().getErrorOnNoFilesFound().getName()));
         }
 
         // ResultSet
-        if (clientArgs.getExpectedSizeOfResultSet().isEmpty()) {
+        if (clientArgs.getExpectedResultSetCount().isEmpty()) {
             return size;
         }
         SOSComparisonOperator op = clientArgs.getRaiseErrorIfResultSetIs().getValue();
         if (op != null) {
-            int expectedSize = clientArgs.getExpectedSizeOfResultSet().getValue();
+            int expectedSize = clientArgs.getExpectedResultSetCount().getValue();
             if (op.compare(size, expectedSize)) {
-                throw new YADEEngineSourceFilesSelectorException(String.format("%s[files found=%s][RaiseErrorIfResultSetIs]%s %s", sourceDelegator
-                        .getLogPrefix(), size, op, expectedSize));
+                throw new YADEEngineSourceFilesSelectorException(String.format("%s[files found=%s][%s]%s %s", sourceDelegator.getLogPrefix(), size,
+                        clientArgs.getRaiseErrorIfResultSetIs().getName(), op.getFirstAlias(), expectedSize));
             }
+            logger.info("%s[%s=%s %s][files found=%s]ok", sourceDelegator.getLogPrefix(), clientArgs.getRaiseErrorIfResultSetIs().getName(), op
+                    .getFirstAlias(), expectedSize, size);
         }
         return size;
     }

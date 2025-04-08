@@ -51,10 +51,10 @@ public class YADEClientHelper {
 
     public static void writeResultSet(ISOSLogger logger, TransferOperation operation, YADEClientArguments clientArgs, List<ProviderFile> sourceFiles)
             throws Exception {
-        if (clientArgs.getResultSetFileName().getValue() == null) {
+        if (clientArgs.getResultSetFile().getValue() == null) {
             return;
         }
-        Path file = SOSPath.toAbsoluteNormalizedPath(clientArgs.getResultSetFileName().getValue());
+        Path file = SOSPath.toAbsoluteNormalizedPath(clientArgs.getResultSetFile().getValue());
         logger.info("[%s]write %s entries to the result set file", file, sourceFiles.size());
 
         boolean logEntries = TransferOperation.GETLIST.equals(operation);

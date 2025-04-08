@@ -583,7 +583,7 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "DisableErrorOnNoFilesFound":
-                    argsLoader.setOppositeBooleanArgumentValue(argsLoader.getSourceArgs().getForceFiles(), n);
+                    argsLoader.setOppositeBooleanArgumentValue(argsLoader.getSourceArgs().getErrorOnNoFilesFound(), n);
                     break;
                 case "TransferZeroByteFiles":
                     argsLoader.getSourceArgs().setZeroByteTransfer(argsLoader.getValue(n));
@@ -643,7 +643,7 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "ResultSetFile":
-                        argsLoader.setPathArgumentValue(argsLoader.getClientArgs().getResultSetFileName(), n);
+                        argsLoader.setPathArgumentValue(argsLoader.getClientArgs().getResultSetFile(), n);
                         break;
                     case "CheckResultSetCount":
                         parseSourceOptionResultSetCheckCount(argsLoader, n);
@@ -666,7 +666,7 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "ExpectedResultSetCount":
-                        argsLoader.setIntegerArgumentValue(argsLoader.getClientArgs().getExpectedSizeOfResultSet(), n);
+                        argsLoader.setIntegerArgumentValue(argsLoader.getClientArgs().getExpectedResultSetCount(), n);
                         break;
                     case "RaiseErrorIfResultSetIs":
                         SOSComparisonOperator comparisonOperator = SOSComparisonOperator.fromString(argsLoader.getValue(n));

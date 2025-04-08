@@ -20,31 +20,31 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     /** - File Selection Arguments ------- */
     // YADE 1 - checks after transfer. why???? ....
-    private SOSArgument<Boolean> forceFiles = new SOSArgument<>("force_files", false, Boolean.valueOf(true));
+    private SOSArgument<Boolean> errorOnNoFilesFound = new SOSArgument<>("ErrorOnNoFilesFound", false, Boolean.valueOf(true));
     // RegExp
-    private SOSArgument<String> excludedDirectories = new SOSArgument<>("source_excluded_directories", false);
-    private SOSArgument<Boolean> recursive = new SOSArgument<>("recursive", false, Boolean.valueOf(false));
+    private SOSArgument<String> excludedDirectories = new SOSArgument<>("ExcludedDirectories", false);
+    private SOSArgument<Boolean> recursive = new SOSArgument<>("Recursive", false, Boolean.valueOf(false));
 
     // single files
-    private SOSArgument<List<String>> filePath = new SOSArgument<>("file_path", false);
-    private SOSArgument<Path> fileList = new SOSArgument<>("file_list_name", false);
+    private SOSArgument<List<String>> filePath = new SOSArgument<>("FilePath", false);
+    private SOSArgument<Path> fileList = new SOSArgument<>("FileList", false);
     // multiple files
-    private SOSArgument<String> fileSpec = new SOSArgument<>("file_path", false, "^.*$");
+    private SOSArgument<String> fileSpec = new SOSArgument<>("FileSpec", false, "^.*$");
     // Max files
-    private SOSArgument<Integer> maxFiles = new SOSArgument<>("max_files", false);
+    private SOSArgument<Integer> maxFiles = new SOSArgument<>("MaxFiles", false);
     // Max/Min age/size defined but not used in YADE 1 ------- */
     // private SOSArgument<String> maxFileAge = new SOSArgument<>("max_file_age", false);
     // private SOSArgument<String> minFileAge = new SOSArgument<>("min_file_age", false);
-    private SOSArgument<Long> maxFileSize = new SOSArgument<>("max_file_size", false);
-    private SOSArgument<Long> minFileSize = new SOSArgument<>("min_file_size", false);
+    private SOSArgument<Long> maxFileSize = new SOSArgument<>("MaxFileSize", false);
+    private SOSArgument<Long> minFileSize = new SOSArgument<>("MinFileSize", false);
 
     /** - Steady state ------- */
     // YADE 1 private SOSArgument<Boolean> checkSteadyStateOfFiles = new SOSArgument<>("check_steady_state_of_files", false, Boolean.valueOf(false));
-    private SOSArgument<String> checkSteadyStateInterval = new SOSArgument<>("check_steady_state_interval", false);
-    private SOSArgument<Integer> checkSteadyCount = new SOSArgument<>("check_steady_count", false, Integer.valueOf(10));
+    private SOSArgument<String> checkSteadyStateInterval = new SOSArgument<>("CheckSteadyStateInterval", false);
+    private SOSArgument<Integer> checkSteadyCount = new SOSArgument<>("CheckSteadyStateCount", false, Integer.valueOf(10));
 
     /** - Zero Byte files handling ------- */
-    private SOSArgument<ZeroByteTransfer> zeroByteTransfer = new SOSArgument<>("zero_byte_transfer", false, ZeroByteTransfer.YES);
+    private SOSArgument<ZeroByteTransfer> zeroByteTransfer = new SOSArgument<>("TransferZeroByteFiles", false, ZeroByteTransfer.YES);
 
     /** - Remove files ------- */
     // YADE1 - not needed? due to MOVE operation
@@ -53,7 +53,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments<br/>
      * COPY/MOVE operations: check transferred Target file against an integrity hash file(md5) placed on the Source Argument name is based on XML schema
      * definition */
-    private SOSArgument<Boolean> checkIntegrityHash = new SOSArgument<>("check_security_hash", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> checkIntegrityHash = new SOSArgument<>("CheckIntegrityHash", false, Boolean.valueOf(false));
 
     public YADESourceArguments() {
         getLabel().setValue(LABEL);
@@ -80,7 +80,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     }
 
     public boolean isDirectivesEnabled() {
-        return forceFiles.isDirty() || zeroByteTransfer.isDirty();
+        return errorOnNoFilesFound.isDirty() || zeroByteTransfer.isDirty();
     }
 
     public YADESourcePollingArguments getPolling() {
@@ -91,8 +91,8 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         polling = val;
     }
 
-    public SOSArgument<Boolean> getForceFiles() {
-        return forceFiles;
+    public SOSArgument<Boolean> getErrorOnNoFilesFound() {
+        return errorOnNoFilesFound;
     }
 
     public SOSArgument<String> getExcludedDirectories() {

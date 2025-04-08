@@ -15,37 +15,37 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     // -- Operation related ------------------------------
     /** CommandBeforeOperation */
     // YADE1 name: pre_transfer_commands
-    private SOSArgument<List<String>> commandsBeforeOperation = new SOSArgument<>("commands_before_operation", false);
+    private SOSArgument<List<String>> commandsBeforeOperation = new SOSArgument<>("CommandBeforeOperation", false);
     /** CommandAfterOperationOnSuccess */
     // YADE1 name: post_transfer_commands
-    private SOSArgument<List<String>> commandsAfterOperationOnSuccess = new SOSArgument<>("commands_after_operation_on_success", false);
+    private SOSArgument<List<String>> commandsAfterOperationOnSuccess = new SOSArgument<>("CommandAfterOperationOnSuccess", false);
     /** CommandAfterOperationOnError YADE-406 */
     // YADE1 name: post_transfer_commands_on_error
-    private SOSArgument<List<String>> commandsAfterOperationOnError = new SOSArgument<>("commands_after_operation_on_error", false);
+    private SOSArgument<List<String>> commandsAfterOperationOnError = new SOSArgument<>("CommandAfterOperationOnError", false);
     /** CommandAfterOperationFinal YADE-406 */
     // YADE1 name: post_transfer_commands_final
-    private SOSArgument<List<String>> commandsAfterOperationFinal = new SOSArgument<>("commands_after_operation_final", false);
+    private SOSArgument<List<String>> commandsAfterOperationFinal = new SOSArgument<>("CommandAfterOperationFinal", false);
 
     // -- File related ------------------------------
     /** CommandBeforeFile include="PostPreProcessing-Variables" */
     // YADE1 name: pre_command - YADE 1 support multiple commands but the name is pre_command instead of pre_commands
-    private SOSArgument<List<String>> commandsBeforeFile = new SOSArgument<>("commands_before_file", false);
+    private SOSArgument<List<String>> commandsBeforeFile = new SOSArgument<>("CommandBeforeFile", false);
 
     /** CommandBeforeFile YADE-471 */
     // YADE1 name: pre_command_enable_for_skipped_transfer
-    private SOSArgument<Boolean> commandsBeforeFileEnableForSkipped = new SOSArgument<>("commands_before_file_enable_for_skipped_transfer", false,
+    private SOSArgument<Boolean> commandsBeforeFileEnableForSkipped = new SOSArgument<>("CommandBeforeFile@enable_for_skipped_transfer", false,
             Boolean.valueOf(false));
 
     /** CommandAfterFile include="PostPreProcessing-Variables" */
     // YADE1 name: post_command
-    private SOSArgument<List<String>> commandsAfterFile = new SOSArgument<>("commands_after_file", false);
+    private SOSArgument<List<String>> commandsAfterFile = new SOSArgument<>("CommandAfterFile", false);
     /** CommandAfterFile YADE-471 */
     // YADE1 name: post_command_disable_for_skipped_transfer
-    private SOSArgument<Boolean> commandsAfterFileDisableForSkipped = new SOSArgument<>("commands_after_file_disable_for_skipped_transfer", false,
+    private SOSArgument<Boolean> commandsAfterFileDisableForSkipped = new SOSArgument<>("CommandAfterFile@disable_for_skipped_transfer", false,
             Boolean.valueOf(false));
     // YADE1 name: tfn_post_command
     // Specifies the commands to be executed for each file on the server after the transfer but before a Rename.
-    private SOSArgument<List<String>> commandsBeforeRename = new SOSArgument<>("commands_before_rename", false);
+    private SOSArgument<List<String>> commandsBeforeRename = new SOSArgument<>("CommandsBeforeRename", false);
 
     public SOSArgument<String> getCommandDelimiter() {
         return commandDelimiter;

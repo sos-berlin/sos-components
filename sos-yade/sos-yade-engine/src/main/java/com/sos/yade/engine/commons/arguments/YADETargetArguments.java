@@ -8,39 +8,39 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     public final static String LABEL = "Target";
 
     /** Create missing directories on the Target */
-    private SOSArgument<Boolean> createDirectories = new SOSArgument<>("make_dirs", false, Boolean.valueOf(true));
+    private SOSArgument<Boolean> createDirectories = new SOSArgument<>("MakeDirectories", false, Boolean.valueOf(true));
 
     /** - Transfer options ------- */
-    private SOSArgument<Boolean> checkSize = new SOSArgument<>("check_size", false, Boolean.valueOf(true));
-    private SOSArgument<Boolean> overwriteFiles = new SOSArgument<>("overwrite_files", false, Boolean.valueOf(true));
+    private SOSArgument<Boolean> checkSize = new SOSArgument<>("CheckSize", false, Boolean.valueOf(true));
+    private SOSArgument<Boolean> overwriteFiles = new SOSArgument<>("OverwriteFiles", false, Boolean.valueOf(true));
 
-    private SOSArgument<Boolean> appendFiles = new SOSArgument<>("append_files", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> appendFiles = new SOSArgument<>("AppendFiles", false, Boolean.valueOf(false));
 
-    private SOSArgument<Boolean> keepModificationDate = new SOSArgument<>("keep_modification_date", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> keepModificationDate = new SOSArgument<>("KeepModificationDate", false, Boolean.valueOf(false));
 
-    private SOSArgument<String> atomicPrefix = new SOSArgument<>("atomic_prefix", false);
-    private SOSArgument<String> atomicSuffix = new SOSArgument<>("atomic_suffix", false);
+    private SOSArgument<String> atomicPrefix = new SOSArgument<>("AtomicPrefix", false);
+    private SOSArgument<String> atomicSuffix = new SOSArgument<>("AtomicSuffix", false);
 
     /** - Cumulate files ------- */
     // YADE1 checks this argument
     // private SOSArgument<Boolean> cumulateFiles = new SOSArgument<>("cumulate_files", false, Boolean.valueOf(false));
     // YADE JS7 checks this argument
     /** Name of file into which all files hat to be cumulated */
-    private SOSArgument<String> cumulativeFileName = new SOSArgument<>("cumulative_filename", false);
+    private SOSArgument<String> cumulativeFileName = new SOSArgument<>("CumulativeFilename", false);
     /** Text which has to replaced between cumulated files */
-    private SOSArgument<String> cumulativeFileSeparator = new SOSArgument<>("cumulative_file_separator", false);
+    private SOSArgument<String> cumulativeFileSeparator = new SOSArgument<>("CumulativeFileSeparator", false);
     /** Delete cumulative file before starting transfer */
-    private SOSArgument<Boolean> cumulativeFileDelete = new SOSArgument<>("cumulative_file_delete", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> cumulativeFileDelete = new SOSArgument<>("CumulativeFileDelete", false, Boolean.valueOf(false));
 
     /** - Compressing ------- */
     // YADE1 checks this argument
     // private SOSArgument<Boolean> compressFiles = new SOSArgument<>("compress_files", false, Boolean.valueOf(false));
     // YADE JS7 checks this argument (YADE1 default: .gz)
-    private SOSArgument<String> compressedFileExtension = new SOSArgument<>("compressed_file_extension", false);
+    private SOSArgument<String> compressedFileExtension = new SOSArgument<>("CompressedFileExtension", false);
 
     /** - Integrity Hash: integrityHashAlgorithm is defined in YADEArguments<br/>
      * Argument name is based on XML schema definition */
-    private SOSArgument<Boolean> createIntegrityHashFile = new SOSArgument<>("create_security_hash_file", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> createIntegrityHashFile = new SOSArgument<>("CreateIntegrityHashFile", false, Boolean.valueOf(false));
 
     public YADETargetArguments() {
         getLabel().setValue(LABEL);

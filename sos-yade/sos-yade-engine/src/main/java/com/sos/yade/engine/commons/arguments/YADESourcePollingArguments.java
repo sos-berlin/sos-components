@@ -3,25 +3,27 @@ package com.sos.yade.engine.commons.arguments;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 
-public class YADESourcePollingArguments extends ASOSArguments{
+public class YADESourcePollingArguments extends ASOSArguments {
 
     public static final long DEFAULT_POLL_INTERVAL = 60L;// seconds
 
     /** - Polling ------- */
-    private SOSArgument<Boolean> pollingServer = new SOSArgument<>("polling_server", false, Boolean.valueOf(false));
-    private SOSArgument<Boolean> pollingServerPollForever = new SOSArgument<>("polling_server_poll_forever", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> pollingServer = new SOSArgument<>("PollingServer", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> pollingServerPollForever = new SOSArgument<>("PollForever", false, Boolean.valueOf(false));
     // TODO - time - YADE 1 default 0
-    private SOSArgument<String> pollingServerDuration = new SOSArgument<>("polling_server_duration", false);
+    private SOSArgument<String> pollingServerDuration = new SOSArgument<>("PollingServerDuration", false);
     // seconds
-    private SOSArgument<String> pollInterval = new SOSArgument<>("poll_interval", false, String.valueOf(DEFAULT_POLL_INTERVAL));
+    private SOSArgument<String> pollInterval = new SOSArgument<>("PollInterval", false, String.valueOf(DEFAULT_POLL_INTERVAL));
     // private SOSArgument<String> pollingDuration = new SOSArgument<>("pollingduration", false);// ??? is used - can be set in schema
 
-    private SOSArgument<Boolean> pollingWait4SourceFolder = new SOSArgument<>("polling_wait_4_source_folder", false, Boolean.valueOf(false));
-    private SOSArgument<Boolean> waitingForLateComers = new SOSArgument<>("waiting_for_late_comers", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> pollingWait4SourceFolder = new SOSArgument<>("WaitForSourceFolder", false, Boolean.valueOf(false));
 
-    private SOSArgument<Integer> pollMinFiles = new SOSArgument<>("poll_minfiles", false);
+    // TODO check -if can be set ...
+    private SOSArgument<Boolean> waitingForLateComers = new SOSArgument<>("WaitingForLateComers", false, Boolean.valueOf(false));
+
+    private SOSArgument<Integer> pollMinFiles = new SOSArgument<>("MinFiles", false);
     // minutes
-    private SOSArgument<Integer> pollTimeout = new SOSArgument<>("poll_timeout", false);
+    private SOSArgument<Integer> pollTimeout = new SOSArgument<>("PollTimeout", false);
     // declared by not used with YADE 1: polling_end_at, pollKeepConnection
 
     public boolean isPollMinFilesEnabled() {

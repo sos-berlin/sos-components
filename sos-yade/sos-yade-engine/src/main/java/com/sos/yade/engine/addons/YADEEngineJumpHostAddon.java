@@ -135,7 +135,7 @@ public class YADEEngineJumpHostAddon {
         } catch (Throwable e) {
             throw new YADEEngineJumpHostException(e.toString(), e);
         } finally {
-            deleteJumpDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
+            // deleteJumpDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
         }
     }
 
@@ -152,7 +152,7 @@ public class YADEEngineJumpHostAddon {
             newSourceArgs.getLabel().setValue(YADEJumpHostArguments.LABEL);
 
             newSourceArgs.getDirectory().setValue(config.dataDirectory);
-            // newSourceArgs.getCreateDirectories().setValue(true);
+            newSourceArgs.getRecursive().setValue(Boolean.valueOf(true));
             newSourceArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newSourceArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
             newSourceArgs.getCommands().addCommandBeforeOperation(config.getYADEClientCommand());
@@ -166,7 +166,7 @@ public class YADEEngineJumpHostAddon {
             newTargetArgs.getLabel().setValue(YADEJumpHostArguments.LABEL);
 
             newTargetArgs.getDirectory().setValue(config.dataDirectory);
-            newTargetArgs.getCreateDirectories().setValue(true);
+            newTargetArgs.getCreateDirectories().setValue(Boolean.valueOf(true));
             newTargetArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newTargetArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
             newTargetArgs.getCommands().addCommandAfterOperationOnSuccess(config.getYADEClientCommand());
@@ -330,9 +330,9 @@ public class YADEEngineJumpHostAddon {
                 sourceToJumpHost.setFileList(argsLoader.getSourceArgs().getFileList());
                 argsLoader.getSourceArgs().getFileList().setValue(null);
             }
-            if (argsLoader.getClientArgs().getResultSetFileName().isDirty()) {
-                sourceToJumpHost.setResultSetFile(argsLoader.getClientArgs().getResultSetFileName());
-                argsLoader.getClientArgs().getResultSetFileName().setValue(null);
+            if (argsLoader.getClientArgs().getResultSetFile().isDirty()) {
+                sourceToJumpHost.setResultSetFile(argsLoader.getClientArgs().getResultSetFile());
+                argsLoader.getClientArgs().getResultSetFile().setValue(null);
             }
 
             if (argsLoader.getArgs().getTransactional().isTrue() && TransferOperation.MOVE.equals(argsLoader.getArgs().getOperation().getValue())) {
@@ -346,7 +346,8 @@ public class YADEEngineJumpHostAddon {
 
         private void setJumpHostToTarget() {
             jumpHostToTarget = new JumpHostToTarget();
-            if (argsLoader.getArgs().getTransactional().isTrue() && TransferOperation.MOVE.equals(argsLoader.getArgs().getOperation().getValue())) {
+            // delete source files "manually" (transaction-independent) only if the transfer from Jump to the Target was successful
+            if (TransferOperation.MOVE.equals(argsLoader.getArgs().getOperation().getValue())) {
                 argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
                 jumpHostToTarget.deleteSourceFiles = true;
             }

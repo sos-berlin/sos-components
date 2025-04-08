@@ -25,13 +25,13 @@ import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 
 public class YADEClientBannerWriter {
 
-    private static final String SEPARATOR_LINE = "**************************************************************";
+    private static final String SEPARATOR_LINE = "****************************************************************************************";
 
     public static void writeHeader(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) {
         if (writeYADEBanner) {
             logger.info(SEPARATOR_LINE);
-            logger.info(String.format("*    YADE    - %-46s%s", "Managed File Transfer (www.sos-berlin.com)", "*"));
-            logger.info(String.format("*    Version - %-46s%s", SOSVersionInfo.VERSION_STRING, "*"));
+            logger.info(String.format("*    YADE    - %-72s%s", "Managed File Transfer (www.sos-berlin.com)", "*"));
+            logger.info(String.format("*    Version - %-72s%s", SOSVersionInfo.VERSION_BUILD_DATE_AND_NUMBER, "*"));
             logger.info(SEPARATOR_LINE);
         }
         writeTransferHeader(logger, argsLoader.getArgs());
@@ -49,13 +49,13 @@ public class YADEClientBannerWriter {
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
         sb.append(",").append(YADEArgumentsHelper.toString(args.getTransactional()));
         if (!args.getSettings().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(args.getSettings()));
+            sb.append(",").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
         }
         if (!args.getProfile().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(args.getProfile()));
+            sb.append(",").append(YADEArgumentsHelper.toString("Profile", args.getProfile()));
         }
         if (args.isParallelismEnabled()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(args.getParallelism()));
+            sb.append(",").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
         }
         logger.info(sb);
         if (logger.isDebugEnabled()) {
@@ -69,11 +69,11 @@ public class YADEClientBannerWriter {
         }
         List<String> l = new ArrayList<>();
         // ResultSet
-        if (!clientArgs.getResultSetFileName().isEmpty()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getResultSetFileName()));
+        if (!clientArgs.getResultSetFile().isEmpty()) {
+            l.add(YADEArgumentsHelper.toString(clientArgs.getResultSetFile()));
         }
-        if (!clientArgs.getExpectedSizeOfResultSet().isEmpty()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getExpectedSizeOfResultSet()));
+        if (!clientArgs.getExpectedResultSetCount().isEmpty()) {
+            l.add(YADEArgumentsHelper.toString(clientArgs.getExpectedResultSetCount()));
         }
         if (!clientArgs.getRaiseErrorIfResultSetIs().isEmpty()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getRaiseErrorIfResultSetIs()));
@@ -101,18 +101,15 @@ public class YADEClientBannerWriter {
     private static void writeSourceHeader(ISOSLogger logger, YADESourceArguments sourceArgs) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(YADESourceArguments.LABEL).append("]");
-        sb.append(YADEArgumentsHelper.toString(sourceArgs.getProvider().getProtocol()));
+        sb.append(YADEArgumentsHelper.toString("Protocol", sourceArgs.getProvider().getProtocol()));
         try {
-            sb.append(",").append(sourceArgs.getProvider().getAccessInfo());
+            sb.append("(").append(sourceArgs.getProvider().getAccessInfo()).append(")");
         } catch (ProviderInitializationException e) {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
-        sb.append(",source_dir=").append(sourceArgs.getDirectory().getDisplayValue());
-
+        sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getDirectory()));
         // File selection
-        sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getForceFiles()));
-        sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getRecursive()));
         if (sourceArgs.isSingleFilesSelection()) {
             if (sourceArgs.isFileListEnabled()) {
                 sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getFileList()));
@@ -124,6 +121,10 @@ public class YADEClientBannerWriter {
         }
         if (!sourceArgs.getExcludedDirectories().isEmpty()) {
             sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getExcludedDirectories()));
+        }
+        sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getRecursive()));
+        if (sourceArgs.getErrorOnNoFilesFound().isDirty()) {
+            sb.append(",").append(YADEArgumentsHelper.toOppositeBooleanString(sourceArgs.getErrorOnNoFilesFound()));
         }
         if (!ZeroByteTransfer.YES.equals(sourceArgs.getZeroByteTransfer().getValue())) {
             sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getZeroByteTransfer()));
@@ -189,14 +190,15 @@ public class YADEClientBannerWriter {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(YADEJumpHostArguments.LABEL).append("]");
-        sb.append(YADEArgumentsHelper.toString(jumpHostArgs.getProvider().getProtocol()));
+        sb.append("[ ").append(YADEJumpHostArguments.LABEL).append(" ]");
+        sb.append(YADEArgumentsHelper.toString("Protocol", jumpHostArgs.getProvider().getProtocol()));
         try {
-            sb.append(",").append(jumpHostArgs.getAccessInfo());
+            sb.append("(").append(jumpHostArgs.getAccessInfo()).append(")");
         } catch (ProviderInitializationException e) {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
+        sb.append(",").append(YADEArgumentsHelper.toString(jumpHostArgs.getDirectory()));
         sb.append(",command=").append(jumpHostArgs.getYADEClientCommand().getDisplayValue());
 
         logger.info(sb);
@@ -213,17 +215,23 @@ public class YADEClientBannerWriter {
 
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(YADETargetArguments.LABEL).append("]");
-        sb.append(YADEArgumentsHelper.toString(targetArgs.getProvider().getProtocol()));
+        sb.append(YADEArgumentsHelper.toString("Protocol", targetArgs.getProvider().getProtocol()));
         try {
-            sb.append(",").append(targetArgs.getProvider().getAccessInfo());
+            sb.append("(").append(targetArgs.getProvider().getAccessInfo()).append(")");
         } catch (ProviderInitializationException e) {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
-        sb.append(",target_dir=").append(targetArgs.getDirectory().getDisplayValue());
-        sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCreateDirectories()));
-        sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCheckSize()));
-        sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getOverwriteFiles()));
+        sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getDirectory()));
+        if (targetArgs.getCreateDirectories().isDirty()) {
+            sb.append(",").append(YADEArgumentsHelper.toOppositeBooleanString(targetArgs.getCreateDirectories()));
+        }
+        if (targetArgs.getCheckSize().isDirty()) {
+            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCheckSize()));
+        }
+        if (targetArgs.getOverwriteFiles().isDirty()) {
+            sb.append(",").append(YADEArgumentsHelper.toOppositeBooleanString(targetArgs.getOverwriteFiles()));
+        }
         if (targetArgs.getAppendFiles().isTrue()) {
             sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
         }

@@ -47,7 +47,7 @@ public class YADEArguments extends ASOSArguments {
 
     /** - Meta info ------- */
     /** COPY/MOVE/GETLIST/RENAME */
-    private SOSArgument<TransferOperation> operation = new SOSArgument<>("operation", true);
+    private SOSArgument<TransferOperation> operation = new SOSArgument<>("Operation", true);
 
     /** - Transfer adjustments ------- */
 
@@ -63,10 +63,10 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<Integer> parallelism = new SOSArgument<>(STARTUP_ARG_PARALLELISM, false, Integer.valueOf(1));
 
     /** COPY/MOVE operations */
-    private SOSArgument<Boolean> transactional = new SOSArgument<>("transactional", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> transactional = new SOSArgument<>("Transactional", false, Boolean.valueOf(false));
 
     /** COPY/MOVE operations: the buffer size(bytes) for reading the Source file/writing the Target file */
-    private SOSArgument<Integer> bufferSize = new SOSArgument<>("buffer_size", false, Integer.valueOf(32 * 1_024));
+    private SOSArgument<Integer> bufferSize = new SOSArgument<>("BufferSize", false, Integer.valueOf(32 * 1_024));
 
     // YADE 1 used in code but not defined in schema...
     // private SOSArgument<Boolean> skipTransfer = new SOSArgument<>("skip_transfer", false, Boolean.valueOf(false));

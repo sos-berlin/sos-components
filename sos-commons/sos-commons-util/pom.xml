@@ -12,13 +12,21 @@
 	</parent>
 
 	<artifactId>sos-commons-util</artifactId>
-
-	<properties>
-		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format> 
-	</properties>
-
+	
 	<build>
 		<plugins>
+			<plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
@@ -30,6 +38,10 @@
 						</goals>
 						<configuration>
 							<tasks>
+								<tstamp>
+                                    <format property="build.date" pattern="yyyy-MM-dd" timezone="UTC"/>
+                                    <format property="build.time" pattern="HH:mm:ss" timezone="UTC"/>
+                                </tstamp>
 								<echo
 									file="${project.basedir}/src/main/java/com/sos/commons/util/SOSVersionInfo.java">
                                 <![CDATA[
@@ -42,8 +54,11 @@ package com.sos.commons.util;
  */
 public class SOSVersionInfo {
     public final static String VERSION = "${project.version}";
-    public final static String BUILD_TIMESTAMP = "${maven.build.timestamp}";
-    public final static String VERSION_STRING = VERSION+"("+BUILD_TIMESTAMP+")";
+    public static final String BUILD_NUMBER = "${buildNumber}";
+    public final static String BUILD_DATE = "${build.date}";
+    public final static String BUILD_TIME = "${build.time}";
+    public final static String VERSION_BUILD_DATE = VERSION+" ("+BUILD_DATE+")";
+    public final static String VERSION_BUILD_DATE_AND_NUMBER = VERSION+" ("+BUILD_DATE+" "+BUILD_NUMBER+")";
 }
                                 ]]>
                             </echo>

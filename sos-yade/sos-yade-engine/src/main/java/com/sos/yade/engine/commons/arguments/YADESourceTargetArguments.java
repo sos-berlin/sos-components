@@ -10,21 +10,21 @@ public class YADESourceTargetArguments extends ASOSArguments {
     private YADEProviderCommandArguments commands;
 
     // TODO source_dir/target_dir
-    private SOSArgument<String> directory = new SOSArgument<>("dir", false);
+    private SOSArgument<String> directory = new SOSArgument<>("Directory", false);
 
-    private SOSArgument<Integer> connectionErrorRetryCountMax = new SOSArgument<>("connection_error_retry_count_max", false);
-    private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("connection_error_retry_interval", false, "0s");
+    private SOSArgument<Integer> connectionErrorRetryCountMax = new SOSArgument<>("RetryCountMax", false);
+    private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("RetryInterval", false, "0s");
 
     /** - Replacing ------- */
-    private SOSArgument<String> replacement = new SOSArgument<>("replacement", false);
-    private SOSArgument<String> replacing = new SOSArgument<>("replacing", false);
+    private SOSArgument<String> replacing = new SOSArgument<>("ReplaceWhat", false);
+    private SOSArgument<String> replacement = new SOSArgument<>("ReplaceWith", false);
 
     /** - Integrity Hash ------- */
     /** COPY/MOVE operations<br/>
      * Same algorithm for Source and Target - currently only md5 is supported<br/>
      * Source -> CheckIntegrityHash, Target -> CreateIntegrityHashFile<br/>
      * Argument name is based on XML schema definition */
-    private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("security_hash_type", false, "md5");
+    private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("HashAlgorithm", false, "md5");
 
     /** Internal Argument - Source/Target/Jump */
     private SOSArgument<String> label = new SOSArgument<>(null, false);

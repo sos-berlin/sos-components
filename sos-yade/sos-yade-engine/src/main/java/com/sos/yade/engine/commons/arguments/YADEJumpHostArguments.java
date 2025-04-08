@@ -18,10 +18,10 @@ public class YADEJumpHostArguments extends ASOSArguments {
     private YADEProviderCommandArguments commands;
 
     /** COPYFROMINTERNET/COPYTOINTERNET/... */
-    private SOSArgument<String> directory = new SOSArgument<>("dir", false);
-    private SOSArgument<JumpPlatform> platform = new SOSArgument<>("platform", false);
+    private SOSArgument<String> directory = new SOSArgument<>("Directory", false);
+    private SOSArgument<JumpPlatform> platform = new SOSArgument<>("Platform", false);
 
-    private SOSArgument<String> yadeClientCommand = new SOSArgument<>("yade_client_command", false);
+    private SOSArgument<String> yadeClientCommand = new SOSArgument<>("JumpCommand", false);
 
     /** internal usage */
     private SOSArgument<Boolean> configuredOnSource = new SOSArgument<>(null, false);

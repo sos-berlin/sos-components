@@ -50,6 +50,14 @@ public class YADEArgumentsHelper {
         return arg.getName() + "=" + arg.getDisplayValue();
     }
 
+    public static <T> String toString(String name, SOSArgument<T> arg) {
+        return name + "=" + arg.getDisplayValue();
+    }
+
+    public static String toOppositeBooleanString(SOSArgument<Boolean> arg) {
+        return "Disable" + arg.getName() + "=" + (!arg.isTrue());
+    }
+
     public static String toString(ISOSLogger logger, String label, ASOSArguments args) {
         if (args == null) {
             return "[" + label + "]null";
