@@ -135,7 +135,7 @@ public class YADEEngineJumpHostAddon {
         } catch (Throwable e) {
             throw new YADEEngineJumpHostException(e.toString(), e);
         } finally {
-            // deleteJumpDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
+            deleteJumpDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
         }
     }
 
