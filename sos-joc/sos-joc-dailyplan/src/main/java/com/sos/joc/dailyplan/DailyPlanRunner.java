@@ -797,14 +797,19 @@ public class DailyPlanRunner extends TimerTask {
                 
                 JPlanSchemaState schemaState = proxy.currentState().idToPlanSchemaState().get(dailyPlanSchemaId);
                 Value val = schemaState.namedValues().get(PlanSchemas.DailyPlanThresholdKey);
+                Map<String, Value> newNamedValues = new HashMap<>(schemaState.namedValues());
                 if (val != null) {
                     String oldValue = val.toStringValueString().getOrElse(null);
                     if (oldValue == null || (oldValue != null && oldValue.compareTo(date) < 0)) {
-                        schemaState.namedValues().put(PlanSchemas.DailyPlanThresholdKey, StringValue.of(date));
+                        newNamedValues.put(PlanSchemas.DailyPlanThresholdKey, StringValue.of(date));
                         proxy.api().executeCommand(JControllerCommand.apply(JControllerCommand.changePlanSchema(dailyPlanSchemaId, Optional.of(
-                                schemaState.namedValues()), Optional.empty()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null,
+                                newNamedValues), Optional.empty()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null,
                                         controllerId));
                     }
+                } else {
+                    newNamedValues.put(PlanSchemas.DailyPlanThresholdKey, StringValue.of(date));
+                    proxy.api().executeCommand(JControllerCommand.apply(JControllerCommand.changePlanSchema(dailyPlanSchemaId, Optional.of(
+                            newNamedValues), Optional.empty()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, controllerId));
                 }
 
             } catch (Exception e) {

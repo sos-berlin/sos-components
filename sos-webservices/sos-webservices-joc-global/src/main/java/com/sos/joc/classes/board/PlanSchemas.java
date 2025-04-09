@@ -29,7 +29,7 @@ public class PlanSchemas {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(PlanSchemas.class);
     public static final String DailyPlanPlanSchemaId = "DailyPlan"; 
-    public static final String DailyPlanThresholdKey = "unknownPlansAreOpenFrom"; 
+    public static final String DailyPlanThresholdKey = "unknownPlansOpenFrom"; 
 //    private static final Duration finishedPlanRetentionPeriod = Duration.ZERO; // Duration.ofDays(7L);
     private static final Map<String, JPlanSchema> planSchemas = Collections.unmodifiableMap(new HashMap<String, JPlanSchema>() {
 
@@ -38,7 +38,7 @@ public class PlanSchemas {
         {
             put(DailyPlanPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(DailyPlanPlanSchemaId), 
                     JExprFunction.apply("(day) => $day >= $" + DailyPlanThresholdKey).asScala(),
-                    Collections.singletonMap(DailyPlanThresholdKey, StringValue.empty())));
+                    new HashMap<>(Collections.singletonMap(DailyPlanThresholdKey, StringValue.empty()))));
         }
     });
 

@@ -2,7 +2,6 @@ package com.sos.joc.publish.util;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,8 +31,6 @@ import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
-import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
@@ -42,7 +38,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocSosHibernateException;
-import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
@@ -206,7 +201,8 @@ public class DeleteDeployments {
     }
     
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
-            String accessToken, JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2, Set<String> fileOrderSourceNames) {
+            String accessToken, JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2,
+            Set<String> fileOrderSourceNames) {
         SOSHibernateSession newHibernateSession = null;
         try {
             if (either.isLeft()) {
@@ -465,7 +461,12 @@ public class DeleteDeployments {
     }
 
     public static void processAfterRevoke(Either<Problem, Void> either, String controllerId, String account, String commitId, 
-            String accessToken, JocError jocError, String cancelOrderDate) {
+            String accessToken, JocError jocError) {
+        processAfterRevoke(either, controllerId, account, commitId, accessToken, jocError, null, null, null);
+    }
+    
+    public static void processAfterRevoke(Either<Problem, Void> either, String controllerId, String account, String commitId, 
+            String accessToken, JocError jocError, List<DBItemDeploymentHistory> toDelete, String commitId2, Set<String> fileOrderSourceNames) {
         SOSHibernateSession newHibernateSession = null;
         try {
             if (either.isLeft()) {
@@ -475,13 +476,9 @@ public class DeleteDeployments {
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
-
                 // get all already optimistically stored entries for the commit
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 // update all previously optimistically stored entries with the error message and change the state
-                Map<Integer, Set<DBItemInventoryConfigurationTrash>> itemsFromTrashByType = 
-                        new HashMap<Integer, Set<DBItemInventoryConfigurationTrash>>();
-                InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                 for(DBItemDeploymentHistory optimistic : optimisticEntries) {
                     optimistic.setErrorMessage(either.getLeft().message());
                     optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
@@ -492,9 +489,26 @@ public class DeleteDeployments {
                         orig.setDeployed(true);
                         dbLayer.getSession().update(orig);
                     }
-}
-                
+                }
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
+            } else {
+                if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
+                    JControllerProxy proxy = Proxy.of(controllerId);
+                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(fos -> OrderWatchPath.of(fos)).collect(Collectors.toSet());
+                    for (int second = 0; second < 10; second++) {
+                        if (!proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
+                            // file order source is deleted
+                            break;
+                        }
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(200L);
+                        } catch (Exception e) {}
+                    }
+                    UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId)
+                            .thenAccept(either2 -> {
+                                processAfterRevoke(either2, controllerId, account, commitId2, accessToken, jocError);
+                            });
+                }
             }
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);

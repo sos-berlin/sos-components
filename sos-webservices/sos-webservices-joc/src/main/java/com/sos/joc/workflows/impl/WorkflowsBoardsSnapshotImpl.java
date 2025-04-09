@@ -1,10 +1,15 @@
 package com.sos.joc.workflows.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -16,6 +21,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.board.PlannedBoard;
@@ -42,6 +48,8 @@ import com.sos.joc.workflows.resource.IWorkflowsBoardsSnapshotResource;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.StreamingOutput;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.plan.PlanId;
@@ -63,7 +71,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
     private Map<String, Set<String>> orderTags = Collections.emptyMap();
 
     @Override
-    public JOCDefaultResponse postWorkflowBoards(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postWorkflowBoards(String accessToken, String acceptEncoding, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
@@ -227,7 +235,8 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             entity.setOrders(idToOrder);
 
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return response(acceptEncoding, Globals.objectMapper.writeValueAsBytes(entity));
+            //return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -236,6 +245,55 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private JOCDefaultResponse response(String acceptEncoding, byte[] responseEntity) {
+        
+        if (responseEntity.length < 1024 * 512) {
+            return JOCDefaultResponse.responseStatus200(responseEntity);
+        }
+
+        boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
+        StreamingOutput entityStream = new StreamingOutput() {
+
+            @Override
+            public void write(OutputStream output) throws IOException {
+                if (withGzipEncoding) {
+                    output = new GZIPOutputStream(output);
+                }
+                InputStream in = null;
+                try {
+                    in = new ByteArrayInputStream(responseEntity);
+                    byte[] buffer = new byte[4096];
+                    int length;
+                    while ((length = in.read(buffer)) > 0) {
+                        output.write(buffer, 0, length);
+                    }
+                    output.flush();
+                } finally {
+                    try {
+                        output.close();
+                    } catch (Exception e) {
+                    }
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
+        };
+        return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding));
+    }
+
+    private Map<String, Object> getGzipHeaders(boolean withGzipEncoding) {
+        Map<String, Object> headers = new HashMap<String, Object>();
+        if (withGzipEncoding) {
+            headers.put("Content-Encoding", "gzip");
+        }
+        headers.put("Transfer-Encoding", "chunked");
+        return headers;
     }
 
     private static boolean orderPosIsBeforeBoardPos(JOrder jOrder, String boardPos) {

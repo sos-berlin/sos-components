@@ -14,6 +14,7 @@ public interface IWorkflowsBoardsSnapshotResource {
     @POST
     @Path("boards/snapshot")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postWorkflowBoards(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postWorkflowBoards(@HeaderParam("X-Access-Token") String xAccessToken,
+            @HeaderParam("Accept-Encoding") String acceptEncoding, byte[] filterBytes);
 
 }
