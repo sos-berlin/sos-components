@@ -179,7 +179,11 @@ public class SOSAuthHelper {
             JsonMappingException, IOException, SOSHibernateException {
 
         String initialPassword = Globals.getConfigurationGlobalsIdentityService().getInitialPassword().getValue();
-        Long minPasswordLength = Long.valueOf(Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getValue());
+        Long minPasswordLength = Long.valueOf(
+                Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getValue() != null 
+                        ? Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getValue() 
+                        : Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getDefault()
+            );
         SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
 
         if (minPasswordLength == null) {
