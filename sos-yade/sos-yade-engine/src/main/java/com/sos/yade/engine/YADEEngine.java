@@ -146,7 +146,7 @@ public class YADEEngine {
 
                     /** 15) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                     operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
-                            files, targetDelegator, cancel);
+                            targetDelegator, files, cancel);
                 }
 
                 /** 16) Source/Target: execute commands after operation on success */
@@ -204,7 +204,7 @@ public class YADEEngine {
 
                         /** 15) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                         operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
-                                files, targetDelegator, cancel);
+                                targetDelegator, files, cancel);
                     }
 
                     /** 16) Source/Target: execute commands after operation on success */
@@ -279,8 +279,7 @@ public class YADEEngine {
         }
 
         // sendNotifications
-        YADEClientBannerWriter.writeSummary(logger, argsLoader.getArgs(), operationDuration, targetDelegator == null ? null : targetDelegator
-                .getArgs(), files, exception);
+        YADEClientBannerWriter.writeSummary(logger, argsLoader.getArgs(), operationDuration, sourceDelegator, targetDelegator, files, exception);
 
         // disconnectSource means - YADE execution(one-time operation or polling) is completed
         if (exceptions.size() > 0 && disconnectSource) {

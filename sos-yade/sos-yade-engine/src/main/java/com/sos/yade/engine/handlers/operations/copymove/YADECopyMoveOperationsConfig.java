@@ -224,6 +224,12 @@ public class YADECopyMoveOperationsConfig {
             if (!transactional && !targetDelegator.getArgs().isAtomicityEnabled()) {
                 return null;
             }
+            // Transactional: Source(Any Provider) -> Jump(SSHProvider)
+            // - does not require atomic transfer (if not defined) for transactions, since an additional directory is created at the jump host
+            // -- this speeds up the transfer as no additional renaming is required
+            if (transactional && targetDelegator.isJumpHost() && !targetDelegator.getArgs().isAtomicityEnabled()) {
+                return null;
+            }
             return new Atomic(targetDelegator.getArgs().getAtomicPrefix().getValue(), targetDelegator.getArgs().getAtomicSuffix().getValue());
         }
 

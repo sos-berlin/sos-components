@@ -26,10 +26,10 @@ public class YADEOperationsManager {
      */
     /** TODO not use "YADEArguments args" ... */
     public static Duration process(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, YADESourceProviderDelegator sourceDelegator,
-            List<ProviderFile> sourceFiles, YADETargetProviderDelegator targetDelegator, AtomicBoolean cancel) throws Exception {
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, AtomicBoolean cancel) throws Exception {
 
         Instant start = Instant.now();
-        //logger.info("[%s]start...", args.getOperation().getValue());
+        // logger.info("[%s]start...", args.getOperation().getValue());
 
         TransferOperation operation = args.getOperation().getValue();
         switch (operation) {

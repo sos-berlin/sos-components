@@ -110,7 +110,9 @@ public class YADEFileActionsExecuter {
         String newPath = file.getFinalFullPath();
 
         YADECommandExecutor.executeBeforeRename(logger, delegator, sourceDelegator, targetDelegator, file);
-        sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
+        delegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
+        // for error tests
+        // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
         file.setSubState(TransferEntryState.RENAMED);
         logger.info("[%s]%s[%s][renamed][%s]", fileTransferLogPrefix, delegator.getLogPrefix(), oldPath, newPath);
     }

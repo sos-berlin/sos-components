@@ -18,6 +18,7 @@ import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
@@ -79,7 +80,7 @@ public class YADEFileHandler {
                         logger.info("[%s][skipped][DisableOverwriteFiles=true]%s=%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFile
                                 .getFinalFullPath());
 
-                        YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, targetFile);
+                        YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
                         return;
                     }
                 }
@@ -181,8 +182,9 @@ public class YADEFileHandler {
             }
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
-            logger.info("[%s][transferred][%s=%s][%s=%s][bytes=%s]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
-                    targetDelegator.getLabel(), targetFile.getFullPath(), targetFile.getSize(), SOSDate.getDuration(startTime, Instant.now()));
+            logger.info("[%s][%s][%s=%s][%s=%s][bytes=%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
+                    sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator.getLabel(), targetFile.getFullPath(), targetFile.getSize(),
+                    SOSDate.getDuration(startTime, Instant.now()));
 
             YADEFileActionsExecuter.checkTargetFileSize(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile);
             YADEChecksumFileHelper.checkSourceIntegrityHash(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
@@ -295,7 +297,7 @@ public class YADEFileHandler {
                 YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
                 YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
-                YADECopyMoveOperationsHandler.handleReusableExecutorsForTransfer(config, sourceDelegator, targetDelegator);
+                YADECopyMoveOperationsHandler.handleReusableResourcesBeforeTransfer(config, sourceDelegator, targetDelegator);
             }
         } else {
             throwException = true;

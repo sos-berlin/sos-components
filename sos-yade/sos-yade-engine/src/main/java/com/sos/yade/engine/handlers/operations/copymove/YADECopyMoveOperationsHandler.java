@@ -59,7 +59,7 @@ public class YADECopyMoveOperationsHandler {
         }
     }
 
-    public static void handleReusableExecutorsForTransfer(YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+    public static void handleReusableResourcesBeforeTransfer(YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator) {
 
         if (!config.processFilesSequentially()) {
@@ -96,7 +96,7 @@ public class YADECopyMoveOperationsHandler {
             maxThreads = size;
         }
 
-        handleReusableExecutorsForTransfer(config, sourceDelegator, targetDelegator);
+        handleReusableResourcesBeforeTransfer(config, sourceDelegator, targetDelegator);
 
         // custom ForkJoinPool & parallelStream because this combination:
         // - allows control over the number of threads created
@@ -186,16 +186,21 @@ public class YADECopyMoveOperationsHandler {
         logger.info(YADEClientBannerWriter.SEPARATOR_LINE);
         handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
 
-        for (ProviderFile pf : sourceFiles) {
-            YADEProviderFile sourceFile = (YADEProviderFile) pf;
-            String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
-            YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile);
+        try {
+            for (ProviderFile pf : sourceFiles) {
+                YADEProviderFile sourceFile = (YADEProviderFile) pf;
+                String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
+                YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile);
 
-            if (config.isMoveOperation()) {
-                if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
-                    logger.info("[%s]%s[deleted]%s", fileTransferLogPrefix, sourceDelegator.getLogPrefix(), sourceFile.getFinalFullPath());
+                if (config.isMoveOperation()) {
+                    if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
+                        logger.info("[%s]%s[deleted]%s", fileTransferLogPrefix, sourceDelegator.getLogPrefix(), sourceFile.getFinalFullPath());
+                    }
                 }
             }
+        } catch (Exception e) {
+            logger.error("[finalizeTransaction]" + e.getMessage());
+            throw e;
         }
     }
 
@@ -211,7 +216,17 @@ public class YADECopyMoveOperationsHandler {
             return;
         }
         logger.info(YADEClientBannerWriter.SEPARATOR_LINE);
-        handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
+
+        boolean isJumpHostRollback = false;
+        if (targetDelegator.isJumpHost()) {
+            // Source(Any Provider) -> Jump(SSHProvider)
+            logger.info(targetDelegator.getLogPrefix() + "rollback");
+            isJumpHostRollback = true;
+        }
+
+        if (!isJumpHostRollback) {
+            handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
+        }
 
         l: for (ProviderFile pf : sourceFiles) {
             YADEProviderFile sourceFile = (YADEProviderFile) pf;
@@ -225,12 +240,19 @@ public class YADECopyMoveOperationsHandler {
                 sourceFile.setSubState(TransferEntryState.ABORTED);
                 continue l;
             }
-            // 2) the targetFile was not created because it may have been skipped due to non-overwrite criteria
+
+            // 2) only set the status targetFile - the entire jump directory will be deleted anyway - no individual files need to be deleted
+            if (isJumpHostRollback) {
+                targetFile.setSubState(TransferEntryState.ROLLED_BACK);
+                continue l;
+            }
+
+            // 3) the targetFile was not created because it may have been skipped due to non-overwrite criteria
             if (!targetFile.isTransferredOrTransferring()) {
                 continue l;
             }
 
-            // 3) a targetFile intergityHash file may have been created and needs to be deleted
+            // 4) a targetFile intergityHash file may have been created and needs to be deleted
             if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
                 String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
                 try {
@@ -242,25 +264,25 @@ public class YADECopyMoveOperationsHandler {
                 }
             }
 
-            // 4) the targetFile may have already been renamed to the final name or may still be a file with the atomic suffix/prefix
+            // 5) the targetFile may have already been renamed to the final name or may still be a file with the atomic suffix/prefix
             // - note for "if compress": all names already contain the compress extension
             String targetFilePath = TransferEntryState.RENAMED.equals(targetFile.getSubState()) ? targetFile.getFinalFullPath() : targetFile
                     .getFullPath();
 
-            // 5) delete targetFile
+            // 6) delete targetFile
             try {
                 if (targetDelegator.getProvider().deleteIfExists(targetFilePath)) {
-                    logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLogPrefix(), targetFilePath);
+                    logger.info("[%s]%s[rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLogPrefix(), targetFilePath);
                 }
                 targetFile.setSubState(TransferEntryState.ROLLED_BACK);
             } catch (Exception e) {
-                logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLogPrefix(), targetFilePath, e.toString());
+                logger.error("[%s]%s[rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLogPrefix(), targetFilePath, e.toString());
                 targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
             }
         }
     }
 
-    public static void handleReusableResourcesAfterTransfer(ISOSLogger logger, YADECopyMoveOperationsConfig config,
+    private static void handleReusableResourcesAfterTransfer(ISOSLogger logger, YADECopyMoveOperationsConfig config,
             YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator) {
 
         // if (!config.processFilesSequentially()) {

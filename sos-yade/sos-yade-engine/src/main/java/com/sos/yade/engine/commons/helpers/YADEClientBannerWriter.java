@@ -22,10 +22,18 @@ import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 
 public class YADEClientBannerWriter {
 
     public static final String SEPARATOR_LINE = "****************************************************************************************";
+
+    private static final boolean STATE_TO_LOWERCASE = false;
+
+    public static String formatState(TransferEntryState state) {
+        return formatState(state.name());
+    }
 
     public static void writeHeader(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) {
         if (writeYADEBanner) {
@@ -72,13 +80,12 @@ public class YADEClientBannerWriter {
         if (!clientArgs.getResultSetFile().isEmpty()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getResultSetFile()));
         }
+        if (!clientArgs.getRaiseErrorIfResultSetIs().isEmpty()) {
+            l.add(YADEArgumentsHelper.comparisonOperatorToString(clientArgs.getRaiseErrorIfResultSetIs()));
+        }
         if (!clientArgs.getExpectedResultSetCount().isEmpty()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getExpectedResultSetCount()));
         }
-        if (!clientArgs.getRaiseErrorIfResultSetIs().isEmpty()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getRaiseErrorIfResultSetIs()));
-        }
-
         // E-Mail
         if (clientArgs.getMailOnEmptyFiles().isTrue()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getMailOnEmptyFiles()));
@@ -124,7 +131,7 @@ public class YADEClientBannerWriter {
         }
         sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getRecursive()));
         if (sourceArgs.getErrorOnNoFilesFound().isDirty()) {
-            sb.append(",").append(YADEArgumentsHelper.toOppositeBooleanString(sourceArgs.getErrorOnNoFilesFound()));
+            sb.append(",").append(YADEArgumentsHelper.toStringAsOppositeValue(sourceArgs.getErrorOnNoFilesFound()));
         }
         if (!ZeroByteTransfer.YES.equals(sourceArgs.getZeroByteTransfer().getValue())) {
             sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getZeroByteTransfer()));
@@ -224,13 +231,13 @@ public class YADEClientBannerWriter {
         }
         sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getDirectory()));
         if (targetArgs.getCreateDirectories().isDirty()) {
-            sb.append(",").append(YADEArgumentsHelper.toOppositeBooleanString(targetArgs.getCreateDirectories()));
+            sb.append(",").append(YADEArgumentsHelper.toStringAsOppositeValue(targetArgs.getCreateDirectories()));
         }
         if (targetArgs.getCheckSize().isDirty()) {
             sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCheckSize()));
         }
         if (targetArgs.getOverwriteFiles().isDirty()) {
-            sb.append(",").append(YADEArgumentsHelper.toOppositeBooleanString(targetArgs.getOverwriteFiles()));
+            sb.append(",").append(YADEArgumentsHelper.toStringAsOppositeValue(targetArgs.getOverwriteFiles()));
         }
         if (targetArgs.getAppendFiles().isTrue()) {
             sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
@@ -264,34 +271,34 @@ public class YADEClientBannerWriter {
         }
     }
 
-    public static void writeSummary(ISOSLogger logger, YADEArguments args, Duration operationDuration, YADETargetArguments targetArgs,
-            List<ProviderFile> files, Throwable error) {
+    public static void writeSummary(ISOSLogger logger, YADEArguments args, Duration operationDuration, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> files, Throwable error) {
         logger.info(SEPARATOR_LINE);
 
         args.getEnd().setValue(Instant.now());
         int totalFiles = files == null ? 0 : files.size();
 
         StringBuilder sb = new StringBuilder("[Summary]");
-        sb.append("total_duration=").append(SOSDate.getDuration(args.getStart().getValue(), args.getEnd().getValue()));
+        sb.append("Duration=").append(SOSDate.getDuration(args.getStart().getValue(), args.getEnd().getValue()));
         if (operationDuration != null) {
-            sb.append("(operation=").append(SOSDate.getDuration(operationDuration)).append(")");
+            sb.append("(Operation=").append(SOSDate.getDuration(operationDuration)).append(")");
         }
-        sb.append(",total_files=").append(totalFiles);
+        sb.append(",Files=").append(totalFiles);
 
         if (totalFiles > 0 && !TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             List<String> l = new ArrayList<>();
 
-            Map<String, List<YADEProviderFile>> groupedByState = FileStateUtils.getGroupedByState(targetArgs, files, getDefaultState(args));
+            Map<String, List<YADEProviderFile>> groupedByState = FileStateUtils.getGroupedByState(targetDelegator, files, getDefaultState(args));
             boolean needsDetails = groupedByState.keySet().stream().anyMatch(k -> k.contains(TransferEntryState.ROLLED_BACK.name()) || k.contains(
                     TransferEntryState.FAILED.name()));
 
-            FileStateUtils.getGroupedByState(targetArgs, files, getDefaultState(args)).forEach((state, fileList) -> {
-                l.add(state.toLowerCase() + "=" + fileList.size());
+            FileStateUtils.getGroupedByState(targetDelegator, files, getDefaultState(args)).forEach((state, fileList) -> {
+                l.add(formatState(state) + "=" + fileList.size());
 
                 if (needsDetails) {
-                    logger.info(state.toLowerCase() + ":");
+                    logger.info(formatState(state) + ":");
                     for (YADEProviderFile file : fileList) {
-                        logger.info(" Source " + file);
+                        logger.info(formatFile(sourceDelegator, targetDelegator, file));
                     }
                 }
 
@@ -299,7 +306,7 @@ public class YADEClientBannerWriter {
             int size = l.size();
             if (size > 0) {
                 // TODO e.g. detect if cumulative file...
-                if (size == 1 && l.get(0).startsWith(getDefaultState(args).toString().toLowerCase())) {
+                if (size == 1 && l.get(0).startsWith(formatState(getDefaultState(args)))) {
 
                 } else {
                     sb.append("(").append(String.join(",", l)).append(")");
@@ -313,16 +320,45 @@ public class YADEClientBannerWriter {
         }
     }
 
+    private static String formatState(String state) {
+        return STATE_TO_LOWERCASE ? state.toLowerCase() : state;
+    }
+
+    private static String formatFile(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
+            YADEProviderFile file) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" ").append(sourceDelegator.getLogPrefix());
+        sb.append(formatFile(file));
+        if (file.getTarget() != null) {
+            sb.append(" ");
+            sb.append(targetDelegator.getLogPrefix());
+            sb.append(formatFile(file.getTarget()));
+        }
+        return sb.toString();
+    }
+
+    private static String formatFile(YADEProviderFile file) {
+        StringBuilder sb = new StringBuilder();
+        if (file.getState() != null) {
+            sb.append(formatState(file.getState()));
+            if (file.getSubState() != null) {
+                sb.append("(").append(formatState(file.getSubState())).append(")");
+            }
+        }
+        sb.append(file.getFinalFullPath());
+        return sb.toString();
+    }
+
     private static TransferEntryState getDefaultState(YADEArguments args) {
         return TransferEntryState.UNKNOWN;
     }
 
     private class FileStateUtils {
 
-        private static Map<String, List<YADEProviderFile>> getGroupedByState(YADETargetArguments targetArgs, List<ProviderFile> files,
+        private static Map<String, List<YADEProviderFile>> getGroupedByState(YADETargetProviderDelegator targetDelegator, List<ProviderFile> files,
                 TransferEntryState defaultState) {
             // skipping the RENAMED subState if the renaming was due to an atomic transfer and not due to a defined replacement
-            final boolean skipRenameSubStateForTarget = targetArgs != null && !targetArgs.isReplacementEnabled();
+            final boolean skipRenameSubStateForTarget = targetDelegator != null && !targetDelegator.getArgs().isReplacementEnabled();
             return files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> getState(f, defaultState,
                     skipRenameSubStateForTarget)));
         }

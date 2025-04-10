@@ -16,6 +16,7 @@ import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon.JumpHostConfig.ConfigFile;
+import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
@@ -75,17 +76,14 @@ public class YADEEngineJumpHostAddon {
 
     public void onAfterSourceDelegatorConnected(YADESourceProviderDelegator sourceDelegator) throws YADEEngineJumpHostException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            uploadConfigurationToJump(sourceDelegator);
+            upload(sourceDelegator);
 
             if (config.sourceToJumpHost.fileList != null) {
                 try {
-                    uploadToJumpHost(sourceDelegator, config.sourceToJumpHost.fileList);
+                    upload(sourceDelegator, config.sourceToJumpHost.fileList);
                 } catch (Exception e) {
-                    throw new YADEEngineJumpHostException(String.format("[uploadToJumpHost][%s=%s]%s",
+                    throw new YADEEngineJumpHostException(String.format("[%s][upload][%s=%s]%s", YADEClientArguments.LABEL,
                             config.sourceToJumpHost.fileList.configurationName, config.sourceToJumpHost.fileList.localFile, e.toString()), e);
-                }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("[%s][onAfterSourceDelegatorConnected][%s]uploaded", YADEJumpHostArguments.LABEL, config.sourceToJumpHost.fileList);
                 }
             }
             isReady = true;
@@ -94,7 +92,7 @@ public class YADEEngineJumpHostAddon {
 
     public void onAfterTargetDelegatorConnected(YADETargetProviderDelegator targetDelegator) throws YADEEngineJumpHostException {
         if (!argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            uploadConfigurationToJump(targetDelegator);
+            upload(targetDelegator);
         }
         isReady = true;
     }
@@ -115,9 +113,9 @@ public class YADEEngineJumpHostAddon {
                 }
                 if (config.sourceToJumpHost.resultSetFile != null) {
                     try {
-                        downloadFromJumpHost(sourceDelegator, config.sourceToJumpHost.resultSetFile);
+                        download(sourceDelegator, config.sourceToJumpHost.resultSetFile);
                     } catch (Exception e) {
-                        throw new YADEEngineJumpHostException(String.format("[downloadFromJumpHost][%s=%s]%s",
+                        throw new YADEEngineJumpHostException(String.format("[%s][download][%s=%s]%s", YADEClientArguments.LABEL,
                                 config.sourceToJumpHost.resultSetFile.configurationName, config.sourceToJumpHost.resultSetFile.localFile, e
                                         .toString()), e);
                     }
@@ -219,35 +217,39 @@ public class YADEEngineJumpHostAddon {
         }
     }
 
-    private void uploadConfigurationToJump(AYADEProviderDelegator delegator) throws YADEEngineJumpHostException {
+    private void upload(AYADEProviderDelegator delegator) throws YADEEngineJumpHostException {
+        String label = YADEClientArguments.LABEL;
         try {
             delegator.getProvider().createDirectoriesIfNotExists(config.configDirectory);
-            uploadToJumpHost(delegator, config.settingsXMLContent, config.settingsXML);
-            logger.info("%s[uploadConfigurationToJump][%s]uploaded", delegator.getLogPrefix(), config.settingsXML);
+            upload(delegator, config.settingsXMLContent, config.settingsXML);
+            logger.info("[%s][upload][Settings][%s=%s]uploaded", label, delegator.getLabel(), config.settingsXML);
         } catch (Exception e) {
-            throw new YADEEngineJumpHostException(String.format("%s[uploadConfigurationToJump][%s]%s", delegator.getLogPrefix(), config.settingsXML,
+            throw new YADEEngineJumpHostException(String.format("[%s][upload][Settings][%s=%s]%s", label, delegator.getLabel(), config.settingsXML,
                     e), e);
         }
     }
 
-    private void uploadToJumpHost(AYADEProviderDelegator delegator, String content, String targetOnJumpHost) throws Exception {
+    private void upload(AYADEProviderDelegator delegator, String content, String targetOnJumpHost) throws Exception {
         delegator.getProvider().writeFile(targetOnJumpHost, content);
     }
 
-    private void uploadToJumpHost(AYADEProviderDelegator delegator, ConfigFile configFile) throws Exception {
+    private void upload(AYADEProviderDelegator delegator, ConfigFile configFile) throws Exception {
         delegator.getProvider().writeFile(configFile.jumpHostFile, SOSPath.readFile(configFile.localFile));
-        logger.info("%s[uploadToJumpHost][%s][%s -> %s]uploaded", delegator.getLogPrefix(), configFile.configurationName, configFile.localFile,
-                configFile.jumpHostFile);
+        logger.info("[%s][upload][%s][%s -> %s=%s]uploaded", YADEClientArguments.LABEL, configFile.configurationName, configFile.localFile, delegator
+                .getLabel(), configFile.jumpHostFile);
     }
 
-    private void downloadFromJumpHost(AYADEProviderDelegator delegator, ConfigFile configFile) throws Exception {
+    private void download(AYADEProviderDelegator delegator, ConfigFile configFile) throws Exception {
+        String label = YADEClientArguments.LABEL;
+        // delegator.getLabel();// <- Jump
+
         String content = delegator.getProvider().getFileContentIfExists(configFile.jumpHostFile);
         if (content == null) {
-            logger.info("%s[downloadFromJumpHost][%s][%s][skip]not found", delegator.getLogPrefix(), configFile.configurationName,
+            logger.info("[%s][download][%s][%s=%s][skip]not found", label, configFile.configurationName, delegator.getLabel(),
                     configFile.jumpHostFile);
         } else {
             SOSPath.overwrite(configFile.localFile, content);
-            logger.info("%s[downloadFromJumpHost][%s][%s -> %s]downloaded", delegator.getLogPrefix(), configFile.configurationName,
+            logger.info("[%s][download][%s][%s=%s -> %s]downloaded", label, configFile.configurationName, delegator.getLabel(),
                     configFile.jumpHostFile, configFile.localFile);
         }
     }

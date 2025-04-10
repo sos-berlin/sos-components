@@ -20,6 +20,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
 
     // optional internal attribute to set a logging label on Source/Target when used as a Jump Host
     // e.g. SFTPFragment name="..." label="Jump"
+    //  TODO - check - the label should be set on the Local Fragment instead of SFTP
     public static final String SFTPFRAGMENT_INTERNAL_ATTRIBUTE_LABEL = "label";
 
     private SOSXMLXPath xpath;

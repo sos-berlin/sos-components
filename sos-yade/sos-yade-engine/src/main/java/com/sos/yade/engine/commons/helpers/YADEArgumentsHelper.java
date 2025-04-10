@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
@@ -50,11 +51,15 @@ public class YADEArgumentsHelper {
         return arg.getName() + "=" + arg.getDisplayValue();
     }
 
+    public static String comparisonOperatorToString(SOSArgument<SOSComparisonOperator> arg) {
+        return arg.getName() + "=" + (arg.getValue() == null ? "" : arg.getValue().getFirstAlias());
+    }
+
     public static <T> String toString(String name, SOSArgument<T> arg) {
         return name + "=" + arg.getDisplayValue();
     }
 
-    public static String toOppositeBooleanString(SOSArgument<Boolean> arg) {
+    public static String toStringAsOppositeValue(SOSArgument<Boolean> arg) {
         return "Disable" + arg.getName() + "=" + (!arg.isTrue());
     }
 
