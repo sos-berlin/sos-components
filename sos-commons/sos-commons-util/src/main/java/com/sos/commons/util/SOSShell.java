@@ -144,7 +144,9 @@ public class SOSShell {
         int cp = Kernel32.INSTANCE.GetConsoleCP();
         if (cp == 0) {
             Charset defaultCharset = Charset.defaultCharset();
-            LOGGER.warn(String.format("[%s][codepage=%s(%s)]use default charset=%s", method, cp, getKernel32LastError(), defaultCharset.name()));
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][codepage=%s(%s)]use default charset=%s", method, cp, getKernel32LastError(), defaultCharset.name()));
+            }
             return defaultCharset;
         }
 

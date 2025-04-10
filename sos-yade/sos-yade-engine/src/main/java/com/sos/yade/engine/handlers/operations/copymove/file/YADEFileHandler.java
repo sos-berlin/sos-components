@@ -178,7 +178,7 @@ public class YADEFileHandler {
                         YADEFileStreamHelper.onStreamsClosed(logger, sourceDelegator, sourceFile, targetDelegator, targetFile);
                     }
                 }
-                YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, sourceFile, targetFile, compressTarget);
+                YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, targetFile, compressTarget);
             }
 
             targetFile.setState(TransferEntryState.TRANSFERRED);

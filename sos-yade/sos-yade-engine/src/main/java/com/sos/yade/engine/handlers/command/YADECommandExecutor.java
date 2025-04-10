@@ -158,16 +158,18 @@ public class YADECommandExecutor {
             YADEProviderFile sourceFile) throws YADEEngineCommandException {
         SOSEnv env = null;
         SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterFile();
+        YADEProviderFile targetFile = sourceFile.getTarget();
         if (!arg.isEmpty()) {
-            if (!sourceFile.isSkipped() || !sourceDelegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
+            boolean skipped = targetFile == null ? sourceFile.isSkipped() : targetFile.isSkipped();
+            if (!skipped || !sourceDelegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
                 env = createLocalEnvForExecuteAfterFile(sourceFile);
                 executeFileCommands(logger, sourceDelegator, sourceDelegator, targetDelegator, arg, sourceFile, env, true);
             }
         }
         if (targetDelegator != null) {
             arg = targetDelegator.getArgs().getCommands().getCommandsAfterFile();
-            if (!arg.isEmpty() && sourceFile.getTarget() != null) {
-                if (!sourceFile.isSkipped() || !targetDelegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
+            if (!arg.isEmpty() && targetFile != null) {
+                if (!targetFile.isSkipped() || !targetDelegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
                     if (env == null) {
                         env = createLocalEnvForExecuteAfterFile(sourceFile);
                     }
@@ -180,21 +182,15 @@ public class YADECommandExecutor {
     /** The command is executed by the delegator<br/>
      * The sourceDelegator and the targetDelegator are used to resolve some YADE variables that can be used in the command<br/>
      * see
-     * {{@link YADEFileCommandVariablesResolver#resolve(YADESourceProviderDelegator, YADETargetProviderDelegator, com.sos.commons.vfs.commons.file.ProviderFile, String)}
-     * 
-     * @param logger
-     * @param delegator
-     * @param sourceDelegator
-     * @param targetDelegator
-     * @param file
-     * @throws YADEEngineCommandException */
+     * {{@link YADEFileCommandVariablesResolver#resolve(YADESourceProviderDelegator, YADETargetProviderDelegator, com.sos.commons.vfs.commons.file.ProviderFile, String)} */
     public static void executeBeforeRename(ISOSLogger logger, IYADEProviderDelegator delegator, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile) throws YADEEngineCommandException {
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, boolean isSource) throws YADEEngineCommandException {
 
         SOSArgument<List<String>> arg = delegator.getArgs().getCommands().getCommandsBeforeRename();
         if (!arg.isEmpty()) {
-            if (!sourceFile.isSkipped() || !delegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
-                executeFileCommands(logger, delegator, sourceDelegator, targetDelegator, arg, sourceFile, null, true);
+            boolean skipped = sourceFile.getTarget() == null ? sourceFile.isSkipped() : sourceFile.getTarget().isSkipped();
+            if (!skipped || !delegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
+                executeFileCommands(logger, delegator, sourceDelegator, targetDelegator, arg, sourceFile, null, isSource);
             }
         }
     }

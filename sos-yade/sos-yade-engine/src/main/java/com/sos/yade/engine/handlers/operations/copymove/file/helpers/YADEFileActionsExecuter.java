@@ -38,7 +38,7 @@ public class YADEFileActionsExecuter {
                     // rename=false;
                     // }
                     // }
-                    rename(logger, fileTransferLogPrefix, targetDelegator, sourceDelegator, targetDelegator, targetFile);
+                    rename(logger, fileTransferLogPrefix, targetDelegator, sourceDelegator, targetDelegator, sourceFile, false);
                 }
                 // 2) Target - KeepModificationDate
                 if (config.getTarget().isKeepModificationDateEnabled()) {
@@ -62,7 +62,7 @@ public class YADEFileActionsExecuter {
 
             // 1) Source - Rename
             if (sourceFile.needsRename()) {
-                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile);
+                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile, true);
             }
         }
 
@@ -72,8 +72,8 @@ public class YADEFileActionsExecuter {
         }
     }
 
-    public static void finalizeTargetFileSize(YADETargetProviderDelegator delegator, YADEProviderFile sourceFile, YADETargetProviderFile targetFile,
-            boolean isCompress) throws Exception {
+    public static void finalizeTargetFileSize(YADETargetProviderDelegator delegator, YADETargetProviderFile targetFile, boolean isCompress)
+            throws Exception {
         if (isCompress) {// the file size check is suppressed by compress but we read the file size for logging and serialization
             String filePath = targetFile.getFullPath();
             targetFile = (YADETargetProviderFile) delegator.getProvider().rereadFileIfExists(targetFile);
@@ -105,15 +105,17 @@ public class YADEFileActionsExecuter {
     }
 
     private static void rename(ISOSLogger logger, String fileTransferLogPrefix, IYADEProviderDelegator delegator,
-            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile file) throws Exception {
-        String oldPath = file.getFullPath();
-        String newPath = file.getFinalFullPath();
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, boolean isSource)
+            throws Exception {
+        YADEProviderFile sourceOrTargetFile = isSource ? sourceFile : sourceFile.getTarget();
+        String oldPath = sourceOrTargetFile.getFullPath();
+        String newPath = sourceOrTargetFile.getFinalFullPath();
 
-        YADECommandExecutor.executeBeforeRename(logger, delegator, sourceDelegator, targetDelegator, file);
+        YADECommandExecutor.executeBeforeRename(logger, delegator, sourceDelegator, targetDelegator, sourceFile, isSource);
         delegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
         // for error tests
         // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
-        file.setSubState(TransferEntryState.RENAMED);
+        sourceOrTargetFile.setSubState(TransferEntryState.RENAMED);
         logger.info("[%s]%s[%s][renamed][%s]", fileTransferLogPrefix, delegator.getLogPrefix(), oldPath, newPath);
     }
 
