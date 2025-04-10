@@ -166,12 +166,12 @@ public class YADECommandExecutor {
         }
         if (targetDelegator != null) {
             arg = targetDelegator.getArgs().getCommands().getCommandsAfterFile();
-            if (!arg.isEmpty()) {
+            if (!arg.isEmpty() && sourceFile.getTarget() != null) {
                 if (!sourceFile.isSkipped() || !targetDelegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
                     if (env == null) {
                         env = createLocalEnvForExecuteAfterFile(sourceFile);
                     }
-                    executeFileCommands(logger, targetDelegator, sourceDelegator, targetDelegator, arg, sourceFile, env);
+                    executeFileCommands(logger, targetDelegator, sourceDelegator, targetDelegator, arg, sourceFile.getTarget(), env);
                 }
             }
         }
@@ -253,12 +253,15 @@ public class YADECommandExecutor {
             throws YADEEngineCommandException {
         logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, delegator.getArgs().getCommands().getCommandDelimiter(), file);
 
-        String prefix = String.format("%s[%s][%s][%s]", delegator.getLogPrefix(), file.getIndex(), file.getFullPath(), arg.getName());
+        String prefix = String.format("[%s]%s[%s][%s]", file.getIndex(), delegator.getLogPrefix(), file.getFullPath(), arg.getName());
         for (String command : arg.getValue()) {
+            // String msg = prefix + "[" + resolved + "]";
+            String msg = prefix + "[" + command + "]";
+            logger.info(msg + "...");
+
             String resolved = YADEFileCommandVariablesResolver.resolve(sourceDelegator, targetDelegator, file, command);
-            String msg = prefix + "[" + resolved + "]";
-            logger.info(msg);
             SOSCommandResult result = delegator.getProvider().executeCommand(resolved, env);
+
             logCommandResult(logger, msg, result);
             checkCommandResult(prefix, result);
         }

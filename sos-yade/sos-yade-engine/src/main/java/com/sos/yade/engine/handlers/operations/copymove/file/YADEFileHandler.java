@@ -226,7 +226,7 @@ public class YADEFileHandler {
         YADETargetProviderFile target = new YADETargetProviderFile(targetDelegator, transferFileFullPath);
         /** the final path of the file after transfer */
         target.setFinalFullPath(targetDelegator, finalFileName);
-        // target.setIndex(sourceFile.getIndex());
+        target.setIndex(sourceFile.getIndex());
         sourceFile.setTarget(target);
     }
 
