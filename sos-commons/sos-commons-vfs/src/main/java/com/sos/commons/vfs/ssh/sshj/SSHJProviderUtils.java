@@ -1,8 +1,12 @@
 package com.sos.commons.vfs.ssh.sshj;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,6 +21,8 @@ import net.schmizz.keepalive.KeepAliveRunner;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.FileMode;
+import net.schmizz.sshj.sftp.OpenMode;
+import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.sftp.SFTPClient;
@@ -111,7 +117,7 @@ public class SSHJProviderUtils {
     }
 
     // possible recursion
-    protected static List<ProviderFile> selectFiles(SSHJProviderImpl provider, ProviderFileSelection selection, String directoryPath,
+    protected static List<ProviderFile> selectFiles(SSHJProvider provider, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
         try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
@@ -131,6 +137,37 @@ public class SSHJProviderUtils {
             throwException(e, sourcePath);
         }
         sftp.rename(sourcePath, targetPath);
+    }
+
+    protected static void setFileLastModifiedFromMillis(SFTPClient sftp, String path, long milliseconds) throws IOException {
+        FileAttributes attr = sftp.stat(path);
+        long seconds = milliseconds / 1_000L;
+        FileAttributes newAttr = new FileAttributes.Builder().withAtimeMtime(attr.getAtime(), seconds).build();
+        sftp.setattr(path, newAttr);
+
+    }
+
+    protected static String getFileContentIfExists(SFTPClient sftp, String path) throws IOException {
+        if (!SSHJProviderUtils.exists(sftp, path)) {
+            return null;
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (RemoteFile file = sftp.open(path); InputStream is = file.new RemoteFileInputStream(0)) {
+            byte[] buffer = new byte[8_192];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+        }
+        return baos.toString(StandardCharsets.UTF_8);
+    }
+
+    protected static void writeFile(SFTPClient sftp, String path, String content) throws IOException {
+        EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT, OpenMode.TRUNC);
+        try (RemoteFile remoteFile = sftp.open(path, mode)) {
+            remoteFile.write(0, content.getBytes(StandardCharsets.UTF_8), 0, content.length());
+        }
     }
 
     protected static String toString(FileAttributes attr) {
@@ -155,7 +192,7 @@ public class SSHJProviderUtils {
         sftp.rmdir(path);
     }
 
-    private static int list(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
+    private static int list(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result, int counterAdded) throws Exception {
         List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
         for (RemoteResourceInfo subResource : subDirInfos) {
@@ -167,7 +204,7 @@ public class SSHJProviderUtils {
         return counterAdded;
     }
 
-    private static int processListEntry(SSHJProviderImpl provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
+    private static int processListEntry(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
             List<ProviderFile> result, int counterAdded) throws Exception {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {

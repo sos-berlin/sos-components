@@ -8,16 +8,12 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.hierynomus.msdtyp.FileTime;
 import com.hierynomus.msfscc.fileinformation.FileAllInformation;
-import com.hierynomus.msfscc.fileinformation.FileBasicInformation;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMB2Dialect;
 import com.hierynomus.mssmb2.SMBApiException;
@@ -27,7 +23,6 @@ import com.hierynomus.smbj.SmbConfig.Builder;
 import com.hierynomus.smbj.connection.Connection;
 import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
-import com.hierynomus.smbj.share.File;
 import com.hierynomus.smbj.utils.SmbFiles;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -39,8 +34,6 @@ import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
@@ -50,14 +43,15 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.smb.SMBProvider;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
-public class SMBJProviderImpl extends SMBProvider {
+public class SMBJProvider extends SMBProvider {
 
     private SMBClient client = null;
     private Session session = null;
 
     private boolean accessMaskMaximumAllowed = false;
+    private boolean reusableResourceEnabled;
 
-    public SMBJProviderImpl(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
+    public SMBJProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
     }
 
@@ -70,9 +64,9 @@ public class SMBJProviderImpl extends SMBProvider {
 
         boolean connected = false;
         try {
-            getLogger().info(getConnectMsg());
-
             client = createClient();
+
+            getLogger().info(getConnectMsg());
             Connection connection = client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
             connected = true;
             try {
@@ -80,6 +74,9 @@ public class SMBJProviderImpl extends SMBProvider {
             } catch (Exception e) {
                 throw new ProviderAuthenticationException(e);
             }
+            // creates a shared DiskShare connection by default
+            enableReusableResource();
+
             getLogger().info(getConnectedMsg());
         } catch (Throwable e) {
             if (connected) {
@@ -101,6 +98,8 @@ public class SMBJProviderImpl extends SMBProvider {
         if (session == null && client == null) {
             return;
         }
+
+        disableReusableResource();
 
         if (session != null) { // check due to session.getConnection()
             SOSClassUtil.closeQuietly(session); // session.close -> logout
@@ -143,9 +142,17 @@ public class SMBJProviderImpl extends SMBProvider {
     public boolean exists(String path) throws ProviderException {
         validatePrerequisites("exists", path, "path");
 
-        try (DiskShare share = connectShare(path)) {
-            // share.getFileInformation(getSMBPath(path));
-            return share.fileExists(getSMBPath(path)) || share.folderExists(getSMBPath(path));
+        try {
+            SMBJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (DiskShare share = connectShare(path)) {
+                    // share.getFileInformation(getSMBPath(path));
+                    return share.fileExists(getSMBPath(path)) || share.folderExists(getSMBPath(path));
+                }
+            } else {
+                DiskShare share = reusable.getDiskShare(path);
+                return share.fileExists(getSMBPath(path)) || share.folderExists(getSMBPath(path));
+            }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -156,12 +163,24 @@ public class SMBJProviderImpl extends SMBProvider {
     public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
         validatePrerequisites("createDirectoriesIfNotExists", path, "path");
 
-        try (DiskShare share = connectShare(path)) {
-            new SmbFiles().mkdirs(share, getSMBPath(path));
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+        try {
+            SMBJProviderReusableResource reusable = getReusableResource();
+            String smbPath = getSMBPath(path);
+            if (reusable == null) {
+                try (DiskShare share = connectShare(path)) {
+                    new SmbFiles().mkdirs(share, smbPath);
+                    if (getLogger().isDebugEnabled()) {
+                        getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+                    }
+                    return true;
+                }
+            } else {
+                new SmbFiles().mkdirs(reusable.getDiskShare(path), smbPath);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+                }
+                return true;
             }
-            return true;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -172,54 +191,19 @@ public class SMBJProviderImpl extends SMBProvider {
     public boolean deleteIfExists(String path) throws ProviderException {
         validatePrerequisites("deleteIfExists", path, "path");
 
-        try (DiskShare share = connectShare(path)) {
-            FileAllInformation info = null;
-            try {
-                info = share.getFileInformation(getSMBPath(path));
-            } catch (SMBApiException e) {
-                return false;// not exists
-            }
-            if (SMBJProviderUtils.isDirectory(info)) {
-                share.rmdir(getSMBPath(path), true);
+        try {
+            SMBJProviderReusableResource reusable = getReusableResource();
+            String smbPath = getSMBPath(path);
+            if (reusable == null) {
+                try (DiskShare share = connectShare(path)) {
+                    return SMBJProviderUtils.deleteIfExists(share, smbPath);
+                }
             } else {
-                share.rm(getSMBPath(path));
+                return SMBJProviderUtils.deleteIfExists(reusable.getDiskShare(path), smbPath);
             }
-            return true;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause());
         }
-    }
-
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
-    @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-        validatePrerequisites("deleteFilesIfExists");
-
-        DeleteFilesResult r = new DeleteFilesResult(files.size());
-        try (DiskShare share = connectShare(files.iterator().next())) {// use the first element
-            l: for (String file : files) {
-                try {
-                    String smbPath = getSMBPath(file);
-                    if (share.fileExists(smbPath)) {
-                        share.rm(smbPath);
-                        r.addSuccess();
-                    } else {
-                        r.addNotFound(file);
-                    }
-                } catch (Throwable e) {
-                    r.addError(file, e);
-                    if (stopOnSingleFileError) {
-                        break l;
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            new ProviderException(e);
-        }
-        return r;
     }
 
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
@@ -228,54 +212,21 @@ public class SMBJProviderImpl extends SMBProvider {
         validatePrerequisites("renameFileIfSourceExists", source, "source");
         validateArgument("renameFileIfSourceExists", target, "target");
 
-        try (DiskShare share = connectShare(source)) {
-            String sourceSMBPath = getSMBPath(source);
-            if (share.fileExists(sourceSMBPath)) {
-                try (File sourceFile = SMBJProviderUtils.openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, sourceSMBPath)) {
-                    sourceFile.rename(getSMBPath(target), true);
+        try {
+            SMBJProviderReusableResource reusable = getReusableResource();
+            String smbSourcePath = getSMBPath(source);
+            String smbTargetPath = getSMBPath(target);
+            if (reusable == null) {
+                try (DiskShare share = connectShare(source)) {
+                    return SMBJProviderUtils.renameFileIfSourceExists(share, smbSourcePath, smbTargetPath, accessMaskMaximumAllowed);
                 }
-                return true;
+            } else {
+                return SMBJProviderUtils.renameFileIfSourceExists(reusable.getDiskShare(source), smbSourcePath, smbTargetPath,
+                        accessMaskMaximumAllowed);
             }
-            return false;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
-    }
-
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
-    @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-        validatePrerequisites("renameFilesIfSourceExists");
-
-        RenameFilesResult r = new RenameFilesResult(files.size());
-        try (DiskShare share = connectShare(files.keySet().iterator().next())) {// use the first element
-            l: for (Map.Entry<String, String> entry : files.entrySet()) {
-                String source = entry.getKey();
-                String target = entry.getValue();
-                try {
-                    String sourceSMBPath = getSMBPath(source);
-                    if (share.fileExists(sourceSMBPath)) {
-                        try (File sourceFile = SMBJProviderUtils.openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, sourceSMBPath)) {
-                            sourceFile.rename(getSMBPath(target), true);
-                            r.addSuccess();
-                        }
-                    } else {
-                        r.addNotFound(source);
-                    }
-                } catch (Throwable e) {
-                    r.addError(source, e);
-                    if (stopOnSingleFileError) {
-                        break l;
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            new ProviderException(e);
-        }
-        return r;
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */
@@ -283,12 +234,23 @@ public class SMBJProviderImpl extends SMBProvider {
     public ProviderFile getFileIfExists(String path) throws ProviderException {
         validatePrerequisites("getFileIfExists", path, "path");
 
-        try (DiskShare share = connectShare(path)) {
-            try {
-                String smbPath = getSMBPath(path);
-                return createProviderFile(smbPath, share.getFileInformation(smbPath));
-            } catch (SMBApiException e) {// not exists
-                return null;
+        try {
+            SMBJProviderReusableResource reusable = getReusableResource();
+            String smbPath = getSMBPath(path);
+            if (reusable == null) {
+                try (DiskShare share = connectShare(path)) {
+                    try {
+                        return createProviderFile(smbPath, share.getFileInformation(smbPath));
+                    } catch (SMBApiException e) {// not exists
+                        return null;
+                    }
+                }
+            } else {
+                try {
+                    return createProviderFile(smbPath, reusable.getDiskShare(path).getFileInformation(smbPath));
+                } catch (SMBApiException e) {// not exists
+                    return null;
+                }
             }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -300,9 +262,12 @@ public class SMBJProviderImpl extends SMBProvider {
     public String getFileContentIfExists(String path) throws ProviderException {
         validatePrerequisites("getFileContentIfExists", path, "path");
 
+        SMBJProviderReusableResource reusable = getReusableResource();
+        DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
+
         StringBuilder content = new StringBuilder();
-        try (InputStream is = new SMBJInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path)); Reader r = new InputStreamReader(
-                is, StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
+        try (InputStream is = new SMBJInputStream(accessMaskMaximumAllowed, share, getSMBPath(path)); Reader r = new InputStreamReader(is,
+                StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
             return content.toString();
         } catch (SOSNoSuchFileException e) {
@@ -317,7 +282,10 @@ public class SMBJProviderImpl extends SMBProvider {
     public void writeFile(String path, String content) throws ProviderException {
         validatePrerequisites("writeFile", path, "path");
 
-        try (OutputStream os = new SMBJOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), false)) {
+        SMBJProviderReusableResource reusable = getReusableResource();
+        DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
+
+        try (OutputStream os = new SMBJOutputStream(accessMaskMaximumAllowed, share, getSMBPath(path), false)) {
             os.write(content.getBytes(StandardCharsets.UTF_8));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -330,13 +298,15 @@ public class SMBJProviderImpl extends SMBProvider {
         validatePrerequisites("setFileLastModifiedFromMillis", path, path);
         validateModificationTime(path, milliseconds);
 
-        try (DiskShare share = connectShare(path)) {
-            try (File file = SMBJProviderUtils.openExistingFileWithChangeAttributeAccess(accessMaskMaximumAllowed, share, getSMBPath(path))) {
-                FileBasicInformation info = file.getFileInformation().getBasicInformation();
-                FileTime lastModified = FileTime.ofEpochMillis(milliseconds);
-                // sets lastWriteTime,changeTime to lastModified
-                file.setFileInformation(new FileBasicInformation(info.getCreationTime(), info.getLastAccessTime(), lastModified, lastModified, info
-                        .getFileAttributes()));
+        try {
+            SMBJProviderReusableResource reusable = getReusableResource();
+            String smbPath = getSMBPath(path);
+            if (reusable == null) {
+                try (DiskShare share = connectShare(path)) {
+                    SMBJProviderUtils.setFileLastModifiedFromMillis(share, smbPath, milliseconds, accessMaskMaximumAllowed);
+                }
+            } else {
+                SMBJProviderUtils.setFileLastModifiedFromMillis(reusable.getDiskShare(path), smbPath, milliseconds, accessMaskMaximumAllowed);
             }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -349,7 +319,10 @@ public class SMBJProviderImpl extends SMBProvider {
         validatePrerequisites("getInputStream", path, "path");
 
         try {
-            return new SMBJInputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path));
+            SMBJProviderReusableResource reusable = getReusableResource();
+            DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
+
+            return new SMBJInputStream(accessMaskMaximumAllowed, share, getSMBPath(path));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -361,7 +334,10 @@ public class SMBJProviderImpl extends SMBProvider {
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
-            return new SMBJOutputStream(accessMaskMaximumAllowed, connectShare(path), getSMBPath(path), append);
+            SMBJProviderReusableResource reusable = getReusableResource();
+            DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
+
+            return new SMBJOutputStream(accessMaskMaximumAllowed, share, getSMBPath(path), append);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -375,8 +351,45 @@ public class SMBJProviderImpl extends SMBProvider {
         }
     }
 
+    /** Overrides {@link AProvider#enableReusableResource()} */
+    @Override
+    public void enableReusableResource() {
+        if (reusableResourceEnabled) {
+            return;
+        }
+        try {
+            super.enableReusableResource(new SMBJProviderReusableResource(this));
+            reusableResourceEnabled = true;
+        } catch (Exception e) {
+            getLogger().warn(getLogPrefix() + "[enableReusableResource]" + e);
+        }
+    }
+
+    /** Overrides {@link AProvider#getReusableResource()} */
+    @Override
+    public SMBJProviderReusableResource getReusableResource() {
+        if (!reusableResourceEnabled) {
+            return null;
+        }
+        return (SMBJProviderReusableResource) super.getReusableResource();
+    }
+
+    @Override
+    public void disableReusableResource() {
+        super.disableReusableResource();
+        reusableResourceEnabled = false;
+    }
+
     protected ProviderFile createProviderFile(String fullPath, FileIdBothDirectoryInformation info) {
         return createProviderFile(fullPath, info.getEndOfFile(), info.getLastWriteTime().toEpochMillis());
+    }
+
+    /** Can throw a SMBRuntimeException
+     * 
+     * @param path
+     * @return connected DiskShare */
+    protected DiskShare connectShare(String path) {
+        return (DiskShare) session.connectShare(getShareName(path));
     }
 
     private SMBClient createClient() {
@@ -492,14 +505,6 @@ public class SMBJProviderImpl extends SMBProvider {
             }
         }
         return smbPath;
-    }
-
-    /** Can throw a SMBRuntimeException
-     * 
-     * @param path
-     * @return connected DiskShare */
-    private DiskShare connectShare(String path) {
-        return (DiskShare) session.connectShare(getShareName(path));
     }
 
     private ProviderFile createProviderFile(String fullPath, FileAllInformation info) {

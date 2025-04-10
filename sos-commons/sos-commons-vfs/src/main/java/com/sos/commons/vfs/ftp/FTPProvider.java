@@ -13,11 +13,9 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.commons.net.ftp.FTP;
@@ -41,8 +39,6 @@ import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
@@ -294,43 +290,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         }
     }
 
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
-    @Override
-    // FTP: DELE /yade/target/test.txt
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-        validatePrerequisites("deleteFilesIfExists");
-
-        DeleteFilesResult r = new DeleteFilesResult(files.size());
-        try {
-            l: for (String file : files) {
-                try {
-                    if (!client.deleteFile(file)) {
-                        FTPProtocolReply reply = new FTPProtocolReply(client);
-                        if (isReplyBasedOnFileNotFound(reply, file)) {
-                            r.addNotFound(file);
-                        } else {
-                            if (!reply.isPositiveReply()) {
-                                throw new Exception(String.format("[failed to delete file]%s", reply));
-                            }
-                        }
-                    }
-                    r.addSuccess();
-                } catch (Throwable e) {
-                    r.addError(file, e);
-                    if (stopOnSingleFileError) {
-                        break l;
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            new ProviderException(e);
-        }
-        return r;
-    }
-
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
     @Override
     public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
@@ -350,42 +309,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
-    }
-
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
-    @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-        validatePrerequisites("renameFilesIfSourceExists");
-
-        RenameFilesResult r = new RenameFilesResult(files.size());
-        try {
-            l: for (Map.Entry<String, String> entry : files.entrySet()) {
-                String source = entry.getKey();
-                String target = entry.getValue();
-                try {
-                    if (!client.rename(source, target)) { // not positive reply
-                        FTPProtocolReply reply = new FTPProtocolReply(client);
-                        if (isReplyBasedOnFileNotFound(reply, target)) {
-                            r.addNotFound(source);
-                        } else {
-                            throw new Exception(String.format("[failed]%s", reply));
-                        }
-                    }
-                    r.addSuccess();
-                } catch (Throwable e) {
-                    r.addError(source, e);
-                    if (stopOnSingleFileError) {
-                        break l;
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            new ProviderException(e);
-        }
-        return r;
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */

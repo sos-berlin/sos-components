@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSCLIArgumentsParser;
 import com.sos.commons.util.SOSPath;
@@ -13,7 +12,6 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
@@ -209,20 +207,14 @@ public class YADEEngineJumpHostAddon {
     }
 
     private void deleteSourceFiles(AYADEProviderDelegator delegator, List<ProviderFile> files) throws YADEEngineJumpHostException {
-        List<String> paths = files.stream().map(f -> f.getFullPath()).collect(Collectors.toList());
-        if (paths.size() > 0) {
-            DeleteFilesResult r;
+        delegator.getProvider().enableReusableResource();
+        for (ProviderFile f : files) {
             try {
-                r = delegator.getProvider().deleteFilesIfExists(paths, false);
-            } catch (ProviderException e) {
+                if (delegator.getProvider().deleteIfExists(f.getFullPath())) {
+                    logger.info("%s[deleteSourceFiles][%s]deleted", delegator.getLogPrefix(), f.getFullPath());
+                }
+            } catch (Exception e) {
                 throw new YADEEngineJumpHostException(String.format("%s[deleteSourceFiles]%s", delegator.getLogPrefix(), e.toString()), e);
-            }
-            if (r.hasErrors()) {
-                throw new YADEEngineJumpHostException(String.format("%s[deleteSourceFiles]%s", delegator.getLogPrefix(), r));
-            }
-            logger.info("%s[deleteSourceFiles]%s", delegator.getLogPrefix(), r);
-            if (logger.isDebugEnabled()) {
-                logger.debug("%s[deleteSourceFiles]%s", delegator.getLogPrefix(), paths);
             }
         }
     }

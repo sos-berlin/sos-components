@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import com.sos.commons.util.beans.SOSCommandResult;
@@ -12,8 +11,6 @@ import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
@@ -103,15 +100,6 @@ public interface IProvider {
      * @throws ProviderException */
     public boolean deleteIfExists(String path) throws ProviderException;
 
-    /** Deletes the specified files if they exist.<br/>
-     * 
-     * @param files the collection of file paths to delete
-     * @param stopOnSingleFileError {@code true} stops deleting on the first error<br/>
-     *            {@code false} continues processing all files
-     * @return a {@link DeleteFilesResult} containing details about deleted files, missing files, and any encountered errors
-     * @throws ProviderException */
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException;
-
     /** Renames a file to a target file if the source file exists.<br/>
      * If the target file exists, then the target file is replaced.
      *
@@ -121,16 +109,6 @@ public interface IProvider {
      *         {@code false} if the sourcePath file could not be renamed because it did not exist
      * @throws ProviderException */
     public boolean renameFileIfSourceExists(String sourcePath, String targetPath) throws ProviderException;
-
-    /** Renames multiple files if the source files exist.<br/>
-     * Each entry in the map represents a source file path and its corresponding target path.<br/>
-     * If a source file doesn't exist or an error occurs during renaming, the process can stop depending on the stopOnSingleFileError flag.
-     * 
-     * @param files a map where the key is the source file path and the value is the target file path
-     * @param stopOnSingleFileError if {@code true}, the renaming process stops upon encountering an error with any file
-     * @return a {@link RenameFilesResult} containing the results of the renaming operation, including errors if any
-     * @throws ProviderException if an error occurs during the renaming process */
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException;
 
     /** Retrieves the file if it exists at the specified path.
      * 

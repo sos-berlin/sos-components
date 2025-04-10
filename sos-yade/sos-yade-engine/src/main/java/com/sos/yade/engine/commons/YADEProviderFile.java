@@ -3,6 +3,7 @@ package com.sos.yade.engine.commons;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 
 /** @apiNote all operations */
 public class YADEProviderFile extends ProviderFile {
@@ -56,6 +57,7 @@ public class YADEProviderFile extends ProviderFile {
         return TransferEntryState.TRANSFERRED.equals(state) || TransferEntryState.TRANSFERRING.equals(state);
     }
 
+    // TODO TransferEntryState.SKIPPED - seems to be unused
     public boolean isSkipped() {
         return TransferEntryState.SKIPPED.equals(state) || TransferEntryState.NOT_OVERWRITTEN.equals(state);
     }
@@ -88,7 +90,7 @@ public class YADEProviderFile extends ProviderFile {
         return target;
     }
 
-    public void setTarget(YADEProviderFile val) {
+    public void setTarget(YADETargetProviderFile val) {
         target = val;
     }
 

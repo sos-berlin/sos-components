@@ -3,15 +3,11 @@ package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
 import com.sos.commons.vfs.exceptions.ProviderException;
-import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 
@@ -34,22 +30,24 @@ public class YADETargetCumulativeFileHelper {
     }
 
     public static void rollback(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator) {
-        YADEProviderFile file = config.getTarget().getCumulate().getFile();
-
-        Set<String> paths = new HashSet<>();
-        // temporary transfer path
-        paths.add(file.getFullPath());
+        String path = config.getTarget().getCumulate().getFile().getFullPath();
+        try {
+            if (targetDelegator.getProvider().deleteIfExists(path)) {
+                logger.info("[%s][rollback][%s]deleted", path);
+            }
+        } catch (Exception e) {
+            logger.info("[%s][rollback][%s]%s", path, e.toString());
+        }
         if (config.getTarget().getCompress() != null) {
             // de-compressed original cumulative file
-            paths.add(config.getTarget().getCumulate().getTmpFullPathOfExistingFileForDecompress());
-        }
-        DeleteFilesResult r;
-        try {
-            r = targetDelegator.getProvider().deleteFilesIfExists(paths, false);
-            logger.info("%s%s[rollback][deleteResult]%s", targetDelegator.getLogPrefix(), LOG_PREFIX, r);
-        } catch (Throwable e) {
-            logger.info("%s%s[rollback][deleteFiles]%s", targetDelegator.getLogPrefix(), LOG_PREFIX, String.join(" ,", paths));
-            logger.error("%s%s[rollback][deleteFiles]%s", targetDelegator.getLogPrefix(), LOG_PREFIX, e.toString());
+            path = config.getTarget().getCumulate().getTmpFullPathOfExistingFileForDecompress();
+            try {
+                if (targetDelegator.getProvider().deleteIfExists(path)) {
+                    logger.info("[%s][rollback][%s]deleted", targetDelegator.getLogPrefix(), path);
+                }
+            } catch (Exception e) {
+                logger.info("[%s][rollback][%s]%s", path, e.toString());
+            }
         }
     }
 

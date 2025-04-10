@@ -13,9 +13,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSPath;
@@ -30,8 +28,6 @@ import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
@@ -152,31 +148,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         }
     }
 
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)} */
-    @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-
-        DeleteFilesResult r = new DeleteFilesResult(files.size());
-        l: for (String file : files) {
-            try {
-                if (deleteIfExists(file)) {
-                    r.addSuccess();
-                } else {
-                    r.addNotFound(file);
-                }
-            } catch (Throwable e) {
-                r.addError(file, e);
-                if (stopOnSingleFileError) {
-                    break l;
-                }
-            }
-        }
-        return r;
-    }
-
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
     @Override
     public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
@@ -193,33 +164,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
-    }
-
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)} */
-    @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-
-        RenameFilesResult r = new RenameFilesResult(files.size());
-        l: for (Map.Entry<String, String> entry : files.entrySet()) {
-            String source = entry.getKey();
-            String target = entry.getValue();
-            try {
-                if (renameFileIfSourceExists(source, target)) {
-                    r.addSuccess(source, target);
-                } else {
-                    r.addNotFound(source);
-                }
-            } catch (Throwable e) {
-                r.addError(source, e);
-                if (stopOnSingleFileError) {
-                    break l;
-                }
-            }
-        }
-        return r;
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */

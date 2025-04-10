@@ -5,18 +5,56 @@ import java.util.List;
 import java.util.Set;
 
 import com.hierynomus.msdtyp.AccessMask;
+import com.hierynomus.msdtyp.FileTime;
 import com.hierynomus.msfscc.FileAttributes;
 import com.hierynomus.msfscc.fileinformation.FileAllInformation;
+import com.hierynomus.msfscc.fileinformation.FileBasicInformation;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMB2CreateDisposition;
 import com.hierynomus.mssmb2.SMB2CreateOptions;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
+import com.hierynomus.mssmb2.SMBApiException;
 import com.hierynomus.smbj.share.DiskShare;
 import com.hierynomus.smbj.share.File;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 
 public class SMBJProviderUtils {
+
+    protected static boolean deleteIfExists(DiskShare share, String smbPath) {
+        FileAllInformation info = null;
+        try {
+            info = share.getFileInformation(smbPath);
+        } catch (SMBApiException e) {
+            return false;// not exists
+        }
+        if (SMBJProviderUtils.isDirectory(info)) {
+            share.rmdir(smbPath, true);
+        } else {
+            share.rm(smbPath);
+        }
+        return true;
+    }
+
+    protected static boolean renameFileIfSourceExists(DiskShare share, String smbSourcePath, String smbTargetPath, boolean accessMaskMaximumAllowed) {
+        if (share.fileExists(smbSourcePath)) {
+            try (File sourceFile = openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, smbSourcePath)) {
+                sourceFile.rename(smbTargetPath, true);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected static void setFileLastModifiedFromMillis(DiskShare share, String smbPath, long milliseconds, boolean accessMaskMaximumAllowed) {
+        try (File file = openExistingFileWithChangeAttributeAccess(accessMaskMaximumAllowed, share, smbPath)) {
+            FileBasicInformation info = file.getFileInformation().getBasicInformation();
+            FileTime lastModified = FileTime.ofEpochMillis(milliseconds);
+            // sets lastWriteTime,changeTime to lastModified
+            file.setFileInformation(new FileBasicInformation(info.getCreationTime(), info.getLastAccessTime(), lastModified, lastModified, info
+                    .getFileAttributes()));
+        }
+    }
 
     /** @param accessMaskMaximumAllowed
      * @param share
@@ -101,7 +139,7 @@ public class SMBJProviderUtils {
         return share.openFile(smbPath, ams, fa, sa, SMB2CreateDisposition.FILE_OPEN, co);
     }
 
-    protected static int selectFiles(SMBJProviderImpl provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
+    protected static int selectFiles(SMBJProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
             DiskShare share, int counterAdded) throws Exception {
         List<FileIdBothDirectoryInformation> infos = share.list(directoryPath);
         for (FileIdBothDirectoryInformation info : infos) {

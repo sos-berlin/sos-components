@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
 
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -40,9 +41,10 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     /** Source/Target type - logging - is not set if only one provider is used (e.g. SSH JITL Job) */
     private AProviderContext context;
 
+    private AProviderReusableResource<?> reusableResource;
+
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
-
     private String logPrefix;
 
     public AProvider(ISOSLogger logger, A arguments, SOSArgument<?>... additionalCredentialStoreArg) throws ProviderInitializationException {
@@ -159,11 +161,30 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return null;
     }
 
-    // other thread
+    // cancelCommands - other thread
     /** Overrides {@link IProvider#cancelCommands()} */
     @Override
     public SOSCommandResult cancelCommands() {
         return null;
+    }
+
+    public void enableReusableResource() {
+
+    }
+
+    public void enableReusableResource(AProviderReusableResource<?> resource) throws Exception {
+        reusableResource = resource;
+    }
+
+    public AProviderReusableResource<?> getReusableResource() {
+        return reusableResource;
+    }
+
+    public void disableReusableResource() {
+        if (reusableResource != null) {
+            SOSClassUtil.closeQuietly(reusableResource);
+            reusableResource = null;
+        }
     }
 
     public Properties getConfigurationPropertiesFromFiles() {
@@ -171,26 +192,25 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
             return null;
         }
         String method = "getConfigurationPropertiesFromFiles";
-        logger.info("%s[%s][files]", getLogPrefix(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f
-                .toString()));
+        logger.info("%s[%s]%s", getLogPrefix(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f.toString()));
         Properties p = new Properties();
         for (Path file : getArguments().getConfigurationFiles().getValue()) {
             if (Files.exists(file) && Files.isRegularFile(file)) {
                 try (BufferedReader reader = Files.newBufferedReader(file)) {
                     p.load(reader);
-                    logger.info("[%s][%s]loaded", method, file);
+                    logger.info("%s[%s][%s]loaded", getLogPrefix(), method, file);
                 } catch (Throwable e) {
-                    logger.warn("[%s][%s][failed]%s", method, file, e.toString());
+                    logger.warn("%s[%s][%s][failed]%s", getLogPrefix(), method, file, e.toString());
                 }
             } else {
-                logger.warn("[%s][%s]does not exist or is not a regular file", method, file);
+                logger.warn("%s[%s][%s]does not exist or is not a regular file", getLogPrefix(), method, file);
             }
         }
 
         if (logger.isDebugEnabled()) {
             for (String n : p.stringPropertyNames()) {
                 String v = p.getProperty(n);
-                logger.debug("[%s]%s=%s", method, n, v);
+                logger.debug("%s[%s]%s=%s", getLogPrefix(), method, n, v);
             }
         }
         return p;

@@ -1,11 +1,11 @@
 package com.sos.yade.engine.commons.delegators;
 
-import com.sos.commons.vfs.commons.IProvider;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public interface IYADEProviderDelegator {
 
-    public IProvider getProvider();
+    public AProvider<?> getProvider();
 
     public YADESourceTargetArguments getArgs();
     

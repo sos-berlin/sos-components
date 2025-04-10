@@ -1,13 +1,13 @@
 package com.sos.yade.engine.commons.delegators;
 
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderContext;
-import com.sos.commons.vfs.commons.IProvider;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 
 /** @apiNote COPY/MOVE operations */
 public class YADETargetProviderDelegator extends AYADEProviderDelegator {
 
-    public YADETargetProviderDelegator(IProvider provider, YADETargetArguments args) {
+    public YADETargetProviderDelegator(AProvider<?> provider, YADETargetArguments args) {
         super(provider, args);
 
         // set YADE specific ProviderContext

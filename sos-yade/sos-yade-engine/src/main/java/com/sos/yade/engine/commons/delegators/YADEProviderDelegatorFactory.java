@@ -4,9 +4,9 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
-import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
@@ -45,7 +45,7 @@ public class YADEProviderDelegatorFactory {
                 targetArgs);
     }
 
-    private static IProvider initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, String delegatorLabel,
+    private static AProvider<?> initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, String delegatorLabel,
             boolean isTarget) throws YADEEngineInitializationException {
 
         if (providerArgs == null) {
@@ -57,7 +57,7 @@ public class YADEProviderDelegatorFactory {
             throw new YADEEngineInitializationException(new SOSMissingDataException(protocol.getName()));
         }
         // <XXX>Provider.createInstance - multiple provider implementations available/possible
-        IProvider p = null;
+        AProvider<?> p = null;
         try {
             switch (protocol.getValue()) {
             case FTP:

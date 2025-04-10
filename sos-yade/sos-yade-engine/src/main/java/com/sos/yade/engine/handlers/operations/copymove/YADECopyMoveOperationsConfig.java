@@ -24,17 +24,17 @@ public class YADECopyMoveOperationsConfig {
     public YADECopyMoveOperationsConfig(final TransferOperation operation, final YADEArguments args,
             final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator, int sourceFilesSize) {
         this.operation = operation;
-
-        this.source = new Source(sourceDelegator);
-        this.target = new Target(targetDelegator);
-
+        this.transactional = args.getTransactional().isTrue();
         // integrityHashAlgorithm - Note: currently source/target only supports md5
         // - TODO - different treatment of integrityHashAlgorithm for source and target
         this.integrityHashAlgorithm = sourceDelegator.getArgs().getIntegrityHashAlgorithm().getValue();
         this.bufferSize = args.getBufferSize().getValue().intValue();
+
+        this.source = new Source(sourceDelegator);
+        this.target = new Target(targetDelegator);
+        // based on source|target
         this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
         this.parallelism = getParallelism(args, sourceFilesSize);
-        this.transactional = args.getTransactional().isTrue();
         this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
     }
 
@@ -135,6 +135,7 @@ public class YADECopyMoveOperationsConfig {
         private final boolean recursiveSelection;
         private final boolean replacemenEnabled;
         private final boolean checkIntegrityHash;
+        private final boolean needsFilePostProcessing;
 
         private Source(YADESourceProviderDelegator sourceDelegator) {
             // directory path without trailing separator
@@ -143,6 +144,8 @@ public class YADECopyMoveOperationsConfig {
             this.recursiveSelection = sourceDelegator.getArgs().getRecursive().isTrue();
             this.replacemenEnabled = isCopyOperation() && sourceDelegator.getArgs().isReplacementEnabled();
             this.checkIntegrityHash = sourceDelegator.getArgs().getCheckIntegrityHash().isTrue();
+            this.needsFilePostProcessing = !isMoveOperation() && sourceDelegator.getArgs().isReplacementEnabled() || sourceDelegator.getArgs()
+                    .getCommands().isFilePostProcessingEnabled();
         }
 
         public String getDirectory() {
@@ -164,6 +167,10 @@ public class YADECopyMoveOperationsConfig {
         public boolean isCheckIntegrityHashEnabled() {
             return checkIntegrityHash;
         }
+
+        public boolean needsFilePostProcessing() {
+            return needsFilePostProcessing;
+        }
     }
 
     public class Target {
@@ -178,6 +185,7 @@ public class YADECopyMoveOperationsConfig {
         private final boolean append;
         private final boolean createIntegrityHashFile;
         private final boolean keepModificationDate;
+        private final boolean needsFilePostProcessing;
 
         private Target(YADETargetProviderDelegator targetDelegator) {
             this.compress = initializeCompress(targetDelegator);
@@ -194,6 +202,8 @@ public class YADECopyMoveOperationsConfig {
             // if (cumulate && compress) {
             // cumulativeFileFullPath = cumulativeFileFullPath + compressFileExtension;
             // }
+            needsFilePostProcessing = targetDelegator.getArgs().getCommands().isFilePostProcessingEnabled() || atomic != null || replacementEnabled
+                    || keepModificationDate || createIntegrityHashFile;
         }
 
         private Cumulate initializeCumulate(final YADETargetProviderDelegator targetDelegator, Compress compress, Atomic atomic) {
@@ -255,6 +265,10 @@ public class YADECopyMoveOperationsConfig {
 
         public boolean isDeleteCumulativeFileEnabled() {
             return cumulate != null && cumulate.deleteFile;
+        }
+
+        public boolean needsFilePostProcessing() {
+            return needsFilePostProcessing;
         }
 
     }

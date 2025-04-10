@@ -1,13 +1,10 @@
 package com.sos.commons.vfs.ssh.sshj;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,10 +26,9 @@ import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
+import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
-import com.sos.commons.vfs.commons.file.files.DeleteFilesResult;
-import com.sos.commons.vfs.commons.file.files.RenameFilesResult;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
@@ -55,12 +51,13 @@ import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.xfer.FileSystemFile;
 
-public class SSHJProviderImpl extends SSHProvider {
+public class SSHJProvider extends SSHProvider {
 
     private SSHClient sshClient;
     private Map<String, Command> commands = new ConcurrentHashMap<>();
+    private boolean reusableResourceEnabled;
 
-    public SSHJProviderImpl(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
+    public SSHJProvider(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
     }
 
@@ -78,6 +75,9 @@ public class SSHJProviderImpl extends SSHProvider {
             getServerInfo();
 
             getLogger().info(getConnectedMsg(SSHJProviderUtils.getConnectedInfos(sshClient)));
+
+            // creates a shared SFTPClient by default
+            enableReusableResource();
         } catch (Throwable e) {
             if (isConnected()) {
                 disconnect();
@@ -99,10 +99,10 @@ public class SSHJProviderImpl extends SSHProvider {
             commands.clear();
             return;
         }
-
         commands.clear();
-        SOSClassUtil.closeQuietly(sshClient);
 
+        disableReusableResource();
+        SOSClassUtil.closeQuietly(sshClient);
         sshClient = null;
         getLogger().info(getDisconnectedMsg());
     }
@@ -137,8 +137,15 @@ public class SSHJProviderImpl extends SSHProvider {
     public boolean exists(String path) throws ProviderException {
         validatePrerequisites("exists", path, "path");
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            return SSHJProviderUtils.exists(sftp, path);
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    return SSHJProviderUtils.exists(sftp, path);
+                }
+            } else {
+                return SSHJProviderUtils.exists(reusable.getSFTPClient(), path);
+            }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -149,18 +156,33 @@ public class SSHJProviderImpl extends SSHProvider {
     public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
         validatePrerequisites("createDirectoriesIfNotExists", path, "path");
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            if (SSHJProviderUtils.exists(sftp, path)) {
-                return false;
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    if (SSHJProviderUtils.exists(sftp, path)) {
+                        return false;
+                    }
+                    sftp.mkdirs(path);
+                    if (getLogger().isDebugEnabled()) {
+                        getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+                    }
+                    return true;
+                }
+            } else {
+                if (SSHJProviderUtils.exists(reusable.getSFTPClient(), path)) {
+                    return false;
+                }
+                reusable.getSFTPClient().mkdirs(path);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
+                }
+                return true;
             }
-            sftp.mkdirs(path);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
-            }
-            return true;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
+
     }
 
     // TODO test if not exists ....
@@ -170,48 +192,21 @@ public class SSHJProviderImpl extends SSHProvider {
         validatePrerequisites("deleteIfExists", path, "path");
 
         try {
-            try (SFTPClient sftp = sshClient.newSFTPClient()) {
-                SSHJProviderUtils.delete(sftp, path);
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    SSHJProviderUtils.delete(sftp, path);
+                    return true;
+                }
+            } else {
+                SSHJProviderUtils.delete(reusable.getSFTPClient(), path);
                 return true;
-            } catch (SOSNoSuchFileException e) {
-                return false;
             }
+        } catch (SOSNoSuchFileException e) {
+            return false;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause());
         }
-    }
-
-    /** Overrides {@link IProvider#deleteFilesIfExists(Collection, boolean)}<br/>
-     * Note - deleteIfExists(String) is not used because an SFTPClient client is used to delete all files<br/>
-     */
-    @Override
-    public DeleteFilesResult deleteFilesIfExists(Collection<String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-        validatePrerequisites("deleteFilesIfExists");
-
-        DeleteFilesResult r = new DeleteFilesResult(files.size());
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            l: for (String file : files) {
-                try {
-                    if (SSHJProviderUtils.exists(sftp, file)) {
-                        SSHJProviderUtils.delete(sftp, file);
-                        r.addSuccess();
-                    } else {
-                        r.addNotFound(file);
-                    }
-                } catch (Throwable e) {
-                    r.addError(file, e);
-                    if (stopOnSingleFileError) {
-                        break l;
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            new ProviderException(e);
-        }
-        return r;
     }
 
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
@@ -220,50 +215,27 @@ public class SSHJProviderImpl extends SSHProvider {
         validatePrerequisites("renameFileIfSourceExists", source, "source");
         validateArgument("renameFileIfSourceExists", target, "target");
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            if (SSHJProviderUtils.exists(sftp, source)) {
-                SSHJProviderUtils.rename(sftp, source, target);
-                return true;
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    if (SSHJProviderUtils.exists(sftp, source)) {
+                        SSHJProviderUtils.rename(sftp, source, target);
+                        return true;
+                    }
+                    return false;
+                }
+            } else {
+                SFTPClient sftp = reusable.getSFTPClient();
+                if (SSHJProviderUtils.exists(sftp, source)) {
+                    SSHJProviderUtils.rename(sftp, source, target);
+                    return true;
+                }
+                return false;
             }
-            return false;
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
-    }
-
-    /** Overrides {@link IProvider#renameFilesIfSourceExists(Map, boolean)}<br/>
-     * Note - renameFileIfSourceExists(String,String) is not used because an SFTPClient client is used to rename all files<br/>
-     */
-    @Override
-    public RenameFilesResult renameFilesIfSourceExists(Map<String, String> files, boolean stopOnSingleFileError) throws ProviderException {
-        if (files == null) {
-            return null;
-        }
-        validatePrerequisites("renameFilesIfSourceExists");
-
-        RenameFilesResult r = new RenameFilesResult(files.size());
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            l: for (Map.Entry<String, String> entry : files.entrySet()) {
-                String source = entry.getKey();
-                String target = entry.getValue();
-                try {
-                    if (SSHJProviderUtils.exists(sftp, source)) {
-                        SSHJProviderUtils.rename(sftp, source, target);
-                        r.addSuccess(source, target);
-                    } else {
-                        r.addNotFound(source);
-                    }
-                } catch (Throwable e) {
-                    r.addError(source, e);
-                    if (stopOnSingleFileError) {
-                        break l;
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            new ProviderException(e);
-        }
-        return r;
     }
 
     /** Overrides {@link IProvider#getFileIfExists(String)} */
@@ -271,13 +243,21 @@ public class SSHJProviderImpl extends SSHProvider {
     public ProviderFile getFileIfExists(String path) throws ProviderException {
         validatePrerequisites("getFileIfExists", path, "path");
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            return createProviderFile(path, sftp.stat(path));
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    return createProviderFile(path, sftp.stat(path));
+                }
+            } else {
+                return createProviderFile(path, reusable.getSFTPClient().stat(path));
+            }
         } catch (NoSuchFileException e) {
             return null;
         } catch (IOException e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
+
     }
 
     /** Overrides {@link IProvider#getFileContentIfExists(String)} */
@@ -285,20 +265,15 @@ public class SSHJProviderImpl extends SSHProvider {
     public String getFileContentIfExists(String path) throws ProviderException {
         validatePrerequisites("getFileContentIfExists", path, "path");
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            if (!SSHJProviderUtils.exists(sftp, path)) {
-                return null;
-            }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try (RemoteFile file = sftp.open(path); InputStream is = file.new RemoteFileInputStream(0)) {
-                byte[] buffer = new byte[8_192];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    baos.write(buffer, 0, bytesRead);
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    return SSHJProviderUtils.getFileContentIfExists(sftp, path);
                 }
+            } else {
+                return SSHJProviderUtils.getFileContentIfExists(reusable.getSFTPClient(), path);
             }
-            return baos.toString(StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -309,10 +284,14 @@ public class SSHJProviderImpl extends SSHProvider {
     public void writeFile(String path, String content) throws ProviderException {
         validatePrerequisites("writeFile", path, "path");
 
-        EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT, OpenMode.TRUNC);
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            try (RemoteFile remoteFile = sftp.open(path, mode)) {
-                remoteFile.write(0, content.getBytes(StandardCharsets.UTF_8), 0, content.length());
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    SSHJProviderUtils.writeFile(sftp, path, content);
+                }
+            } else {
+                SSHJProviderUtils.writeFile(reusable.getSFTPClient(), path, content);
             }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -325,11 +304,15 @@ public class SSHJProviderImpl extends SSHProvider {
         validatePrerequisites("setFileLastModifiedFromMillis", path, path);
         validateModificationTime(path, milliseconds);
 
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            FileAttributes attr = sftp.stat(path);
-            long seconds = milliseconds / 1_000L;
-            FileAttributes newAttr = new FileAttributes.Builder().withAtimeMtime(attr.getAtime(), seconds).build();
-            sftp.setattr(path, newAttr);
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    SSHJProviderUtils.setFileLastModifiedFromMillis(sftp, path, milliseconds);
+                }
+            } else {
+                SSHJProviderUtils.setFileLastModifiedFromMillis(reusable.getSFTPClient(), path, milliseconds);
+            }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -342,7 +325,10 @@ public class SSHJProviderImpl extends SSHProvider {
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         try {
-            sftpRef.set(sshClient.newSFTPClient());
+            SSHJProviderReusableResource reusable = getReusableResource();
+            SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
+
+            sftpRef.set(sftpClient);
             RemoteFile remoteFile = sftpRef.get().open(path);
             return remoteFile.new ReadAheadRemoteFileInputStream(16) {
 
@@ -375,7 +361,10 @@ public class SSHJProviderImpl extends SSHProvider {
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         try {
-            sftpRef.set(sshClient.newSFTPClient());
+            SSHJProviderReusableResource reusable = getReusableResource();
+            SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
+
+            sftpRef.set(sftpClient);
             EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT);
             if (append) {
                 mode.add(OpenMode.APPEND);
@@ -478,14 +467,55 @@ public class SSHJProviderImpl extends SSHProvider {
         }
     }
 
+    /** Overrides {@link AProvider#enableReusableResource()} */
+    @Override
+    public void enableReusableResource() {
+        if (reusableResourceEnabled) {
+            return;
+        }
+        if (Protocol.SSH.equals(getArguments().getProtocol().getValue())) {
+            reusableResourceEnabled = false;
+            return;
+        }
+        try {
+            super.enableReusableResource(new SSHJProviderReusableResource(this));
+            reusableResourceEnabled = true;
+        } catch (Exception e) {
+            getLogger().warn(getLogPrefix() + "[enableReusableResource]" + e);
+        }
+    }
+
+    /** Overrides {@link AProvider#getReusableResource()} */
+    @Override
+    public SSHJProviderReusableResource getReusableResource() {
+        if (!reusableResourceEnabled) {
+            return null;
+        }
+        return (SSHJProviderReusableResource) super.getReusableResource();
+    }
+
+    @Override
+    public void disableReusableResource() {
+        super.disableReusableResource();
+        reusableResourceEnabled = false;
+    }
+
     /** SSH Provider specific methods */
 
     /** Overrides {@link ASSHProvider#put(String, String, int)} */
     @Override
     public void put(String source, String target, int perm) throws ProviderException {
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            SSHJProviderUtils.put(sftp, source, target);
-            sftp.chmod(target, perm);
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    SSHJProviderUtils.put(sftp, source, target);
+                    sftp.chmod(target, perm);
+                }
+            } else {
+                SSHJProviderUtils.put(reusable.getSFTPClient(), source, target);
+                reusable.getSFTPClient().chmod(target, perm);
+            }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "][perm=" + perm + "]", e);
         }
@@ -494,8 +524,15 @@ public class SSHJProviderImpl extends SSHProvider {
     /** Overrides {@link SSHProvider#put(String, String)} */
     @Override
     public void put(String source, String target) throws ProviderException {
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            SSHJProviderUtils.put(sftp, source, target);
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    SSHJProviderUtils.put(sftp, source, target);
+                }
+            } else {
+                SSHJProviderUtils.put(reusable.getSFTPClient(), source, target);
+            }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
@@ -504,8 +541,15 @@ public class SSHJProviderImpl extends SSHProvider {
     /** Overrides {@link SSHProvider#get(String, String)} */
     @Override
     public void get(String source, String target) throws ProviderException {
-        try (SFTPClient sftp = sshClient.newSFTPClient()) {
-            sftp.get(sftp.canonicalize(source), new FileSystemFile(target));
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    sftp.get(sftp.canonicalize(source), new FileSystemFile(target));
+                }
+            } else {
+                reusable.getSFTPClient().get(reusable.getSFTPClient().canonicalize(source), new FileSystemFile(target));
+            }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }

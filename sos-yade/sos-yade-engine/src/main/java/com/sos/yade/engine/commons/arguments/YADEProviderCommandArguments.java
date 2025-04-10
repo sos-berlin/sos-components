@@ -162,8 +162,12 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public boolean isPostProcessingEnabled() {
-        return commandsAfterFile.isDirty() || commandsAfterOperationOnSuccess.isDirty() || commandsAfterOperationOnError.isDirty()
-                || commandsAfterOperationFinal.isDirty() || commandsBeforeRename.isDirty();
+        return commandsAfterOperationOnSuccess.isDirty() || commandsAfterOperationOnError.isDirty() || commandsAfterOperationFinal.isDirty()
+                || isFilePostProcessingEnabled();
+    }
+
+    public boolean isFilePostProcessingEnabled() {
+        return commandsAfterFile.isDirty() || commandsBeforeRename.isDirty();
     }
 
     private String getCommandsAsString(SOSArgument<List<String>> arg) {

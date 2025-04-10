@@ -1,7 +1,7 @@
 package com.sos.yade.engine.commons.delegators;
 
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderContext;
-import com.sos.commons.vfs.commons.IProvider;
 import com.sos.yade.engine.commons.YADEDirectoryMapper;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
@@ -11,7 +11,7 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
 
     private final YADEDirectoryMapper directoryMapper;
 
-    public YADESourceProviderDelegator(IProvider provider, YADESourceArguments args) {
+    public YADESourceProviderDelegator(AProvider<?> provider, YADESourceArguments args) {
         super(provider, args);
 
         // set YADE specific ProviderContext

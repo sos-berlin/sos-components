@@ -6,10 +6,10 @@ import java.util.List;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.YADEProviderFile;
-import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -21,8 +21,10 @@ import com.sos.yade.engine.exceptions.YADEEngineCommandException;
 public class YADECommandExecutor {
 
     private static final String AFTER_OPERATION_BUILTIN_FUNCTION_REMOVE_DIRECTORY = "REMOVE_DIRECTORY()";
-
     private static final boolean THROW_ERROR_ON_STDERR = false;
+
+    private static String AFTER_FILE_ENV_VAR_FILE_TRANSFER_STATUS = "YADE_FILE_TRANSFER_STATUS";
+    private static String AFTER_FILE_ENV_VAR_FILE_IS_TRANSFERRED = "YADE_FILE_IS_TRANSFERRED";
 
     // -- Operation related ------------------------------
     public static void executeBeforeOperation(ISOSLogger logger, AYADEProviderDelegator delegator) throws YADEEngineCommandException {
@@ -31,16 +33,15 @@ public class YADECommandExecutor {
 
     public static void executeBeforeOperation(ISOSLogger logger, AYADEProviderDelegator delegator, YADEEngineJumpHostAddon jumpHostAddon)
             throws YADEEngineCommandException {
-        YADEProviderCommandArguments args = getArgs(delegator);
-        if (args == null || args.getCommandsBeforeOperation().isEmpty()) {
+        if (delegator == null || delegator.getArgs().getCommands().getCommandsBeforeOperation().isEmpty()) {
             return;
         }
-        SOSArgument<List<String>> arg = args.getCommandsBeforeOperation();
-        logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, args.getCommandDelimiter());
+        SOSArgument<List<String>> arg = delegator.getArgs().getCommands().getCommandsBeforeOperation();
+        logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, delegator.getArgs().getCommands().getCommandDelimiter());
 
         String argumentName = arg.getName();
         boolean isJumpHostClientCommand = jumpHostAddon != null && jumpHostAddon.isConfiguredOnSource();
-        for (String command : args.getCommandsBeforeOperation().getValue()) {
+        for (String command : arg.getValue()) {
             logger.info("%s[%s]%s", delegator.getLogPrefix(), argumentName, command);
             SOSCommandResult result = delegator.getProvider().executeCommand(command);
             if (isJumpHostClientCommand) {
@@ -55,14 +56,15 @@ public class YADECommandExecutor {
 
     public static void executeAfterOperationOnSuccess(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator) throws YADEEngineCommandException {
-        YADEProviderCommandArguments args = getArgs(sourceDelegator);
-        if (args != null && !args.getCommandsAfterOperationOnSuccess().isEmpty()) {
-            executeAfterOperationCommands(logger, sourceDelegator, args, args.getCommandsAfterOperationOnSuccess(), null);
+
+        SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterOperationOnSuccess();
+        if (!arg.isEmpty()) {
+            executeAfterOperationCommands(logger, sourceDelegator, arg, null);
         }
         if (targetDelegator != null) {
-            args = getArgs(targetDelegator);
-            if (args != null && !args.getCommandsAfterOperationOnSuccess().isEmpty()) {
-                executeAfterOperationCommands(logger, targetDelegator, args, args.getCommandsAfterOperationOnSuccess(), null);
+            arg = targetDelegator.getArgs().getCommands().getCommandsAfterOperationOnSuccess();
+            if (!arg.isEmpty()) {
+                executeAfterOperationCommands(logger, targetDelegator, arg, null);
             }
         }
     }
@@ -71,19 +73,19 @@ public class YADECommandExecutor {
             YADETargetProviderDelegator targetDelegator, Throwable exception) {
 
         YADECommandResult r = YADECommandResult.createInstance();
-        YADEProviderCommandArguments args = getArgs(sourceDelegator);
-        if (args != null && !args.getCommandsAfterOperationOnError().isEmpty()) {
+        SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterOperationOnError();
+        if (!arg.isEmpty()) {
             try {
-                executeAfterOperationCommands(logger, sourceDelegator, args, args.getCommandsAfterOperationOnError(), exception);
+                executeAfterOperationCommands(logger, sourceDelegator, arg, exception);
             } catch (YADEEngineCommandException e) {
                 r.source = e;
             }
         }
         if (targetDelegator != null) {
-            args = getArgs(targetDelegator);
-            if (args != null && !args.getCommandsAfterOperationOnError().isEmpty()) {
+            arg = targetDelegator.getArgs().getCommands().getCommandsAfterOperationOnError();
+            if (!arg.isEmpty()) {
                 try {
-                    executeAfterOperationCommands(logger, targetDelegator, args, args.getCommandsAfterOperationOnError(), exception);
+                    executeAfterOperationCommands(logger, targetDelegator, arg, exception);
                 } catch (YADEEngineCommandException e) {
                     r.target = e;
                 }
@@ -96,19 +98,19 @@ public class YADECommandExecutor {
             YADETargetProviderDelegator targetDelegator, Throwable exception) {
 
         YADECommandResult r = YADECommandResult.createInstance();
-        YADEProviderCommandArguments args = getArgs(sourceDelegator);
-        if (args != null && !args.getCommandsAfterOperationFinal().isEmpty()) {
+        SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterOperationFinal();
+        if (!arg.isEmpty()) {
             try {
-                executeAfterOperationCommands(logger, sourceDelegator, args, args.getCommandsAfterOperationFinal(), exception);
+                executeAfterOperationCommands(logger, sourceDelegator, arg, exception);
             } catch (YADEEngineCommandException e) {
                 r.source = e;
             }
         }
         if (targetDelegator != null) {
-            args = getArgs(targetDelegator);
-            if (args != null && !args.getCommandsAfterOperationFinal().isEmpty()) {
+            arg = targetDelegator.getArgs().getCommands().getCommandsAfterOperationFinal();
+            if (!arg.isEmpty()) {
                 try {
-                    executeAfterOperationCommands(logger, targetDelegator, args, args.getCommandsAfterOperationFinal(), exception);
+                    executeAfterOperationCommands(logger, targetDelegator, arg, exception);
                 } catch (YADEEngineCommandException e) {
                     r.target = e;
                 }
@@ -125,89 +127,90 @@ public class YADECommandExecutor {
 
     public static void executeBeforeFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
             YADEProviderFile file) throws YADEEngineCommandException {
-        YADEProviderCommandArguments args = getArgs(sourceDelegator);
-        if (args != null && !args.getCommandsBeforeFile().isEmpty()) {
-            if (!file.isSkipped() || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
-                SOSArgument<List<String>> arg = args.getCommandsBeforeFile();
-                executeFileCommands(logger, sourceDelegator, args, arg, file, sourceDelegator, targetDelegator);
+        SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsBeforeFile();
+        if (!arg.isEmpty()) {
+            if (!file.isSkipped() || sourceDelegator.getArgs().getCommands().getCommandsBeforeFileEnableForSkipped().isTrue()) {
+                executeFileCommands(logger, sourceDelegator, sourceDelegator, targetDelegator, arg, file, null);
             }
         }
         if (targetDelegator != null) {
-            args = getArgs(targetDelegator);
-            if (args != null && !args.getCommandsBeforeFile().isEmpty()) {
-                if (!file.isSkipped() || args.getCommandsBeforeFileEnableForSkipped().isTrue()) {
-                    SOSArgument<List<String>> arg = args.getCommandsBeforeFile();
-                    executeFileCommands(logger, targetDelegator, args, arg, file, sourceDelegator, targetDelegator);
+            arg = targetDelegator.getArgs().getCommands().getCommandsBeforeFile();
+            if (!arg.isEmpty()) {
+                if (!file.isSkipped() || targetDelegator.getArgs().getCommands().getCommandsBeforeFileEnableForSkipped().isTrue()) {
+                    executeFileCommands(logger, targetDelegator, sourceDelegator, targetDelegator, arg, file, null);
                 }
             }
         }
     }
 
-    public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile file)
+    /** REMOVE Operation - after a source file has been removed
+     * 
+     * @param logger
+     * @param sourceDelegator
+     * @param sourceFile
+     * @throws YADEEngineCommandException */
+    public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile)
             throws YADEEngineCommandException {
-        executeAfterFile(logger, sourceDelegator, null, file);
+        executeAfterFile(logger, sourceDelegator, null, sourceFile);
     }
 
     public static void executeAfterFile(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
-            YADEProviderFile file) throws YADEEngineCommandException {
-        YADEProviderCommandArguments args = getArgs(sourceDelegator);
-        if (args != null && !args.getCommandsAfterFile().isEmpty()) {
-            if (!file.isSkipped() || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
-                SOSArgument<List<String>> arg = args.getCommandsAfterFile();
-                executeFileCommands(logger, sourceDelegator, args, arg, file, sourceDelegator, targetDelegator);
+            YADEProviderFile sourceFile) throws YADEEngineCommandException {
+        SOSEnv env = null;
+        SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterFile();
+        if (!arg.isEmpty()) {
+            if (!sourceFile.isSkipped() || !sourceDelegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
+                env = createLocalEnvForExecuteAfterFile(sourceFile);
+                executeFileCommands(logger, sourceDelegator, sourceDelegator, targetDelegator, arg, sourceFile, env);
             }
         }
         if (targetDelegator != null) {
-            args = getArgs(targetDelegator);
-            if (args != null && !args.getCommandsAfterFile().isEmpty()) {
-                if (!file.isSkipped() || !args.getCommandsAfterFileDisableForSkipped().isTrue()) {
-                    SOSArgument<List<String>> arg = args.getCommandsAfterFile();
-                    executeFileCommands(logger, targetDelegator, args, arg, file, sourceDelegator, targetDelegator);
+            arg = targetDelegator.getArgs().getCommands().getCommandsAfterFile();
+            if (!arg.isEmpty()) {
+                if (!sourceFile.isSkipped() || !targetDelegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
+                    if (env == null) {
+                        env = createLocalEnvForExecuteAfterFile(sourceFile);
+                    }
+                    executeFileCommands(logger, targetDelegator, sourceDelegator, targetDelegator, arg, sourceFile, env);
                 }
             }
         }
     }
 
+    /** The command is executed by the delegator<br/>
+     * The sourceDelegator and the targetDelegator are used to resolve some YADE variables that can be used in the command<br/>
+     * see
+     * {{@link YADEFileCommandVariablesResolver#resolve(YADESourceProviderDelegator, YADETargetProviderDelegator, com.sos.commons.vfs.commons.file.ProviderFile, String)}
+     * 
+     * @param logger
+     * @param delegator
+     * @param sourceDelegator
+     * @param targetDelegator
+     * @param file
+     * @throws YADEEngineCommandException */
     public static void executeBeforeRename(ISOSLogger logger, IYADEProviderDelegator delegator, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, YADEProviderFile file) throws YADEEngineCommandException {
-        YADEProviderCommandArguments args = getArgs(delegator);
-        if (isCommandBeforeRenameEnabled(args, file)) {
-            SOSArgument<List<String>> arg = args.getCommandsBeforeRename();
-            executeFileCommands(logger, delegator, args, arg, file, sourceDelegator, targetDelegator);
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile) throws YADEEngineCommandException {
+
+        SOSArgument<List<String>> arg = delegator.getArgs().getCommands().getCommandsBeforeRename();
+        if (!arg.isEmpty()) {
+            if (!sourceFile.isSkipped() || !delegator.getArgs().getCommands().getCommandsAfterFileDisableForSkipped().isTrue()) {
+                executeFileCommands(logger, targetDelegator, sourceDelegator, targetDelegator, arg, sourceFile, null);
+            }
         }
     }
 
-    public static boolean isCommandBeforeRenameEnabled(YADEProviderCommandArguments args) {
-        return args != null && !args.getCommandsBeforeRename().isEmpty();
-    }
-
-    public static boolean isCommandBeforeRenameEnabled(YADEProviderCommandArguments args, YADEProviderFile file) {
-        if (!isCommandBeforeRenameEnabled(args)) {
-            return false;
-        }
-        return !file.isSkipped() || !args.getCommandsAfterFileDisableForSkipped().isTrue();
-    }
-
-    // -- Help-Methods
-    private static YADEProviderCommandArguments getArgs(IYADEProviderDelegator delegator) {
-        if (delegator == null || delegator.getArgs() == null) {
-            return null;
-        }
-        return delegator.getArgs().getCommands();
-    }
-
-    private static void executeAfterOperationCommands(ISOSLogger logger, AYADEProviderDelegator delegator, YADEProviderCommandArguments args,
-            SOSArgument<List<String>> arg, Throwable exception) throws YADEEngineCommandException {
+    private static void executeAfterOperationCommands(ISOSLogger logger, AYADEProviderDelegator delegator, SOSArgument<List<String>> arg,
+            Throwable exception) throws YADEEngineCommandException {
 
         String argumentName = arg.getName();
         // e.g. target connection exception, but provider is source...
         if (exception != null && YADEProviderDelegatorHelper.isConnectionException(exception) && !delegator.getProvider().isConnected()) {
             logger.info("%s[%s][%s][skip]due to a connection exception", delegator.getLogPrefix(), argumentName, YADEArgumentsHelper.toString(arg,
-                    args.getCommandDelimiter().getValue()));
+                    delegator.getArgs().getCommands().getCommandDelimiter().getValue()));
             return;
         }
 
-        logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, args.getCommandDelimiter());
+        logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, delegator.getArgs().getCommands().getCommandDelimiter());
 
         for (String command : arg.getValue()) {
             logger.info("%s[%s]%s", delegator.getLogPrefix(), argumentName, command);
@@ -234,18 +237,28 @@ public class YADECommandExecutor {
         }
     }
 
+    private static SOSEnv createLocalEnvForExecuteAfterFile(YADEProviderFile sourceFile) {
+        if (sourceFile.getTarget() == null) {
+            return null;
+        }
+        SOSEnv env = new SOSEnv();
+        env.putLocalEnv(AFTER_FILE_ENV_VAR_FILE_TRANSFER_STATUS, sourceFile.getTarget().getState().value());
+        env.putLocalEnv(AFTER_FILE_ENV_VAR_FILE_IS_TRANSFERRED, sourceFile.getTarget().isTransferred() ? "1" : "0");
+        return env;
+    }
+
     // TODO direc
-    private static void executeFileCommands(ISOSLogger logger, IYADEProviderDelegator delegator, YADEProviderCommandArguments args,
-            SOSArgument<List<String>> arg, YADEProviderFile file, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator) throws YADEEngineCommandException {
-        logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, args.getCommandDelimiter(), file);
+    private static void executeFileCommands(ISOSLogger logger, IYADEProviderDelegator delegator, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, SOSArgument<List<String>> arg, YADEProviderFile file, SOSEnv env)
+            throws YADEEngineCommandException {
+        logIfMultipleCommands(logger, delegator.getLogPrefix(), arg, delegator.getArgs().getCommands().getCommandDelimiter(), file);
 
         String prefix = String.format("%s[%s][%s][%s]", delegator.getLogPrefix(), file.getIndex(), file.getFullPath(), arg.getName());
         for (String command : arg.getValue()) {
             String resolved = YADEFileCommandVariablesResolver.resolve(sourceDelegator, targetDelegator, file, command);
             String msg = prefix + "[" + resolved + "]";
             logger.info(msg);
-            SOSCommandResult result = delegator.getProvider().executeCommand(resolved);
+            SOSCommandResult result = delegator.getProvider().executeCommand(resolved, env);
             logCommandResult(logger, msg, result);
             checkCommandResult(prefix, result);
         }

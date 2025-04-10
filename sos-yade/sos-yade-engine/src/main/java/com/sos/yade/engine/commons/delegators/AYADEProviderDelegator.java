@@ -2,13 +2,13 @@ package com.sos.yade.engine.commons.delegators;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.commons.IProvider;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
-    private final IProvider provider;
+    private final AProvider<?> provider;
     private final YADESourceTargetArguments args;
 
     private final String label;
@@ -19,7 +19,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     private final boolean isHTTP;
 
-    public AYADEProviderDelegator(IProvider provider, YADESourceTargetArguments args) {
+    public AYADEProviderDelegator(AProvider<?> provider, YADESourceTargetArguments args) {
         this.provider = provider;
         this.args = args;
         this.label = args.getLabel().getValue();
@@ -31,7 +31,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     /** Overrides {@link IYADEProviderDelegator#getProvider()} */
     @Override
-    public IProvider getProvider() {
+    public AProvider<?> getProvider() {
         return provider;
     }
 

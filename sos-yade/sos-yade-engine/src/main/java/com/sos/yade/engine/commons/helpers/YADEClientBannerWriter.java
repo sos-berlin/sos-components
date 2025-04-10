@@ -25,7 +25,7 @@ import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 
 public class YADEClientBannerWriter {
 
-    private static final String SEPARATOR_LINE = "****************************************************************************************";
+    public static final String SEPARATOR_LINE = "****************************************************************************************";
 
     public static void writeHeader(ISOSLogger logger, AYADEArgumentsLoader argsLoader, boolean writeYADEBanner) {
         if (writeYADEBanner) {

@@ -185,7 +185,7 @@ public class YADEDirectoryMapper {
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
                         // Temp
-                        result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
+                        result = SOSString.trimStart(result, config.getSource().getPathSeparator());
                     }
                 } else if (SOSPathUtils.isAbsoluteWindowsUNCPath(sourceDirectory)) { // \\server\share
                     // server\share TODO trim server?
@@ -213,6 +213,7 @@ public class YADEDirectoryMapper {
             if (targetPath.isEmpty()) {
                 targetPath = targetDelegator.getDirectory(); // already normalized without trailing path separator
             } else {
+                // appendPath is OK because the getSourceDirectoryForMapping method should return a relative directory
                 targetPath = targetDelegator.appendPath(targetDelegator.getDirectory(), targetPath);
             }
         }

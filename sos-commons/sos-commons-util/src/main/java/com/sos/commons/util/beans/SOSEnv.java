@@ -1,5 +1,6 @@
 package com.sos.commons.util.beans;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.sos.commons.util.SOSShell;
@@ -31,12 +32,26 @@ public class SOSEnv {
         localEnvs = val;
     }
 
+    public void putLocalEnv(String name, String value) {
+        if (localEnvs == null) {
+            localEnvs = new LinkedHashMap<>();
+        }
+        localEnvs.put(name, value);
+    }
+
     public Map<String, String> getGlobalEnvs() {
         return globalEnvs;
     }
 
     public void setGlobalEnvs(Map<String, String> val) {
         globalEnvs = val;
+    }
+
+    public void putGlobalEnv(String name, String value) {
+        if (globalEnvs == null) {
+            globalEnvs = new LinkedHashMap<>();
+        }
+        globalEnvs.put(name, value);
     }
 
     public static String newLine2Space(String value) {

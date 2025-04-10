@@ -20,7 +20,7 @@ public class SOSPathUtils {
 
     /** 1) URI */
     /** URI paths (e.g., file:/, http:/, sftp:/...) */
-    private static final String REGEX_ABSOLUTE_URI_PATH = "^[a-zA-Z][a-zA-Z0-9+.-]*:/.+";
+    private static final String REGEX_ABSOLUTE_URI_PATH = "^(?![a-zA-Z]:[/\\\\])[a-zA-Z][a-zA-Z0-9+.-]*:/.+";
 
     /** 2) UNIX */
     /** - Unix absolute paths (starting with /)<br/>

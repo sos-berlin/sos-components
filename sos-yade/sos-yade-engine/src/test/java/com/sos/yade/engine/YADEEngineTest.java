@@ -43,7 +43,7 @@ public class YADEEngineTest {
         Map<String, String> map = System.getenv();
         boolean settingsReplacerCaseSensitive = true;
         boolean settingsReplacerKeepUnresolved = true;
-        int parallelism = 1;
+        int parallelism = 10;
         try {
             ISOSLogger logger = new SLF4JLogger();
 
