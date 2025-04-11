@@ -1,4 +1,4 @@
-package com.sos.yade.engine;
+package com.sos.yade.engine.providers;
 
 import java.nio.file.Path;
 
@@ -11,6 +11,7 @@ import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVSProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.YADEEngine;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.commons.arguments.loaders.YADEUnitTestArgumentsLoader;
 
@@ -34,7 +35,7 @@ public class WebDAVYADEEngineTest {
             PORT = 9080;
 
             /** Common */
-            YADEUnitTestArgumentsLoader argsLoader = YADEEngineTest.createYADEUnitTestArgumentsLoader();
+            YADEUnitTestArgumentsLoader argsLoader = Base.createYADEUnitTestArgumentsLoader();
             argsLoader.getArgs().getParallelism().setValue(10);
             // argsLoader.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
@@ -72,7 +73,7 @@ public class WebDAVYADEEngineTest {
             boolean useFilestash = HOST.contains("https://webdav.filestash.app");
 
             /** Common */
-            YADEUnitTestArgumentsLoader argsLoader = YADEEngineTest.createYADEUnitTestArgumentsLoader();
+            YADEUnitTestArgumentsLoader argsLoader = Base.createYADEUnitTestArgumentsLoader();
             argsLoader.getArgs().getParallelism().setValue(10);
             // argsLoader.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);

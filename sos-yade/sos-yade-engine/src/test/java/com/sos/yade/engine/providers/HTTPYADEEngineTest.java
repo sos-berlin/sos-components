@@ -1,4 +1,4 @@
-package com.sos.yade.engine;
+package com.sos.yade.engine.providers;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -12,6 +12,7 @@ import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.YADEEngine;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.commons.arguments.loaders.YADEUnitTestArgumentsLoader;
 
@@ -36,7 +37,7 @@ public class HTTPYADEEngineTest {
             }
 
             /** Common */
-            YADEUnitTestArgumentsLoader argsLoader = YADEEngineTest.createYADEUnitTestArgumentsLoader();
+            YADEUnitTestArgumentsLoader argsLoader = Base.createYADEUnitTestArgumentsLoader();
             argsLoader.getArgs().getParallelism().setValue(10);
             // argsLoader.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
@@ -76,7 +77,7 @@ public class HTTPYADEEngineTest {
             }
 
             /** Common */
-            YADEUnitTestArgumentsLoader argsLoader = YADEEngineTest.createYADEUnitTestArgumentsLoader();
+            YADEUnitTestArgumentsLoader argsLoader = Base.createYADEUnitTestArgumentsLoader();
             argsLoader.getArgs().getParallelism().setValue(10);
             // argsLoader.getArgs().getBufferSize().setValue(Integer.valueOf(128 * 1_024));
             argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
