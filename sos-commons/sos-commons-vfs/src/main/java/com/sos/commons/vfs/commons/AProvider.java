@@ -45,7 +45,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
-    private String logPrefix;
+    private String label;
 
     public AProvider(ISOSLogger logger, A arguments, SOSArgument<?>... additionalCredentialStoreArg) throws ProviderInitializationException {
         this.logger = logger;
@@ -192,25 +192,25 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
             return null;
         }
         String method = "getConfigurationPropertiesFromFiles";
-        logger.info("%s[%s]%s", getLogPrefix(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f.toString()));
+        logger.info("[%s][%s]%s", getLabel(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f.toString()));
         Properties p = new Properties();
         for (Path file : getArguments().getConfigurationFiles().getValue()) {
             if (Files.exists(file) && Files.isRegularFile(file)) {
                 try (BufferedReader reader = Files.newBufferedReader(file)) {
                     p.load(reader);
-                    logger.info("%s[%s][%s]loaded", getLogPrefix(), method, file);
+                    logger.info("[%s][%s][%s]loaded", getLabel(), method, file);
                 } catch (Throwable e) {
-                    logger.warn("%s[%s][%s][failed]%s", getLogPrefix(), method, file, e.toString());
+                    logger.warn("[%s][%s][%s][failed]%s", getLabel(), method, file, e.toString());
                 }
             } else {
-                logger.warn("%s[%s][%s]does not exist or is not a regular file", getLogPrefix(), method, file);
+                logger.warn("[%s][%s][%s]does not exist or is not a regular file", getLabel(), method, file);
             }
         }
 
         if (logger.isDebugEnabled()) {
             for (String n : p.stringPropertyNames()) {
                 String v = p.getProperty(n);
-                logger.debug("%s[%s]%s=%s", getLogPrefix(), method, n, v);
+                logger.debug("[%s][%s]%s=%s", getLabel(), method, n, v);
             }
         }
         return p;
@@ -231,15 +231,19 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
     }
 
-    public String getLogPrefix() {
-        if (logPrefix == null) {
-            logPrefix = context == null ? "" : context.getLogPrefix();
+    public String getLabel() {
+        if (label == null) {
+            label = context == null ? "" : context.getLabel();
         }
-        return logPrefix;
+        return label;
     }
 
     public String getPathOperationPrefix(String path) {
         return getLogPrefix() + "[" + path + "]";
+    }
+    
+    public String getLogPrefix() {
+        return SOSString.isEmpty(getLabel()) ? "" : "[" + getLabel() + "]";
     }
 
     /** Refresh file size and lastModified<br/>
@@ -351,7 +355,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     public void logNotImpementedMethod(String methodName, String add) {
-        logger.info("%s[%s][%s][not implemented yet]%s", getLogPrefix(), getClass().getSimpleName(), methodName, add);
+        logger.info("[%s][%s][%s][not implemented yet]%s", getLabel(), getClass().getSimpleName(), methodName, add);
     }
 
     /** Called when credential store are successfully resolved.

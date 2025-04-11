@@ -13,7 +13,7 @@ import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsCo
 
 public class YADETargetCumulativeFileHelper {
 
-    private static final String LOG_PREFIX = "[cumulative file]";
+    private static final String LABEL = "CumulativeFile";
 
     public static void tryDeleteFile(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator)
             throws Exception {
@@ -43,7 +43,7 @@ public class YADETargetCumulativeFileHelper {
             path = config.getTarget().getCumulate().getTmpFullPathOfExistingFileForDecompress();
             try {
                 if (targetDelegator.getProvider().deleteIfExists(path)) {
-                    logger.info("[%s][rollback][%s]deleted", targetDelegator.getLogPrefix(), path);
+                    logger.info("[%s][rollback][%s]deleted", targetDelegator.getLabel(), path);
                 }
             } catch (Exception e) {
                 logger.info("[%s][rollback][%s]%s", path, e.toString());
@@ -66,7 +66,7 @@ public class YADETargetCumulativeFileHelper {
                     compress(logger, config, targetDelegator, transferPath, finalPath);
                     targetDelegator.getProvider().deleteIfExists(transferPath);
                 }
-                logger.info("%s%s[%s]created", targetDelegator.getLogPrefix(), LOG_PREFIX, finalPath);
+                logger.info("[%s][%s][%s]created", targetDelegator.getLabel(), LABEL, finalPath);
             } else {
                 if (targetDelegator.getProvider().exists(finalPath)) {
                     if (config.getTarget().getCompress() == null) {
@@ -83,7 +83,7 @@ public class YADETargetCumulativeFileHelper {
                         targetDelegator.getProvider().deleteIfExists(tmpFinalPath);
 
                     }
-                    logger.info("%s%s[%s]updated", targetDelegator.getLogPrefix(), LOG_PREFIX, finalPath);
+                    logger.info("[%s][%s][%s]updated", targetDelegator.getLabel(), LABEL, finalPath);
                 } else {
                     if (config.getTarget().getCompress() == null) {
                         targetDelegator.getProvider().renameFileIfSourceExists(transferPath, finalPath);
@@ -91,7 +91,7 @@ public class YADETargetCumulativeFileHelper {
                         compress(logger, config, targetDelegator, transferPath, finalPath);
                         targetDelegator.getProvider().deleteIfExists(transferPath);
                     }
-                    logger.info("%s%s[%s]created", targetDelegator.getLogPrefix(), LOG_PREFIX, finalPath);
+                    logger.info("[%s][%s][%s]created", targetDelegator.getLabel(), LABEL, finalPath);
                 }
             }
         }
@@ -100,7 +100,7 @@ public class YADETargetCumulativeFileHelper {
     private static void decompress(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
             String gzipFile, String outputFile) throws ProviderException {
 
-        logger.info("%s%s[decompress][%s]->[%s]", targetDelegator.getLogPrefix(), LOG_PREFIX, gzipFile, outputFile);
+        logger.info("[%s][%s][decompress][%s]->[%s]", targetDelegator.getLabel(), LABEL, gzipFile, outputFile);
         targetDelegator.getProvider().deleteIfExists(outputFile);
 
         try (InputStream is = targetDelegator.getProvider().getInputStream(gzipFile); GZIPInputStream gis = new GZIPInputStream(is); OutputStream os =
@@ -111,14 +111,14 @@ public class YADETargetCumulativeFileHelper {
                 os.write(buffer, 0, len);
             }
         } catch (IOException e) {
-            new ProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[decompress][" + gzipFile + "]->[" + outputFile + "]" + e, e);
+            new ProviderException("[" + targetDelegator.getLabel() + "][" + LABEL + "][decompress][" + gzipFile + "]->[" + outputFile + "]" + e, e);
         }
     }
 
     private static void merge(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator, String inputFile,
             String outputFile) throws ProviderException {
 
-        logger.info("%s%s[merge][%s]->[%s]", targetDelegator.getLogPrefix(), LOG_PREFIX, inputFile, outputFile);
+        logger.info("[%s][%s][merge][%s]->[%s]", targetDelegator.getLabel(), LABEL, inputFile, outputFile);
 
         try (InputStream is = targetDelegator.getProvider().getInputStream(inputFile); OutputStream os = targetDelegator.getProvider()
                 .getOutputStream(outputFile, true)) {
@@ -128,7 +128,7 @@ public class YADETargetCumulativeFileHelper {
                 os.write(buffer, 0, len);
             }
         } catch (IOException e) {
-            new ProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[merge][" + inputFile + "]->[" + outputFile + "]" + e, e);
+            new ProviderException("[" + targetDelegator.getLabel() + "][" + LABEL + "][merge][" + inputFile + "]->[" + outputFile + "]" + e, e);
         }
     }
 
@@ -136,7 +136,7 @@ public class YADETargetCumulativeFileHelper {
             String inputFile, String gzipFile) throws ProviderException {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("%s%s[compress][%s]->[%s]", targetDelegator.getLogPrefix(), LOG_PREFIX, inputFile, gzipFile);
+            logger.debug("[%s][%s][compress][%s]->[%s]", targetDelegator.getLabel(), LABEL, inputFile, gzipFile);
         }
 
         try (InputStream is = targetDelegator.getProvider().getInputStream(inputFile); GZIPOutputStream os = new GZIPOutputStream(targetDelegator
@@ -147,7 +147,7 @@ public class YADETargetCumulativeFileHelper {
                 os.write(buffer, 0, len);
             }
         } catch (IOException e) {
-            new ProviderException(targetDelegator.getLogPrefix() + LOG_PREFIX + "[compress][" + inputFile + "]->[" + gzipFile + "]" + e, e);
+            new ProviderException("[" + targetDelegator.getLabel() + "][" + LABEL + "][compress][" + inputFile + "]->[" + gzipFile + "]" + e, e);
         }
     }
 

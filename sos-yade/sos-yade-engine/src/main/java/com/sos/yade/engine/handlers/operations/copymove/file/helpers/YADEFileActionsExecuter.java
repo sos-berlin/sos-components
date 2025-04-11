@@ -43,7 +43,7 @@ public class YADEFileActionsExecuter {
                 // 2) Target - KeepModificationDate
                 if (config.getTarget().isKeepModificationDateEnabled()) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("[%s]%s[%s][setTargetFileModificationDate][UTC]%s", fileTransferLogPrefix, targetDelegator.getLogPrefix(),
+                        logger.debug("[%s][%s][%s][setTargetFileModificationDate][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(),
                                 targetFile.getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
                     }
                     targetDelegator.getProvider().setFileLastModifiedFromMillis(targetFile.getFinalFullPath(), sourceFile.getLastModifiedMillis());
@@ -52,7 +52,7 @@ public class YADEFileActionsExecuter {
                 if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
                     String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
                     targetDelegator.getProvider().writeFile(path, targetFile.getIntegrityHash());
-                    logger.info("[%s][%s][%s][integrity hash]file written", fileTransferLogPrefix, targetDelegator.getLogPrefix(), path);
+                    logger.info("[%s][%s][%s][integrity hash]file written", fileTransferLogPrefix, targetDelegator.getLabel(), path);
                 }
             }
         }
@@ -116,7 +116,7 @@ public class YADEFileActionsExecuter {
         // for error tests
         // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
         sourceOrTargetFile.setSubState(TransferEntryState.RENAMED);
-        logger.info("[%s]%s[%s][renamed][%s]", fileTransferLogPrefix, delegator.getLogPrefix(), oldPath, newPath);
+        logger.info("[%s][%s][%s][renamed][%s]", fileTransferLogPrefix, delegator.getLabel(), oldPath, newPath);
     }
 
 }

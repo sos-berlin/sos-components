@@ -39,7 +39,7 @@ public class YADESourceFilesPolling {
     public YADESourceFilesPolling(YADESourceProviderDelegator sourceDelegator) {
         this.args = sourceDelegator.getArgs();
         initMethod();
-        this.mainLogPrefix = sourceDelegator.getLogPrefix() + "[polling]";
+        this.mainLogPrefix = "[" + sourceDelegator.getLabel() + "][polling]";
         this.start = Instant.now();
     }
 

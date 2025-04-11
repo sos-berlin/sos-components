@@ -222,7 +222,7 @@ public class YADEDirectoryMapper {
             // if (logger.isDebugEnabled()) {
             // logger.debug("[getTargetDirectory][targetPath is empty][set to]" + targetPath);
             // }
-            throw new ProviderException(targetDelegator.getLogPrefix() + "Target directory can't be evaluated");
+            throw new ProviderException("[" + targetDelegator.getLabel() + "]Target directory can't be evaluated");
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectory][sourceDirectoryPathForMapping=" + sourceDirectoryPathForMapping + "]targetPath=" + targetPath);

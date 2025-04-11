@@ -327,11 +327,10 @@ public class YADEClientBannerWriter {
     private static String formatFile(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
             YADEProviderFile file) {
         StringBuilder sb = new StringBuilder();
-        sb.append(" ").append(sourceDelegator.getLogPrefix());
+        sb.append(" [").append(sourceDelegator.getLabel()).append("]");
         sb.append(formatFile(file));
         if (file.getTarget() != null) {
-            sb.append(" ");
-            sb.append(targetDelegator.getLogPrefix());
+            sb.append(" [").append(targetDelegator.getLabel()).append("]");
             sb.append(formatFile(file.getTarget()));
         }
         return sb.toString();

@@ -305,16 +305,16 @@ public class YADEFileHandler {
         if (throwException) {
             throwException(fileTransferLogPrefix, targetFile, e, throwExceptionAdd);
         } else {
-            String msg = String.format("[%s][%s=%s]%s[%s]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
-                    targetDelegator.getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
+            String msg = String.format("[%s][%s=%s][%s][%s]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
+                    targetDelegator.getLabel(), targetFile.getFullPath(), throwExceptionAdd + e);
             logger.warn(msg);
         }
     }
 
     private void throwException(String fileTransferLogPrefix, YADETargetProviderFile targetFile, Throwable e, String throwExceptionAdd)
             throws YADEEngineTransferFileException {
-        String msg = String.format("[%s][%s=%s]%s[%s]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator
-                .getLogPrefix(), targetFile.getFullPath(), throwExceptionAdd + e);
+        String msg = String.format("[%s][%s=%s][%s][%s]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
+                targetDelegator.getLabel(), targetFile.getFullPath(), throwExceptionAdd + e);
         logger.error(msg);
         throw new YADEEngineTransferFileException(msg, e);
     }

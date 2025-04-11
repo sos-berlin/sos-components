@@ -40,7 +40,7 @@ public class YADEProviderDelegatorHelper {
                 if (retryCounter == maxRetries) {
                     throwConnectionException(delegator, e);
                 }
-                logger.info("%s[retry=%s in %ss]%s", delegator.getLogPrefix(), retryCounter + 1, retryInterval, e.toString(), e);
+                logger.info("[%s][retry=%s in %ss]%s", delegator.getLabel(), retryCounter + 1, retryInterval, e.toString(), e);
                 YADEClientHelper.waitFor(retryInterval);
             }
         }

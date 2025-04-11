@@ -194,7 +194,7 @@ public class YADECopyMoveOperationsHandler {
 
                 if (config.isMoveOperation()) {
                     if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
-                        logger.info("[%s]%s[deleted]%s", fileTransferLogPrefix, sourceDelegator.getLogPrefix(), sourceFile.getFinalFullPath());
+                        logger.info("[%s][%s][deleted]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFinalFullPath());
                     }
                 }
             }
@@ -220,7 +220,7 @@ public class YADECopyMoveOperationsHandler {
         boolean isJumpHostRollback = false;
         if (targetDelegator.isJumpHost()) {
             // Source(Any Provider) -> Jump(SSHProvider)
-            logger.info(targetDelegator.getLogPrefix() + "rollback");
+            logger.info("[" + targetDelegator.getLabel() + "]rollback");
             isJumpHostRollback = true;
         }
 
@@ -257,10 +257,10 @@ public class YADECopyMoveOperationsHandler {
                 String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
                 try {
                     if (targetDelegator.getProvider().deleteIfExists(path)) {
-                        logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLogPrefix(), path);
+                        logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), path);
                     }
                 } catch (Exception e) {
-                    logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLogPrefix(), path, e.toString());
+                    logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), path, e.toString());
                 }
             }
 
@@ -272,11 +272,11 @@ public class YADECopyMoveOperationsHandler {
             // 6) delete targetFile
             try {
                 if (targetDelegator.getProvider().deleteIfExists(targetFilePath)) {
-                    logger.info("[%s]%s[rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLogPrefix(), targetFilePath);
+                    logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath);
                 }
                 targetFile.setSubState(TransferEntryState.ROLLED_BACK);
             } catch (Exception e) {
-                logger.error("[%s]%s[rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLogPrefix(), targetFilePath, e.toString());
+                logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath, e.toString());
                 targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
             }
         }

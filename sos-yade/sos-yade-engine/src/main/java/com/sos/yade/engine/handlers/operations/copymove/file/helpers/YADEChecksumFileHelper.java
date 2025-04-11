@@ -62,7 +62,7 @@ public class YADEChecksumFileHelper {
         String sourceIntegrityHashFile = sourceFile.getFullPath() + config.getIntegrityHashFileExtensionWithDot();
         sourceFile.setIntegrityHash(sourceDelegator.getProvider().getFileContentIfExists(sourceIntegrityHashFile));
 
-        String msg = String.format("%s]%s[%s", fileTransferLogPrefix, sourceDelegator.getLogPrefix(), sourceIntegrityHashFile);
+        String msg = String.format("%s][%s][%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceIntegrityHashFile);
         if (sourceFile.getIntegrityHash() == null) {
             logger.info("[%s][integrity hash]file not found", msg);
             return;

@@ -8,10 +8,8 @@ public interface IYADEProviderDelegator {
     public AProvider<?> getProvider();
 
     public YADESourceTargetArguments getArgs();
-    
-    public String getLabel();
 
-    public String getLogPrefix();
+    public String getLabel();
 
     /** Directory path without trailing path separator */
     public String getDirectory();

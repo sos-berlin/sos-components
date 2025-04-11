@@ -101,7 +101,7 @@ public class YADESourceFilesSelector {
 
         YADESourceArguments args = sourceDelegator.getArgs();
 
-        String lp = sourceDelegator.getLogPrefix() + "[selectSingleFiles]";
+        String lp = "[" + sourceDelegator.getLabel() + "][selectSingleFiles]";
         List<String> singleFiles = null;
         SOSArgument<?> arg = null;
         if (args.isFilePathEnabled()) {
@@ -222,7 +222,7 @@ public class YADESourceFilesSelector {
         if (!sourceDelegator.getArgs().getMaxFileSize().isEmpty()) {
             sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFileSize())).append("]");
         }
-        logger.info("%s%sfound=%s", sourceDelegator.getLogPrefix(), sb, sourceFiles.size());
+        logger.info("[%s]%sfound=%s", sourceDelegator.getLabel(), sb, sourceFiles.size());
 
         checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
         checkFileListSize(logger, sourceDelegator, clientArgs, sourceFiles);
@@ -245,7 +245,7 @@ public class YADESourceFilesSelector {
             if (zeroSizeFiles.size() == sourceFiles.size()) {
                 i = 1;
                 for (ProviderFile f : zeroSizeFiles) {
-                    logger.info("%s[%s][TransferZeroByteFiles=NO][%s]bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
+                    logger.info("[%s][%s][TransferZeroByteFiles=NO][%s]bytes=%s", sourceDelegator.getLabel(), i, f.getFullPath(), f.getSize());
                     i++;
                 }
                 throw new YADEEngineSourceZeroByteFilesException(String.format(
@@ -261,7 +261,7 @@ public class YADESourceFilesSelector {
             if (zeroSizeFiles.size() > 0) {
                 i = 1;
                 for (ProviderFile f : zeroSizeFiles) {
-                    logger.info("%s[%s][TransferZeroByteFiles=STRICT][%s]bytes=%s", sourceDelegator.getLogPrefix(), i, f.getFullPath(), f.getSize());
+                    logger.info("[%s][%s][TransferZeroByteFiles=STRICT][%s]bytes=%s", sourceDelegator.getLabel(), i, f.getFullPath(), f.getSize());
                     i++;
                 }
                 throw new YADEEngineSourceZeroByteFilesException(String.format("[TransferZeroByteFiles=STRICT]%s zero byte size file(s) detected",
@@ -291,8 +291,8 @@ public class YADESourceFilesSelector {
         int size = sourceFiles == null ? 0 : sourceFiles.size();
 
         if (size == 0 && sourceDelegator.getArgs().getErrorOnNoFilesFound().getValue()) {
-            throw new YADEEngineSourceFilesSelectorException(String.format("%s[%s=true]No files found", sourceDelegator.getLogPrefix(),
-                    sourceDelegator.getArgs().getErrorOnNoFilesFound().getName()));
+            throw new YADEEngineSourceFilesSelectorException(String.format("[%s][%s=true]No files found", sourceDelegator.getLabel(), sourceDelegator
+                    .getArgs().getErrorOnNoFilesFound().getName()));
         }
 
         // ResultSet
@@ -303,10 +303,10 @@ public class YADESourceFilesSelector {
         if (op != null) {
             int expectedSize = clientArgs.getExpectedResultSetCount().getValue();
             if (op.compare(size, expectedSize)) {
-                throw new YADEEngineSourceFilesSelectorException(String.format("%s[files found=%s][%s]%s %s", sourceDelegator.getLogPrefix(), size,
+                throw new YADEEngineSourceFilesSelectorException(String.format("[%s][files found=%s][%s]%s %s", sourceDelegator.getLabel(), size,
                         clientArgs.getRaiseErrorIfResultSetIs().getName(), op.getFirstAlias(), expectedSize));
             }
-            logger.info("%s[%s=%s %s][files found=%s]ok", sourceDelegator.getLogPrefix(), clientArgs.getRaiseErrorIfResultSetIs().getName(), op
+            logger.info("[%s][%s=%s %s][files found=%s]ok", sourceDelegator.getLabel(), clientArgs.getRaiseErrorIfResultSetIs().getName(), op
                     .getFirstAlias(), expectedSize, size);
         }
         return size;

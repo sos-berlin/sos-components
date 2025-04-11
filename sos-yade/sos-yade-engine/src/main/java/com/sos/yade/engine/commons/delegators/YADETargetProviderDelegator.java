@@ -11,12 +11,12 @@ public class YADETargetProviderDelegator extends AYADEProviderDelegator {
         super(provider, args);
 
         // set YADE specific ProviderContext
-        final String providerLogPrefix = getLogPrefix();
+        final String label = getLabel();
         provider.setContext(new AProviderContext() {
 
             @Override
-            public String getLogPrefix() {
-                return providerLogPrefix;
+            public String getLabel() {
+                return label;
             }
         });
     }

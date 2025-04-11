@@ -209,10 +209,10 @@ public class YADEEngineJumpHostAddon {
         for (ProviderFile f : files) {
             try {
                 if (delegator.getProvider().deleteIfExists(f.getFullPath())) {
-                    logger.info("%s[deleteSourceFiles][%s]deleted", delegator.getLogPrefix(), f.getFullPath());
+                    logger.info("[%s][deleteSourceFiles][%s]deleted", delegator.getLabel(), f.getFullPath());
                 }
             } catch (Exception e) {
-                throw new YADEEngineJumpHostException(String.format("%s[deleteSourceFiles]%s", delegator.getLogPrefix(), e.toString()), e);
+                throw new YADEEngineJumpHostException(String.format("[%s][deleteSourceFiles]%s", delegator.getLabel(), e.toString()), e);
             }
         }
     }

@@ -24,9 +24,9 @@ public class YADERemoveOperationHandler {
                 YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, file);
 
                 if (sourceDelegator.getProvider().deleteIfExists(file.getFullPath())) {
-                    logger.info("%s[%s][%s]deleted", sourceDelegator.getLogPrefix(), file.getIndex(), file.getFullPath());
+                    logger.info("[%s][%s][%s]deleted", sourceDelegator.getLabel(), file.getIndex(), file.getFullPath());
                 } else {
-                    logger.info("%s[%s][%s]not exists", sourceDelegator.getLogPrefix(), file.getIndex(), file.getFullPath());
+                    logger.info("[%s][%s][%s]not exists", sourceDelegator.getLabel(), file.getIndex(), file.getFullPath());
                 }
                 file.setState(TransferEntryState.DELETED);
 

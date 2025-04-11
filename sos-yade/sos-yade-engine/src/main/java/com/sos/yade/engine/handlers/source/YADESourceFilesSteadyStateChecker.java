@@ -33,7 +33,7 @@ public class YADESourceFilesSteadyStateChecker {
             steady = true;
 
             String position = String.format("checkSteadyCount=%s of %s", i + 1, total);
-            logger.info(String.format("%s[%s][wait]%ss...", sourceDelegator.getLogPrefix(), position, interval));
+            logger.info(String.format("[%s][%s][wait]%ss...", sourceDelegator.getLabel(), position, interval));
             YADEClientHelper.waitFor(interval);
 
             l: for (ProviderFile sourceFile : sourceFiles) {
@@ -43,7 +43,7 @@ public class YADESourceFilesSteadyStateChecker {
                 }
             }
             if (steady) {
-                logger.info("%s[%s][all files seem steady]extra waiting %ss for late comers", sourceDelegator.getLogPrefix(), position, interval);
+                logger.info("[%s][%s][all files seem steady]extra waiting %ss for late comers", sourceDelegator.getLabel(), position, interval);
                 YADEClientHelper.waitFor(interval);
                 nl: for (ProviderFile sourceFile : sourceFiles) {
                     if (!checkFileSteadyState(sourceDelegator, sourceFile)) {
@@ -53,7 +53,7 @@ public class YADESourceFilesSteadyStateChecker {
                 }
             }
             if (steady) {
-                logger.info("%s[%s][break]all files are steady", sourceDelegator.getLogPrefix(), position);
+                logger.info("[%s][%s][break]all files are steady", sourceDelegator.getLabel(), position);
                 break ml;
             }
         }
