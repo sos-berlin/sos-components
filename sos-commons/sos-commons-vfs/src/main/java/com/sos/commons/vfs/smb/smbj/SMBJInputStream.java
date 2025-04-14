@@ -11,6 +11,7 @@ import com.sos.commons.util.SOSClassUtil;
 public class SMBJInputStream extends InputStream {
 
     private final DiskShare share;
+    private final boolean closeShare;
     private final File file;
     private final InputStream is;
 
@@ -19,8 +20,10 @@ public class SMBJInputStream extends InputStream {
      * @param smbPath The normalized SMB path of the file to open. This path should already be processed using {@link SMBJProviderImpl#getSMBPath(String)} to
      *            match the expected format.
      * @throws IOException */
-    public SMBJInputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final String smbPath) throws Exception {
+    public SMBJInputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final boolean closeShare, final String smbPath)
+            throws Exception {
         this.share = share;
+        this.closeShare = closeShare;
         if (!this.share.fileExists(smbPath)) {
             throw new SOSNoSuchFileException(smbPath, new Exception(smbPath));
         }
@@ -40,7 +43,9 @@ public class SMBJInputStream extends InputStream {
         } finally {
             SOSClassUtil.closeQuietly(is);
             SOSClassUtil.closeQuietly(file);
-            SOSClassUtil.closeQuietly(share);
+            if (closeShare) {
+                SOSClassUtil.closeQuietly(share);
+            }
         }
     }
 

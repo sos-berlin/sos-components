@@ -266,8 +266,8 @@ public class SMBJProvider extends SMBProvider {
         DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
 
         StringBuilder content = new StringBuilder();
-        try (InputStream is = new SMBJInputStream(accessMaskMaximumAllowed, share, getSMBPath(path)); Reader r = new InputStreamReader(is,
-                StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
+        try (InputStream is = new SMBJInputStream(accessMaskMaximumAllowed, share, reusable == null, getSMBPath(path)); Reader r =
+                new InputStreamReader(is, StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
             return content.toString();
         } catch (SOSNoSuchFileException e) {
@@ -285,7 +285,7 @@ public class SMBJProvider extends SMBProvider {
         SMBJProviderReusableResource reusable = getReusableResource();
         DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
 
-        try (OutputStream os = new SMBJOutputStream(accessMaskMaximumAllowed, share, getSMBPath(path), false)) {
+        try (OutputStream os = new SMBJOutputStream(accessMaskMaximumAllowed, share, reusable == null, getSMBPath(path), false)) {
             os.write(content.getBytes(StandardCharsets.UTF_8));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -322,7 +322,7 @@ public class SMBJProvider extends SMBProvider {
             SMBJProviderReusableResource reusable = getReusableResource();
             DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
 
-            return new SMBJInputStream(accessMaskMaximumAllowed, share, getSMBPath(path));
+            return new SMBJInputStream(accessMaskMaximumAllowed, share, reusable == null, getSMBPath(path));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -337,7 +337,7 @@ public class SMBJProvider extends SMBProvider {
             SMBJProviderReusableResource reusable = getReusableResource();
             DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
 
-            return new SMBJOutputStream(accessMaskMaximumAllowed, share, getSMBPath(path), append);
+            return new SMBJOutputStream(accessMaskMaximumAllowed, share, reusable == null, getSMBPath(path), append);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }

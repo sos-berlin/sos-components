@@ -279,7 +279,8 @@ public class YADEEngine {
         }
 
         // sendNotifications
-        YADEClientBannerWriter.writeSummary(logger, argsLoader.getArgs(), operationDuration, sourceDelegator, targetDelegator, files, exception);
+        YADEClientBannerWriter.writeSummary(logger, argsLoader.getArgs(), operationDuration, sourceDelegator, targetDelegator, jumpHostAddon, files,
+                exception);
 
         // disconnectSource means - YADE execution(one-time operation or polling) is completed
         if (exceptions.size() > 0 && disconnectSource) {

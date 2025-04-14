@@ -7,6 +7,7 @@ import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon.JumpHostConfig;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
+import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
@@ -52,7 +53,7 @@ public class YADEXMLJumpHostSettingsWriter {
         StringBuilder sb = new StringBuilder();
         /** SFTP Protocol Fragment ----------------------------- */
         sb.append("<ProtocolFragments>");
-        sb.append("<SFTPFragment name=").append(attrValue(SFTPFRAGMENT_NAME)).append(" label=").append(attrValue(SFTPFRAGMENT_NAME)).append(">");
+        sb.append("<SFTPFragment name=").append(attrValue(SFTPFRAGMENT_NAME)).append(">");
         sb.append(generateFragmentsSFTPFragmentBasicConnection(providerArgs.getHost(), providerArgs.getPort()));
         // SSHAuthentication
         sb.append("<SSHAuthentication>");
@@ -364,7 +365,9 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateJumpHostLocalCopySource(JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<CopySource>");
-        sb.append("<CopySourceFragmentRef><LocalSource /></CopySourceFragmentRef>");
+        sb.append("<CopySourceFragmentRef>");
+        sb.append("<LocalSource ").append(generateJumpAttribute()).append("/>");
+        sb.append("</CopySourceFragmentRef>");
         sb.append("<SourceFileOptions>");
         sb.append("<Selection>");
         sb.append("<FileSpecSelection>");
@@ -381,11 +384,17 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateJumpHostLocalCopyTarget(YADETargetArguments targetArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<CopyTarget>");
-        sb.append("<CopyTargetFragmentRef><LocalSource /></CopyTargetFragmentRef>");
+        sb.append("<CopyTargetFragmentRef>");
+        sb.append("<LocalTarget ").append(generateJumpAttribute()).append("/>");
+        sb.append("</CopyTargetFragmentRef>");
         sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
         sb.append("<KeepModificationDate>").append(targetArgs.getKeepModificationDate().getValue()).append("</KeepModificationDate>");
         sb.append("</CopyTarget>");
         return sb;
+    }
+
+    private static String generateJumpAttribute() {
+        return YADEXMLArgumentsLoader.INTERNAL_ATTRIBUTE_LABEL + "=" + attrValue(YADEJumpHostArguments.LABEL);
     }
 
     private static StringBuilder generateProfileTargetSFTPFragmentRef(YADESourceTargetArguments args) {

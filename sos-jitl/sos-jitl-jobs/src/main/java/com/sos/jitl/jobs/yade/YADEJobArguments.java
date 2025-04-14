@@ -14,8 +14,9 @@ public class YADEJobArguments extends JobArguments {
     private JobArgument<Path> settings = new JobArgument<>(YADEArguments.STARTUP_ARG_SETTINGS, true);
     private JobArgument<String> profile = new JobArgument<>(YADEArguments.STARTUP_ARG_PROFILE, true);
 
-    /** see {@link YADEArguments#ARG_PARALLELISM} */
-    private JobArgument<Integer> parallelism = new JobArgument<>(YADEArguments.STARTUP_ARG_PARALLELISM, false, Integer.valueOf(1));
+    /** see {@link YADEArguments#STARTUP_ARG_PARALLELISM} */
+    private JobArgument<Integer> parallelism = new JobArgument<>(YADEArguments.STARTUP_ARG_PARALLELISM, false,
+            YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
 
     /** Settings - overrides settings arguments */
     // Source
@@ -30,8 +31,8 @@ public class YADEJobArguments extends JobArguments {
     /** Settings - replacement behavior */
     private JobArgument<Boolean> settingsReplacerCaseSensitive = new JobArgument<>(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE, false,
             YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE_DEFAULT);
-    private JobArgument<Boolean> settingsReplacerKeepUnresolved = new JobArgument<>(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED, false,
-            YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
+    private JobArgument<Boolean> settingsReplacerKeepUnresolved = new JobArgument<>(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED,
+            false, YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
 
     /** Job Outcome ------------------------------------------------------- */
     // YADE History

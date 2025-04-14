@@ -161,19 +161,26 @@ public class YADEDirectoryMapper {
         String result;
         if (config.getSource().isRecursiveSelection()) {
             if (logger.isDebugEnabled()) {
-                logger.debug("[getSourceDirectoryForMapping][isRecursiveSelection=true][configured=%s]%s", config.getSource().getDirectory(),
+                logger.debug("[getSourceDirectoryForMapping][1][isRecursiveSelection=true][configured=%s]%s", config.getSource().getDirectory(),
                         sourceDirectory);
             }
-            if (sourceDirectory.startsWith(config.getSource().getDirectory())) {
+            if (!SOSString.isEmpty(config.getSource().getDirectory()) && sourceDirectory.startsWith(config.getSource().getDirectory())) {
                 // relative
                 if (sourceDirectory.equalsIgnoreCase(config.getSource().getDirectory())) {
                     // sourceDirectory is config.getSource().getDirectory()
                     result = "";
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("    [getSourceDirectoryForMapping][2.1][result]%s", result);
+                    }
                 } else {
                     // sourceDirectory string length can't be less then config.getSource().getDirectory() string length
                     result = sourceDirectory.substring(config.getSource().getDirectory().length());
                     result = SOSString.trimStart(result, config.getSource().getPathSeparator());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("    [getSourceDirectoryForMapping][2.2][result]%s", result);
+                    }
                 }
+
             } else {
                 // YADE-600 + YADE-619(makeDirs)
                 // e.g. for FilePath/FileList source files selection (not based on the configuredSourceDirectory)
@@ -182,20 +189,35 @@ public class YADEDirectoryMapper {
                     if (SOSPathUtils.isAbsoluteURIPath(sourceDirectory)) {// http(s)://server/1.txt TODO - use provider information instead
                         // server/1.txt TODO trim server?
                         result = sourceDirectory.replaceFirst("^[a-zA-Z]+://", "");
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("    [getSourceDirectoryForMapping][3.1][result]%s", result);
+                        }
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
                         // Temp
                         result = SOSString.trimStart(result, config.getSource().getPathSeparator());
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("    [getSourceDirectoryForMapping][3.2][result]%s", result);
+                        }
                     }
                 } else if (SOSPathUtils.isAbsoluteWindowsUNCPath(sourceDirectory)) { // \\server\share
                     // server\share TODO trim server?
                     result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("    [getSourceDirectoryForMapping][3.3][result]%s", result);
+                    }
                 } else {
                     result = SOSString.trimStart(sourceDirectory, config.getSource().getPathSeparator());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("    [getSourceDirectoryForMapping][3.4][result]%s", result);
+                    }
                 }
             }
         } else {
             result = ""; // TODO check YADE1 makeDirs=false,recursive=false ...
+            if (logger.isDebugEnabled()) {
+                logger.debug("    [getSourceDirectoryForMapping][4][result]%s", result);
+            }
         }
         if (logger.isDebugEnabled()) {
             logger.debug("[getSourceDirectoryForMapping]result=" + result);
@@ -207,14 +229,28 @@ public class YADEDirectoryMapper {
     // sourceDirectoryPathForMapping - directory path without leading path separator
     private String getTargetDirectory(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator,
             String sourceDirectoryPathForMapping) throws ProviderException {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("[getTargetDirectory]sourceDirectoryPathForMapping=" + sourceDirectoryPathForMapping);
+        }
         // TODO - ??? check YADE 1 - relative to the working directory? (due to directoryPath - without leading path separator)
         String targetPath = sourceDirectoryPathForMapping.isEmpty() ? "" : targetDelegator.getProvider().toPathStyle(sourceDirectoryPathForMapping);
+        if (logger.isDebugEnabled()) {
+            logger.debug("[getTargetDirectory][1]targetPath=" + targetPath);
+        }
         if (targetDelegator.getDirectory() != null) {
             if (targetPath.isEmpty()) {
                 targetPath = targetDelegator.getDirectory(); // already normalized without trailing path separator
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[getTargetDirectory][1.1]targetPath=" + targetPath);
+                }
             } else {
                 // appendPath is OK because the getSourceDirectoryForMapping method should return a relative directory
                 targetPath = targetDelegator.appendPath(targetDelegator.getDirectory(), targetPath);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[getTargetDirectory][1.2]targetPath=" + targetPath);
+                }
             }
         }
         if (SOSString.isEmpty(targetPath)) {
@@ -225,7 +261,7 @@ public class YADEDirectoryMapper {
             throw new ProviderException("[" + targetDelegator.getLabel() + "]Target directory can't be evaluated");
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug("[getTargetDirectory][sourceDirectoryPathForMapping=" + sourceDirectoryPathForMapping + "]targetPath=" + targetPath);
+                logger.debug("[getTargetDirectory]targetPath=" + targetPath);
             }
         }
         return targetPath;

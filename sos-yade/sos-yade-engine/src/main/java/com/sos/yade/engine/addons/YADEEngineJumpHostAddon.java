@@ -352,8 +352,11 @@ public class YADEEngineJumpHostAddon {
         }
 
         private String getJumpHostDirectory() {
-            return SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(argsLoader.getJumpHostArgs().getDirectory().getValue()) + "jade-dmz-"
-                    + UUID.randomUUID().toString();
+            String jumpDirectory = SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(argsLoader.getJumpHostArgs().getDirectory().getValue());
+            if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(jumpDirectory)) {
+                jumpDirectory = jumpDirectory.substring(1);
+            }
+            return jumpDirectory + "jade-dmz-" + UUID.randomUUID().toString();
         }
 
         private boolean getJumpHostTransactional() {

@@ -9,7 +9,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.impl.JavaKeyStoreType;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.arguments.impl.SSLArguments;
@@ -173,18 +172,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
     protected static SSHProviderArguments parseSFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
         Node fragment = getProtocolFragment(argsLoader, ref, isSource, "SFTP");
-
-        // Label example:
-        // – A label has been set internally for a JumpHost YADE execution - see YADEXMLJumpHostSettingsWriter
-        // – If set, the JumpHost YADE Client uses this label (e.g., Jump) for the SSHProvider logging instead of Source/Target
-        String label = SOSXML.getAttributeValue(fragment, YADEXMLArgumentsLoader.SFTPFRAGMENT_INTERNAL_ATTRIBUTE_LABEL);
-        if (!SOSString.isEmpty(label)) {
-            if (isSource) {
-                argsLoader.getSourceArgs().getLabel().setValue(label);
-            } else {
-                argsLoader.getTargetArgs().getLabel().setValue(label);
-            }
-        }
 
         SSHProviderArguments args = new SSHProviderArguments();
         args.applyDefaultIfNullQuietly();

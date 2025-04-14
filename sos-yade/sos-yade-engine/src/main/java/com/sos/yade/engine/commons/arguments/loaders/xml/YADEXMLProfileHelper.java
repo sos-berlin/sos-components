@@ -249,6 +249,18 @@ public class YADEXMLProfileHelper {
         LocalProviderArguments args = new LocalProviderArguments();
         args.applyDefaultIfNullQuietly();
 
+        // Label example:
+        // – A label has been set internally for a JumpHost YADE execution - see YADEXMLJumpHostSettingsWriter
+        // – If set, the JumpHost YADE Client uses this label (e.g., Jump) for the Provider logging instead of Source/Target
+        String label = SOSXML.getAttributeValue(ref, YADEXMLArgumentsLoader.INTERNAL_ATTRIBUTE_LABEL);
+        if (!SOSString.isEmpty(label)) {
+            if (isSource) {
+                argsLoader.getSourceArgs().getLabel().setValue(label);
+            } else {
+                argsLoader.getTargetArgs().getLabel().setValue(label);
+            }
+        }
+
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);

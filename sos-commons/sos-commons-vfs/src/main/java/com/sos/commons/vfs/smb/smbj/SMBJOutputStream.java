@@ -10,6 +10,7 @@ import com.sos.commons.util.SOSClassUtil;
 public class SMBJOutputStream extends OutputStream {
 
     private final DiskShare share;
+    private final boolean closeShare;
     private final File file;
     private final OutputStream os;
 
@@ -19,8 +20,10 @@ public class SMBJOutputStream extends OutputStream {
      *            match the expected format.
      * @param append
      * @throws IOException */
-    public SMBJOutputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final String smbPath, boolean append) throws IOException {
+    public SMBJOutputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final boolean closeShare, final String smbPath,
+            boolean append) throws IOException {
         this.share = share;
+        this.closeShare = closeShare;
         this.file = SMBJProviderUtils.openFileWithWriteAccess(accessMaskMaximumAllowed, share, smbPath, append);
         this.os = file.getOutputStream(append);
     }
@@ -44,8 +47,9 @@ public class SMBJOutputStream extends OutputStream {
     public void close() throws IOException {
         SOSClassUtil.closeQuietly(os);
         SOSClassUtil.closeQuietly(file);
-        SOSClassUtil.closeQuietly(share);
-
+        if (closeShare) {
+            SOSClassUtil.closeQuietly(share);
+        }
         super.close();
     }
 }

@@ -151,7 +151,6 @@ public class SSHJProviderUtils {
         if (!SSHJProviderUtils.exists(sftp, path)) {
             return null;
         }
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (RemoteFile file = sftp.open(path); InputStream is = file.new RemoteFileInputStream(0)) {
             byte[] buffer = new byte[8_192];
@@ -192,8 +191,8 @@ public class SSHJProviderUtils {
         sftp.rmdir(path);
     }
 
-    private static int list(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result, int counterAdded) throws Exception {
+    private static int list(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
+            int counterAdded) throws Exception {
         List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
         for (RemoteResourceInfo subResource : subDirInfos) {
             if (selection.maxFilesExceeded(counterAdded)) {

@@ -17,6 +17,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineCommandException;
+import com.sos.yade.engine.exceptions.YADEEngineJumpHostCommandException;
 
 public class YADECommandExecutor {
 
@@ -46,7 +47,11 @@ public class YADECommandExecutor {
             SOSCommandResult result = delegator.getProvider().executeCommand(command);
             if (isJumpHostClientCommand) {
                 logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "]", result);
-                checkCommandResult(delegator, argumentName, result);
+                try {
+                    checkCommandResult(delegator, argumentName, result);
+                } catch (YADEEngineCommandException e) {
+                    throw new YADEEngineJumpHostCommandException(e);
+                }
             } else {
                 logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "][" + command + "]", result);
                 checkCommandResult(delegator, argumentName, result);

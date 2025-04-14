@@ -122,14 +122,14 @@ public class YADEEngineMain {
                 + YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE_DEFAULT);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED, "<boolean>", "default: "
                 + YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
-        printArgumentUsage(YADEArguments.STARTUP_ARG_PARALLELISM, "<int>", "default: " + YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_PARALLELISM, "<integer>", "default: " + YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
 
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_DIR, "<>", null);
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES, "<>", null);
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, "<>", null);
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH, "<>", null);
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC, "<>", null);
-        printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_DIR, "<>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_DIR, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_DIR, "<...>", null);
 
         printArgumentUsage(STARTUP_ARG_HELP, null, "displays usage");
     }

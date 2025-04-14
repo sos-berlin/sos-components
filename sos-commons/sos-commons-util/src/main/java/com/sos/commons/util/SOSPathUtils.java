@@ -82,25 +82,24 @@ public class SOSPathUtils {
     }
 
     public static boolean isAbsoluteURIPath(String path) {
-        String np = toUnixStyle(path);
-        if (np == null) {
+        if (SOSString.isEmpty(path)) {
             return false;
         }
-        return np.matches(REGEX_ABSOLUTE_URI_PATH);
+        return toUnixStyle(path).matches(REGEX_ABSOLUTE_URI_PATH);
     }
 
     public static boolean isAbsoluteWindowsOpenSSHPath(String path) {
         if (SOSString.isEmpty(path)) {
             return false;
         }
-        return path.matches(REGEX_ABSOLUTE_WINDOWS_OPENSSH_PATH);
+        return toUnixStyle(path).matches(REGEX_ABSOLUTE_WINDOWS_OPENSSH_PATH);
     }
 
     public static boolean isAbsoluteWindowsStandardPath(String path) {
         if (SOSString.isEmpty(path)) {
             return false;
         }
-        return path.matches(REGEX_ABSOLUTE_WINDOWS_STANDARD_PATH);
+        return toWindowsStyle(path).matches(REGEX_ABSOLUTE_WINDOWS_STANDARD_PATH);
     }
 
     public static boolean isAbsoluteWindowsEnvPath(String path) {

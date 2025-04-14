@@ -14,6 +14,7 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -272,7 +273,7 @@ public class YADEClientBannerWriter {
     }
 
     public static void writeSummary(ISOSLogger logger, YADEArguments args, Duration operationDuration, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> files, Throwable error) {
+            YADETargetProviderDelegator targetDelegator, YADEEngineJumpHostAddon jumpHostAddon, List<ProviderFile> files, Throwable error) {
         logger.info(SEPARATOR_LINE);
 
         args.getEnd().setValue(Instant.now());
@@ -314,7 +315,6 @@ public class YADEClientBannerWriter {
             }
         }
         logger.info(sb);
-
         if (error != null) {
             logger.error("[Error]%s", error.toString());
         }

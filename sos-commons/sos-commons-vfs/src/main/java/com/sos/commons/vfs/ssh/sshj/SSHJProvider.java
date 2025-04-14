@@ -324,8 +324,9 @@ public class SSHJProvider extends SSHProvider {
         validatePrerequisites("getInputStream", path, "path");
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
+        SSHJProviderReusableResource reusable = getReusableResource();
+        final boolean closeSFTPClient = reusable == null;
         try {
-            SSHJProviderReusableResource reusable = getReusableResource();
             SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
 
             sftpRef.set(sftpClient);
@@ -343,13 +344,17 @@ public class SSHJProvider extends SSHProvider {
                         super.close();
                     } finally {
                         SOSClassUtil.closeQuietly(remoteFile);
-                        SOSClassUtil.closeQuietly(sftpRef.get());
+                        if (closeSFTPClient) {
+                            SOSClassUtil.closeQuietly(sftpRef.get());
+                        }
                         close.set(true);
                     }
                 }
             };
         } catch (Throwable e) {
-            SOSClassUtil.closeQuietly(sftpRef.get());
+            if (closeSFTPClient) {
+                SOSClassUtil.closeQuietly(sftpRef.get());
+            }
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -360,8 +365,9 @@ public class SSHJProvider extends SSHProvider {
         validatePrerequisites("getOutputStream", path, "path");
 
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
+        SSHJProviderReusableResource reusable = getReusableResource();
+        final boolean closeSFTPClient = reusable == null;
         try {
-            SSHJProviderReusableResource reusable = getReusableResource();
             SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
 
             sftpRef.set(sftpClient);
@@ -386,13 +392,17 @@ public class SSHJProvider extends SSHProvider {
                         super.close();
                     } finally {
                         SOSClassUtil.closeQuietly(remoteFile);
-                        SOSClassUtil.closeQuietly(sftpRef.get());
+                        if (closeSFTPClient) {
+                            SOSClassUtil.closeQuietly(sftpRef.get());
+                        }
                         close.set(true);
                     }
                 }
             };
         } catch (Throwable e) {
-            SOSClassUtil.closeQuietly(sftpRef.get());
+            if (closeSFTPClient) {
+                SOSClassUtil.closeQuietly(sftpRef.get());
+            }
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
