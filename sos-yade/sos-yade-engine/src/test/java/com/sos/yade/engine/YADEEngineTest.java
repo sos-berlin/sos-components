@@ -1,6 +1,7 @@
 package com.sos.yade.engine;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,6 @@ public class YADEEngineTest {
         Path settings = Path.of("xyz");
         String profile = "xyz";
 
-        
         Map<String, String> map = System.getenv();
         boolean settingsReplacerCaseSensitive = true;
         boolean settingsReplacerKeepUnresolved = true;
@@ -47,6 +47,16 @@ public class YADEEngineTest {
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
+    }
+
+    @Ignore
+    @Test
+    public void testMain() {
+        List<String> args = new ArrayList<>();
+        args.add("--settings=xyz");
+        args.add("--profile=xyz");
+        args.add("--help");
+        YADEEngineMain.main(args.toArray(new String[0]));
     }
 
 }

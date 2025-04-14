@@ -20,6 +20,7 @@ public class YADEArguments extends ASOSArguments {
      * - Not supported (automatically set to 1) for transfers using:<br/>
      * -- FTP(S), HTTP(S) as Target, WebDAV(S) as Target */
     public static final String STARTUP_ARG_PARALLELISM = "parallelism";
+    public static final int STARTUP_ARG_PARALLELISM_DEFAULT = 1;
     /** Settings - overrides settings arguments<br/>
      * These Job Arguments have higher priority than those defined in the {@code Settings.xml} file */
     // Source

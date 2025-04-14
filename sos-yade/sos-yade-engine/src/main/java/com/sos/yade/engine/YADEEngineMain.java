@@ -1,6 +1,8 @@
 package com.sos.yade.engine;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.sos.commons.util.SOSCLIArgumentsParser;
@@ -16,6 +18,7 @@ import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
 
 public class YADEEngineMain {
 
+    private static final String STARTUP_ARG_HELP = "help";
     private static final int ERROR_EXIT_CODE = 99;
 
     private YADEEngine engine;
@@ -43,10 +46,10 @@ public class YADEEngineMain {
         try {
             // CLI Arguments
             Map<String, String> cliArgs = SOSCLIArgumentsParser.parse(args);
-            if (cliArgs.size() < 2) {
-                throw new YADEEngineSettingsLoadException("missing -" + YADEArguments.STARTUP_ARG_SETTINGS + ",-"
-                        + YADEArguments.STARTUP_ARG_PROFILE);
+            if (!checkArguments(cliArgs)) {
+                return 0;
             }
+
             Path settings = Path.of(getRequiredArgumentValue(cliArgs, YADEArguments.STARTUP_ARG_SETTINGS));
             String profile = getRequiredArgumentValue(cliArgs, YADEArguments.STARTUP_ARG_PROFILE);
             Boolean settingsReplacerCaseSensitive = getBooleanValue(cliArgs, YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE,
@@ -58,7 +61,8 @@ public class YADEEngineMain {
             YADEXMLArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, System.getenv(),
                     settingsReplacerCaseSensitive, settingsReplacerKeepUnresolved);
 
-            argsLoader.getArgs().getParallelism().setValue(getIntegerValue(cliArgs, YADEArguments.STARTUP_ARG_PARALLELISM, "1"));
+            argsLoader.getArgs().getParallelism().setValue(getIntegerValue(cliArgs, YADEArguments.STARTUP_ARG_PARALLELISM, String.valueOf(
+                    YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT)));
             // Overrides some settings with the CLI Arguments
             applyOverrides(argsLoader, cliArgs);
 
@@ -75,6 +79,26 @@ public class YADEEngineMain {
         }
     }
 
+    private static boolean checkArguments(Map<String, String> cliArgs) throws YADEEngineSettingsLoadException {
+        if (cliArgs.size() > 0 && cliArgs.containsKey(STARTUP_ARG_HELP)) {
+            printUsage();
+            return false;
+        }
+
+        List<String> missingRequired = new ArrayList<>();
+        if (!cliArgs.containsKey(YADEArguments.STARTUP_ARG_SETTINGS)) {
+            missingRequired.add(YADEArguments.STARTUP_ARG_SETTINGS);
+        }
+        if (!cliArgs.containsKey(YADEArguments.STARTUP_ARG_PROFILE)) {
+            missingRequired.add(YADEArguments.STARTUP_ARG_PROFILE);
+        }
+        if (missingRequired.size() > 0) {
+            printUsage();
+            throw new YADEEngineSettingsLoadException("[missing required arguments]" + String.join(",", missingRequired));
+        }
+        return true;
+    }
+
     private void applyOverrides(AYADEArgumentsLoader argsLoader, Map<String, String> args) {
         // Source
         setOptionalStringArgument(argsLoader.getSourceArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_SOURCE_DIR);
@@ -84,6 +108,39 @@ public class YADEEngineMain {
         setOptionalStringArgument(argsLoader.getSourceArgs().getFileSpec(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
         // Target
         setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
+    }
+
+    private static void printUsage() {
+        System.out.println("Usage:");
+        System.out.println("  Arguments:");
+        System.out.println("    Required:");
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SETTINGS, "<location of the settings xml file>", "");
+        printArgumentUsage(YADEArguments.STARTUP_ARG_PROFILE, "<profile id>", "");
+
+        System.out.println("    Optional:");
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE, "<boolean>", "default: "
+                + YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE_DEFAULT);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED, "<boolean>", "default: "
+                + YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_PARALLELISM, "<int>", "default: " + YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
+
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_DIR, "<>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES, "<>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, "<>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH, "<>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC, "<>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_DIR, "<>", null);
+
+        printArgumentUsage(STARTUP_ARG_HELP, null, "displays usage");
+    }
+
+    private static void printArgumentUsage(String name, String valueDescription, String description) {
+        String value = SOSString.isEmpty(valueDescription) ? "" : "=" + valueDescription;
+        String desc = "";
+        if (!SOSString.isEmpty(description)) {
+            desc = "| " + description;
+        }
+        System.out.println(String.format("    --%-45s%s", (name + value), desc));
     }
 
     private String getRequiredArgumentValue(Map<String, String> args, String name) throws YADEEngineSettingsLoadException {
@@ -122,4 +179,5 @@ public class YADEEngineMain {
     private Integer getIntegerValue(Map<String, String> args, String name, String defaultValue) throws YADEEngineSettingsLoadException {
         return Integer.valueOf(args.getOrDefault(name, defaultValue));
     }
+
 }
