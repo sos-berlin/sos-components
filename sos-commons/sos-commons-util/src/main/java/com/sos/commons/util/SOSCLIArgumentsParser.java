@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class SOSCLIArgumentsParser {
 
     /** Parses a single string of CLI-style arguments (e.g. from a shell input).<br/>
-     * Quoted sections are preserved (e.g. -cp "lib/*;dist/*").
+     * Quoted sections are preserved (e.g. -cp "lib/*" or multiple values: -java-options "-Xms32m" "-Xmx64m").
      *
      * @param args CLI argument string
      * @return parsed arguments as key-value pairs */
@@ -37,22 +37,25 @@ public class SOSCLIArgumentsParser {
                 continue;
             }
 
-            String key, value;
-            // Handle --key=value or -k=value
-            if (arg.contains("=")) {
+            String key;
+            if (arg.contains("=")) {// --key=value or -k=value
                 String[] parts = arg.split("=", 2);
                 key = parts[0].replaceFirst("^--?", "");
-                value = stripQuotes(parts[1]);
+                arguments.put(key, stripQuotes(parts[1]));
             } else {
                 key = arg.replaceFirst("^--?", "");
-                // Check if next element is a value (and not another flag)
-                if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
-                    value = stripQuotes(args[++i]);
-                } else {
-                    value = "true"; // it's a flag
+                List<String> values = new ArrayList<>();
+                // e.g. -cp "lib/*" or multiple values: -java-options "-Xms32m" "-Xmx64m"
+                while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+                    values.add(stripQuotes(args[++i]));
+                }
+                if (values.isEmpty()) { // it's a flag
+                    arguments.put(key, "true");
+                } else {// single/multiple values
+                    // TODO multiple values as List?
+                    arguments.put(key, String.join(" ", values));
                 }
             }
-            arguments.put(key, value);
         }
         return arguments;
     }
@@ -64,22 +67,28 @@ public class SOSCLIArgumentsParser {
 
     private static List<String> tokenize(String input) {
         List<String> tokens = new ArrayList<>();
+        // - unquoted sequences (e.g. abc, --flag)
+        // - double-quoted strings (e.g. "some value")
+        // - single-quoted strings (e.g. 'some value')
+        // it ignores whitespace between tokens
         Matcher m = Pattern.compile("([^\"]\\S*|\".*?\"|'.*?')\\s*").matcher(input);
         while (m.find()) {
-            String token = m.group(1).trim();
-            tokens.add(token);
+            tokens.add(m.group(1).trim());
         }
         return tokens;
     }
 
     public static void main(String[] args) {
-        // args: -name "Fritz Tester" -b="a" --c="d" --e
+        // args: --age=30 --city=Berlin -name "Fritz Tester" -java-options "-Xms32m" "-Xmx64m" --flag
         for (String a : args) {
+            // [ARG]--age=30
+            // [ARG]--city=Berlin
             // [ARG]-name
             // [ARG]Fritz Tester
-            // [ARG]-b=a
-            // [ARG]--c=d
-            // [ARG]--e
+            // [ARG]-java-options
+            // [ARG]-Xms32m
+            // [ARG]-Xmx64m
+            // [ARG]--flag
             System.out.println("[ARG]" + a);
         }
 
@@ -88,11 +97,14 @@ public class SOSCLIArgumentsParser {
         l.add("--city=\"Berlin\"");
         l.add("-name");
         l.add("\"Fritz Tester\"");
+        l.add("-java-options");
+        l.add("\"-Xms32m\"");
+        l.add("\"-Xmx64m\"");
         l.add("--flag");
         Map<String, String> result = SOSCLIArgumentsParser.parse(l.toArray(new String[0]));
         System.out.println(result);
 
-        result = SOSCLIArgumentsParser.parse(" --age=30 --city=Berlin -name \"Fritz Tester\"      --flag");
+        result = SOSCLIArgumentsParser.parse(" --age=30 --city=Berlin -name \"Fritz Tester\" -java-options \"-Xms32m\" \"-Xmx64m\"     --flag");
         System.out.println(result);
     }
 }
