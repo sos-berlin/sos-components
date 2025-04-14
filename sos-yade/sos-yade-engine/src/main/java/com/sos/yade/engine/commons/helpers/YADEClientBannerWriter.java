@@ -108,7 +108,7 @@ public class YADEClientBannerWriter {
 
     private static void writeSourceHeader(ISOSLogger logger, YADESourceArguments sourceArgs) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(YADESourceArguments.LABEL).append("]");
+        sb.append("[").append(sourceArgs.getLabel().isEmpty() ? YADESourceArguments.LABEL : sourceArgs.getLabel().getValue()).append("]");
         sb.append(YADEArgumentsHelper.toString("Protocol", sourceArgs.getProvider().getProtocol()));
         try {
             sb.append("(").append(sourceArgs.getProvider().getAccessInfo()).append(")");
@@ -222,7 +222,7 @@ public class YADEClientBannerWriter {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(YADETargetArguments.LABEL).append("]");
+        sb.append("[").append(targetArgs.getLabel().isEmpty() ? YADETargetArguments.LABEL : targetArgs.getLabel().getValue()).append("]");
         sb.append(YADEArgumentsHelper.toString("Protocol", targetArgs.getProvider().getProtocol()));
         try {
             sb.append("(").append(targetArgs.getProvider().getAccessInfo()).append(")");
