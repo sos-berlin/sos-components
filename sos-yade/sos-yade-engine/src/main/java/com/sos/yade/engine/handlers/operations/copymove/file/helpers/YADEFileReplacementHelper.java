@@ -1,6 +1,5 @@
 package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
-import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
@@ -52,7 +51,8 @@ public class YADEFileReplacementHelper {
 
         String newName;
         if (matcher.groupCount() == 0) {
-            newName = replaceVariables(replacement, fileName);
+            String newReplacement = replaceVariables(replacement, fileName);
+            newName = matcher.replaceAll(newReplacement);
         } else {
             String[] replacements = replacement.split(";");
             StringBuilder result = new StringBuilder();
@@ -125,8 +125,12 @@ public class YADEFileReplacementHelper {
 
     public static void main(String[] args) {
         try {
-            AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SLF4JLogger(), new LocalProviderArguments()),
-                    new YADESourceArguments());
+            LocalProviderArguments pargs = new LocalProviderArguments();
+            pargs.applyDefaultIfNullQuietly();
+            YADESourceArguments sargs = new YADESourceArguments();
+            sargs.applyDefaultIfNullQuietly();
+            sargs.setProvider(pargs);
+            AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SLF4JLogger(), pargs), sargs);
 
             YADEProviderFile file = new YADEProviderFile(delegator, "/tmp/1abc12def123.TXT", 0, 0, null, false);
             /** 1) Change File Name */
@@ -147,16 +151,17 @@ public class YADEFileReplacementHelper {
             replacement = "/sub/$1";
             // replacement = "../$1";
 
+            regex = "a";
+            replacement = "b";
+
             Optional<YADEFileNameInfo> result = getReplacementResultIfDifferent(delegator, file.getName(), regex, replacement);
             System.out.println("[RESULT]" + (result.isPresent() ? SOSString.toString(result.get()) : "false"));
 
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(file.getName());
-            if (matcher.find()) {
-                System.out.println("[RESULT][replaceAll]" + file.getName().replaceAll(regex, replacement));
-            }
-
-            System.out.println(Path.of("/sub").isAbsolute());
+            // Pattern pattern = Pattern.compile(regex);
+            // Matcher matcher = pattern.matcher(file.getName());
+            // if (matcher.find()) {
+            // System.out.println("[RESULT][replaceAll]" + file.getName().replaceAll(regex, replacement));
+            // }
 
         } catch (Exception e) {
             e.printStackTrace();

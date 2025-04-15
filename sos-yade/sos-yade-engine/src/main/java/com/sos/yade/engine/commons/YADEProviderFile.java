@@ -71,7 +71,7 @@ public class YADEProviderFile extends ProviderFile {
     }
 
     public boolean needsRename() {
-        return finalFullPath != null && !finalFullPath.equalsIgnoreCase(getFullPath());
+        return finalFullPath != null && !finalFullPath.equalsIgnoreCase(getFullPath()) && !isSkipped();
     }
 
     public void setFinalFullPath(AYADEProviderDelegator delegator, String newName) {

@@ -76,9 +76,8 @@ public class YADEFileHandler {
                 if (!config.getTarget().isOverwriteFilesEnabled()) {
                     if (targetDelegator.getProvider().exists(targetFile.getFinalFullPath())) {
                         targetFile.setState(TransferEntryState.NOT_OVERWRITTEN);
-
-                        logger.info("[%s][skipped][DisableOverwriteFiles=true]%s=%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFile
-                                .getFinalFullPath());
+                        logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
+                                targetDelegator.getLabel(), targetFile.getFinalFullPath());
 
                         YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
                         return;
