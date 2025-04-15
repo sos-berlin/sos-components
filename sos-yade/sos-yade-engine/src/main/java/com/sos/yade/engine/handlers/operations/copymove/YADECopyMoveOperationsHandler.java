@@ -48,10 +48,12 @@ public class YADECopyMoveOperationsHandler {
         sourceDelegator.getDirectoryMapper().tryCreateAllTargetDirectoriesBeforeOperation(logger, config, targetDelegator);
 
         // 3) Source/Target: Transfer files
+        boolean isMoveOperation = config.isMoveOperation();
         boolean useCumulativeTargetFile = config.getTarget().getCumulate() != null;
         try {
-            processFiles(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile, cancel);
-            finalizeTransactionIfNeeded(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile, cancel);
+            processFiles(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile, cancel);
+            finalizeTransactionIfNeeded(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile,
+                    cancel);
         } catch (Throwable e) {
             // rollbackIfTransactional - does not throws exception
             rollbackTransactionIfNeeded(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile);
@@ -70,13 +72,14 @@ public class YADECopyMoveOperationsHandler {
     }
 
     private static void processFiles(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean useCumulativeTargetFile, AtomicBoolean cancel)
-            throws Exception {
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, boolean useCumulativeTargetFile,
+            AtomicBoolean cancel) throws Exception {
         try {
             if (config.processFilesSequentially()) {
-                processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile, cancel);
+                processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile,
+                        cancel);
             } else {
-                processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles, cancel);
+                processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, cancel);
             }
         } catch (Throwable e) {
             throw e;
@@ -89,7 +92,8 @@ public class YADECopyMoveOperationsHandler {
 
     // cumulative file is not processed here - only sequential processing
     private static void processFilesInParallel(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, AtomicBoolean cancel) throws Exception {
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, AtomicBoolean cancel)
+            throws Exception {
         int maxThreads = config.getParallelism();
         int size = sourceFiles.size();
         if (size < maxThreads) {
@@ -123,7 +127,7 @@ public class YADECopyMoveOperationsHandler {
                     YADEProviderFile f = (YADEProviderFile) pf;
                     try {
                         // useCumulativeTargetFile=false for transfers in parallel
-                        new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(false);
+                        new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(isMoveOperation, false);
                     } catch (Exception e) {
                         if (config.isTransactionalEnabled()) {
                             cancel.set(true);
@@ -146,8 +150,8 @@ public class YADECopyMoveOperationsHandler {
     }
 
     private static void processFilesSequentially(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean useCumulativeTargetFile, AtomicBoolean cancel)
-            throws Exception {
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, boolean useCumulativeTargetFile,
+            AtomicBoolean cancel) throws Exception {
 
         if (useCumulativeTargetFile) {
             YADETargetCumulativeFileHelper.tryDeleteFile(logger, config, targetDelegator);
@@ -159,7 +163,7 @@ public class YADECopyMoveOperationsHandler {
             }
             YADEProviderFile f = (YADEProviderFile) sourceFile;
             try {
-                new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(useCumulativeTargetFile);
+                new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(isMoveOperation, useCumulativeTargetFile);
             } catch (Throwable e) {
                 if (config.isTransactionalEnabled()) {
                     cancel.set(true);
@@ -176,7 +180,7 @@ public class YADECopyMoveOperationsHandler {
 
     private static void finalizeTransactionIfNeeded(ISOSLogger logger, YADECopyMoveOperationsConfig config,
             YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles,
-            boolean useCumulativeTargetFile, AtomicBoolean cancel) throws Exception {
+            boolean isMoveOperation, boolean useCumulativeTargetFile, AtomicBoolean cancel) throws Exception {
         if (!config.isTransactionalEnabled()) {
             return;
         }
@@ -187,15 +191,17 @@ public class YADECopyMoveOperationsHandler {
         handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
 
         try {
-            String deleted = YADEClientBannerWriter.formatState(TransferEntryState.DELETED);
+            String moved = isMoveOperation ? YADEClientBannerWriter.formatState(TransferEntryState.MOVED) : "";
             for (ProviderFile pf : sourceFiles) {
                 YADEProviderFile sourceFile = (YADEProviderFile) pf;
                 String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
-                YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile);
+                YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
+                        true);
 
-                if (config.isMoveOperation()) {
+                if (isMoveOperation) {
                     if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
-                        logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, deleted, sourceDelegator.getLabel(), sourceFile.getFinalFullPath());
+                        sourceFile.setState(TransferEntryState.MOVED);
+                        logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, moved, sourceDelegator.getLabel(), sourceFile.getFinalFullPath());
                     }
                 }
             }

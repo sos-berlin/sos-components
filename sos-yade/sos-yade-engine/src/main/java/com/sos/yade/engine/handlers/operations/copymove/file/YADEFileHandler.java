@@ -56,7 +56,7 @@ public class YADEFileHandler {
         this.cancel = cancel;
     }
 
-    public void run(boolean useCumulativeTargetFile) throws YADEEngineTransferFileException {
+    public void run(boolean isMoveOperation, boolean useCumulativeTargetFile) throws YADEEngineTransferFileException {
         this.sourceFile.resetSteady();
 
         // 'index' or 'index][thread name'
@@ -192,19 +192,20 @@ public class YADEFileHandler {
                     sourceMessageDigest);
             YADEChecksumFileHelper.setTargetIntegrityHash(sourceFile, targetMessageDigest);
 
-            if (!config.isTransactionalEnabled() && (config.isMoveOperation() || config.getSource().needsFilePostProcessing() || config.getTarget()
+            if (!config.isTransactionalEnabled() && (isMoveOperation || config.getSource().needsFilePostProcessing() || config.getTarget()
                     .needsFilePostProcessing())) {
                 // If NOT Transactional
                 // - MOVE operations - remove source file
                 // - Source - Replacement if enabled, Commands AfterFile/BeforeRename
                 // - Target - Replacement/Rename(Atomic) if enabled, IntergityHash, KeepLastModifiedDate, Commands AfterFile/BeforeRename
-                if (config.isMoveOperation()) {
+                if (isMoveOperation) {
                     if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath())) {
                         logger.info("[%s][%s][%s]deleted", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath());
                     }
                     sourceFile.setState(TransferEntryState.MOVED);
                 }
-                YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile);
+                YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
+                        false);
             }
         } catch (YADEEngineTransferFileException e) {
             throw e;

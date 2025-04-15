@@ -17,7 +17,8 @@ import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetP
 public class YADEFileActionsExecuter {
 
     public static void postProcessingOnSuccess(ISOSLogger logger, String fileTransferLogPrefix, YADECopyMoveOperationsConfig config,
-            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile) throws Exception {
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile,
+            boolean isTransactionalEnabled) throws Exception {
 
         boolean executeAfterFile = false;
         // 1) Target - individual operations
@@ -38,7 +39,8 @@ public class YADEFileActionsExecuter {
                     // rename=false;
                     // }
                     // }
-                    rename(logger, fileTransferLogPrefix, targetDelegator, sourceDelegator, targetDelegator, sourceFile, false);
+                    rename(logger, fileTransferLogPrefix, targetDelegator, sourceDelegator, targetDelegator, sourceFile, isTransactionalEnabled,
+                            false);
                 }
                 // 2) Target - KeepModificationDate
                 if (config.getTarget().isKeepModificationDateEnabled()) {
@@ -63,7 +65,7 @@ public class YADEFileActionsExecuter {
 
             // 1) Source - Rename
             if (sourceFile.needsRename()) {
-                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile, true);
+                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile, isTransactionalEnabled, true);
             }
         }
 
@@ -106,8 +108,8 @@ public class YADEFileActionsExecuter {
     }
 
     private static void rename(ISOSLogger logger, String fileTransferLogPrefix, IYADEProviderDelegator delegator,
-            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, boolean isSource)
-            throws Exception {
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile,
+            boolean isTransactionalEnabled, boolean isSource) throws Exception {
         YADEProviderFile sourceOrTargetFile = isSource ? sourceFile : sourceFile.getTarget();
         String oldPath = sourceOrTargetFile.getFullPath();
         String newPath = sourceOrTargetFile.getFinalFullPath();
@@ -117,8 +119,10 @@ public class YADEFileActionsExecuter {
         if (delegator.getProvider().renameFileIfSourceExists(oldPath, newPath)) {
             // for error tests
             // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
+
             sourceOrTargetFile.setSubState(TransferEntryState.RENAMED);
-            logger.info("[%s][%s][%s]->[%s]", fileTransferLogPrefix, delegator.getLabel(), oldPath, newPath);
+            logger.info("[%s][%s][%s]->[%s]%srenamed", fileTransferLogPrefix, delegator.getLabel(), oldPath, newPath, (isTransactionalEnabled
+                    ? "atomically " : ""));
         }
     }
 
