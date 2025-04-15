@@ -9,6 +9,7 @@ import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -24,6 +25,7 @@ import net.schmizz.sshj.sftp.FileMode;
 import net.schmizz.sshj.sftp.OpenMode;
 import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
+import net.schmizz.sshj.sftp.RenameFlags;
 import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.sftp.SFTPException;
@@ -136,7 +138,8 @@ public class SSHJProviderUtils {
         } catch (SFTPException e) {
             throwException(e, sourcePath);
         }
-        sftp.rename(sourcePath, targetPath);
+        // sftp.rename(sourcePath, targetPath);
+        sftp.rename(sourcePath, targetPath, Set.of(RenameFlags.OVERWRITE));
     }
 
     protected static void setFileLastModifiedFromMillis(SFTPClient sftp, String path, long milliseconds) throws IOException {
