@@ -7,6 +7,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 public class YADETargetProviderFile extends YADEProviderFile {
 
     private long bytesProcessed;
+    private boolean nameReplaced;
 
     public YADETargetProviderFile(YADETargetProviderDelegator targetDelegator, String fullPath) {
         super(targetDelegator, fullPath, 0L, 0L, null, false);
@@ -25,4 +26,11 @@ public class YADETargetProviderFile extends YADEProviderFile {
         return bytesProcessed;
     }
 
+    public boolean isNameReplaced() {
+        return nameReplaced;
+    }
+
+    public void setNameReplaced(boolean val) {
+        nameReplaced = val;
+    }
 }

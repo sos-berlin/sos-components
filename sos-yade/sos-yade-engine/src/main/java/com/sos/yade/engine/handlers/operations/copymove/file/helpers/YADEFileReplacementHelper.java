@@ -75,7 +75,7 @@ public class YADEFileReplacementHelper {
         if (newName.equals(fileName)) {
             return Optional.empty();
         } else {
-            return Optional.of(new YADEFileNameInfo(delegator, newName));
+            return Optional.of(new YADEFileNameInfo(delegator, newName, true));
         }
     }
 

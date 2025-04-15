@@ -70,7 +70,7 @@ public class YADEFileHandler {
             } else {
                 // 1) Target: may create target directories if target replacement enabled
                 initializeTarget();
-                targetFile = (YADETargetProviderFile) sourceFile.getTarget();
+                targetFile = sourceFile.getTarget();
 
                 // 2) Target: check should be transferred...
                 if (!config.getTarget().isOverwriteFilesEnabled()) {
@@ -181,9 +181,11 @@ public class YADEFileHandler {
             }
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
-            logger.info("[%s][%s][%s=%s][%s=%s][bytes=%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
-                    sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator.getLabel(), targetFile.getFullPath(), targetFile.getSize(),
-                    SOSDate.getDuration(startTime, Instant.now()));
+            // renamed based on ReplaceWhat...
+            String renamed = targetFile.isNameReplaced() ? "[" + YADEClientBannerWriter.formatState(TransferEntryState.RENAMED) + "]" : "";
+            logger.info("[%s][%s]%s[%s=%s][%s=%s][Bytes=%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
+                    renamed, sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator.getLabel(), targetFile.getFullPath(), targetFile
+                            .getSize(), SOSDate.getDuration(startTime, Instant.now()));
 
             YADEFileActionsExecuter.checkTargetFileSize(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile);
             YADEChecksumFileHelper.checkSourceIntegrityHash(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
@@ -228,6 +230,7 @@ public class YADEFileHandler {
         /** the final path of the file after transfer */
         target.setFinalFullPath(targetDelegator, finalFileName);
         target.setIndex(sourceFile.getIndex());
+        target.setNameReplaced(fileNameInfo.isReplaced());
         sourceFile.setTarget(target);
     }
 
@@ -277,7 +280,7 @@ public class YADEFileHandler {
             }
         }
         if (info == null) {
-            info = new YADEFileNameInfo(targetDelegator, fileName);
+            info = new YADEFileNameInfo(targetDelegator, fileName, false);
         }
         return info;
     }

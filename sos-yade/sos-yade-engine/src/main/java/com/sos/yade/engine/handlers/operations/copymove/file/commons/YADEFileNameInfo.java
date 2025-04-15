@@ -22,8 +22,9 @@ public class YADEFileNameInfo {
     private String parent;
     private String path;
     private boolean absolutePath;
+    private boolean replaced;
 
-    public YADEFileNameInfo(final AYADEProviderDelegator delegator, final String fileNameOrPath) {
+    public YADEFileNameInfo(final AYADEProviderDelegator delegator, final String fileNameOrPath, boolean wasReplaced) {
         String formatted = delegator.getProvider().toPathStyle(fileNameOrPath);
         if (delegator.containsParentPath(formatted)) {
             name = SOSPathUtils.getName(formatted);
@@ -38,6 +39,7 @@ public class YADEFileNameInfo {
             path = null;
             absolutePath = false;
         }
+        replaced = wasReplaced;
     }
 
     public String getName() {
@@ -60,4 +62,7 @@ public class YADEFileNameInfo {
         return absolutePath;
     }
 
+    public boolean isReplaced() {
+        return replaced;
+    }
 }

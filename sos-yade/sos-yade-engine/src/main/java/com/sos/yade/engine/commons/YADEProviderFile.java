@@ -9,7 +9,7 @@ import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetP
 public class YADEProviderFile extends ProviderFile {
 
     private Steady steady = null;
-    private YADEProviderFile target;
+    private YADETargetProviderFile target;
 
     private TransferEntryState state = null;
     private TransferEntryState subState;
@@ -86,7 +86,7 @@ public class YADEProviderFile extends ProviderFile {
         return finalFullPath == null ? parentFullPath : delegator.getParentPath(finalFullPath);
     }
 
-    public YADEProviderFile getTarget() {
+    public YADETargetProviderFile getTarget() {
         return target;
     }
 

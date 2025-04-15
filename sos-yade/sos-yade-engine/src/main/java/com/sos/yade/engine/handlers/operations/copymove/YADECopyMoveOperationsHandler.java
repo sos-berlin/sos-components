@@ -187,6 +187,7 @@ public class YADECopyMoveOperationsHandler {
         handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
 
         try {
+            String deleted = YADEClientBannerWriter.formatState(TransferEntryState.DELETED);
             for (ProviderFile pf : sourceFiles) {
                 YADEProviderFile sourceFile = (YADEProviderFile) pf;
                 String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
@@ -194,7 +195,7 @@ public class YADECopyMoveOperationsHandler {
 
                 if (config.isMoveOperation()) {
                     if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
-                        logger.info("[%s][%s][deleted]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFinalFullPath());
+                        logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, deleted, sourceDelegator.getLabel(), sourceFile.getFinalFullPath());
                     }
                 }
             }

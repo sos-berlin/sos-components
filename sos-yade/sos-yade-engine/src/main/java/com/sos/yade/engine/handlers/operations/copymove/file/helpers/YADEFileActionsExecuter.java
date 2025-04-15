@@ -7,7 +7,6 @@ import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileSizeException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
@@ -23,7 +22,7 @@ public class YADEFileActionsExecuter {
         boolean executeAfterFile = false;
         // 1) Target - individual operations
         if (config.getTarget().needsFilePostProcessing()) {
-            YADEProviderFile targetFile = sourceFile.getTarget();
+            YADETargetProviderFile targetFile = sourceFile.getTarget();
             if (targetFile != null) {
                 executeAfterFile = true;
 
@@ -53,7 +52,8 @@ public class YADEFileActionsExecuter {
                 if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
                     String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
                     targetDelegator.getProvider().writeFile(path, targetFile.getIntegrityHash());
-                    logger.info("[%s][%s][%s][integrity hash]file written", fileTransferLogPrefix, targetDelegator.getLabel(), path);
+                    logger.info("[%s][%s][%s][%s]created", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
+                            .getCreateIntegrityHashFile().getName(), path);
                 }
             }
         }
@@ -118,8 +118,7 @@ public class YADEFileActionsExecuter {
             // for error tests
             // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
             sourceOrTargetFile.setSubState(TransferEntryState.RENAMED);
-            logger.info("[%s][%s][%s][%s][%s]", fileTransferLogPrefix, YADEClientBannerWriter.formatState(sourceOrTargetFile.getSubState()), delegator
-                    .getLabel(), oldPath, newPath);
+            logger.info("[%s][%s][%s]->[%s]", fileTransferLogPrefix, delegator.getLabel(), oldPath, newPath);
         }
     }
 

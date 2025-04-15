@@ -25,6 +25,7 @@ import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 
 public class YADEClientBannerWriter {
 
@@ -33,6 +34,9 @@ public class YADEClientBannerWriter {
     private static final boolean STATE_TO_LOWERCASE = false;
 
     public static String formatState(TransferEntryState state) {
+        if (state == null) {
+            return "";
+        }
         return formatState(state.name());
     }
 
@@ -356,15 +360,14 @@ public class YADEClientBannerWriter {
 
         private static Map<String, List<YADEProviderFile>> getGroupedByState(YADETargetProviderDelegator targetDelegator, List<ProviderFile> files,
                 TransferEntryState defaultState) {
-            // skipping the RENAMED subState if the renaming was due to an atomic transfer and not due to a defined replacement
-            final boolean skipRenameSubStateForTarget = targetDelegator != null && !targetDelegator.getArgs().isReplacementEnabled();
-            return files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> getState(f, defaultState,
-                    skipRenameSubStateForTarget)));
+            return files.stream().map(f -> (YADEProviderFile) f).collect(Collectors.groupingBy(f -> getState(f, defaultState)));
         }
 
-        private static String getState(YADEProviderFile f, TransferEntryState defaultState, boolean skipRenameSubStateForTarget) {
+        private static String getState(YADEProviderFile f, TransferEntryState defaultState) {
+            // skipping the RENAMED subState if the renaming was due to an atomic transfer and not due to a defined replacement
             if (f.getTarget() != null) {
-                return resolve(f.getTarget(), defaultState, skipRenameSubStateForTarget);
+                YADETargetProviderFile target = (YADETargetProviderFile) f.getTarget();
+                return resolve(f.getTarget(), defaultState, !target.isNameReplaced());
             }
             return resolve(f, defaultState, false);
         }
@@ -376,7 +379,7 @@ public class YADEClientBannerWriter {
         }
 
         private static String getSubState(YADEProviderFile target, boolean skipRenameSubState) {
-            if (target.getSubState() == null || (skipRenameSubState && TransferEntryState.RENAMED.equals(target.getSubState()))) {
+            if (target.getSubState() == null || skipRenameSubState) {
                 return "";
             }
             return "(" + target.getSubState() + ")";
