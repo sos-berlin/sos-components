@@ -11,7 +11,7 @@ import com.sos.commons.xml.SOSXML;
 public class YADEXMLFragmentsCredentialStoreFragmentHelper {
 
     protected static void parse(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource, AProviderArguments providerArgs) throws Exception {
-        String exp = "Fragments/CredentialStoreFragments[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
+        String exp = "Fragments/CredentialStoreFragments/CredentialStoreFragment[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
         Node fragment = argsLoader.getXPath().selectNode(argsLoader.getRoot(), exp);
         if (fragment == null) {
             throw new SOSMissingDataException("[profile=" + argsLoader.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target")
