@@ -61,14 +61,14 @@ public class YADEClientBannerWriter {
         sb.append("[").append(YADEArguments.LABEL).append("]");
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
         sb.append(",").append(YADEArgumentsHelper.toString(args.getTransactional()));
-        if (!args.getSettings().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
+        if (args.isParallelismEnabled()) {
+            sb.append(",").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
         }
         if (!args.getProfile().isEmpty()) {
             sb.append(",").append(YADEArgumentsHelper.toString("Profile", args.getProfile()));
         }
-        if (args.isParallelismEnabled()) {
-            sb.append(",").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
+        if (!args.getSettings().isEmpty()) {
+            sb.append(",").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
         }
         logger.info(sb);
         if (logger.isDebugEnabled()) {

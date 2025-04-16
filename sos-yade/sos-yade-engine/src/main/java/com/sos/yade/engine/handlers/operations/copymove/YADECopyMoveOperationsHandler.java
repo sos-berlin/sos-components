@@ -192,11 +192,12 @@ public class YADECopyMoveOperationsHandler {
 
         try {
             String moved = isMoveOperation ? YADEClientBannerWriter.formatState(TransferEntryState.MOVED) : "";
+            boolean isAtomicallyEnabled = config.getTarget().getAtomic() != null;
             for (ProviderFile pf : sourceFiles) {
                 YADEProviderFile sourceFile = (YADEProviderFile) pf;
                 String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
-                        true);
+                        isAtomicallyEnabled);
 
                 if (isMoveOperation) {
                     if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {

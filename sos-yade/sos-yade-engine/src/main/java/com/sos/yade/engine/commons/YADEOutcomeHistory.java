@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.yade;
+package com.sos.yade.engine.commons;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -16,12 +16,11 @@ import com.sos.yade.commons.result.YadeTransferResult;
 import com.sos.yade.commons.result.YadeTransferResultEntry;
 import com.sos.yade.commons.result.YadeTransferResultProtocol;
 import com.sos.yade.commons.result.YadeTransferResultSerializer;
-import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 
-public class YADEJobOutcomeHistory {
+public class YADEOutcomeHistory {
 
     public static String get(AYADEArgumentsLoader argsLoader, List<ProviderFile> files, Throwable exception) throws Exception {
         YadeTransferResult result = new YadeTransferResult();

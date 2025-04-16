@@ -29,7 +29,7 @@ public class YADEEngineTest {
         Map<String, String> map = System.getenv();
         boolean settingsReplacerCaseSensitive = true;
         boolean settingsReplacerKeepUnresolved = true;
-        int parallelism = 10;
+        int parallelism = 1;
         try {
             ISOSLogger logger = new SLF4JLogger();
 
@@ -53,9 +53,10 @@ public class YADEEngineTest {
     @Test
     public void testMain() {
         List<String> args = new ArrayList<>();
-        args.add("--settings=xyz");
+        args.add("--SETTINGS=xyz");
         args.add("--profile=xyz");
-        args.add("--help");
+        args.add("--file-spec=xyz");
+        // args.add("-h");
         YADEEngineMain.main(args.toArray(new String[0]));
     }
 

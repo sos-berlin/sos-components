@@ -205,7 +205,7 @@ public class YADEFileHandler {
                     sourceFile.setState(TransferEntryState.MOVED);
                 }
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
-                        false);
+                        config.getTarget().getAtomic() != null);
             }
         } catch (YADEEngineTransferFileException e) {
             throw e;

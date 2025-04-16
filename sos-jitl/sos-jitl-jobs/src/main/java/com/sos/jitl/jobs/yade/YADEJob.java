@@ -7,6 +7,7 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.yade.engine.YADEEngine;
+import com.sos.yade.engine.commons.YADEOutcomeHistory;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLArgumentsLoader;
 
@@ -76,7 +77,7 @@ public class YADEJob extends Job<YADEJobArguments> {
             if (argsLoader == null || argsLoader.getArgs() == null) {
                 return;
             }
-            args.getHistory().setValue(YADEJobOutcomeHistory.get(argsLoader, files, exception));
+            args.getHistory().setValue(YADEOutcomeHistory.get(argsLoader, files, exception));
             step.getOutcome().putVariable(args.getHistory());
         } catch (Exception e) {
             step.getLogger().error("[setOutcomeHistory]%s", e.toString());
