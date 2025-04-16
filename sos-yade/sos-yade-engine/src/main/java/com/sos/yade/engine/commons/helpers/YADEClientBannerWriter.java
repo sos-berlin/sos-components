@@ -60,15 +60,15 @@ public class YADEClientBannerWriter {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(YADEArguments.LABEL).append("]");
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
-        sb.append(",").append(YADEArgumentsHelper.toString(args.getTransactional()));
+        sb.append(", ").append(YADEArgumentsHelper.toString(args.getTransactional()));
         if (args.isParallelismEnabled()) {
-            sb.append(",").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
+            sb.append(", ").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
         }
         if (!args.getProfile().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString("Profile", args.getProfile()));
+            sb.append(", ").append(YADEArgumentsHelper.toString("Profile", args.getProfile()));
         }
         if (!args.getSettings().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
+            sb.append(", ").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
         }
         logger.info(sb);
         if (logger.isDebugEnabled()) {
@@ -120,73 +120,73 @@ public class YADEClientBannerWriter {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
-        sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getDirectory()));
+        sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getDirectory()));
         // File selection
         if (sourceArgs.isSingleFilesSelection()) {
             if (sourceArgs.isFileListEnabled()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getFileList()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getFileList()));
             } else if (sourceArgs.isFilePathEnabled()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getFilePath()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getFilePath()));
             }
         } else {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getFileSpec()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getFileSpec()));
         }
         if (!sourceArgs.getExcludedDirectories().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getExcludedDirectories()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getExcludedDirectories()));
         }
-        sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getRecursive()));
+        sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getRecursive()));
         if (sourceArgs.getErrorOnNoFilesFound().isDirty()) {
-            sb.append(",").append(YADEArgumentsHelper.toStringAsOppositeValue(sourceArgs.getErrorOnNoFilesFound()));
+            sb.append(", ").append(YADEArgumentsHelper.toStringAsOppositeValue(sourceArgs.getErrorOnNoFilesFound()));
         }
         if (!ZeroByteTransfer.YES.equals(sourceArgs.getZeroByteTransfer().getValue())) {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getZeroByteTransfer()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getZeroByteTransfer()));
         }
         if (!sourceArgs.getMaxFiles().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFiles()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFiles()));
         }
         if (!sourceArgs.getMaxFileSize().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFileSize()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFileSize()));
         }
         if (!sourceArgs.getMinFileSize().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getMinFileSize()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMinFileSize()));
         }
         if (sourceArgs.getPolling() != null) {
             if (sourceArgs.getPolling().getPollingServer().isTrue()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingServer()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingServer()));
             }
             if (!sourceArgs.getPolling().getPollingServerDuration().isEmpty()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingServerDuration()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingServerDuration()));
             }
             if (sourceArgs.getPolling().getPollingServerPollForever().isTrue()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingServerPollForever()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingServerPollForever()));
             }
             if (sourceArgs.getPolling().getPollingWait4SourceFolder().isTrue()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingWait4SourceFolder()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingWait4SourceFolder()));
             }
             if (sourceArgs.getPolling().getWaitingForLateComers().isTrue()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getWaitingForLateComers()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getWaitingForLateComers()));
             }
 
             if (!sourceArgs.getPolling().getPollInterval().isEmpty()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollInterval()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollInterval()));
             }
             if (!sourceArgs.getPolling().getPollMinFiles().isEmpty()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollMinFiles()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollMinFiles()));
             }
             if (!sourceArgs.getPolling().getPollTimeout().isEmpty()) {
-                sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollTimeout()));
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollTimeout()));
             }
         }
 
         // Replacement
         if (sourceArgs.isReplacementEnabled()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getReplacing()));
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getReplacement()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getReplacing()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getReplacement()));
         }
 
         // Integrity Hash
         if (sourceArgs.getCheckIntegrityHash().isTrue()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(sourceArgs.getCheckIntegrityHash()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getCheckIntegrityHash()));
         }
 
         logger.info(sb);
@@ -210,8 +210,8 @@ public class YADEClientBannerWriter {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
-        sb.append(",").append(YADEArgumentsHelper.toString(jumpHostArgs.getDirectory()));
-        sb.append(",command=").append(jumpHostArgs.getYADEClientCommand().getDisplayValue());
+        sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getDirectory()));
+        sb.append(", command=").append(jumpHostArgs.getYADEClientCommand().getDisplayValue());
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
@@ -234,39 +234,39 @@ public class YADEClientBannerWriter {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
-        sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getDirectory()));
+        sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getDirectory()));
         if (targetArgs.getCreateDirectories().isDirty()) {
-            sb.append(",").append(YADEArgumentsHelper.toStringAsOppositeValue(targetArgs.getCreateDirectories()));
+            sb.append(", ").append(YADEArgumentsHelper.toStringAsOppositeValue(targetArgs.getCreateDirectories()));
         }
         if (targetArgs.getCheckSize().isDirty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCheckSize()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCheckSize()));
         }
         if (targetArgs.getOverwriteFiles().isDirty()) {
-            sb.append(",").append(YADEArgumentsHelper.toStringAsOppositeValue(targetArgs.getOverwriteFiles()));
+            sb.append(", ").append(YADEArgumentsHelper.toStringAsOppositeValue(targetArgs.getOverwriteFiles()));
         }
         if (targetArgs.getAppendFiles().isTrue()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
         }
         if (!targetArgs.getAtomicPrefix().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getAtomicPrefix()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getAtomicPrefix()));
         }
         if (!targetArgs.getAtomicSuffix().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getAtomicSuffix()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getAtomicSuffix()));
         }
         if (targetArgs.isReplacementEnabled()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getReplacing()));
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getReplacement()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getReplacing()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getReplacement()));
         }
         if (targetArgs.getKeepModificationDate().isTrue()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getKeepModificationDate()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getKeepModificationDate()));
         }
         if (targetArgs.getCreateIntegrityHashFile().isTrue()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCreateIntegrityHashFile()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCreateIntegrityHashFile()));
         }
         if (!targetArgs.getCumulativeFileName().isEmpty()) {
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileName()));
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileDelete()));
-            sb.append(",").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileSeparator()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileName()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileDelete()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileSeparator()));
         }
 
         logger.info(sb);
@@ -288,7 +288,7 @@ public class YADEClientBannerWriter {
         if (operationDuration != null) {
             sb.append("(Operation=").append(SOSDate.getDuration(operationDuration)).append(")");
         }
-        sb.append(",Files=").append(totalFiles);
+        sb.append(", Files=").append(totalFiles);
 
         if (totalFiles > 0 && !TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             List<String> l = new ArrayList<>();
