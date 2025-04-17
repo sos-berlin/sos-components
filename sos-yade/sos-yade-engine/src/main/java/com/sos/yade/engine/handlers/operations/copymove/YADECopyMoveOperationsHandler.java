@@ -199,7 +199,8 @@ public class YADECopyMoveOperationsHandler {
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
                         isAtomicallyEnabled);
 
-                if (isMoveOperation) {
+                //TODO test SOURCE_TO_JUMP_HOST with MOVE
+                if (isMoveOperation && !sourceDelegator.isJumpHost()) {
                     if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
                         sourceFile.setState(TransferEntryState.MOVED);
                         logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, moved, sourceDelegator.getLabel(), sourceFile.getFinalFullPath());

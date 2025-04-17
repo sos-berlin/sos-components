@@ -199,10 +199,13 @@ public class YADEFileHandler {
                 // - Source - Replacement if enabled, Commands AfterFile/BeforeRename
                 // - Target - Replacement/Rename(Atomic) if enabled, IntergityHash, KeepLastModifiedDate, Commands AfterFile/BeforeRename
                 if (isMoveOperation) {
-                    if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath())) {
-                        logger.info("[%s][%s][%s]deleted", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath());
+                    if (!sourceDelegator.isJumpHost()) {
+                        if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath())) {
+                            logger.info("[%s][%s][%s]deleted", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath());
+                        }
+                        sourceFile.setState(TransferEntryState.MOVED);
                     }
-                    sourceFile.setState(TransferEntryState.MOVED);
+
                 }
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
                         config.getTarget().getAtomic() != null);

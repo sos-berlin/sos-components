@@ -192,7 +192,9 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
             return null;
         }
         String method = "getConfigurationPropertiesFromFiles";
-        logger.info("[%s][%s]%s", getLabel(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f.toString()));
+        if (logger.isDebugEnabled()) {
+            logger.debug("[%s][%s]%s", getLabel(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f.toString()));
+        }
         Properties p = new Properties();
         for (Path file : getArguments().getConfigurationFiles().getValue()) {
             if (Files.exists(file) && Files.isRegularFile(file)) {
@@ -241,7 +243,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     public String getPathOperationPrefix(String path) {
         return getLogPrefix() + "[" + path + "]";
     }
-    
+
     public String getLogPrefix() {
         return SOSString.isEmpty(getLabel()) ? "" : "[" + getLabel() + "]";
     }
