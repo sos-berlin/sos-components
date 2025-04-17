@@ -18,20 +18,37 @@ public class YADEXMLJumpHostSettingsWriter {
 
     private static final String SFTPFRAGMENT_NAME = "sftp";
 
-    public static String fromSourceToJumpHost(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
+    public static String sourceToJumpHostCOPY(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
         StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
         StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
-                .getTargetArgs(), config);
+                .getTargetArgs(), config, "Copy", true);
         return generateConfiguration(fragments, profile).toString();
     }
 
-    public static String fromJumpHostToTarget(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
+    public static String sourceToJumpHostREMOVE(AYADEArgumentsLoader argsLoader, JumpHostConfig config, String profileId) {
+        YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
+
+        StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
+        StringBuilder profile = generateProfileSourceToJumpHostREMOVE(sourceArgs, config, profileId);
+        return generateConfiguration(fragments, profile).toString();
+    }
+
+    public static String sourceToJumpHostGETLIST(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
+        YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
+
+        StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
+        StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
+                .getTargetArgs(), config, "GetList", false);
+        return generateConfiguration(fragments, profile).toString();
+    }
+
+    public static String jumpHostToTargetCOPY(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADETargetArguments targetArgs = argsLoader.getTargetArgs();
 
         StringBuilder fragments = generateFragments((SSHProviderArguments) targetArgs.getProvider());
-        StringBuilder profile = generateProfileJumpHostToTarget(argsLoader.getArgs(), targetArgs, config);
+        StringBuilder profile = generateProfileJumpHostToTargetCOPY(argsLoader.getArgs(), targetArgs, config);
         return generateConfiguration(fragments, profile).toString();
     }
 
@@ -181,15 +198,18 @@ public class YADEXMLJumpHostSettingsWriter {
     }
 
     private static StringBuilder generateProfileSourceToJumpHost(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs,
-            YADETargetArguments targetArgs, JumpHostConfig config) {
+            YADETargetArguments targetArgs, JumpHostConfig config, String operation, boolean useTarget) {
         StringBuilder sb = new StringBuilder();
         sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
         sb.append("<Operation>");
-        sb.append("<Copy>");
+        sb.append("<").append(operation).append(">");
 
         // Source (SFTPFragment) -----------------------
-        sb.append("<CopySource>");
-        sb.append("<CopySourceFragmentRef>").append(generateProfileTargetSFTPFragmentRef(sourceArgs)).append("</CopySourceFragmentRef>");
+        String sourcePrefix = operation + "Source";
+        sb.append("<").append(sourcePrefix).append(">");
+        sb.append("<").append(sourcePrefix).append("FragmentRef>");
+        sb.append(generateProfileTargetSFTPFragmentRef(sourceArgs));
+        sb.append("</").append(sourcePrefix).append("FragmentRef>");
         sb.append("<SourceFileOptions>");
         // Source - Selection
         sb.append("<Selection>");
@@ -325,19 +345,48 @@ public class YADEXMLJumpHostSettingsWriter {
         }
 
         sb.append("</SourceFileOptions>");
-        sb.append("</CopySource>");
-        // Target (Jump) ----------------------------------
-        sb.append(generateJumpHostLocalCopyTarget(targetArgs, config));
-        // TransferOptions
-        sb.append(generateProfileTransferOptions(args, sourceArgs, config));
-
-        sb.append("</Copy>");
+        sb.append("</").append(sourcePrefix).append(">");
+        if (useTarget) {
+            // Target (Jump) ----------------------------------
+            sb.append(generateJumpHostLocalCopyTarget(targetArgs, config));
+            // TransferOptions
+            sb.append(generateProfileTransferOptions(args, sourceArgs, config));
+        }
+        sb.append("</").append(operation).append(">");
         sb.append("</Operation>");
         sb.append("</Profile>");
         return sb;
     }
 
-    private static StringBuilder generateProfileJumpHostToTarget(YADEArguments args, YADETargetArguments targetArgs, JumpHostConfig config) {
+    private static StringBuilder generateProfileSourceToJumpHostREMOVE(YADESourceArguments sourceArgs, JumpHostConfig config, String profileId) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<Profile profile_id=").append(attrValue(profileId)).append(">");
+        sb.append("<Operation>");
+        sb.append("<Remove>");
+
+        // Source (SFTPFragment) -----------------------
+        sb.append("<RemoveSource>");
+        sb.append("<RemoveSourceFragmentRef>");
+        sb.append("<SFTPFragmentRef ref=").append(attrValue(SFTPFRAGMENT_NAME)).append(" />");
+        sb.append("</RemoveSourceFragmentRef>");
+        sb.append("<SourceFileOptions>");
+        // Source - Selection
+        sb.append("<Selection>");
+        sb.append("<FileListSelection>");
+        sb.append("<FileList>").append(cdata(config.getSourceToJumpHost().getFileList().getJumpHostFile())).append("</FileList>");
+        sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        sb.append("</FileListSelection>");
+        sb.append("</Selection>");
+        sb.append("</SourceFileOptions>");
+        sb.append("</RemoveSource>");
+
+        sb.append("</Remove>");
+        sb.append("</Operation>");
+        sb.append("</Profile>");
+        return sb;
+    }
+
+    private static StringBuilder generateProfileJumpHostToTargetCOPY(YADEArguments args, YADETargetArguments targetArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
         sb.append("<Operation>");

@@ -247,10 +247,10 @@ public class SSHJProvider extends SSHProvider {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
                 try (SFTPClient sftp = sshClient.newSFTPClient()) {
-                    return createProviderFile(path, sftp.stat(path));
+                    return createProviderFile(path, sftp.statExistence(path));
                 }
             } else {
-                return createProviderFile(path, reusable.getSFTPClient().stat(path));
+                return createProviderFile(path, reusable.getSFTPClient().statExistence(path));
             }
         } catch (NoSuchFileException e) {
             return null;
@@ -618,6 +618,9 @@ public class SSHJProvider extends SSHProvider {
     }
 
     protected ProviderFile createProviderFile(String path, FileAttributes attr) {
+        if (attr == null) {
+            return null;
+        }
         return createProviderFile(path, attr.getSize(), SSHJProviderUtils.getFileLastModifiedMillis(attr));
     }
 

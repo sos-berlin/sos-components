@@ -76,6 +76,18 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<Instant> start = new SOSArgument<>(null, false);
     private SOSArgument<Instant> end = new SOSArgument<>(null, false);
 
+    public boolean isOperationGETLIST() {
+        return TransferOperation.GETLIST.equals(operation.getValue());
+    }
+
+    public boolean isOperationMOVE() {
+        return TransferOperation.MOVE.equals(operation.getValue());
+    }
+
+    public boolean isOperationREMOVE() {
+        return TransferOperation.REMOVE.equals(operation.getValue());
+    }
+
     public SOSArgument<Path> getSettings() {
         return settings;
     }

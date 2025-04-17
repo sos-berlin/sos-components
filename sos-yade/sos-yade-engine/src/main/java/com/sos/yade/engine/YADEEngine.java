@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
@@ -109,6 +110,13 @@ public class YADEEngine {
         List<ProviderFile> files = null;
 
         String sourceExcludedFileExtension = YADESourceFilesSelector.getExcludedFileExtension(argsLoader.getArgs(), sourceDelegator, targetDelegator);
+        boolean isGETLIST = argsLoader.getArgs().isOperationGETLIST();
+        boolean isREMOVE = argsLoader.getArgs().isOperationREMOVE();
+        boolean selectFiles = true;
+        if (jumpHostAddon != null && sourceDelegator.isJumpHost() && (isGETLIST || isREMOVE)) {
+            selectFiles = false;
+        }
+
         // All steps may trigger an exception
         if (!argsLoader.getSourceArgs().isPollingEnabled()) {
             try {
@@ -123,16 +131,17 @@ public class YADEEngine {
                 /** 8) Source: execute commands before operation */
                 YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator, jumpHostAddon);
 
-                /** 9) Source: select files */
-                files = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
+                if (selectFiles) {
+                    /** 9) Source: select files */
+                    files = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                /** 10) Source: check files steady state */
-                YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
+                    /** 10) Source: check files steady state */
+                    YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                /** 11) Source: check zeroByteFiles, forceFiles, resultSet conditions */
-                YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
-
-                if (!files.isEmpty()) {
+                    /** 11) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                    YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
+                }
+                if (!SOSCollection.isEmpty(files)) {
                     /** 12) Target: connect */
                     YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
@@ -180,16 +189,17 @@ public class YADEEngine {
                     /** 8) Source: execute commands before operation */
                     YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator, jumpHostAddon);
 
-                    /** 9) Source: select files */
-                    files = sourcePolling.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
+                    if (selectFiles) {
+                        /** 9) Source: select files */
+                        files = sourcePolling.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                    /** 10) Source: check files steady state */
-                    YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
+                        /** 10) Source: check files steady state */
+                        YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                    /** 11) Source: check zeroByteFiles, forceFiles, resultSet conditions */
-                    YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
-
-                    if (!files.isEmpty()) {
+                        /** 11) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                        YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
+                    }
+                    if (!SOSCollection.isEmpty(files)) {
                         /** 12) Target: connect */
                         YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
 
@@ -259,7 +269,7 @@ public class YADEEngine {
 
         if (jumpHostAddon != null) {
             try {
-                jumpHostAddon.onBeforeDelegatorDisconnected(sourceDelegator, targetDelegator, files, disconnectSource);
+                jumpHostAddon.onBeforeDelegatorDisconnected(sourceDelegator, targetDelegator, files, exception == null, disconnectSource);
             } catch (Exception e) {
                 exceptions.add(e);
             }

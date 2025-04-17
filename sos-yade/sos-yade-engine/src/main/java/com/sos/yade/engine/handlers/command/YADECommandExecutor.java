@@ -200,6 +200,21 @@ public class YADECommandExecutor {
         }
     }
 
+    public static void executeJumpHostCommand(ISOSLogger logger, AYADEProviderDelegator jumpHostDelegator, String command)
+            throws YADEEngineCommandException {
+        if (jumpHostDelegator == null) {
+            return;
+        }
+        logger.info("[%s]%s", jumpHostDelegator.getLabel(), command);
+        SOSCommandResult result = jumpHostDelegator.getProvider().executeCommand(command);
+        logCommandResult(logger, "[" + jumpHostDelegator.getLabel() + "]", result);
+        try {
+            checkCommandResult("[" + jumpHostDelegator.getLabel() + "]", result);
+        } catch (YADEEngineCommandException e) {
+            throw new YADEEngineJumpHostCommandException(e);
+        }
+    }
+
     private static void executeAfterOperationCommands(ISOSLogger logger, AYADEProviderDelegator delegator, SOSArgument<List<String>> arg,
             Throwable exception) throws YADEEngineCommandException {
 

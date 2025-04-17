@@ -151,7 +151,9 @@ public class YADEEngineMain {
         setOptionalSourceFilePath(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH);
         setOptionalStringArgument(argsLoader.getSourceArgs().getFileSpec(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
         // Target
-        setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
+        if (argsLoader.getTargetArgs() != null) {
+            setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
+        }
     }
 
     private static void writeHistoryToReturnValuesFile(ISOSLogger logger, String historyReturnValuesFile, AYADEArgumentsLoader argsLoader,
@@ -182,9 +184,9 @@ public class YADEEngineMain {
         System.out.println("    Transfer Options:");
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_DIR, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES, "<...>", null);
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_DIR, "<...>", null);
 
         System.out.println("    Processing Options:");

@@ -41,8 +41,8 @@ public class YADEArgumentsChecker {
             throws YADEEngineInitializationException {
         if (!needTargetProvider && TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             if (clientArgs == null || clientArgs.getResultSetFile().isEmpty()) {
-                throw new YADEEngineInitializationException("[" + TransferOperation.GETLIST + "]Missing \"" + clientArgs.getResultSetFile().getName()
-                        + "\" argument");
+                throw new YADEEngineInitializationException("[" + YADEClientArguments.LABEL + "][" + TransferOperation.GETLIST + "]Missing \""
+                        + clientArgs.getResultSetFile().getName() + "\" argument");
             }
         }
     }
@@ -52,13 +52,13 @@ public class YADEArgumentsChecker {
             throw new YADEEngineInitializationException("Missing Source Arguments");
         }
         if (!sourceArgs.isSingleFilesSelection() && sourceArgs.getDirectory().isEmpty()) {
-            throw new YADEEngineInitializationException(String.format("The \"source_dir\" argument is missing but is required if %s is set",
-                    YADEArgumentsHelper.toString(sourceArgs.getFileSpec())));
+            throw new YADEEngineInitializationException(String.format("[%s]The \"%s\" argument is missing but is required if %s is set",
+                    YADESourceArguments.LABEL, sourceArgs.getDirectory().getName(), YADEArgumentsHelper.toString(sourceArgs.getFileSpec())));
         }
         if (sourceArgs.isPollingEnabled()) {
             if (sourceArgs.getPolling().getPollingWait4SourceFolder().getValue() && sourceArgs.getDirectory() == null) {
-                throw new YADEEngineInitializationException(sourceArgs.getPolling().getPollingWait4SourceFolder().getName()
-                        + "=true, but source_dir is not set");
+                throw new YADEEngineInitializationException("[" + YADESourceArguments.LABEL + "]" + sourceArgs.getPolling()
+                        .getPollingWait4SourceFolder().getName() + "=true, but \"" + sourceArgs.getDirectory().getName() + "\" is not set");
             }
         }
 
@@ -100,8 +100,8 @@ public class YADEArgumentsChecker {
     private static void adjustSourceArguments(ISOSLogger logger, YADESourceArguments args) {
         if (ZeroByteTransfer.RELAXED.equals(args.getZeroByteTransfer().getValue())) {
             if (args.getMinFileSize().getValue() == null || args.getMinFileSize().getValue().longValue() <= 0L) {
-                logger.info("[%s=1]ZeroByteTransfer.RELAXED is active, setting %s=1", args.getMinFileSize().getName(), args.getMinFileSize()
-                        .getName());
+                logger.info("[%s][%s=1]ZeroByteTransfer.RELAXED is active, setting %s=1", YADESourceArguments.LABEL, args.getMinFileSize().getName(),
+                        args.getMinFileSize().getName());
                 args.getMinFileSize().setValue(Long.valueOf(1L));
             }
         }
@@ -117,7 +117,8 @@ public class YADEArgumentsChecker {
             return;
         }
         if (!sourceArgs.isSingleFilesSelection() && targetArgs.getDirectory().isEmpty()) {
-            logger.info("[target_dir=.]configured target_dir is missing, using '.' as the default");
+            logger.info("[%s][configured \"%s\" is missing, using '.' as the default]%s=.", YADETargetArguments.LABEL, targetArgs.getDirectory()
+                    .getName(), targetArgs.getDirectory().getName());
             targetArgs.getDirectory().setValue(".");
         }
     }

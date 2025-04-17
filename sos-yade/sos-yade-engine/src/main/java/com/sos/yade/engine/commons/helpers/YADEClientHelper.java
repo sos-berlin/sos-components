@@ -55,7 +55,7 @@ public class YADEClientHelper {
             return;
         }
         Path file = SOSPath.toAbsoluteNormalizedPath(clientArgs.getResultSetFile().getValue());
-        logger.info("[%s]write %s entries to the result set file", file, sourceFiles.size());
+        logger.info("[%s][%s=%s]write %s entries:", YADEClientArguments.LABEL, clientArgs.getResultSetFile().getName(), file, sourceFiles.size());
 
         boolean logEntries = TransferOperation.GETLIST.equals(operation);
         StringBuilder sb = new StringBuilder();

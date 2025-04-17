@@ -43,7 +43,7 @@ public class YADEOperationsManager {
             YADERemoveOperationHandler.process(operation, logger, sourceDelegator, sourceFiles);
             return Duration.between(start, Instant.now());
         case GETLIST:
-            YADEGetListOperationHandler.process(operation, logger);
+            YADEGetListOperationHandler.process(operation, logger, sourceDelegator);
             return null;
 
         // Non YADEEngine operations
