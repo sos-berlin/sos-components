@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -253,7 +254,7 @@ public class YADEDirectoryMapper {
                 }
             }
         }
-        if (SOSString.isEmpty(targetPath)) {
+        if (targetPath == null) {
             // targetPath = ".";
             // if (logger.isDebugEnabled()) {
             // logger.debug("[getTargetDirectory][targetPath is empty][set to]" + targetPath);
@@ -273,7 +274,9 @@ public class YADEDirectoryMapper {
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectoriesToCreate][original]" + sourceTarget.values());
             }
-            Set<String> result = SOSPathUtils.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getProvider().getPathSeparator());
+            // DeepestLevelPath can be empty if root(/), because without trailing separator...
+            Set<String> result = SOSPathUtils.selectDeepestLevelPaths(sourceTarget.values(), targetDelegator.getProvider().getPathSeparator())
+                    .stream().filter(d -> !SOSString.isEmpty(d)).collect(Collectors.toSet());
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectoriesToCreate][deepestLevelPaths]" + result);
             }
