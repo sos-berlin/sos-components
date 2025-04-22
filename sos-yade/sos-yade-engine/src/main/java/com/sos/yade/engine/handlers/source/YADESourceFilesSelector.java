@@ -201,7 +201,9 @@ public class YADESourceFilesSelector {
             List<ProviderFile> sourceFiles) throws YADEEngineSourceFilesSelectorException {
         StringBuilder sb = new StringBuilder();
         if (sourceDelegator.getDirectory() != null) {
-            sb.append("[").append(sourceDelegator.getDirectory()).append("]");
+            // sourceDelegator.getDirectory() - can be empty - if empty(trailing separator was removed) - use the pathSeparator, e.g.: /
+            sb.append("[").append(sourceDelegator.getDirectory().isEmpty() ? sourceDelegator.getProvider().getPathSeparator() : sourceDelegator
+                    .getDirectory()).append("]");
         }
         sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getRecursive())).append("]");
         if (sourceDelegator.getArgs().isSingleFilesSelection()) {

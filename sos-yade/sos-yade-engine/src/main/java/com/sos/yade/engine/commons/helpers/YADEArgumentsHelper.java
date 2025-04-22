@@ -47,16 +47,16 @@ public class YADEArgumentsHelper {
         }
     }
 
-    public static <T> String toString(SOSArgument<T> arg) {
-        return arg.getName() + "=" + arg.getDisplayValue();
+    public static String toString(SOSArgument<?> arg) {
+        return toString(arg.getName(), arg);
+    }
+
+    public static String toString(String name, SOSArgument<?> arg) {
+        return name + "=" + displayValueToString(arg);
     }
 
     public static String comparisonOperatorToString(SOSArgument<SOSComparisonOperator> arg) {
         return arg.getName() + "=" + (arg.getValue() == null ? "" : arg.getValue().getFirstAlias());
-    }
-
-    public static <T> String toString(String name, SOSArgument<T> arg) {
-        return name + "=" + arg.getDisplayValue();
     }
 
     public static String toStringAsOppositeValue(SOSArgument<Boolean> arg) {
@@ -95,5 +95,9 @@ public class YADEArgumentsHelper {
         }
 
         return sb.toString();
+    }
+
+    private static String displayValueToString(SOSArgument<?> arg) {
+        return arg.getValue() == null ? "" : arg.getDisplayValue();
     }
 }

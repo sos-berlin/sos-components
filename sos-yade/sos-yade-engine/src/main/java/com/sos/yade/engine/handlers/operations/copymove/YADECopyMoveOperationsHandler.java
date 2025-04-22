@@ -2,8 +2,6 @@ package com.sos.yade.engine.handlers.operations.copymove;
 
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -15,6 +13,7 @@ import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
+import com.sos.yade.engine.commons.helpers.YADEParallelExecutorFactory;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
@@ -94,46 +93,26 @@ public class YADECopyMoveOperationsHandler {
     private static void processFilesInParallel(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, AtomicBoolean cancel)
             throws Exception {
-        int maxThreads = config.getParallelism();
-        int size = sourceFiles.size();
-        if (size < maxThreads) {
-            maxThreads = size;
-        }
 
         handleReusableResourcesBeforeTransfer(config, sourceDelegator, targetDelegator);
 
-        // custom ForkJoinPool & parallelStream because this combination:
-        // - allows control over the number of threads created
-        // - blocks the main thread until all tasks are completed
-        // - does not increase memory usage (compared to using a Future list callback in case of a large number of files)
-        ForkJoinPool threadPool = new ForkJoinPool(maxThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
-
-            private int count = 1;
-
-            @Override
-            public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-                ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-                thread.setName("yade-thread-" + (count++));
-                return thread;
-            }
-
-        }, null, false);
+        ForkJoinPool threadPool = YADEParallelExecutorFactory.create(config.getParallelism(), sourceFiles.size());
         try {
             threadPool.submit(() -> {
-                sourceFiles.parallelStream().forEach(pf -> {
+                sourceFiles.parallelStream().forEach(f -> {
                     if (cancel.get()) {
                         return;
                     }
-                    YADEProviderFile f = (YADEProviderFile) pf;
+                    YADEProviderFile sourceFile = (YADEProviderFile) f;
                     try {
                         // useCumulativeTargetFile=false for transfers in parallel
-                        new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(isMoveOperation, false);
+                        new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, sourceFile, cancel).run(isMoveOperation, false);
                     } catch (Exception e) {
                         if (config.isTransactionalEnabled()) {
                             cancel.set(true);
                             throw new RuntimeException(e);
                         }
-                        setFailedIfNonTransactional(f);
+                        setFailedIfNonTransactional(sourceFile);
                     }
                 });
 
@@ -141,11 +120,7 @@ public class YADECopyMoveOperationsHandler {
         } catch (Exception e) {
             throw new YADEEngineOperationException(getTransferFileException(e.getCause()));
         } finally {
-            threadPool.shutdown();
-            try {
-                threadPool.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-            }
+            YADEParallelExecutorFactory.shutdown(threadPool);
         }
     }
 
@@ -199,7 +174,7 @@ public class YADECopyMoveOperationsHandler {
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
                         isAtomicallyEnabled);
 
-                //TODO test SOURCE_TO_JUMP_HOST with MOVE
+                // TODO test SOURCE_TO_JUMP_HOST with MOVE
                 if (isMoveOperation && !sourceDelegator.isJumpHost()) {
                     if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
                         sourceFile.setState(TransferEntryState.MOVED);

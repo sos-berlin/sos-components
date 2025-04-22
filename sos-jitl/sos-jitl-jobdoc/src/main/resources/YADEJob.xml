@@ -108,7 +108,8 @@
 						<br />
 						<br />
 						Examples:
-						<em>&lt;Directory&gt;${PLACEHOLDER_VARIABLE}&lt;/Directory&gt; </em>
+						<em>&lt;Directory&gt;${PLACEHOLDER_VARIABLE}&lt;/Directory&gt;
+						</em>
 						<ul>
 							<li>
 								<em>true</em>
@@ -146,8 +147,7 @@
 						<br />
 						<br />
 						Examples:
-						<em>&lt;Directory&gt;${PLACEHOLDER_VARIABLE}&lt;/Directory&gt;
-						</em>
+						<em>&lt;Directory&gt;${PLACEHOLDER_VARIABLE}&lt;/Directory&gt; </em>
 						<ul>
 							<li>
 								<em>true</em>
@@ -179,18 +179,27 @@
 				DataType="java.lang.Integer">
 				<note>
 					<p>
-						Processing argument: Transfer files in parallel from Source to
-						Target.
+						Processing argument: Execute operations in parallel.
 						<br />
 						<br />
-						Only affects
-						<em>Copy|Move</em>
-						operations that use a Target.
+						Affects all operations that support parallel execution, including:
+						<ul>
+							<li>
+								<em>Copy</em>
+								and
+								<em>Move</em>
+								- parallel file transfer
+							</li>
+							<li>
+								<em>Remove</em>
+								- parallel deletion from Source
+							</li>
+						</ul>
 						<br />
 						<br />
 						<em>Note:</em>
 						This value is ignored or automatically set to the default value of
-						1 if parallel transfer is not supported by the Source or Target
+						1 if parallel execution is not supported by the Source or Target
 						provider.
 					</p>
 				</note>

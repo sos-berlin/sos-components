@@ -30,48 +30,54 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 
+/** SOURCE_TO_JUMP_HOST_...: Source(SSHProvider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET<br/>
+ * - 1) Current YADE Client:<br/>
+ * - 1.1) Changes the configuration on the fly:<br/>
+ * - 1.1.1) Source - Jump Host<br/>
+ * - 1.1.2) Target - the same as before - Any Provider<br/>
+ * - 1.1.3) Note: so, the Current YADE Client will transfer files between the Jump Host and Target(Any Provider)<br/>
+ * - 1.2) Connects to the Source(Jump Host)<br/>
+ * - 1.3) Uploads generated settings.xml to the Jump Host<br/>
+ * - 1.3.1) Note: the settings.xml contains configuration for transfer between "old" Source(SSHProvider) -> Jump Host(Local)<br/>
+ * - 1.4) Optional uploads a FileList file to the Jump Host for the files selection on the "old" Source(SSHProvider) based on this file<br/>
+ * - 2) Jump Host YADE Client (the JumpHost connection is already established - see 1.2))<br/>
+ * - 2.1) CommandBeforeOperation - uses 1.3) to transfer files from Source(SSHProvider) -> Jump Host(Local)<br/>
+ * - 2.2) Optional - writes a ResultSetFile of the file selection on the "old" Source(SSHProvider) in a temporary config dir on the Jump Host<br/>
+ * - 2.3) Jump Host YADE Client - completed - "old" Source(SSHProvider) is disconnected<br/>
+ * - 3) Current YADE Client:<br/>
+ * - 3.1)<br/>
+ * - 3.1.1) if 2.3) completed successfully<br/>
+ * - 3.1.1.1) transfers files from Source(Jump Host) -> Target(Any Provider)<br/>
+ * - 3.1.1.1.1) transfer error occurs and transactional is defined:<br/>
+ * - 3.1.1.1.1.1) Source(Jump Host) - nothing should be extra rolled back, due to entire Jump Host temporary directory will be deleted anyway<br/>
+ * - 3.1.1.1.1.2) Target(Any Provider) - the already transferred files should be rolled back<br/>
+ * 
+ * - Extra case MOVE operation and transactional (Remove files on the "old" Source(SSHProvider))<br/>
+ * - 1) if all previous steps completed successfully<br/>
+ * - 1.1) Note: the "old" Source(SSHProvider) is already disconnected<br/>
+ * - 1.2) Note: the current Source(Jump Host) stays connected<br/>
+ * - 1.3) Jump Host YADE Client is called again with a new generated settings XML<br/>
+ * - 1.3.1) REMOVE Operation based on a ResultSetFile created with 2.2)<br/>
+ * - 1.3.2) Note: if the ResultSetFile argument was not declared<br/>
+ * - 1.3.2.1) 2.2) will creates in MOVE case a temporary ResultSetFile but not transfers it later to 1)<br/>
+ * - 1.3.3) Note: if the ResultSetFile argument was declared<br/>
+ * - 1.3.3.1) 2.2) this ResultSetFile is used and will be transferred to 1)<br/>
+ * 
+ * JUMP_HOST_TO_TARGET...: Source(Any Provider) -> Jump(SSHProvider) -> Target(SSHProvider) - old name - TO INTERNET<br/>
+ * - Note: Jump(DMZ) operations: COPY/MOVE.<br/>
+ * -- REMOVE/GETLIST not needs Jump functionality because executed on the Source(Any Provider)
+ * --------------------------------------------------------------------------------------------------------------<br/>
+ * JumpFragment/JumpCommand: <br/>
+ * - if the JumpCommand includes --transactional and/or --paralelism options,<br/>
+ * -- these options are used to perform operation between the Jump Host and Source|Target.<br/>
+ * - Otherwise, the the current Settings (TransferOptions.Transactional or paralelism) are used */
 public class YADEEngineJumpHostAddon {
 
-    /** Source(SSHProvider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET<br/>
-     * 1) Current YADE Client:<br/>
-     * 1.1) Changes the configuration on the fly:<br/>
-     * 1.1.1) Source - Jump Host<br/>
-     * 1.1.2) Target - the same as before - Any Provider<br/>
-     * 1.1.3) Note: so, the Current YADE Client will transfer files between the Jump Host and Target(Any Provider)<br/>
-     * 1.2) Connects to the Source(Jump Host)<br/>
-     * 1.3) Uploads generated settings.xml to the Jump Host<br/>
-     * 1.3.1) Note: the settings.xml contains configuration for transfer between "old" Source(SSHProvider) -> Jump Host(Local)<br/>
-     * 1.4) Optional uploads a FileList file to the Jump Host for the files selection on the "old" Source(SSHProvider) based on this file<br/>
-     * 2) Jump Host YADE Client (the JumpHost connection is already established - see 1.2))<br/>
-     * 2.1) CommandBeforeOperation - uses 1.3) to transfer files from Source(SSHProvider) -> Jump Host(Local)<br/>
-     * 2.2) Optional - writes a ResultSetFile of the file selection on the "old" Source(SSHProvider) in a temporary config dir on the Jump Host<br/>
-     * 2.3) Jump Host YADE Client - completed - "old" Source(SSHProvider) is disconnected<br/>
-     * 3) Current YADE Client:<br/>
-     * 3.1)<br/>
-     * 3.1.1) if 2.3) completed successfully<br/>
-     * 3.1.1.1) transfers files from Source(Jump Host) -> Target(Any Provider)<br/>
-     * 3.1.1.1.1) transfer error occurs and transactional is defined:<br/>
-     * 3.1.1.1.1.1) Source(Jump Host) - nothing should be extra rolled back, due to entire Jump Host temporary directory will be deleted anyway<br/>
-     * 3.1.1.1.1.2) Target(Any Provider) - the already transferred files should be rolled back<br/>
-     * ---------------------------------------------------------------<br/>
-     * Extra case MOVE operation and transactional (Remove files on the "old" Source(SSHProvider))<br/>
-     * 1) if all previous steps completed successfully<br/>
-     * 1.1) Note: the "old" Source(SSHProvider) is already disconnected<br/>
-     * 1.2) Note: the current Source(Jump Host) stays connected<br/>
-     * 1.3) Jump Host YADE Client is called again with a new generated settings XML<br/>
-     * 1.3.1) REMOVE Operation based on a ResultSetFile created with 2.2)<br/>
-     * 1.3.2) Note: if the ResultSetFile argument was not declared<br/>
-     * 1.3.2.1) 2.2) will creates in MOVE case a temporary ResultSetFile but not transfers it later to 1)<br/>
-     * 1.3.3) Note: if the ResultSetFile argument was declared<br/>
-     * 1.3.3.1) 2.2) this ResultSetFile is used and will be transferred to 1)<br/>
-     */
     private static final String SOURCE_TO_JUMP_HOST_COPY_PROFILE_ID = "SOURCE_TO_JUMP_HOST_COPY";
     private static final String SOURCE_TO_JUMP_HOST_GETLIST_PROFILE_ID = "SOURCE_TO_JUMP_HOST_GETLIST";
     private static final String SOURCE_TO_JUMP_HOST_REMOVE_PROFILE_ID = "SOURCE_TO_JUMP_HOST_REMOVE";
     private static final String SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE = "REMOVE_SOURCE";
 
-    /** Source(Any Provider) -> Jump(SSHProvider) -> Target(SSHProvider) - old name - TO INTERNET<br/>
-     * Jump(DMZ) operations: COPY/MOVE. REMOVE/GETLIST not needs Jump functionality because executed on the Source(Any Provider) */
     // -- Step 1) Target will be replaced by Jump (Source will "transfer" files to Jump)
     // -- Step 2) Configuration(Settings XML) will be generated for "transfers" files from Jump to Target
     // -- Step 3) Source creates/adds a Post-Processing command to call the Jump YADE Client with the generated Configuration
@@ -88,14 +94,16 @@ public class YADEEngineJumpHostAddon {
     private boolean isReady;
 
     // YADE1:
-    // - Source|Target -> Jump always transactional, ignores TransferOptions.Transactional
-    // - From Jump - can be controlled by the Jump YADE Client command line argument transactional=true|false
+    // - 1) Source|Target -> Jump
+    // -- always transactional, ignores TransferOptions.Transactional
+    // - 2) From Jump -> Source|Target
+    // -- can be controlled by the Jump YADE Client command line option: -transactional=true|false
     // JS7:
-    // - Source|Target -> Jump
+    // - 1) Source|Target -> Jump
     // -- transferToJumpHostAlwaysTransactional=true - as with YADE1
     // -- transferToJumpHostAlwaysTransactional=false - use TransferOptions.Transactional
-    // --- TODO to discuss - incompatible with YADE1 but more flexible
-    // - From Jump - as with YADE1
+    // - 2) From Jump -> Source|Target
+    // -- same as with YADE1 (see YADE1 2) above)
     private boolean transferToJumpHostAlwaysTransactional = false;
 
     public static YADEEngineJumpHostAddon initialize(ISOSLogger logger, AYADEArgumentsLoader argsLoader) throws YADEEngineInitializationException {
@@ -457,9 +465,9 @@ public class YADEEngineJumpHostAddon {
         private boolean getJumpHostTransactional() {
             Map<String, String> jumpHostClientArgs = SOSCLIArgumentsParser.parse(argsLoader.getJumpHostArgs().getYADEClientCommand().getValue()
                     .toLowerCase());
-            String transactional = jumpHostClientArgs.get("transactional");
+            String transactional = jumpHostClientArgs.get(argsLoader.getArgs().getTransactional().getName());
             if (transactional == null) {
-                return argsLoader.getArgs().getTransactional().getValue();// true
+                return argsLoader.getArgs().getTransactional().getValue();
             } else {
                 if ("false".equals(transactional)) {
                     return false;
@@ -471,8 +479,17 @@ public class YADEEngineJumpHostAddon {
         }
 
         private String getYADEClientCommand(String settingsXML, String profileId) {
-            return String.format("%s -settings=\"%s\" -profile=\"%s\"", argsLoader.getJumpHostArgs().getYADEClientCommand().getValue(), settingsXML,
-                    profileId);
+            String parallelism = "";
+            if (argsLoader.getArgs().isParallelismEnabled()) {
+                SOSArgument<Integer> arg = argsLoader.getArgs().getParallelism();
+                // Jump Host command not contains 'parallelism='
+                if (!argsLoader.getJumpHostArgs().getYADEClientCommand().getValue().toLowerCase().contains(arg.getName() + "=")) {
+                    parallelism = " --" + arg.getName() + "=" + arg.getValue();
+                }
+            }
+
+            return String.format("%s -settings=\"%s\" -profile=\"%s\"%s", argsLoader.getJumpHostArgs().getYADEClientCommand().getValue(), settingsXML,
+                    profileId, parallelism);
         }
 
         public class SourceToJumpHost {

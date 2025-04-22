@@ -40,7 +40,7 @@ public class YADEOperationsManager {
             return Duration.between(start, Instant.now());
         // Source operations
         case REMOVE:
-            YADERemoveOperationHandler.process(operation, logger, sourceDelegator, sourceFiles);
+            YADERemoveOperationHandler.process(operation, logger, args, sourceDelegator, sourceFiles, cancel);
             return Duration.between(start, Instant.now());
         case GETLIST:
             YADEGetListOperationHandler.process(operation, logger, sourceDelegator);

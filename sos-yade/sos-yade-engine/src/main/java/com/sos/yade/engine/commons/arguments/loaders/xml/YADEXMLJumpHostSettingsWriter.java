@@ -18,6 +18,8 @@ public class YADEXMLJumpHostSettingsWriter {
 
     private static final String SFTPFRAGMENT_NAME = "sftp";
 
+    // -------- SOURCE_TO_JUMP_HOST XML settings -------------------
+    /** COPY/MOVE operations */
     public static String sourceToJumpHostCOPY(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
@@ -27,6 +29,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return generateConfiguration(fragments, profile).toString();
     }
 
+    /** GETLIST operation */
     public static String sourceToJumpHostGETLIST(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
@@ -36,6 +39,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return generateConfiguration(fragments, profile).toString();
     }
 
+    /** REMOVE operation */
     public static String sourceToJumpHostREMOVE(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
@@ -45,6 +49,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return generateConfiguration(fragments, profile).toString();
     }
 
+    /** additional configuration for a MOVE operation - removing the source files after successful transfer */
     public static String sourceToJumpHostMOVERemove(AYADEArgumentsLoader argsLoader, JumpHostConfig config, String profileId) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
@@ -53,6 +58,10 @@ public class YADEXMLJumpHostSettingsWriter {
         return generateConfiguration(fragments, profile).toString();
     }
 
+    // -------- JUMP_HOST_TO_TARGET -------------------
+    /** COPY/MOVE operations<br/>
+     * 
+     * @apiNote GETLIST and REMOVE operations are ignored because they are performed for the Source(Any Provider) and not require a Jump Host */
     public static String jumpHostToTargetCOPY(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADETargetArguments targetArgs = argsLoader.getTargetArgs();
 
@@ -61,6 +70,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return generateConfiguration(fragments, profile).toString();
     }
 
+    // ------------- Help-Methods -----
     private static StringBuilder generateConfiguration(StringBuilder fragments, StringBuilder profile) {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
