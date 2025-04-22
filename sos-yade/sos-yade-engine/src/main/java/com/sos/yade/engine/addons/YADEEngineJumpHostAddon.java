@@ -32,22 +32,53 @@ import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 
 public class YADEEngineJumpHostAddon {
 
-    /** Source(SSHProvider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET */
-    // -- Step 1) Source will be replaced by Jump (Source will "transfer" files to Jump)
-    // -- Step 2) Configuration(Settings XML) will be generated for "transfers" files from Jump to Target
-    // -- Step 3) Source creates/adds a Pre-Processing command to call the Jump YADE Client with the generated Configuration
-    private static final String PROFILE_COPY_SOURCE_TO_JUMP_HOST = "COPY_SOURCE_TO_JUMP_HOST";
-    private static final String PROFILE_GETLIST_SOURCE_TO_JUMP_HOST = "GETLIST_SOURCE_TO_JUMP_HOST";
-    /** Source(Any Provider) -> Jump(SSHProvider) -> Target(SSHProvider) - old name - TO INTERNET <br/>
+    /** Source(SSHProvider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET<br/>
+     * 1) Current YADE Client:<br/>
+     * 1.1) Changes the configuration on the fly:<br/>
+     * 1.1.1) Source - Jump Host<br/>
+     * 1.1.2) Target - the same as before - Any Provider<br/>
+     * 1.1.3) Note: so, the Current YADE Client will transfer files between the Jump Host and Target(Any Provider)<br/>
+     * 1.2) Connects to the Source(Jump Host)<br/>
+     * 1.3) Uploads generated settings.xml to the Jump Host<br/>
+     * 1.3.1) Note: the settings.xml contains configuration for transfer between "old" Source(SSHProvider) -> Jump Host(Local)<br/>
+     * 1.4) Optional uploads a FileList file to the Jump Host for the files selection on the "old" Source(SSHProvider) based on this file<br/>
+     * 2) Jump Host YADE Client (the JumpHost connection is already established - see 1.2))<br/>
+     * 2.1) CommandBeforeOperation - uses 1.3) to transfer files from Source(SSHProvider) -> Jump Host(Local)<br/>
+     * 2.2) Optional - writes a ResultSetFile of the file selection on the "old" Source(SSHProvider) in a temporary config dir on the Jump Host<br/>
+     * 2.3) Jump Host YADE Client - completed - "old" Source(SSHProvider) is disconnected<br/>
+     * 3) Current YADE Client:<br/>
+     * 3.1)<br/>
+     * 3.1.1) if 2.3) completed successfully<br/>
+     * 3.1.1.1) transfers files from Source(Jump Host) -> Target(Any Provider)<br/>
+     * 3.1.1.1.1) transfer error occurs and transactional is defined:<br/>
+     * 3.1.1.1.1.1) Source(Jump Host) - nothing should be extra rolled back, due to entire Jump Host temporary directory will be deleted anyway<br/>
+     * 3.1.1.1.1.2) Target(Any Provider) - the already transferred files should be rolled back<br/>
+     * ---------------------------------------------------------------<br/>
+     * Extra case MOVE operation and transactional (Remove files on the "old" Source(SSHProvider))<br/>
+     * 1) if all previous steps completed successfully<br/>
+     * 1.1) Note: the "old" Source(SSHProvider) is already disconnected<br/>
+     * 1.2) Note: the current Source(Jump Host) stays connected<br/>
+     * 1.3) Jump Host YADE Client is called again with a new generated settings XML<br/>
+     * 1.3.1) REMOVE Operation based on a ResultSetFile created with 2.2)<br/>
+     * 1.3.2) Note: if the ResultSetFile argument was not declared<br/>
+     * 1.3.2.1) 2.2) will creates in MOVE case a temporary ResultSetFile but not transfers it later to 1)<br/>
+     * 1.3.3) Note: if the ResultSetFile argument was declared<br/>
+     * 1.3.3.1) 2.2) this ResultSetFile is used and will be transferred to 1)<br/>
+     */
+    private static final String SOURCE_TO_JUMP_HOST_COPY_PROFILE_ID = "SOURCE_TO_JUMP_HOST_COPY";
+    private static final String SOURCE_TO_JUMP_HOST_GETLIST_PROFILE_ID = "SOURCE_TO_JUMP_HOST_GETLIST";
+    private static final String SOURCE_TO_JUMP_HOST_REMOVE_PROFILE_ID = "SOURCE_TO_JUMP_HOST_REMOVE";
+    private static final String SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE = "REMOVE_SOURCE";
+
+    /** Source(Any Provider) -> Jump(SSHProvider) -> Target(SSHProvider) - old name - TO INTERNET<br/>
      * Jump(DMZ) operations: COPY/MOVE. REMOVE/GETLIST not needs Jump functionality because executed on the Source(Any Provider) */
     // -- Step 1) Target will be replaced by Jump (Source will "transfer" files to Jump)
     // -- Step 2) Configuration(Settings XML) will be generated for "transfers" files from Jump to Target
     // -- Step 3) Source creates/adds a Post-Processing command to call the Jump YADE Client with the generated Configuration
-    private static final String PROFILE_COPY_JUMP_HOST_TO_TARGET = "COPY_JUMP_HOST_TO_TARGET";
+    private static final String JUMP_HOST_TO_TARGET_COPY_PROFILE_ID = "JUMP_HOST_TO_TARGET_COPY";
 
+    /*** Name of the main configuration file uploaded to the Jump Host temporary config directory */
     private static final String SETTINGS_XML = "settings.xml";
-
-    private static final String LABEL_REMOVE_SOURCE = "remove_source";
 
     private final ISOSLogger logger;
     private final AYADEArgumentsLoader argsLoader;
@@ -83,29 +114,19 @@ public class YADEEngineJumpHostAddon {
 
     private void init() throws YADEEngineInitializationException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            boolean isGETLIST = false;
-            boolean isMOVE = false;
-            boolean isREMOVE = false;
             String profileId;
             switch (argsLoader.getArgs().getOperation().getValue()) {
             case GETLIST:
-                isGETLIST = true;
-                profileId = PROFILE_GETLIST_SOURCE_TO_JUMP_HOST;
-                break;
-            case MOVE:
-                isMOVE = true;
-                profileId = PROFILE_COPY_SOURCE_TO_JUMP_HOST;
+                profileId = SOURCE_TO_JUMP_HOST_GETLIST_PROFILE_ID;
                 break;
             case REMOVE:
-                isREMOVE = true;
-                profileId = PROFILE_COPY_SOURCE_TO_JUMP_HOST;
+                profileId = SOURCE_TO_JUMP_HOST_REMOVE_PROFILE_ID;
                 break;
             default:
-                profileId = PROFILE_COPY_SOURCE_TO_JUMP_HOST;
+                profileId = SOURCE_TO_JUMP_HOST_COPY_PROFILE_ID;
                 break;
             }
-
-            config.setSourceToJumpHost(profileId, isGETLIST, isMOVE, isREMOVE);
+            config.setSourceToJumpHost(profileId, argsLoader.getArgs().getOperation().getValue());
 
             YADESourceArguments newSourceArgs = new YADESourceArguments();
             newSourceArgs.applyDefaultIfNullQuietly();
@@ -116,10 +137,11 @@ public class YADEEngineJumpHostAddon {
             newSourceArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newSourceArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
             newSourceArgs.getCommands().addCommandBeforeOperation(config.getYADEClientCommand(config.settingsXML, config.profileId));
-
+            // Source (Target Host)
+            // Target (Any Provider) - the same as before
             argsLoader.setSourceArgs(newSourceArgs);
         } else {
-            config.setJumpHostToTarget(PROFILE_COPY_JUMP_HOST_TO_TARGET);
+            config.setJumpHostToTarget(JUMP_HOST_TO_TARGET_COPY_PROFILE_ID);
 
             YADETargetArguments newTargetArgs = new YADETargetArguments();
             newTargetArgs.applyDefaultIfNullQuietly();
@@ -131,6 +153,8 @@ public class YADEEngineJumpHostAddon {
             newTargetArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
             newTargetArgs.getCommands().addCommandAfterOperationOnSuccess(config.getYADEClientCommand(config.settingsXML, config.profileId));
 
+            // Source (Any Provider) - the same as before
+            // Target (Jump Host)
             argsLoader.setTargetArgs(newTargetArgs);
         }
         // logger.info(jumpHostSettingsXMLContent);
@@ -142,7 +166,7 @@ public class YADEEngineJumpHostAddon {
 
     public void onAfterSourceDelegatorConnected(YADESourceProviderDelegator sourceDelegator) throws YADEEngineJumpHostException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            upload(sourceDelegator);
+            upload(sourceDelegator); // upload settings.xml
 
             if (config.sourceToJumpHost.fileList != null) {
                 try {
@@ -158,12 +182,13 @@ public class YADEEngineJumpHostAddon {
 
     public void onAfterTargetDelegatorConnected(YADETargetProviderDelegator targetDelegator) throws YADEEngineJumpHostException {
         if (!argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            upload(targetDelegator);
+            upload(targetDelegator);// upload settings.xml
         }
         isReady = true;
     }
 
-    /** when polling - isSourceDisconnectingEnabled can be false - only jump data directory should be removed */
+    /** @param isTransferSucceeded - the previous Jump Host execution was successful
+     * @param isSourceDisconnectingEnabled - when polling - an be false - only jump data directory should be removed */
     public void onBeforeDelegatorDisconnected(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
             List<ProviderFile> files, boolean isTransferSucceeded, boolean isSourceDisconnectingEnabled) throws YADEEngineJumpHostException {
         if (!isReady) {
@@ -177,10 +202,11 @@ public class YADEEngineJumpHostAddon {
 
                 if (isTransferSucceeded) {
                     if (config.sourceToJumpHost.deleteSourceFiles) {
-                        String settingsXML = config.configDirectory + "/" + LABEL_REMOVE_SOURCE + "_settings.xml";
-                        String profileId = LABEL_REMOVE_SOURCE.toUpperCase();
+                        String settingsXML = config.configDirectory + "/" + SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE.toLowerCase()
+                                + "_settings.xml";
+                        String profileId = SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE;
                         try {
-                            String settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostREMOVE(argsLoader, config, profileId);
+                            String settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostMOVERemove(argsLoader, config, profileId);
                             upload(sourceDelegator, settingsXMLContent, settingsXML);
                             logger.info("[%s][upload][Settings][%s=%s]uploaded", YADEClientArguments.LABEL, sourceDelegator.getLabel(), settingsXML);
                         } catch (Exception e) {
@@ -203,7 +229,7 @@ public class YADEEngineJumpHostAddon {
                 jumpHostDelegator = targetDelegator;
                 if (isTransferSucceeded) {
                     if (config.jumpHostToTarget.deleteSourceFiles) {
-                        deleteSourceFilesIfJumpHostToTarget(sourceDelegator, files);
+                        jumpHostToTargetDeleteSourceFiles(sourceDelegator, files);
                     }
                 }
             }
@@ -220,22 +246,22 @@ public class YADEEngineJumpHostAddon {
         return argsLoader.getJumpHostArgs().isConfiguredOnSource();
     }
 
-    private void deleteJumpDirectory(AYADEProviderDelegator delegator, boolean isSourceDisconnectingEnabled) {
-        if (delegator == null) {
+    private void deleteJumpDirectory(AYADEProviderDelegator jumpHostDelegator, boolean isSourceDisconnectingEnabled) {
+        if (jumpHostDelegator == null) {
             return;
         }
         String dir = isSourceDisconnectingEnabled ? config.directory : config.dataDirectory;
         try {
-            SSHProvider ssh = (SSHProvider) delegator.getProvider();
+            SSHProvider jumpHostSSH = (SSHProvider) jumpHostDelegator.getProvider();
             boolean deleted;
             if (argsLoader.getJumpHostArgs().isPlatformEnabled()) {
                 if (argsLoader.getJumpHostArgs().isWindowsPlatform()) {
-                    deleted = ssh.deleteWindowsDirectory(dir);
+                    deleted = jumpHostSSH.deleteWindowsDirectory(dir);
                 } else {
-                    deleted = ssh.deleteUnixDirectory(dir);
+                    deleted = jumpHostSSH.deleteUnixDirectory(dir);
                 }
             } else {
-                deleted = ssh.deleteDirectory(dir);
+                deleted = jumpHostSSH.deleteDirectory(dir);
             }
 
             if (deleted) {
@@ -249,7 +275,7 @@ public class YADEEngineJumpHostAddon {
     }
 
     /** deletes files on the Source because the Source is accessible */
-    private void deleteSourceFilesIfJumpHostToTarget(AYADEProviderDelegator delegator, List<ProviderFile> files) throws YADEEngineJumpHostException {
+    private void jumpHostToTargetDeleteSourceFiles(AYADEProviderDelegator delegator, List<ProviderFile> files) throws YADEEngineJumpHostException {
         delegator.getProvider().enableReusableResource();
         for (ProviderFile f : files) {
             try {
@@ -366,9 +392,10 @@ public class YADEEngineJumpHostAddon {
             return sourceToJumpHost;
         }
 
-        private void setSourceToJumpHost(String profileId, boolean isGETLIST, boolean isMOVE, boolean isREMOVE)
-                throws YADEEngineInitializationException {
+        private void setSourceToJumpHost(String profileId, TransferOperation operation) throws YADEEngineInitializationException {
             this.sourceToJumpHost = new SourceToJumpHost();
+            this.profileId = profileId;
+
             // TODO move FileList to the ClientArguments? since the file should be present on the client system...
             if (argsLoader.getSourceArgs().isFileListEnabled()) {
                 if (!Files.exists(argsLoader.getSourceArgs().getFileList().getValue())) {
@@ -383,54 +410,26 @@ public class YADEEngineJumpHostAddon {
                 argsLoader.getClientArgs().getResultSetFile().setValue(null);
             }
 
-            if (isMOVE) {
-                // if (argsLoader.getArgs().getTransactional().isTrue() && isMOVE) {
-
-                // Source(SSHProvider) -> Jump(SSHProvider) -> Target(Any Provider)
-                // 1) Current YADE Client:
-                // 1.1) Changes the configuration on the fly:
-                // 1.1.1) Source - Jump Host
-                // 1.1.2) Target - the same as before - Any Provider
-                // 1.1.3) Note: so, the Current YADE Client will transfer files between the Jump Host and Target(Any Provider)
-                // 1.2) Connects to the Source(Jump Host)
-                // 1.3) Uploads generated settings.xml to the Jump Host
-                // 1.3.1) Note: the settings.xml contains configuration for transfer between "old" Source(SSHProvider) -> Jump Host(Local)
-                // 1.4) Optional uploads a FileList file to the Jump Host for the files selection on the "old" Source(SSHProvider) based on this file
-                // 2) Jump Host YADE Client (the JumpHost connection is already established - see 1.2))
-                // 2.1) CommandBeforeOperation - uses 1.3) to transfer files from Source(SSHProvider) -> Jump Host(Local)
-                // 2.2) Optional - writes a ResultSetFile of the file selection on the "old" Source(SSHProvider) in a temporary config dir on the Jump Host
-                // 2.3) Jump Host YADE Client - completed - "old" Source(SSHProvider) is disconnected
-                // 3) Current YADE Client:
-                // 3.1)
-                // 3.1.1) if 2.3) completed successfully
-                // 3.1.1.1) transfers files from Source(Jump Host) -> Target(Any Provider)
-                // 3.1.1.1.1) transfer error occurs and transactional is defined:
-                // 3.1.1.1.1.1) Source(Jump Host) - nothing should be extra rolled back, due to entire Jump Host temporary directory will be deleted anyway
-                // 3.1.1.1.1.2) Target(Any Provider) - the already transferred files should be rolled back
-                // ---------------------------------------------------------------
-                // Extra case MOVE operation and transactional (Remove files on the "old" Source(SSHProvider))
-                // 1) if all previous steps completed successfully
-                // 1.1) Note: the "old" Source(SSHProvider) is already disconnected
-                // 1.2) Note: the current Source(Jump Host) stays connected
-                // 1.3) Jump Host YADE Client is called again with a new generated settings XML
-                // 1.3.1) REMOVE Operation based on a ResultSetFile created with 2.2)
-                // 1.3.2) Note: if the ResultSetFile argument was not declared
-                // 1.3.2.1) 2.2) will creates in MOVE case a temporary ResultSetFile but not transfers it later to 1)
-                // 1.3.3) Note: if the ResultSetFile argument was declared
-                // 1.3.3.1) 2.2) this ResultSetFile is used and will be transferred to 1)
+            switch (operation) {
+            case GETLIST:
+                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostGETLIST(argsLoader, this);
+                break;
+            case REMOVE:
+                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostREMOVE(argsLoader, this);
+                break;
+            case MOVE:
                 argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
                 this.sourceToJumpHost.deleteSourceFiles = true;
                 if (this.sourceToJumpHost.resultSetFile == null) {
-                    this.sourceToJumpHost.setResultSetFile(argsLoader.getClientArgs().getResultSetFile(), LABEL_REMOVE_SOURCE + "_" + new Date()
-                            .getTime() + ".txt");
+                    this.sourceToJumpHost.setResultSetFile(argsLoader.getClientArgs().getResultSetFile(), SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE
+                            .toLowerCase() + "_" + new Date().getTime() + ".sos.rs");
                 }
-            }
-
-            this.profileId = profileId;
-            if (isGETLIST) {
-                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostGETLIST(argsLoader, this);
-            } else {
                 this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(argsLoader, this);
+                break;
+            case COPY:
+            default:
+                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(argsLoader, this);
+                break;
             }
         }
 

@@ -109,14 +109,8 @@ public class YADEEngine {
         Throwable exception = null;
         List<ProviderFile> files = null;
 
+        boolean selectFiles = selectFiles(argsLoader, sourceDelegator, jumpHostAddon);
         String sourceExcludedFileExtension = YADESourceFilesSelector.getExcludedFileExtension(argsLoader.getArgs(), sourceDelegator, targetDelegator);
-        boolean isGETLIST = argsLoader.getArgs().isOperationGETLIST();
-        boolean isREMOVE = argsLoader.getArgs().isOperationREMOVE();
-        boolean selectFiles = true;
-        if (jumpHostAddon != null && sourceDelegator.isJumpHost() && (isGETLIST || isREMOVE)) {
-            selectFiles = false;
-        }
-
         // All steps may trigger an exception
         if (!argsLoader.getSourceArgs().isPollingEnabled()) {
             try {
@@ -242,6 +236,16 @@ public class YADEEngine {
         cancel.set(true);
 
         // TODO wait ...
+    }
+
+    private boolean selectFiles(AYADEArgumentsLoader argsLoader, YADESourceProviderDelegator sourceDelegator, YADEEngineJumpHostAddon jumpHostAddon) {
+        if (jumpHostAddon != null && sourceDelegator.isJumpHost()) {
+            // Current Source is Jump Host - if GETLIST or REMOVE - no selection should be performed because it happens on the really Source(SSHProvider)
+            if (argsLoader.getArgs().isOperationGETLIST() || argsLoader.getArgs().isOperationREMOVE()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void onError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,

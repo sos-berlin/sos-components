@@ -27,20 +27,29 @@ public class YADEXMLJumpHostSettingsWriter {
         return generateConfiguration(fragments, profile).toString();
     }
 
-    public static String sourceToJumpHostREMOVE(AYADEArgumentsLoader argsLoader, JumpHostConfig config, String profileId) {
-        YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
-
-        StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
-        StringBuilder profile = generateProfileSourceToJumpHostREMOVE(sourceArgs, config, profileId);
-        return generateConfiguration(fragments, profile).toString();
-    }
-
     public static String sourceToJumpHostGETLIST(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
         StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
         StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
                 .getTargetArgs(), config, "GetList", false);
+        return generateConfiguration(fragments, profile).toString();
+    }
+
+    public static String sourceToJumpHostREMOVE(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
+        YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
+
+        StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
+        StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
+                .getTargetArgs(), config, "Remove", false);
+        return generateConfiguration(fragments, profile).toString();
+    }
+
+    public static String sourceToJumpHostMOVERemove(AYADEArgumentsLoader argsLoader, JumpHostConfig config, String profileId) {
+        YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
+
+        StringBuilder fragments = generateFragments((SSHProviderArguments) sourceArgs.getProvider());
+        StringBuilder profile = generateProfileSourceToJumpHostMOVERemove(sourceArgs, config, profileId);
         return generateConfiguration(fragments, profile).toString();
     }
 
@@ -358,7 +367,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfileSourceToJumpHostREMOVE(YADESourceArguments sourceArgs, JumpHostConfig config, String profileId) {
+    private static StringBuilder generateProfileSourceToJumpHostMOVERemove(YADESourceArguments sourceArgs, JumpHostConfig config, String profileId) {
         StringBuilder sb = new StringBuilder();
         sb.append("<Profile profile_id=").append(attrValue(profileId)).append(">");
         sb.append("<Operation>");
