@@ -118,13 +118,13 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             }
 
             executePostLoginCommands();
+
+            getLogger().info(getConnectedMsg(getConnectedInfos()));
         } catch (Throwable e) {
             if (isConnected()) {
                 disconnect();
             }
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
-        } finally {
-            getLogger().info(getConnectedMsg(getConnectedInfos()));
         }
 
     }
@@ -607,7 +607,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
             }
-
         }
     }
 

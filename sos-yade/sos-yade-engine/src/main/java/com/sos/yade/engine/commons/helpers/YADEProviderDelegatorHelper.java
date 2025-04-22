@@ -75,7 +75,7 @@ public class YADEProviderDelegatorHelper {
         if (delegator instanceof YADESourceProviderDelegator) {
             return new YADEEngineSourceConnectionException(ex.getCause());
         }
-        return new YADEEngineTargetConnectionException(ex.getMessage(), ex);
+        return new YADEEngineTargetConnectionException(ex.getMessage(), ex.getCause());
     }
 
     public static boolean isConnectionException(Throwable cause) {
