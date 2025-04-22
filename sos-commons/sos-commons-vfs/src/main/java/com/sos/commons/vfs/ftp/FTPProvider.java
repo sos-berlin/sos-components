@@ -612,6 +612,9 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     }
 
     private String getConnectedInfos() {
+        if (client == null) {
+            return "";
+        }
         List<String> l = new ArrayList<String>();
         if (client.getConnectTimeout() > 0) {
             l.add("ConnectTimeout=" + AProvider.millis2string(client.getConnectTimeout()));
