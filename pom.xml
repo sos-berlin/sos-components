@@ -33,7 +33,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <sos.engine.version>2.7.4-SNAPSHOT</sos.engine.version>
+    <sos.engine.version>2.7.5-SNAPSHOT</sos.engine.version>
     <api.schema.version>${project.version}</api.schema.version>
     <inventory.schema.version>1.8.0-SNAPSHOT</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
