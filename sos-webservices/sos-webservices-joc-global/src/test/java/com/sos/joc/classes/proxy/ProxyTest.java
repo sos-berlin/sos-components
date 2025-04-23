@@ -74,7 +74,7 @@ public class ProxyTest {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(Order.Fresh$.class, "scheduled");
+                    put(Order.Fresh.class, "scheduled");
                     put(Order.DelayedAfterError.class, "waiting");
                     put(Order.Forked.class, "waiting");
                     put(Order.ExpectingNotice.class, "waiting");
@@ -87,7 +87,7 @@ public class ProxyTest {
                     put(Order.FailedWhileFresh$.class, "failed");
                     put(Order.Stopped$.class, "failed");
                     put(Order.StoppedWhileFresh$.class, "failed");
-                    put(Order.Ready$.class, "running");
+                    put(Order.Ready.class, "running");
                     put(Order.Processed$.class, "running");
                     put(Order.Processing.class, "running");
                     put(Order.Finished$.class, "finished");
@@ -229,7 +229,7 @@ public class ProxyTest {
                 LOGGER.info(order.get().toJson());
             }
             final Instant now = controllerState.instant();
-            Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class))
+            Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class))
                 .map(o -> o.scheduledFor())
                 .filter(Optional::isPresent)
                 .filter(t -> t.get().isBefore(now))

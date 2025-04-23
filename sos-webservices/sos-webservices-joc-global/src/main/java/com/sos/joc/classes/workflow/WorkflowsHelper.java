@@ -1761,7 +1761,7 @@ public class WorkflowsHelper {
 //                Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
 //                        Order.ProcessingKilled$.class));
 //        Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
-//        Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
+//        Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
 //                JOrderPredicates.and(o -> OrdersHelper.isCyclicOrderId(o.id().string()), JOrderPredicates.not(suspendFilter)));
         Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
                 o -> OrdersHelper.isCyclicOrderId(o.id().string()));

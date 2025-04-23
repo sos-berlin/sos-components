@@ -129,7 +129,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 if (!workflowIds.isEmpty()) {
                     orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> workflowIds.contains(o
                             .workflowId())));
-                    if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
+                    if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
                         freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
                                 JOrderPredicates.and(notSuspendFilter, o -> workflowIds.contains(o.workflowId()))));
                     }
@@ -151,8 +151,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> canAdd(WorkflowPaths.getPath(o
                             .workflowId().path().string()), permittedFolders)));
                     
-                    if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
-//                        freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
+                    if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
+//                        freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
 //                                JOrderPredicates.and(notSuspendFilter, o -> workflowIds2.contains(o.workflowId()))));
                         
                         freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
@@ -171,7 +171,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 //                }
             } else {
                 orderStates = controllerState.orderStateToCount(notSuspendFilter);
-                if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
+                if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
                     freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), notSuspendFilter));
                 }
                 suspendedOrders = controllerState.ordersBy(suspendFilter).map(collapseCyclicOrders).distinct().mapToInt(e -> 1).sum();
