@@ -169,7 +169,7 @@ public class OrdersHelper {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(Order.Fresh$.class, OrderStateText.SCHEDULED);
+                    put(Order.Fresh.class, OrderStateText.SCHEDULED);
                     put(Order.ExpectingNotice.class, OrderStateText.WAITING); // only until 2.3
                     put(Order.ExpectingNotices.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
@@ -177,7 +177,7 @@ public class OrdersHelper {
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.BetweenCycles.class, OrderStateText.WAITING);
-                    put(Order.Ready$.class, OrderStateText.WAITING);
+                    put(Order.Ready.class, OrderStateText.WAITING);
                     put(Order.Sleeping.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
@@ -383,7 +383,7 @@ public class OrdersHelper {
 
     public static boolean isContinuableAfterSuspending(JOrder order) {
         Order<Order.State> o = order.asScala();
-        if (o.state() instanceof Order.Fresh$ && o.maybeDelayedUntil().isDefined()) {
+        if (o.state() instanceof Order.Fresh && o.maybeDelayedUntil().isDefined()) {
             return false;
         }
         if (o.state() instanceof Order.Sleeping) {
@@ -1168,7 +1168,7 @@ public class OrdersHelper {
 
     public static Optional<Set<String>> getNotFreshOrders(Collection<String> orderIds, JControllerState currentState) {
         Function1<Order<Order.State>, Object> notFreshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
-                .not(JOrderPredicates.byOrderState(Order.Fresh$.class)));
+                .not(JOrderPredicates.byOrderState(Order.Fresh.class)));
         Set<String> notFreshOrderIds = currentState.ordersBy(notFreshAndExistsFilter).map(JOrder::id).map(OrderId::string).collect(Collectors
                 .toSet());
         if (!notFreshOrderIds.isEmpty()) {
@@ -1179,7 +1179,7 @@ public class OrdersHelper {
 
     public static Stream<String> getWorkflowNamesOfFreshOrders(Collection<String> orderIds, JControllerState currentState) {
         Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
-                .byOrderState(Order.Fresh$.class));
+                .byOrderState(Order.Fresh.class));
         return currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).distinct();
     }
 
@@ -1311,7 +1311,7 @@ public class OrdersHelper {
         };
 
         Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> temporaryOrderIds.contains(o.id().string()),
-                JOrderPredicates.byOrderState(Order.Fresh$.class));
+                JOrderPredicates.byOrderState(Order.Fresh.class));
         Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(freshAndExistsFilter).parallel().map(mapper).collect(
                 Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 

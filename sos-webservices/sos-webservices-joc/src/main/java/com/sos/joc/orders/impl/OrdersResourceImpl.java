@@ -124,13 +124,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
                     Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
                             Order.ProcessingKilled$.class));
-            Function1<Order<Order.State>, Object> freshFilter = JOrderPredicates.byOrderState(Order.Fresh$.class);
+            Function1<Order<Order.State>, Object> freshFilter = JOrderPredicates.byOrderState(Order.Fresh.class);
             Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
             Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
             Function1<Order<Order.State>, Object> cyclicFilter = o -> OrdersHelper.isCyclicOrderId(o.id().string());
             Function1<Order<Order.State>, Object> freshCyclicFilter = JOrderPredicates.and(freshFilter, cyclicFilter);
             Function1<Order<Order.State>, Object> notCyclicFilter = JOrderPredicates.not(cyclicFilter);
-            Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+            Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o
                     .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
 
             if (!withOrderIdFilter) {

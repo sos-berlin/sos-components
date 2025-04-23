@@ -821,7 +821,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 Objects::nonNull).filter(o -> Order.Fresh$.class.isInstance(o.asScala().state())).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o
                         .id().string())).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {
-            cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> freshCyclicIds
+            cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> freshCyclicIds
                     .contains(OrdersHelper.getCyclicOrderIdMainPart(o.id().string()))));
         }
         return cyclicOrderStream;
@@ -830,10 +830,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public static Stream<JOrder> cyclicFreshJOrders(Collection<JOrder> jOrders, JControllerState currentState) {
         Stream<JOrder> cyclicOrderStream = Stream.empty();
         // determine cyclic ids
-        Set<String> freshCyclicIds = jOrders.stream().filter(o -> OrdersHelper.isCyclicOrderId(o.id().string())).filter(o -> Order.Fresh$.class
+        Set<String> freshCyclicIds = jOrders.stream().filter(o -> OrdersHelper.isCyclicOrderId(o.id().string())).filter(o -> Order.Fresh.class
                 .isInstance(o.asScala().state())).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string())).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {
-            cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> freshCyclicIds
+            cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> freshCyclicIds
                     .contains(OrdersHelper.getCyclicOrderIdMainPart(o.id().string()))));
         }
         return cyclicOrderStream;
@@ -1079,10 +1079,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
 
             if (freshOrderFilter != null) {
-                freshOrderFilter = JOrderPredicates.and(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+                freshOrderFilter = JOrderPredicates.and(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o
                         .isSuspended()), freshOrderFilter);
             } else if (lookingForScheduled && lookingForBlocked && lookingForPending) {
-                freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended());
+                freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o.isSuspended());
             }
 
             if (stateFilter == null) {
@@ -1107,7 +1107,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         if (lookingForBlocked || lookingForInProgress) {
             long surveyDateMillis = controllerState.instant().toEpochMilli();
-            Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+            Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o
                     .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
 
             Set<JOrder> blockedOrders = controllerState.ordersBy(JOrderPredicates.and(filter, blockedFilter)).collect(Collectors.toSet());
