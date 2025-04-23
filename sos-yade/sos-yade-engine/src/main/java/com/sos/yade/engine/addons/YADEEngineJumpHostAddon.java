@@ -287,7 +287,7 @@ public class YADEEngineJumpHostAddon {
         delegator.getProvider().enableReusableResource();
         for (ProviderFile f : files) {
             try {
-                if (delegator.getProvider().deleteIfExists(f.getFullPath())) {
+                if (delegator.getProvider().deleteFileIfExists(f.getFullPath())) {
                     logger.info("[%s][deleteSourceFiles][%s]deleted", delegator.getLabel(), f.getFullPath());
                 }
             } catch (Exception e) {

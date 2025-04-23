@@ -60,7 +60,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsBeforeOperation(String commands) {
-        commandsBeforeOperation.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
+        commandsBeforeOperation.setValue(YADEArgumentsHelper.toList(commands, commandDelimiter.getValue()));
     }
 
     public void addCommandBeforeOperation(String command) {
@@ -79,7 +79,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterOperationOnSuccess(String commands) {
-        commandsAfterOperationOnSuccess.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
+        commandsAfterOperationOnSuccess.setValue(YADEArgumentsHelper.toList(commands, commandDelimiter.getValue()));
     }
 
     public void addCommandAfterOperationOnSuccess(String command) {
@@ -98,7 +98,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterOperationOnError(String commands) {
-        commandsAfterOperationOnError.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
+        commandsAfterOperationOnError.setValue(YADEArgumentsHelper.toList(commands, commandDelimiter.getValue()));
     }
 
     public SOSArgument<List<String>> getCommandsAfterOperationFinal() {
@@ -110,7 +110,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterOperationFinal(String commands) {
-        commandsAfterOperationFinal.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
+        commandsAfterOperationFinal.setValue(YADEArgumentsHelper.toList(commands, commandDelimiter.getValue()));
     }
 
     public SOSArgument<List<String>> getCommandsBeforeFile() {
@@ -122,7 +122,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsBeforeFile(String commands) {
-        commandsBeforeFile.setValue(YADEArgumentsHelper.stringListValue(commands, commandDelimiter.getValue()));
+        commandsBeforeFile.setValue(YADEArgumentsHelper.toList(commands, commandDelimiter.getValue()));
     }
 
     public SOSArgument<Boolean> getCommandsBeforeFileEnableForSkipped() {
@@ -138,7 +138,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterFile(String val) {
-        commandsAfterFile.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+        commandsAfterFile.setValue(YADEArgumentsHelper.toList(val, commandDelimiter.getValue()));
     }
 
     public SOSArgument<Boolean> getCommandsAfterFileDisableForSkipped() {
@@ -154,7 +154,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsBeforeRename(String val) {
-        commandsBeforeRename.setValue(YADEArgumentsHelper.stringListValue(val, commandDelimiter.getValue()));
+        commandsBeforeRename.setValue(YADEArgumentsHelper.toList(val, commandDelimiter.getValue()));
     }
 
     public boolean isPreProcessingEnabled() {
@@ -164,6 +164,10 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     public boolean isPostProcessingEnabled() {
         return commandsAfterOperationOnSuccess.isDirty() || commandsAfterOperationOnError.isDirty() || commandsAfterOperationFinal.isDirty()
                 || isFilePostProcessingEnabled();
+    }
+
+    public boolean isPostProcessingOnOperationErrorEnabled() {
+        return commandsAfterOperationOnError.isDirty() || commandsAfterOperationFinal.isDirty();
     }
 
     public boolean isFilePostProcessingEnabled() {

@@ -15,6 +15,8 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         YES, NO, STRICT, RELAXED;
     }
 
+    private final static String LIST_VALUES_DELIMITER = ";";
+
     /** - Polling Arguments ------- */
     private YADESourcePollingArguments polling;
 
@@ -107,14 +109,14 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         if (filePath.getValue() == null) {
             return null;
         }
-        return String.join(";", filePath.getValue());
+        return String.join(LIST_VALUES_DELIMITER, filePath.getValue());
     }
 
     public void setFilePath(String val) {
         if (SOSString.isEmpty(val)) {
             filePath.setValue(null);
         } else {
-            filePath.setValue(YADEArgumentsHelper.stringListValue(val, ";"));
+            filePath.setValue(YADEArgumentsHelper.toList(val, LIST_VALUES_DELIMITER));
         }
     }
 

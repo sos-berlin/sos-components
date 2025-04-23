@@ -98,7 +98,7 @@ public class YADEFileActionsExecuter {
                     .getFullPath(), sourceFile.getSize(), targetDelegator.getLabel(), sourceFile.getTarget().getFullPath(), sourceFile.getTarget()
                             .getSize());
 
-            targetDelegator.getProvider().deleteIfExists(sourceFile.getTarget().getFullPath());
+            targetDelegator.getProvider().deleteFileIfExists(sourceFile.getTarget().getFullPath());
             sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);
             logger.info("%s[file size does not match]target file deleted", msg);
 

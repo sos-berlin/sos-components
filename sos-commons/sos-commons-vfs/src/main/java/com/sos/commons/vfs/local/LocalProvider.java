@@ -148,6 +148,18 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         }
     }
 
+    /** Overrides {@link IProvider#deleteFileIfExists(String)} */
+    @Override
+    public boolean deleteFileIfExists(String path) throws ProviderException {
+        validateArgument("deleteFileIfExists", path, "path");
+
+        try {
+            return Files.deleteIfExists(getAbsoluteNormalizedPath(path));
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
+        }
+    }
+
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
     @Override
     public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {

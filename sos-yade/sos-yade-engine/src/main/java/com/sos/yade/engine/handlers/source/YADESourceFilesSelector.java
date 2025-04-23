@@ -53,6 +53,40 @@ public class YADESourceFilesSelector {
         return null;
     }
 
+    public static void checkSelectionResult(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEClientArguments clientArgs,
+            List<ProviderFile> sourceFiles) throws YADEEngineSourceFilesSelectorException {
+        StringBuilder sb = new StringBuilder();
+        if (sourceDelegator.getDirectory() != null) {
+            // sourceDelegator.getDirectory() - can be empty - if empty(trailing separator was removed) - use the pathSeparator, e.g.: /
+            sb.append("[").append(sourceDelegator.getDirectory().isEmpty() ? sourceDelegator.getProvider().getPathSeparator() : sourceDelegator
+                    .getDirectory()).append("]");
+        }
+        sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getRecursive())).append("]");
+        if (sourceDelegator.getArgs().isSingleFilesSelection()) {
+            if (sourceDelegator.getArgs().isFileListEnabled()) {
+                sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFileList())).append("]");
+            } else if (sourceDelegator.getArgs().isFilePathEnabled()) {
+                sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFilePath().getName(), sourceDelegator.getArgs()
+                        .getFilePathAsString())).append("]");
+            }
+        } else {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFileSpec())).append("]");
+        }
+        if (!sourceDelegator.getArgs().getMaxFiles().isEmpty()) {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFiles())).append("]");
+        }
+        if (!sourceDelegator.getArgs().getMinFileSize().isEmpty()) {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMinFileSize())).append("]");
+        }
+        if (!sourceDelegator.getArgs().getMaxFileSize().isEmpty()) {
+            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFileSize())).append("]");
+        }
+        logger.info("[%s]%sfound=%s", sourceDelegator.getLabel(), sb, sourceFiles.size());
+
+        checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
+        checkFileListSize(logger, sourceDelegator, clientArgs, sourceFiles);
+    }
+
     private static List<ProviderFile> selectFiles(YADESourceProviderDelegator sourceDelegator, ProviderFileSelection selection)
             throws YADEEngineSourceFilesSelectorException {
 
@@ -195,39 +229,6 @@ public class YADESourceFilesSelector {
             return false;
         }
         return true;
-    }
-
-    public static void checkSelectionResult(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEClientArguments clientArgs,
-            List<ProviderFile> sourceFiles) throws YADEEngineSourceFilesSelectorException {
-        StringBuilder sb = new StringBuilder();
-        if (sourceDelegator.getDirectory() != null) {
-            // sourceDelegator.getDirectory() - can be empty - if empty(trailing separator was removed) - use the pathSeparator, e.g.: /
-            sb.append("[").append(sourceDelegator.getDirectory().isEmpty() ? sourceDelegator.getProvider().getPathSeparator() : sourceDelegator
-                    .getDirectory()).append("]");
-        }
-        sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getRecursive())).append("]");
-        if (sourceDelegator.getArgs().isSingleFilesSelection()) {
-            if (sourceDelegator.getArgs().isFileListEnabled()) {
-                sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFileList())).append("]");
-            } else if (sourceDelegator.getArgs().isFilePathEnabled()) {
-                sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFilePath())).append("]");
-            }
-        } else {
-            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getFileSpec())).append("]");
-        }
-        if (!sourceDelegator.getArgs().getMaxFiles().isEmpty()) {
-            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFiles())).append("]");
-        }
-        if (!sourceDelegator.getArgs().getMinFileSize().isEmpty()) {
-            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMinFileSize())).append("]");
-        }
-        if (!sourceDelegator.getArgs().getMaxFileSize().isEmpty()) {
-            sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFileSize())).append("]");
-        }
-        logger.info("[%s]%sfound=%s", sourceDelegator.getLabel(), sb, sourceFiles.size());
-
-        checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
-        checkFileListSize(logger, sourceDelegator, clientArgs, sourceFiles);
     }
 
     private static void checkZeroByteFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles)

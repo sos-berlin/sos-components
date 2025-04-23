@@ -85,7 +85,7 @@ public class YADERemoveOperationHandler {
         try {
             YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, sourceFile);
 
-            if (!sourceDelegator.getProvider().deleteIfExists(sourceFile.getFullPath())) {
+            if (!sourceDelegator.getProvider().deleteFileIfExists(sourceFile.getFullPath())) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("[%s][%s][%s][%s]not exists", fileTransferLogPrefix, YADEClientBannerWriter.formatState(sourceFile.getState()),
                             sourceDelegator.getLabel(), sourceFile.getFullPath());

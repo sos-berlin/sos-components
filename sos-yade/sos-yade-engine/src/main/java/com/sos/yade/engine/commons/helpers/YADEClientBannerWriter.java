@@ -303,7 +303,7 @@ public class YADEClientBannerWriter {
             boolean needsDetails = groupedByState.keySet().stream().anyMatch(k -> k.contains(TransferEntryState.ROLLED_BACK.name()) || k.contains(
                     TransferEntryState.FAILED.name()));
 
-            FileStateUtils.getGroupedByState(targetDelegator, files, getDefaultState(args)).forEach((state, fileList) -> {
+            groupedByState.forEach((state, fileList) -> {
                 l.add(formatState(state) + "=" + fileList.size());
 
                 if (needsDetails) {

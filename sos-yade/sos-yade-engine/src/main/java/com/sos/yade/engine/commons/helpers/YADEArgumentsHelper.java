@@ -15,20 +15,6 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEArgumentsHelper {
 
-    public static List<String> stringListValue(String val, String listValueDelimiter) {
-        if (val == null || val.trim().length() == 0) {
-            return null;
-        }
-        return Stream.of(val.split(listValueDelimiter)).filter(e -> !SOSString.isEmpty(e)).collect(Collectors.toList());
-    }
-
-    public static String toString(SOSArgument<List<String>> arg, String listValueDelimiter) {
-        if (arg == null || arg.getValue() == null) {
-            return null;
-        }
-        return String.join(listValueDelimiter, arg.getValue());
-    }
-
     public static boolean needTargetProvider(YADEArguments args) throws YADEEngineInitializationException {
         switch (args.getOperation().getValue()) {
         case GETLIST:
@@ -47,20 +33,38 @@ public class YADEArgumentsHelper {
         }
     }
 
+    public static List<String> toList(String val, String listValueDelimiter) {
+        if (val == null || val.trim().length() == 0) {
+            return null;
+        }
+        return Stream.of(val.split(listValueDelimiter)).filter(e -> !SOSString.isEmpty(e)).collect(Collectors.toList());
+    }
+
+    public static String toString(SOSArgument<List<String>> arg, String listValueDelimiter) {
+        if (arg == null || arg.getValue() == null) {
+            return null;
+        }
+        return String.join(listValueDelimiter, arg.getValue());
+    }
+
+    public static String toString(String name, String value) {
+        return name + "=" + (value == null ? "" : value);
+    }
+
     public static String toString(SOSArgument<?> arg) {
         return toString(arg.getName(), arg);
     }
 
     public static String toString(String name, SOSArgument<?> arg) {
-        return name + "=" + displayValueToString(arg);
+        return toString(name, arg.getDisplayValue());
     }
 
     public static String comparisonOperatorToString(SOSArgument<SOSComparisonOperator> arg) {
-        return arg.getName() + "=" + (arg.getValue() == null ? "" : arg.getValue().getFirstAlias());
+        return toString(arg.getName(), (arg.getValue() == null ? null : arg.getValue().getFirstAlias()));
     }
 
     public static String toStringAsOppositeValue(SOSArgument<Boolean> arg) {
-        return "Disable" + arg.getName() + "=" + (!arg.isTrue());
+        return toString("Disable" + arg.getName(), String.valueOf((!arg.isTrue())));
     }
 
     public static String toString(ISOSLogger logger, String label, ASOSArguments args) {
@@ -95,9 +99,5 @@ public class YADEArgumentsHelper {
         }
 
         return sb.toString();
-    }
-
-    private static String displayValueToString(SOSArgument<?> arg) {
-        return arg.getValue() == null ? "" : arg.getDisplayValue();
     }
 }

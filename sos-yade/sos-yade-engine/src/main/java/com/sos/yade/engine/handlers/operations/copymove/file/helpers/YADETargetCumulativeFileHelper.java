@@ -19,20 +19,20 @@ public class YADETargetCumulativeFileHelper {
             throws Exception {
         if (config.getTarget().getCumulate().getFile().needsRename()) {
             // temporary transfer path
-            targetDelegator.getProvider().deleteIfExists(config.getTarget().getCumulate().getFile().getFullPath());
+            targetDelegator.getProvider().deleteFileIfExists(config.getTarget().getCumulate().getFile().getFullPath());
         }
 
         if (!config.getTarget().isDeleteCumulativeFileEnabled()) {
             return;
         }
         // final path
-        targetDelegator.getProvider().deleteIfExists(config.getTarget().getCumulate().getFile().getFinalFullPath());
+        targetDelegator.getProvider().deleteFileIfExists(config.getTarget().getCumulate().getFile().getFinalFullPath());
     }
 
     public static void rollback(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator) {
         String path = config.getTarget().getCumulate().getFile().getFullPath();
         try {
-            if (targetDelegator.getProvider().deleteIfExists(path)) {
+            if (targetDelegator.getProvider().deleteFileIfExists(path)) {
                 logger.info("[%s][rollback][%s]deleted", path);
             }
         } catch (Exception e) {
@@ -42,7 +42,7 @@ public class YADETargetCumulativeFileHelper {
             // de-compressed original cumulative file
             path = config.getTarget().getCumulate().getTmpFullPathOfExistingFileForDecompress();
             try {
-                if (targetDelegator.getProvider().deleteIfExists(path)) {
+                if (targetDelegator.getProvider().deleteFileIfExists(path)) {
                     logger.info("[%s][rollback][%s]deleted", targetDelegator.getLabel(), path);
                 }
             } catch (Exception e) {
@@ -64,23 +64,23 @@ public class YADETargetCumulativeFileHelper {
                     targetDelegator.getProvider().renameFileIfSourceExists(transferPath, finalPath);
                 } else {
                     compress(logger, config, targetDelegator, transferPath, finalPath);
-                    targetDelegator.getProvider().deleteIfExists(transferPath);
+                    targetDelegator.getProvider().deleteFileIfExists(transferPath);
                 }
                 logger.info("[%s][%s][%s]created", targetDelegator.getLabel(), LABEL, finalPath);
             } else {
                 if (targetDelegator.getProvider().exists(finalPath)) {
                     if (config.getTarget().getCompress() == null) {
                         merge(logger, config, targetDelegator, transferPath, finalPath);
-                        targetDelegator.getProvider().deleteIfExists(transferPath);
+                        targetDelegator.getProvider().deleteFileIfExists(transferPath);
                     } else {
                         String tmpFinalPath = config.getTarget().getCumulate().getTmpFullPathOfExistingFileForDecompress();
                         decompress(logger, config, targetDelegator, finalPath, tmpFinalPath);
                         merge(logger, config, targetDelegator, transferPath, tmpFinalPath);
-                        targetDelegator.getProvider().deleteIfExists(transferPath);
-                        targetDelegator.getProvider().deleteIfExists(finalPath);
+                        targetDelegator.getProvider().deleteFileIfExists(transferPath);
+                        targetDelegator.getProvider().deleteFileIfExists(finalPath);
 
                         compress(logger, config, targetDelegator, tmpFinalPath, finalPath);
-                        targetDelegator.getProvider().deleteIfExists(tmpFinalPath);
+                        targetDelegator.getProvider().deleteFileIfExists(tmpFinalPath);
 
                     }
                     logger.info("[%s][%s][%s]updated", targetDelegator.getLabel(), LABEL, finalPath);
@@ -89,7 +89,7 @@ public class YADETargetCumulativeFileHelper {
                         targetDelegator.getProvider().renameFileIfSourceExists(transferPath, finalPath);
                     } else {
                         compress(logger, config, targetDelegator, transferPath, finalPath);
-                        targetDelegator.getProvider().deleteIfExists(transferPath);
+                        targetDelegator.getProvider().deleteFileIfExists(transferPath);
                     }
                     logger.info("[%s][%s][%s]created", targetDelegator.getLabel(), LABEL, finalPath);
                 }
@@ -101,7 +101,7 @@ public class YADETargetCumulativeFileHelper {
             String gzipFile, String outputFile) throws ProviderException {
 
         logger.info("[%s][%s][decompress][%s]->[%s]", targetDelegator.getLabel(), LABEL, gzipFile, outputFile);
-        targetDelegator.getProvider().deleteIfExists(outputFile);
+        targetDelegator.getProvider().deleteFileIfExists(outputFile);
 
         try (InputStream is = targetDelegator.getProvider().getInputStream(gzipFile); GZIPInputStream gis = new GZIPInputStream(is); OutputStream os =
                 targetDelegator.getProvider().getOutputStream(outputFile, false)) {

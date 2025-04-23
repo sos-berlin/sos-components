@@ -209,6 +209,29 @@ public class SSHJProvider extends SSHProvider {
         }
     }
 
+    /** Overrides {@link IProvider#deleteFileIfExists(String)} */
+    @Override
+    public boolean deleteFileIfExists(String path) throws ProviderException {
+        validatePrerequisites("deleteIfExists", path, "path");
+
+        try {
+            SSHJProviderReusableResource reusable = getReusableResource();
+            if (reusable == null) {
+                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                    SSHJProviderUtils.deleteFile(sftp, path);
+                    return true;
+                }
+            } else {
+                SSHJProviderUtils.deleteFile(reusable.getSFTPClient(), path);
+                return true;
+            }
+        } catch (SOSNoSuchFileException e) {
+            return false;
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+        }
+    }
+
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
     @Override
     public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {

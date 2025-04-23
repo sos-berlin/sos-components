@@ -36,6 +36,15 @@ public class SMBJProviderUtils {
         return true;
     }
 
+    protected static boolean deleteFileIfExists(DiskShare share, String smbPath) {
+        if (!share.fileExists(smbPath)) {
+            return false;
+        }
+
+        share.rm(smbPath);
+        return true;
+    }
+
     protected static boolean renameFileIfSourceExists(DiskShare share, String smbSourcePath, String smbTargetPath, boolean accessMaskMaximumAllowed) {
         if (share.fileExists(smbSourcePath)) {
             try (File sourceFile = openExistingFileWithRenameAccess(accessMaskMaximumAllowed, share, smbSourcePath)) {
