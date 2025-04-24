@@ -206,6 +206,26 @@ public class SMBJProvider extends SMBProvider {
         }
     }
 
+    /** Overrides {@link IProvider#deleteFileIfExists(String)} */
+    @Override
+    public boolean deleteFileIfExists(String path) throws ProviderException {
+        validatePrerequisites("deleteFileIfExists", path, "path");
+
+        try {
+            SMBJProviderReusableResource reusable = getReusableResource();
+            String smbPath = getSMBPath(path);
+            if (reusable == null) {
+                try (DiskShare share = connectShare(path)) {
+                    return SMBJProviderUtils.deleteFileIfExists(share, smbPath);
+                }
+            } else {
+                return SMBJProviderUtils.deleteFileIfExists(reusable.getDiskShare(path), smbPath);
+            }
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+        }
+    }
+
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
     @Override
     public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {

@@ -176,6 +176,12 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
+    /** Overrides {@link IProvider#deleteFileIfExists(String)} */
+    @Override
+    public boolean deleteFileIfExists(String path) throws ProviderException {
+        return deleteIfExists(path);
+    }
+
     /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)}<br/>
      * PUT,DELETE implementation<br />
      * - alternative - MOVE (may not be supported by the server…)

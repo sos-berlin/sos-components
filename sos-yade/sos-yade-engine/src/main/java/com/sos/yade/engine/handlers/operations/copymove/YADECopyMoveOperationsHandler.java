@@ -3,6 +3,8 @@ package com.sos.yade.engine.handlers.operations.copymove;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -83,9 +85,12 @@ public class YADECopyMoveOperationsHandler {
         } catch (Throwable e) {
             throw e;
         } finally {
-            // re-connect in any case - e.g. for rollback, after operation commands...
-            YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
-            YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
+            // re-connect - e.g. for rollback, after operation commands...
+            if (config.isTransactionalEnabled() || sourceDelegator.getArgs().getCommands().isPostProcessingOnOperationErrorEnabled()
+                    || targetDelegator.getArgs().getCommands().isPostProcessingOnOperationErrorEnabled()) {
+                YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
+                YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
+            }
         }
     }
 
@@ -95,6 +100,9 @@ public class YADECopyMoveOperationsHandler {
             throws Exception {
 
         handleReusableResourcesBeforeTransfer(config, sourceDelegator, targetDelegator);
+
+        AtomicInteger nonTransactionalErrorCounter = new AtomicInteger();
+        AtomicReference<Throwable> lastNonTransactionalError = new AtomicReference<>();
 
         ForkJoinPool threadPool = YADEParallelExecutorFactory.create(config.getParallelism(), sourceFiles.size());
         try {
@@ -113,6 +121,8 @@ public class YADECopyMoveOperationsHandler {
                             throw new RuntimeException(e);
                         }
                         setFailedIfNonTransactional(sourceFile);
+                        nonTransactionalErrorCounter.incrementAndGet();
+                        lastNonTransactionalError.set(e);
                     }
                 });
 
@@ -122,6 +132,8 @@ public class YADECopyMoveOperationsHandler {
         } finally {
             YADEParallelExecutorFactory.shutdown(threadPool);
         }
+
+        checkNonTransactionalResult(sourceFiles, nonTransactionalErrorCounter.get(), lastNonTransactionalError.get());
     }
 
     private static void processFilesSequentially(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
@@ -132,6 +144,8 @@ public class YADECopyMoveOperationsHandler {
             YADETargetCumulativeFileHelper.tryDeleteFile(logger, config, targetDelegator);
         }
 
+        int nonTransactionalErrorCounter = 0;
+        Throwable lastNonTransactionalError = null;
         for (ProviderFile sourceFile : sourceFiles) {
             if (cancel.get()) {
                 return;
@@ -145,12 +159,24 @@ public class YADECopyMoveOperationsHandler {
                     throw e;
                 }
                 setFailedIfNonTransactional(f);
+                nonTransactionalErrorCounter++;
+                lastNonTransactionalError = e;
             }
         }
+
+        checkNonTransactionalResult(sourceFiles, nonTransactionalErrorCounter, lastNonTransactionalError);
 
         if (useCumulativeTargetFile) {
             YADETargetCumulativeFileHelper.onSuccess(logger, config, targetDelegator);
         }
+    }
+
+    private static void checkNonTransactionalResult(List<ProviderFile> sourceFiles, int nonTransactionalErrorCounter,
+            Throwable lastNonTransactionalError) throws Exception {
+        if (nonTransactionalErrorCounter <= 0 || nonTransactionalErrorCounter != sourceFiles.size()) {
+            return;
+        }
+        throw new Exception("Processing of all files failed. Last exception: " + lastNonTransactionalError, lastNonTransactionalError);
     }
 
     private static void finalizeTransactionIfNeeded(ISOSLogger logger, YADECopyMoveOperationsConfig config,
@@ -176,7 +202,7 @@ public class YADECopyMoveOperationsHandler {
 
                 // TODO test SOURCE_TO_JUMP_HOST with MOVE
                 if (isMoveOperation && !sourceDelegator.isJumpHost()) {
-                    if (sourceDelegator.getProvider().deleteIfExists(sourceFile.getFinalFullPath())) {
+                    if (sourceDelegator.getProvider().deleteFileIfExists(sourceFile.getFinalFullPath())) {
                         sourceFile.setState(TransferEntryState.MOVED);
                         logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, moved, sourceDelegator.getLabel(), sourceFile.getFinalFullPath());
                     }
@@ -240,7 +266,7 @@ public class YADECopyMoveOperationsHandler {
             if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
                 String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
                 try {
-                    if (targetDelegator.getProvider().deleteIfExists(path)) {
+                    if (targetDelegator.getProvider().deleteFileIfExists(path)) {
                         logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), path);
                     }
                 } catch (Exception e) {
@@ -255,7 +281,7 @@ public class YADECopyMoveOperationsHandler {
 
             // 6) delete targetFile
             try {
-                if (targetDelegator.getProvider().deleteIfExists(targetFilePath)) {
+                if (targetDelegator.getProvider().deleteFileIfExists(targetFilePath)) {
                     logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath);
                 }
                 targetFile.setSubState(TransferEntryState.ROLLED_BACK);

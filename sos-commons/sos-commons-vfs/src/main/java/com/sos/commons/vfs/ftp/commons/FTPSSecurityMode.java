@@ -4,7 +4,7 @@ import com.sos.commons.util.SOSString;
 
 public enum FTPSSecurityMode {
 
-    EXPLICIT, IMLICIT;
+    EXPLICIT, IMPLICIT;
 
     public static FTPSSecurityMode fromString(String securityMode) {
         if (SOSString.isEmpty(securityMode)) {

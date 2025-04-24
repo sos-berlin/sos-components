@@ -114,6 +114,15 @@ public class SSHJProviderUtils {
         }
     }
 
+    protected static void deleteFile(SFTPClient sftp, String path) throws Exception {
+        try {
+            path = sftp.canonicalize(path);
+        } catch (SFTPException e) {
+            throwException(e, path);
+        }
+        sftp.rm(path);
+    }
+
     protected static boolean exists(SFTPClient sftp, String path) throws IOException {
         return sftp.statExistence(path) != null;
     }

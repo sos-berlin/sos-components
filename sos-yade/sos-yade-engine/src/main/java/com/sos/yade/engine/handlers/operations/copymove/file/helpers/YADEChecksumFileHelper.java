@@ -71,7 +71,7 @@ public class YADEChecksumFileHelper {
         if (sourceFile.getIntegrityHash().equals(checksum)) {
             logger.info("[%s][integrity hash]matches", msg);
         } else {
-            targetDelegator.getProvider().deleteIfExists(sourceFile.getTarget().getFullPath());
+            targetDelegator.getProvider().deleteFileIfExists(sourceFile.getTarget().getFullPath());
             sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);
             logger.info("[%s][%s][calculated=%s][integrity hash does not match]target file %s deleted", msg, sourceFile.getIntegrityHash(), checksum,
                     sourceFile.getTarget().getFullPath());

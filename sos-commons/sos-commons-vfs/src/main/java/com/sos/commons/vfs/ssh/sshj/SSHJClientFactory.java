@@ -23,9 +23,8 @@ import net.schmizz.sshj.Config;
 import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.Service;
-import net.schmizz.sshj.transport.TransportException;
+import net.schmizz.sshj.common.SSHException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
-import net.schmizz.sshj.userauth.UserAuthException;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import net.schmizz.sshj.userauth.method.AuthKeyboardInteractive;
 import net.schmizz.sshj.userauth.method.AuthPassword;
@@ -112,28 +111,54 @@ public class SSHJClientFactory {
 
     /** ssh(d)_config AuthenticationMethods */
     private static void useRequiredAuthentications(SSHProviderArguments args, SSHClient client) throws Exception {
-        for (SSHAuthMethod am : args.getRequiredAuthentications().getValue()) {
-            switch (am) {
+        for (SSHAuthMethod method : args.getRequiredAuthentications().getValue()) {
+            switch (method) {
             case PUBLICKEY:
-                partialAuthentication(args, client, getAuthPublickey(args, client));
+                partialRequiredAuthentication(args, client, method, getAuthPublickey(args, client));
                 break;
             case PASSWORD:
-                partialAuthentication(args, client, getAuthPassword(args));
+                partialRequiredAuthentication(args, client, method, getAuthPassword(args));
                 break;
             case KEYBOARD_INTERACTIVE:
-                partialAuthentication(args, client, getAuthKeyboardInteractive(args));
+                partialRequiredAuthentication(args, client, method, getAuthKeyboardInteractive(args));
                 break;
             }
         }
     }
 
-    private static void partialAuthentication(SSHProviderArguments args, SSHClient client, net.schmizz.sshj.userauth.method.AuthMethod method)
-            throws ProviderAuthenticationException, UserAuthException, TransportException {
-        if (!client.getUserAuth().authenticate(args.getUser().getValue(), (Service) client.getConnection(), method, client.getTransport()
-                .getTimeoutMs())) {
-            if (!client.getUserAuth().hadPartialSuccess()) {
-                throw new ProviderAuthenticationException();
+    private static void partialRequiredAuthentication(SSHProviderArguments args, SSHClient client, SSHAuthMethod method,
+            net.schmizz.sshj.userauth.method.AuthMethod methodImpl) throws ProviderAuthenticationException {
+
+        boolean hadPartialSuccess = false;
+        try {
+            if (client.getUserAuth().authenticate(args.getUser().getValue(), (Service) client.getConnection(), methodImpl, client.getTransport()
+                    .getTimeoutMs())) {
+                return;
             }
+            hadPartialSuccess = client.getUserAuth().hadPartialSuccess();
+        } catch (SSHException e) {
+            // occurs for example:
+            // - required = 'publickey,password', server accepts only 'publickey'
+            // - 1) publickey: success
+            // - 2) password: fails with SSHException SSH_MSG_UNIMPLEMENTED
+
+            // serverAccepts(see below) not available
+            String configured = SOSString.join(args.getRequiredAuthentications().getValue(), ",", m -> m.toString()).toLowerCase();
+            throw new ProviderAuthenticationException(String.format(
+                    "Required authentication is configured (%s). Authentication step '%s' failed for user '%s'.", configured, method.name()
+                            .toLowerCase(), args.getUser().getValue()), e);
+        }
+
+        if (!hadPartialSuccess) {
+            // occurs for example:
+            // - required = 'password,publickey', server accepts only 'publickey'
+            // - 1) password fails silently
+
+            String configured = SOSString.join(args.getRequiredAuthentications().getValue(), ",", m -> m.toString()).toLowerCase();
+            String serverAccepts = String.join(", ", client.getUserAuth().getAllowedMethods());
+            throw new ProviderAuthenticationException(String.format(
+                    "Required authentication is configured (%s). The server accepts: %s. Authentication step '%s' failed for user '%s'.", configured,
+                    serverAccepts, method.name().toLowerCase(), args.getUser().getValue()));
         }
     }
 

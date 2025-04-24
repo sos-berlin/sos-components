@@ -14,6 +14,7 @@ import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
+import com.sos.commons.vfs.ftp.commons.FTPProviderArguments.TransferMode;
 import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPSSecurityMode;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
@@ -46,6 +47,15 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                case "PassiveMode":
+                    argsLoader.setBooleanArgumentValue(args.getPassiveMode(), n);
+                    break;
+                case "TransferMode":
+                    TransferMode transferMode = TransferMode.fromString(argsLoader.getValue(n));
+                    if (transferMode != null) {
+                        args.getTransferMode().setValue(transferMode);
+                    }
                     break;
                 case "ProxyForFTP":
                     parseProxy(argsLoader, args, n);

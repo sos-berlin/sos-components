@@ -15,6 +15,8 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         YES, NO, STRICT, RELAXED;
     }
 
+    private final static String LIST_VALUES_DELIMITER = ";";
+
     /** - Polling Arguments ------- */
     private YADESourcePollingArguments polling;
 
@@ -57,6 +59,28 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     public YADESourceArguments() {
         getLabel().setValue(LABEL);
+    }
+
+    // Overwrite settings
+    public void applyFilePath(String val) {
+        if (val != null) {
+            resetSelection();
+            setFilePath(val);
+        }
+    }
+
+    public void applyFileList(Path val) {
+        if (val != null) {
+            resetSelection();
+            fileList.setValue(val);
+        }
+    }
+
+    public void applyFileSpec(String val) {
+        if (val != null) {
+            resetSelection();
+            fileSpec.setValue(val);
+        }
     }
 
     public boolean isSingleFilesSelection() {
@@ -107,14 +131,14 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         if (filePath.getValue() == null) {
             return null;
         }
-        return String.join(";", filePath.getValue());
+        return String.join(LIST_VALUES_DELIMITER, filePath.getValue());
     }
 
     public void setFilePath(String val) {
         if (SOSString.isEmpty(val)) {
             filePath.setValue(null);
         } else {
-            filePath.setValue(YADEArgumentsHelper.stringListValue(val, ";"));
+            filePath.setValue(YADEArgumentsHelper.toList(val, LIST_VALUES_DELIMITER));
         }
     }
 
@@ -163,6 +187,12 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getCheckIntegrityHash() {
         return checkIntegrityHash;
+    }
+
+    private void resetSelection() {
+        filePath.setValue(null);
+        fileList.setValue(null);
+        fileSpec.setValue(null);
     }
 
 }

@@ -8,15 +8,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Deque;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -27,6 +24,7 @@ import org.apache.commons.net.ftp.FTPSClient;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSSSLContextFactory;
 import com.sos.commons.util.SOSString;
@@ -207,8 +205,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             if (reply.isFileStatusReply()) {
                 return true;
             }
-            if (!reply.isPositiveReply()) {
-                throw new Exception(String.format("%s[exists]%s", getLogPrefix(), reply));
+            if (!reply.isFileUnavailableReply()) {
+                if (!reply.isPositiveReply()) {
+                    throw new Exception(String.format("%s[exists]%s", getLogPrefix(), reply));
+                }
             }
             return false;
         } catch (Throwable e) {
@@ -286,7 +286,27 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             }
             return deleted;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e);
+        }
+    }
+
+    /** Overrides {@link IProvider#deleteFileIfExists(String)} */
+    @Override
+    public boolean deleteFileIfExists(String path) throws ProviderException {
+        validatePrerequisites("deleteFileIfExists", path, "path");
+        try {
+
+            if (!client.deleteFile(path)) {// not positive reply
+                FTPProtocolReply reply = new FTPProtocolReply(client);
+                if (isReplyBasedOnFileNotFound(reply, path)) {
+                    return false;
+                } else {
+                    throw new Exception(String.format("[failed]%s", reply));
+                }
+            }
+            return true;
+        } catch (Throwable e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
@@ -330,16 +350,24 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
         StringBuilder content = new StringBuilder();
         FTPProtocolReply reply = null;
-        try (InputStream is = client.retrieveFileStream(path); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8); BufferedReader br =
-                new BufferedReader(r)) {
-            reply = new FTPProtocolReply(client);
-            if (is == null || reply.isFileUnavailableReply()) {
+        try (InputStream is = client.retrieveFileStream(path)) {
+            if (is == null) {
                 return null;
             }
-            br.lines().forEach(content::append);
-            return client.completePendingCommand() ? content.toString() : null;
+            try (Reader r = new InputStreamReader(is, StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
+                br.lines().forEach(content::append);
+                reply = new FTPProtocolReply(client);
+                return client.completePendingCommand() ? content.toString() : null;
+            }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path) + (reply == null ? "" : reply), e);
+        } finally {
+            if (reply == null) {
+                try {
+                    client.completePendingCommand();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 
@@ -368,10 +396,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         validateModificationTime(path, milliseconds);
 
         try {
-            // FTP servers expect the timestamp in UTC and exactly in this format
-            SimpleDateFormat f = new SimpleDateFormat("yyyyMMddHHmmss");
-            f.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
-            if (!client.setModificationTime(path, f.format(new Date(milliseconds)))) {
+            if (!client.setModificationTime(path, FTPProviderUtils.millisecondsToModificationTimeString(milliseconds))) {
                 throw new ProviderException(String.format("%s[failed]%s", getPathOperationPrefix(path), new FTPProtocolReply(client)));
             }
         } catch (ProviderException e) {
@@ -558,6 +583,11 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     private void applyPreConnectSettings(FTPClient client) {
         setProtocolCommandListener(client);
         client.setConnectTimeout(getArguments().getConnectTimeoutAsMillis());
+        // setDefaultTimeout -
+        // client.setDefaultTimeout(client.getConnectTimeout());
+        // setDataTimeout - Sets the timeout to use when reading from the data connection.
+        // - This timeout will be set immediately after opening the data connection, provided that thevalue is ≥ 0.
+        // - client.setDataTimeout(Duration.ofMillis(client.getConnectTimeout()));
         client.setAutodetectUTF8(true);
     }
 
@@ -572,16 +602,25 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             } else {
                 throw new ProviderException(String.format("%s[pasv]%s", getLogPrefix(), reply));
             }
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[%s=true]pasv executed successfully", getLogPrefix(), getArguments().getPassiveMode().getName());
+            }
         }
         // Transfer Mode
         if (getArguments().isBinaryTransferMode()) {
             if (!client.setFileType(FTP.BINARY_FILE_TYPE)) {
-                throw new ProviderException(String.format("%s[binary]%s", getLogPrefix(), new FTPProtocolReply(client)));
+                throw new ProviderException(String.format("%s[%s]%s", getLogPrefix(), getArguments().getTransferMode().getValue(),
+                        new FTPProtocolReply(client)));
             }
         } else {
             if (!client.setFileType(FTP.ASCII_FILE_TYPE)) {
-                throw new ProviderException(String.format("%s[ascii]%s", getLogPrefix(), new FTPProtocolReply(client)));
+                throw new ProviderException(String.format("%s[%s]%s", getLogPrefix(), getArguments().getTransferMode().getValue(),
+                        new FTPProtocolReply(client)));
             }
+        }
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug("%s[%s=%s]successfully set", getLogPrefix(), getArguments().getTransferMode().getName(), getArguments()
+                    .getTransferModeValue());
         }
 
         client.sendNoOp();// NOOP command
@@ -618,11 +657,18 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         if (client.getConnectTimeout() > 0) {
             l.add("ConnectTimeout=" + AProvider.millis2string(client.getConnectTimeout()));
         }
-        // + passive, + binary
-        l.add("KeepAliveTimeout=" + getArguments().getServerAliveInterval().getValue() + "s");
+        if (client.getControlKeepAliveTimeoutDuration() != null) {
+            // l.add("KeepAliveInterval=" + getArguments().getServerAliveInterval().getValue() + "s");
+            // ControlKeepAliveTimeoutDuration is set from getServerAliveInterval
+            l.add("KeepAliveTimeout=" + SOSDate.getDuration(client.getControlKeepAliveTimeoutDuration()));
+            // TODO ControlKeepAliveReplyTimeoutDuration is currently not configurable
+            // client.getControlKeepAliveReplyTimeoutDuration();
+        }
+        l.add(getArguments().getPassiveMode().getName() + "=" + getArguments().getPassiveMode().getValue());
+        l.add(getArguments().getTransferMode().getName() + "=" + getArguments().getTransferModeValue());
 
         String serverInfo = getServerInfo();
-        return SOSString.isEmpty(serverInfo) ? String.join(",", l) : ("[" + serverInfo + "]" + String.join(",", l));
+        return SOSString.isEmpty(serverInfo) ? String.join(", ", l) : ("[" + serverInfo + "]" + String.join(", ", l));
     }
 
     private String getServerInfo() {
