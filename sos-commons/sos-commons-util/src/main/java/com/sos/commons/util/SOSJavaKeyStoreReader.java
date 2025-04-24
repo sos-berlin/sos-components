@@ -81,6 +81,7 @@ public class SOSJavaKeyStoreReader {
         if (path == null) {
             return null;
         }
+
         String type = getType(storeType);
         // char[] pass = password == null ? "".toCharArray() : password.toCharArray();
         char[] pass = password == null ? null : password.toCharArray();
@@ -89,7 +90,7 @@ public class SOSJavaKeyStoreReader {
             ks.load(is, pass);
             return ks;
         } catch (Throwable e) {
-            throw new Exception(String.format("[%s][%s]%s", path, storeType, e), e);
+            throw new Exception(String.format("[%s.load][%s][%s]%s", SOSJavaKeyStoreReader.class.getSimpleName(), storeType, path, e), e);
         }
     }
 

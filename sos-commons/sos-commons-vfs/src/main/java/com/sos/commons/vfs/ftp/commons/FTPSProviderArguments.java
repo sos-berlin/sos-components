@@ -41,12 +41,12 @@ public class FTPSProviderArguments extends FTPProviderArguments {
     /** Overrides {@link AProviderArguments#getAccessInfo() */
     @Override
     public String getAccessInfo() throws ProviderInitializationException {
-        String ftpsInfo = "[" + String.join(",", getSSL().getProtocols().getValue()) + " " + getSecurityMode().getValue().name().toLowerCase() + "]";
-        return String.format("%s%s", ftpsInfo, super.getAccessInfo());
+        String ftpsInfo = String.join(",", getSSL().getProtocols().getValue()) + " " + getSecurityMode().getValue().name().toLowerCase();
+        return String.format("%s %s", super.getAccessInfo(), ftpsInfo);
     }
 
     public boolean isSecurityModeImplicit() {
-        return FTPSSecurityMode.IMLICIT.equals(securityMode.getValue());
+        return FTPSSecurityMode.IMPLICIT.equals(securityMode.getValue());
     }
 
     public SOSArgument<FTPSSecurityMode> getSecurityMode() {
