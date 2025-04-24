@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,7 +37,7 @@ public class PlanSchemas {
 
         {
             put(DailyPlanPlanSchemaId, JPlanSchema.of(PlanSchemaId.of(DailyPlanPlanSchemaId), 
-                    Optional.of(JExprFunction.apply("(day) => $day < $" + DailyPlanThresholdKey).asScala()),
+                    JExprFunction.apply("(day) => $day >= $" + DailyPlanThresholdKey).asScala(),
                     new HashMap<>(Collections.singletonMap(DailyPlanThresholdKey, StringValue.empty()))));
         }
     });
@@ -88,7 +87,7 @@ public class PlanSchemas {
     }
     
     private static Map<Boolean, List<JPlanSchema>> getGroupedPlanSchemas(JControllerState currentState) {
-        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.planIsClosedFunction(), ps
+        Function<JPlanSchema, JPlanSchema> cloneWithoutRevision = ps -> JPlanSchema.of(ps.id(), ps.unknownPlanIsOpenFunction(), ps
                 .namedValues());
         Set<JPlanSchema> knownPlanSchemas = currentState.idToPlanSchemaState().values().stream().filter(p -> !p.asScala().isGlobal()).map(
                 JPlanSchemaState::item).map(cloneWithoutRevision).collect(Collectors.toSet());
