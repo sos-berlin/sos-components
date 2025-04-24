@@ -447,7 +447,7 @@ public class Globals {
 
     public static String getHostname() {
         try {
-            return SOSShell.getHostname();
+            return SOSShell.getLocalHostName();
         } catch (UnknownHostException e) {
             LOGGER.error(e.toString(), e);
         }

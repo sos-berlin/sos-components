@@ -250,7 +250,7 @@ public class OrderProcessStepLogger implements ISOSLogger {
     }
 
     private String getMessage(LogLevel logLevel, Object msg) {
-        return String.format("[%s]%s", logLevel.name(), msg);
+        return String.format("[%s] %s", logLevel.name(), msg);
     }
 
     protected String throwable2String(String msg, Throwable e) {

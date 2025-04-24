@@ -13,7 +13,6 @@ import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
-import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.http.HTTPProvider;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;

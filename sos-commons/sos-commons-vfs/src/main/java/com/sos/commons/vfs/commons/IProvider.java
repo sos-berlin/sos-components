@@ -67,7 +67,7 @@ public interface IProvider {
      * 
      * @param selection the {@link ProviderFileSelection} containing the criteria for file selection
      * @return a list of {@link ProviderFile} objects that match the selection criteria
-     * @throws ProviderException if an error occurs during the file selection process */
+     * @throws ProviderException if the configured directory is not found and/or an error occurs during the file selection process */
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException;
 
     /** Tests whether a file/directory exists. **/

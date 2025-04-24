@@ -94,7 +94,7 @@ public class SOSString {
                     for (int i = 0; i < len; i++) {
                         r.add(toString(Array.get(o, i), excludeFieldNames, excludeNullValues, error, recursion));
                     }
-                    sb.append(String.join(",", r));
+                    sb.append(String.join(", ", r));
                     sb.append(']');
                 }
             } else if (SOSReflection.isEnum(clazz)) {
@@ -111,7 +111,7 @@ public class SOSString {
                 while ((it.hasNext())) {
                     r.add(toString(it.next(), excludeFieldNames, excludeNullValues, error, recursion));
                 }
-                sb.append(String.join(",", r));
+                sb.append(String.join(", ", r));
                 sb.append(']');
             } else if (o instanceof Map) {
                 sb.append('{');
@@ -122,7 +122,7 @@ public class SOSString {
                     Object key = it.next();
                     r.add(key + "=" + toString(map.get(key), excludeFieldNames, excludeNullValues, error, recursion));
                 }
-                sb.append(String.join(",", r));
+                sb.append(String.join(", ", r));
                 sb.append('}');
             } else if (o instanceof CharSequence) {
                 String val = o.toString();
@@ -179,7 +179,7 @@ public class SOSString {
                     if (r.size() > 0) {
                         sb.append(clazzSimpleName);
                         sb.append("[");
-                        sb.append(String.join(",", r));
+                        sb.append(String.join(", ", r));
                         sb.append("]");
                     }
                 }

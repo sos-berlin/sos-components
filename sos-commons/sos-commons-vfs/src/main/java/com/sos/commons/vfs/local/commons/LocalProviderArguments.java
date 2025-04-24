@@ -1,7 +1,5 @@
 package com.sos.commons.vfs.local.commons;
 
-import java.net.UnknownHostException;
-
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
@@ -22,10 +20,6 @@ public class LocalProviderArguments extends AProviderArguments {
     }
 
     private String getHostname() {
-        try {
-            return SOSShell.getHostname();
-        } catch (UnknownHostException e) {
-            return "localhost";
-        }
+        return SOSShell.getLocalHostNameOptional().orElse("localhost");
     }
 }

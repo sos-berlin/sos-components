@@ -78,7 +78,7 @@ public class YADEArgumentsHelper {
         try {
             for (SOSArgument<?> arg : args.getArguments()) {
                 if (add) {
-                    sb.append(",");
+                    sb.append(", ");
                 }
                 sb.append(toString(arg));
                 add = true;
@@ -90,10 +90,13 @@ public class YADEArgumentsHelper {
             List<ASOSArguments> included = args.getIncludedArgumentsIfNotNull();
             if (included != null) {
                 for (ASOSArguments include : included) {
-                    sb.append(",").append(toString(logger, include.getClass().getSimpleName(), include));
+                    String name = include.getClass().getSimpleName();
+                    // if (excluded.equals(name)) {
+                    // continue;
+                    // }
+                    sb.append(", ").append(toString(logger, name, include));
                 }
             }
-
         } catch (Exception e) {
             sb.append(e.toString());
         }

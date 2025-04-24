@@ -8,8 +8,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSVersionInfo;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.yade.commons.Yade.TransferEntryState;
@@ -138,6 +140,9 @@ public class YADEClientBannerWriter {
 
     private static void writeClientHeader(ISOSLogger logger, YADEClientArguments clientArgs) {
         if (clientArgs == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug(getLocalHostInfo());
+            }
             return;
         }
         List<String> l = new ArrayList<>();
@@ -166,6 +171,7 @@ public class YADEClientBannerWriter {
             logger.info("[" + YADEClientArguments.LABEL + "]" + String.join(",", l));
         }
         if (logger.isDebugEnabled()) {
+            logger.debug(getLocalHostInfo());
             logger.debug(YADEArgumentsHelper.toString(logger, YADEClientArguments.LABEL, clientArgs));
         }
     }
@@ -254,8 +260,9 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs));
+            logger.debug(getHostInfo(YADESourceArguments.LABEL, sourceArgs.getProvider()));
             logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs.getProvider()));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs));
         }
     }
 
@@ -280,8 +287,9 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs));
+            logger.debug(getHostInfo(YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider()));
             logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider()));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs));
         }
     }
 
@@ -338,9 +346,23 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs));
+            logger.debug(getHostInfo(YADETargetArguments.LABEL, targetArgs.getProvider()));
             logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs.getProvider()));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs));
         }
+    }
+
+    private static String getLocalHostInfo() {
+        String localhost = SOSShell.getLocalHostNameOptional().orElse("unknown");
+        return getHostInfo(YADEClientArguments.LABEL, localhost, SOSShell.getHostAddressQuietly(localhost));
+    }
+
+    private static String getHostInfo(String label, AProviderArguments args) {
+        return getHostInfo(label, args.getHost().getValue(), SOSShell.getHostAddressQuietly(args.getHost().getValue()));
+    }
+
+    private static String getHostInfo(String label, String host, String ip) {
+        return "[" + label + "][Host]" + host + ", IP=" + ip;
     }
 
     private static String formatState(String state) {

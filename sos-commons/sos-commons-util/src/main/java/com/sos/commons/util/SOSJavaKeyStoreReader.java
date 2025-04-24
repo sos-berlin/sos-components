@@ -47,7 +47,7 @@ public class SOSJavaKeyStoreReader {
     }
 
     public static SOSJavaKeyStoreResult read(JavaKeyStoreArguments args) throws Exception {
-        if (args == null || (args.getKeyStoreFile().isEmpty() && args.getTrustStoreFile().isEmpty())) {
+        if (args == null || !args.isEnabled()) {
             return null;
         }
         SOSJavaKeyStoreResult result = new SOSJavaKeyStoreReader().new SOSJavaKeyStoreResult();

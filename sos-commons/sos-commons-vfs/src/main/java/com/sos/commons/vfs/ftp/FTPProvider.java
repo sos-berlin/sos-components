@@ -44,6 +44,7 @@ import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderNoSuchFileException;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolCommandListener;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolReply;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
@@ -101,8 +102,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             if (!reply.isPositiveReply()) {
                 throw new Exception(String.format("%s[connect][FTP server refused connection]%s", getLogPrefix(), reply));
             }
-            // Keep Alive
-            client.setControlKeepAliveTimeout(getKeepAliveTimeout());
+            postConnectOperations();
 
             // Login
             try {
@@ -115,7 +115,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 throw new Exception(String.format("%s[login]%s", getLogPrefix(), reply));
             }
 
-            executePostLoginCommands();
+            postLoginOperations();
 
             getLogger().info(getConnectedMsg(getConnectedInfos()));
         } catch (Throwable e) {
@@ -180,8 +180,11 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         });
 
         String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
-
         try {
+            if (!client.changeWorkingDirectory(directory)) {
+                throw new ProviderNoSuchFileException(getDirectoryNotFoundMsg(directory));
+            }
+
             List<ProviderFile> result = new ArrayList<>();
             FTPProviderUtils.selectFiles(this, selection, directory, result);
             return result;
@@ -530,6 +533,15 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         return client;
     }
 
+    /** Attempt to determine if NOT_FOUND is truly the cause in the case of FTPReply.FILE_UNAVAILABLE, rather than issues like permissions, etc. */
+    public boolean isReplyBasedOnFileNotFound(FTPProtocolReply reply, String path) throws ProviderException {
+        if (reply.isFileUnavailableReply()) {
+            // Reply text is not analyzed due to different implementations/languages
+            return exists(path);
+        }
+        return false;
+    }
+
     private FTPClient createClient() throws Exception {
         FTPClient client = isFTPS ? createFTPSClient() : createFTPClient();
         applyPreConnectSettings(client);
@@ -565,9 +577,14 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         // System.setProperty("jdk.tls.allowLegacyResumption", "true");
         // System.setProperty("jdk.tls.useExtendedMasterSecret", "false");
         // System.setProperty("jdk.tls.client.enableSessionTicketExtension", "false");
-
         FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
-        FTPSClient client = new FTPSClient(args.isSecurityModeImplicit(), SOSSSLContextFactory.create(args.getSSL()));
+        FTPSClient client = null;
+        if (args.getSSL().getJavaKeyStore().isEnabled()) {
+            client = new FTPSClient(args.isSecurityModeImplicit(), SOSSSLContextFactory.create(args.getSSL()));
+        } else {
+            client = new FTPSClient(args.isSecurityModeImplicit());
+            // client.setTrustManager(TrustManagerUtils.getAcceptAllTrustManager());
+        }
 
         if (!args.getSSL().getVerifyCertificateHostname().isTrue()) {
             client.setHostnameVerifier(null);
@@ -591,7 +608,35 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         client.setAutodetectUTF8(true);
     }
 
-    private void executePostLoginCommands() throws Exception {
+    private void postConnectOperations() throws Exception {
+        // Keep Alive
+        client.setControlKeepAliveTimeout(getKeepAliveTimeout());
+
+        /** FTPS */
+        if (isFTPS) {
+            client.enterLocalPassiveMode();
+            debugCommand("enterLocalPassiveMode");
+
+            try {
+                ((FTPSClient) client).execPBSZ(0);
+                debugCommand("execPBSZ(0)");
+            } catch (Throwable e) {
+                getLogger().warn("[execPBSZ(0)]" + e);
+            }
+            try {
+                ((FTPSClient) client).execPROT("P");
+                debugCommand("execPROT(P)");
+            } catch (Throwable e) {
+                getLogger().warn("[execPROT(P)]" + e);
+            }
+
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
+            }
+        }
+    }
+
+    private void postLoginOperations() throws Exception {
         /** FTP/FTPS */
         // Passive Mode
         if (getArguments().getPassiveMode().isTrue()) {
@@ -624,29 +669,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         }
 
         client.sendNoOp();// NOOP command
-
-        /** FTPS */
-        if (isFTPS) {
-            client.enterLocalPassiveMode();
-            debugCommand("enterLocalPassiveMode");
-
-            try {
-                ((FTPSClient) client).execPBSZ(0);
-                debugCommand("execPBSZ(0)");
-            } catch (Throwable e) {
-                getLogger().warn("[execPBSZ(0)]" + e);
-            }
-            try {
-                ((FTPSClient) client).execPROT("P");
-                debugCommand("execPROT(P)");
-            } catch (Throwable e) {
-                getLogger().warn("[execPROT(P)]" + e);
-            }
-
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
-            }
-        }
     }
 
     private String getConnectedInfos() {
@@ -682,15 +704,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
         validatePrerequisites(method);
         validateArgument(method, argValue, msg);
-    }
-
-    /** Attempt to determine if NOT_FOUND is truly the cause in the case of FTPReply.FILE_UNAVAILABLE, rather than issues like permissions, etc. */
-    private boolean isReplyBasedOnFileNotFound(FTPProtocolReply reply, String path) throws ProviderException {
-        if (reply.isFileUnavailableReply()) {
-            // Reply text is not analyzed due to different implementations/languages
-            return exists(path);
-        }
-        return false;
     }
 
     private Duration getKeepAliveTimeout() {

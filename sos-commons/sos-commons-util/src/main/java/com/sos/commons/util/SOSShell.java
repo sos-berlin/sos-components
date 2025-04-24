@@ -7,10 +7,12 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -175,12 +177,44 @@ public class SOSShell {
         }
     }
 
-    public static String getHostname() throws UnknownHostException {
+    public static String getLocalHostName() throws UnknownHostException {
         if (HOSTNAME == null) {
             String env = System.getenv(IS_WINDOWS ? "COMPUTERNAME" : "HOSTNAME");
             HOSTNAME = SOSString.isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
         }
         return HOSTNAME;
+    }
+
+    public static Optional<String> getLocalHostNameOptional() {
+        try {
+            return Optional.of(getLocalHostName());
+        } catch (UnknownHostException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static String getHostAddress(String host) throws UnknownHostException {
+        try {
+            return InetAddress.getByName(host).getHostAddress();
+        } catch (UnknownHostException originalException) {
+            try {
+                return InetAddress.getByName(new URL(host).getHost()).getHostAddress();
+            } catch (Exception urlException) {
+                throw originalException;
+            }
+        }
+    }
+
+    public static Optional<String> getHostAddressOptional(String host) {
+        try {
+            return Optional.of(getHostAddress(host));
+        } catch (Exception e1) {
+            return Optional.empty();
+        }
+    }
+
+    public static String getHostAddressQuietly(String host) {
+        return getHostAddressOptional(host).orElse("could not be resolved!");
     }
 
     public static String getUsername() {

@@ -58,7 +58,7 @@ public class JocConfiguration {
         if (hostname == null) {
             hostname = "unknown";
             try {
-                hostname = SOSShell.getHostname();
+                hostname = SOSShell.getLocalHostName();
             } catch (UnknownHostException e) {
                 LOGGER.error(e.toString(), e);
             }

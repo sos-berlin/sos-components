@@ -32,6 +32,7 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderNoSuchFileException;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 
 public class LocalProvider extends AProvider<LocalProviderArguments> {
@@ -91,6 +92,9 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         });
 
         Path directory = Paths.get(selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory());
+        if (!Files.exists(directory)) {
+            throw new ProviderNoSuchFileException(getDirectoryNotFoundMsg(directory.toString()));
+        }
         try {
             List<ProviderFile> result;
             if (selection.getConfig().isRecursive()) {

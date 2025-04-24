@@ -18,7 +18,7 @@ public class JocInstanceTest {
         LOGGER.info(String.valueOf(SOSShell.OS_NAME));
         LOGGER.info(String.valueOf(SOSShell.OS_VERSION));
         LOGGER.info(String.valueOf(SOSShell.OS_ARCHITECTURE));
-        LOGGER.info(String.valueOf(SOSShell.getHostname()));
+        LOGGER.info(String.valueOf(SOSShell.getLocalHostNameOptional().orElse("UNKNOWN")));
     }
 
 }

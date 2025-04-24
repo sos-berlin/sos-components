@@ -30,7 +30,7 @@ public class HTTPAuthConfig {
 
         if (SOSString.isEmpty(userWorkstation)) {
             try {
-                userWorkstation = SOSShell.getHostname();
+                userWorkstation = SOSShell.getLocalHostName();
             } catch (UnknownHostException e) {
                 logger.warn("[HTTPAuthConfig][workstation][getHostname]" + e.toString());
             }

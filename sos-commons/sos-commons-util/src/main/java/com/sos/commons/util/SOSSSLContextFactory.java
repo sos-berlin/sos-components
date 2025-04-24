@@ -33,8 +33,8 @@ public class SOSSSLContextFactory {
         SSLContext sslContext = SSLContext.getInstance(DEFAULT_PROTOCOL);
 
         SOSJavaKeyStoreResult result = SOSJavaKeyStoreReader.read(args.getJavaKeyStore());
-        if (result == null) {
-            // TODO throw Exception ?
+        if (result == null) {// TODO
+            sslContext.init(null, null, null);
         } else {
             try {
                 sslContext.init(getKeyManagers(result.getKeyStore(), result.getKeyStorePassword(), null), getTrustManagers(result.getTrustStore(),

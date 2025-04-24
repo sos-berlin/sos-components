@@ -326,6 +326,10 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
+    public String getDirectoryNotFoundMsg(String directory) {
+        return getLogPrefix() + "[Directory]" + directory;
+    }
+
     public static String millis2string(int val) {
         if (val <= 0) {
             return String.valueOf(val).concat("ms");

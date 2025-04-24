@@ -265,7 +265,7 @@ public abstract class AConfiguration {
     private String getJocBaseUri() {
         try {
             if (Globals.servletBaseUri != null) {
-                String hostname = SOSShell.getHostname();
+                String hostname = SOSShell.getLocalHostName();
                 String baseUri = Globals.servletBaseUri.normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
                 if (baseUri.matches("https?://localhost:.*") && hostname != null) {
                     baseUri = baseUri.replaceFirst("^(https?://)localhost:", "$1" + hostname + ":");
