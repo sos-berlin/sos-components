@@ -56,13 +56,13 @@ public class YADEJob extends Job<YADEJobArguments> {
             argsLoader.getSourceArgs().getExcludedDirectories().setValue(args.getSourceExcludedDirectories().getValue());
         }
         if (!args.getSourceFileList().isEmpty()) {
-            argsLoader.getSourceArgs().getFileList().setValue(args.getSourceFileList().getValue());
+            argsLoader.getSourceArgs().applyFileList(args.getSourceFileList().getValue());
         }
         if (!args.getSourceFilePath().isEmpty()) {
-            argsLoader.getSourceArgs().setFilePath(args.getSourceFilePath().getValue());
+            argsLoader.getSourceArgs().applyFilePath(args.getSourceFilePath().getValue());
         }
         if (!args.getSourceFileSpec().isEmpty()) {
-            argsLoader.getSourceArgs().getFileSpec().setValue(args.getSourceFileSpec().getValue());
+            argsLoader.getSourceArgs().applyFileSpec(args.getSourceFileSpec().getValue());
         }
 
         // Target

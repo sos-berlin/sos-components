@@ -61,6 +61,28 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         getLabel().setValue(LABEL);
     }
 
+    // Overwrite settings
+    public void applyFilePath(String val) {
+        if (val != null) {
+            resetSelection();
+            setFilePath(val);
+        }
+    }
+
+    public void applyFileList(Path val) {
+        if (val != null) {
+            resetSelection();
+            fileList.setValue(val);
+        }
+    }
+
+    public void applyFileSpec(String val) {
+        if (val != null) {
+            resetSelection();
+            fileSpec.setValue(val);
+        }
+    }
+
     public boolean isSingleFilesSelection() {
         return isFilePathEnabled() || isFileListEnabled();
     }
@@ -165,6 +187,12 @@ public class YADESourceArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getCheckIntegrityHash() {
         return checkIntegrityHash;
+    }
+
+    private void resetSelection() {
+        filePath.setValue(null);
+        fileList.setValue(null);
+        fileSpec.setValue(null);
     }
 
 }

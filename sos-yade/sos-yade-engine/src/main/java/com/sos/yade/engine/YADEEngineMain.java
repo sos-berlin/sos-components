@@ -147,9 +147,9 @@ public class YADEEngineMain {
         // Source
         setOptionalStringArgument(argsLoader.getSourceArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_SOURCE_DIR);
         setOptionalStringArgument(argsLoader.getSourceArgs().getExcludedDirectories(), args, YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES);
-        setOptionalPathArgument(argsLoader.getSourceArgs().getFileList(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST);
+        setOptionalSourceFileList(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST);
         setOptionalSourceFilePath(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH);
-        setOptionalStringArgument(argsLoader.getSourceArgs().getFileSpec(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
+        setOptionalSourceFileSpec(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
         // Target
         if (argsLoader.getTargetArgs() != null) {
             setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
@@ -233,17 +233,24 @@ public class YADEEngineMain {
         }
     }
 
-    private void setOptionalPathArgument(SOSArgument<Path> arg, Map<String, String> args, String name) {
-        String val = args.get(name);
-        if (!SOSString.isEmpty(val)) {
-            arg.setValue(Path.of(val));
-        }
-    }
-
     private void setOptionalSourceFilePath(YADESourceArguments sourceArgs, Map<String, String> args, String name) {
         String val = args.get(name);
         if (!SOSString.isEmpty(val)) {
-            sourceArgs.setFilePath(val);
+            sourceArgs.applyFilePath(val);
+        }
+    }
+
+    private void setOptionalSourceFileList(YADESourceArguments sourceArgs, Map<String, String> args, String name) {
+        String val = args.get(name);
+        if (!SOSString.isEmpty(val)) {
+            sourceArgs.applyFileList(Path.of(val));
+        }
+    }
+
+    private void setOptionalSourceFileSpec(YADESourceArguments sourceArgs, Map<String, String> args, String name) {
+        String val = args.get(name);
+        if (!SOSString.isEmpty(val)) {
+            sourceArgs.applyFileSpec(val);
         }
     }
 
