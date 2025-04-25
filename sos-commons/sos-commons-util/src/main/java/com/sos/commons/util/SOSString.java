@@ -401,4 +401,11 @@ public class SOSString {
         return collection.stream().map(transformation).collect(Collectors.joining(delimiter));
     }
 
+    public static String replaceNewLines(String input, String replacement) {
+        if (input == null) {
+            return null;
+        }
+        return input.replaceAll("[\\r\\n]+", replacement);
+    }
+
 }

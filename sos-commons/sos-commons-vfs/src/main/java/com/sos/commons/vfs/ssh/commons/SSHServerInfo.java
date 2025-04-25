@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.vfs.ssh.SSHProvider;
 
 public class SSHServerInfo {
 
@@ -16,19 +17,25 @@ public class SSHServerInfo {
         UNKNOWN, UNIX, WINDOWS, CYGWIN
     };
 
+    private static final String COMMANDO = "uname";
+
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private final String serverVersion;
     private final SOSCommandResult commandResult;
+    // String because of linux|darwin|aix|hp-ux|solaris|sunos|freebsd ...
     private String os = OS.UNKNOWN.name();
     private Shell shell = Shell.UNKNOWN;
 
-    public SSHServerInfo(String serverVersion, SOSCommandResult commandResult) {
+    public SSHServerInfo(SSHProvider provider, String serverVersion) {
         this.serverVersion = serverVersion;
-        this.commandResult = commandResult;
-        analyze();
+        this.commandResult = provider.executeCommand(COMMANDO);
+        if (provider.getLogger().isDebugEnabled()) {
+            provider.getLogger().debug("[SSHServerInfo]%s", SOSString.replaceNewLines(commandResult.toString(), " "));
+        }
+        analyze(provider);
     }
 
-    private void analyze() {
+    private void analyze(SSHProvider provider) {
         if (commandResult == null) {
             return;
         }
@@ -37,53 +44,84 @@ public class SSHServerInfo {
             if (commandResult.getStdErr().length() > 0) {
                 os = OS.WINDOWS.name();
             } else {
-                analyzeServerVersion();
+                trySetOSFromServerVersion();
             }
             return;
         }
 
+        // SFTP only
+        // - Windows OpenSSH DE - [SSHServerInfo][uname][exitCode=0][std:out=This service allows sftp connections only.][std:err=]
+        // - Unix OpenSSH - [SSHServerInfo][uname][exitCode=1][std:out=This service allows sftp connections only.][std:err=]
+        String stdOut = commandResult.getStdOut().trim().toLowerCase();
+        String stdErr = commandResult.getStdErr().trim().toLowerCase();
+        boolean isSFTPOnly = stdOut.contains("sftp") && stdOut.contains("only") && stdErr.isEmpty();
         switch (commandResult.getExitCode()) {
         case 0:
-            String stdOut = commandResult.getStdOut().trim();
             if (stdOut.matches("(?i).*(linux|darwin|aix|hp-ux|solaris|sunos|freebsd).*")) {
                 os = stdOut;
-                shell = Shell.UNIX;
+                setShell(isSFTPOnly, Shell.UNIX);
             } else if (stdOut.matches("(?i).*cygwin.*")) {
                 // OS is Windows but shell is Unix like
                 // unix commands have to be used
                 os = OS.WINDOWS.name();
-                shell = Shell.CYGWIN;
+                setShell(isSFTPOnly, Shell.CYGWIN);
             } else {
-                analyzeServerVersion();
-                shell = Shell.UNIX;
+                trySetOSFromServerVersion();
+                setShell(isSFTPOnly, Shell.UNIX);
             }
             break;
         case 9009:
+            // Windows - command not found
+            os = OS.WINDOWS.name();
+            setShell(isSFTPOnly, Shell.WINDOWS);
+            break;
         case 1:
             // call of uname under Windows OS delivers exit code 9009 or exit code 1 and target shell cmd.exe
             // the exit code depends on the remote SSH implementation
-            os = OS.WINDOWS.name();
-            shell = Shell.WINDOWS;
+            trySetOSFromServerVersion(); // maybe OpenSSH_for_Windows_x.x
+            if (isSFTPOnly) {
+                shell = Shell.UNKNOWN;
+            } else {
+                // [uname][exitCode=1][std:out=][std:err=Der Befehl "uname" ist entweder falsch geschrieben oder konnte nicht gefunden werden.]
+                if (stdOut.isEmpty() && stdErr.contains(COMMANDO)) {
+                    os = OS.WINDOWS.name();
+                    shell = Shell.WINDOWS;
+                } else {
+                    SOSCommandResult ver = provider.executeCommand("ver");
+                    if (provider.getLogger().isDebugEnabled()) {
+                        provider.getLogger().debug("[SSHServerInfo]%s", commandResult);
+                    }
+                    if (ver.getStdOut().toUpperCase().contains(OS.WINDOWS.name())) {
+                        os = OS.WINDOWS.name();
+                        shell = Shell.WINDOWS;
+                    }
+                    // otherwise UNKNOWN
+                }
+            }
             break;
         case 127:
             // call of uname under Windows OS with CopSSH (cygwin) and target shell /bin/bash delivers exit code 127
             // command uname is not installed by default through CopSSH installation
             os = OS.WINDOWS.name();
-            shell = Shell.CYGWIN;
+            setShell(isSFTPOnly, Shell.CYGWIN);
             break;
         default:
-            analyzeServerVersion();
+            trySetOSFromServerVersion();
             shell = Shell.UNKNOWN;
             break;
         }
     }
 
-    private void analyzeServerVersion() {
+    private void trySetOSFromServerVersion() {
         if (!SOSString.isEmpty(serverVersion)) {
             if (serverVersion.toUpperCase().contains(OS.WINDOWS.name())) {
                 os = OS.WINDOWS.name();
             }
         }
+    }
+
+    private void setShell(boolean isSFTPOnly, Shell shell) {
+        this.shell = isSFTPOnly ? Shell.UNKNOWN : shell;
     }
 
     public String getOS() {

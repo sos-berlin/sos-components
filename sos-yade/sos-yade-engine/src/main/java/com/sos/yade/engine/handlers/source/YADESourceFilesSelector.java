@@ -58,8 +58,11 @@ public class YADESourceFilesSelector {
         StringBuilder sb = new StringBuilder();
         if (sourceDelegator.getDirectory() != null) {
             // sourceDelegator.getDirectory() - can be empty - if empty(trailing separator was removed) - use the pathSeparator, e.g.: /
-            sb.append("[").append(sourceDelegator.getDirectory().isEmpty() ? sourceDelegator.getProvider().getPathSeparator() : sourceDelegator
-                    .getDirectory()).append("]");
+            String sourceDirectory = sourceDelegator.getDirectory().isEmpty() ? sourceDelegator.getProvider().getPathSeparator() : sourceDelegator
+                    .getDirectory();
+            sb.append("[");
+            sb.append(sourceDelegator.getArgs().getDirectory().getName()).append("=").append(sourceDirectory);
+            sb.append("]");
         }
         sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getRecursive())).append("]");
         if (sourceDelegator.getArgs().isSingleFilesSelection()) {
@@ -81,7 +84,7 @@ public class YADESourceFilesSelector {
         if (!sourceDelegator.getArgs().getMaxFileSize().isEmpty()) {
             sb.append("[").append(YADEArgumentsHelper.toString(sourceDelegator.getArgs().getMaxFileSize())).append("]");
         }
-        logger.info("[%s]%sfound=%s", sourceDelegator.getLabel(), sb, sourceFiles.size());
+        logger.info("[%s][Selection]%sfound=%s", sourceDelegator.getLabel(), sb, sourceFiles.size());
 
         checkZeroByteFiles(logger, sourceDelegator, sourceFiles);
         checkFileListSize(logger, sourceDelegator, clientArgs, sourceFiles);

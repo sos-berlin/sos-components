@@ -78,7 +78,7 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
 
     public SSHServerInfo getServerInfo() {
         if (serverInfo == null) {
-            serverInfo = new SSHServerInfo(serverVersion, executeCommand("uname"));
+            serverInfo = new SSHServerInfo(this, serverVersion);
         }
         return serverInfo;
     }

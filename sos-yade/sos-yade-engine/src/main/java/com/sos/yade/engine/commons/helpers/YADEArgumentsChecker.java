@@ -41,8 +41,8 @@ public class YADEArgumentsChecker {
             throws YADEEngineInitializationException {
         if (!needTargetProvider && TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             if (clientArgs == null || clientArgs.getResultSetFile().isEmpty()) {
-                throw new YADEEngineInitializationException("[" + YADEClientArguments.LABEL + "][" + TransferOperation.GETLIST + "]Missing \""
-                        + clientArgs.getResultSetFile().getName() + "\" argument");
+                throw new YADEEngineInitializationException("[" + YADEClientArguments.LABEL + "][" + TransferOperation.GETLIST
+                        + "]Missing \"SourceFileOptions/ResultSet/" + clientArgs.getResultSetFile().getName() + "\" argument");
             }
         }
     }
