@@ -104,6 +104,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry numOfWOrkflowTagsDisplayed = new ConfigurationEntry("num_of_workflow_tags_displayed", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     
+    //role of 4-eyes principle
+    private ConfigurationEntry fourEyesRole = new ConfigurationEntry("four_eyes_role", "", GlobalSettingsSectionValueType.STRING);
+    
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -161,6 +164,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         reportJavaOptions.setOrdering(++index);
         numOfTagsDisplayedAsOrderId.setOrdering(++index);
         numOfWOrkflowTagsDisplayed.setOrdering(++index);
+        
+        fourEyesRole.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -347,6 +352,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         } catch (Exception e) {
             return 0; // default
         }
+    }
+    
+    public ConfigurationEntry getFourEyesRole() {
+        return fourEyesRole;
     }
     
 }

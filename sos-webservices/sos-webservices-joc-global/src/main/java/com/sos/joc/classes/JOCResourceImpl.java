@@ -256,6 +256,10 @@ public class JOCResourceImpl {
     public JOCDefaultResponse accessDeniedResponse() {
         return accessDeniedResponse("Access denied");
     }
+    
+    public JOCDefaultResponse fourEyesResponse() {
+        return accessDeniedResponse("4-eyes principle: Operation needs approval process.");
+    }
 
     public JOCDefaultResponse accessDeniedResponse(String message) {
         jocError.setMessage(message);
@@ -313,10 +317,17 @@ public class JOCResourceImpl {
     }
 
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission) throws JocException {
+        return initPermissions(controllerId, permission, false);
+    }
+    
+    public JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission) throws JocException {
         JOCDefaultResponse jocDefaultResponse = init401And440();
 
         if (!permission) {
             return accessDeniedResponse();
+        }
+        if (fourEyesPermission) {
+            return fourEyesResponse();
         }
         folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
         folderPermissions.setSchedulerId(controllerId);

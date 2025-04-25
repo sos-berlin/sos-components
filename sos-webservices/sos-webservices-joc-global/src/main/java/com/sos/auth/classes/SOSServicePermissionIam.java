@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -557,10 +558,8 @@ public class SOSServicePermissionIam {
                         sosLogin.setMsg("login denied: no role assignment found");
                         currentAccount.setCurrentSubject(null);
                     } else {
-                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
-                            sosLogin.setMsg("login denied: no permission assignment found");
-                            currentAccount.setCurrentSubject(null);
-                        }
+                        sosLogin.setMsg("login denied: no permission assignment found");
+                        currentAccount.setCurrentSubject(null);
                     }
                     authorization = false;
                 }
@@ -719,8 +718,9 @@ public class SOSServicePermissionIam {
                 iamAccountFilter.setAccountName(currentAccount.getAccountname());
                 DBItemIamBlockedAccount dbItemIamBlockedAccount = iamAccountDBLayer.getBlockedAccount(iamAccountFilter);
 
-                Map<String, String> authenticationResult = new HashMap<String, String>();
-                Set<String> setOfAccountPermissions = new HashSet<String>();
+                Map<String, String> authenticationResult = new HashMap<>();
+                Set<String> setOfAccountPermissions = new HashSet<>();
+                Set<String> setOf4EyesRolePermissions = new HashSet<>();
 
                 IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
                 IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
@@ -749,6 +749,7 @@ public class SOSServicePermissionIam {
                                 if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                                     setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
                                 }
+                                setOf4EyesRolePermissions.addAll(currentAccount.getCurrentSubject().getListOf4EyesRolePermissions());
                                 addFolder(currentAccount);
                             } else {
                                 authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
@@ -835,11 +836,15 @@ public class SOSServicePermissionIam {
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, true);
                     currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
+                    currentAccount.getCurrentSubject().getListOf4EyesRolePermissions().addAll(setOf4EyesRolePermissions);
                     SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
                     SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
                     Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
                             securityConfigurationEntry);
+                    Permissions sos4EyesRolePermissionJocCockpitControllers = sosPermissionsCreator
+                            .create4EyesJocCockpitPermissionControllerObjectList(securityConfigurationEntry);
                     currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
+                    currentAccount.set4EyesRolePermissionJocCockpitControllers(sos4EyesRolePermissionJocCockpitControllers);
                 } else {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, false);
                 }

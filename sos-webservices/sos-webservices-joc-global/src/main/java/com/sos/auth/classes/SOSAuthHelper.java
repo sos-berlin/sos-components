@@ -8,16 +8,19 @@ import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -290,23 +293,34 @@ public class SOSAuthHelper {
     }
 
     public static Set<String> getSetOfPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
-        Set<String> setOfPermissions = new HashSet<String>();
-        for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
-            if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-                String permission = "";
-                if (dbItemSOSPermissionWithName.getControllerId() != null && !dbItemSOSPermissionWithName.getControllerId().isEmpty()) {
-                    permission = dbItemSOSPermissionWithName.getControllerId() + ":" + dbItemSOSPermissionWithName.getAccountPermission();
-                } else {
-                    permission = dbItemSOSPermissionWithName.getAccountPermission();
-                }
-                if (dbItemSOSPermissionWithName.getExcluded()) {
-                    permission = "-" + permission;
-                }
-                setOfPermissions.add(permission);
-            }
+        return listOfPermissions.stream().map(SOSAuthHelper::getPermission).filter(Optional::isPresent).map(Optional::get).collect(Collectors
+                .toSet());
+    }
+    
+    public static Set<String> getSetOf4EyesRolePermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
+        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getFourEyesRole().getValue();
+        if (fourEyesRole == null || fourEyesRole.isEmpty()) {
+            return Collections.emptySet();
         }
-        return setOfPermissions;
-
+        Predicate<DBItemIamPermissionWithName> is4EyesRole = i -> i.getRoleName().equals(fourEyesRole);
+        return listOfPermissions.stream().filter(is4EyesRole).map(SOSAuthHelper::getPermission).filter(Optional::isPresent).map(Optional::get).collect(Collectors
+                .toSet());
+    }
+    
+    private static Optional<String> getPermission(DBItemIamPermissionWithName dbItemSOSPermissionWithName) {
+        if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
+            String permission = "";
+            if (dbItemSOSPermissionWithName.getControllerId() != null && !dbItemSOSPermissionWithName.getControllerId().isEmpty()) {
+                permission = dbItemSOSPermissionWithName.getControllerId() + ":" + dbItemSOSPermissionWithName.getAccountPermission();
+            } else {
+                permission = dbItemSOSPermissionWithName.getAccountPermission();
+            }
+            if (dbItemSOSPermissionWithName.getExcluded()) {
+                permission = "-" + permission;
+            }
+            return Optional.of(permission);
+        }
+        return Optional.empty();
     }
 
     public static boolean accountExist(String account, Long identityServiceId) {

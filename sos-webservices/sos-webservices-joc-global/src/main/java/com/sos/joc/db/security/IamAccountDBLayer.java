@@ -24,6 +24,7 @@ import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.ConfigurationType;
@@ -369,36 +370,38 @@ public class IamAccountDBLayer {
         return null;
     }
 
-    private String getRoleListSql(Collection<String> list) {
-        if (list.size() == 0) {
-            return "1=0";
-        }
-        StringBuilder sql = new StringBuilder();
-        sql.append("r.roleName in (");
-        for (String s : list) {
-            sql.append("'" + s + "',");
-        }
-        String s = sql.toString();
-        s = s.substring(0, s.length() - 1);
-        s = s + ")";
+//    private String getRoleListSql(Collection<String> list) {
+//        if (list.size() == 0) {
+//            return "1=0";
+//        }
+//        StringBuilder sql = new StringBuilder();
+//        sql.append("r.roleName in (");
+//        for (String s : list) {
+//            sql.append("'" + s + "',");
+//        }
+//        String s = sql.toString();
+//        s = s.substring(0, s.length() - 1);
+//        s = s + ")";
+//
+//        return " (" + s + ") ";
+//    }
 
-        return " (" + s + ") ";
-    }
-
-    private List<DBItemIamPermissionWithName> getListOfPermissionsFromRoles(Set<String> setOfRoles, Long identityServiceId)
+    private List<DBItemIamPermissionWithName> getListOfPermissionsFromRoles(Collection<String> setOfRoles, Long identityServiceId)
             throws SOSHibernateException {
         if (setOfRoles.size() == 0) {
-            return new ArrayList<DBItemIamPermissionWithName>();
+            return Collections.emptyList();
         }
 
-        String q = "select  p.controllerId as controllerId,p.roleId as roleId,p.accountPermission as accountPermission,"
-                + "p.folderPermission as folderPermission,p.excluded as excluded,p.recursive as recursive,r.roleName as roleName " + "from "
-                + DBItemIamPermission + " p," + DBItemIamRole + " r" + " where " + getRoleListSql(setOfRoles)
-                + " and p.roleId=r.id and p.identityServiceId = :identityServiceId";
+        String q = "select p.controllerId as controllerId,p.roleId as roleId,p.accountPermission as accountPermission,"
+                + "p.folderPermission as folderPermission,p.excluded as excluded,p.recursive as recursive,r.roleName as roleName from "
+                + DBItemIamPermission + " p," + DBItemIamRole + " r" + " where " 
+                //+ getRoleListSql(setOfRoles)
+                + "r.roleName in (:roles) and p.roleId=r.id and p.identityServiceId = :identityServiceId";
 
         Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q, DBItemIamPermissionWithName.class);
 
         query.setParameter("identityServiceId", identityServiceId);
+        query.setParameterList("roles", setOfRoles);
         List<DBItemIamPermissionWithName> listOfPermissionsFromRoles = sosHibernateSession.getResultList(query);
         return listOfPermissionsFromRoles == null ? Collections.emptyList() : listOfPermissionsFromRoles;
 
@@ -406,21 +409,28 @@ public class IamAccountDBLayer {
 
     public List<DBItemIamPermissionWithName> getListOfPermissionsFromRoleNames(Set<String> setOfRoles, Long identityServiceId)
             throws SOSHibernateException {
-        List<DBItemIamPermissionWithName> resultList = new ArrayList<DBItemIamPermissionWithName>();
+//        List<DBItemIamPermissionWithName> resultList = new ArrayList<DBItemIamPermissionWithName>();
         int size = setOfRoles.size();
         if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-            ArrayList<String> copy = (ArrayList<String>) setOfRoles.stream().collect(Collectors.toList());
+//            List<String> copy = setOfRoles.stream().collect(Collectors.toList());
+//            for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+//                Set<String> s = null;
+//                if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
+//                    s = copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)).stream().collect(Collectors.toSet());
+//
+//                } else {
+//                    s = copy.subList(i, size).stream().collect(Collectors.toSet());
+//                }
+//                resultList.addAll(getListOfPermissionsFromRoles(s, identityServiceId));
+//            }
+//            return resultList;
+            
+            List<DBItemIamPermissionWithName> result = new ArrayList<>();
+            List<String> copy = setOfRoles.stream().collect(Collectors.toList());
             for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                Set<String> s = null;
-                if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
-                    s = copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)).stream().collect(Collectors.toSet());
-
-                } else {
-                    s = copy.subList(i, size).stream().collect(Collectors.toSet());
-                }
-                resultList.addAll(getListOfPermissionsFromRoles(s, identityServiceId));
+                result.addAll(getListOfPermissionsFromRoles(SOSHibernate.getInClausePartition(i, copy), identityServiceId));
             }
-            return resultList;
+            return result;
         } else {
             return getListOfPermissionsFromRoles(setOfRoles, identityServiceId);
         }

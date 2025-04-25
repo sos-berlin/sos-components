@@ -32,7 +32,7 @@ public class SOSPermissionMerger {
     public SecurityConfiguration addIdentityService(SOSIdentityService sosIdentityService) throws JocException,
             SOSHibernateException, IOException {
         if (identityServices == null) {
-            identityServices = new ArrayList<SOSIdentityService>();
+            identityServices = new ArrayList<>();
         }
         if (!identityServices.contains(sosIdentityService)) {
             identityServices.add(sosIdentityService);
@@ -42,7 +42,7 @@ public class SOSPermissionMerger {
 
         securityConfiguration = sosSecurityDBConfiguration.readConfiguration(null, sosIdentityService.getIdentityServiceName());
         if (listOfSecurityConfigurations == null) {
-            listOfSecurityConfigurations = new ArrayList<SecurityConfiguration>();
+            listOfSecurityConfigurations = new ArrayList<>();
         }
         listOfSecurityConfigurations.add(securityConfiguration);
         return securityConfiguration;

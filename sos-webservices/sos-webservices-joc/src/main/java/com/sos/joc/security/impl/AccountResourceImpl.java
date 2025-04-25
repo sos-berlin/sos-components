@@ -479,7 +479,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_PERMISSIONS);
 
             Permissions permissions = new Permissions();
-            Set<String> setOfAccountPermissions = new HashSet<String>();
+            //Set<String> setOfAccountPermissions = new HashSet<String>();
 
             SOSAuthCurrentAccount currentAccount = new SOSAuthCurrentAccount(accountFilter.getAccountName());
 
@@ -490,7 +490,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             iamIdentityServiceFilter.setRequired(true);
 
             List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(iamIdentityServiceFilter, 0);
-            listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(iamIdentityServiceFilter, 0);
 
             if (listOfIdentityServices.size() == 0) {
                 DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountFilter
@@ -507,15 +506,15 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 case LDAP:
                 case LDAP_JOC:
                     sosLogin = new SOSLdapLogin();
-                    LOGGER.debug("Login with idendity service ldap");
+                    LOGGER.debug("Login with identity service ldap");
                     break;
                 case JOC:
                     sosLogin = new SOSInternAuthLogin();
-                    LOGGER.debug("Login with idendity service sosintern");
+                    LOGGER.debug("Login with identity service sosintern");
                     break;
                 default:
                     sosLogin = new SOSInternAuthLogin();
-                    LOGGER.debug("Login with idendity service sosintern");
+                    LOGGER.debug("Login with identity service sosintern");
                 }
 
                 sosLogin.setIdentityService(sosIdentityService);
@@ -530,7 +529,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(sosIdentityService);
 
                 currentAccount.setRoles(securityConfiguration);
-                setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                //setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
             }
 
             SecurityConfiguration securityConfiguration = sosPermissionMerger.mergePermissions();

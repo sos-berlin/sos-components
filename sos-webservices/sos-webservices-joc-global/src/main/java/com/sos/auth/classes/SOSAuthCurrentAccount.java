@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,6 +63,7 @@ public class SOSAuthCurrentAccount {
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
+    private Permissions sos4EyesPermissions;
 
     public SOSAuthCurrentAccount(String accountName) {
         super();
@@ -81,11 +83,14 @@ public class SOSAuthCurrentAccount {
         }
 
         if (sosPermissionJocCockpitControllers.getControllers() != null) {
-            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(controllerId)) {
-                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId);
-            } else {
-                return sosPermissionJocCockpitControllers.getControllerDefaults();
-            }
+            return Optional.ofNullable(sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId)).orElse(
+                    sosPermissionJocCockpitControllers.getControllerDefaults());
+
+//            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(controllerId)) {
+//                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId);
+//            } else {
+//                return sosPermissionJocCockpitControllers.getControllerDefaults();
+//            }
         } else {
             return sosPermissionJocCockpitControllers.getControllerDefaults();
         }
@@ -113,6 +118,41 @@ public class SOSAuthCurrentAccount {
     public void setSosPermissionJocCockpitControllers(Permissions sosPermissionJocCockpitControllers) {
         this.sosPermissionJocCockpitControllers = sosPermissionJocCockpitControllers;
     }
+    
+    public ControllerPermissions get4EyesControllerPermissions(String controllerId) {
+        if (sos4EyesPermissions == null) {
+            sos4EyesPermissions = initPermissions();
+        }
+
+        if (sos4EyesPermissions.getControllers() != null) {
+            return Optional.ofNullable(sos4EyesPermissions.getControllers().getAdditionalProperties().get(controllerId)).orElse(
+                    sos4EyesPermissions.getControllerDefaults());
+        } else {
+            return sos4EyesPermissions.getControllerDefaults();
+        }
+    }
+    
+    public ControllerPermissions get4EyesControllerDefaultPermissions() {
+        if (sos4EyesPermissions == null) {
+            sos4EyesPermissions = initPermissions();
+        }
+        return sos4EyesPermissions.getControllerDefaults();
+    }
+
+    public JocPermissions get4EyesJocPermissions() {
+        if (sos4EyesPermissions == null) {
+            sos4EyesPermissions = initPermissions();
+        }
+        return sos4EyesPermissions.getJoc();
+    }
+    
+    public void set4EyesRolePermissionJocCockpitControllers(Permissions sos4EyesRolePermissionJocCockpitControllers) {
+        this.sos4EyesPermissions = sos4EyesRolePermissionJocCockpitControllers;
+    }
+    
+    public Permissions get4EyesRolePermissionJocCockpitControllers() {
+        return sos4EyesPermissions;
+    }
 
     public String getAccessToken() {
         return accessToken;
@@ -124,7 +164,7 @@ public class SOSAuthCurrentAccount {
 
     public void setAccessToken(String identityServiceName, String accessToken) {
         if (identyServiceAccessToken == null) {
-            identyServiceAccessToken = new HashMap<String, String>();
+            identyServiceAccessToken = new HashMap<>();
         }
         identyServiceAccessToken.put(identityServiceName, accessToken);
         if (this.id == null) {
@@ -150,7 +190,7 @@ public class SOSAuthCurrentAccount {
     public void setRoles(SecurityConfiguration securityConf) {
 
         if (this.roles == null) {
-            this.roles = new HashSet<String>();
+            this.roles = new HashSet<>();
         }
         if (currentSubject != null) {
             this.roles.addAll(Stream.concat(securityConf.getAccounts().stream().filter(account -> account.getRoles() != null).flatMap(
@@ -159,7 +199,7 @@ public class SOSAuthCurrentAccount {
 
         }
     }
-
+    
     public Set<String> getRoles() {
         if (roles == null) {
             return Collections.emptySet();
@@ -220,22 +260,51 @@ public class SOSAuthCurrentAccount {
 
         return excluded;
     }
+    
+    private boolean get4EyesExcludedController(String permission, String controllerId) {
+        boolean excluded = false;
+        if (currentSubjects != null) {
+            for (ISOSAuthSubject subject : currentSubjects) {
+                if (subject != null) {
+                    Path path = Paths.get(permission.replace(':', '/'));
+                    int nameCount = path.getNameCount();
+                    for (int i = 0; i < nameCount - 1; i++) {
+                        if (excluded) {
+                            break;
+                        }
+                        String s = path.subpath(0, nameCount - i).toString().replace(File.separatorChar, ':');
+                        excluded = subject.is4EyesPermitted("-" + s) || subject.is4EyesPermitted("-" + controllerId + ":" + s);
+                    }
+                }
+            }
+        }
+
+        return excluded;
+    }
 
     public boolean testGetExcluded(String permission, String controllerId) {
         return getExcludedController(permission, controllerId);
     }
 
-    private boolean getPermissionFromSubject(ISOSAuthSubject subject, String controllerId, String permission) {
-        return (subject.isPermitted(permission) || subject.isPermitted(controllerId + ":" + permission)) && !getExcludedController(permission,
-                controllerId);
+    private boolean getPermissionFromSubject(ISOSAuthSubject subject, String controllerId, String permission, boolean onlyfourEyesRole) {
+        if (onlyfourEyesRole) {
+            if (permission.endsWith(":view")) {
+                return false; //view permissions don't need 4-eyes principle
+            }
+            return (subject.is4EyesPermitted(permission) || subject.is4EyesPermitted(controllerId + ":" + permission)) && !get4EyesExcludedController(
+                    permission, controllerId);
+        } else {
+            return (subject.isPermitted(permission) || subject.isPermitted(controllerId + ":" + permission)) && !getExcludedController(permission,
+                    controllerId);
+        }
     }
 
-    public boolean isPermitted(String controllerId, String permission) {
+    public boolean isPermitted(String controllerId, String permission, boolean onlyfourEyesRole) {
         boolean permitted = false;
         if (currentSubjects != null) {
             for (ISOSAuthSubject subject : currentSubjects) {
                 if (subject != null) {
-                    permitted = getPermissionFromSubject(subject, controllerId, permission);
+                    permitted = getPermissionFromSubject(subject, controllerId, permission, onlyfourEyesRole);
                     if (permitted) {
                         return true;
                     }
@@ -244,11 +313,10 @@ public class SOSAuthCurrentAccount {
         }
 
         return permitted;
-
     }
 
     public boolean isPermitted(String permission) {
-        return (isPermitted("", permission));
+        return (isPermitted("", permission, false));
     }
 
     public boolean isAuthenticated() {

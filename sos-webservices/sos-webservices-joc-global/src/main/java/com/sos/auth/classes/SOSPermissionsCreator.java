@@ -1,10 +1,13 @@
 package com.sos.auth.classes;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.sos.joc.Globals;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
@@ -37,6 +40,7 @@ import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
 public class SOSPermissionsCreator {
 
     private SOSAuthCurrentAccount currentAccount;
+    private boolean only4EyesRole = false;
 
     public SOSPermissionsCreator(SOSAuthCurrentAccount currentAccount) {
         super();
@@ -54,18 +58,36 @@ public class SOSPermissionsCreator {
     }
 
     public Permissions createJocCockpitPermissionControllerObjectList(SecurityConfiguration secConf) {
+        only4EyesRole = false;
         Permissions permissions = new Permissions(currentAccount.getRoles(), getJocPermissions(), getControllerPermissions(""),
                 new com.sos.joc.model.security.configuration.permissions.Controllers());
 
         Stream<Map.Entry<String, SecurityConfigurationRole>> controllersStream = secConf.getRoles().getAdditionalProperties().entrySet().stream();
-        if (!permissions.getRoles().isEmpty()) {
-            controllersStream = controllersStream.filter(c -> permissions.getRoles() != null && permissions.getRoles().contains(c.getKey()));
+        if (permissions.getRoles() != null && !permissions.getRoles().isEmpty()) {
+            controllersStream = controllersStream.filter(c -> permissions.getRoles().contains(c.getKey()));
         }
         controllersStream.flatMap(e -> e.getValue().getPermissions().getControllers().getAdditionalProperties().keySet().stream()).filter(
                 s -> s != null && !s.isEmpty()).forEach(controller -> permissions.getControllers().setAdditionalProperty(controller,
                         getControllerPermissions(controller)));
 
         return permissions;
+    }
+    
+    public Permissions create4EyesJocCockpitPermissionControllerObjectList(SecurityConfiguration secConf) {
+        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getFourEyesRole().getValue();
+        if (currentAccount.getRoles().contains(fourEyesRole)) {
+            only4EyesRole = true;
+            Permissions permissions = new Permissions(Collections.singleton(fourEyesRole), getJocPermissions(), getControllerPermissions(""),
+                    new com.sos.joc.model.security.configuration.permissions.Controllers());
+
+            secConf.getRoles().getAdditionalProperties().entrySet().stream().filter(c -> permissions.getRoles().contains(c.getKey())).flatMap(e -> e
+                    .getValue().getPermissions().getControllers().getAdditionalProperties().keySet().stream()).filter(s -> s != null && !s.isEmpty())
+                    .forEach(controller -> permissions.getControllers().setAdditionalProperty(controller, getControllerPermissions(controller)));
+
+            return permissions;
+        }
+
+        return null;
     }
 
     private JocPermissions getJocPermissions() {
@@ -76,39 +98,39 @@ public class SOSPermissionsCreator {
 
         if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
 
-            jocPermissions.setGetLog(haveRight("", "sos:products:joc:get_log"));
+            jocPermissions.setGetLog(haveRight("sos:products:joc:get_log"));
             Administration admin = jocPermissions.getAdministration();
-            admin.getAccounts().setView(haveRight("", "sos:products:joc:administration:accounts:view") || haveRight("", "sos:products:joc:adminstration:accounts:view"));
-            admin.getAccounts().setManage(haveRight("", "sos:products:joc:administration:accounts:manage") || haveRight("", "sos:products:joc:adminstration:accounts:manage"));
-            admin.getCertificates().setView(haveRight("", "sos:products:joc:administration:certificates:view") || haveRight("", "sos:products:joc:adminstration:certificates:view"));
-            admin.getCertificates().setManage(haveRight("", "sos:products:joc:administration:certificates:manage") || haveRight("", "sos:products:joc:adminstration:certificates:manage"));
-            admin.getControllers().setView(haveRight("", "sos:products:joc:administration:controllers:view") || haveRight("", "sos:products:joc:adminstration:controllers:view"));
-            admin.getControllers().setManage(haveRight("", "sos:products:joc:administration:controllers:manage"));
-            admin.getSettings().setView(haveRight("", "sos:products:joc:administration:settings:view") || haveRight("", "sos:products:joc:adminstration:settings:view"));
-            admin.getSettings().setManage(haveRight("", "sos:products:joc:administration:settings:manage") || haveRight("", "sos:products:joc:adminstration:settings:manage"));
-            admin.getCustomization().setView(haveRight("", "sos:products:joc:administration:customization:view") || haveRight("", "sos:products:joc:adminstration:customization:view"));
-            admin.getCustomization().setManage(haveRight("", "sos:products:joc:administration:customization:manage") || haveRight("", "sos:products:joc:adminstration:customization:manage"));
-            admin.getCustomization().setShare(haveRight("", "sos:products:joc:administration:customization:share") || haveRight("", "sos:products:joc:adminstration:customization:share"));
+            admin.getAccounts().setView(haveRight("sos:products:joc:administration:accounts:view") || haveRight("sos:products:joc:adminstration:accounts:view"));
+            admin.getAccounts().setManage(haveRight("sos:products:joc:administration:accounts:manage") || haveRight("sos:products:joc:adminstration:accounts:manage"));
+            admin.getCertificates().setView(haveRight("sos:products:joc:administration:certificates:view") || haveRight("sos:products:joc:adminstration:certificates:view"));
+            admin.getCertificates().setManage(haveRight("sos:products:joc:administration:certificates:manage") || haveRight("sos:products:joc:adminstration:certificates:manage"));
+            admin.getControllers().setView(haveRight("sos:products:joc:administration:controllers:view") || haveRight("sos:products:joc:adminstration:controllers:view"));
+            admin.getControllers().setManage(haveRight("sos:products:joc:administration:controllers:manage"));
+            admin.getSettings().setView(haveRight("sos:products:joc:administration:settings:view") || haveRight("sos:products:joc:adminstration:settings:view"));
+            admin.getSettings().setManage(haveRight("sos:products:joc:administration:settings:manage") || haveRight("sos:products:joc:adminstration:settings:manage"));
+            admin.getCustomization().setView(haveRight("sos:products:joc:administration:customization:view") || haveRight("sos:products:joc:adminstration:customization:view"));
+            admin.getCustomization().setManage(haveRight("sos:products:joc:administration:customization:manage") || haveRight("sos:products:joc:adminstration:customization:manage"));
+            admin.getCustomization().setShare(haveRight("sos:products:joc:administration:customization:share") || haveRight("sos:products:joc:adminstration:customization:share"));
             jocPermissions.setAdministration(admin);
-            jocPermissions.getAuditLog().setView(haveRight("", "sos:products:joc:auditlog:view"));
-            jocPermissions.getCalendars().setView(haveRight("", "sos:products:joc:calendars:view"));
-            jocPermissions.getCluster().setManage(haveRight("", "sos:products:joc:cluster:manage"));
-            jocPermissions.getDailyPlan().setView(haveRight("", "sos:products:joc:dailyplan:view"));
-            jocPermissions.getDailyPlan().setManage(haveRight("", "sos:products:joc:dailyplan:manage"));
-            jocPermissions.getDocumentations().setView(haveRight("", "sos:products:joc:documentations:view"));
-            jocPermissions.getDocumentations().setManage(haveRight("", "sos:products:joc:documentations:manage"));
-            jocPermissions.getFileTransfer().setView(haveRight("", "sos:products:joc:filetransfer:view"));
-            jocPermissions.getFileTransfer().setManage(haveRight("", "sos:products:joc:filetransfer:manage"));
-            jocPermissions.getInventory().setView(haveRight("", "sos:products:joc:inventory:view"));
-            jocPermissions.getInventory().setManage(haveRight("", "sos:products:joc:inventory:manage"));
-            jocPermissions.getInventory().setDeploy(haveRight("", "sos:products:joc:inventory:deploy"));
-            jocPermissions.getNotification().setView(haveRight("", "sos:products:joc:notification:view"));
-            jocPermissions.getNotification().setManage(haveRight("", "sos:products:joc:notification:manage"));
-            jocPermissions.getReports().setView(haveRight("", "sos:products:joc:reports:view"));
-            jocPermissions.getReports().setManage(haveRight("", "sos:products:joc:reports:manage"));
-            jocPermissions.getOthers().setView(haveRight("", "sos:products:joc:others:view"));
-            jocPermissions.getOthers().setManage(haveRight("", "sos:products:joc:others:manage"));
-            jocPermissions.getEncipherment().setEncrypt(haveRight("", "sos:products:joc:encipherment:encrypt"));
+            jocPermissions.getAuditLog().setView(haveRight("sos:products:joc:auditlog:view"));
+            jocPermissions.getCalendars().setView(haveRight("sos:products:joc:calendars:view"));
+            jocPermissions.getCluster().setManage(haveRight("sos:products:joc:cluster:manage"));
+            jocPermissions.getDailyPlan().setView(haveRight("sos:products:joc:dailyplan:view"));
+            jocPermissions.getDailyPlan().setManage(haveRight("sos:products:joc:dailyplan:manage"));
+            jocPermissions.getDocumentations().setView(haveRight("sos:products:joc:documentations:view"));
+            jocPermissions.getDocumentations().setManage(haveRight("sos:products:joc:documentations:manage"));
+            jocPermissions.getFileTransfer().setView(haveRight("sos:products:joc:filetransfer:view"));
+            jocPermissions.getFileTransfer().setManage(haveRight("sos:products:joc:filetransfer:manage"));
+            jocPermissions.getInventory().setView(haveRight("sos:products:joc:inventory:view"));
+            jocPermissions.getInventory().setManage(haveRight("sos:products:joc:inventory:manage"));
+            jocPermissions.getInventory().setDeploy(haveRight("sos:products:joc:inventory:deploy"));
+            jocPermissions.getNotification().setView(haveRight("sos:products:joc:notification:view"));
+            jocPermissions.getNotification().setManage(haveRight("sos:products:joc:notification:manage"));
+            jocPermissions.getReports().setView(haveRight("sos:products:joc:reports:view"));
+            jocPermissions.getReports().setManage(haveRight("sos:products:joc:reports:manage"));
+            jocPermissions.getOthers().setView(haveRight("sos:products:joc:others:view"));
+            jocPermissions.getOthers().setManage(haveRight("sos:products:joc:others:manage"));
+            jocPermissions.getEncipherment().setEncrypt(haveRight("sos:products:joc:encipherment:encrypt"));
         }
 
         return jocPermissions;
@@ -148,11 +170,15 @@ public class SOSPermissionsCreator {
     }
 
     private boolean isPermitted(String controllerId, String permission) {
-        return (currentAccount != null && currentAccount.isPermitted(controllerId, permission) && currentAccount.isAuthenticated());
+        return currentAccount.isAuthenticated() && currentAccount.isPermitted(controllerId, permission, only4EyesRole);
     }
 
     private boolean haveRight(String controllerId, String permission) {
         return isPermitted(controllerId, permission);
+    }
+    
+    private boolean haveRight(String permission) {
+        return isPermitted("", permission);
     }
 
 //    private void addRole(List<String> sosRoles, String role, boolean forAccount) {

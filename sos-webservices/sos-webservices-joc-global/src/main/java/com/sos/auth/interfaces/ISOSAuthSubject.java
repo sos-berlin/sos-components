@@ -10,6 +10,8 @@ public interface ISOSAuthSubject {
 
     public Boolean isPermitted(String permission);
 
+    public Boolean is4EyesPermitted(String permission);
+
     public Boolean isAuthenticated();
 
     public Boolean isForcePasswordChange();
@@ -19,6 +21,8 @@ public interface ISOSAuthSubject {
     public Set<String> getListOfAccountPermissions();
 
     public Set<String> getListOfAccountRoles();
+    
+    public Set<String> getListOf4EyesRolePermissions();
 
     public ISOSSession getSession();
 

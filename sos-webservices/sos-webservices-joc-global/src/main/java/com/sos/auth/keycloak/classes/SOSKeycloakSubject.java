@@ -2,15 +2,11 @@ package com.sos.auth.keycloak.classes;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
-import com.sos.auth.interfaces.ISOSAuthSubject;
+import com.sos.auth.common.ASOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.SOSKeycloakSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -20,15 +16,9 @@ import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-public class SOSKeycloakSubject implements ISOSAuthSubject {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSKeycloakSubject.class);
+public class SOSKeycloakSubject extends ASOSAuthSubject {
 
     private SOSKeycloakSession session;
-    private Boolean authenticated;
-    private Map<String, List<String>> mapOfFolderPermissions;
-    private Set<String> setOfAccountPermissions;
-    private Set<String> setOfRoles;
     private SOSIdentityService identityService;
     private String account;
 
@@ -36,34 +26,6 @@ public class SOSKeycloakSubject implements ISOSAuthSubject {
         super();
         this.identityService = identityService;
         this.account = account;
-    }
-
-    @Override
-    public Boolean hasRole(String role) {
-        return setOfRoles != null && setOfRoles.contains(role);
-    }
-
-    @Override
-    public Boolean isPermitted(String permission) {
-        permission = permission + ":";
-        if (setOfAccountPermissions != null) {
-            for (String accountPermission : setOfAccountPermissions) {
-                accountPermission = accountPermission + ":";
-                if (permission.startsWith(accountPermission)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public Boolean isAuthenticated() {
-        return authenticated;
-    }
-
-    public void setAuthenticated(Boolean authenticated) {
-        this.authenticated = authenticated;
     }
 
     private SOSKeycloakSession getKeycloakSession() {
@@ -85,7 +47,7 @@ public class SOSKeycloakSubject implements ISOSAuthSubject {
     public void setPermissionAndRoles(Set<String> setOfTokenRoles, String accountName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            setOfRoles = new HashSet<String>();
+            setOfRoles = new HashSet<>();
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -104,29 +66,11 @@ public class SOSKeycloakSubject implements ISOSAuthSubject {
                     .getIdentityServiceId());
             mapOfFolderPermissions = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions);
             setOfAccountPermissions = SOSAuthHelper.getSetOfPermissions(listOfPermissions);
+            setOf4EyesRolePermissions = SOSAuthHelper.getSetOf4EyesRolePermissions(listOfPermissions);
 
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
 
-    @Override
-    public Map<String, List<String>> getMapOfFolderPermissions() {
-        return this.mapOfFolderPermissions;
-    }
-
-    @Override
-    public Boolean isForcePasswordChange() {
-        return false;
-    }
-
-    @Override
-    public Set<String> getListOfAccountPermissions() {
-        return setOfAccountPermissions;
-    }
-
-    @Override
-    public Set<String> getListOfAccountRoles() {
-        return this.setOfRoles;
-    }
 }
