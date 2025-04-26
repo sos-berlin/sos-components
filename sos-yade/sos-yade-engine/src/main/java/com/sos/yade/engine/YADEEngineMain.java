@@ -200,6 +200,7 @@ public class YADEEngineMain {
 
         System.out.println("    Switches:");
         printArgumentUsage("-" + STARTUP_SWITCH_HELP_1 + " | --" + STARTUP_SWITCH_HELP_2, null, "displays usage", false);
+        printArgumentUsage("-" + YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE, null, "true", false);
     }
 
     private static void printArgumentUsage(String name, String valueDescription, String description) {
