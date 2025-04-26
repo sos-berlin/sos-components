@@ -25,10 +25,12 @@ public class YADEArguments extends ASOSArguments {
      * These Job Arguments have higher priority than those defined in the {@code Settings.xml} file */
     // Source
     public static final String STARTUP_ARG_SOURCE_DIR = "source_dir";
+    public static final String STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES = "source_excluded_directories";
     public static final String STARTUP_ARG_SOURCE_FILE_PATH = "source_file_path";
     public static final String STARTUP_ARG_SOURCE_FILE_SPEC = "source_file_spec";
     public static final String STARTUP_ARG_SOURCE_FILE_LIST = "source_file_list";
-    public static final String STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES = "source_excluded_directories";
+    public static final String STARTUP_ARG_SOURCE_RECURSIVE = "source_recursive";
+    // Target
     public static final String STARTUP_ARG_TARGET_DIR = "target_dir";
     /** Settings - replacement behavior<br/>
      * These arguments define how placeholder variables in the {@code Settings.xml} file are to be replaced or resolved. */

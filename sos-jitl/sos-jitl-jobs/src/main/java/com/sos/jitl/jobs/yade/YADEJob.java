@@ -64,6 +64,9 @@ public class YADEJob extends Job<YADEJobArguments> {
         if (!args.getSourceFileSpec().isEmpty()) {
             argsLoader.getSourceArgs().applyFileSpec(args.getSourceFileSpec().getValue());
         }
+        if (!args.getSourceRecursive().isEmpty()) {
+            argsLoader.getSourceArgs().getRecursive().setValue(args.getSourceRecursive().getValue());
+        }
 
         // Target
         if (!args.getTargetDir().isEmpty() && argsLoader.getTargetArgs() != null) {

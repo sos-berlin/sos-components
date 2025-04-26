@@ -21,10 +21,11 @@ public class YADEJobArguments extends JobArguments {
     /** Settings - overrides settings arguments */
     // Source
     private JobArgument<String> sourceDir = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_DIR, false);
+    private JobArgument<String> sourceExcludedDirectories = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES, false);
     private JobArgument<String> sourceFilePath = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH, false);
     private JobArgument<String> sourceFileSpec = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC, false);
     private JobArgument<Path> sourceFileList = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, false);
-    private JobArgument<String> sourceExcludedDirectories = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES, false);
+    private JobArgument<Boolean> sourceRecursive = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE, false);
     // Target
     private JobArgument<String> targetDir = new JobArgument<>(YADEArguments.STARTUP_ARG_TARGET_DIR, false);
 
@@ -57,8 +58,8 @@ public class YADEJobArguments extends JobArguments {
         return sourceDir;
     }
 
-    public JobArgument<String> getTargetDir() {
-        return targetDir;
+    public JobArgument<String> getSourceExcludedDirectories() {
+        return sourceExcludedDirectories;
     }
 
     public JobArgument<String> getSourceFilePath() {
@@ -73,8 +74,12 @@ public class YADEJobArguments extends JobArguments {
         return sourceFileList;
     }
 
-    public JobArgument<String> getSourceExcludedDirectories() {
-        return sourceExcludedDirectories;
+    public JobArgument<Boolean> getSourceRecursive() {
+        return sourceRecursive;
+    }
+
+    public JobArgument<String> getTargetDir() {
+        return targetDir;
     }
 
     public JobArgument<Boolean> getSettingsReplacerCaseSensitive() {

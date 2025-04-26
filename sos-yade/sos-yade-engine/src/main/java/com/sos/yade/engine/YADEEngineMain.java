@@ -65,7 +65,7 @@ public class YADEEngineMain {
         try {
             // CLI Arguments
             Map<String, String> cliArgs = SOSCLIArgumentsParser.parse(args);
-            Map<String, String> normalizedArgs = normalizeArguments(cliArgs, Set.of("file_spec", "file_path", "file_list"));
+            Map<String, String> normalizedArgs = normalizeArguments(cliArgs, Set.of("file_spec", "file_path", "file_list", "recursive"));
             if (logger.isDebugEnabled()) {
                 logger.debug("[cliArgs]" + cliArgs);
                 logger.debug("[normalizedArgs]" + normalizedArgs);
@@ -150,6 +150,7 @@ public class YADEEngineMain {
         setOptionalSourceFileList(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST);
         setOptionalSourceFilePath(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH);
         setOptionalSourceFileSpec(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
+        setOptionalBooleanArgument(argsLoader.getSourceArgs().getRecursive(), args, YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE);
         // Target
         if (argsLoader.getTargetArgs() != null) {
             setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
@@ -187,6 +188,7 @@ public class YADEEngineMain {
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE, "<true|false>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_DIR, "<...>", null);
 
         System.out.println("    Processing Options:");
@@ -230,6 +232,13 @@ public class YADEEngineMain {
         String val = args.get(name);
         if (!SOSString.isEmpty(val)) {
             arg.setValue(val);
+        }
+    }
+
+    private void setOptionalBooleanArgument(SOSArgument<Boolean> arg, Map<String, String> args, String name) {
+        String val = args.get(name);
+        if (!SOSString.isEmpty(val)) {
+            arg.setValue(Boolean.valueOf(val));
         }
     }
 

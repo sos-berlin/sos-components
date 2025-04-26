@@ -60,7 +60,7 @@
 				<note>
 					<p>
 						Transfer argument: Overwrites
-						<em>.../SourceFileOptions/Selection/FilePathSelection/FilePath
+						<em>.../SourceFileOptions/Selection/FilePathSelection/FilePath|FileSpec|FileList
 						</em>
 						of the current profile.
 					</p>
@@ -71,7 +71,7 @@
 				<note>
 					<p>
 						Transfer argument: Overwrites
-						<em>.../SourceFileOptions/Selection/FileSpecSelection/FileSpec
+						<em>.../SourceFileOptions/Selection/FileSpecSelection/FileSpec|FilePath|FileList
 						</em>
 						of the current profile.
 					</p>
@@ -82,7 +82,18 @@
 				<note>
 					<p>
 						Transfer argument: Overwrites
-						<em>.../SourceFileOptions/Selection/FileListSelection/FileList
+						<em>.../SourceFileOptions/Selection/FileListSelection/FileList|FilePath|FileSpec
+						</em>
+						of the current profile.
+					</p>
+				</note>
+			</param>
+			<param name="source_recursive" required="false"
+				DataType="java.lang.Boolean">
+				<note>
+					<p>
+						Transfer argument: Overwrites
+						<em>.../SourceFileOptions/Selection/.../Recursive
 						</em>
 						of the current profile.
 					</p>
@@ -108,8 +119,7 @@
 						<br />
 						<br />
 						Examples:
-						<em>&lt;Directory&gt;${PLACEHOLDER_VARIABLE}&lt;/Directory&gt;
-						</em>
+						<em>&lt;Directory&gt;${PLACEHOLDER_VARIABLE}&lt;/Directory&gt; </em>
 						<ul>
 							<li>
 								<em>true</em>
