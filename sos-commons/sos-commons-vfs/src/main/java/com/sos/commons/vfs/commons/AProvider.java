@@ -351,11 +351,17 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public void logIfHostnameVerificationDisabled(SSLArguments args) {
         if (!args.getVerifyCertificateHostname().isTrue()) {
+            String name = args.getVerifyCertificateHostname().getName();
+            Boolean val = args.getVerifyCertificateHostname().getValue();
+            // e.g. YADE uses DisableCertificateHostnameVerification
+            if (args.getVerifyCertificateHostnameOppositeName() != null) {
+                name = args.getVerifyCertificateHostnameOppositeName();
+                val = !val;
+            }
             logger.info("*********************** Security warning *********************************************************************");
-            logger.info("YADE option \"%s\" is currently \"false\" for %s connections. ", args.getVerifyCertificateHostname().getName(),
-                    getArguments().getProtocol().getValue());
+            logger.info("\"%s\" is currently \"%s\" for %s connections. ", name, val, getArguments().getProtocol().getValue());
             logger.info("The certificate verification process will not verify the DNS name of the certificate presented by the server,");
-            logger.info(" with the hostname of the server used by the YADE client connection.");
+            logger.info("with the hostname of the server used by the client connection.");
             logger.info("**************************************************************************************************************");
         }
     }

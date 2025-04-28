@@ -20,6 +20,12 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     private static final int DEFAULT_PORT = 22;
+    // TODO - dynamically
+    private static String ARG_NAME_PREFERRED_AUTHENTICATIONS_DISPLAY_NAME = "PreferredAuthentications";
+    private static String ARG_NAME_REQUIRED_AUTHENTICATIONS_DISPLAY_NAME = "RequiredAuthentications";
+    private static String ARG_NAME_AUTH_METHOD_PASSWORD_DISPLAY_NAME = "AuthenticationMethodPassword";
+    private static String ARG_NAME_AUTH_METHOD_PUBLICKEY_DISPLAY_NAME = "AuthenticationMethodPublickey";
+    private static String ARG_NAME_AUTH_METHOD_KEYBOARD_INTERACTIVE_DISPLAY_NAME = "AuthenticationMethodKeyboardInteractive";
 
     // Authentication
     private SOSArgument<String> passphrase = new SOSArgument<>("passphrase", false, DisplayMode.MASKED);
@@ -62,6 +68,30 @@ public class SSHProviderArguments extends AProviderArguments {
     @Override
     public String getAccessInfo() throws ProviderInitializationException {
         return String.format("%s@%s:%s", getUser().getDisplayValue(), getHost().getDisplayValue(), getPort().getDisplayValue());
+    }
+
+    /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
+    @Override
+    public String getAdvancedAccessInfo() {
+        if (!getRequiredAuthentications().isEmpty()) {
+            return ARG_NAME_REQUIRED_AUTHENTICATIONS_DISPLAY_NAME;
+        }
+        if (!getPreferredAuthentications().isEmpty()) {
+            return ARG_NAME_PREFERRED_AUTHENTICATIONS_DISPLAY_NAME;
+        }
+        if (!getAuthMethod().isEmpty()) {
+            switch (getAuthMethod().getValue()) {
+            case PASSWORD:
+                return ARG_NAME_AUTH_METHOD_PASSWORD_DISPLAY_NAME;
+            case PUBLICKEY:
+                return ARG_NAME_AUTH_METHOD_PUBLICKEY_DISPLAY_NAME;
+            case KEYBOARD_INTERACTIVE:
+                return ARG_NAME_AUTH_METHOD_KEYBOARD_INTERACTIVE_DISPLAY_NAME;
+            default:
+                break;
+            }
+        }
+        return null;
     }
 
     public SOSArgument<SSHAuthMethod> getAuthMethod() {

@@ -243,6 +243,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 case "Hostname":
                     argsLoader.setStringArgumentValue(args.getHost(), n);
+                    args.tryRedefineHostPort();
                     break;
                 case "SMBAuthentication":
                     parseSMBAuthentication(argsLoader, args, n);
@@ -265,8 +266,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         if (url == null) {
             return null;
         }
-
-        WebDAVProviderArguments args = url.toLowerCase().startsWith("webdavs://") ? new WebDAVSProviderArguments() : new WebDAVProviderArguments();
+        String urlLC = url.toLowerCase();
+        WebDAVProviderArguments args = urlLC.startsWith("https://") || urlLC.startsWith("webdavs://") ? new WebDAVSProviderArguments()
+                : new WebDAVProviderArguments();
         args.applyDefaultIfNullQuietly();
         args.getHost().setValue(url);
 
@@ -555,14 +557,14 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "KeyStoreType":
                     JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsLoader.getValue(n));
                     if (keyStoreType != null) {
-                        args.getSSL().getJavaKeyStore().getKeyStoreType().setValue(keyStoreType);
+                        args.getSSL().getJavaKeyStore().getTrustStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "KeyStoreFile":
-                    args.getSSL().getJavaKeyStore().getKeyStoreFile().setValue(Path.of(argsLoader.getValue(n)));
+                    args.getSSL().getJavaKeyStore().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
                     break;
                 case "KeyStorePassword":
-                    argsLoader.setStringArgumentValue(args.getSSL().getJavaKeyStore().getKeyStorePassword(), n);
+                    argsLoader.setStringArgumentValue(args.getSSL().getJavaKeyStore().getTrustStorePassword(), n);
                     break;
                 }
             }
@@ -598,14 +600,14 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "KeyStoreType":
                     JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsLoader.getValue(n));
                     if (keyStoreType != null) {
-                        args.getJavaKeyStore().getKeyStoreType().setValue(keyStoreType);
+                        args.getJavaKeyStore().getTrustStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "KeyStoreFile":
-                    args.getJavaKeyStore().getKeyStoreFile().setValue(Path.of(argsLoader.getValue(n)));
+                    args.getJavaKeyStore().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
                     break;
                 case "KeyStorePassword":
-                    argsLoader.setStringArgumentValue(args.getJavaKeyStore().getKeyStorePassword(), n);
+                    argsLoader.setStringArgumentValue(args.getJavaKeyStore().getTrustStorePassword(), n);
                     break;
                 }
             }

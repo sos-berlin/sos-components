@@ -48,6 +48,12 @@ public class HTTPProviderArguments extends AProviderArguments {
         return SOSHTTPUtils.getAccessInfo(baseURI.getValue(), getUser().getValue());
     }
 
+    /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
+    @Override
+    public String getAdvancedAccessInfo() {
+        return null;
+    }
+
     public SSLArguments getSSL() {
         if (ssl == null) {
             ssl = new SSLArguments();

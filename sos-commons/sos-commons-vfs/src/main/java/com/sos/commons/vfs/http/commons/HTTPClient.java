@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.net.ssl.SSLContext;
+
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
@@ -88,8 +90,14 @@ public class HTTPClient implements AutoCloseable {
         }
 
         if (provider.isSecureConnectionEnabled()) {
+            SSLContext sslContext = SOSSSLContextFactory.create(provider.getLogger(), provider.getArguments().getSSL());
+            // SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
+            // sslParameters.setEndpointIdentificationAlgorithm(""); // disable hostname verification
+
+            builder.sslContext(sslContext);
+            // builder.sslParameters(sslParameters);
+
             provider.logIfHostnameVerificationDisabled(provider.getArguments().getSSL());
-            builder.sslContext(SOSSSLContextFactory.create(provider.getArguments().getSSL()));
         }
 
         HTTPClient client = new HTTPClient(builder.build(), ntlmMAuthToken);

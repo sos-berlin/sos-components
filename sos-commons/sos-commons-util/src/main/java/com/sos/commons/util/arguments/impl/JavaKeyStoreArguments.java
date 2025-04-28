@@ -47,4 +47,14 @@ public class JavaKeyStoreArguments extends ASOSArguments {
     public SOSArgument<String> getTrustStorePassword() {
         return trustStorePassword;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[keystore ").append(keyStoreType.getValue());
+        sb.append(" file=").append(keyStoreFile.getValue()).append("]");
+        sb.append("[truststore ").append(trustStoreType.getValue());
+        sb.append(" file=").append(trustStoreFile.getValue()).append("]");
+        return sb.toString();
+    }
 }

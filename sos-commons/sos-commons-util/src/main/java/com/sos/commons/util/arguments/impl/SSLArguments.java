@@ -17,12 +17,23 @@ public class SSLArguments extends ASOSArguments {
     private SOSArgument<Boolean> verifyCertificateHostname = new SOSArgument<>("verify_certificate_hostname", false, Boolean.valueOf(true));
     private SOSArgument<Boolean> acceptUntrustedCertificate = new SOSArgument<>("accept_untrusted_certificate", false, Boolean.valueOf(false));
 
+    // e.g. YADE uses DisableCertificateHostnameVerification
+    private String verifyCertificateHostnameOppositeName;
+    private String acceptUntrustedCertificateNameAlias;
+
     public JavaKeyStoreArguments getJavaKeyStore() {
         if (javaKeyStore == null) {
             javaKeyStore = new JavaKeyStoreArguments();
             javaKeyStore.applyDefaultIfNullQuietly();
         }
         return javaKeyStore;
+    }
+
+    public String getTrustStoreInfo(String argName) {
+        if (javaKeyStore == null || javaKeyStore.getTrustStoreFile().isEmpty()) {
+            return null;
+        }
+        return argName + "=" + javaKeyStore.getTrustStoreType().getValue();
     }
 
     public void setJavaKeyStore(JavaKeyStoreArguments val) {
@@ -37,7 +48,56 @@ public class SSLArguments extends ASOSArguments {
         return acceptUntrustedCertificate;
     }
 
+    public String getAcceptUntrustedCertificateName() {
+        return acceptUntrustedCertificateNameAlias == null ? acceptUntrustedCertificate.getName() : acceptUntrustedCertificateNameAlias;
+    }
+
     public SOSArgument<List<String>> getProtocols() {
         return protocols;
+    }
+
+    public String getVerifyCertificateHostnameOppositeName() {
+        return verifyCertificateHostnameOppositeName;
+    }
+
+    public void setVerifyCertificateHostnameOppositeName(String val) {
+        verifyCertificateHostnameOppositeName = val;
+    }
+
+    public String getAcceptUntrustedCertificateNameAlias() {
+        return acceptUntrustedCertificateNameAlias;
+    }
+
+    public void setAcceptUntrustedCertificateNameAlias(String val) {
+        acceptUntrustedCertificateNameAlias = val;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(SSLArguments.class.getSimpleName()).append("]");
+        if (acceptUntrustedCertificateNameAlias == null) {
+            sb.append(acceptUntrustedCertificate.getName());
+        } else {
+            sb.append(acceptUntrustedCertificateNameAlias);
+        }
+        sb.append("=").append(acceptUntrustedCertificate.getValue());
+        sb.append(", ");
+        if (verifyCertificateHostnameOppositeName == null) {
+            sb.append(verifyCertificateHostname.getName());
+            sb.append("=").append(verifyCertificateHostname.getValue());
+        } else {
+            sb.append(verifyCertificateHostnameOppositeName);
+            sb.append("=").append(!verifyCertificateHostname.getValue());
+        }
+        if (protocols.getValue() != null) {
+            sb.append(", ");
+            sb.append(protocols.getName());
+            sb.append("=").append(String.join(", ", protocols.getValue()));
+        }
+        sb.append(", ");
+        sb.append("[").append(JavaKeyStoreArguments.class.getSimpleName()).append("]");
+        sb.append(javaKeyStore);
+        return sb.toString();
     }
 }

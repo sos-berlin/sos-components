@@ -53,6 +53,7 @@ public class SMBJProvider extends SMBProvider {
 
     public SMBJProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
+        getArguments().tryRedefineHostPort();
     }
 
     /** Overrides {@link IProvider#connect()} */

@@ -45,6 +45,12 @@ public class FTPSProviderArguments extends FTPProviderArguments {
         return String.format("%s %s", super.getAccessInfo(), ftpsInfo);
     }
 
+    /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
+    @Override
+    public String getAdvancedAccessInfo() {
+        return getSSL().getTrustStoreInfo(ARG_NAME_KEYSTORE_DISPLAY_NAME);
+    }
+
     public boolean isSecurityModeImplicit() {
         return FTPSSecurityMode.IMPLICIT.equals(securityMode.getValue());
     }

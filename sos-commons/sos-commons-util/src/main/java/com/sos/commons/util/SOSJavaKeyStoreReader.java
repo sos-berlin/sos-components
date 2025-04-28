@@ -8,6 +8,7 @@ import java.security.KeyStore;
 
 import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
 import com.sos.commons.util.arguments.impl.JavaKeyStoreType;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class SOSJavaKeyStoreReader {
 
@@ -46,29 +47,18 @@ public class SOSJavaKeyStoreReader {
         return load(path, password, storeType);
     }
 
-    public static SOSJavaKeyStoreResult read(JavaKeyStoreArguments args) throws Exception {
+    public static SOSJavaKeyStoreResult read(ISOSLogger logger, JavaKeyStoreArguments args) throws Exception {
         if (args == null || !args.isEnabled()) {
             return null;
         }
         SOSJavaKeyStoreResult result = new SOSJavaKeyStoreReader().new SOSJavaKeyStoreResult();
-        if (args.getTrustStoreFile().isEmpty()) {
-            SOSJavaKeyStore ks = read(Type.KEY_AND_TRUSTSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args
-                    .getKeyStoreType().getValue().name());
-            result.setKeyStoreResult(ks);
-            result.setTrustStoreResult(ks);
-        } else if (args.getKeyStoreFile().isEmpty()) {
-            SOSJavaKeyStore ks = read(Type.KEY_AND_TRUSTSTORE, args.getTrustStoreFile().getValue(), args.getTrustStorePassword().getValue(), args
-                    .getTrustStoreType().getValue().name());
-            result.setKeyStoreResult(ks);
-            result.setTrustStoreResult(ks);
-        } else {
-            SOSJavaKeyStore ks = read(Type.KEYSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args.getKeyStoreType()
-                    .getValue().name());
-            result.setKeyStoreResult(ks);
-
-            ks = read(Type.TRUSTSTORE, args.getTrustStoreFile().getValue(), args.getTrustStorePassword().getValue(), args.getTrustStoreType()
-                    .getValue().name());
-            result.setTrustStoreResult(ks);
+        if (!args.getKeyStoreFile().isEmpty()) {
+            result.setKeyStoreResult(read(Type.KEYSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args
+                    .getKeyStoreType().getValue().name()));
+        }
+        if (!args.getTrustStoreFile().isEmpty()) {
+            result.setTrustStoreResult(read(Type.TRUSTSTORE, args.getTrustStoreFile().getValue(), args.getTrustStorePassword().getValue(), args
+                    .getTrustStoreType().getValue().name()));
         }
         return result;
     }

@@ -19,7 +19,14 @@ public class LocalProviderArguments extends AProviderArguments {
         return String.format("%s@%s", getUser().getDisplayValue(), getHost().getDisplayValue());
     }
 
+    /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
+    @Override
+    public String getAdvancedAccessInfo() {
+        return null;
+    }
+
     private String getHostname() {
         return SOSShell.getLocalHostNameOptional().orElse("localhost");
     }
+
 }

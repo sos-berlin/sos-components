@@ -88,4 +88,8 @@ public class YADEJumpHostArguments extends ASOSArguments {
     public String getAccessInfo() throws ProviderInitializationException {
         return provider == null ? null : provider.getAccessInfo();
     }
+
+    public String getAdvancedAccessInfo() {
+        return provider == null ? null : provider.getAdvancedAccessInfo();
+    }
 }

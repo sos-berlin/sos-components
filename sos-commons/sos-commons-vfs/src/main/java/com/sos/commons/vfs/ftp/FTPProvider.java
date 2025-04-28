@@ -61,6 +61,15 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     private final boolean isFTPS;
     private FTPClient client;
 
+    /** true<br/>
+     * - automatically sends FEAT command before authentication...<br/>
+     * -- can be a problem?<br/>
+     * -- correctly internally sets UTF-8 if enabled<br/>
+     * --- manually setting client.setControlEncoding(charsetUTF8) after login has no effect:<br/>
+     * ---- apiNote: Please note that this has to be set before the connection is established.<br/>
+     */
+    private boolean autodetectUTF8Enabled = true;
+
     public FTPProvider(ISOSLogger logger, FTPProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
         isFTPS = Protocol.FTPS.equals(getArguments().getProtocol().getValue());
@@ -179,7 +188,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                     .getValidFileTypes().getValue().contains(FileType.SYMLINK));
         });
 
-        String directory = selection.getConfig().getDirectory() == null ? "." : selection.getConfig().getDirectory();
+        String directory = SOSString.isEmpty(selection.getConfig().getDirectory()) ? "/" : selection.getConfig().getDirectory();
         try {
             if (!client.changeWorkingDirectory(directory)) {
                 throw new ProviderNoSuchFileException(getDirectoryNotFoundMsg(directory));
@@ -580,7 +589,12 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
         FTPSClient client = null;
         if (args.getSSL().getJavaKeyStore().isEnabled()) {
-            client = new FTPSClient(args.isSecurityModeImplicit(), SOSSSLContextFactory.create(args.getSSL()));
+            // tmp
+            // args.getSSL().getProtocols().setValue(List.of("TLSv1.2"));
+            // if (!args.getSSL().getJavaKeyStore().isEnabled()) {
+            // args.getSSL().getAcceptUntrustedCertificate().setValue(true);
+            // }
+            client = new FTPSClient(args.isSecurityModeImplicit(), SOSSSLContextFactory.create(getLogger(), args.getSSL()));
         } else {
             client = new FTPSClient(args.isSecurityModeImplicit());
             // client.setTrustManager(TrustManagerUtils.getAcceptAllTrustManager());
@@ -605,38 +619,22 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         // setDataTimeout - Sets the timeout to use when reading from the data connection.
         // - This timeout will be set immediately after opening the data connection, provided that thevalue is ≥ 0.
         // - client.setDataTimeout(Duration.ofMillis(client.getConnectTimeout()));
-        client.setAutodetectUTF8(true);
+
+        client.setAutodetectUTF8(autodetectUTF8Enabled);
     }
 
     private void postConnectOperations() throws Exception {
         // Keep Alive
         client.setControlKeepAliveTimeout(getKeepAliveTimeout());
-
-        /** FTPS */
-        if (isFTPS) {
-            client.enterLocalPassiveMode();
-            debugCommand("enterLocalPassiveMode");
-
-            try {
-                ((FTPSClient) client).execPBSZ(0);
-                debugCommand("execPBSZ(0)");
-            } catch (Throwable e) {
-                getLogger().warn("[execPBSZ(0)]" + e);
-            }
-            try {
-                ((FTPSClient) client).execPROT("P");
-                debugCommand("execPROT(P)");
-            } catch (Throwable e) {
-                getLogger().warn("[execPROT(P)]" + e);
-            }
-
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
-            }
-        }
     }
 
     private void postLoginOperations() throws Exception {
+        // Keep Alive
+        // client.setControlKeepAliveTimeout(getKeepAliveTimeout());
+        features();
+
+        postLoginOperationsIfFTPS();
+
         /** FTP/FTPS */
         // Passive Mode
         if (getArguments().getPassiveMode().isTrue()) {
@@ -671,6 +669,62 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         client.sendNoOp();// NOOP command
     }
 
+    // not used, more for documentation purposes
+    // see notes: autodetectUTF8Enabled
+    private void features() {
+        if (autodetectUTF8Enabled) {
+            return;
+        }
+        try {
+            client.features();
+            FTPProtocolReply reply = new FTPProtocolReply(client);
+            if (reply.isSystemStatusReply()) {
+                if (getLogger().isDebugEnabled()) {
+                    for (String feature : client.getReplyStrings()) {
+                        getLogger().debug("%s[feature]%s", getLogPrefix(), feature);
+                    }
+                }
+            }
+            String charsetUTF8 = StandardCharsets.UTF_8.name();
+            if (client.hasFeature("UTF8") || client.hasFeature(charsetUTF8)) {
+                // apiNote: Please note that this has to be set before the connection is established.
+                client.setControlEncoding(charsetUTF8);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[setControlEncoding]%s", getLogPrefix(), charsetUTF8);
+                }
+            }
+
+        } catch (Throwable e) {
+
+        }
+    }
+
+    private void postLoginOperationsIfFTPS() throws Exception {
+        if (isFTPS) {
+            client.enterLocalPassiveMode();
+            debugCommand("enterLocalPassiveMode");
+
+            // SSL login and data connection - execPBSZ(0),execPROT(P)
+            FTPSClient ftps = (FTPSClient) client;
+            try {
+                ftps.execPBSZ(0);
+                debugCommand("execPBSZ(0)");
+            } catch (Throwable e) {
+                getLogger().warn("[execPBSZ(0)]" + e);
+            }
+            try {
+                ftps.execPROT("P");
+                debugCommand("execPROT(P)");
+            } catch (Throwable e) {
+                getLogger().warn("[execPROT(P)]" + e);
+            }
+
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
+            }
+        }
+    }
+
     private String getConnectedInfos() {
         if (client == null) {
             return "";
@@ -686,7 +740,9 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             // TODO ControlKeepAliveReplyTimeoutDuration is currently not configurable
             // client.getControlKeepAliveReplyTimeoutDuration();
         }
-        l.add(getArguments().getPassiveMode().getName() + "=" + getArguments().getPassiveMode().getValue());
+        if (!isFTPS) {
+            l.add(getArguments().getPassiveMode().getName() + "=" + getArguments().getPassiveMode().getValue());
+        }
         l.add(getArguments().getTransferMode().getName() + "=" + getArguments().getTransferModeValue());
 
         String serverInfo = getServerInfo();

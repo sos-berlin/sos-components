@@ -53,6 +53,12 @@ public class FTPProviderArguments extends AProviderArguments {
         return String.format("%s@%s:%s", getUser().getDisplayValue(), getHost().getDisplayValue(), getPort().getDisplayValue());
     }
 
+    /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
+    @Override
+    public String getAdvancedAccessInfo() {
+        return null;
+    }
+
     public boolean isBinaryTransferMode() {
         return TransferMode.BINARY.equals(transferMode.getValue());
     }

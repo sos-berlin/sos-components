@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.SOSVersionInfo;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
@@ -181,7 +182,12 @@ public class YADEClientBannerWriter {
         sb.append("[").append(sourceArgs.getLabel().isEmpty() ? YADESourceArguments.LABEL : sourceArgs.getLabel().getValue()).append("]");
         sb.append(YADEArgumentsHelper.toString("Protocol", sourceArgs.getProvider().getProtocol()));
         try {
-            sb.append("(").append(sourceArgs.getProvider().getAccessInfo()).append(")");
+            sb.append("(");
+            sb.append(sourceArgs.getProvider().getAccessInfo());
+            if (!SOSString.isEmpty(sourceArgs.getProvider().getAdvancedAccessInfo())) {
+                sb.append(", ").append(sourceArgs.getProvider().getAdvancedAccessInfo());
+            }
+            sb.append(")");
         } catch (ProviderInitializationException e) {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
@@ -275,7 +281,12 @@ public class YADEClientBannerWriter {
         sb.append("[ ").append(YADEJumpHostArguments.LABEL).append(" ]");
         sb.append(YADEArgumentsHelper.toString("Protocol", jumpHostArgs.getProvider().getProtocol()));
         try {
-            sb.append("(").append(jumpHostArgs.getAccessInfo()).append(")");
+            sb.append("(");
+            sb.append(jumpHostArgs.getAccessInfo());
+            if (!SOSString.isEmpty(jumpHostArgs.getAdvancedAccessInfo())) {
+                sb.append(", ").append(jumpHostArgs.getAdvancedAccessInfo());
+            }
+            sb.append(")");
         } catch (ProviderInitializationException e) {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
@@ -302,7 +313,12 @@ public class YADEClientBannerWriter {
         sb.append("[").append(targetArgs.getLabel().isEmpty() ? YADETargetArguments.LABEL : targetArgs.getLabel().getValue()).append("]");
         sb.append(YADEArgumentsHelper.toString("Protocol", targetArgs.getProvider().getProtocol()));
         try {
-            sb.append("(").append(targetArgs.getProvider().getAccessInfo()).append(")");
+            sb.append("(");
+            sb.append(targetArgs.getProvider().getAccessInfo());
+            if (!SOSString.isEmpty(targetArgs.getProvider().getAdvancedAccessInfo())) {
+                sb.append(", ").append(targetArgs.getProvider().getAdvancedAccessInfo());
+            }
+            sb.append(")");
         } catch (ProviderInitializationException e) {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);

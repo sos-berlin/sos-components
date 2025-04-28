@@ -35,7 +35,11 @@ public abstract class AProviderArguments extends ASOSArguments {
         REGULAR, SYMLINK
     }
 
+    public static String ARG_NAME_KEYSTORE_DISPLAY_NAME = "KeyStore";
+
     public abstract String getAccessInfo() throws ProviderInitializationException;
+
+    public abstract String getAdvancedAccessInfo();
 
     private CredentialStoreArguments credentialStore;
     private ProxyArguments proxy;
@@ -95,6 +99,16 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public SOSArgument<EnumSet<FileType>> getValidFileTypes() {
         return validFileTypes;
+    }
+
+    public void tryRedefineHostPort() {
+        if (!host.isEmpty() && host.getValue().contains(":")) {
+            String[] arr = host.getValue().split(":");
+            host.setValue(arr[0]);
+            if (!port.isDirty()) {
+                port.setValue(Integer.parseInt(arr[1]));
+            }
+        }
     }
 
 }

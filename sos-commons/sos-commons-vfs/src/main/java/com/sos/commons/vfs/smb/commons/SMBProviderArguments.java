@@ -41,8 +41,20 @@ public class SMBProviderArguments extends AProviderArguments {
             }
             break;
         }
-        String domain = getDomain().isEmpty() ? "" : " (" + getDomain().getValue() + ")";
-        return String.format("%s%s@%s:%s%s", authMethod, user, getHost().getDisplayValue(), getPort().getDisplayValue(), domain);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(authMethod);
+        sb.append(user).append("@").append(getHost().getValue()).append(":").append(getPort().getValue());
+        if (!getDomain().isEmpty()) {
+            sb.append("(").append(getDomain().getValue()).append(")");
+        }
+        return sb.toString();
+    }
+
+    /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
+    @Override
+    public String getAdvancedAccessInfo() {
+        return null;
     }
 
     public SOSArgument<SMBAuthMethod> getAuthMethod() {

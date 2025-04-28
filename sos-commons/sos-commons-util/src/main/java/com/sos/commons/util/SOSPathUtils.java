@@ -121,6 +121,9 @@ public class SOSPathUtils {
             return path;
         }
         String n = toUnixStyle(Path.of(path).normalize().toString());
+        if (n == null) {
+            return n;
+        }
         return n.startsWith("/") ? n : "/" + n;
     }
 
