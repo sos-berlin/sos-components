@@ -35,8 +35,6 @@ public abstract class AProviderArguments extends ASOSArguments {
         REGULAR, SYMLINK
     }
 
-    public static String ARG_NAME_KEYSTORE_DISPLAY_NAME = "KeyStore";
-
     public abstract String getAccessInfo() throws ProviderInitializationException;
 
     public abstract String getAdvancedAccessInfo();

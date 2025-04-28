@@ -9,6 +9,9 @@ import com.sos.commons.util.arguments.base.SOSArgument;
 
 public class SSLArguments extends ASOSArguments {
 
+    private static String ARG_NAME_TRUSTSTORE_DISPLAY_NAME = "TrustStore";
+    private static String ARG_NAME_KEYSTORE_DISPLAY_NAME = "KeyStore";
+
     private JavaKeyStoreArguments javaKeyStore;
 
     // e.g - TLSv1.3,TLSv1.2
@@ -29,11 +32,33 @@ public class SSLArguments extends ASOSArguments {
         return javaKeyStore;
     }
 
-    public String getTrustStoreInfo(String argName) {
+    public String getTrustStoreInfo() {
         if (javaKeyStore == null || javaKeyStore.getTrustStoreFile().isEmpty()) {
             return null;
         }
-        return argName + "=" + javaKeyStore.getTrustStoreType().getValue();
+        return ARG_NAME_TRUSTSTORE_DISPLAY_NAME + "=" + javaKeyStore.getTrustStoreType().getValue();
+    }
+
+    public String getKeyStoreTrustStoreFullInfo() {
+        if (javaKeyStore == null || !javaKeyStore.isEnabled()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (!javaKeyStore.getKeyStoreFile().isEmpty()) {
+            sb.append("[");
+            sb.append(ARG_NAME_KEYSTORE_DISPLAY_NAME);
+            sb.append(" ").append(javaKeyStore.getKeyStoreType().getValue());
+            sb.append(" ").append(javaKeyStore.getKeyStoreFile().getValue());
+            sb.append("]");
+        }
+        if (!javaKeyStore.getTrustStoreFile().isEmpty()) {
+            sb.append("[");
+            sb.append(ARG_NAME_TRUSTSTORE_DISPLAY_NAME);
+            sb.append(" ").append(javaKeyStore.getTrustStoreFile().getValue());
+            sb.append(" ").append(javaKeyStore.getTrustStoreFile().getValue());
+            sb.append("]");
+        }
+        return sb.toString();
     }
 
     public void setJavaKeyStore(JavaKeyStoreArguments val) {

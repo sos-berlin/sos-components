@@ -39,7 +39,8 @@ public class SOSSSLContextFactory {
         SSLContext sslContext = SSLContext.getInstance(DEFAULT_PROTOCOL);
         if (args.getAcceptUntrustedCertificate().isTrue()) {
             if (args.getJavaKeyStore().isEnabled()) {
-                logger.info("[SOSSSLContextFactory][%s=true][ignored]%s", args.getAcceptUntrustedCertificateName(), args.getJavaKeyStore());
+                logger.info("[SOSSSLContextFactory][%s=true][ignored]%s", args.getAcceptUntrustedCertificateName(), args
+                        .getKeyStoreTrustStoreFullInfo());
             }
             if (args.getVerifyCertificateHostname().isTrue()) {
                 sslContext.init(null, getAcceptUntrustedCertificateTrustManagers(), new SecureRandom());
