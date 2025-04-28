@@ -67,7 +67,11 @@ public abstract class SMBProvider extends AProvider<SMBProviderArguments> {
             } else {
                 // Remove leading backslashes or slashes, if they exist and split in 2 parts
                 String[] pathParts = path.replaceAll("^[/\\\\]+", "").split("[/\\\\]", 2);
-                shareName = pathParts.length > 1 ? pathParts[0] : "";
+                // shareName = pathParts.length > 1 ? pathParts[0] : "";
+                shareName = pathParts[0];
+            }
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[shareName]%s", getLogPrefix(), shareName);
             }
         }
         return shareName;
