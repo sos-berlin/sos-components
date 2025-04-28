@@ -22,16 +22,12 @@ public class SMBAuthenticationContextFactory {
 
     public static AuthenticationContext create(SMBProviderArguments args) throws Exception {
         switch (args.getAuthMethod().getValue()) {
-        case BASIC:
-            if (args.getUser().isEmpty()) {
-                return AuthenticationContext.anonymous();
-            }
-            if (args.getPassword().getValue() == null) {
-                // if ("guest".equalsIgnoreCase(args.getUser().getValue())) {
-                // return AuthenticationContext.guest(); //not set the domain...
-                // }
-                return new AuthenticationContext(args.getUser().getValue(), new char[0], args.getDomain().getValue());
-            }
+        case ANONYMOUS:
+            return AuthenticationContext.anonymous();
+        case GUEST:
+            return AuthenticationContext.guest(); // not set the domain...
+        // return new AuthenticationContext(args.getUser().getValue(), new char[0], args.getDomain().getValue());
+        case NTLM:
             return new AuthenticationContext(args.getUser().getValue(), args.getPassword().getValue().toCharArray(), args.getDomain().getValue());
         case KERBEROS:
         case SPNEGO:
@@ -73,8 +69,11 @@ public class SMBAuthenticationContextFactory {
 
     private static GSSCredential getGSSCredential(String username, String domain, Oid oid) throws GSSException {
         GSSManager manager = GSSManager.getInstance();
-        GSSName gssName = manager.createName(SOSString.isEmpty(domain) ? username : (username + "@" + domain), GSSName.NT_USER_NAME);
-
+        GSSName gssName = null;
+        if (!SOSString.isEmpty(username)) {
+            // uses the ticket cache
+            gssName = manager.createName(SOSString.isEmpty(domain) ? username : (username + "@" + domain), GSSName.NT_USER_NAME);
+        }
         // GSSCredential.INDEFINITE_LIFETIME
         // - is for Credentials to indicate an indefinite validity, meaning that the credential is valid without any expiration time.
         // GSSContext.DEFAULT_LIFETIME

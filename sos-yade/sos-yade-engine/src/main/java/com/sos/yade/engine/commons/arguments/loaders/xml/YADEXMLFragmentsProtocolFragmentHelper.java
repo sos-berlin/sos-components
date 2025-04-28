@@ -19,6 +19,7 @@ import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPSSecurityMode;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPSProviderArguments;
+import com.sos.commons.vfs.smb.commons.SMBAuthMethod;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -241,9 +242,12 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
-                case "Hostname":
+                case "Hostname": // YADE1 - deprecated, SMBConnection should be used
                     argsLoader.setStringArgumentValue(args.getHost(), n);
                     args.tryRedefineHostPort();
+                    break;
+                case "SMBConnection": // introduced with JS7 YADE-626
+                    parseSMBConnection(argsLoader, args, n);
                     break;
                 case "SMBAuthentication":
                     parseSMBAuthentication(argsLoader, args, n);
@@ -571,8 +575,74 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
+    private static void parseSMBConnection(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node smbAuthentication) {
+        NodeList nl = smbAuthentication.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Hostname":
+                    argsLoader.setStringArgumentValue(args.getHost(), n);
+                    break;
+                case "Port":
+                    argsLoader.setIntegerArgumentValue(args.getPort(), n);
+                    break;
+                case "Sharename":
+                    argsLoader.setStringArgumentValue(args.getShareName(), n);
+                    break;
+                }
+            }
+        }
+    }
+
     private static void parseSMBAuthentication(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node smbAuthentication) {
         NodeList nl = smbAuthentication.getChildNodes();
+        boolean account = false;
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Account": // YADE 1 - deprecated
+                    argsLoader.setStringArgumentValue(args.getUser(), n);
+                    account = true;
+                    break;
+                case "Domain": // YADE 1 - deprecated
+                    argsLoader.setStringArgumentValue(args.getDomain(), n);
+                    break;
+                case "Password": // YADE 1 - deprecated
+                    argsLoader.setStringArgumentValue(args.getPassword(), n);
+                    break;
+                case "SMBAuthenticationMethodAnonymous":
+                    args.getAuthMethod().setValue(SMBAuthMethod.ANONYMOUS);
+                    break;
+                case "SMBAuthenticationMethodGuest":
+                    parseSMBAuthenticationMethodGuest(argsLoader, args, n);
+                    break;
+                case "SMBAuthenticationMethodNTLM":
+                    parseSMBAuthenticationMethodNTLM(argsLoader, args, n);
+                    break;
+                case "SMBAuthenticationMethodKerberos":
+                    parseSMBAuthenticationMethodKerberos(argsLoader, args, n);
+                    break;
+                case "SMBAuthenticationMethodSPNEGO":
+                    parseSMBAuthenticationMethodSPNEGO(argsLoader, args, n);
+                    break;
+                }
+            }
+        }
+        if (account) {// YADE1 -> JS7
+            if (args.getPassword().isEmpty() && args.getDomain().isEmpty()) {
+                if (SMBAuthMethod.ANONYMOUS.name().equalsIgnoreCase(args.getUser().getValue())) {
+                    args.getAuthMethod().setValue(SMBAuthMethod.ANONYMOUS);
+                } else {
+                    args.getAuthMethod().setValue(SMBAuthMethod.GUEST);
+                }
+            }// else default NTLM
+        }
+    }
+
+    private static void parseSMBAuthenticationMethodGuest(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+        NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
@@ -582,13 +652,73 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "Domain":
                     argsLoader.setStringArgumentValue(args.getDomain(), n);
+                }
+            }
+        }
+        if (args.getUser().isEmpty()) {
+            args.getUser().setValue("guest");
+        }
+        args.getAuthMethod().setValue(SMBAuthMethod.GUEST);
+    }
+
+    private static void parseSMBAuthenticationMethodNTLM(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+        NodeList nl = node.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Account":
+                    argsLoader.setStringArgumentValue(args.getUser(), n);
                     break;
                 case "Password":
                     argsLoader.setStringArgumentValue(args.getPassword(), n);
                     break;
+                case "Domain":
+                    argsLoader.setStringArgumentValue(args.getDomain(), n);
                 }
             }
         }
+        args.getAuthMethod().setValue(SMBAuthMethod.NTLM);
+    }
+
+    private static void parseSMBAuthenticationMethodKerberos(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+        NodeList nl = node.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Account":
+                    argsLoader.setStringArgumentValue(args.getUser(), n);
+                    break;
+                case "Password":
+                    argsLoader.setStringArgumentValue(args.getPassword(), n);
+                    break;
+                case "Domain":
+                    argsLoader.setStringArgumentValue(args.getDomain(), n);
+                }
+            }
+        }
+        args.getAuthMethod().setValue(SMBAuthMethod.KERBEROS);
+    }
+
+    private static void parseSMBAuthenticationMethodSPNEGO(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+        NodeList nl = node.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Account":
+                    argsLoader.setStringArgumentValue(args.getUser(), n);
+                    break;
+                case "Password":
+                    argsLoader.setStringArgumentValue(args.getPassword(), n);
+                    break;
+                case "Domain":
+                    argsLoader.setStringArgumentValue(args.getDomain(), n);
+                }
+            }
+        }
+        args.getAuthMethod().setValue(SMBAuthMethod.SPNEGO);
     }
 
     private static void parseKeyStrore(YADEXMLArgumentsLoader argsLoader, SSLArguments args, Node keyStore) {

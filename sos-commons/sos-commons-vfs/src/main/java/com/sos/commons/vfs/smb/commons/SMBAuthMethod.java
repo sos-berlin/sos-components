@@ -3,12 +3,11 @@ package com.sos.commons.vfs.smb.commons;
 public enum SMBAuthMethod {
 
     /** Simple, no special configuration required. Less secure, no SSO(Single Sign-On). Recommended For: Standalone servers, workgroups<br/>
-     * - NTLM: NT LAN Manager, an older authentication protocol from Microsoft, typically used when Kerberos is unavailable.<br/>
-     * - GUEST: Represents unauthenticated access where no credentials are required. The username is set to "Guest", and the password is not needed (null).<br/>
      * - ANONYMOUS: Used for situations where no authentication is required, such as accessing public SMB shares or other unauthenticated services.<br/>
-     * 
-     * @TODO LEGACY...SIMPLE instead of BASIC? */
-    BASIC(null, null, null)
+     * - GUEST: Represents unauthenticated access where no credentials are required. The username is set to "Guest", and the password is not needed (null).<br/>
+     * - NTLM: NT LAN Manager, an older authentication protocol from Microsoft, typically used when Kerberos is unavailable.<br/>
+     */
+    ANONYMOUS(null, null, null), GUEST(null, null, null), NTLM(null, null, null)
     /** GSSAPI(Generic Security Service Application Program Interface) mechanisms:<br/>
      * - KERBEROS<br/>
      * - SPNEGO<br/>

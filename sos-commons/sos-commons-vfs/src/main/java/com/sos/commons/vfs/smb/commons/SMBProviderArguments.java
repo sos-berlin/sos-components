@@ -10,7 +10,7 @@ public class SMBProviderArguments extends AProviderArguments {
     private static final int DEFAULT_PORT = 445;
 
     // JS7 new - not in the XML schema
-    private SOSArgument<SMBAuthMethod> authMethod = new SOSArgument<>("auth_method", false, SMBAuthMethod.BASIC);
+    private SOSArgument<SMBAuthMethod> authMethod = new SOSArgument<>("auth_method", false, SMBAuthMethod.NTLM);
 
     private SOSArgument<String> domain = new SOSArgument<>("domain", false);
     // JS7 new - not in the XML schema
@@ -24,29 +24,24 @@ public class SMBProviderArguments extends AProviderArguments {
     /** Overrides {@link AProviderArguments#getAccessInfo() */
     @Override
     public String getAccessInfo() throws ProviderInitializationException {
-        String authMethod = "";
-        String user = getUser().getDisplayValue();
+        String user = getUser().getValue();
         switch (getAuthMethod().getValue()) {
-        case BASIC:
-            if (SOSString.isEmpty(user)) {
-                user = "anonymous";
-            }
-            break;
         case KERBEROS:
         case SPNEGO:
         default:
-            authMethod = "[" + getAuthMethod().getValue().name() + "]";
             if (SOSString.isEmpty(user)) {
-                user = "[sso]";
+                user = "[SSO]";
             }
             break;
         }
-
         StringBuilder sb = new StringBuilder();
-        sb.append(authMethod);
+        sb.append("[").append(getAuthMethod().getValue().name()).append("]");
         sb.append(user).append("@").append(getHost().getValue()).append(":").append(getPort().getValue());
-        if (!getDomain().isEmpty()) {
-            sb.append("(").append(getDomain().getValue()).append(")");
+        if (!domain.isEmpty()) {
+            sb.append("(").append(domain.getValue()).append(")");
+        }
+        if (!shareName.isEmpty()) {
+            sb.append("\\").append(shareName.getValue());
         }
         return sb.toString();
     }
