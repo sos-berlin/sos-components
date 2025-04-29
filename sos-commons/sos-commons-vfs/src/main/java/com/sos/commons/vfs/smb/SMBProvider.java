@@ -47,7 +47,14 @@ public abstract class SMBProvider extends AProvider<SMBProviderArguments> {
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return toPathStyle(Path.of(path).normalize().toString());
+        if (SOSString.isEmpty(path)) {
+            return getPathSeparator();
+        }
+        String p = toPathStyle(Path.of(path).normalize().toString());
+        if (p == null) {
+            return getPathSeparator();
+        }
+        return p.startsWith(getPathSeparator()) ? p : getPathSeparator() + p;
     }
 
     /** 'sos/documents/myfile.txt' -> 'sos'<br/>

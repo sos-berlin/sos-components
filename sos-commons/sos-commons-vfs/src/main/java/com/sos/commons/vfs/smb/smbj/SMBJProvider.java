@@ -402,6 +402,9 @@ public class SMBJProvider extends SMBProvider {
     }
 
     protected ProviderFile createProviderFile(String fullPath, FileIdBothDirectoryInformation info) {
+        if (!fullPath.startsWith(getPathSeparator())) {
+            fullPath = getPathSeparator() + fullPath;
+        }
         return createProviderFile(fullPath, info.getEndOfFile(), info.getLastWriteTime().toEpochMillis());
     }
 
@@ -514,12 +517,14 @@ public class SMBJProvider extends SMBProvider {
      * @param path
      * @return */
     private String getSMBPath(String path) {
-        String shareName = getShareName(path);
         String smbPath = normalizePath(path);
-
+        if (SOSString.isEmpty(smbPath)) {
+            return "";
+        }
+        String shareName = getShareName(path);
         smbPath = SOSString.trimStart(smbPath, getPathSeparator());
         if (!SOSString.isEmpty(shareName)) {
-            if (smbPath == null || shareName.equalsIgnoreCase(smbPath)) {
+            if (shareName.equalsIgnoreCase(smbPath)) {
                 return "";
             }
             // finds the share name in the path and removes it.
