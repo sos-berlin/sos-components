@@ -519,7 +519,7 @@ public class SMBJProvider extends SMBProvider {
 
         smbPath = SOSString.trimStart(smbPath, getPathSeparator());
         if (!SOSString.isEmpty(shareName)) {
-            if (shareName.equalsIgnoreCase(smbPath)) {
+            if (smbPath == null || shareName.equalsIgnoreCase(smbPath)) {
                 return "";
             }
             // finds the share name in the path and removes it.
