@@ -55,9 +55,10 @@ public class YADEClientHelper {
             return;
         }
         Path file = SOSPath.toAbsoluteNormalizedPath(clientArgs.getResultSetFile().getValue());
-        logger.info("[%s][%s=%s]write %s entries:", YADEClientArguments.LABEL, clientArgs.getResultSetFile().getName(), file, sourceFiles.size());
-
         boolean logEntries = TransferOperation.GETLIST.equals(operation);
+        if (logEntries) {
+            logger.info("[%s][%s=%s]write %s entries:", YADEClientArguments.LABEL, clientArgs.getResultSetFile().getName(), file, sourceFiles.size());
+        }
         StringBuilder sb = new StringBuilder();
         if (SOSCollection.isEmpty(sourceFiles)) {
             sb.append(NEW_LINE);
@@ -75,6 +76,10 @@ public class YADEClientHelper {
             // SOSPath.append(file, sb.toString());
         } catch (Throwable e) {
             throw new YADEEngineException("[writeResultSet][" + file + "]" + e, e);
+        }
+        if (!logEntries) {
+            logger.info("[%s][%s=%s]%s entries written", YADEClientArguments.LABEL, clientArgs.getResultSetFile().getName(), file, sourceFiles
+                    .size());
         }
     }
 
