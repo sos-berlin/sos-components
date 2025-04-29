@@ -2,20 +2,27 @@ package com.sos.commons.vfs.smb.commons;
 
 public enum SMBAuthMethod {
 
-    /** Simple, no special configuration required. Less secure, no SSO(Single Sign-On). Recommended For: Standalone servers, workgroups<br/>
+    /** <br/>
      * - ANONYMOUS: Used for situations where no authentication is required, such as accessing public SMB shares or other unauthenticated services.<br/>
      * - GUEST: Represents unauthenticated access where no credentials are required. The username is set to "Guest", and the password is not needed (null).<br/>
      * - NTLM: NT LAN Manager, an older authentication protocol from Microsoft, typically used when Kerberos is unavailable.<br/>
-     */
+     * -- Simple, no special configuration required. Less secure, no SSO(Single Sign-On). Recommended For: Standalone servers, workgroups */
     ANONYMOUS(null, null, null), GUEST(null, null, null), NTLM(null, null, null)
     /** GSSAPI(Generic Security Service Application Program Interface) mechanisms:<br/>
      * - KERBEROS<br/>
      * - SPNEGO<br/>
      */
     /** Kerberos: The standard authentication protocol used in many enterprise environments like Active Directory. */
-    /** Secure, SSO, no passwords transmitted over the network. Works only in Windows domains. Recommended For: Windows domains (Active Directory) */
+    /** Secure, SSO, no passwords transmitted over the network. Works only in Windows domains. Recommended For: Windows domains (Active Directory)<br/>
+     * 
+     * OID: "1.2.840.113554.1.2.2" – This is the standard identifier for Kerberos GSSAPI and must remain fixed.<br/>
+     * LoginContextName: Configurable, allows referencing a custom JAAS login entry (default is "KerberosLogin").<br/>
+     */
     ,KERBEROS("Kerberos", "1.2.840.113554.1.2.2", "KerberosLogin")
-    /** SPNEGO: The Simple and Protected GSSAPI Negotiation Mechanism, used to negotiate between different authentication mechanisms (e.g., Kerberos, NTLM). */
+    /** SPNEGO: The Simple and Protected GSSAPI Negotiation Mechanism, used to negotiate between different authentication mechanisms (e.g., Kerberos, NTLM).<br>
+     * 
+     * OID: "1.3.6.1.5.5.2" – This is the standard identifier for SPNEGO and must remain fixed.<br/>
+     * LoginContextName: Configurable, allows referencing a custom JAAS login entry (default is "SPNEGOLogin"). */
     ,SPNEGO("SPNEGO", "1.3.6.1.5.5.2", "SPNEGOLogin");
 
     /** DIGEST_MD5, LDAP, OAUTH, SCRAM, and X509 are not GSSAPI mechanisms in the classic sense.<br/>

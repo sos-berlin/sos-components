@@ -637,7 +637,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 } else {
                     args.getAuthMethod().setValue(SMBAuthMethod.GUEST);
                 }
-            }// else default NTLM
+            } else {
+                args.getAuthMethod().setValue(SMBAuthMethod.NTLM); // default
+            }
         }
     }
 
@@ -652,6 +654,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "Domain":
                     argsLoader.setStringArgumentValue(args.getDomain(), n);
+                    break;
                 }
             }
         }
@@ -675,6 +678,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "Domain":
                     argsLoader.setStringArgumentValue(args.getDomain(), n);
+                    break;
                 }
             }
         }
@@ -695,6 +699,10 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "Domain":
                     argsLoader.setStringArgumentValue(args.getDomain(), n);
+                    break;
+                case "LoginContextName":
+                    argsLoader.setStringArgumentValue(args.getLoginContextName(), n);
+                    break;
                 }
             }
         }
@@ -715,6 +723,10 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "Domain":
                     argsLoader.setStringArgumentValue(args.getDomain(), n);
+                    break;
+                case "LoginContextName":
+                    argsLoader.setStringArgumentValue(args.getLoginContextName(), n);
+                    break;
                 }
             }
         }

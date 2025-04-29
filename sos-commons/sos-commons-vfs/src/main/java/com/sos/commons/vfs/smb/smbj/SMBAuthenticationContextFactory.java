@@ -23,12 +23,15 @@ public class SMBAuthenticationContextFactory {
     public static AuthenticationContext create(SMBProviderArguments args) throws Exception {
         switch (args.getAuthMethod().getValue()) {
         case ANONYMOUS:
+            // sets: user='', pass=new char[0] ,domain=null
             return AuthenticationContext.anonymous();
         case GUEST:
-            return AuthenticationContext.guest(); // not set the domain...
-        // return new AuthenticationContext(args.getUser().getValue(), new char[0], args.getDomain().getValue());
+            // return new AuthenticationContext(args.getUser().getValue(), new char[0], args.getDomain().getValue());
+            // sets: user='Guest', pass=new char[0] ,domain=null
+            return AuthenticationContext.guest();
         case NTLM:
-            return new AuthenticationContext(args.getUser().getValue(), args.getPassword().getValue().toCharArray(), args.getDomain().getValue());
+            char[] pass = args.getPassword().getValue() == null ? new char[0] : args.getPassword().getValue().toCharArray();
+            return new AuthenticationContext(args.getUser().getValue(), pass, args.getDomain().getValue());
         case KERBEROS:
         case SPNEGO:
         default:
@@ -42,13 +45,13 @@ public class SMBAuthenticationContextFactory {
         String username = args.getUser().getValue();
         String password = args.getPassword().getValue();
         String domain = args.getDomain().getValue();
-
+        String loginContextName = args.getLoginContextName().isEmpty() ? authMethod.getLoginContextName() : args.getLoginContextName().getValue();
         LoginContext loginContext;
         if (password == null) {
             // uses the ticket cache (e.g. kinit for Kerberos SSO)
-            loginContext = new LoginContext(authMethod.getLoginContextName());
+            loginContext = new LoginContext(loginContextName);
         } else {
-            loginContext = new LoginContext(authMethod.getLoginContextName(), new CallbackHandler() {
+            loginContext = new LoginContext(loginContextName, new CallbackHandler() {
 
                 @Override
                 public void handle(Callback[] callbacks) {
