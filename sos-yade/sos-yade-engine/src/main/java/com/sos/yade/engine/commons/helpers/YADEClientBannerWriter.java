@@ -71,10 +71,15 @@ public class YADEClientBannerWriter {
         StringBuilder detailsLines = new StringBuilder();
         if (totalFiles > 0 && !TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             List<String> l = new ArrayList<>();
+            if (logger.isDebugEnabled()) {
+                for (ProviderFile f : files) {
+                    logger.debug((YADEProviderFile) f);
+                }
+            }
 
             Map<String, List<YADEProviderFile>> groupedByState = FileStateUtils.getGroupedByState(targetDelegator, files, getDefaultState(args));
-            boolean needsDetails = groupedByState.keySet().stream().anyMatch(k -> k.contains(TransferEntryState.ROLLED_BACK.name()) || k.contains(
-                    TransferEntryState.FAILED.name()));
+            boolean needsDetails = groupedByState.keySet().stream().anyMatch(k -> k.contains(formatState(TransferEntryState.ROLLED_BACK)) || k
+                    .contains(formatState(TransferEntryState.FAILED)));
 
             groupedByState.forEach((state, fileList) -> {
                 l.add(formatState(state) + "=" + fileList.size());
@@ -430,16 +435,16 @@ public class YADEClientBannerWriter {
         }
 
         private static String resolve(YADEProviderFile f, TransferEntryState defaultState, boolean skipRenameSubStateForTarget) {
-            String state = f.getState() == null ? defaultState.toString() : f.getState().toString();
+            String state = f.getState() == null ? formatState(defaultState) : formatState(f.getState());
             String subState = getSubState(f, skipRenameSubStateForTarget);
             return state + subState;
         }
 
         private static String getSubState(YADEProviderFile target, boolean skipRenameSubState) {
-            if (target.getSubState() == null || skipRenameSubState) {
+            if (target.getSubState() == null || (skipRenameSubState && TransferEntryState.RENAMED.equals(target.getSubState()))) {
                 return "";
             }
-            return "(" + target.getSubState() + ")";
+            return "(" + formatState(target.getSubState()) + ")";
         }
     }
 

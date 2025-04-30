@@ -52,15 +52,16 @@ public class SSHServerInfo {
         // SFTP only
         // - Windows OpenSSH DE - [SSHServerInfo][uname][exitCode=0][std:out=This service allows sftp connections only.][std:err=]
         // - Unix OpenSSH - [SSHServerInfo][uname][exitCode=1][std:out=This service allows sftp connections only.][std:err=]
-        String stdOut = commandResult.getStdOut().trim().toLowerCase();
-        String stdErr = commandResult.getStdErr().trim().toLowerCase();
-        boolean isSFTPOnly = stdOut.contains("sftp") && stdOut.contains("only") && stdErr.isEmpty();
+        String stdOut = commandResult.getStdOut().trim();
+        String stdOutLowerCase = stdOut.toLowerCase();
+        String stdErrLowerCase = commandResult.getStdErr().trim().toLowerCase();
+        boolean isSFTPOnly = stdOutLowerCase.contains("sftp") && stdOutLowerCase.contains("only") && stdErrLowerCase.isEmpty();
         switch (commandResult.getExitCode()) {
         case 0:
-            if (stdOut.matches("(?i).*(linux|darwin|aix|hp-ux|solaris|sunos|freebsd).*")) {
+            if (stdOutLowerCase.matches("(?i).*(linux|darwin|aix|hp-ux|solaris|sunos|freebsd).*")) {
                 os = stdOut;
                 setShell(isSFTPOnly, Shell.UNIX);
-            } else if (stdOut.matches("(?i).*cygwin.*")) {
+            } else if (stdOutLowerCase.matches("(?i).*cygwin.*")) {
                 // OS is Windows but shell is Unix like
                 // unix commands have to be used
                 os = OS.WINDOWS.name();
@@ -83,7 +84,7 @@ public class SSHServerInfo {
                 shell = Shell.UNKNOWN;
             } else {
                 // [uname][exitCode=1][std:out=][std:err=Der Befehl "uname" ist entweder falsch geschrieben oder konnte nicht gefunden werden.]
-                if (stdOut.isEmpty() && stdErr.contains(COMMANDO)) {
+                if (stdOutLowerCase.isEmpty() && stdErrLowerCase.contains(COMMANDO.toLowerCase())) {
                     os = OS.WINDOWS.name();
                     shell = Shell.WINDOWS;
                 } else {

@@ -120,11 +120,11 @@ public class SOSPathUtils {
         if (SOSString.isEmpty(path)) {
             return path;
         }
-        String n = toUnixStyle(Path.of(path).normalize().toString());
-        if (n == null) {
-            return n;
-        }
-        return n.startsWith("/") ? n : "/" + n;
+        return toUnixStyle(SOSPath.toAbsoluteNormalizedPath(path).toString());
+    }
+
+    public static String toAbsoluteUnixPath() {
+        return toUnixStyle(SOSPath.toAbsoluteNormalizedPath("").toString());
     }
 
     /** Returns:<br/>
@@ -244,6 +244,13 @@ public class SOSPathUtils {
 
     public static String getWindowsStyleDirectoryWithTrailingSeparator(String path) {
         return getDirectoryWithTrailingSeparator(toWindowsStyle(path), PATH_SEPARATOR_WINDOWS);
+    }
+
+    public static String getDirectoryWithTrailingSeparator(String path, String pathSeparator) {
+        if (path == null) {
+            return null;
+        }
+        return path.endsWith(pathSeparator) ? path : path + pathSeparator;
     }
 
     /** Selects top-level paths from a collection of path-like elements.<br />
@@ -409,13 +416,6 @@ public class SOSPathUtils {
             return null;
         }
         return SOSString.trimEnd(path, pathSeparator);
-    }
-
-    private static String getDirectoryWithTrailingSeparator(String path, String pathSeparator) {
-        if (path == null) {
-            return null;
-        }
-        return path.endsWith(pathSeparator) ? path : path + pathSeparator;
     }
 
     private static String getPathSeparator(Collection<?> paths, String pathSeparator) {

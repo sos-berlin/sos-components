@@ -56,8 +56,8 @@ public class YADECopyMoveOperationsHandler {
             finalizeTransactionIfNeeded(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile,
                     cancel);
         } catch (Throwable e) {
-            // rollbackIfTransactional - does not throws exception
-            rollbackTransactionIfNeeded(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile);
+            // rollback - does not throws exception
+            onError(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile);
             throw e;
         }
     }
@@ -214,13 +214,18 @@ public class YADECopyMoveOperationsHandler {
         }
     }
 
-    /** @apiNote the Source files by rollback are not affected */
-    private static void rollbackTransactionIfNeeded(ISOSLogger logger, YADECopyMoveOperationsConfig config,
-            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles,
-            boolean useCumulativeTargetFile) {
-        if (!config.isTransactionalEnabled()) {
-            return;
+    private static void onError(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean useCumulativeTargetFile) {
+        if (config.isTransactionalEnabled()) {
+            rollbackTransactional(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile);
+        } else {
+            // maybe setting State, SubState ...
         }
+    }
+
+    /** @apiNote the Source files by rollback are not affected */
+    private static void rollbackTransactional(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean useCumulativeTargetFile) {
         if (useCumulativeTargetFile) {
             YADETargetCumulativeFileHelper.rollback(logger, config, targetDelegator);
             return;

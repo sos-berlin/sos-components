@@ -10,13 +10,16 @@ import java.util.UUID;
 import com.sos.commons.util.SOSCLIArgumentsParser;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ssh.SSHProvider;
+import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon.JumpHostConfig.ConfigFile;
+import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
@@ -72,6 +75,10 @@ import com.sos.yade.engine.handlers.command.YADECommandExecutor;
  * -- these options are used to perform operation between the Jump Host and Source|Target.<br/>
  * - Otherwise, the the current Settings (TransferOptions.Transactional or paralelism) are used */
 public class YADEEngineJumpHostAddon {
+
+    // tmp directory on JumpHost: jumpDirectory + JUMP_HOST_TMP_DIRECTORY_PREFIX + UUID.randomUUID().toString();
+    // e.g.: /tmp/yade-dmz-4777b33f-81dc-41e5-af5a-2e71e424c9fe
+    private static final String JUMP_HOST_TMP_DIRECTORY_PREFIX = "yade-dmz-";
 
     private static final String SOURCE_TO_JUMP_HOST_COPY_PROFILE_ID = "SOURCE_TO_JUMP_HOST_COPY";
     private static final String SOURCE_TO_JUMP_HOST_GETLIST_PROFILE_ID = "SOURCE_TO_JUMP_HOST_GETLIST";
@@ -195,8 +202,12 @@ public class YADEEngineJumpHostAddon {
         isReady = true;
     }
 
-    /** @param isTransferSucceeded - the previous Jump Host execution was successful
-     * @param isSourceDisconnectingEnabled - when polling - an be false - only jump data directory should be removed */
+    /** @param sourceDelegator
+     * @param targetDelegator
+     * @param files
+     * @param isTransferSucceeded - the previous Jump Host execution was successful
+     * @param isSourceDisconnectingEnabled - when polling - can be false - only jump data directory should be removed
+     * @throws YADEEngineJumpHostException */
     public void onBeforeDelegatorDisconnected(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator,
             List<ProviderFile> files, boolean isTransferSucceeded, boolean isSourceDisconnectingEnabled) throws YADEEngineJumpHostException {
         if (!isReady) {
@@ -232,6 +243,9 @@ public class YADEEngineJumpHostAddon {
                                             .toString()), e);
                         }
                     }
+                } else {
+                    // TODO test...
+                    setFailed(files);
                 }
             } else {
                 jumpHostDelegator = targetDelegator;
@@ -239,6 +253,8 @@ public class YADEEngineJumpHostAddon {
                     if (config.jumpHostToTarget.deleteSourceFiles) {
                         jumpHostToTargetDeleteSourceFiles(sourceDelegator, files);
                     }
+                } else {
+                    setFailed(files);// tested
                 }
             }
         } catch (YADEEngineJumpHostException e) {
@@ -247,6 +263,23 @@ public class YADEEngineJumpHostAddon {
             throw new YADEEngineJumpHostException(e.toString(), e);
         } finally {
             deleteJumpDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
+        }
+    }
+
+    private void setFailed(List<ProviderFile> sourceFiles) {
+        l: for (ProviderFile pf : sourceFiles) {
+            YADEProviderFile sourceFile = (YADEProviderFile) pf;
+            YADEProviderFile targetFile = sourceFile.getTarget();
+
+            // 1) a targetFile was not initialized because the transfer was aborted in a previous file
+            if (targetFile == null) {
+                // set state on sourceFile for Summary
+                sourceFile.setState(TransferEntryState.SELECTED);
+                sourceFile.setSubState(TransferEntryState.ABORTED);
+                continue l;
+            }
+            // 2) only set the status targetFile - the entire jump directory will be deleted anyway - no individual files need to be deleted
+            targetFile.setSubState(TransferEntryState.ROLLED_BACK);
         }
     }
 
@@ -357,7 +390,7 @@ public class YADEEngineJumpHostAddon {
         private JumpHostToTarget jumpHostToTarget;
 
         private JumpHostConfig() {
-            directory = getJumpHostDirectory();
+            directory = getJumpHostLocalTemporaryDirectory();
             configDirectory = directory + "/config";
             dataDirectory = directory + "/data";
             settingsXML = configDirectory + "/" + SETTINGS_XML;
@@ -454,12 +487,20 @@ public class YADEEngineJumpHostAddon {
 
         }
 
-        private String getJumpHostDirectory() {
-            String jumpDirectory = SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(argsLoader.getJumpHostArgs().getDirectory().getValue());
-            if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(jumpDirectory)) {
-                jumpDirectory = jumpDirectory.substring(1);
+        private String getJumpHostLocalTemporaryDirectory() {
+            String jumpDirectory;
+            String configuredParentDirectory = argsLoader.getJumpHostArgs().getDirectory().getValue();
+            if (SOSString.isEmpty(configuredParentDirectory)) {
+                jumpDirectory = SOSPathUtils.toAbsoluteUnixPath();
+            } else {
+                if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(configuredParentDirectory)) {
+                    jumpDirectory = SOSPathUtils.toAbsoluteUnixPath(configuredParentDirectory.substring(1));
+                } else {
+                    jumpDirectory = SOSPathUtils.toAbsoluteUnixPath(configuredParentDirectory);
+                }
             }
-            return jumpDirectory + "jade-dmz-" + UUID.randomUUID().toString();
+            jumpDirectory = SOSPathUtils.getDirectoryWithTrailingSeparator(jumpDirectory, SOSPathUtils.PATH_SEPARATOR_UNIX);
+            return jumpDirectory + JUMP_HOST_TMP_DIRECTORY_PREFIX + UUID.randomUUID().toString();
         }
 
         private boolean getJumpHostTransactional() {
