@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sos.commons.util.SOSCLIArgumentsParser;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -76,7 +77,7 @@ public class YADEEngineMain {
 
             historyReturnValuesFile = normalizedArgs.get(STARTUP_ARG_RETURN_VALUES);
 
-            Path settings = Path.of(getRequiredArgumentValue(normalizedArgs, YADEArguments.STARTUP_ARG_SETTINGS));
+            Path settings = SOSPath.toAbsoluteNormalizedPath(getRequiredArgumentValue(normalizedArgs, YADEArguments.STARTUP_ARG_SETTINGS));
             String profile = getRequiredArgumentValue(normalizedArgs, YADEArguments.STARTUP_ARG_PROFILE);
             Boolean settingsReplacerCaseSensitive = getBooleanValue(normalizedArgs, YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE,
                     YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE_DEFAULT);

@@ -266,6 +266,10 @@ public class YADEEngineJumpHostAddon {
         }
     }
 
+    public boolean isConfiguredOnSource() {
+        return argsLoader.getJumpHostArgs().isConfiguredOnSource();
+    }
+
     private void setFailed(List<ProviderFile> sourceFiles) {
         l: for (ProviderFile pf : sourceFiles) {
             YADEProviderFile sourceFile = (YADEProviderFile) pf;
@@ -281,10 +285,6 @@ public class YADEEngineJumpHostAddon {
             // 2) only set the status targetFile - the entire jump directory will be deleted anyway - no individual files need to be deleted
             targetFile.setSubState(TransferEntryState.ROLLED_BACK);
         }
-    }
-
-    public boolean isConfiguredOnSource() {
-        return argsLoader.getJumpHostArgs().isConfiguredOnSource();
     }
 
     private void deleteJumpDirectory(AYADEProviderDelegator jumpHostDelegator, boolean isSourceDisconnectingEnabled) {
@@ -487,20 +487,27 @@ public class YADEEngineJumpHostAddon {
 
         }
 
+        /** @apiNote the java nio methods such as 'normalize' or 'absolutePath' cannot be used,<br/>
+         *          because the paths are created based on the current system and not on the JumpHost system on which the JumpHost client is installed */
         private String getJumpHostLocalTemporaryDirectory() {
-            String jumpDirectory;
-            String configuredParentDirectory = argsLoader.getJumpHostArgs().getDirectory().getValue();
-            if (SOSString.isEmpty(configuredParentDirectory)) {
-                jumpDirectory = SOSPathUtils.toAbsoluteUnixPath();
-            } else {
-                if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(configuredParentDirectory)) {
-                    jumpDirectory = SOSPathUtils.toAbsoluteUnixPath(configuredParentDirectory.substring(1));
+            String jumpParentDirectory;
+            if (argsLoader.getJumpHostArgs().getDirectory().isDirty()) {
+                String configuredParentDirectory = SOSPathUtils.toUnixStyle(argsLoader.getJumpHostArgs().getDirectory().getValue());
+                if (SOSString.isEmpty(configuredParentDirectory)) {// ... can't be empty due to default value ...
+                    jumpParentDirectory = SOSPathUtils.toUnixStyle(SOSPathUtils.getParentPath(argsLoader.getJumpHostArgs().getYADEClientCommand()
+                            .getValue()));
                 } else {
-                    jumpDirectory = SOSPathUtils.toAbsoluteUnixPath(configuredParentDirectory);
+                    if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(configuredParentDirectory)) {
+                        jumpParentDirectory = configuredParentDirectory.substring(1);
+                    } else {
+                        jumpParentDirectory = configuredParentDirectory;
+                    }
                 }
+            } else { // default: /tmp
+                jumpParentDirectory = SOSPathUtils.toUnixStyle(argsLoader.getJumpHostArgs().getDirectory().getValue());
             }
-            jumpDirectory = SOSPathUtils.getDirectoryWithTrailingSeparator(jumpDirectory, SOSPathUtils.PATH_SEPARATOR_UNIX);
-            return jumpDirectory + JUMP_HOST_TMP_DIRECTORY_PREFIX + UUID.randomUUID().toString();
+            jumpParentDirectory = SOSPathUtils.getDirectoryWithTrailingSeparator(jumpParentDirectory, SOSPathUtils.PATH_SEPARATOR_UNIX);
+            return jumpParentDirectory + JUMP_HOST_TMP_DIRECTORY_PREFIX + UUID.randomUUID().toString();
         }
 
         private boolean getJumpHostTransactional() {

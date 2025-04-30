@@ -17,8 +17,7 @@ public class YADEJumpHostArguments extends ASOSArguments {
     private SSHProviderArguments provider;
     private YADEProviderCommandArguments commands;
 
-    /** COPYFROMINTERNET/COPYTOINTERNET/... */
-    private SOSArgument<String> directory = new SOSArgument<>("Directory", false);
+    private SOSArgument<String> directory = new SOSArgument<>("Directory", false, "/tmp");
     private SOSArgument<JumpPlatform> platform = new SOSArgument<>("Platform", false);
 
     private SOSArgument<String> yadeClientCommand = new SOSArgument<>("JumpCommand", false);

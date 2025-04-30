@@ -94,11 +94,13 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
             return null;
         }
         String dir = path;
-        // TODO always normalize?
-        // if (isHTTP) {
-        /** resolved and normalized based on baseURL */
-        dir = provider.normalizePath(path);
-        // }
+
+        // JumpHost Note: the java nio methods such as 'normalize' or 'absolutePath' cannot be used,
+        // because the paths are created based on the current system and not on the JumpHost system on which the JumpHost client is installed */
+        if (!isJumpHost()) {
+            dir = provider.normalizePath(path);
+        }
+
         return SOSPathUtils.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtils.getUnixStyleDirectoryWithoutTrailingSeparator(
                 dir) : SOSPathUtils.getWindowsStyleDirectoryWithoutTrailingSeparator(dir);
     }
