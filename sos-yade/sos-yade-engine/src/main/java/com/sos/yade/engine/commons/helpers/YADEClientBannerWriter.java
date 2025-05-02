@@ -148,9 +148,13 @@ public class YADEClientBannerWriter {
     }
 
     private static void writeNotificationHeader(ISOSLogger logger, YADENotificationArguments args) {
+        if (args == null) {
+            return;
+        }
+
         boolean triggersEnabled = args.triggersEnabled();
         boolean mailEnabled = args.isMailEnabled();
-        if (args == null || (!triggersEnabled && !mailEnabled)) {
+        if (!triggersEnabled && !mailEnabled) {
             return;
         }
 
