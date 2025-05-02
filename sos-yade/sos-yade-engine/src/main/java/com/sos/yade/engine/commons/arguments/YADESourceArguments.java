@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 
 public class YADESourceArguments extends YADESourceTargetArguments {
 
@@ -14,8 +14,6 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     public static enum ZeroByteTransfer {
         YES, NO, STRICT, RELAXED;
     }
-
-    private final static String LIST_VALUES_DELIMITER = ";";
 
     /** - Polling Arguments ------- */
     private YADESourcePollingArguments polling;
@@ -128,18 +126,11 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     }
 
     public String getFilePathAsString() {
-        if (filePath.getValue() == null) {
-            return null;
-        }
-        return String.join(LIST_VALUES_DELIMITER, filePath.getValue());
+        return SOSArgumentHelper.getListStringArgValueAsString(filePath);
     }
 
     public void setFilePath(String val) {
-        if (SOSString.isEmpty(val)) {
-            filePath.setValue(null);
-        } else {
-            filePath.setValue(YADEArgumentsHelper.toList(val, LIST_VALUES_DELIMITER));
-        }
+        SOSArgumentHelper.setListStringArgValue(filePath, val);
     }
 
     public SOSArgument<Path> getFileList() {

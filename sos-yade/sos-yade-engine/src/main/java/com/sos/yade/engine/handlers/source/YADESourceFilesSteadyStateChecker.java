@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.YADEProviderFile;
@@ -27,7 +27,7 @@ public class YADESourceFilesSteadyStateChecker {
         }
         boolean steady = true;
         int total = args.getCheckSteadyCount().getValue().intValue();
-        long interval = ASOSArguments.asSeconds(args.getCheckSteadyStateInterval(), 1L);
+        long interval = SOSArgumentHelper.asSeconds(args.getCheckSteadyStateInterval(), 1L);
 
         ml: for (int i = 0; i < total; i++) {
             steady = true;

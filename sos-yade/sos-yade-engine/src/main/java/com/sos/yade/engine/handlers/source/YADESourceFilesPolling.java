@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
@@ -186,13 +186,13 @@ public class YADESourceFilesPolling {
     }
 
     private void initMethod() {
-        interval = ASOSArguments.asSeconds(args.getPolling().getPollInterval(), YADESourcePollingArguments.DEFAULT_POLL_INTERVAL);
+        interval = SOSArgumentHelper.asSeconds(args.getPolling().getPollInterval(), YADESourcePollingArguments.DEFAULT_POLL_INTERVAL);
         timeout = getPollTimeout();
 
         if (isPollingServer()) {
             if (args.getPolling().getPollingServerDuration().getValue() != null && !args.getPolling().getPollingServerPollForever().isTrue()) {
                 method = PollingMethod.ServerDuration;
-                serverDuration = ASOSArguments.asSeconds(args.getPolling().getPollingServerDuration(),
+                serverDuration = SOSArgumentHelper.asSeconds(args.getPolling().getPollingServerDuration(),
                         YADESourcePollingArguments.DEFAULT_POLL_INTERVAL);
             } else {
                 method = PollingMethod.Forever;

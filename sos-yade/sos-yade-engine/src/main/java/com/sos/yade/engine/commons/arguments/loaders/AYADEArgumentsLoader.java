@@ -4,6 +4,7 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
+import com.sos.yade.engine.commons.arguments.YADENotificationArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
@@ -12,10 +13,11 @@ public abstract class AYADEArgumentsLoader {
 
     private final YADEArguments args;
     private final YADEClientArguments clientArgs;
-    
+
     private YADESourceArguments sourceArgs;
     private YADETargetArguments targetArgs;
     private YADEJumpHostArguments jumpHostArgs;
+    private YADENotificationArguments notificationArgs;
 
     public AYADEArgumentsLoader() {
         this.args = new YADEArguments();
@@ -67,6 +69,10 @@ public abstract class AYADEArgumentsLoader {
         return jumpHostArgs;
     }
 
+    public YADENotificationArguments getNotificationArgs() {
+        return notificationArgs;
+    }
+
     public void nullifyTargetArgs() {
         targetArgs = null;
     }
@@ -82,6 +88,13 @@ public abstract class AYADEArgumentsLoader {
         if (jumpHostArgs == null) {
             jumpHostArgs = new YADEJumpHostArguments();
             jumpHostArgs.applyDefaultIfNullQuietly();
+        }
+    }
+
+    public void initializeNotificationArgsIfNull() {
+        if (notificationArgs == null) {
+            notificationArgs = new YADENotificationArguments();
+            notificationArgs.applyDefaultIfNullQuietly();
         }
     }
 }

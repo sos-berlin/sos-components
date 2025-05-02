@@ -26,24 +26,6 @@ public class YADEClientArguments extends ASOSArguments {
     private SOSArgument<Path> bannerHeader = new SOSArgument<>("banner_header", false);
     private SOSArgument<Path> bannerFooter = new SOSArgument<>("banner_footer", false);
 
-    /** - E-Mail Arguments ------- */
-    // TODO - only if standalone .... ?
-    private SOSArgument<Boolean> mailOnSuccess = new SOSArgument<>("OnSuccess", false, Boolean.valueOf(false));
-    private SOSArgument<Boolean> mailOnError = new SOSArgument<>("OnError", false, Boolean.valueOf(false));
-    private SOSArgument<Boolean> mailOnEmptyFiles = new SOSArgument<>("OnEmptyFiles", false, Boolean.valueOf(false));
-
-    public SOSArgument<Boolean> getMailOnSuccess() {
-        return mailOnSuccess;
-    }
-
-    public SOSArgument<Boolean> getMailOnError() {
-        return mailOnError;
-    }
-
-    public SOSArgument<Boolean> getMailOnEmptyFiles() {
-        return mailOnEmptyFiles;
-    }
-
     public boolean isCheckResultSetCountEnabled() {
         return expectedResultSetCount.isDirty() || raiseErrorIfResultSetIs.isDirty();
     }

@@ -1,9 +1,5 @@
 package com.sos.yade.engine.commons.arguments.loaders.xml;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -36,15 +32,16 @@ public class YADEXMLProfileHelper {
                     parseOperation(argsLoader, n);
                     break;
                 case "SystemPropertyFiles":
-                    parseSystemPropertyFiles(argsLoader, n);
+                    YADEXMLGeneralHelper.parseSystemPropertyFiles(argsLoader, n);
+                    break;
+                case "NotificationTriggers":
+                    parseNotificationTriggers(argsLoader, n);
+                    break;
+                case "Notifications":
+                    YADEXMLGeneralHelper.parseNotifications(argsLoader, n, "Profile=" + argsLoader.getArgs().getProfile().getValue());
                     break;
                 case "Client":
                 case "JobScheduler":
-                case "Logging":
-                case "NotificationTriggers":
-                case "Notifications":
-                case "Assertions":
-                case "Documentation":
                 default:
                     break;
                 }
@@ -83,20 +80,25 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseSystemPropertyFiles(YADEXMLArgumentsLoader argsLoader, Node systemPropertyFiles) {
-        NodeList nl = systemPropertyFiles.getChildNodes();
-        if (nl == null) {
-            return;
-        }
-        List<Path> files = new ArrayList<>();
+    private static void parseNotificationTriggers(YADEXMLArgumentsLoader argsLoader, Node notificationTriggers) {
+        argsLoader.initializeNotificationArgsIfNull();
+
+        NodeList nl = notificationTriggers.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE && "SystemPropertyFile".equals(n.getNodeName())) {
-                files.add(Path.of(argsLoader.getValue(n)));
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "OnSuccess":
+                    argsLoader.setBooleanArgumentValue(argsLoader.getNotificationArgs().getOnSuccess(), n);
+                    break;
+                case "OnError":
+                    argsLoader.setBooleanArgumentValue(argsLoader.getNotificationArgs().getOnError(), n);
+                    break;
+                case "OnEmptyFiles":
+                    argsLoader.setBooleanArgumentValue(argsLoader.getNotificationArgs().getOnEmptyFiles(), n);
+                    break;
+                }
             }
-        }
-        if (files.size() > 0) {
-            argsLoader.getClientArgs().getSystemPropertyFiles().setValue(files);
         }
     }
 
@@ -182,7 +184,7 @@ public class YADEXMLProfileHelper {
                     argsLoader.setBooleanArgumentValue(argsLoader.getArgs().getTransactional(), n);
                     break;
                 case "RetryOnConnectionError":
-                    parseTransferOptionsRetryOnConnectionError(argsLoader, n);
+                    YADEXMLGeneralHelper.parseRetryOnConnectionError(argsLoader, n);
                     break;
                 }
             }
@@ -881,27 +883,6 @@ public class YADEXMLProfileHelper {
                     break;
                 case "CommandBeforeRename":
                     sourceTargetArgs.getCommands().setCommandsBeforeRename(argsLoader.getValue(n));
-                    break;
-                }
-            }
-        }
-    }
-
-    private static void parseTransferOptionsRetryOnConnectionError(YADEXMLArgumentsLoader argsLoader, Node retryOnConnectionError) throws Exception {
-        NodeList nl = retryOnConnectionError.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                switch (n.getNodeName()) {
-                case "RetryCountMax":
-                    argsLoader.setIntegerArgumentValue(argsLoader.getSourceArgs().getConnectionErrorRetryCountMax(), n);
-                    argsLoader.getTargetArgs().getConnectionErrorRetryCountMax().setValue(argsLoader.getSourceArgs().getConnectionErrorRetryCountMax()
-                            .getValue());
-                    break;
-                case "RetryInterval":
-                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getConnectionErrorRetryInterval(), n);
-                    argsLoader.getTargetArgs().getConnectionErrorRetryInterval().setValue(argsLoader.getSourceArgs().getConnectionErrorRetryInterval()
-                            .getValue());
                     break;
                 }
             }

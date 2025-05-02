@@ -68,6 +68,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
 
             // Map<String, String> map = System.getenv();
             varReplacer = new SOSMapVariableReplacer((Map<String, String>) params[2], (Boolean) params[3], (Boolean) params[4]);
+            YADEXMLGeneralHelper.parse(this, xpath.selectNode(root, "General"));
             YADEXMLProfileHelper.parse(this, profile);
             if (logger.isDebugEnabled()) {
                 logger.debug("[%s][set][duration]%s", YADEEngineSettingsLoadException.class.getSimpleName(), SOSDate.getDuration(getArgs().getStart()

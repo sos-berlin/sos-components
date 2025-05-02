@@ -14,8 +14,8 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
         String exp = "Fragments/CredentialStoreFragments/CredentialStoreFragment[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
         Node fragment = argsLoader.getXPath().selectNode(argsLoader.getRoot(), exp);
         if (fragment == null) {
-            throw new SOSMissingDataException("[profile=" + argsLoader.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target")
-                    + "][" + exp + "]referenced CredentialStore fragment not found");
+            throw new SOSMissingDataException("[Profile=" + argsLoader.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target")
+                    + "][" + exp + "]referenced CredentialStoreFragment not found");
         }
 
         NodeList nl = fragment.getChildNodes();

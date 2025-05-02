@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -14,7 +15,6 @@ import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineCommandException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostCommandException;
@@ -221,8 +221,8 @@ public class YADECommandExecutor {
         String argumentName = arg.getName();
         // e.g. target connection exception, but provider is source...
         if (exception != null && YADEProviderDelegatorHelper.isConnectionException(exception) && !delegator.getProvider().isConnected()) {
-            logger.info("[%s][%s][%s][skip]due to a connection exception", delegator.getLabel(), argumentName, YADEArgumentsHelper.toString(arg,
-                    delegator.getArgs().getCommands().getCommandDelimiter().getValue()));
+            logger.info("[%s][%s][%s][skip]due to a connection exception", delegator.getLabel(), argumentName, SOSArgumentHelper
+                    .getListStringArgValueAsString(arg, delegator.getArgs().getCommands().getCommandDelimiter().getValue()));
             return;
         }
 
@@ -297,8 +297,8 @@ public class YADECommandExecutor {
             if (sourceOrTargetFile != null) {
                 add = String.format("[%s][%s]", sourceOrTargetFile.getIndex(), sourceOrTargetFile.getFullPath());
             }
-            logger.info("[%s]%s[%s]%s", delegatorLabel, add, commandsArg.getName(), YADEArgumentsHelper.toString(commandsArg, commandDelimiterArg
-                    .getValue()));
+            logger.info("[%s]%s[%s]%s", delegatorLabel, add, commandsArg.getName(), SOSArgumentHelper.getListStringArgValueAsString(commandsArg,
+                    commandDelimiterArg.getValue()));
         }
     }
 

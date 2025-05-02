@@ -22,6 +22,7 @@ import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
+import com.sos.yade.engine.commons.arguments.YADENotificationArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
@@ -52,6 +53,7 @@ public class YADEClientBannerWriter {
             logger.info(SEPARATOR_LINE);
         }
         writeTransferHeader(logger, argsLoader.getArgs());
+        writeNotificationHeader(logger, argsLoader.getNotificationArgs());
         writeClientHeader(logger, argsLoader.getClientArgs());
         writeSourceHeader(logger, argsLoader.getSourceArgs());
         writeJumpHostHeader(logger, argsLoader.getJumpHostArgs());
@@ -144,6 +146,29 @@ public class YADEClientBannerWriter {
         }
     }
 
+    private static void writeNotificationHeader(ISOSLogger logger, YADENotificationArguments args) {
+        if (args == null || (!args.isEnabled() && !args.isMailEnabled())) {
+            return;
+        }
+        List<String> l = new ArrayList<>();
+        if (args.getOnSuccess().isTrue()) {
+            l.add(args.getOnSuccess().getName());
+        }
+        if (args.getOnError().isTrue()) {
+            l.add(args.getOnError().getName());
+        }
+        if (args.getOnEmptyFiles().isTrue()) {
+            l.add(args.getOnEmptyFiles().getName());
+        }
+
+        if (l.size() > 0) {
+            logger.info("[" + YADENotificationArguments.LABEL + "]" + String.join(", ", l));
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug(YADEArgumentsHelper.toString(logger, YADENotificationArguments.LABEL, args));
+        }
+    }
+
     private static void writeClientHeader(ISOSLogger logger, YADEClientArguments clientArgs) {
         if (clientArgs == null) {
             if (logger.isDebugEnabled()) {
@@ -162,19 +187,9 @@ public class YADEClientBannerWriter {
         if (!clientArgs.getExpectedResultSetCount().isEmpty()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getExpectedResultSetCount()));
         }
-        // E-Mail
-        if (clientArgs.getMailOnEmptyFiles().isTrue()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getMailOnEmptyFiles()));
-        }
-        if (clientArgs.getMailOnError().isTrue()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getMailOnError()));
-        }
-        if (clientArgs.getMailOnSuccess().isTrue()) {
-            l.add(YADEArgumentsHelper.toString(clientArgs.getMailOnSuccess()));
-        }
 
         if (l.size() > 0) {
-            logger.info("[" + YADEClientArguments.LABEL + "]" + String.join(",", l));
+            logger.info("[" + YADEClientArguments.LABEL + "]" + String.join(", ", l));
         }
         if (logger.isDebugEnabled()) {
             logger.debug(getLocalHostInfo());

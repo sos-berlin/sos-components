@@ -33,20 +33,12 @@ public class YADEJumpHostArguments extends ASOSArguments {
         return provider;
     }
 
-    public void setProvider(SSHProviderArguments val) {
-        provider = val;
-    }
-
     public YADEProviderCommandArguments getCommands() {
         if (commands == null) {
             commands = new YADEProviderCommandArguments();
             commands.applyDefaultIfNullQuietly();
         }
         return commands;
-    }
-
-    public void setCommands(YADEProviderCommandArguments val) {
-        commands = val;
     }
 
     public SOSArgument<String> getDirectory() {

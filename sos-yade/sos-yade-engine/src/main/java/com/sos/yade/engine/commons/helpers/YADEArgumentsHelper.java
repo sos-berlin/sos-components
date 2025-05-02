@@ -1,12 +1,9 @@
 package com.sos.yade.engine.commons.helpers;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSComparisonOperator;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -33,20 +30,7 @@ public class YADEArgumentsHelper {
         }
     }
 
-    public static List<String> toList(String val, String listValueDelimiter) {
-        if (val == null || val.trim().length() == 0) {
-            return null;
-        }
-        return Stream.of(val.split(listValueDelimiter)).filter(e -> !SOSString.isEmpty(e)).collect(Collectors.toList());
-    }
-
-    public static String toString(SOSArgument<List<String>> arg, String listValueDelimiter) {
-        if (arg == null || arg.getValue() == null) {
-            return null;
-        }
-        return String.join(listValueDelimiter, arg.getValue());
-    }
-
+    
     public static String toString(String name, String value) {
         return name + "=" + (value == null ? "" : value);
     }
