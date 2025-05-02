@@ -1,14 +1,21 @@
 package com.sos.yade.engine;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.sos.commons.mail.SOSMail;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
+import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.arguments.YADENotificationMailArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.delegators.YADEProviderDelegatorFactory;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -22,6 +29,7 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor.YADECommandResult;
 import com.sos.yade.engine.handlers.operations.YADEOperationsManager;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 import com.sos.yade.engine.handlers.source.YADESourceFilesPolling;
 import com.sos.yade.engine.handlers.source.YADESourceFilesSelector;
 import com.sos.yade.engine.handlers.source.YADESourceFilesSteadyStateChecker;
@@ -292,7 +300,7 @@ public class YADEEngine {
             }
         }
 
-        // sendNotifications
+        sendNotifications(logger, argsLoader, files, exceptions);
         YADEClientBannerWriter.writeSummary(logger, argsLoader.getArgs(), operationDuration, sourceDelegator, targetDelegator, jumpHostAddon, files,
                 exception);
 
@@ -313,6 +321,133 @@ public class YADEEngine {
                 throw new YADEEngineException(msg.toString(), exceptions.get(0));
             }
         }
+    }
+
+    // TODO currently - quick solution - reorganize code ...
+    private void sendNotifications(ISOSLogger logger, AYADEArgumentsLoader argsLoader, List<ProviderFile> files, List<Throwable> exceptions) {
+        if (argsLoader.getNotificationArgs() == null || !argsLoader.getNotificationArgs().isEnabled()) {
+            return;
+        }
+
+        YADENotificationMailArguments args = argsLoader.getNotificationArgs().getMail();
+        String body = args.getBody().getValue() == null ? "" : args.getBody().getValue() + args.getNewLine();
+        if (exceptions.size() > 0) {
+            if (!argsLoader.getNotificationArgs().getOnError().isTrue()) {
+                return;
+            }
+            // onError
+            StringBuilder sb = new StringBuilder();
+            sb.append(body);
+            for (Throwable e : exceptions) {
+                sb.append(SOSClassUtil.getStackTrace(e, args.getNewLine()));
+            }
+            args.getBody().setValue(sb.toString());
+            sendMail(logger, argsLoader.getNotificationArgs().getOnError(), args);
+        } else {
+            // onSuccess
+            if (argsLoader.getNotificationArgs().getOnSuccess().isTrue()) {
+                StringBuilder sb = new StringBuilder();
+                for (ProviderFile f : files) {
+                    YADEProviderFile file = (YADEProviderFile) f;
+                    YADETargetProviderFile targetFile = file.getTarget();
+                    sb.append(file.getFinalFullPath());
+                    if (targetFile == null) {
+                        if (file.getState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(file.getState())).append("]");
+                        }
+                        if (file.getSubState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(file.getSubState())).append("]");
+                        }
+                    } else {
+                        if (targetFile.getState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(targetFile.getState())).append("]");
+                        }
+                        if (targetFile.getSubState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(targetFile.getSubState())).append("]");
+                        }
+                    }
+                    sb.append("[Bytes ").append(file.getSize()).append("]");
+                    sb.append(args.getNewLine());
+                }
+
+                args.getBody().setValue(body + sb.toString());
+                sendMail(logger, argsLoader.getNotificationArgs().getOnSuccess(), args);
+            }
+            // onEmptyFiles
+            if (argsLoader.getNotificationArgs().getOnEmptyFiles().isTrue()) {
+                StringBuilder sb = new StringBuilder();
+                int counterEmpyFiles = 0;
+                for (ProviderFile f : files) {
+                    YADEProviderFile file = (YADEProviderFile) f;
+                    if (file.getSize() > 0) {
+                        continue;
+                    }
+
+                    counterEmpyFiles++;
+                    YADETargetProviderFile targetFile = file.getTarget();
+                    sb.append(file.getFinalFullPath());
+                    if (targetFile == null) {
+                        if (file.getState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(file.getState())).append("]");
+                        }
+                        if (file.getSubState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(file.getSubState())).append("]");
+                        }
+                    } else {
+                        if (targetFile.getState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(targetFile.getState())).append("]");
+                        }
+                        if (targetFile.getSubState() != null) {
+                            sb.append("[").append(YADEClientBannerWriter.formatState(targetFile.getSubState())).append("]");
+                        }
+                    }
+                    sb.append("[Bytes ").append(file.getSize()).append("]");
+                    sb.append(args.getNewLine());
+                }
+                if (counterEmpyFiles > 0) {
+                    args.getBody().setValue(body + sb.toString());
+                    sendMail(logger, argsLoader.getNotificationArgs().getOnSuccess(), args);
+                }
+            }
+        }
+    }
+
+    private void sendMail(ISOSLogger logger, SOSArgument<Boolean> trigger, YADENotificationMailArguments args) {
+        try {
+            SOSMail mail = new SOSMail(args.getHostname().getValue(), String.valueOf(args.getPort().getValue()), args.getAccount().getValue(), args
+                    .getPassword().getValue());
+
+            mail.setFrom(args.getHeaderFrom().getValue());
+            for (String to : args.getHeaderTo().getValue()) {
+                mail.addRecipient(to);
+            }
+            if (!args.getHeaderCC().isEmpty()) {
+                for (String cc : args.getHeaderCC().getValue()) {
+                    mail.addCC(cc);
+                }
+            }
+            if (!args.getHeaderBCC().isEmpty()) {
+                for (String bcc : args.getHeaderBCC().getValue()) {
+                    mail.addBCC(bcc);
+                }
+            }
+            if (!args.getAttachment().isEmpty()) {
+                for (Path attachment : args.getAttachment().getValue()) {
+                    mail.addAttachment(SOSPath.toAbsoluteNormalizedPath(attachment).toString());
+                }
+            }
+
+            mail.setSubject(args.getHeaderSubject().getValue() == null ? trigger.getName() : args.getHeaderSubject().getValue());
+            mail.setBody(args.getBody().getValue());
+
+            mail.setContentType(args.getContentType().getValue());
+            mail.setEncoding(args.getEncoding().getValue());
+
+            mail.send(logger);
+        } catch (Exception e) {
+            logger.warn("[sendMail]%s", e);
+        }
+
     }
 
 }

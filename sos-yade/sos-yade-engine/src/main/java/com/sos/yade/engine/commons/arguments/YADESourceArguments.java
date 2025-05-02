@@ -126,11 +126,11 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     }
 
     public String getFilePathAsString() {
-        return SOSArgumentHelper.getListStringArgValueAsString(filePath);
+        return SOSArgumentHelper.getListStringArgumentValueAsString(filePath);
     }
 
     public void setFilePath(String val) {
-        SOSArgumentHelper.setListStringArgValue(filePath, val);
+        SOSArgumentHelper.setListStringArgumentValue(filePath, val);
     }
 
     public SOSArgument<Path> getFileList() {

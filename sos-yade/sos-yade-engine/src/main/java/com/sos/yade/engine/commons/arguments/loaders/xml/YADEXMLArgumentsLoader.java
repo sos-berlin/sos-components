@@ -2,6 +2,7 @@ package com.sos.yade.engine.commons.arguments.loaders.xml;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import org.w3c.dom.Element;
@@ -10,6 +11,7 @@ import org.w3c.dom.Node;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSMapVariableReplacer;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
@@ -112,6 +114,14 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
 
     protected void setStringArgumentValue(SOSArgument<String> arg, Node node) {
         arg.setValue(getValue(node));
+    }
+
+    protected void setListStringArgumentValue(SOSArgument<List<String>> arg, Node node) {
+        SOSArgumentHelper.setListStringArgumentValue(arg, getValue(node));
+    }
+
+    protected void setListPathArgumentValue(SOSArgument<List<Path>> arg, Node node) {
+        SOSArgumentHelper.setListPathArgumentValue(arg, getValue(node));
     }
 
     protected void setPathArgumentValue(SOSArgument<Path> arg, Node node) {

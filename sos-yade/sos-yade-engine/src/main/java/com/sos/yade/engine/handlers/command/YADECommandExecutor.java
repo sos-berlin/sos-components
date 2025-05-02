@@ -222,7 +222,7 @@ public class YADECommandExecutor {
         // e.g. target connection exception, but provider is source...
         if (exception != null && YADEProviderDelegatorHelper.isConnectionException(exception) && !delegator.getProvider().isConnected()) {
             logger.info("[%s][%s][%s][skip]due to a connection exception", delegator.getLabel(), argumentName, SOSArgumentHelper
-                    .getListStringArgValueAsString(arg, delegator.getArgs().getCommands().getCommandDelimiter().getValue()));
+                    .getListStringArgumentValueAsString(arg, delegator.getArgs().getCommands().getCommandDelimiter().getValue()));
             return;
         }
 
@@ -297,7 +297,7 @@ public class YADECommandExecutor {
             if (sourceOrTargetFile != null) {
                 add = String.format("[%s][%s]", sourceOrTargetFile.getIndex(), sourceOrTargetFile.getFullPath());
             }
-            logger.info("[%s]%s[%s]%s", delegatorLabel, add, commandsArg.getName(), SOSArgumentHelper.getListStringArgValueAsString(commandsArg,
+            logger.info("[%s]%s[%s]%s", delegatorLabel, add, commandsArg.getName(), SOSArgumentHelper.getListStringArgumentValueAsString(commandsArg,
                     commandDelimiterArg.getValue()));
         }
     }

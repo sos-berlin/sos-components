@@ -1,5 +1,6 @@
 package com.sos.commons.util.arguments.base;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,11 +56,11 @@ public class SOSArgumentHelper {
         }
     }
 
-    public static void setListStringArgValue(SOSArgument<List<String>> arg, String value) {
-        setListStringArgValue(arg, value, DEFAULT_LIST_VALUE_DELIMITER);
+    public static void setListStringArgumentValue(SOSArgument<List<String>> arg, String value) {
+        setListStringArgumentValue(arg, value, DEFAULT_LIST_VALUE_DELIMITER);
     }
 
-    public static void setListStringArgValue(SOSArgument<List<String>> arg, String value, String listValueDelimiter) {
+    public static void setListStringArgumentValue(SOSArgument<List<String>> arg, String value, String listValueDelimiter) {
         if (arg == null) {
             return;
         }
@@ -70,11 +71,27 @@ public class SOSArgumentHelper {
         }
     }
 
-    public static String getListStringArgValueAsString(SOSArgument<List<String>> arg) {
-        return getListStringArgValueAsString(arg, DEFAULT_LIST_VALUE_DELIMITER);
+    public static void setListPathArgumentValue(SOSArgument<List<Path>> arg, String value) {
+        setListPathArgumentValue(arg, value, DEFAULT_LIST_VALUE_DELIMITER);
     }
 
-    public static String getListStringArgValueAsString(SOSArgument<List<String>> arg, String listValueDelimiter) {
+    public static void setListPathArgumentValue(SOSArgument<List<Path>> arg, String value, String listValueDelimiter) {
+        if (arg == null) {
+            return;
+        }
+        if (SOSString.isEmpty(value)) {
+            arg.setValue(null);
+        } else {
+            arg.setValue(Stream.of(value.split(listValueDelimiter)).filter(e -> !SOSString.isEmpty(e)).map(p -> Path.of(p)).collect(Collectors
+                    .toList()));
+        }
+    }
+
+    public static String getListStringArgumentValueAsString(SOSArgument<List<String>> arg) {
+        return getListStringArgumentValueAsString(arg, DEFAULT_LIST_VALUE_DELIMITER);
+    }
+
+    public static String getListStringArgumentValueAsString(SOSArgument<List<String>> arg, String listValueDelimiter) {
         if (arg == null || arg.getValue() == null) {
             return null;
         }

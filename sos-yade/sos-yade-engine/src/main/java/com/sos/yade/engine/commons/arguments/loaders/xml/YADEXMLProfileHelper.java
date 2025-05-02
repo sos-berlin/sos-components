@@ -22,6 +22,8 @@ import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public class YADEXMLProfileHelper {
 
+    public static final String ELEMENT_NAME_NOTIFICATION_TRIGGERS = "NotificationTriggers";
+
     protected static void parse(YADEXMLArgumentsLoader argsLoader, Node profile) throws Exception {
         NodeList nl = profile.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -34,8 +36,8 @@ public class YADEXMLProfileHelper {
                 case "SystemPropertyFiles":
                     YADEXMLGeneralHelper.parseSystemPropertyFiles(argsLoader, n);
                     break;
-                case "NotificationTriggers":
-                    parseNotificationTriggers(argsLoader, n);
+                case ELEMENT_NAME_NOTIFICATION_TRIGGERS:
+                    parseNotificationTriggers(argsLoader, n, "Profile=" + argsLoader.getArgs().getProfile().getValue());
                     break;
                 case "Notifications":
                     YADEXMLGeneralHelper.parseNotifications(argsLoader, n, "Profile=" + argsLoader.getArgs().getProfile().getValue());
@@ -80,7 +82,7 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseNotificationTriggers(YADEXMLArgumentsLoader argsLoader, Node notificationTriggers) {
+    private static void parseNotificationTriggers(YADEXMLArgumentsLoader argsLoader, Node notificationTriggers, String parentInfo) throws Exception {
         argsLoader.initializeNotificationArgsIfNull();
 
         NodeList nl = notificationTriggers.getChildNodes();
@@ -89,14 +91,85 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "OnSuccess":
-                    argsLoader.setBooleanArgumentValue(argsLoader.getNotificationArgs().getOnSuccess(), n);
+                    parseNotificationTrigger(argsLoader, n, parentInfo);
+                    argsLoader.getNotificationArgs().getOnSuccess().setValue(true);
                     break;
                 case "OnError":
-                    argsLoader.setBooleanArgumentValue(argsLoader.getNotificationArgs().getOnError(), n);
+                    parseNotificationTrigger(argsLoader, n, parentInfo);
+                    argsLoader.getNotificationArgs().getOnError().setValue(true);
                     break;
                 case "OnEmptyFiles":
-                    argsLoader.setBooleanArgumentValue(argsLoader.getNotificationArgs().getOnEmptyFiles(), n);
+                    parseNotificationTrigger(argsLoader, n, parentInfo);
+                    argsLoader.getNotificationArgs().getOnEmptyFiles().setValue(true);
                     break;
+                }
+            }
+        }
+    }
+
+    private static void parseNotificationTrigger(YADEXMLArgumentsLoader argsLoader, Node notificationTrigger, String parentInfo) throws Exception {
+        Node ref = SOSXML.getChildNode(notificationTrigger, "MailFragmentRef");
+        if (ref == null) {
+            return;
+        }
+
+        String exp = "Fragments/NotificationFragments/MailFragment[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
+        Node fragment = argsLoader.getXPath().selectNode(argsLoader.getRoot(), exp);
+        if (fragment == null) {
+            throw new SOSMissingDataException("[" + parentInfo + "][" + exp + "]referenced MailFragment not found");
+        }
+        NodeList nl = fragment.getChildNodes();
+        int len = nl.getLength();
+        if (len > 0) {
+            for (int i = 0; i < len; i++) {
+                Node n = nl.item(i);
+                if (n.getNodeType() == Node.ELEMENT_NODE) {
+                    switch (n.getNodeName()) {
+                    case "Header":
+                        parseMailFragmentHeader(argsLoader, n);
+                        break;
+                    case "Attachment":
+                        argsLoader.setListPathArgumentValue(argsLoader.getNotificationArgs().getMail().getAttachment(), n);
+                        break;
+                    case "Body":
+                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getBody(), n);
+                        break;
+                    case "ContentType":
+                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getContentType(), n);
+                        break;
+                    case "Encoding":
+                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getEncoding(), n);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private static void parseMailFragmentHeader(YADEXMLArgumentsLoader argsLoader, Node header) {
+        NodeList nl = header.getChildNodes();
+        int len = nl.getLength();
+        if (len > 0) {
+            for (int i = 0; i < len; i++) {
+                Node n = nl.item(i);
+                if (n.getNodeType() == Node.ELEMENT_NODE) {
+                    switch (n.getNodeName()) {
+                    case "From":
+                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderFrom(), n);
+                        break;
+                    case "To":
+                        argsLoader.setListStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderTo(), n);
+                        break;
+                    case "CC":
+                        argsLoader.setListStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderCC(), n);
+                        break;
+                    case "BCC":
+                        argsLoader.setListStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderBCC(), n);
+                        break;
+                    case "Subject":
+                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderSubject(), n);
+                        break;
+                    }
                 }
             }
         }

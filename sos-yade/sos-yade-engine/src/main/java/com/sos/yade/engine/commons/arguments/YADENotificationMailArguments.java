@@ -16,10 +16,11 @@ public class YADENotificationMailArguments extends ASOSArguments {
 
     private SOSArgument<String> queueDirectory = new SOSArgument<>("QueueDirectory", false);
 
-    private SOSArgument<String> headerFrom = new SOSArgument<>("From", false);
+    private SOSArgument<String> headerFrom = new SOSArgument<>("From", false, "yade@sos-berlin.com");
     private SOSArgument<List<String>> headerTo = new SOSArgument<>("To", false);
     private SOSArgument<List<String>> headerCC = new SOSArgument<>("CC", false);
     private SOSArgument<List<String>> headerBCC = new SOSArgument<>("BCC", false);
+    private SOSArgument<String> headerSubject = new SOSArgument<>("Subject", false);
 
     private SOSArgument<String> body = new SOSArgument<>("Body", false);
     private SOSArgument<String> contentType = new SOSArgument<>("ContentType", false, "text/plain");
@@ -27,7 +28,11 @@ public class YADENotificationMailArguments extends ASOSArguments {
     private SOSArgument<List<Path>> attachment = new SOSArgument<>("Attachment", false);
 
     public boolean isEnabled() {
-        return !hostname.isEmpty();
+        return !hostname.isEmpty() && !headerTo.isEmpty();
+    }
+
+    public String getNewLine() {
+        return contentType.getValue().toLowerCase().contains("html") ? "<br/>" : "\n";
     }
 
     public SOSArgument<String> getHostname() {
@@ -64,6 +69,10 @@ public class YADENotificationMailArguments extends ASOSArguments {
 
     public SOSArgument<List<String>> getHeaderBCC() {
         return headerBCC;
+    }
+
+    public SOSArgument<String> getHeaderSubject() {
+        return headerSubject;
     }
 
     public SOSArgument<String> getBody() {

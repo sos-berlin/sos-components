@@ -64,6 +64,10 @@ public class SOSClassUtil {
     }
 
     public static String getStackTrace(Throwable e) {
+        return getStackTrace(e, NEW_LINE);
+    }
+
+    public static String getStackTrace(Throwable e, String newLine) {
         if (e == null) {
             return null;
         }
@@ -71,7 +75,7 @@ public class SOSClassUtil {
             StringBuilder sb = new StringBuilder();
             StackTraceElement trace[] = e.getStackTrace();
             for (int i = 0; i < trace.length; i++) {
-                sb.append(trace[i].toString()).append(NEW_LINE);
+                sb.append(trace[i].toString()).append(newLine);
             }
             return sb.toString().trim();
         } catch (Throwable ee) {

@@ -42,6 +42,7 @@ import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.credentialstore.exceptions.SOSCredentialStoreException;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class SOSMail {
 
@@ -474,10 +475,15 @@ public class SOSMail {
     }
 
     public boolean send() throws Exception {
-        return sendJavaMail();
+        return send(null);
     }
 
-    private boolean sendJavaMail() throws Exception {
+    // TODO - use ISOSLogger instead of SLPFJ ...
+    public boolean send(ISOSLogger logger) throws Exception {
+        return sendJavaMail(logger);
+    }
+
+    private boolean sendJavaMail(ISOSLogger logger) throws Exception {
         useCredentialStoreArguments();
 
         String host = getHost();
@@ -499,11 +505,20 @@ public class SOSMail {
             if (!"".equals(bcc)) {
                 msg.append(" BCC=").append(bcc);
             }
-            LOGGER.info(msg.toString());
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Subject=" + subject);
-                LOGGER.debug(dumpHeaders());
-                LOGGER.debug(dumpMessageAsString(false));
+            if (logger == null) {
+                LOGGER.info(msg.toString());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Subject=" + subject);
+                    LOGGER.debug(dumpHeaders());
+                    LOGGER.debug(dumpMessageAsString(false));
+                }
+            } else {
+                logger.info(msg.toString());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Subject=" + subject);
+                    logger.debug(dumpHeaders());
+                    logger.debug(dumpMessageAsString(false));
+                }
             }
             if (!sendToOutputStream) {
                 Transport transport;
@@ -561,7 +576,11 @@ public class SOSMail {
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {
-                        LOGGER.warn(e.getMessage());
+                        if (logger == null) {
+                            LOGGER.warn(e.getMessage());
+                        } else {
+                            logger.warn(e.getMessage());
+                        }
                     }
                     return false;
 
@@ -578,7 +597,11 @@ public class SOSMail {
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {
-                        LOGGER.warn(e.getMessage());
+                        if (logger == null) {
+                            LOGGER.warn(e.getMessage());
+                        } else {
+                            logger.warn(e.getMessage());
+                        }
                     }
                     return false;
                 } else {

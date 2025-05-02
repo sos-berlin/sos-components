@@ -27,6 +27,7 @@ import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
+import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLProfileHelper;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
@@ -147,23 +148,67 @@ public class YADEClientBannerWriter {
     }
 
     private static void writeNotificationHeader(ISOSLogger logger, YADENotificationArguments args) {
-        if (args == null || (!args.isEnabled() && !args.isMailEnabled())) {
+        boolean triggersEnabled = args.triggersEnabled();
+        boolean mailEnabled = args.isMailEnabled();
+        if (args == null || (!triggersEnabled && !mailEnabled)) {
             return;
         }
-        List<String> l = new ArrayList<>();
-        if (args.getOnSuccess().isTrue()) {
-            l.add(args.getOnSuccess().getName());
-        }
-        if (args.getOnError().isTrue()) {
-            l.add(args.getOnError().getName());
-        }
-        if (args.getOnEmptyFiles().isTrue()) {
-            l.add(args.getOnEmptyFiles().getName());
+
+        List<String> triggers = new ArrayList<>();
+        if (triggersEnabled) {
+            if (args.getOnSuccess().isTrue()) {
+                triggers.add(args.getOnSuccess().getName());
+            }
+            if (args.getOnError().isTrue()) {
+                triggers.add(args.getOnError().getName());
+            }
+            if (args.getOnEmptyFiles().isTrue()) {
+                triggers.add(args.getOnEmptyFiles().getName());
+            }
         }
 
-        if (l.size() > 0) {
-            logger.info("[" + YADENotificationArguments.LABEL + "]" + String.join(", ", l));
+        List<String> mail = new ArrayList<>();
+        if (mailEnabled) {
+            if (args.getMail().getHeaderSubject().isEmpty()) {
+                args.getMail().getHeaderSubject().setValue(String.join(", ", triggers));
+            }
+
+            mail.add(YADEArgumentsHelper.toString(args.getMail().getHostname().getName(), args.getMail().getHostname().getValue() + ":" + args
+                    .getMail().getPort().getValue()));
+            mail.add(YADEArgumentsHelper.toString(args.getMail().getHeaderFrom()));
+            mail.add(YADEArgumentsHelper.toString(args.getMail().getHeaderSubject()));
+            mail.add(YADEArgumentsHelper.toStringFromListString(args.getMail().getHeaderTo()));
+            if (!args.getMail().getHeaderCC().isEmpty()) {
+                mail.add(YADEArgumentsHelper.toStringFromListString(args.getMail().getHeaderCC()));
+            }
+            if (!args.getMail().getHeaderBCC().isEmpty()) {
+                mail.add(YADEArgumentsHelper.toStringFromListString(args.getMail().getHeaderBCC()));
+            }
         }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(YADENotificationArguments.LABEL).append("]");
+        if (!triggersEnabled) {
+            sb.append("[ignored due to ").append(YADEXMLProfileHelper.ELEMENT_NAME_NOTIFICATION_TRIGGERS).append(" not defined");
+
+        } else if (!mailEnabled) {
+            sb.append("[ignored due to Mail not defined");
+
+        }
+        if (triggersEnabled) {
+            sb.append(YADEXMLProfileHelper.ELEMENT_NAME_NOTIFICATION_TRIGGERS);
+            sb.append("=").append(String.join(", ", triggers));
+        }
+        if (mailEnabled) {
+            if (triggersEnabled) {
+                sb.append(", ");
+            }
+            sb.append("Mail(");
+            sb.append(String.join(", ", mail));
+            sb.append(")");
+        }
+        logger.info(sb);
+
         if (logger.isDebugEnabled()) {
             logger.debug(YADEArgumentsHelper.toString(logger, YADENotificationArguments.LABEL, args));
         }

@@ -60,7 +60,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsBeforeOperation(String commands) {
-        SOSArgumentHelper.setListStringArgValue(commandsBeforeOperation, commands, commandDelimiter.getValue());
+        SOSArgumentHelper.setListStringArgumentValue(commandsBeforeOperation, commands, commandDelimiter.getValue());
     }
 
     public void addCommandBeforeOperation(String command) {
@@ -79,7 +79,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterOperationOnSuccess(String commands) {
-        SOSArgumentHelper.setListStringArgValue(commandsAfterOperationOnSuccess, commands, commandDelimiter.getValue());
+        SOSArgumentHelper.setListStringArgumentValue(commandsAfterOperationOnSuccess, commands, commandDelimiter.getValue());
     }
 
     public void addCommandAfterOperationOnSuccess(String command) {
@@ -98,7 +98,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterOperationOnError(String commands) {
-        SOSArgumentHelper.setListStringArgValue(commandsAfterOperationOnError, commands, commandDelimiter.getValue());
+        SOSArgumentHelper.setListStringArgumentValue(commandsAfterOperationOnError, commands, commandDelimiter.getValue());
     }
 
     public SOSArgument<List<String>> getCommandsAfterOperationFinal() {
@@ -110,7 +110,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterOperationFinal(String commands) {
-        SOSArgumentHelper.setListStringArgValue(commandsAfterOperationFinal, commands, commandDelimiter.getValue());
+        SOSArgumentHelper.setListStringArgumentValue(commandsAfterOperationFinal, commands, commandDelimiter.getValue());
     }
 
     public SOSArgument<List<String>> getCommandsBeforeFile() {
@@ -122,7 +122,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsBeforeFile(String commands) {
-        SOSArgumentHelper.setListStringArgValue(commandsBeforeFile, commands, commandDelimiter.getValue());
+        SOSArgumentHelper.setListStringArgumentValue(commandsBeforeFile, commands, commandDelimiter.getValue());
     }
 
     public SOSArgument<Boolean> getCommandsBeforeFileEnableForSkipped() {
@@ -138,7 +138,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsAfterFile(String commands) {
-        SOSArgumentHelper.setListStringArgValue(commandsAfterFile, commands, commandDelimiter.getValue());
+        SOSArgumentHelper.setListStringArgumentValue(commandsAfterFile, commands, commandDelimiter.getValue());
     }
 
     public SOSArgument<Boolean> getCommandsAfterFileDisableForSkipped() {
@@ -154,7 +154,7 @@ public class YADEProviderCommandArguments extends ASOSArguments {
     }
 
     public void setCommandsBeforeRename(String commands) {
-        SOSArgumentHelper.setListStringArgValue(commandsBeforeRename, commands, commandDelimiter.getValue());
+        SOSArgumentHelper.setListStringArgumentValue(commandsBeforeRename, commands, commandDelimiter.getValue());
     }
 
     public boolean isPreProcessingEnabled() {

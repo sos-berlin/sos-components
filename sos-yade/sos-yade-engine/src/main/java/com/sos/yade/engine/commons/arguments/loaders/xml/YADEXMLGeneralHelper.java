@@ -56,6 +56,7 @@ public class YADEXMLGeneralHelper {
 
     public static void parseNotifications(YADEXMLArgumentsLoader argsLoader, Node notifications, String parentInfo) throws Exception {
         argsLoader.initializeNotificationArgsIfNull();
+
         NodeList nl = notifications.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -64,7 +65,6 @@ public class YADEXMLGeneralHelper {
                 case "MailServerFragmentRef":
                     parseMailServerFragmentRef(argsLoader, n, parentInfo);
                     break;
-
                 }
             }
         }
@@ -93,7 +93,6 @@ public class YADEXMLGeneralHelper {
                 }
             }
         }
-
     }
 
     public static void parseRetryOnConnectionError(YADEXMLArgumentsLoader argsLoader, Node retryOnConnectionError) throws Exception {

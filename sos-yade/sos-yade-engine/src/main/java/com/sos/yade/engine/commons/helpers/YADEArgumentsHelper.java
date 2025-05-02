@@ -6,6 +6,7 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
@@ -30,13 +31,16 @@ public class YADEArgumentsHelper {
         }
     }
 
-    
     public static String toString(String name, String value) {
         return name + "=" + (value == null ? "" : value);
     }
 
     public static String toString(SOSArgument<?> arg) {
         return toString(arg.getName(), arg);
+    }
+
+    public static String toStringFromListString(SOSArgument<List<String>> arg) {
+        return toString(arg.getName(), SOSArgumentHelper.getListStringArgumentValueAsString(arg));
     }
 
     public static String toString(String name, SOSArgument<?> arg) {

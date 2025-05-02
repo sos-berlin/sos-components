@@ -2,190 +2,112 @@ package com.sos.commons.util.loggers.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
+import org.slf4j.spi.LocationAwareLogger;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
 /** slf4j-based implementation for applications that can be used in JS7 jobs (job logger) or standalone (slf4j API). */
 public class SLF4JLogger implements ISOSLogger {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SLF4JLogger.class);
+    private static final String FQCN = SLF4JLogger.class.getName();
 
-    private static final String LOGGER_CLASS_NAME = SLF4JLogger.class.getName();
-    private static final String THREAD_CLASS_NAME = Thread.class.getName();
+    private final Logger logger;
+    private final LocationAwareLogger locationAwareLogger;
 
     private final boolean isDebugEnabled;
     private final boolean isTraceEnabled;
 
     public SLF4JLogger() {
-        isDebugEnabled = LOGGER.isDebugEnabled();
-        isTraceEnabled = LOGGER.isTraceEnabled();
+        this(LoggerFactory.getLogger(SLF4JLogger.class));
+    }
+
+    public SLF4JLogger(Logger logger) {
+        this.logger = logger;
+        this.isDebugEnabled = logger.isDebugEnabled();
+        this.isTraceEnabled = logger.isTraceEnabled();
+
+        if (logger instanceof LocationAwareLogger) {
+            this.locationAwareLogger = (LocationAwareLogger) logger;
+        } else {
+            this.locationAwareLogger = null;
+        }
     }
 
     @Override
     public void info(Object msg) {
-        try {
-            setMDC();
-            LOGGER.info(String.valueOf(msg));
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.INFO_INT, String.valueOf(msg), null);
     }
 
     @Override
     public void info(String format, Object... args) {
-        try {
-            setMDC();
-            if (args.length > 0) {
-                LOGGER.info(String.format(format, args));
-            } else {
-                LOGGER.info(format);
-            }
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.INFO_INT, format, args);
     }
 
     @Override
     public void debug(Object msg) {
-        if (!isDebugEnabled()) {
+        if (!isDebugEnabled) {
             return;
         }
-
-        try {
-            setMDC();
-            LOGGER.debug(String.valueOf(msg));
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.DEBUG_INT, String.valueOf(msg), null);
     }
 
     @Override
     public void debug(String format, Object... args) {
-        if (!isDebugEnabled()) {
+        if (!isDebugEnabled) {
             return;
         }
-
-        try {
-            setMDC();
-            if (args.length > 0) {
-                LOGGER.debug(String.format(format, args));
-            } else {
-                LOGGER.debug(format);
-            }
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.DEBUG_INT, format, args);
     }
 
     @Override
     public void trace(Object msg) {
-        if (!isTraceEnabled()) {
+        if (!isTraceEnabled) {
             return;
         }
-
-        try {
-            setMDC();
-            LOGGER.trace(String.valueOf(msg));
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.TRACE_INT, String.valueOf(msg), null);
     }
 
     @Override
     public void trace(String format, Object... args) {
-        if (!isTraceEnabled()) {
+        if (!isTraceEnabled) {
             return;
         }
-
-        try {
-            setMDC();
-            if (args.length > 0) {
-                LOGGER.trace(String.format(format, args));
-            } else {
-                LOGGER.trace(format);
-            }
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.TRACE_INT, format, args);
     }
 
     @Override
     public void warn(Object msg) {
-        try {
-            setMDC();
-            LOGGER.warn(String.valueOf(msg));
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.WARN_INT, String.valueOf(msg), null);
     }
 
     @Override
     public void warn(String format, Object... args) {
-        try {
-            setMDC();
-            if (args.length > 0) {
-                LOGGER.warn(String.format(format, args));
-            } else {
-                LOGGER.warn(format);
-            }
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.WARN_INT, format, args);
     }
 
     @Override
     public void warn(String msg, Throwable e) {
-        try {
-            setMDC();
-            LOGGER.warn(msg, e);
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.WARN_INT, msg, null, e);
     }
 
     @Override
     public void error(Object msg) {
-        try {
-            setMDC();
-            LOGGER.error(String.valueOf(msg));
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.ERROR_INT, String.valueOf(msg), null);
     }
 
     @Override
     public void error(String format, Object... args) {
-        try {
-            setMDC();
-            if (args.length > 0) {
-                LOGGER.error(String.format(format, args));
-            } else {
-                LOGGER.error(format);
-            }
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.ERROR_INT, format, args);
     }
 
     @Override
     public void error(String msg, Throwable e) {
-        try {
-            setMDC();
-            LOGGER.error(msg, e);
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.ERROR_INT, msg, null, e);
     }
 
     @Override
     public void error(Throwable e) {
-        try {
-            setMDC();
-            LOGGER.warn(e.toString(), e);
-        } finally {
-            clearMDC();
-        }
+        log(LocationAwareLogger.ERROR_INT, e.toString(), null, e);
     }
 
     @Override
@@ -198,32 +120,62 @@ public class SLF4JLogger implements ISOSLogger {
         return isTraceEnabled;
     }
 
-    private void setMDC() {
-        StackTraceElement caller = findCaller();
-        if (caller != null) {
-            MDC.put("F", caller.getFileName());
-            MDC.put("L", String.valueOf(caller.getLineNumber()));
-        }
+    private void log(int level, String msg, Object[] args) {
+        log(level, msg, args, null);
     }
 
-    private void clearMDC() {
-        MDC.clear();
-    }
-
-    private static StackTraceElement findCaller() {
-        StackTraceElement[] st = Thread.currentThread().getStackTrace();
-        // use a normal loop instead of a stream solution...
-        // 0 - info/debug/... , 1 - findCaller() self, from 2 - caller methods
-        // do not use st[2] directly, but from 2 to the end:
-        // - because, for example, in some JVM implementations additional stack trace elements can be added, or nested calls, or ...
-        for (int i = 2; i < st.length; i++) {
-            StackTraceElement e = st[i];
-            String cn = e.getClassName();
-            if (!cn.equals(LOGGER_CLASS_NAME) && !cn.startsWith(THREAD_CLASS_NAME)) {// e.g. java.lang.Thread$Worker
-                return e;
+    private void log(int level, String msg, Object[] args, Throwable t) {
+        if (locationAwareLogger != null) {
+            locationAwareLogger.log(null, FQCN, level, format(msg, args), null, t);
+        } else {
+            switch (level) {
+            case LocationAwareLogger.TRACE_INT:
+                if (t != null) {
+                    logger.trace(format(msg, args), t);
+                } else {
+                    logger.trace(format(msg, args));
+                }
+                break;
+            case LocationAwareLogger.DEBUG_INT:
+                if (t != null) {
+                    logger.debug(format(msg, args), t);
+                } else {
+                    logger.debug(format(msg, args));
+                }
+                break;
+            case LocationAwareLogger.INFO_INT:
+                if (t != null) {
+                    logger.info(format(msg, args), t);
+                } else {
+                    logger.info(format(msg, args));
+                }
+                break;
+            case LocationAwareLogger.WARN_INT:
+                if (t != null) {
+                    logger.warn(format(msg, args), t);
+                } else {
+                    logger.warn(format(msg, args));
+                }
+                break;
+            case LocationAwareLogger.ERROR_INT:
+                if (t != null) {
+                    logger.error(format(msg, args), t);
+                } else {
+                    logger.error(format(msg, args));
+                }
+                break;
             }
         }
-        return null;
     }
 
+    private String format(String format, Object[] args) {
+        if (args == null || args.length == 0) {
+            return format;
+        }
+        try {
+            return String.format(format, args);
+        } catch (Exception e) {
+            return "[" + SLF4JLogger.class.getSimpleName() + "][" + format + "]" + e.getMessage();
+        }
+    }
 }

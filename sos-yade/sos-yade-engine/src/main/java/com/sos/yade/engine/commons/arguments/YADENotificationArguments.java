@@ -14,6 +14,10 @@ public class YADENotificationArguments extends ASOSArguments {
     private SOSArgument<Boolean> onEmptyFiles = new SOSArgument<>("OnEmptyFiles", false, Boolean.valueOf(false));
 
     public boolean isEnabled() {
+        return triggersEnabled() && isMailEnabled();
+    }
+
+    public boolean triggersEnabled() {
         return (onSuccess.isTrue() || onError.isTrue() || onEmptyFiles.isTrue());
     }
 
