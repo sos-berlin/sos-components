@@ -38,7 +38,7 @@ import js7.launcher.forjava.internal.BlockingInternalJob;
 public abstract class Job<A extends JobArguments> implements BlockingInternalJob {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
-    
+
     public static final String OPERATION_CANCEL_KILL = "cancel/kill";
 
     private JobEnvironment<A> jobEnvironment;
@@ -292,7 +292,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         if (!arg.isScopeAll()) {
             return;
         }
-
+       
         // step calls another java job
         if (step != null && step.hasExecuteJobArguments() && step.getExecuteJobBean().getArguments().containsKey(arg.getName())) {
             JobArgument<?> a = step.getExecuteJobBean().getArguments().get(arg.getName());
@@ -344,6 +344,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             if (val == null || SOSString.isEmpty(val.toString())) {
                 arg.setValue(arg.getDefaultValue());
                 setDeclaredArgumentValueType(arg, field, arg.getValue());
+                // getDeclaredArgumentValue(step, arg, field, val);
             } else {
                 arg.setValue(getDeclaredArgumentValue(step, arg, field, val));
             }
@@ -382,14 +383,14 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             throws ClassNotFoundException {
         boolean isTraceEnabled = step != null && step.getLogger().isTraceEnabled();
         if (isTraceEnabled) {
-            step.getLogger().trace(String.format("[getValue][%s][arg value=%s(%s),defaultValue=%s(%s)]val=%s(%s)", arg.getName(), arg.getValue(),
-                    getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue()), val, getClassName(val)));
+            step.getLogger().trace(String.format("[getDeclaredArgumentValue][%s][arg value=%s(%s),defaultValue=%s(%s)]val=%s(%s)", arg.getName(), arg
+                    .getValue(), getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue()), val, getClassName(val)));
         }
         try {
             setDeclaredArgumentValueType(arg, field, val);
             if (isTraceEnabled) {
-                step.getLogger().trace(String.format("[getValue][%s]clazzType=%s,argumentType=%s,argumentFlatType=%s", arg.getName(), arg
-                        .getClazzType(), arg.getArgumentType(), arg.getArgumentFlatType()));
+                step.getLogger().trace(String.format("    [getDeclaredArgumentValue][%s]clazzType=%s,argumentType=%s,argumentFlatType=%s", arg
+                        .getName(), arg.getClazzType(), arg.getArgumentType(), arg.getArgumentFlatType()));
             }
 
             switch (arg.getArgumentType()) {
@@ -424,7 +425,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     private <V> V convertCollectionStringValue(final OrderProcessStep<A> step, JobArgument<V> arg, Object val) {
         String valAsString = val.toString();
         try {
-            Stream<? extends Object> stream = Stream.of(valAsString.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(v -> {
+            Stream<? extends Object> stream = Stream.of(valAsString.split(SOSArgumentHelper.DEFAULT_LIST_VALUE_DELIMITER)).map(v -> {
                 try {
                     if (hasValueStartsWith(step, v)) {
                         return v;

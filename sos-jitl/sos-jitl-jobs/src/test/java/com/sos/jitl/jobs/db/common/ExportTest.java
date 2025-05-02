@@ -10,8 +10,8 @@ import org.junit.Test;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
-import com.sos.js7.job.UnitTestJobHelper;
 
 public class ExportTest {
 
@@ -57,13 +57,13 @@ public class ExportTest {
                 rs = executor.getResultSet(statement);
                 switch (type) {
                 case CSV:
-                    Export2CSV.export(rs, outputFile, UnitTestJobHelper.newLogger());
+                    Export2CSV.export(rs, outputFile, new SLF4JLogger());
                     break;
                 case XML:
-                    Export2XML.export(rs, outputFile, UnitTestJobHelper.newLogger());
+                    Export2XML.export(rs, outputFile, new SLF4JLogger());
                     break;
                 case JSON:
-                    Export2JSON.export(rs, outputFile, UnitTestJobHelper.newLogger());
+                    Export2JSON.export(rs, outputFile, new SLF4JLogger());
                     break;
                 default:
                     break;

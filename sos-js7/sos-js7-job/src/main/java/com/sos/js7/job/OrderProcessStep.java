@@ -85,14 +85,15 @@ public class OrderProcessStep<A extends JobArguments> {
     private String workflowPosition;
     private String stepInfo;
 
-    protected OrderProcessStep(JobEnvironment<A> jobEnvironment, BlockingInternalJob.Step step) {
+    protected OrderProcessStep(JobEnvironment<A> jobEnvironment, BlockingInternalJob.Step internalStep) {
         this.jobEnvironment = jobEnvironment;
-        this.internalStep = step;
-        this.logger = new OrderProcessStepLogger(internalStep);
+        this.internalStep = internalStep;
+        this.logger = new OrderProcessStepLogger(this.internalStep);
         this.outcome = new OrderProcessStepOutcome();
         this.resolverPrefixes = JobArgumentValueResolverCache.getResolverPrefixes();
     }
 
+    // executeJob
     private OrderProcessStep(JobEnvironment<A> jobEnvironment, OrderProcessStep<?> step) {
         this.jobEnvironment = jobEnvironment;
         this.internalStep = step.getInternalStep();

@@ -20,11 +20,11 @@ public class CredentialStoreArguments extends ASOSArguments {
     // KeePass
     // TODO set <Path> instead of <String> for credentialStoreFile,credentialStoreKeyFile
     // it works but should be tested when value is not path conform, e.g. contains env variables names etc...
-    private SOSArgument<String> file = new SOSArgument<String>(ARG_NAME_FILE, false);
-    private SOSArgument<String> keyFile = new SOSArgument<String>(ARG_NAME_KEY_FILE, false);
-    private SOSArgument<String> password = new SOSArgument<String>(ARG_NAME_PASSWORD, false, DisplayMode.MASKED);
-    private SOSArgument<String> entryPath = new SOSArgument<String>(ARG_NAME_ENTRY_PATH, false);
-    private SOSArgument<String> keePassModule = new SOSArgument<String>(ARG_NAME_KEEPASS_MODULE, false, SOSKeePassDatabase.DEFAULT_MODULE.name());
+    private SOSArgument<String> file = new SOSArgument<>(ARG_NAME_FILE, false);
+    private SOSArgument<String> keyFile = new SOSArgument<>(ARG_NAME_KEY_FILE, false);
+    private SOSArgument<String> password = new SOSArgument<>(ARG_NAME_PASSWORD, false, DisplayMode.MASKED);
+    private SOSArgument<String> entryPath = new SOSArgument<>(ARG_NAME_ENTRY_PATH, false);
+    private SOSArgument<String> keePassModule = new SOSArgument<>(ARG_NAME_KEEPASS_MODULE, false, SOSKeePassDatabase.DEFAULT_MODULE.name());
 
     // Internal/Keepass
     private SOSArgument<SOSKeePassDatabase> keepassDatabase = new SOSArgument<>(null, false);

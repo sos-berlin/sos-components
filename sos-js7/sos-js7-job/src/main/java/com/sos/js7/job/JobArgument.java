@@ -1,6 +1,7 @@
 package com.sos.js7.job;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -94,30 +95,18 @@ public class JobArgument<T> extends SOSArgument<T> {
         this(name, required, defaultValue, displayMode, nameAliases, Scope.ALL);
     }
 
-    public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases, Scope scope) {
+    private JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases, Scope scope) {
         super(name, required, defaultValue, displayMode);
         this.type = Type.DECLARED;
         this.scope = scope;
         this.valueSource = new ValueSource(ValueSourceType.JAVA);
         this.nameAliases = nameAliases;
-
     }
 
-    private JobArgument(SOSArgument<T> arg) {
-        super(arg.getName(), arg.isRequired(), arg.getDefaultValue(), arg.getDisplayMode());
-        this.setClazzType(arg.getClazzType());
-        this.setValue(arg.getValue());
-        this.nameAliases = null;
-    }
-
-    private JobArgument(String name, T value) {
-        this(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
-        setValue(value);
-        this.type = Type.UNDECLARED;
-    }
-
-    protected static JobArgument<?> toUndeclaredExecuteJobArgument(String name, Object value) {
-        return new JobArgument<>(name, value).toUndeclaredExecuteJobArgument();
+    protected static <T> JobArgument<T> toUndeclaredExecuteJobArgument(String name, Object value) {
+        JobArgument<T> arg = new JobArgument<>(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
+        arg.applyValue(value);
+        return arg.toUndeclaredExecuteJobArgument();
     }
 
     protected JobArgument<T> toUndeclaredExecuteJobArgument() {
@@ -134,20 +123,25 @@ public class JobArgument<T> extends SOSArgument<T> {
     /* internal usage - undeclared Arguments */
     protected static JobArgument<?> createUndeclaredArgument(String name, Object value, ValueSource valueSource) throws Exception {
         JobArgument<?> arg = new JobArgument<>(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
-        arg.setClazzType(value);
-        arg.applyValue(value);
         arg.type = Type.UNDECLARED;
         arg.valueSource = valueSource;
+
+        arg.setClazzType(value);
+        arg.applyValue(value);
         arg.setArgumentType();
         return arg;
     }
 
     /* internal usage - e.g. Provider Arguments */
-    protected static JobArgument<?> createDeclaredArgumentFromIncluded(SOSArgument<?> includedArg) throws Exception {
-        JobArgument<?> arg = new JobArgument<>(includedArg);
+    protected static <T> JobArgument<T> createDeclaredArgumentFromIncluded(SOSArgument<T> includedArg, Field field) throws Exception {
+        JobArgument<T> arg = new JobArgument<>(includedArg.getName(), includedArg.isRequired(), includedArg.getDefaultValue(), includedArg
+                .getDisplayMode());
         arg.type = Type.DECLARED;
         arg.scope = Scope.ALL;
         arg.valueSource = new ValueSource(ValueSourceType.JAVA);
+
+        arg.setValue(includedArg.getValue());
+        arg.setClazzType(getArgumentFieldType(field));
         arg.setArgumentType();
         return arg;
     }
@@ -334,6 +328,17 @@ public class JobArgument<T> extends SOSArgument<T> {
             break;
         }
         return value;
+    }
+
+    private static java.lang.reflect.Type getArgumentFieldType(Field field) {
+        if (field == null) {
+            return null;
+        }
+        try {
+            return ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private java.lang.reflect.Type getSubType(java.lang.reflect.Type type, int paramIndex) {

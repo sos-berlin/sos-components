@@ -14,20 +14,21 @@ public class OrderProcessStepLogger implements ISOSLogger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderProcessStepLogger.class);
 
-    private final BlockingInternalJob.Step step;
+    private final BlockingInternalJob.Step internalStep;
 
     private boolean isDebugEnabled;
     private boolean isTraceEnabled;
 
-    protected OrderProcessStepLogger(BlockingInternalJob.Step step) {
-        this.step = step;
+    protected OrderProcessStepLogger(BlockingInternalJob.Step internalStep) {
+        this.internalStep = internalStep;
+        if (this.internalStep == null) {// UnitTest
+            isTraceEnabled = LOGGER.isTraceEnabled();
+            isDebugEnabled = LOGGER.isDebugEnabled();
+        }
     }
 
     protected void init(Object args) {
-        if (step == null) {
-            isTraceEnabled = LOGGER.isTraceEnabled();
-            isDebugEnabled = LOGGER.isDebugEnabled();
-        } else if (args != null && args instanceof JobArguments) {
+        if (this.internalStep != null && args != null && args instanceof JobArguments) {
             JobArguments ja = (JobArguments) args;
             isTraceEnabled = ja.getLogLevel().getValue().equals(LogLevel.TRACE);
             isDebugEnabled = ja.getLogLevel().getValue().equals(LogLevel.DEBUG) || isTraceEnabled;
@@ -37,11 +38,11 @@ public class OrderProcessStepLogger implements ISOSLogger {
     @Override
     public void info(final Object msg) {
         String m = getMessage(LogLevel.INFO, msg);
-        if (step == null) {
+        if (internalStep == null) {
             LOGGER.info(m);
             return;
         }
-        step.out().println(m);
+        internalStep.out().println(m);
     }
 
     @Override
@@ -59,11 +60,11 @@ public class OrderProcessStepLogger implements ISOSLogger {
             return;
         }
         String m = getMessage(LogLevel.DEBUG, msg);
-        if (step == null) {
+        if (internalStep == null) {
             LOGGER.debug(m);
             return;
         }
-        step.out().println(m);
+        internalStep.out().println(m);
     }
 
     @Override
@@ -84,11 +85,11 @@ public class OrderProcessStepLogger implements ISOSLogger {
             return;
         }
         String m = getMessage(LogLevel.TRACE, msg);
-        if (step == null) {
+        if (internalStep == null) {
             LOGGER.trace(m);
             return;
         }
-        step.out().println(m);
+        internalStep.out().println(m);
     }
 
     @Override
@@ -106,11 +107,11 @@ public class OrderProcessStepLogger implements ISOSLogger {
     @Override
     public void warn(final Object msg) {
         String m = getMessage(LogLevel.WARN, msg);
-        if (step == null) {
+        if (internalStep == null) {
             LOGGER.warn(m);
             return;
         }
-        step.out().println(m);
+        internalStep.out().println(m);
     }
 
     @Override
@@ -138,11 +139,11 @@ public class OrderProcessStepLogger implements ISOSLogger {
     @Override
     public void error(final Object msg) {
         String m = getMessage(LogLevel.ERROR, msg);
-        if (step == null) {
+        if (internalStep == null) {
             LOGGER.error(m);
             return;
         }
-        step.err().println(m);
+        internalStep.err().println(m);
     }
 
     @Override

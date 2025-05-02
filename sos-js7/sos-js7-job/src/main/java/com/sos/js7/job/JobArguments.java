@@ -62,7 +62,7 @@ public class JobArguments {
                         if (sa.getName() == null) {// internal usage
                             return null;
                         }
-                        return JobArgument.createDeclaredArgumentFromIncluded(sa);
+                        return JobArgument.createDeclaredArgumentFromIncluded(sa,f);
                     } catch (Throwable e) {
                         return null;
                     }

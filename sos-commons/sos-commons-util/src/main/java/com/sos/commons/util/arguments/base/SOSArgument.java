@@ -1,6 +1,8 @@
 package com.sos.commons.util.arguments.base;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +11,7 @@ import java.util.Map;
  * - usage in JITL: see com.sos.commons.job.JobArgument supported types <br/>
  * - does not implement the Serializable interface because T may not be serializable - e.g. sun.nio.fs.WindowsPath<br/>
  */
-public class SOSArgument<T> extends ASOSArgument<T> {
+public class SOSArgument<T> {
 
     public enum DisplayMode {
 
@@ -37,6 +39,9 @@ public class SOSArgument<T> extends ASOSArgument<T> {
     private Boolean dirty;
     private T value;
     private Object payload;
+    // clazzType (e.g. String) can't be evaluated here because generic type T is erased at runtime.
+    // The actual type is inferred later externally via reflection on the declaring field.
+    private java.lang.reflect.Type clazzType;
 
     public SOSArgument(String name, boolean required) {
         this(name, required, null, DisplayMode.UNMASKED);
@@ -55,7 +60,6 @@ public class SOSArgument<T> extends ASOSArgument<T> {
     }
 
     public SOSArgument(String name, boolean required, T defaultValue, DisplayMode displayMode) {
-        super();
         this.name = name;
         this.required = required;
         this.defaultValue = defaultValue;
@@ -152,6 +156,25 @@ public class SOSArgument<T> extends ASOSArgument<T> {
 
     public boolean isTrue() {
         return value != null && value instanceof Boolean && (Boolean) value;
+    }
+
+    public void setClazzType(Type val) {
+        clazzType = val;
+    }
+
+    public void setClazzType(Object value) {
+        if (value == null) {
+            return;
+        }
+        clazzType = value.getClass();
+        Type superClass = value.getClass().getGenericSuperclass();
+        if (superClass instanceof ParameterizedType) {
+            clazzType = superClass;
+        }
+    }
+
+    public Type getClazzType() {
+        return clazzType;
     }
 
     private void setIsDirty() {

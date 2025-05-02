@@ -16,15 +16,15 @@ import org.w3c.dom.Document;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.xml.SOSXML;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public class Export2XML {
 
     private static final String NEW_LINE = "\r\n";
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
 
-    public static void export(ResultSet resultSet, Path outputFile, OrderProcessStepLogger logger) throws Exception {
+    public static void export(ResultSet resultSet, Path outputFile, ISOSLogger logger) throws Exception {
         if (resultSet == null) {
             throw new Exception("missing ResultSet");
         }

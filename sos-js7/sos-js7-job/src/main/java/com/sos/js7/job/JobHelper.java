@@ -153,7 +153,7 @@ public class JobHelper {
             List<?> l = (List<?>) o;
             String s = (String) l.stream().map(e -> {
                 return e.toString();
-            }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
+            }).collect(Collectors.joining(SOSArgumentHelper.DEFAULT_LIST_VALUE_DELIMITER));
             return StringValue.of(s);
         }
         return StringValue.of(o.toString());

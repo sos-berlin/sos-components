@@ -3,6 +3,7 @@ package com.sos.commons.vfs.ftp.commons;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
@@ -76,7 +77,7 @@ public class FTPProviderArguments extends AProviderArguments {
     }
 
     public int getConnectTimeoutAsMillis() {
-        return (int) asMillis(connectTimeout);
+        return (int) SOSArgumentHelper.asMillis(connectTimeout);
     }
 
     public SOSArgument<Boolean> getProtocolCommandListener() {

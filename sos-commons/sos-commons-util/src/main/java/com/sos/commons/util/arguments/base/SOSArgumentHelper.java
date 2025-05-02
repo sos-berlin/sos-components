@@ -1,10 +1,16 @@
 package com.sos.commons.util.arguments.base;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 
 public class SOSArgumentHelper {
 
-    public static final String LIST_VALUE_DELIMITER = ";";
+    public static final String DEFAULT_LIST_VALUE_DELIMITER = ";";
 
     private static final String DISPLAY_VALUE_TRUNCATING_SUFFIX = "<truncated>";
     private static final int DISPLAY_VALUE_MAX_LENGTH = 255;
@@ -32,6 +38,47 @@ public class SOSArgumentHelper {
         }
         int indx = fullyQualifiedName.lastIndexOf('.');
         return indx > -1 ? fullyQualifiedName.substring(indx + 1) : fullyQualifiedName;
+    }
+
+    public static long asMillis(SOSArgument<String> arg) {
+        return asSeconds(arg, 0L) * 1_000;
+    }
+
+    public static long asSeconds(SOSArgument<String> arg, long defaultValue) {
+        if (arg.getValue() == null) {
+            return defaultValue;
+        }
+        try {
+            return SOSDate.resolveAge("s", arg.getValue()).longValue();
+        } catch (Throwable e) {
+            return defaultValue;
+        }
+    }
+
+    public static void setListStringArgValue(SOSArgument<List<String>> arg, String value) {
+        setListStringArgValue(arg, value, DEFAULT_LIST_VALUE_DELIMITER);
+    }
+
+    public static void setListStringArgValue(SOSArgument<List<String>> arg, String value, String listValueDelimiter) {
+        if (arg == null) {
+            return;
+        }
+        if (SOSString.isEmpty(value)) {
+            arg.setValue(null);
+        } else {
+            arg.setValue(Stream.of(value.split(listValueDelimiter)).filter(e -> !SOSString.isEmpty(e)).collect(Collectors.toList()));
+        }
+    }
+
+    public static String getListStringArgValueAsString(SOSArgument<List<String>> arg) {
+        return getListStringArgValueAsString(arg, DEFAULT_LIST_VALUE_DELIMITER);
+    }
+
+    public static String getListStringArgValueAsString(SOSArgument<List<String>> arg, String listValueDelimiter) {
+        if (arg == null || arg.getValue() == null) {
+            return null;
+        }
+        return String.join(listValueDelimiter, arg.getValue());
     }
 
     private static String truncatingIfNeeded(final String val) {

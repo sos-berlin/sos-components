@@ -69,12 +69,6 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }).get(timeout.getInterval(), timeout.getTimeUnit());
     }
 
-    public static OrderProcessStepLogger newLogger() {
-        OrderProcessStepLogger l = new OrderProcessStepLogger(null);
-        l.init(null);
-        return l;
-    }
-
     public void setEnvVar(String n, String v) {
         if (environment != null) {
             environment.put(n, v);

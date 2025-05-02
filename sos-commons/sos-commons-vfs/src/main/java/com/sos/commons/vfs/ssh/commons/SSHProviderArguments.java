@@ -7,6 +7,7 @@ import java.util.List;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
@@ -119,7 +120,7 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     public int getConnectTimeoutAsMillis() {
-        return (int) asMillis(connectTimeout);
+        return (int) SOSArgumentHelper.asMillis(connectTimeout);
     }
 
     public SOSArgument<String> getSocketTimeout() {
@@ -127,7 +128,7 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     public int getSocketTimeoutAsMillis() {
-        return (int) asMillis(socketTimeout);
+        return (int) SOSArgumentHelper.asMillis(socketTimeout);
     }
 
     public SOSArgument<String> getServerAliveInterval() {
@@ -135,7 +136,7 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     public int getServerAliveIntervalAsSeconds() {
-        return (int) asSeconds(authFile, 0L);
+        return (int) SOSArgumentHelper.asSeconds(authFile, 0L);
     }
 
     public SOSArgument<Integer> getServerAliveCountMax() {

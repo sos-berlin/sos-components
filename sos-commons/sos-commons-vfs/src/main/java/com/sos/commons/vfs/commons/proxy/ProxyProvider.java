@@ -6,8 +6,8 @@ import java.nio.charset.Charset;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.vfs.commons.AProviderArguments;
 
 public class ProxyProvider {
 
@@ -47,7 +47,7 @@ public class ProxyProvider {
         this.port = getPort(args.getType(), args.getPort());
         this.user = args.getUser().getValue();
         this.password = args.getPassword().getValue();
-        this.connectTimeoutAsMillis = (int) AProviderArguments.asMillis(args.getConnectTimeout());
+        this.connectTimeoutAsMillis = (int) SOSArgumentHelper.asMillis(args.getConnectTimeout());
 
         this.proxy = new java.net.Proxy(args.getType().getValue(), new InetSocketAddress(this.host, this.port));
     }
