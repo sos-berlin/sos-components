@@ -56,8 +56,8 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogFilter.class);
             RunningTaskLog taskLog = Globals.objectMapper.readValue(filterBytes, RunningTaskLog.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(taskLog.getControllerId(), getControllerPermissions(taskLog.getControllerId(),
-                    accessToken).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(taskLog.getControllerId(), getBasicControllerPermissions(taskLog
+                    .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -169,7 +169,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             JsonValidator.validateFailFast(filterBytes, TaskFilter.class);
             TaskFilter taskFilter = Globals.objectMapper.readValue(filterBytes, TaskFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(taskFilter.getControllerId(), getControllerPermissions(taskFilter
+            JOCDefaultResponse jocDefaultResponse = initPermissions(taskFilter.getControllerId(), getBasicControllerPermissions(taskFilter
                     .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

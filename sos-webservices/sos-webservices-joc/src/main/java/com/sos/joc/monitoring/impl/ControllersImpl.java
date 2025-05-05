@@ -263,7 +263,7 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
         boolean permitted = false;
         if (controllerId == null || controllerId.isEmpty()) {
             controllerId = "";
-            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
                     availableController, accessToken).getView()).collect(Collectors.toSet());
             permitted = !allowedControllers.isEmpty();
             if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
@@ -271,7 +271,7 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
             }
         } else {
             allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getView();
+            permitted = getBasicControllerPermissions(controllerId, accessToken).getView();
         }
         return permitted;
     }

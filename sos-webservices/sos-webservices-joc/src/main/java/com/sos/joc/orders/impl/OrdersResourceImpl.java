@@ -76,8 +76,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getControllerPermissions(ordersFilter
-                    .getControllerId(), accessToken).getOrders().getView());
+            String controllerId = ordersFilter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -103,7 +104,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
             ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
-            JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
+            JControllerState currentState = Proxy.of(controllerId).currentState();
             Instant surveyDateInstant = currentState.instant();
             Long surveyDateMillis = surveyDateInstant.toEpochMilli();
 
@@ -368,7 +369,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 }
                 
-                Map<String, Set<String>> orderTags = OrderTags.getTags(withOrderTags, ordersFilter.getControllerId(), jOrders, connection);
+                Map<String, Set<String>> orderTags = OrderTags.getTags(withOrderTags, controllerId, jOrders, connection);
                 if (withOrderTags) {
                     orderStream = OrderTags.filter(jOrders, orderTags, ordersFilter.getOrderTags());
                 } else {
@@ -388,7 +389,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                         }
                     }
                     HistoryFilter filter = new HistoryFilter();
-                    filter.setControllerIds(Collections.singleton(ordersFilter.getControllerId()));
+                    filter.setControllerIds(Collections.singleton(controllerId));
                     filter.addFolders(folders);
                     filter.setOrderState(states);
                     filter.setStateFrom(JobSchedulerDate.getDateFrom(ordersFilter.getStateDateFrom(), ordersFilter.getTimeZone()));
@@ -399,7 +400,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     orderStream = orderStream.filter(o -> stateDateOrderIds.contains(o.id().string()));
                 }
 
-                Map<List<Object>, String> positionToLabelsMap = responseWithLabel ? getPositionToLabelsMap(ordersFilter.getControllerId(), workflowIds
+                Map<List<Object>, String> positionToLabelsMap = responseWithLabel ? getPositionToLabelsMap(controllerId, workflowIds
                         .iterator().next()) : null;
 
                 Set<String> childOrders = OrdersHelper.getChildOrders(currentState);

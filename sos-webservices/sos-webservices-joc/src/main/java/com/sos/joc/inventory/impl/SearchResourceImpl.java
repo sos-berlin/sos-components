@@ -42,8 +42,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             JsonValidator.validateFailFast(inBytes, RequestSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestSearchFilter.class);
 
-            boolean permission = getJocPermissions(accessToken).getInventory().getView();
-            JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
+            JOCDefaultResponse response = checkPermissions(accessToken, in, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response != null) {
                 return response;
             }

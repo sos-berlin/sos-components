@@ -36,7 +36,8 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, SetRootCaFilter.class);
             SetRootCaFilter setRootCaFilter = Globals.objectMapper.readValue(filter, SetRootCaFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+                    .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

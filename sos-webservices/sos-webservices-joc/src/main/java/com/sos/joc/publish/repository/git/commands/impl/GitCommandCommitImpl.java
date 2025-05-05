@@ -46,7 +46,7 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
             initLogging(API_CALL, commitFilter, xAccessToken);
             JsonValidator.validate(commitFilter, CommitFilter.class);
             CommitFilter filter = Globals.objectMapper.readValue(commitFilter, CommitFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

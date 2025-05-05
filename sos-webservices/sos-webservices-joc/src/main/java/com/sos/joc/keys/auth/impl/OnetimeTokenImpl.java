@@ -39,7 +39,8 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             initLogging(API_CALL_CREATE, filter, xAccessToken);
             JsonValidator.validate(filter, CreateOnetimeTokenFilter.class);
             CreateOnetimeTokenFilter createOnetimeTokenFilter = Globals.objectMapper.readValue(filter, CreateOnetimeTokenFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+                    .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -109,16 +110,15 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
 
     @Override
     public JOCDefaultResponse postShowToken(String xAccessToken, byte[] filter) {
-        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL_SHOW, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, ShowOnetimeTokenFilter.class);
             ShowOnetimeTokenFilter showOnetimeTokenFilter = Globals.objectMapper.readValue(filter, ShowOnetimeTokenFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+                    .getCertificates().getView()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SHOW);
             String controllerId = showOnetimeTokenFilter.getControllerId();
             List<String> agentIds = showOnetimeTokenFilter.getAgentIds();
             ClientServerCertificateUtil.cleanupInvalidatedTokens();
@@ -128,15 +128,17 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
                response.setTokens(onetimeTokens.getTokens().stream().collect(Collectors.toList())); 
             } else {
                 if (!onetimeTokens.getTokens().isEmpty() && controllerId != null && !controllerId.isEmpty()) {
-                    OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> controllerId.equals(item.getControllerId())).collect(Collectors.toList()).get(0);
+                    OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> controllerId.equals(item.getControllerId())).collect(
+                            Collectors.toList()).get(0);
                     if (token != null) {
                         response.getTokens().add(token);
                     }
                 }
-                if(!onetimeTokens.getTokens().isEmpty() && agentIds != null && !agentIds.isEmpty()) {
+                if (!onetimeTokens.getTokens().isEmpty() && agentIds != null && !agentIds.isEmpty()) {
                     agentIds.stream().forEach(agentId -> {
-                        OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> agentId.equals(item.getAgentId())).collect(Collectors.toList()).get(0);
-                        if(token != null) {
+                        OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> agentId.equals(item.getAgentId())).collect(Collectors
+                                .toList()).get(0);
+                        if (token != null) {
                             response.getTokens().add(token);
                         }
                     });
@@ -148,8 +150,6 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(hibernateSession);
         }
     }
 

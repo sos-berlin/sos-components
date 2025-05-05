@@ -86,7 +86,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
     }
 
     private JOCDefaultResponse initPermissions(String accessToken) {
-        return initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+        return initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
     }
     
     private Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags) throws Exception {

@@ -23,7 +23,7 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
             RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response != null) {
                 return response;
             }

@@ -19,7 +19,6 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.ModifyNotice;
-import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoards;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -69,9 +68,9 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         JsonValidator.validateFailFast(filterBytes, ModifyNotice.class);
         ModifyNotice filter = Globals.objectMapper.readValue(filterBytes, ModifyNotice.class);
         String controllerId = filter.getControllerId();
-        NoticeBoards nb = getControllerPermissions(controllerId, accessToken).getNoticeBoards();
-        boolean permission = (action.equals(Action.DELETE)) ? nb.getDelete() : nb.getPost();
-        JOCDefaultResponse response = initPermissions(controllerId, permission);
+        
+        JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getNoticeBoards())
+                .map(p -> action.equals(Action.DELETE) ? p.getDelete() : p.getPost()));
         if (response != null) {
             return response;
         }

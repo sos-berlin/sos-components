@@ -53,7 +53,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = delete(in);
             }
@@ -73,7 +73,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             initLogging(IMPL_PATH_FOLDER, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = deleteFolder(in, true);
             }

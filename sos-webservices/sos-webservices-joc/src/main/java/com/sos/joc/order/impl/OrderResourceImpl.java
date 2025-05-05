@@ -49,22 +49,23 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getControllerPermissions(orderFilter
-                    .getControllerId(), accessToken).getOrders().getView());
+            String controllerId = orderFilter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
+            JControllerState currentState = Proxy.of(controllerId).currentState();
             Instant surveyDateInstant = currentState.instant();
             JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
             
             if (jOrder != null) {
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 
-                Map<String, Set<String>> orderTags = OrderTags.getTags(orderFilter.getControllerId(), Collections.singletonList(jOrder), connection);
+                Map<String, Set<String>> orderTags = OrderTags.getTags(controllerId, Collections.singletonList(jOrder), connection);
 
-                Map<List<Object>, String> positionToLabelsMap = getPositionToLabelsMap(orderFilter.getControllerId(), jOrder.workflowId());
+                Map<List<Object>, String> positionToLabelsMap = getPositionToLabelsMap(controllerId, jOrder.workflowId());
                 Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
                 OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), folderPermissions.getListOfFolders(),
                         orderTags, waitingOrders, Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(),
@@ -73,7 +74,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 o.setLabel(positionToLabelsMap.get(o.getPosition()));
                 o.setHasChildOrders(currentState.orderIds().stream().map(OrderId::string).anyMatch(s -> s.startsWith(o.getOrderId() + "|")));
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
-                    o.setRequirements(OrdersHelper.getRequirements(jOrder, orderFilter.getControllerId(), new DeployedConfigurationDBLayer(connection)));
+                    o.setRequirements(OrdersHelper.getRequirements(jOrder, controllerId, new DeployedConfigurationDBLayer(connection)));
                     //o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
                 }
                 o.setSurveyDate(Date.from(surveyDateInstant));

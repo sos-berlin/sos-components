@@ -48,9 +48,9 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             
             JsonValidator.validate(filterBytes, StoreSubagentClusters.class);
             StoreSubagentClusters agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreSubagentClusters.class);
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

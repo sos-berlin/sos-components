@@ -69,7 +69,9 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         try {
             initLogging(API_CALL, filter.toString().getBytes(), xAccessToken);
             JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ImportCertificateRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
+            //4-eyes principle cannot support uploads
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
+                    .getManage(), false);   
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -114,7 +116,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
             DeployFilter deployFilter = new DeployFilter();
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-                    .filter(availableController -> getControllerPermissions(availableController, xAccessToken)
+                    .filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken)
                             .getDeployments().getDeploy()).collect(Collectors.toSet());
             deployFilter.setControllerIds(new ArrayList<String>(allowedControllerIds));
             deployFilter.setAuditLog(audit);

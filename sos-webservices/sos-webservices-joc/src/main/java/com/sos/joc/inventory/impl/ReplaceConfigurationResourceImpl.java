@@ -45,7 +45,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = replace(in);
             }
@@ -65,7 +65,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = replaceFolder(in);
             }

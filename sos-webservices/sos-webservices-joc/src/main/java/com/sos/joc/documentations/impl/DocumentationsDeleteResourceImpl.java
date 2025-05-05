@@ -40,7 +40,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, DocumentationsDeleteFilter.class);
             DocumentationsDeleteFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsDeleteFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

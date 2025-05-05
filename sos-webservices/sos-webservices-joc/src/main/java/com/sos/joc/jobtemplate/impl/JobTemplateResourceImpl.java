@@ -42,7 +42,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
             JsonValidator.validateFailFast(filterBytes, JobTemplateFilter.class);
             JobTemplateFilter jobTemplateFilter = Globals.objectMapper.readValue(filterBytes, JobTemplateFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -93,7 +93,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
             JsonValidator.validateFailFast(filterBytes, JobTemplateStateFilter.class);
             JobTemplateStateFilter jobTemplateFilter = Globals.objectMapper.readValue(filterBytes, JobTemplateStateFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

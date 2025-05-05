@@ -28,7 +28,7 @@ public class TemplatesImpl extends JOCResourceImpl implements ITemplatesResource
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
             
-            JocPermissions permission = getJocPermissions(accessToken);
+            JocPermissions permission = getBasicJocPermissions(accessToken);
             JOCDefaultResponse response = initPermissions(null, permission.getReports().getView() || permission.getInventory().getView());
             if (response != null) {
                 return response;

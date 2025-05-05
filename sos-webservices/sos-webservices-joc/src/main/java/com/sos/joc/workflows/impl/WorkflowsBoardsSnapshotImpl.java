@@ -78,7 +78,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             String controllerId = filter.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getNoticeBoards()
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getNoticeBoards()
                     .getView());
             if (response != null) {
                 return response;

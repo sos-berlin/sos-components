@@ -46,7 +46,7 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             initLogging(API_CALL, cloneFilter, xAccessToken);
             JsonValidator.validate(cloneFilter, CloneFilter.class);
             CloneFilter filter = Globals.objectMapper.readValue(cloneFilter, CloneFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

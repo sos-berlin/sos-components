@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -94,8 +95,8 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     public JOCDefaultResponse skipWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflowLabels modifyWorkflow = initRequest(Action.SKIP, accessToken, filterBytes);
-            boolean perm = hasPermission(modifyWorkflow.getControllerId(), accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId(),
+                    accessToken));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -113,8 +114,8 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     public JOCDefaultResponse unskipWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflowLabels modifyWorkflow = initRequest(Action.UNSKIP, accessToken, filterBytes);
-            boolean perm = hasPermission(modifyWorkflow.getControllerId(), accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId(),
+                    accessToken));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -402,7 +403,7 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         return false;
     }
     
-    private boolean hasPermission(String controllerId, String accessToken) {
-        return getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
+    private Stream<Boolean> hasPermission(String controllerId, String accessToken) {
+        return getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions());
     }
 }

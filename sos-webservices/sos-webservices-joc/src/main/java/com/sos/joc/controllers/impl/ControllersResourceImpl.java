@@ -69,10 +69,11 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getControllerDefaultPermissions(accessToken).getView();
+                    permitted = getBasicControllerDefaultPermissions(accessToken).getView();
                 } else {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                            availableController, accessToken).getView()).collect(Collectors.toSet());
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                            availableController -> getBasicControllerPermissions(availableController, accessToken).getView()).collect(Collectors
+                                    .toSet());
                     permitted = !allowedControllers.isEmpty();
 
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
@@ -81,7 +82,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getView();
+                permitted = getBasicControllerPermissions(controllerId, accessToken).getView();
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);

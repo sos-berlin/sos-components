@@ -35,7 +35,8 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
             JsonValidator.validateFailFast(body, ActiveSessionsFilter.class);
             ActiveSessionsFilter activeSessionsFilter = Globals.objectMapper.readValue(body, ActiveSessionsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -98,7 +99,8 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
             JsonValidator.validate(body, ActiveSessionsCancelFilter.class);
             ActiveSessionsCancelFilter activeSessionsCancelFilter = Globals.objectMapper.readValue(body, ActiveSessionsCancelFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

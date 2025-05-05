@@ -48,7 +48,7 @@ public class ReadSettingsImpl extends JOCResourceImpl implements IReadSettings {
             DBItemJocConfiguration dbItemGlobalSettings = jocConfigurationDBLayer.getGlobalSettingsConfiguration();
             Configuration cfg = new Configuration();
             cfg.setAccount(dbItemGlobalSettings.getAccount());
-            if(!getJocPermissions(xAccessToken).getAdministration().getSettings().getManage()) {
+            if(!getBasicJocPermissions(xAccessToken).getAdministration().getSettings().getManage()) {
                 cfg.setConfigurationItem(showUserSettingsOnly(dbItemGlobalSettings.getConfigurationItem()));
             } else {
                 cfg.setConfigurationItem(dbItemGlobalSettings.getConfigurationItem());

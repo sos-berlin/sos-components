@@ -26,7 +26,7 @@ public class WorkflowQuickSearchImpl extends JOCResourceImpl implements IQuickSe
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getWorkflows()
                     .getView());
             if (response != null) {
                 return response;

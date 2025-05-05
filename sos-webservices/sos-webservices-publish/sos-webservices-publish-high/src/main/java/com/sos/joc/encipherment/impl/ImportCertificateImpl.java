@@ -54,7 +54,9 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         try {
             initLogging(API_CALL, filter.toString().getBytes(), xAccessToken);
             JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ImportCertificateRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
+            //4-eyes principle cannot support uploads
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
+                    .getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

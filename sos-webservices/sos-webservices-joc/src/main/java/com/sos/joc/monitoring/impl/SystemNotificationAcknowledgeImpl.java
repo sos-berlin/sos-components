@@ -37,8 +37,9 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
             storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
 
             // 1) notification view changes permitted
-            if (!getJocPermissions(accessToken).getNotification().getManage()) {
-                return initPermissions(null, false);
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getNotification().getManage()));
+            if (response != null) {
+                return response;
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

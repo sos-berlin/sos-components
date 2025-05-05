@@ -40,7 +40,7 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
             initLogging(API_CALL, removeCredentialsFilter, xAccessToken);
             JsonValidator.validate(removeCredentialsFilter, RemoveCredentialsFilter.class);
             RemoveCredentialsFilter filter = Globals.objectMapper.readValue(removeCredentialsFilter, RemoveCredentialsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

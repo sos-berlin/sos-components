@@ -37,7 +37,8 @@ public class UriImpl extends JOCResourceImpl implements IUriResource {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, CockpitURI.class);
             CockpitURI in = Globals.objectMapper.readValue(filterBytes, CockpitURI.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getSettings().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getSettings()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -26,7 +26,7 @@ public class DeleteNotificationImpl extends JOCResourceImpl implements IDeleteNo
             initLogging(API_CALL, deleteNotificationFilter, xAccessToken);
             JsonValidator.validateFailFast(deleteNotificationFilter, DeleteNotificationFilter.class);
             DeleteConfiguration in = Globals.objectMapper.readValue(deleteNotificationFilter, DeleteConfiguration.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).getNotification().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getNotification().getManage()));
             if (response != null) {
                 return response;
             }

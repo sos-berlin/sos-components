@@ -40,7 +40,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response != null) {
                 return response;
             }

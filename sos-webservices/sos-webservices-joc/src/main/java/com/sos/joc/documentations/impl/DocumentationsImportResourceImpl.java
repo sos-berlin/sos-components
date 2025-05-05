@@ -60,7 +60,8 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, null, xAccessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getDocumentations().getManage());
+            //4-eyes principle cannot support uploads
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getDocumentations().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -123,15 +123,21 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
 
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getModify());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                    .getModify()));
             if (response != null) {
                 return response;
             }
 
-            boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
-            if (!hasManagePositionsPermission && (in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty())
+            List<Boolean> hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions()).toList();
+            if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty())
                     || in.getBlockPosition() != null)) {
-                return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
+                if (!hasManagePositionsPermission.get(0)) {
+                    return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
+                }
+                if (hasManagePositionsPermission.get(1)) {
+                    return fourEyesResponse("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions.");
+                }
             }
 
             JControllerProxy proxy = null;

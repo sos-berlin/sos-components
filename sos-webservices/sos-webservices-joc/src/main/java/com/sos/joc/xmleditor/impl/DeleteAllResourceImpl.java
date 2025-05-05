@@ -1,7 +1,8 @@
 package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -28,28 +29,38 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             DeleteAll in = Globals.objectMapper.readValue(filterBytes, DeleteAll.class);
-
-            // checkRequiredParameters(in);
-
-            List<ObjectType> permittedObjectTypes = in.getObjectTypes().stream().filter(o -> getPermission(accessToken, o, Role.MANAGE)).distinct()
-                    .collect(Collectors.toList());
-            JOCDefaultResponse response = initPermissions(null, permittedObjectTypes.size() > 0);
-            in.setObjectTypes(permittedObjectTypes);
-            if (response == null) {
-                ObjectType type = in.getObjectTypes().get(0);
-                switch (type) {
-                case YADE:
-                case OTHER:
+            
+            Map<Boolean, Set<ObjectType>> supportedTypes = in.getObjectTypes().stream().collect(Collectors.groupingBy(objT -> ObjectType.YADE
+                    .equals(objT) || ObjectType.OTHER.equals(objT), Collectors.toSet()));
+            
+            Set<ObjectType> unSupportedTypes = supportedTypes.get(false);
+            
+            if (unSupportedTypes != null) {
+                throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
+                        "[%s]unsupported object type(s) for delete all", unSupportedTypes.stream().map(ObjectType::value).collect(Collectors
+                                .joining(",")))));
+            }
+            
+            if (supportedTypes.get(true) != null) {
+                JOCDefaultResponse jocDefaultResponse = null;
+                if (in.getObjectTypes().contains(ObjectType.YADE) && in.getObjectTypes().contains(ObjectType.OTHER)) {
+                    jocDefaultResponse = initAndPermissions(null, getJocPermissions(accessToken).map(p -> p.getFileTransfer().getManage()),
+                            getJocPermissions(accessToken).map(p -> p.getOthers().getManage()));
+                } else if (in.getObjectTypes().contains(ObjectType.YADE)) {
+                    jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getFileTransfer().getManage()));
+                } else if (in.getObjectTypes().contains(ObjectType.OTHER)) {
+                    jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getOthers().getManage()));
+                }
+                
+                if (jocDefaultResponse != null) {
+                    return jocDefaultResponse;
+                }
+                
+                for (ObjectType type : supportedTypes.get(true)) {
                     deleteAllMultiple(type);
-                    response = JOCDefaultResponse.responseStatus200(getSuccess());
-                    break;
-                default:
-                    throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                            "[%s]unsupported object type(s) for delete all", in.getObjectTypes().stream().map(ObjectType::value).collect(Collectors
-                                    .joining(",")))));
                 }
             }
-            return response;
+            return JOCDefaultResponse.responseStatus200(getSuccess());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

@@ -43,7 +43,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
 
             String controllerId = auditLogFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAuditLog().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -54,17 +54,17 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             boolean deployCategoryIsPermitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
                         availableController, accessToken).getView()).collect(Collectors.toSet());
                 controllerCategoryIsPermitted = !allowedControllers.isEmpty();
                 deployCategoryIsPermitted = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getDeployments().getView()).count() > 0L;
+                        availableController -> getBasicControllerPermissions(availableController, accessToken).getDeployments().getView()).count() > 0L;
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                     allControllerAllowed = true;
                 }
             } else {
-                controllerCategoryIsPermitted = getControllerPermissions(controllerId, accessToken).getView();
-                deployCategoryIsPermitted = getControllerPermissions(controllerId, accessToken).getDeployments().getView();
+                controllerCategoryIsPermitted = getBasicControllerPermissions(controllerId, accessToken).getView();
+                deployCategoryIsPermitted = getBasicControllerPermissions(controllerId, accessToken).getDeployments().getView();
                 if (controllerCategoryIsPermitted) {
                     allowedControllers = Collections.singleton(controllerId);
                 }
@@ -75,17 +75,17 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 case CONTROLLER:
                     return true; // depends on ControllerId
                 case CERTIFICATES:
-                    return getJocPermissions(accessToken).getAdministration().getCertificates().getView();
+                    return getBasicJocPermissions(accessToken).getAdministration().getCertificates().getView();
                 case DAILYPLAN:
-                    return getJocPermissions(accessToken).getDailyPlan().getView();
+                    return getBasicJocPermissions(accessToken).getDailyPlan().getView();
                 case DEPLOYMENT:
                     return true; // depends on ControllerId
                 case DOCUMENTATIONS:
-                    return getJocPermissions(accessToken).getDocumentations().getView();
+                    return getBasicJocPermissions(accessToken).getDocumentations().getView();
                 case INVENTORY:
-                    return getJocPermissions(accessToken).getInventory().getView();
+                    return getBasicJocPermissions(accessToken).getInventory().getView();
                 case IDENTITY:
-                    return getJocPermissions(accessToken).getAdministration().getAccounts().getView();
+                    return getBasicJocPermissions(accessToken).getAdministration().getAccounts().getView();
                 default:
                     return true;
                 }

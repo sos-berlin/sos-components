@@ -21,6 +21,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -293,8 +294,13 @@ public class SOSAuthHelper {
     }
 
     public static Set<String> getSetOfPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
-        return listOfPermissions.stream().map(SOSAuthHelper::getPermission).filter(Optional::isPresent).map(Optional::get).collect(Collectors
-                .toSet());
+        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getFourEyesRole().getValue();
+        Stream<DBItemIamPermissionWithName> stream = listOfPermissions.stream();
+        if (fourEyesRole != null && !fourEyesRole.isEmpty()) {
+            Predicate<DBItemIamPermissionWithName> isNot4EyesRole = i -> !i.getRoleName().equals(fourEyesRole);
+            stream = stream.filter(isNot4EyesRole);
+        }
+        return stream.map(SOSAuthHelper::getPermission).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toSet());
     }
     
     public static Set<String> getSetOf4EyesRolePermissions(List<DBItemIamPermissionWithName> listOfPermissions) {

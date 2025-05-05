@@ -36,8 +36,8 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             initLogging(API_CALL, generateKeyFilter, xAccessToken);
             JsonValidator.validateFailFast(generateKeyFilter, GenerateKeyFilter.class);
             GenerateKeyFilter filter = Globals.objectMapper.readValue(generateKeyFilter, GenerateKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+                    .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -51,7 +51,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             initLogging(API_CALL, deleteFromFilter, xAccessToken);
             JsonValidator.validate(deleteFromFilter, DeleteFromFilter.class);
             DeleteFromFilter filter = Globals.objectMapper.readValue(deleteFromFilter, DeleteFromFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

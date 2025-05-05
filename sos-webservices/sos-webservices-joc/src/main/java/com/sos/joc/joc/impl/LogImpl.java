@@ -39,7 +39,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JOClog jocLog = Globals.objectMapper.readValue(filterBytes, JOClog.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getGetLog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -91,7 +91,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             } else {
                 initLogging(API_CALL, null, accessToken);
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getGetLog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

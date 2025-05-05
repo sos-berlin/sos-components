@@ -42,7 +42,8 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             ScheduleSelector in = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getView());
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+                    .getView());
             if (response != null) {
                 return response;
             }

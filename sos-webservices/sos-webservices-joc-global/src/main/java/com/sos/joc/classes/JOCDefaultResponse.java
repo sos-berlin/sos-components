@@ -368,6 +368,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             entity.setAccessToken(sosAuthCurrentAccountAnswer.getAccessToken());
             entity.setAccount(sosAuthCurrentAccountAnswer.getAccountname());
             entity.setRole(String.join(", ", sosAuthCurrentAccountAnswer.getRoles()));
+            entity.setHasRole(!sosAuthCurrentAccountAnswer.getRoles().isEmpty());
         } else {
             entity.setAccessToken("");
             entity.setAccount("");

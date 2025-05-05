@@ -37,7 +37,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(urlParamSchema.getControllerId(), accessToken)
-                    .getGetLog());
+                    .map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

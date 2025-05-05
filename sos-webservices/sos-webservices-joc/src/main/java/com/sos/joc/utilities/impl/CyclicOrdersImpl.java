@@ -31,9 +31,10 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV in = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
-
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
-                    .getOrders().getView());
+            String controllerId = in.getControllerId();
+            
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+                    .getView());
             if (response != null) {
                 return response;
             }
@@ -47,7 +48,7 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
                     mainParts.add(mainPart);
                     
                     answer.getOrderIds().add(orderId);
-                    addCyclicOrderIds(answer.getOrderIds(), orderId, in.getControllerId());
+                    addCyclicOrderIds(answer.getOrderIds(), orderId, controllerId);
 
                     // TODO add when not found or single order?
                     // DBItemDailyPlanOrder item = addCyclicOrderIds(answer.getOrderIds(), orderId, in.getControllerId());

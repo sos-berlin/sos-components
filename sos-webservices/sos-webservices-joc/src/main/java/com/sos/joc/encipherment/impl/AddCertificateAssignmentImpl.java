@@ -21,13 +21,14 @@ public class AddCertificateAssignmentImpl extends JOCResourceImpl implements IAd
     private static final String API_CALL = "./encipherment/assignment/add";
     
     @Override
-    public JOCDefaultResponse postAddCertificateAssgnment(String xAccessToken, byte[] agentAssignmentFilter) throws Exception {
+    public JOCDefaultResponse postAddCertificateAssgnment(String xAccessToken, byte[] agentAssignmentFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, agentAssignmentFilter, xAccessToken);
             JsonValidator.validateFailFast(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
             AgentAssignmentRequestFilter filter = Globals.objectMapper.readValue(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+                    .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

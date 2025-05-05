@@ -113,7 +113,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             ControllerConnectionRefusedException, SOSMissingDataException, ParseException, ExecutionException {
 
         String controllerId = in.getControllerId();
-        if (!getControllerPermissions(controllerId, accessToken).getOrders().getCreate()) {
+        if (!getBasicControllerPermissions(controllerId, accessToken).getOrders().getCreate()) {
             return false;
         }
 

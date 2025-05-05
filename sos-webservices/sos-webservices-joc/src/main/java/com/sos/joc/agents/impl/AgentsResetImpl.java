@@ -39,11 +39,11 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             ResetAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ResetAgents.class);
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
             
             String controllerId = agentParameter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

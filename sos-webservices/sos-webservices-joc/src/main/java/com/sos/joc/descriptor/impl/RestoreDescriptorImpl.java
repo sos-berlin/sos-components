@@ -21,7 +21,7 @@ public class RestoreDescriptorImpl extends ARestoreConfiguration implements IRes
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.restore.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.restore.RequestFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = restore(filter, IMPL_PATH_RESTORE, true);
             }

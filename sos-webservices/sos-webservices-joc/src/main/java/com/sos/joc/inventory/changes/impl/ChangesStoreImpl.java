@@ -25,7 +25,7 @@ public class ChangesStoreImpl extends AStoreChange implements IChangesStore {
             JsonValidator.validate(filter, StoreChangeRequest.class);
             StoreChangeRequest storeFilter = Globals.objectMapper.readValue(filter, StoreChangeRequest.class);
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = storeChange(storeFilter, API_CALL);
             }

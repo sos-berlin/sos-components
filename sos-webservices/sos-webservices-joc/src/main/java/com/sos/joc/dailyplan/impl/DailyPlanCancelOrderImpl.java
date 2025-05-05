@@ -101,7 +101,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 IMPL_PATH);
 
         if (!ordersPerControllerIds.isEmpty()) {
-            ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> getControllerPermissions(
+            ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> getBasicControllerPermissions(
                     availableController.getKey(), accessToken).getOrders().getCancel()).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 
             if (ordersPerControllerIds.keySet().isEmpty()) {

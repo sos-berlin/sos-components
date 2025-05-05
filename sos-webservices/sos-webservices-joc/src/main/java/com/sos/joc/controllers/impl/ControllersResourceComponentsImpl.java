@@ -62,9 +62,9 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerIdObj.getControllerId(), accessToken)
-                    .getView());
+            String controllerId = controllerIdObj.getControllerId();
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId, accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -73,8 +73,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
 
             Components entity = new Components();
 
-            List<ControllerAnswer> controllers = ControllersResourceImpl.getControllerAnswers(controllerIdObj.getControllerId(), accessToken,
-                    connection);
+            List<ControllerAnswer> controllers = ControllersResourceImpl.getControllerAnswers(controllerId, accessToken, connection);
             // TODO controllerConnectionState from database, here a fake
             List<ControllerConnectionState> fakeControllerConnections = controllers.stream().map(c -> {
                 ControllerConnectionState s = new ControllerConnectionState();
@@ -89,7 +88,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 return s;
             }).collect(Collectors.toList());
             
-            entity.setClusterState(getClusterState(controllers, controllerIdObj.getControllerId()));
+            entity.setClusterState(getClusterState(controllers, controllerId));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
             entity.setJocs(setCockpits(connection, fakeControllerConnections, unknownControllerConnections));
             entity.setDatabase(getDB(connection));

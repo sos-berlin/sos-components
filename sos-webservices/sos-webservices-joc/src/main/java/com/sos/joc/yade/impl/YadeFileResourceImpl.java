@@ -31,7 +31,7 @@ public class YadeFileResourceImpl extends JOCResourceImpl implements IYadeFileRe
             JsonValidator.validateFailFast(inBytes, FileFilter.class);
             FileFilter in = Globals.objectMapper.readValue(inBytes, FileFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

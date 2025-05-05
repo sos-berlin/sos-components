@@ -22,7 +22,7 @@ public class StoreConfigurationResourceImpl extends AStoreConfiguration implemen
             JsonValidator.validate(inBytes, ConfigurationObject.class, true);
             ConfigurationObject in = Globals.objectMapper.readValue(inBytes, ConfigurationObject.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = store(in, ConfigurationType.FOLDER, IMPL_PATH);
             }

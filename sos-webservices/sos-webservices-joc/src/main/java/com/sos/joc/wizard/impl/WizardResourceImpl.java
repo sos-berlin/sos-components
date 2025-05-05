@@ -71,7 +71,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL_JOBS, null, accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -134,7 +134,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             JsonValidator.validateFailFast(filterBytes, JobWizardFilter.class);
             JobWizardFilter body = Globals.objectMapper.readValue(filterBytes, JobWizardFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

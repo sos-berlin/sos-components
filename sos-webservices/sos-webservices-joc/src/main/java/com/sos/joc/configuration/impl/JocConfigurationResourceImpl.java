@@ -122,7 +122,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 dbItem.setShared(ConfigurationGlobals.SHARED);
                 dbItem.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
 
-                if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
+                if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
+                    if (get4EyesJocPermissions().getAdministration().getSettings().getManage()) {
+                        return fourEyesResponse();
+                    }
                     // store only user settings without permissions
                     configuration.setConfigurationItem(StoreSettingsImpl.updateOnlyUserSection(configuration.getConfigurationItem(), oldConfiguration,
                             getJocError()));
@@ -131,8 +134,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
                 break;
             case IAM:
-                if (!getJocPermissions(accessToken).getAdministration().getAccounts().getManage()) {
+                if (!getBasicJocPermissions(accessToken).getAdministration().getAccounts().getManage()) {
                     return accessDeniedResponse();
+                }
+                if (get4EyesJocPermissions().getAdministration().getAccounts().getManage()) {
+                    return fourEyesResponse();
                 }
 
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
@@ -167,12 +173,20 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     boolean owner = account.equals(dbItem.getAccount());
 
                     if (!owner) {
-                        if (!getJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
+                        if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
                             return accessDeniedResponse();
                         }
+                        if (get4EyesJocPermissions().getAdministration().getCustomization().getManage()) {
+                            return fourEyesResponse();
+                        }
                         boolean shareIsChanged = (dbItem.getShared() && !shouldBeShared) || (!dbItem.getShared() && shouldBeShared);
-                        if (shareIsChanged && !getJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
-                            return this.accessDeniedResponse();
+                        if (shareIsChanged) {
+                            if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
+                                return accessDeniedResponse();
+                            }
+                            if (!get4EyesJocPermissions().getAdministration().getCustomization().getShare()) {
+                                return fourEyesResponse();
+                            }
                         }
                     }
                     dbItem.setInstanceId(0L);
@@ -285,7 +299,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 // owner doesn't need any permission or it is shared
                 boolean owner = account.equals(dbItem.getAccount());
                 if (!owner && !dbItem.getShared()) {
-                    if (!getJocPermissions(accessToken).getAdministration().getCustomization().getView()) {
+                    if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getView()) {
                         return accessDeniedResponse();
                     }
                 }
@@ -298,7 +312,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (confType.equals(ConfigurationType.GLOBALS)) {
                 // user setting from conf.getConfigurationItem() are always sent independent the settings:view permission
                 String confJson = conf.getConfigurationItem();
-                if (confJson != null && !getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                if (confJson != null && !getBasicJocPermissions(accessToken).getAdministration().getSettings().getView()) {
                     // delete all except user setting from conf.getConfigurationItem()
                     try {
                         JsonReader rdr = Json.createReader(new StringReader(confJson));
@@ -370,8 +384,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case GLOBALS:
-                if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
-                    return accessDeniedResponse();
+                JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getAdministration().getSettings()
+                        .getManage()));
+                if (response != null) {
+                    return response;
                 }
                 break;
             default:
@@ -380,11 +396,23 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 boolean owner = ".".equals(dbItem.getAccount()) || account.equals(dbItem.getAccount());
 
                 if (!owner) {
-                    if (!getJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
-                        return accessDeniedResponse();
+//                    if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
+//                        return accessDeniedResponse();
+//                    }
+//                    if (!dbItem.getShared() || !getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
+//                        return accessDeniedResponse();
+//                    }
+                    JOCDefaultResponse response1 = null;
+                    if (!dbItem.getShared()) {
+                        response1 = initPermissions(null, andPermissions(getJocPermissions(accessToken).map(p -> p.getAdministration()
+                                .getCustomization().getManage()), getJocPermissions(accessToken).map(p -> p.getAdministration().getCustomization()
+                                        .getShare())));
+                    } else {
+                        response1 = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getAdministration().getCustomization()
+                                .getManage()));
                     }
-                    if (!dbItem.getShared() || !getJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
-                        return accessDeniedResponse();
+                    if (response1 != null) {
+                        return response1;
                     }
                 }
                 break;
@@ -436,8 +464,12 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 boolean owner = account.equals(dbItem.getAccount());
 
                 if (!owner) {
-                    if (!getJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
+                    List<Boolean> perms = getJocPermissions(accessToken).map(p -> p.getAdministration().getCustomization().getShare()).toList();
+                    if (!perms.get(0)) {
                         return accessDeniedResponse();
+                    }
+                    if (perms.get(1)) {
+                        return fourEyesResponse();
                     }
                 }
                 dbItem.setShared(true);
@@ -489,8 +521,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 boolean owner = account.equals(dbItem.getAccount());
 
                 if (!owner) {
-                    if (!getJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
+                    if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
                         return accessDeniedResponse();
+                    }
+                    if (get4EyesJocPermissions().getAdministration().getCustomization().getShare()) {
+                        return fourEyesResponse();
                     }
                 }
                 dbItem.setShared(false);

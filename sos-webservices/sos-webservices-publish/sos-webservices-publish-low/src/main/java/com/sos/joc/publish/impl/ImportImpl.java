@@ -101,7 +101,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         try {
             initLogging(API_CALL, null, xAccessToken); 
             JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter), ImportFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
+            //4-eyes principle cannot support uploads
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

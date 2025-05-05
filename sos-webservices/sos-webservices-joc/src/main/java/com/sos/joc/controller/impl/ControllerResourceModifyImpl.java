@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.controller.model.command.Abort;
@@ -43,7 +44,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "terminate");
 
-            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getTerminate();
+            Stream<Boolean> permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).map(p -> p.getTerminate());
             Terminate terminateCommand = new Terminate();
             if (urlParameter.getWithSwitchover() == Boolean.TRUE) {
                 terminateCommand.setClusterAction(new ClusterAction());
@@ -62,7 +63,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "restart");
 
-            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getRestart();
+            Stream<Boolean> permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).map(p -> p.getRestart());
             Terminate terminateCommand = new Terminate(true, null);
             if (urlParameter.getWithSwitchover() == Boolean.TRUE) {
                 terminateCommand.setClusterAction(new ClusterAction());
@@ -81,7 +82,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort");
 
-            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getTerminate();
+            Stream<Boolean> permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).map(p -> p.getTerminate());
             return executeModifyJobSchedulerCommand("abort", new Abort(), urlParameter, accessToken, permission);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -96,7 +97,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort_and_restart");
 
-            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getRestart();
+            Stream<Boolean> permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).map(p -> p.getRestart());
             return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -113,7 +114,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
     }
 
     private JOCDefaultResponse executeModifyJobSchedulerCommand(String request, Command cmd, UrlParameter urlParameter, String accessToken,
-            boolean permission) throws JsonProcessingException, JocException {
+            Stream<Boolean> permission) throws JsonProcessingException, JocException {
         JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
         if (jocDefaultResponse != null) {
             return jocDefaultResponse;

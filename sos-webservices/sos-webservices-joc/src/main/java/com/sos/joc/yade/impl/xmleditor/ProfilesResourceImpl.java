@@ -44,7 +44,7 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
             Profiles in = Globals.objectMapper.readValue(inBytes, Profiles.class);
 
             checkRequiredParameters(in);
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

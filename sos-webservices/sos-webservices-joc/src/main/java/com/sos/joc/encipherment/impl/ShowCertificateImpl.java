@@ -36,7 +36,7 @@ public class ShowCertificateImpl extends JOCResourceImpl implements IShowCertifi
             } else {
                 filter = new ShowCertificateRequestFilter();
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

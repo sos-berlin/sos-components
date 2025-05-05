@@ -44,8 +44,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken)
-                    .getSwitchOver());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -88,8 +88,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken)
-                    .getSwitchOver());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -120,7 +120,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter body = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = body.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).getSwitchOver());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

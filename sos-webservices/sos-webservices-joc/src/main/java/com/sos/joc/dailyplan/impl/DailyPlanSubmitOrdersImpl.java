@@ -77,7 +77,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
                     controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
                 }
-                allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
+                allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController,
                         accessToken).getOrders().getCreate()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
             }

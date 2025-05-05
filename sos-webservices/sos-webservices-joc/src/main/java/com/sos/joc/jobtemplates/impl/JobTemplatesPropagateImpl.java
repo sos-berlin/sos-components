@@ -69,7 +69,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
             JsonValidator.validateFailFast(filterBytes, JobTemplatesPropagateFilter.class);
             JobTemplatesPropagateFilter jobTemplatesFilter = Globals.objectMapper.readValue(filterBytes, JobTemplatesPropagateFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

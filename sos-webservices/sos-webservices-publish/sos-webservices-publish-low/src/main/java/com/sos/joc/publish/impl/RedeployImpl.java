@@ -68,7 +68,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             JsonValidator.validateFailFast(filter, RedeployFilter.class);
             RedeployFilter redeployFilter = Globals.objectMapper.readValue(filter, RedeployFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

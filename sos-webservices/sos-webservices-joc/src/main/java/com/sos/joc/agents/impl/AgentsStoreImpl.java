@@ -7,8 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -31,6 +30,8 @@ import com.sos.joc.model.agent.StoreClusterAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("agents")
 public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
@@ -62,7 +63,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             initLogging(action, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
+            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
             String controllerId = agentStoreParameter.getControllerId();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
@@ -142,7 +143,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             JsonValidator.validateFailFast(filterBytes, StoreClusterAgents.class);
             StoreClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreClusterAgents.class);
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
+            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
             String controllerId = agentStoreParameter.getControllerId();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);

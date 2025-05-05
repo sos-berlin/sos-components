@@ -95,7 +95,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
                 controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
             }
-            allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
+            allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController,
                     accessToken).getOrders().getCreate()).collect(Collectors.toSet());
             permitted = !allowedControllers.isEmpty();
         } else {
@@ -181,7 +181,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 IMPL_PATH);
         if (!ordersPerControllerIds.isEmpty()) {
             ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> 
-                    getControllerPermissions(availableController.getKey(), accessToken).getOrders().getCancel())
+                    getBasicControllerPermissions(availableController.getKey(), accessToken).getOrders().getCancel())
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
             if (ordersPerControllerIds.keySet().isEmpty()) {
                 throw new JocAccessDeniedException("No permissions to delete dailyplan orders");

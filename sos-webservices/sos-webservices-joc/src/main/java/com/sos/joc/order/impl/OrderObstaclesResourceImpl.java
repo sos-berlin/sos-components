@@ -41,13 +41,14 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getControllerPermissions(orderFilter
-                    .getControllerId(), accessToken).getOrders().getView());
+            String controllerId = orderFilter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
+            JControllerState currentState = Proxy.of(controllerId).currentState();
             Instant surveyDateInstant = currentState.instant();
             OrderId oId = OrderId.of(orderFilter.getOrderId());
             Either<Problem, Set<JOrderObstacle>> obstaclesE = currentState.orderToObstacles(oId, surveyDateInstant);

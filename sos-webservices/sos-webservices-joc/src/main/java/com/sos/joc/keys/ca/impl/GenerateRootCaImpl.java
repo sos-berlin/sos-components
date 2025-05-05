@@ -36,8 +36,8 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
             initLogging(API_CALL, generateCAFilter, xAccessToken);
             JsonValidator.validateFailFast(generateCAFilter, GenerateCaFilter.class);
             GenerateCaFilter filter = Globals.objectMapper.readValue(generateCAFilter, GenerateCaFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+                    .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

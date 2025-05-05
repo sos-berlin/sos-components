@@ -58,13 +58,12 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
             JsonValidator.validate(exportFilter, ExportFolderFilter.class);
             ExportFolderFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFolderFilter.class);
             
-            boolean permitted = false;
+            JOCDefaultResponse jocDefaultResponse = null;
             if (filter.getForSigning() != null) {
-                permitted = getJocPermissions(xAccessToken).getInventory().getManage();
+                jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             } else {
-                permitted = getJocPermissions(xAccessToken).getInventory().getView();
+                jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getView());
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

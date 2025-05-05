@@ -30,9 +30,9 @@ public class SubAgentClusterOrderingImpl extends JOCResourceImpl implements ISub
 
             JsonValidator.validateFailFast(filterBytes, OrderingSubagentClusters.class);
             OrderingSubagentClusters orderingParam = Globals.objectMapper.readValue(filterBytes, OrderingSubagentClusters.class);
-            
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
-                    .getManage());
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -45,7 +45,7 @@ public class SubAgentClusterOrderingImpl extends JOCResourceImpl implements ISub
             agentClusterDBLayer.setSubAgentClusterOrdering(orderingParam.getControllerId(), orderingParam.getSubagentClusterId(), orderingParam
                     .getPredecessorSubagentClusterId());
             Globals.commit(connection);
-            
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             Globals.rollback(connection);

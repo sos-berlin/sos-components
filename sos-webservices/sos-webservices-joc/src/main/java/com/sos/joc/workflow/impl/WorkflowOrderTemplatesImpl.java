@@ -43,8 +43,8 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
             JsonValidator.validateFailFast(filterBytes, WorkflowPathFilter.class);
             WorkflowPathFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowPathFilter.class);
             String controllerId = workflowFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken)
+                    .getWorkflows().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

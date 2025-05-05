@@ -65,10 +65,11 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+                    permitted = getBasicControllerDefaultPermissions(accessToken).getOrders().getView();
                 } else {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                            availableController -> getBasicControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                                    Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                         allowedControllers = Collections.emptySet();
@@ -76,7 +77,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+                permitted = getBasicControllerPermissions(controllerId, accessToken).getOrders().getView();
             }
 
             JOCDefaultResponse response = initPermissions(controllerId, permitted);
@@ -170,7 +171,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId(), accessToken)
                     .getOrders().getView());
             if (response != null) {
                 return response;
@@ -228,7 +229,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(inBytes, SubmissionsOrdersRequest.class);
             SubmissionsOrdersRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsOrdersRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId(), accessToken)
                     .getOrders().getView());
             if (response != null) {
                 return response;

@@ -35,7 +35,7 @@ public class SystemNotificationImpl extends JOCResourceImpl implements ISystemNo
             SystemNotificationFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationFilter.class);
 
             // 1) notification view permitted
-            if (!getJocPermissions(accessToken).getNotification().getView()) {
+            if (!getBasicJocPermissions(accessToken).getNotification().getView()) {
                 return initPermissions(null, false);
             }
 

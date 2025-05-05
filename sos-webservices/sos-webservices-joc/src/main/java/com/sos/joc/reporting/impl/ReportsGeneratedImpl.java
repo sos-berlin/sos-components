@@ -49,7 +49,7 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
             JsonValidator.validateFailFast(filterBytes, ReportHistoryFilter.class);
             ReportHistoryFilter in = Globals.objectMapper.readValue(filterBytes, ReportHistoryFilter.class);
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getReports().getView());
             if (response != null) {
                 return response;
             }

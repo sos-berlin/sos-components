@@ -48,7 +48,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
             OrderNotificationsFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationsFilter.class);
 
             // 1) notification view permitted
-            if (!getJocPermissions(accessToken).getNotification().getView()) {
+            if (!getBasicJocPermissions(accessToken).getNotification().getView()) {
                 return initPermissions(in.getControllerId(), false);
             }
             // 2) controller permitted (because of controller related monitoring entries)
@@ -57,12 +57,12 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
                         availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+                permitted = getBasicControllerPermissions(controllerId, accessToken).getOrders().getView();
             }
 
             JOCDefaultResponse response = initPermissions(null, permitted);

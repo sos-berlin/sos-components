@@ -8,10 +8,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-public interface IRemoveCertificateAssgnment {
+public interface IRemoveCertificateAssignment {
 
     @POST
     @Path("remove")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postRemoveCertificateAssgnment(@HeaderParam("X-Access-Token") String xAccessToken, byte[] agentAssignmentFilter) throws Exception;
+    public JOCDefaultResponse postRemoveCertificateAssgnment(@HeaderParam("X-Access-Token") String xAccessToken, byte[] agentAssignmentFilter);
 }

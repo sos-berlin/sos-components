@@ -32,7 +32,7 @@ public class LoadDataImpl extends JOCResourceImpl implements ILoadDataResource {
             JsonValidator.validateFailFast(filterBytes, LoadFilter.class);
             LoadFilter in = Globals.objectMapper.readValue(filterBytes, LoadFilter.class);
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getReports().getManage()));
             if (response != null) {
                 return response;
             }

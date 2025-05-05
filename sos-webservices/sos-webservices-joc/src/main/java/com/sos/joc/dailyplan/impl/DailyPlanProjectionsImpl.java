@@ -89,12 +89,12 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                 if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
                     controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
                 }
-                allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController, accessToken)
+                allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController, accessToken)
                         .getOrders().getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
             }
             if (permitted) {
-                JocPermissions perms = getJocPermissions(accessToken);
+                JocPermissions perms = getBasicJocPermissions(accessToken);
                 permitted = perms.getCalendars().getView() || perms.getDailyPlan().getView();
             }
 

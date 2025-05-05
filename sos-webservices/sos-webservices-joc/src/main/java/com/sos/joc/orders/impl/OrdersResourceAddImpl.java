@@ -92,13 +92,13 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             JsonValidator.validate(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
             String controllerId = addOrders.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders()
-                    .getCreate());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getOrders().getCreate()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
-            boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
+            boolean hasManagePositionsPermission = getBasicControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
             Predicate<AddOrder> requestHasStartPositionSettings = o -> o.getStartPosition() != null;
             Predicate<AddOrder> requestHasEndPositionSettings = o -> o.getEndPositions() != null && !o.getEndPositions().isEmpty();
             Predicate<AddOrder> requestHasBlockPositionSettings = o -> o.getBlockPosition() != null;

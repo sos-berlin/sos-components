@@ -66,7 +66,7 @@ public class RevalidateResourceImpl extends JOCResourceImpl implements IRevalida
     public JOCDefaultResponse revalidate(final String accessToken, final byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             if (!folderPermissions.isPermittedForFolder(in.getPath())) {

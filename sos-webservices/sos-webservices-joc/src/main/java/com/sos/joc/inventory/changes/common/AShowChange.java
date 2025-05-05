@@ -26,9 +26,6 @@ public abstract class AShowChange extends JOCResourceImpl {
             List<DBItemInventoryChange> changes = dbLayer.getChanges(filter);
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getResponse(changes, filter.getDetails(), session)));
-        } catch (Throwable e) {
-            Globals.rollback(session);
-            throw e;
         } finally {
             Globals.disconnect(session);
         }

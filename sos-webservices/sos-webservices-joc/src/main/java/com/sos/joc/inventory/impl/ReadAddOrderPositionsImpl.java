@@ -34,7 +34,7 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
             JsonValidator.validateFailFast(inBytes, RequestWorkflowFilter.class);
             RequestWorkflowFilter in = Globals.objectMapper.readValue(inBytes, RequestWorkflowFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 response = read(in);
             }

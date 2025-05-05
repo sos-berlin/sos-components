@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
@@ -50,8 +51,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             WorkflowPropagateFilter in = Globals.objectMapper.readValue(inBytes, WorkflowPropagateFilter.class);
 
             in.setFolder(normalizeFolder(in.getFolder()));
-            boolean permission = getJocPermissions(accessToken).getInventory().getManage();
-            JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
+            JOCDefaultResponse response = checkPermissions(accessToken, in, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
             }
@@ -144,7 +144,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, boolean permission) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, Stream<Boolean> permission) throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null && in.getFolder() != null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later

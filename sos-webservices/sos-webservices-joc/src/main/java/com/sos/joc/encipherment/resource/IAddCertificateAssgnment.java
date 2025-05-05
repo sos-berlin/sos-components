@@ -13,5 +13,5 @@ public interface IAddCertificateAssgnment {
     @POST
     @Path("add")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postAddCertificateAssgnment(@HeaderParam("X-Access-Token") String xAccessToken, byte[] agentAssignmentFilter) throws Exception;
+    public JOCDefaultResponse postAddCertificateAssgnment(@HeaderParam("X-Access-Token") String xAccessToken, byte[] agentAssignmentFilter);
 }

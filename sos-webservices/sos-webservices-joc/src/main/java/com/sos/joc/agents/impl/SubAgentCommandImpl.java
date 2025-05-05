@@ -352,7 +352,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
         AgentHelper.throwJocMissingLicenseException();
 
-        return initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers().getManage());
+        return initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage()));
     }
     
     private static SubAgentsCommand getSubAgentsCommand(byte[] filterBytes) throws SOSJsonSchemaException, IOException {

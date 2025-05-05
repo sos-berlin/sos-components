@@ -100,7 +100,6 @@ public class SOSAuthCurrentAccount {
         if (sosPermissionJocCockpitControllers == null) {
             sosPermissionJocCockpitControllers = initPermissions();
         }
-
         return sosPermissionJocCockpitControllers.getControllerDefaults();
     }
 

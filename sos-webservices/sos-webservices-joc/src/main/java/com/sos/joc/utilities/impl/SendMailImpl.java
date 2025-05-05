@@ -4,9 +4,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSString;
@@ -30,7 +27,6 @@ import jakarta.ws.rs.Path;
 public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResource {
 
     private static final String TEST_MAIL = "Test mail";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SendMailImpl.class);
     private static final String API_CALL_SESSIONS = "./utilities/send_email";
     private SOSMail mail = null;
 
@@ -43,7 +39,7 @@ public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResou
             JsonValidator.validateFailFast(filterBytes, SendMail.class);
             SendMail sendMail = Globals.objectMapper.readValue(filterBytes, SendMail.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -56,10 +56,11 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getControllerDefaultPermissions(xAccessToken).getDeployments().getView();
+                    permitted = getBasicControllerDefaultPermissions(xAccessToken).getDeployments().getView();
                 } else {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                            availableController, xAccessToken).getDeployments().getView()).collect(Collectors.toSet());
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                            availableController -> getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getView())
+                            .collect(Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                         allowedControllers = Collections.emptySet();
@@ -67,7 +68,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, xAccessToken).getDeployments().getView();
+                permitted = getBasicControllerPermissions(controllerId, xAccessToken).getDeployments().getView();
             }
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
             if (jocDefaultResponse != null) {

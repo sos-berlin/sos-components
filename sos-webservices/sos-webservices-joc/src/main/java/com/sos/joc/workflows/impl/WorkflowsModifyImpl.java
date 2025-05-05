@@ -58,8 +58,8 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
     public JOCDefaultResponse suspendWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflows modifyWorkflows = initRequest(Action.SUSPEND, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyWorkflows.getControllerId(), accessToken).getOrders().getSuspendResume();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflows.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(modifyWorkflows
+                    .getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -77,8 +77,8 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
     public JOCDefaultResponse resumeWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflows modifyWorkflows = initRequest(Action.RESUME, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyWorkflows.getControllerId(), accessToken).getOrders().getSuspendResume();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflows.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(modifyWorkflows
+                    .getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

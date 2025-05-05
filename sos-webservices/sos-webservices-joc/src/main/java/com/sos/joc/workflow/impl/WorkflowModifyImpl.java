@@ -3,6 +3,7 @@ package com.sos.joc.workflow.impl;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.stream.Stream;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -44,8 +45,8 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     public JOCDefaultResponse transition(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflow workflow = initRequest(Action.TRANSITION, accessToken, filterBytes);
-            boolean perm = hasPermission(workflow.getControllerId(), accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), hasPermission(workflow.getControllerId(),
+                    accessToken));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -63,8 +64,8 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     public JOCDefaultResponse transfer(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflow workflow = initRequest(Action.TRANFER, accessToken, filterBytes);
-            boolean perm = hasPermission(workflow.getControllerId(), accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), hasPermission(workflow.getControllerId(),
+                    accessToken));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -121,7 +122,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
         }
     }
 
-    private boolean hasPermission(String controllerId, String accessToken) {
-        return getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
+    private Stream<Boolean> hasPermission(String controllerId, String accessToken) {
+        return getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions());
     }
 }

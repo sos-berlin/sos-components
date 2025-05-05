@@ -290,8 +290,9 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL_IMPORT_ICON, null, xAccessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getAccounts()
-                    .getManage());
+            //4-eyes principle cannot support uploads
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getAccounts()
+                    .getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

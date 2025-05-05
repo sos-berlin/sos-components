@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -51,7 +52,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
+            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {

@@ -63,8 +63,8 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             JsonValidator.validate(filterBytes, DeleteNotices.class, true);
             DeleteNotices in = Globals.objectMapper.readValue(filterBytes, DeleteNotices.class);
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getNoticeBoards()
-                    .getDelete());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getNoticeBoards().getDelete()));
             if (response != null) {
                 return response;
             }
@@ -105,8 +105,8 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             JsonValidator.validate(filterBytes, PostNotices.class, true);
             PostNotices in = Globals.objectMapper.readValue(filterBytes, PostNotices.class);
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getNoticeBoards()
-                    .getPost());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getNoticeBoards()
+                    .getPost()));
             if (response != null) {
                 return response;
             }
@@ -161,8 +161,8 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             JsonValidator.validateFailFast(filterBytes, PostExpectedNotices.class);
             PostExpectedNotices in = Globals.objectMapper.readValue(filterBytes, PostExpectedNotices.class);
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getNoticeBoards()
-                    .getPost());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getNoticeBoards().getPost()));
             if (response != null) {
                 return response;
             }

@@ -60,14 +60,14 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, RevokeFilter.class);
             RevokeFilter revokeFilter = Globals.objectMapper.readValue(filter, RevokeFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(revokeFilter.getAuditLog(), CategoryType.DEPLOYMENT);
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-            		.filter(availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+            		.filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);

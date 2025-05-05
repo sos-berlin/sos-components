@@ -35,7 +35,7 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             initLogging(API_CALL, setVersionFilter, xAccessToken);
             JsonValidator.validateFailFast(setVersionFilter, SetVersionFilter.class);
             SetVersionFilter filter = Globals.objectMapper.readValue(setVersionFilter, SetVersionFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).getInventory().getDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

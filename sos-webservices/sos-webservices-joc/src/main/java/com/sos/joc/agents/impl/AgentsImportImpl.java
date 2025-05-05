@@ -72,8 +72,8 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
         try {
             initLogging(API_CALL, null, xAccessToken); 
             JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), AgentImportFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getControllers()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getControllers()
+                    .getManage(), false); //4-eyes principle cannot support uploads
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

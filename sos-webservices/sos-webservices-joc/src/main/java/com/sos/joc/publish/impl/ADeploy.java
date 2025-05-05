@@ -75,9 +75,9 @@ public abstract class ADeploy extends JOCResourceImpl {
         PublishSemaphore.tryAcquire(xAccessToken);
         
         Set<String> allowedControllerIds = Collections.emptySet();
-        allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-                .filter(availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
-        
+        allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
+                availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+
         DBLayerDeploy dbLayer  = new DBLayerDeploy(hibernateSession);
         // process filter
         Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());

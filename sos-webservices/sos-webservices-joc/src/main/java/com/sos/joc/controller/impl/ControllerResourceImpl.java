@@ -56,10 +56,9 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            String controllerId = jobSchedulerBody.getControllerId();
             
-            
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(jobSchedulerBody.getControllerId(), accessToken)
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId, accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -72,14 +71,13 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             
             
             if (jobSchedulerBody.getUrl() == null) {
-                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(jobSchedulerBody.getControllerId());
+                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
                 if (controllerInstances == null || controllerInstances.isEmpty()) {
                     // read db again?
-                    throw new DBMissingDataException(String.format("Couldn't find Controller with id %s for security level %s", jobSchedulerBody
-                            .getControllerId(), Globals.getJocSecurityLevel()));
+                    throw new DBMissingDataException(String.format("Couldn't find Controller with id %s for security level %s", controllerId, Globals
+                            .getJocSecurityLevel()));
                 }
-                schedulerInstance = States.getActiveControllerNode(controllerInstances, Proxy.of(jobSchedulerBody.getControllerId()).currentState()
-                        .clusterState());
+                schedulerInstance = States.getActiveControllerNode(controllerInstances, Proxy.of(controllerId).currentState().clusterState());
 
             } else {
                 if (!isUrl.test(jobSchedulerBody.getUrl())) {

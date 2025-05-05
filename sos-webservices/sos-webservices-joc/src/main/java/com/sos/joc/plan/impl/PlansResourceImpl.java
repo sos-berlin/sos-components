@@ -71,8 +71,8 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getControllerPermissions(filter.getControllerId(), accessToken)
-                    .getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
+                    accessToken).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
@@ -100,8 +100,8 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             initLogging(API_CALL_IDS, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PlansOpenCloseFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getControllerPermissions(filter.getControllerId(), accessToken)
-                    .getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
+                    accessToken).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }

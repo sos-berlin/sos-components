@@ -60,7 +60,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             boolean permitted = noControllerAvailable; // no access denied if no controllers are registered
             if (controllerId == null || controllerId.isEmpty()) {
                 if (!noControllerAvailable) {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
                             availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
@@ -69,7 +69,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getAgents().getView();
+                permitted = getBasicControllerPermissions(controllerId, accessToken).getAgents().getView();
             }
 
             JOCDefaultResponse response = initPermissions(null, permitted);

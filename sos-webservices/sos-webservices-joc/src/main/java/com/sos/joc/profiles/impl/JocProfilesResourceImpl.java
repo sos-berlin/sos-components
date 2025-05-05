@@ -62,9 +62,10 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
 
             JOCDefaultResponse jocDefaultResponse = null;
             if (!onlyActAccount) {
-                jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+                jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
+                        .getManage()));
             } else {
-                jocDefaultResponse = initPermissions("", true);
+                jocDefaultResponse = initPermissions("", true, false);
             }
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -96,7 +97,8 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
         try {
             initLogging(API_CALL_PROFILES, null, accessToken);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

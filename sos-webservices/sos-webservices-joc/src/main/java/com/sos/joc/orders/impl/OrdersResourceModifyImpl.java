@@ -107,8 +107,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersContinue(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.CONTINUE, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getModify();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
+                    .getControllerId(), accessToken).map(p -> p.getOrders().getModify()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -126,8 +126,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersSuspend(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.SUSPEND, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getSuspendResume();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
+                    .getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -145,13 +145,16 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersResume(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.RESUME, accessToken, filterBytes);
-            boolean permSuspendResume = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getSuspendResume();
-            boolean permResumeFailed = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getResumeFailed();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), permSuspendResume || permResumeFailed);
+            List<Boolean> permSuspendResume = getControllerPermissions(modifyOrders.getControllerId(), accessToken).map(p -> p.getOrders()
+                    .getSuspendResume()).toList();
+            List<Boolean> permResumeFailed = getControllerPermissions(modifyOrders.getControllerId(), accessToken).map(p -> p.getOrders()
+                    .getResumeFailed()).toList();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), permResumeFailed.get(0) || permSuspendResume.get(
+                    0), permResumeFailed.get(1) && permSuspendResume.get(1));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            postResumeOrders(modifyOrders, permResumeFailed && !permSuspendResume);
+            postResumeOrders(modifyOrders, permResumeFailed.get(0) && !permSuspendResume.get(0));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -165,8 +168,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersCancel(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.CANCEL, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getCancel();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
+                    .getControllerId(), accessToken).map(p -> p.getOrders().getCancel()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -184,8 +187,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersConfirm(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.ANSWER_PROMPT, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getConfirm();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
+                    .getControllerId(), accessToken).map(p -> p.getOrders().getConfirm()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -203,8 +206,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersRemoveWhenTerminated(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.REMOVE_WHEN_TERMINATED, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getView();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getBasicControllerPermissions(modifyOrders
+                    .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -61,13 +61,12 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             ExportFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFilter.class);
             ExportForSigning forSigning = filter.getForSigning();
             
-            boolean permitted = false;
+            JOCDefaultResponse jocDefaultResponse = null;
             if (forSigning != null) {
-                permitted = getJocPermissions(xAccessToken).getInventory().getManage();
+                jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             } else {
-                permitted = getJocPermissions(xAccessToken).getInventory().getView();
+                jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getView());
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

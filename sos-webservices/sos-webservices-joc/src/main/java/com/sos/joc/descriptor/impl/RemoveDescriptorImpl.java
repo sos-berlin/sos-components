@@ -28,7 +28,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             JsonValidator.validate(body, RequestFilters.class, true);
             RequestFilters filters = Globals.objectMapper.readValue(body, RequestFilters.class);;
             com.sos.joc.model.inventory.delete.RequestFilters in = mapTo(filters);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = remove(accessToken, in, IMPL_PATH_REMOVE);
             }
@@ -50,7 +50,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             com.sos.joc.model.inventory.delete.RequestFolder in = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.delete.RequestFolder.class);
             in.setObjectTypes(Arrays.asList(new ConfigurationType[] {ConfigurationType.DEPLOYMENTDESCRIPTOR, ConfigurationType.DESCRIPTORFOLDER}));
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = removeFolder(accessToken, in, true, IMPL_PATH_REMOVE_FOLDER);
             }
@@ -72,7 +72,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             RequestFilters filters = Globals.objectMapper.readValue(body, RequestFilters.class);;
             com.sos.joc.model.inventory.delete.RequestFilters in = mapTo(filters);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = delete(accessToken, in, IMPL_PATH_TRASH_DELETE);
             }
@@ -94,7 +94,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             com.sos.joc.model.inventory.delete.RequestFolder in = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.delete.RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = deleteFolder(accessToken, in, true, PATH_TRASH_DELETE_FOLDER);
             }

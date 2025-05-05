@@ -31,7 +31,7 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId, accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -64,7 +64,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
             JsonValidator.validateFailFast(filterBytes, RunHistoryFilter.class);
             RunHistoryFilter in = Globals.objectMapper.readValue(filterBytes, RunHistoryFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getReports().getView());
             if (response != null) {
                 return response;
             }

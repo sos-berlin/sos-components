@@ -3,6 +3,7 @@ package com.sos.joc.controllers.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import jakarta.ws.rs.Path;
 
@@ -31,13 +32,13 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
 
         try {
             initLogging(API_CALL_LEVELS, null, accessToken);
-            com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers controllerPermissions = getJocPermissions(accessToken)
+            com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers controllerPermissions = getBasicJocPermissions(accessToken)
                     .getAdministration().getControllers();
             // TODO admin permissions to take over security level
             boolean adminPermission = controllerPermissions.getManage();
             boolean showPermission = controllerPermissions.getView();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", adminPermission || showPermission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", adminPermission || showPermission, false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -73,7 +74,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
             ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             
             // TODO admin permissions to take over security level
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
+            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {

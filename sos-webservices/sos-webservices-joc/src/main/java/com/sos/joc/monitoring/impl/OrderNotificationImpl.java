@@ -35,11 +35,11 @@ public class OrderNotificationImpl extends JOCResourceImpl implements IOrderNoti
             OrderNotificationFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationFilter.class);
 
             // 1) notification view permitted
-            if (!getJocPermissions(accessToken).getNotification().getView()) {
+            if (!getBasicJocPermissions(accessToken).getNotification().getView()) {
                 return initPermissions(in.getControllerId(), false);
             }
             // 2) controller permitted (because of controller related monitoring entries)
-            if (!getControllerPermissions(in.getControllerId(), accessToken).getOrders().getView()) {
+            if (!getBasicControllerPermissions(in.getControllerId(), accessToken).getOrders().getView()) {
                 return initPermissions(in.getControllerId(), false);
             }
 

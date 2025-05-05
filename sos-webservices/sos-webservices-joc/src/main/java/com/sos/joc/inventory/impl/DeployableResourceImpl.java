@@ -50,7 +50,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             JsonValidator.validate(inBytes, DeployableFilter.class, true);
             DeployableFilter in = Globals.objectMapper.readValue(inBytes, DeployableFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(deployable(in));

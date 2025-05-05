@@ -100,7 +100,8 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         try {
             initLogging(API_CALL, null, xAccessToken); 
             JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ConvertCronFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
+            //4-eyes principle cannot support uploads
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

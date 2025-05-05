@@ -31,7 +31,8 @@ public class DeleteKeyImpl extends JOCResourceImpl implements IDeleteKey {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, DeleteKeyFilter.class);
             DeleteKeyFilter deleteKeyFilter = Globals.objectMapper.readValue(filter, DeleteKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+                    .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

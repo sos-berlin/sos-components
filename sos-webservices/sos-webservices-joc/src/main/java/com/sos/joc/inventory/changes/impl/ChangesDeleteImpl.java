@@ -25,7 +25,7 @@ public class ChangesDeleteImpl extends ADeleteChange implements IChangesDelete {
             JsonValidator.validate(filter, DeleteChangesRequest.class);
             DeleteChangesRequest deletefilter = Globals.objectMapper.readValue(filter, DeleteChangesRequest.class);
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = deleteChange(deletefilter, API_CALL);
             }

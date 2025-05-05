@@ -25,7 +25,7 @@ public class AddToChangeImpl extends AAddToChange implements IAddToChange {
             JsonValidator.validate(filter, AddToChangeRequest.class);
             AddToChangeRequest addFilter = Globals.objectMapper.readValue(filter, AddToChangeRequest.class);
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = addToChange(addFilter, API_CALL);
             }

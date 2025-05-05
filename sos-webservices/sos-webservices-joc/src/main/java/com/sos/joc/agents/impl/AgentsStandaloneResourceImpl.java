@@ -52,16 +52,18 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
             
             String controllerId = agentParameter.getControllerId();
             Set<String> allowedControllers = Collections.emptySet();
+            boolean adminPermitted = getBasicJocPermissions(accessToken).getAdministration().getControllers().getView();
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getControllerDefaultPermissions(accessToken).getAgents().getView() || getJocPermissions(accessToken)
-                            .getAdministration().getControllers().getView();
+                    permitted = getBasicControllerDefaultPermissions(accessToken).getAgents().getView() || getBasicControllerDefaultPermissions(
+                            accessToken).getView() || adminPermitted;
                 } else {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                            availableController, accessToken).getAgents().getView() || getJocPermissions(accessToken).getAdministration()
-                                    .getControllers().getView()).collect(Collectors.toSet());
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                            availableController -> getBasicControllerPermissions(availableController, accessToken).getAgents().getView()
+                                    || getBasicControllerPermissions(availableController, accessToken).getView() || adminPermitted).collect(Collectors
+                                            .toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                         allowedControllers = Collections.emptySet();
@@ -69,8 +71,8 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getAgents().getView() || getJocPermissions(accessToken)
-                        .getAdministration().getControllers().getView();
+                permitted = getBasicControllerPermissions(controllerId, accessToken).getAgents().getView() || getBasicControllerPermissions(
+                        controllerId, accessToken).getView() || adminPermitted;
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);

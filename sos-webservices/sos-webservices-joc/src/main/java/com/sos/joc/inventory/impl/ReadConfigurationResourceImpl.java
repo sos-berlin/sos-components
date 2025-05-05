@@ -22,7 +22,7 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 response = read(in, IMPL_PATH);
             }
@@ -44,7 +44,7 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 response = readTrash(in, TRASH_IMPL_PATH);
             }

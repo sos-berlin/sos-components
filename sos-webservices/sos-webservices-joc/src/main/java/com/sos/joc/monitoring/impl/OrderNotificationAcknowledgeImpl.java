@@ -36,13 +36,21 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
 
             storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
 
-            // 1) notification view changes permitted
-            if (!getJocPermissions(accessToken).getNotification().getManage()) {
-                return initPermissions(in.getControllerId(), false);
-            }
-            // 2) controller permitted (because of controller related monitoring entries)
-            if (!getControllerPermissions(in.getControllerId(), accessToken).getOrders().getView()) {
-                return initPermissions(in.getControllerId(), false);
+//            // 1) notification view changes permitted
+//            if (!getJocPermissions_(accessToken).getNotification().getManage()) {
+//                return initPermissions(in.getControllerId(), false);
+//            }
+//            // 2) controller permitted (because of controller related monitoring entries)
+//            if (!getBasicControllerPermissions(in.getControllerId(), accessToken).getOrders().getView()) {
+//                return initPermissions(in.getControllerId(), false);
+//            }
+            
+            boolean perm = getBasicJocPermissions(accessToken).getNotification().getManage() && getBasicControllerPermissions(in.getControllerId(),
+                    accessToken).getOrders().getView();
+            boolean fourEyesPerm = get4EyesJocPermissions().getNotification().getManage();
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), perm, fourEyesPerm);
+            if (response != null) {
+                return response;
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

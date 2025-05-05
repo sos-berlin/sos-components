@@ -33,7 +33,7 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();
 
-            JOCDefaultResponse response = initPermissions(controllerId, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response != null) {
                 return response;
             }

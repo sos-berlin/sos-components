@@ -50,7 +50,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
             initLogging(API_CALL, readFromFilter, xAccessToken);
             JsonValidator.validate(readFromFilter, ReadFromFilter.class);
             ReadFromFilter filter = Globals.objectMapper.readValue(readFromFilter, ReadFromFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

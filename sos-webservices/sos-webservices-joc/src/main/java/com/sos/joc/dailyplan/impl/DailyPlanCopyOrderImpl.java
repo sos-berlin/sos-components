@@ -107,7 +107,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
 
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getCreate());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                    .getCreate()));
             if (response != null) {
                 return response;
             }

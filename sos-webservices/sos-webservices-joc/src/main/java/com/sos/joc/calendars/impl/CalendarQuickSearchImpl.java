@@ -27,7 +27,7 @@ public class CalendarQuickSearchImpl extends JOCResourceImpl implements IQuickSe
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
             RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getCalendars().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getCalendars().getView());
             if (response != null) {
                 return response;
             }

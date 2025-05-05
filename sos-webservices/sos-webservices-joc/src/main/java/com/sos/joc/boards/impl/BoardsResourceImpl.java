@@ -62,8 +62,8 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, BoardsFilter.class);
             BoardsFilter filter = Globals.objectMapper.readValue(filterBytes, BoardsFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getControllerPermissions(filter.getControllerId(), accessToken)
-                    .getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
+                    accessToken).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }

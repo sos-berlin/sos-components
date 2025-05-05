@@ -23,7 +23,7 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.read.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.read.RequestFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 filter.setObjectType(ConfigurationType.DEPLOYMENTDESCRIPTOR);
                 response = read(filter, IMPL_PATH_READ);
@@ -45,7 +45,7 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.read.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.read.RequestFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 filter.setObjectType(ConfigurationType.DEPLOYMENTDESCRIPTOR);
                 response = readTrash(filter, PATH_TRASH_READ);

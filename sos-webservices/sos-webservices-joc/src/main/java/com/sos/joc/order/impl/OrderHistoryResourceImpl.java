@@ -39,9 +39,9 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, OrderHistoryFilter.class);
             OrderHistoryFilter in = Globals.objectMapper.readValue(inBytes, OrderHistoryFilter.class);
-
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
-                    .getOrders().getView());
+            String controllerId = in.getControllerId();
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+                    .getView());
             if (response != null) {
                 return response;
             }
@@ -49,7 +49,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             HistoryFilter dbFilter = null;
             if (in.getHistoryId() == null) {
                 dbFilter = new HistoryFilter();
-                dbFilter.setControllerIds(Collections.singleton(in.getControllerId()));
+                dbFilter.setControllerIds(Collections.singleton(controllerId));
                 dbFilter.setOrderId(in.getOrderId());
             }
             
@@ -61,7 +61,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
                 Long historyId = dbLayer.getHistoryId();
                 if (historyId == null) {
                     DBMissingDataException e = new DBMissingDataException(String.format("Couldn't find order log for '%s'", in.getOrderId()));
-                    ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), in.getControllerId());
+                    ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), controllerId);
                     return JOCDefaultResponse.responseStatus434JSError(e, true);
                 } else {
                     in.setHistoryId(historyId);

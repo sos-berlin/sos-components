@@ -37,7 +37,7 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 
-            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }
@@ -47,10 +47,10 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getView()).collect(
+                        availableController -> getBasicControllerPermissions(availableController, accessToken).getView()).collect(
                                 Collectors.toSet());
             } else {
-                if (getControllerPermissions(controllerId, accessToken).getView()) {
+                if (getBasicControllerPermissions(controllerId, accessToken).getView()) {
                     allowedControllers = Collections.singleton(controllerId);
                 }
             }

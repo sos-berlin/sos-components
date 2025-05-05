@@ -107,7 +107,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             JsonValidator.validateFailFast(importDeployFilter, ImportDeployFilter.class);
             ImportDeployFilter filter = Globals.objectMapper.readValue(importDeployFilter, ImportDeployFilter.class);
             // copy&paste Permission, has to be changed to the correct permission for upload
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
+            //4-eyes principle cannot support uploads
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getDeploy(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

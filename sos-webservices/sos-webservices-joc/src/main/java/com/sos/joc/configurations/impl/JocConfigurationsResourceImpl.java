@@ -87,7 +87,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     configurationsFilter.setObjectType(null);
 
                     defaultGlobalSettings = new ConfigurationGlobals().getClonedDefaults();
-                    if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                    if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getView()) {
                         // read only user settings without permissions
                         if (defaultGlobalSettings != null) {
                             for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
@@ -155,7 +155,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             }
 
             if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
-                boolean viewPerm = getJocPermissions(accessToken).getAdministration().getCustomization().getView();
+                boolean viewPerm = getBasicJocPermissions(accessToken).getAdministration().getCustomization().getView();
                 for (DBItemJocConfiguration jocConfigurationDbItem : listOfJocConfigurationDbItem) {
                     Configuration configuration = new Configuration();
                     configuration.setAccount(jocConfigurationDbItem.getAccount());
@@ -172,7 +172,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     }
                     switch (configuration.getConfigurationType()) {
                     case GLOBALS:
-                        if (!getJocPermissions(accessToken).getAdministration().getSettings().getView() && configuration
+                        if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getView() && configuration
                                 .getConfigurationItem() != null) {
                             // read only user settings without permissions
                             try {
@@ -222,8 +222,8 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsDeleteFilter.class);
             ConfigurationsDeleteFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsDeleteFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getCustomization()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration()
+                    .getCustomization().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -253,7 +253,8 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         try {
             initLogging(API_CALL_PROFILES, null, accessToken);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

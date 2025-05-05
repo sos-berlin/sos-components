@@ -1,10 +1,7 @@
 package com.sos.joc.documentation.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -26,6 +23,8 @@ import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("documentation")
 public class DocumentationEditResourceImpl extends JOCResourceImpl implements IDocumentationEditResource {
 
@@ -38,7 +37,7 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

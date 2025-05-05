@@ -68,10 +68,11 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+                    permitted = getBasicControllerDefaultPermissions(accessToken).getOrders().getView();
                 } else {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                            availableController -> getBasicControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                                    Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                         allowedControllers = Collections.emptySet();
@@ -79,7 +80,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+                permitted = getBasicControllerPermissions(controllerId, accessToken).getOrders().getView();
             }
 
             JOCDefaultResponse response = initPermissions(controllerId, permitted);
@@ -211,7 +212,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
     private boolean getControllerPermissions(DBItemHistoryOrderStep item, String accessToken, Map<String, Boolean> checkedControllers) {
         Boolean result = checkedControllers.get(item.getControllerId());
         if (result == null) {
-            result = getControllerPermissions(item.getControllerId(), accessToken).getOrders().getView();
+            result = getBasicControllerPermissions(item.getControllerId(), accessToken).getOrders().getView();
             checkedControllers.put(item.getControllerId(), result);
         }
         return result;

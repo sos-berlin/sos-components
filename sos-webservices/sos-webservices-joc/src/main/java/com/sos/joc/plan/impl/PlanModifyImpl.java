@@ -60,8 +60,8 @@ public class PlanModifyImpl extends JOCResourceImpl implements IPlanModify {
             JsonValidator.validateFailFast(filterBytes, PlansModifyFilter.class);
             PlansModifyFilter filter = Globals.objectMapper.readValue(filterBytes, PlansModifyFilter.class);
             String controllerId = filter.getControllerId();
-            // TODO new permission for plans
-            JOCDefaultResponse response = initPermissions(controllerId, true);
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                    .getCreate()));
             if (response != null) {
                 return response;
             }

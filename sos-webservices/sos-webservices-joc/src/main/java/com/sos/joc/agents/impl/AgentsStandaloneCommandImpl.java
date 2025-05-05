@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -55,9 +56,9 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             initLogging(API_CALL_REVOKE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -159,7 +160,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             
             DeployAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
-            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
+            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {

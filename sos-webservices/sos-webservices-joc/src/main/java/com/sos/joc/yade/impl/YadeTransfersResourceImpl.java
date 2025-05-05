@@ -59,9 +59,9 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             TransferId in = Globals.objectMapper.readValue(inBytes, TransferId.class);
 
             Set<String> allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                    availableController -> getControllerPermissions(availableController, accessToken).getView()).collect(Collectors.toSet());
+                    availableController -> getBasicControllerPermissions(availableController, accessToken).getView()).collect(Collectors.toSet());
 
-            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }
@@ -106,13 +106,13 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             Set<String> allowedControllers = Collections.emptySet();
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
                         availableController, accessToken).getView()).collect(Collectors.toSet());
-            } else if (getControllerPermissions(controllerId, accessToken).getView()) {
+            } else if (getBasicControllerPermissions(controllerId, accessToken).getView()) {
                 allowedControllers = Collections.singleton(controllerId);
             }
 
-            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

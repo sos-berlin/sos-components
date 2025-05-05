@@ -53,7 +53,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             initLogging(API_CALL, updateFromFilter, xAccessToken);
             JsonValidator.validate(updateFromFilter, UpdateFromFilter.class);
             UpdateFromFilter filter = Globals.objectMapper.readValue(updateFromFilter, UpdateFromFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

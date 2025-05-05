@@ -21,7 +21,6 @@ import com.sos.joc.classes.controller.ControllerAnswer;
 import com.sos.joc.classes.controller.ControllerCallable;
 import com.sos.joc.classes.controller.States;
 import com.sos.joc.classes.proxy.ClusterWatch;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -56,7 +55,6 @@ import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
-import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 
 @Path("controller")
@@ -141,8 +139,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -292,8 +290,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter controllerObj = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -361,7 +359,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 throw new JocBadRequestException("$.url: does not match the url pattern " + isUrlPattern);
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getControllers()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

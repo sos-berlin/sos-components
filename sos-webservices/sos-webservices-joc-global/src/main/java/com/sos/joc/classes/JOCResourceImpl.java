@@ -6,11 +6,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,27 +60,55 @@ public class JOCResourceImpl {
         updateUserInMetaInfo();
     }
 
-    private String getMasterId(String masterId) throws SessionNotExistException {
-        if (masterId == null) {
-            masterId = "";
+    private String getControllerId(String controllerId) throws SessionNotExistException {
+        if (controllerId == null) {
+            controllerId = "";
         }
-        return masterId;
-    }
-
-    protected ControllerPermissions getControllerPermissions(String masterId, String accessToken) throws JocException {
-        initGetPermissions(accessToken);
-        masterId = getMasterId(masterId);
-        return jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(masterId);
+        return controllerId;
     }
     
-    protected ControllerPermissions getControllerDefaultPermissions(String accessToken) throws JocException {
+    protected ControllerPermissions getBasicControllerDefaultPermissions(String accessToken) throws JocException {
         initGetPermissions(accessToken);
         return jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions();
     }
 
-    protected JocPermissions getJocPermissions(String accessToken) throws JocException {
+    protected ControllerPermissions getBasicControllerPermissions(String controllerId, String accessToken) throws JocException {
+        initGetPermissions(accessToken);
+        controllerId = getControllerId(controllerId);
+        return jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(controllerId);
+    }
+
+    protected JocPermissions getBasicJocPermissions(String accessToken) throws JocException {
         initGetPermissions(accessToken);
         return jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions();
+    }
+    
+    protected Stream<ControllerPermissions> getControllerPermissions(String controllerId, String accessToken) throws JocException {
+        initGetPermissions(accessToken);
+        controllerId = getControllerId(controllerId);
+        return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(controllerId), jobschedulerUser
+                .getSOSAuthCurrentAccount().get4EyesControllerPermissions(controllerId));
+    }
+    
+    protected ControllerPermissions get4EyesControllerPermissions(String controllerId) throws JocException {
+        controllerId = getControllerId(controllerId);
+        return jobschedulerUser.getSOSAuthCurrentAccount().get4EyesControllerPermissions(controllerId);
+    }
+    
+    protected Stream<ControllerPermissions> getControllerDefaultPermissions(String accessToken) throws JocException {
+        initGetPermissions(accessToken);
+        return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions(), jobschedulerUser.getSOSAuthCurrentAccount()
+                .get4EyesControllerDefaultPermissions());
+    }
+    
+    protected Stream<JocPermissions> getJocPermissions(String accessToken) throws JocException {
+        initGetPermissions(accessToken);
+        return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions(), jobschedulerUser.getSOSAuthCurrentAccount()
+                .get4EyesJocPermissions());
+    }
+    
+    protected JocPermissions get4EyesJocPermissions() throws JocException {
+        return jobschedulerUser.getSOSAuthCurrentAccount().get4EyesJocPermissions();
     }
 
     public String getAccessToken() {
@@ -260,6 +290,10 @@ public class JOCResourceImpl {
     public JOCDefaultResponse fourEyesResponse() {
         return accessDeniedResponse("4-eyes principle: Operation needs approval process.");
     }
+    
+    public JOCDefaultResponse fourEyesResponse(String message) {
+        return accessDeniedResponse(message);
+    }
 
     public JOCDefaultResponse accessDeniedResponse(String message) {
         jocError.setMessage(message);
@@ -318,6 +352,69 @@ public class JOCResourceImpl {
 
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission) throws JocException {
         return initPermissions(controllerId, permission, false);
+    }
+    
+    public JOCDefaultResponse initPermissions(String controllerId, Stream<Boolean> permissions) throws JocException {
+        return initPermissions(controllerId, permissions.toList());
+    }
+    
+    public JOCDefaultResponse initPermissions(String controllerId, List<Boolean> permissions) throws JocException {
+        return initPermissions(controllerId, permissions.get(0), permissions.get(1));
+    }
+    
+    @SafeVarargs
+    public final JOCDefaultResponse initOrPermissions(String controllerId, Stream<Boolean>... permissions) throws JocException {
+        return initPermissions(controllerId, orPermissions(permissions));
+    }
+    
+    @SafeVarargs
+    public final List<Boolean> orPermissions(Stream<Boolean>... permissions) throws JocException {
+        // p wird verordert; p4eyes wird verundet
+        boolean p = false;
+        boolean p4eyes = true;
+        for (Stream<Boolean> perms : permissions) {
+            List<Boolean> pList = perms.toList();
+            // pList.get(0): normal permissions; pList.get(1): 4-eyes permissions 
+            if (pList.isEmpty()) {
+                continue;
+            }
+            if (!p) {
+                p = pList.get(0);
+            }
+            if (!pList.get(1)) {
+                p4eyes = false; 
+            }
+        }
+        return Arrays.asList(p, p4eyes);
+    }
+    
+    @SafeVarargs
+    public final JOCDefaultResponse initAndPermissions(String controllerId, Stream<Boolean>... permissions) throws JocException {
+        return initPermissions(controllerId, andPermissions(permissions));
+    }
+    
+    @SafeVarargs
+    public final List<Boolean> andPermissions(Stream<Boolean>... permissions) throws JocException {
+        if (permissions.length == 0) {
+            return Arrays.asList(false, true);
+        }
+        // p wird verundet; p4eyes wird verordert
+        boolean p = true;
+        boolean p4eyes = false;
+        for (Stream<Boolean> perms : permissions) {
+            List<Boolean> pList = perms.toList();
+            // pList.get(0): normal permissions; pList.get(1): 4-eyes permissions 
+            if (pList.isEmpty()) {
+                continue;
+            }
+            if (!pList.get(0)) {
+                p = false; 
+            }
+            if (!p4eyes) {
+                p4eyes = pList.get(1);
+            }
+        }
+        return Arrays.asList(p, p4eyes);
     }
     
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission) throws JocException {

@@ -38,7 +38,7 @@ public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginH
             JsonValidator.validateFailFast(body, LoginHistoryFilter.class);
             LoginHistoryFilter loginHistoryFilter = Globals.objectMapper.readValue(body, LoginHistoryFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAuditLog().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

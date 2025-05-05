@@ -23,8 +23,7 @@ public class FolderResourceImpl extends AReadFolder implements IFolderResource {
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             in.setPath(normalizeFolder(in.getPath()));
-            boolean permission = getJocPermissions(accessToken).getInventory().getView();
-            JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
+            JOCDefaultResponse response = checkPermissions(accessToken, in, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 ResponseFolder folder = readFolder(in, IMPL_PATH);
                 folder.setDeploymentDescriptors(null);
@@ -47,8 +46,7 @@ public class FolderResourceImpl extends AReadFolder implements IFolderResource {
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             in.setPath(normalizeFolder(in.getPath()));
-            boolean permission = getJocPermissions(accessToken).getInventory().getView();
-            JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
+            JOCDefaultResponse response = checkPermissions(accessToken, in, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 ResponseFolder folder = readFolder(in, TRASH_IMPL_PATH);
                 folder.setDeploymentDescriptors(null);

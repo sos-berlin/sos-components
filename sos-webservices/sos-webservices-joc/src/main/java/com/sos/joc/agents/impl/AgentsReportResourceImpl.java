@@ -54,9 +54,9 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getControllerDefaultPermissions(accessToken).getAgents().getView();
+                    permitted = getBasicControllerDefaultPermissions(accessToken).getAgents().getView();
                 } else {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
                             availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
@@ -65,8 +65,7 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getAgents().getView() || getJocPermissions(accessToken)
-                        .getAdministration().getControllers().getView();
+                permitted = getBasicControllerPermissions(controllerId, accessToken).getAgents().getView();
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);

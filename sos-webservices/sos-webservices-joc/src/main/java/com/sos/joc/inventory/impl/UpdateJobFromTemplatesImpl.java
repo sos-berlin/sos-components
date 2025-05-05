@@ -46,7 +46,7 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
             JsonValidator.validateFailFast(inBytes, JobPropagateFilter.class);
             JobPropagateFilter in = Globals.objectMapper.readValue(inBytes, JobPropagateFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
             }

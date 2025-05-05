@@ -30,7 +30,7 @@ public class RemoveFromChangeImpl extends ARemoveFromChange implements IRemoveFr
             JsonValidator.validate(filter, RemoveFromChangeRequest.class);
             RemoveFromChangeRequest removeFilter = Globals.objectMapper.readValue(filter, RemoveFromChangeRequest.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).getInventory().getManage());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = removeFromChange(removeFilter, API_CALL);
             }

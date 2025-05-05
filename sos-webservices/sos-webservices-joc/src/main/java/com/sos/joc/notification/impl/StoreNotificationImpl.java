@@ -31,7 +31,7 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
             initLogging(API_CALL, storeNotificationFilter, xAccessToken);
             JsonValidator.validate(storeNotificationFilter, StoreNotificationFilter.class);
             StoreConfiguration in = Globals.objectMapper.readValue(storeNotificationFilter, StoreConfiguration.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).getNotification().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getNotification().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

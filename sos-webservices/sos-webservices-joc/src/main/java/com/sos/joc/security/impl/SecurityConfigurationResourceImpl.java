@@ -38,7 +38,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL_READ, null, accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -115,7 +116,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     }
                 }
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
