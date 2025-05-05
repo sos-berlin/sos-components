@@ -2,6 +2,7 @@ package com.sos.joc.classes;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,8 @@ import org.slf4j.MarkerFactory;
 
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -25,6 +28,8 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Err420;
 import com.sos.joc.model.common.Errs;
 import com.sos.joc.model.common.Ok;
+import com.sos.joc.model.security.foureyes.FourEyesRequest;
+import com.sos.joc.model.security.foureyes.RequestBody;
 
 public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
@@ -333,9 +338,15 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         }
         return new JOCDefaultResponse(responseBuilder.build());
     }
-
+    
     public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity) {
         return responseStatus403(entity, MediaType.APPLICATION_JSON);
+    }
+    
+    public static JOCDefaultResponse responseStatus433(byte[] entity) {
+        Response.ResponseBuilder responseBuilder = Response.status(433).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(setNoCaching());
+        responseBuilder.entity(entity);
+        return new JOCDefaultResponse(responseBuilder.build());
     }
 
     public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, String apiCall) {
@@ -379,6 +390,25 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         entity.setMessage(message);
         entity.setApiCall(apiCall);
         return entity;
+    }
+    
+    public static byte[] getError433Schema(String message, JocAuditLog jocAuditLog) {
+        FourEyesRequest entity = new FourEyesRequest();
+        entity.setAccountName(jocAuditLog.getUser());
+        entity.setRequestUrl(jocAuditLog.getRequest());
+        try {
+            entity.setRequestBody(Globals.objectMapper.readValue(jocAuditLog.getParams(), RequestBody.class));
+        } catch (Exception e) {
+            throw new JocException(e);
+        }
+        entity.setDeliveryDate(Date.from(Instant.now()));
+        entity.setTitle(null);
+        entity.setMessage(message);
+        try {
+            return Globals.objectMapper.writeValueAsBytes(entity);
+        } catch (Exception e) {
+            throw new JocException(e);
+        }
     }
 
     public static String getErrorMessage(JocException e) {

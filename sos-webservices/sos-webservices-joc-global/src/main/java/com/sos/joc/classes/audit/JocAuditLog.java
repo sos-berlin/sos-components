@@ -59,6 +59,20 @@ public class JocAuditLog {
         return params;
     }
     
+    public String getUser() {
+        return user;
+    }
+
+    
+    public String getRequest() {
+        return request;
+    }
+
+    
+    public String getParams() {
+        return params;
+    }
+    
     public void logAuditMessage(AuditParams audit) {
         logAuditMessage(audit, 0L);
     }

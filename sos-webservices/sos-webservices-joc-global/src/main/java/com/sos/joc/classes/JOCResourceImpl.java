@@ -288,11 +288,11 @@ public class JOCResourceImpl {
     }
     
     public JOCDefaultResponse fourEyesResponse() {
-        return accessDeniedResponse("4-eyes principle: Operation needs approval process.");
+        return fourEyesResponse("4-eyes principle: Operation needs approval process.");
     }
     
     public JOCDefaultResponse fourEyesResponse(String message) {
-        return accessDeniedResponse(message);
+        return JOCDefaultResponse.responseStatus433(JOCDefaultResponse.getError433Schema(message, jocAuditLog));
     }
 
     public JOCDefaultResponse accessDeniedResponse(String message) {
