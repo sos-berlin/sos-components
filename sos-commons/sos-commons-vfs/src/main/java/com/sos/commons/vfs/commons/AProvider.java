@@ -350,12 +350,12 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     public void logIfHostnameVerificationDisabled(SSLArguments args) {
-        if (!args.getVerifyCertificateHostname().isTrue()) {
-            String name = args.getVerifyCertificateHostname().getName();
-            Boolean val = args.getVerifyCertificateHostname().getValue();
+        if (!args.getUntrustedSSLVerifyCertificateHostname().isTrue()) {
+            String name = args.getUntrustedSSLVerifyCertificateHostname().getName();
+            Boolean val = args.getUntrustedSSLVerifyCertificateHostname().getValue();
             // e.g. YADE uses DisableCertificateHostnameVerification
-            if (args.getVerifyCertificateHostnameOppositeName() != null) {
-                name = args.getVerifyCertificateHostnameOppositeName();
+            if (args.getUntrustedSSLVerifyCertificateHostnameOppositeName() != null) {
+                name = args.getUntrustedSSLVerifyCertificateHostnameOppositeName();
                 val = !val;
             }
             logger.info("*********************** Security warning *********************************************************************");

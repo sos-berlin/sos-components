@@ -29,8 +29,8 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEProviderDelegatorFactory {
 
-    private static final String SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME = "DisableCertificateHostnameVerification";
-    private static final String SSL_ACCEPT_UNTRUSTED_CERTIFICATE = "AcceptUntrustedCertificate";
+    private static final String UNTRUSTER_SSL = "UntrustedSSL";
+    private static final String UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME = "DisableCertificateHostnameVerification";
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
     public static YADESourceProviderDelegator createSourceDelegator(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs)
@@ -71,8 +71,8 @@ public class YADEProviderDelegatorFactory {
             case FTPS:
                 FTPSProviderArguments fa = (FTPSProviderArguments) providerArgs;
                 if (fa.getSSL() != null) {
-                    fa.getSSL().setVerifyCertificateHostnameOppositeName(SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
-                    fa.getSSL().setAcceptUntrustedCertificateNameAlias(SSL_ACCEPT_UNTRUSTED_CERTIFICATE);
+                    fa.getSSL().setUntrustedSSLVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
+                    fa.getSSL().setUntrustedSSLNameAlias(UNTRUSTER_SSL);
                 }
                 p = new FTPProvider(logger, fa);
                 args.getParallelism().setValue(1);
@@ -84,8 +84,8 @@ public class YADEProviderDelegatorFactory {
             case HTTPS:
                 HTTPProviderArguments ha = (HTTPProviderArguments) providerArgs;
                 if (ha.getSSL() != null) {
-                    ha.getSSL().setVerifyCertificateHostnameOppositeName(SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
-                    ha.getSSL().setAcceptUntrustedCertificateNameAlias(SSL_ACCEPT_UNTRUSTED_CERTIFICATE);
+                    ha.getSSL().setUntrustedSSLVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
+                    ha.getSSL().setUntrustedSSLNameAlias(UNTRUSTER_SSL);
                 }
                 p = new HTTPProvider(logger, ha);
                 if (isTarget) {
@@ -103,8 +103,8 @@ public class YADEProviderDelegatorFactory {
             case WEBDAVS:
                 WebDAVProviderArguments wa = (WebDAVProviderArguments) providerArgs;
                 if (wa.getSSL() != null) {
-                    wa.getSSL().setVerifyCertificateHostnameOppositeName(SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
-                    wa.getSSL().setAcceptUntrustedCertificateNameAlias(SSL_ACCEPT_UNTRUSTED_CERTIFICATE);
+                    wa.getSSL().setUntrustedSSLVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
+                    wa.getSSL().setUntrustedSSLNameAlias(UNTRUSTER_SSL);
                 }
                 p = new WebDAVProvider(logger, wa);
                 if (isTarget) {

@@ -36,10 +36,8 @@ public class SSHProviderArguments extends AProviderArguments {
     private SOSArgument<List<SSHAuthMethod>> preferredAuthentications = new SOSArgument<>("preferred_authentications", false);
     private SOSArgument<List<SSHAuthMethod>> requiredAuthentications = new SOSArgument<>("required_authentications", false);
 
-    // Socket connect timeout in seconds based on socket.connect
-    /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
-    private SOSArgument<String> connectTimeout = new SOSArgument<>("connect_timeout", false, "0s");
     // Socket timeout SO_TIMEOUT in seconds based on socket.setSoTimeout
+    // - Read Timeout Maximum time to wait for a response after the connection is established.
     /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
     private SOSArgument<String> socketTimeout = new SOSArgument<>("socket_timeout", false, "0s");
 
@@ -115,14 +113,6 @@ public class SSHProviderArguments extends AProviderArguments {
         return requiredAuthentications;
     }
 
-    public SOSArgument<String> getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    public int getConnectTimeoutAsMillis() {
-        return (int) SOSArgumentHelper.asMillis(connectTimeout);
-    }
-
     public SOSArgument<String> getSocketTimeout() {
         return socketTimeout;
     }
@@ -136,7 +126,7 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     public int getServerAliveIntervalAsSeconds() {
-        return (int) SOSArgumentHelper.asSeconds(authFile, 0L);
+        return (int) SOSArgumentHelper.asSeconds(serverAliveInterval, 0L);
     }
 
     public SOSArgument<Integer> getServerAliveCountMax() {

@@ -1,7 +1,6 @@
 package com.sos.yade.engine.providers;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Ignore;
@@ -98,11 +97,11 @@ public class FTPYADEEngineTest {
 
         if (isFTPS) {
             Path keyStore = Path.of(System.getProperty("java.home")).resolve("lib/security/cacerts");
-            ((FTPSProviderArguments) args).getSSL().getAcceptUntrustedCertificate().setValue(true);
-            ((FTPSProviderArguments) args).getSSL().getVerifyCertificateHostname().setValue(false);
-            ((FTPSProviderArguments) args).getSSL().getJavaKeyStore().getKeyStoreFile().setValue(keyStore);
-            ((FTPSProviderArguments) args).getSSL().getJavaKeyStore().getKeyStorePassword().setValue("changeit");
-            ((FTPSProviderArguments) args).getSSL().getProtocols().setValue(Arrays.asList("TLSv1.2"));
+            ((FTPSProviderArguments) args).getSSL().getUntrustedSSL().setValue(true);
+            ((FTPSProviderArguments) args).getSSL().getUntrustedSSLVerifyCertificateHostname().setValue(false);
+            ((FTPSProviderArguments) args).getSSL().getTrustedSSL().getKeyStoreFile().setValue(keyStore);
+            ((FTPSProviderArguments) args).getSSL().getTrustedSSL().getKeyStorePassword().setValue("changeit");
+            ((FTPSProviderArguments) args).getSSL().getEnabledProtocols().setValue("TLSv1.2");
         }
 
         return args;

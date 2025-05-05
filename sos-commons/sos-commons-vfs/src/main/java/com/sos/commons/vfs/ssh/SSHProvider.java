@@ -73,7 +73,8 @@ public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
             String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
             return toPathStyle(n);
         }
-        return SOSPathUtils.toAbsoluteUnixPath(path);
+        // do not use an absolute NIO path as this will add the Windows letter such as C:/ when YADE is running in a Windows environment.
+        return toPathStyle(Path.of(path).normalize().toString());
     }
 
     public SSHServerInfo getServerInfo() {

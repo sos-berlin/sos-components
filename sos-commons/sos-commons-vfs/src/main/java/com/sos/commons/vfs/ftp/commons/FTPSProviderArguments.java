@@ -2,6 +2,7 @@ package com.sos.commons.vfs.ftp.commons;
 
 import org.apache.commons.net.ftp.FTPSClient;
 
+import com.sos.commons.util.SOSSSLContextFactory;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
@@ -11,7 +12,7 @@ public class FTPSProviderArguments extends FTPProviderArguments {
 
     private SSLArguments ssl;
 
-    private SOSArgument<FTPSSecurityMode> securityMode = new SOSArgument<>("ftps_client_security", false, FTPSSecurityMode.EXPLICIT);
+    private SOSArgument<FTPSSecurityMode> securityMode = new SOSArgument<>("security_mode", false, FTPSSecurityMode.EXPLICIT);
 
     public FTPSProviderArguments() {
         super(null);// use super dummy,no-op constructor
@@ -41,7 +42,13 @@ public class FTPSProviderArguments extends FTPProviderArguments {
     /** Overrides {@link AProviderArguments#getAccessInfo() */
     @Override
     public String getAccessInfo() throws ProviderInitializationException {
-        String ftpsInfo = String.join(",", getSSL().getProtocols().getValue()) + " " + getSecurityMode().getValue().name().toLowerCase();
+        StringBuilder ftpsInfo = new StringBuilder();
+        ftpsInfo.append(SOSSSLContextFactory.DEFAULT_PROTOCOL);
+        String[] sslEnabledPrtocols = SOSSSLContextFactory.getFilteredEnabledProtocols(getSSL());
+        if (sslEnabledPrtocols.length > 0) {
+            ftpsInfo.append("(").append(String.join(", ", sslEnabledPrtocols)).append(")");
+        }
+        ftpsInfo.append(" ").append(getSecurityMode().getValue().name().toLowerCase());
         return String.format("%s %s", super.getAccessInfo(), ftpsInfo);
     }
 

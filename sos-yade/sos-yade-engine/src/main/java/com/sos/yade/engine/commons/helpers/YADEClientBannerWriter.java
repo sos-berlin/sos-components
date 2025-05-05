@@ -99,7 +99,7 @@ public class YADEClientBannerWriter {
             if (size > 0) {
                 // TODO e.g. detect if cumulative file...
                 if (size == 1 && l.get(0).startsWith(formatState(getDefaultState(args)))) {
-
+                    summaryLineFilesSummary = "(" + formatState(TransferEntryState.SELECTED) + ")";
                 } else {
                     summaryLineFilesSummary = "(" + String.join(",", l) + ")";
                 }

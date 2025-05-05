@@ -7,6 +7,7 @@ import java.util.List;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
@@ -48,6 +49,10 @@ public abstract class AProviderArguments extends ASOSArguments {
     private SOSArgument<Integer> port = new SOSArgument<>("port", false);
     private SOSArgument<String> user = new SOSArgument<>("user", false);
     private SOSArgument<String> password = new SOSArgument<>("password", false, DisplayMode.MASKED);
+    // Socket connect timeout in seconds based on socket.connect
+    // - Maximum time to wait while establishing a connection.
+    /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
+    private SOSArgument<String> connectTimeout = new SOSArgument<>("connect_timeout", false, "0");
 
     private SOSArgument<List<Path>> configurationFiles = new SOSArgument<>("configuration_files", false);
 
@@ -89,6 +94,14 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public SOSArgument<String> getPassword() {
         return password;
+    }
+
+    public SOSArgument<String> getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public int getConnectTimeoutAsMillis() {
+        return (int) SOSArgumentHelper.asMillis(connectTimeout);
     }
 
     public SOSArgument<List<Path>> getConfigurationFiles() {

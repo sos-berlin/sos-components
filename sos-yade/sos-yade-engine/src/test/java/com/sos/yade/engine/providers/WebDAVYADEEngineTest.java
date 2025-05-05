@@ -109,8 +109,8 @@ public class WebDAVYADEEngineTest {
         args.getPort().setValue(PORT);
         if (isHTTPS) {
             Path keyStore = Path.of(System.getProperty("java.home")).resolve("lib/security/cacerts");
-            args.getSSL().getJavaKeyStore().getKeyStoreFile().setValue(keyStore);
-            args.getSSL().getJavaKeyStore().getKeyStorePassword().setValue("changeit");
+            args.getSSL().getTrustedSSL().getKeyStoreFile().setValue(keyStore);
+            args.getSSL().getTrustedSSL().getKeyStorePassword().setValue("changeit");
         }
         args.applyDefaultIfNull();
         return args;

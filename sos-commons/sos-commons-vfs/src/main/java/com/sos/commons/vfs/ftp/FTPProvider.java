@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -91,7 +92,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return SOSPathUtils.toAbsoluteUnixPath(path);
+        // do not use an absolute NIO path as this will add the Windows letter such as C:/ when YADE is running in a Windows environment.
+        return toPathStyle(Path.of(path).normalize().toString());
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -588,7 +590,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         // System.setProperty("jdk.tls.client.enableSessionTicketExtension", "false");
         FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
         FTPSClient client = null;
-        if (args.getSSL().getJavaKeyStore().isEnabled()) {
+        if (args.getSSL().getTrustedSSL().isEnabled()) {
             // tmp
             // args.getSSL().getProtocols().setValue(List.of("TLSv1.2"));
             // if (!args.getSSL().getJavaKeyStore().isEnabled()) {
@@ -597,12 +599,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             client = new FTPSClient(args.isSecurityModeImplicit(), SOSSSLContextFactory.create(getLogger(), args.getSSL()));
         } else {
             client = new FTPSClient(args.isSecurityModeImplicit());
-            // client.setTrustManager(TrustManagerUtils.getAcceptAllTrustManager());
-        }
-
-        if (!args.getSSL().getVerifyCertificateHostname().isTrue()) {
-            client.setHostnameVerifier(null);
-            logIfHostnameVerificationDisabled(args.getSSL());
+            if (!args.getSSL().getUntrustedSSLVerifyCertificateHostname().isTrue()) {
+                client.setHostnameVerifier(null);
+                logIfHostnameVerificationDisabled(args.getSSL());
+            }
         }
 
         if (getProxyProvider() != null) {
@@ -763,7 +763,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     }
 
     private Duration getKeepAliveTimeout() {
-        return Duration.ofSeconds(getArguments().getServerAliveInterval().getValue());
+        return Duration.ofSeconds(getArguments().getKeepAliveTimeoutAsSeconds());
     }
 
     private void setProtocolCommandListener(FTPClient client) {

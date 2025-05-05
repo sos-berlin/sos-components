@@ -1,9 +1,5 @@
 package com.sos.commons.util.arguments.impl;
 
-import java.util.Arrays;
-import java.util.List;
-
-import com.sos.commons.util.SOSSSLContextFactory;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 
@@ -12,117 +8,111 @@ public class SSLArguments extends ASOSArguments {
     private static String ARG_NAME_TRUSTSTORE_DISPLAY_NAME = "TrustStore";
     private static String ARG_NAME_KEYSTORE_DISPLAY_NAME = "KeyStore";
 
-    private JavaKeyStoreArguments javaKeyStore;
+    private JavaKeyStoreArguments trustedSSL;
 
-    // e.g - TLSv1.3,TLSv1.2
-    // SOSSSLContextFactory uses always the SOSSSLContextFactory.DEFAULT_PROTOCOL for initialization
-    private SOSArgument<List<String>> protocols = new SOSArgument<>("protocols", false, Arrays.asList(SOSSSLContextFactory.DEFAULT_PROTOCOL));
-    private SOSArgument<Boolean> verifyCertificateHostname = new SOSArgument<>("verify_certificate_hostname", false, Boolean.valueOf(true));
-    private SOSArgument<Boolean> acceptUntrustedCertificate = new SOSArgument<>("accept_untrusted_certificate", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> untrustedSSL = new SOSArgument<>("untrusted_ssl", false, Boolean.valueOf(false));
+    private SOSArgument<Boolean> untrustedSSLVerifyCertificateHostname = new SOSArgument<>("verify_certificate_hostname", false, Boolean.valueOf(
+            true));
 
+    private String untrustedSSLNameAlias;
     // e.g. YADE uses DisableCertificateHostnameVerification
-    private String verifyCertificateHostnameOppositeName;
-    private String acceptUntrustedCertificateNameAlias;
+    private String untrustedSSLVerifyCertificateHostnameOppositeName;
 
-    public JavaKeyStoreArguments getJavaKeyStore() {
-        if (javaKeyStore == null) {
-            javaKeyStore = new JavaKeyStoreArguments();
-            javaKeyStore.applyDefaultIfNullQuietly();
+    // SOSSSLContextFactory uses always the SOSSSLContextFactory.DEFAULT_PROTOCOL for initialization
+    // e.g - TLSv1.3,TLSv1.2
+    private SOSArgument<String> enabledProtocols = new SOSArgument<>("enabled_protocols", false);
+
+    public JavaKeyStoreArguments getTrustedSSL() {
+        if (trustedSSL == null) {
+            trustedSSL = new JavaKeyStoreArguments();
+            trustedSSL.applyDefaultIfNullQuietly();
         }
-        return javaKeyStore;
+        return trustedSSL;
     }
 
     public String getTrustStoreInfo() {
-        if (javaKeyStore == null || javaKeyStore.getTrustStoreFile().isEmpty()) {
+        if (trustedSSL == null || trustedSSL.getTrustStoreFile().isEmpty()) {
             return null;
         }
-        return ARG_NAME_TRUSTSTORE_DISPLAY_NAME + "=" + javaKeyStore.getTrustStoreType().getValue();
+        return ARG_NAME_TRUSTSTORE_DISPLAY_NAME + "=" + trustedSSL.getTrustStoreType().getValue();
     }
 
-    public String getKeyStoreTrustStoreFullInfo() {
-        if (javaKeyStore == null || !javaKeyStore.isEnabled()) {
+    public String getTrustedSSLFullInfo() {
+        if (trustedSSL == null || !trustedSSL.isEnabled()) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        if (!javaKeyStore.getKeyStoreFile().isEmpty()) {
+        if (!trustedSSL.getKeyStoreFile().isEmpty()) {
             sb.append("[");
             sb.append(ARG_NAME_KEYSTORE_DISPLAY_NAME);
-            sb.append(" ").append(javaKeyStore.getKeyStoreType().getValue());
-            sb.append(" ").append(javaKeyStore.getKeyStoreFile().getValue());
+            sb.append(" ").append(trustedSSL.getKeyStoreType().getValue());
+            sb.append(" ").append(trustedSSL.getKeyStoreFile().getValue());
             sb.append("]");
         }
-        if (!javaKeyStore.getTrustStoreFile().isEmpty()) {
+        if (!trustedSSL.getTrustStoreFile().isEmpty()) {
             sb.append("[");
             sb.append(ARG_NAME_TRUSTSTORE_DISPLAY_NAME);
-            sb.append(" ").append(javaKeyStore.getTrustStoreFile().getValue());
-            sb.append(" ").append(javaKeyStore.getTrustStoreFile().getValue());
+            sb.append(" ").append(trustedSSL.getTrustStoreFile().getValue());
+            sb.append(" ").append(trustedSSL.getTrustStoreFile().getValue());
             sb.append("]");
         }
         return sb.toString();
     }
 
-    public void setJavaKeyStore(JavaKeyStoreArguments val) {
-        javaKeyStore = val;
+    public void setTrustedSSL(JavaKeyStoreArguments val) {
+        trustedSSL = val;
     }
 
-    public SOSArgument<Boolean> getVerifyCertificateHostname() {
-        return verifyCertificateHostname;
+    public SOSArgument<Boolean> getUntrustedSSL() {
+        return untrustedSSL;
     }
 
-    public SOSArgument<Boolean> getAcceptUntrustedCertificate() {
-        return acceptUntrustedCertificate;
+    public SOSArgument<Boolean> getUntrustedSSLVerifyCertificateHostname() {
+        return untrustedSSLVerifyCertificateHostname;
     }
 
-    public String getAcceptUntrustedCertificateName() {
-        return acceptUntrustedCertificateNameAlias == null ? acceptUntrustedCertificate.getName() : acceptUntrustedCertificateNameAlias;
+    public SOSArgument<String> getEnabledProtocols() {
+        return enabledProtocols;
     }
 
-    public SOSArgument<List<String>> getProtocols() {
-        return protocols;
+    public void setUntrustedSSLNameAlias(String val) {
+        untrustedSSLNameAlias = val;
     }
 
-    public String getVerifyCertificateHostnameOppositeName() {
-        return verifyCertificateHostnameOppositeName;
+    public String getUntrustedSSLVerifyCertificateHostnameOppositeName() {
+        return untrustedSSLVerifyCertificateHostnameOppositeName;
     }
 
-    public void setVerifyCertificateHostnameOppositeName(String val) {
-        verifyCertificateHostnameOppositeName = val;
-    }
-
-    public String getAcceptUntrustedCertificateNameAlias() {
-        return acceptUntrustedCertificateNameAlias;
-    }
-
-    public void setAcceptUntrustedCertificateNameAlias(String val) {
-        acceptUntrustedCertificateNameAlias = val;
+    public void setUntrustedSSLVerifyCertificateHostnameOppositeName(String val) {
+        untrustedSSLVerifyCertificateHostnameOppositeName = val;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(SSLArguments.class.getSimpleName()).append("]");
-        if (acceptUntrustedCertificateNameAlias == null) {
-            sb.append(acceptUntrustedCertificate.getName());
+        if (untrustedSSLNameAlias == null) {
+            sb.append(untrustedSSL.getName());
         } else {
-            sb.append(acceptUntrustedCertificateNameAlias);
+            sb.append(untrustedSSLNameAlias);
         }
-        sb.append("=").append(acceptUntrustedCertificate.getValue());
+        sb.append("=").append(untrustedSSL.getValue());
         sb.append(", ");
-        if (verifyCertificateHostnameOppositeName == null) {
-            sb.append(verifyCertificateHostname.getName());
-            sb.append("=").append(verifyCertificateHostname.getValue());
+        if (untrustedSSLVerifyCertificateHostnameOppositeName == null) {
+            sb.append(untrustedSSLVerifyCertificateHostname.getName());
+            sb.append("=").append(untrustedSSLVerifyCertificateHostname.getValue());
         } else {
-            sb.append(verifyCertificateHostnameOppositeName);
-            sb.append("=").append(!verifyCertificateHostname.getValue());
+            sb.append(untrustedSSLVerifyCertificateHostnameOppositeName);
+            sb.append("=").append(!untrustedSSLVerifyCertificateHostname.getValue());
         }
-        if (protocols.getValue() != null) {
+        if (enabledProtocols.getValue() != null) {
             sb.append(", ");
-            sb.append(protocols.getName());
-            sb.append("=").append(String.join(", ", protocols.getValue()));
+            sb.append(enabledProtocols.getName());
+            sb.append("=").append(String.join(", ", enabledProtocols.getValue()));
         }
         sb.append(", ");
         sb.append("[").append(JavaKeyStoreArguments.class.getSimpleName()).append("]");
-        sb.append(javaKeyStore);
+        sb.append(trustedSSL);
         return sb.toString();
     }
 }

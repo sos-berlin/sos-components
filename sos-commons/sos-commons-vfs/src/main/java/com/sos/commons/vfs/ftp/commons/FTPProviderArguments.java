@@ -1,7 +1,6 @@
 package com.sos.commons.vfs.ftp.commons;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.vfs.commons.AProviderArguments;
@@ -23,12 +22,8 @@ public class FTPProviderArguments extends AProviderArguments {
 
     protected static final int DEFAULT_PORT = 21;
 
-    // seconds
-    /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
-    private SOSArgument<String> connectTimeout = new SOSArgument<>("ConnectTimeout", false, "0s");
     // KeepAlive - timeout interval in seconds
-    // ?TODO server_alive_count_max
-    private SOSArgument<Long> serverAliveInterval = new SOSArgument<>("ServerAliveInterval", false, Long.valueOf(180));// YADE1 default
+    private SOSArgument<String> keepAliveTimeout = new SOSArgument<>("KeepAliveTimeout", false, "180");// YADE1 default
 
     private SOSArgument<Boolean> protocolCommandListener = new SOSArgument<>("ProtocolCommandListener", false, Boolean.valueOf(false));
 
@@ -68,16 +63,12 @@ public class FTPProviderArguments extends AProviderArguments {
         return passiveMode.isTrue();
     }
 
-    public SOSArgument<Long> getServerAliveInterval() {
-        return serverAliveInterval;
+    public SOSArgument<String> getKeepAliveTimeout() {
+        return keepAliveTimeout;
     }
 
-    public SOSArgument<String> getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    public int getConnectTimeoutAsMillis() {
-        return (int) SOSArgumentHelper.asMillis(connectTimeout);
+    public int getKeepAliveTimeoutAsSeconds() {
+        return (int) SOSArgumentHelper.asSeconds(keepAliveTimeout, 0L);
     }
 
     public SOSArgument<Boolean> getProtocolCommandListener() {
