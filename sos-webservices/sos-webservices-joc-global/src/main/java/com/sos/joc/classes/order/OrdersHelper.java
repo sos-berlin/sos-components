@@ -1477,7 +1477,9 @@ public class OrdersHelper {
         if (planId != null) {
             pId = getPlanId(planId);
         }
-        return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, pId, true, forceJobAdmission, blockPosition, startPos, endPoss);
+        // re - due to compiler error
+        //return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, pId, true, forceJobAdmission, blockPosition, startPos, endPoss);
+        return JFreshOrder.of(orderId, workflowPath, args, pId, scheduledFor, true, forceJobAdmission, startPos, endPoss);
     }
     
     private static PlanKey getDailyPlanPlanKey(String orderId) {

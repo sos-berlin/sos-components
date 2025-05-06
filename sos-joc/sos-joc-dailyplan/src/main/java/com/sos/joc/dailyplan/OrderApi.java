@@ -160,8 +160,10 @@ public class OrderApi {
 
         }
         boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
-        return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, scheduledFor, OrdersHelper.getDailyPlanPlanId(planSchemaId, order
-                .getId()), false, forceJobAdmission, blockPosition, startPosition, endPositions);
+        // re
+        //return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, scheduledFor, OrdersHelper.getDailyPlanPlanId(planSchemaId, order
+       //         .getId()), false, forceJobAdmission, blockPosition, startPosition, endPositions);
+        return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, OrdersHelper.getDailyPlanPlanId(planSchemaId, order.getId()), scheduledFor, false, forceJobAdmission, startPosition, endPositions);
     }
 
     public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String callerForLog, String controllerId, String dailyPlanDate,

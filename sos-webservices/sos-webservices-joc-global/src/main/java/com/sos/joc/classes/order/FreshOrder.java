@@ -101,16 +101,20 @@ public class FreshOrder {
         if (branchPath == null) {
             branchPath = JBranchPath.empty();
         }
-        return JFreshOrder.of(newOrderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(), false, forceJobAdmission, branchPath, startPosition,
-                endPositions);
+        //re - due to compiler error
+        //return JFreshOrder.of(newOrderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(), false, forceJobAdmission, branchPath, startPosition,
+        //        endPositions);
+        return JFreshOrder.of(newOrderId, workflowPath, args, getDailyPlanPlanId(), scheduledFor, false, forceJobAdmission, startPosition, endPositions);
     }
 
     public JFreshOrder getJFreshOrderWithDeleteOrderWhenTerminated() {
         if (branchPath == null) {
             branchPath = JBranchPath.empty();
         }
-        return JFreshOrder.of(newOrderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(), true, forceJobAdmission, branchPath, startPosition,
-                endPositions);
+        // re - due to compiler error
+        //return JFreshOrder.of(newOrderId, workflowPath, args, scheduledFor, getDailyPlanPlanId(), true, forceJobAdmission, branchPath, startPosition,
+        //        endPositions);
+        return JFreshOrder.of(newOrderId, workflowPath, args, getDailyPlanPlanId(), scheduledFor, false, forceJobAdmission, startPosition, endPositions);
     }
 
     private static OrderId generateNewFromOldOrderId(OrderId orderId, ZoneId zoneId) {
