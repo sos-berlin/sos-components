@@ -1,5 +1,6 @@
 package com.sos.joc.dailyplan;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -160,10 +161,10 @@ public class OrderApi {
 
         }
         boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
-        // re
-        //return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, scheduledFor, OrdersHelper.getDailyPlanPlanId(planSchemaId, order
-       //         .getId()), false, forceJobAdmission, blockPosition, startPosition, endPositions);
-        return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, OrdersHelper.getDailyPlanPlanId(planSchemaId, order.getId()), scheduledFor, false, forceJobAdmission, startPosition, endPositions);
+        // JS-2108 default priority
+        BigDecimal priority = new BigDecimal(0);
+        return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, scheduledFor, priority, OrdersHelper.getDailyPlanPlanId(
+                planSchemaId, order.getId()), false, forceJobAdmission, blockPosition, startPosition, endPositions);
     }
 
     public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String callerForLog, String controllerId, String dailyPlanDate,
