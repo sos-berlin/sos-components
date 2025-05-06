@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +31,7 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
@@ -533,7 +537,25 @@ public class SMBJProvider extends SMBProvider {
                 smbPath = smbPath.substring(shareIndex + shareName.length() + 1); // +1 for pathSeparator
             }
         }
-        return smbPath;
+        return sanitizeFilename(smbPath);
+    }
+
+    // TODO optimize ...
+    private static String sanitizeFilename(String input) {
+        Path path = Paths.get(input);
+        String fileName = path.getFileName().toString();
+
+        String illegalChars = "[<>:\"/\\\\|?*\\p{Cntrl}]";
+        if (!fileName.matches(".*" + illegalChars + ".*")) {
+            return input;
+        }
+
+        String sanitized = fileName.replaceAll(illegalChars, "_");
+        sanitized = Normalizer.normalize(sanitized, Normalizer.Form.NFC);
+
+        Path parent = path.getParent();
+        String finalPath = (parent != null) ? parent.resolve(sanitized).toString() : sanitized;
+        return SOSPathUtils.toWindowsStyle(finalPath);
     }
 
     private ProviderFile createProviderFile(String fullPath, FileAllInformation info) {
