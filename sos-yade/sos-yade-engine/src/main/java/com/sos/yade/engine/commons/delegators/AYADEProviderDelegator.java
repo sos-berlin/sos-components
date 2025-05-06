@@ -97,6 +97,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
         // JumpHost Note: the java nio methods such as 'normalize' or 'absolutePath' cannot be used,
         // because the paths are created based on the current system and not on the JumpHost system on which the JumpHost client is installed */
+        // TODO - normalizePath were updated - re-check if if (!isJumpHost()) { is needed
         if (!isJumpHost()) {
             dir = provider.normalizePath(path);
         }

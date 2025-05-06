@@ -17,6 +17,7 @@ import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.xml.SOSXML;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.arguments.YADESourcePollingArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
@@ -342,10 +343,10 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "LocalPreProcessing":
-                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePreProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "LocalPostProcessing":
-                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "ProcessingCommandDelimiter":
                     argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
@@ -371,10 +372,10 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FTPPreProcessing":
-                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePreProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "FTPPostProcessing":
-                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "ProcessingCommandDelimiter":
                     argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
@@ -397,10 +398,10 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "FTPPreProcessing":
-                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePreProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "FTPPostProcessing":
-                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "ProcessingCommandDelimiter":
                     argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
@@ -463,10 +464,10 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "SFTPPreProcessing":
-                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePreProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "SFTPPostProcessing":
-                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "ProcessingCommandDelimiter":
                     argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
@@ -492,10 +493,10 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "SMBPreProcessing":
-                    parseFragmentRefPreProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePreProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "SMBPostProcessing":
-                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "ProcessingCommandDelimiter":
                     argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
@@ -518,7 +519,7 @@ public class YADEXMLProfileHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "WebDAVPostProcessing":
-                    parseFragmentRefPostProcessing(argsLoader, n, sourceTargetArgs);
+                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 case "Rename":
                     parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
@@ -909,8 +910,7 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseFragmentRefPreProcessing(YADEXMLArgumentsLoader argsLoader, Node preProcessing,
-            YADESourceTargetArguments sourceTargetArgs) throws Exception {
+    public static void parsePreProcessing(YADEXMLArgumentsLoader argsLoader, YADEProviderCommandArguments args, Node preProcessing) throws Exception {
         NodeList nl = preProcessing.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -919,20 +919,20 @@ public class YADEXMLProfileHelper {
                 case "CommandBeforeFile":
                     String attrVal = SOSXML.getAttributeValue(n, "enable_for_skipped_transfer");
                     if (!SOSString.isEmpty(attrVal)) {
-                        sourceTargetArgs.getCommands().getCommandsBeforeFileEnableForSkipped().setValue(Boolean.parseBoolean(attrVal));
+                        args.getCommandsBeforeFileEnableForSkipped().setValue(Boolean.parseBoolean(attrVal));
                     }
-                    sourceTargetArgs.getCommands().setCommandsBeforeFile(argsLoader.getValue(n));
+                    args.setCommandsBeforeFile(argsLoader.getValue(n));
                     break;
                 case "CommandBeforeOperation":
-                    sourceTargetArgs.getCommands().setCommandsBeforeOperation(argsLoader.getValue(n));
+                    args.setCommandsBeforeOperation(argsLoader.getValue(n));
                     break;
                 }
             }
         }
     }
 
-    private static void parseFragmentRefPostProcessing(YADEXMLArgumentsLoader argsLoader, Node postProcessing,
-            YADESourceTargetArguments sourceTargetArgs) throws Exception {
+    public static void parsePostProcessing(YADEXMLArgumentsLoader argsLoader, YADEProviderCommandArguments args, Node postProcessing)
+            throws Exception {
         NodeList nl = postProcessing.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -941,21 +941,21 @@ public class YADEXMLProfileHelper {
                 case "CommandAfterFile":
                     String attrVal = SOSXML.getAttributeValue(n, "disable_for_skipped_transfer");
                     if (!SOSString.isEmpty(attrVal)) {
-                        sourceTargetArgs.getCommands().getCommandsAfterFileDisableForSkipped().setValue(Boolean.parseBoolean(attrVal));
+                        args.getCommandsAfterFileDisableForSkipped().setValue(Boolean.parseBoolean(attrVal));
                     }
-                    sourceTargetArgs.getCommands().setCommandsAfterFile(argsLoader.getValue(n));
+                    args.setCommandsAfterFile(argsLoader.getValue(n));
                     break;
                 case "CommandAfterOperationOnSuccess":
-                    sourceTargetArgs.getCommands().setCommandsAfterOperationOnSuccess(argsLoader.getValue(n));
+                    args.setCommandsAfterOperationOnSuccess(argsLoader.getValue(n));
                     break;
                 case "CommandAfterOperationOnError":
-                    sourceTargetArgs.getCommands().setCommandsAfterOperationOnError(argsLoader.getValue(n));
+                    args.setCommandsAfterOperationOnError(argsLoader.getValue(n));
                     break;
                 case "CommandAfterOperationFinal":
-                    sourceTargetArgs.getCommands().setCommandsAfterOperationFinal(argsLoader.getValue(n));
+                    args.setCommandsAfterOperationFinal(argsLoader.getValue(n));
                     break;
                 case "CommandBeforeRename":
-                    sourceTargetArgs.getCommands().setCommandsBeforeRename(argsLoader.getValue(n));
+                    args.setCommandsBeforeRename(argsLoader.getValue(n));
                     break;
                 }
             }
