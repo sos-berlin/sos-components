@@ -321,6 +321,10 @@ public class YADEClientBannerWriter {
                 sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollTimeout()));
             }
         }
+        if (sourceArgs.isCheckSteadyStateEnabled()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getCheckSteadyStateInterval()));
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getCheckSteadyCount()));
+        }
 
         // Replacement
         if (sourceArgs.isReplacementEnabled()) {
