@@ -120,7 +120,7 @@ public class YADECopyMoveOperationsHandler {
                             cancel.set(true);
                             throw new RuntimeException(e);
                         }
-                        setFailedIfNonTransactional(sourceFile);
+                        setFailedIfNonTransactional(logger, sourceFile, e);
                         nonTransactionalErrorCounter.incrementAndGet();
                         lastNonTransactionalError.set(e);
                     }
@@ -158,7 +158,7 @@ public class YADECopyMoveOperationsHandler {
                     cancel.set(true);
                     throw e;
                 }
-                setFailedIfNonTransactional(f);
+                setFailedIfNonTransactional(logger, f, e);
                 nonTransactionalErrorCounter++;
                 lastNonTransactionalError = e;
             }
@@ -306,7 +306,7 @@ public class YADECopyMoveOperationsHandler {
         // }
     }
 
-    private static void setFailedIfNonTransactional(YADEProviderFile f) {
+    private static void setFailedIfNonTransactional(ISOSLogger logger, YADEProviderFile f, Throwable ex) {
         YADEProviderFile y = (YADEProviderFile) f;
         if (y.getTarget() == null) {
             y.setSubState(TransferEntryState.FAILED);

@@ -16,6 +16,9 @@ public class SOSPathUtils {
     public static final String PATH_SEPARATOR_UNIX = "/";
     public static final String PATH_SEPARATOR_WINDOWS = "\\";
 
+    public static final String FILENAME_ILLEGAL_CHARS_REGEX_UNIX = "[/]";
+    public static final String FILENAME_ILLEGAL_CHARS_REGEX_WINDOWS = "[<>:\"/\\\\|?*]";
+
     /** ----------------- */
 
     /** 1) URI */

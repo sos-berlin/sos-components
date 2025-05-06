@@ -52,7 +52,7 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("exists", path, "path");
 
         try {
-            return WebDAVProviderUtils.exists(getClient(), new URI(normalizePathEncoded(path)));
+            return WebDAVProviderUtils.exists(getClient(), new URI(normalizePath(path)));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -73,7 +73,7 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("createDirectoriesIfNotExists", path, "path");
 
         try {
-            URI uri = new URI(normalizePathEncoded(path));
+            URI uri = new URI(normalizePath(path));
             if (WebDAVProviderUtils.directoryExists(this, uri)) {
                 return false; // already exists
             }
@@ -102,8 +102,8 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("renameFileIfSourceExists", source, "source");
         validateArgument("renameFileIfSourceExists", target, "target");
         try {
-            URI sourceURI = new URI(normalizePathEncoded(source));
-            URI targetURI = new URI(normalizePathEncoded(target));
+            URI sourceURI = new URI(normalizePath(source));
+            URI targetURI = new URI(normalizePath(target));
 
             HttpRequest.Builder builder = getClient().createRequestBuilder(sourceURI);
             builder.header("Destination", targetURI.toString());
@@ -127,7 +127,7 @@ public class WebDAVProvider extends HTTPProvider {
         validatePrerequisites("getFileIfExists", path, "path");
 
         try {
-            return createProviderFile(WebDAVProviderUtils.getResource(this, new URI(normalizePathEncoded(path))));
+            return createProviderFile(WebDAVProviderUtils.getResource(this, new URI(normalizePath(path))));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -156,7 +156,7 @@ public class WebDAVProvider extends HTTPProvider {
         if (resource.getSize() < 0) {
             return null;
         }
-        return createProviderFile(SOSHTTPUtils.decode(resource.getURI()), resource.getSize(), resource.getLastModifiedInMillis());
+        return createProviderFile(resource.getURI(), resource.getSize(), resource.getLastModifiedInMillis());
     }
 
 }

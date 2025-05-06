@@ -1,5 +1,7 @@
 package com.sos.yade.engine.commons;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -188,11 +190,18 @@ public class YADEDirectoryMapper {
                 int colon = sourceDirectory.indexOf(":"); // Windows/URI(HTTP) paths
                 if (colon > -1) {
                     if (SOSPathUtils.isAbsoluteURIPath(sourceDirectory)) {// http(s)://server/1.txt TODO - use provider information instead
-                        // server/1.txt TODO trim server?
+                        // server:port/1.txt
                         result = sourceDirectory.replaceFirst("^[a-zA-Z]+://", "");
+                        int slash = result.indexOf("/");
+                        if (slash > -1) {
+                            // trim server/port
+                            result = result.substring(slash + 1);
+                        }
                         if (logger.isDebugEnabled()) {
                             logger.debug("    [getSourceDirectoryForMapping][3.1][result]%s", result);
                         }
+                        //remove %20(empty) etc
+                        result = URLDecoder.decode(result, StandardCharsets.UTF_8);
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
                         // Temp

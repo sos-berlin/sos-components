@@ -97,16 +97,16 @@ public class WebDAVProviderUtils {
             }
             if (resource.isDirectory()) {
                 if (selection.getConfig().isRecursive()) {
-                    if (selection.checkDirectory(resource.getURI().toString())) {
-                        subDirectories.add(resource.getURI().toString());
+                    if (selection.checkDirectory(resource.getURI())) {
+                        subDirectories.add(resource.getURI());
                     }
                 }
             } else {
-                if (selection.checkFileName(SOSPathUtils.getName(resource.getURI().toString())) && selection.isValidFileType(resource)) {
+                if (selection.checkFileName(SOSPathUtils.getName(resource.getURI())) && selection.isValidFileType(resource)) {
                     ProviderFile file = provider.createProviderFile(resource);
                     if (file == null) {
                         if (provider.getLogger().isDebugEnabled()) {
-                            provider.getLogger().debug(provider.getPathOperationPrefix(resource.getURI().toString()) + "[skip]" + resource);
+                            provider.getLogger().debug(provider.getPathOperationPrefix(resource.getURI()) + "[skip]" + resource);
                         }
                     } else {
                         if (selection.checkProviderFileMinMaxSize(file)) {
@@ -191,7 +191,8 @@ public class WebDAVProviderUtils {
                 continue;
             }
 
-            URI resourceURI = URI.create(SOSHTTPUtils.normalizePathEncoded(uri, resourceHref));
+            // without encoding
+            URI resourceURI = URI.create(SOSHTTPUtils.normalizePath(uri, resourceHref));
             boolean resourceIsDirectory = extractIsDirectory(response);
             if (!responseOfURISelfChecked && !depth.equals("0") && resourceIsDirectory) {
                 if (SOSHTTPUtils.ensureDirectoryURI(uri).equals(SOSHTTPUtils.ensureDirectoryURI(resourceURI))) {
@@ -208,7 +209,8 @@ public class WebDAVProviderUtils {
     private static String extractHref(Element response) {
         NodeList nodes = response.getElementsByTagNameNS("*", "href");
         if (nodes.getLength() > 0) {
-            return SOSHTTPUtils.decode(nodes.item(0).getTextContent());
+            // original - without extra encoding - getTextContent returns escaped e.g. XML &amp; converted as & etc
+            return nodes.item(0).getTextContent();
         }
         return null;
     }

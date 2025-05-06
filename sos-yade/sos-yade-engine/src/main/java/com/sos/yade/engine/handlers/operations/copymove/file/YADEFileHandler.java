@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
 
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -114,7 +115,6 @@ public class YADEFileHandler {
             boolean isCumulateTargetWritten = false;
 
             Instant startTime = Instant.now();
-
             if (targetDelegator.isHTTP()) {
                 // TODO compressing, cumulative, messageDigest, skipSourceInputStreamToPosition ...
                 l: while (attempts < config.getMaxRetries()) {
@@ -235,6 +235,13 @@ public class YADEFileHandler {
 
         /** finalFileName: the final name of the file after transfer (compressed/replaced name...) */
         String finalFileName = fileNameInfo.getName();
+        if (sourceDelegator.isHTTP()) {
+            // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
+            if (!targetDelegator.isHTTP()) {
+                finalFileName = SOSHTTPUtils.toValidFileSystemName(finalFileName, targetDelegator.isWindows());
+            }
+        }
+
         /** transferFileName: file name during transfer - same path as finalFileName but can contains the atomic prefix/suffix */
         String transferFileName = finalFileName;
 
@@ -243,9 +250,23 @@ public class YADEFileHandler {
         }
         String targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(logger, config, targetDelegator, sourceFile, fileNameInfo);
         String transferFileFullPath = targetDelegator.appendPath(targetDirectory, transferFileName);
+
+        String httpOriginalParentFullPath = null;
+        if (targetDelegator.isHTTP()) {
+            // without base URI because of possible double encoding etc
+            httpOriginalParentFullPath = targetDelegator.getParentPath(transferFileFullPath);
+            // adds baseURI (+ encoding)
+            transferFileFullPath = targetDelegator.getProvider().normalizePath(transferFileFullPath);
+        }
         YADETargetProviderFile target = new YADETargetProviderFile(targetDelegator, transferFileFullPath);
         /** the final path of the file after transfer */
-        target.setFinalFullPath(targetDelegator, finalFileName);
+
+        if (targetDelegator.isHTTP()) {
+            String httpFinalPath = targetDelegator.appendPath(httpOriginalParentFullPath, finalFileName);
+            target.setFinalFullPath(targetDelegator.getProvider().normalizePath(httpFinalPath));
+        } else {
+            target.setFinalFullPath(targetDelegator, finalFileName);
+        }
         target.setIndex(sourceFile.getIndex());
         target.setNameReplaced(fileNameInfo.isReplaced());
         sourceFile.setTarget(target);
@@ -277,12 +298,6 @@ public class YADEFileHandler {
     private YADEFileNameInfo getTargetFinalFilePathInfo() {
         // 1) Source name
         String fileName = sourceFile.getName();
-
-        if (sourceDelegator.isHTTP()) {
-            // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
-            fileName = SOSHTTPUtils.toValidFileSystemName(fileName);
-        }
-
         // 2) Compressed name
         if (config.getTarget().getCompress() != null) {
             fileName = fileName + config.getTarget().getCompress().getFileExtension();
@@ -336,8 +351,8 @@ public class YADEFileHandler {
             return;
         }
         // if (e instanceof YADEEngineTargetOutputStreamException) {
-        String msg = String.format("[%s][%s][%s][%s]", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
-                targetDelegator.getLabel(), targetFile.getFullPath());
+        String msg = String.format("[tryCleanupIfFailed][%s][%s][%s][%s]", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile
+                .getState()), targetDelegator.getLabel(), targetFile.getFullPath());
         try {
             if (!targetDelegator.getProvider().isConnected()) {
                 if (targetDelegator.getProvider() instanceof FTPProvider) {
@@ -371,9 +386,13 @@ public class YADEFileHandler {
 
     private void throwException(String fileTransferLogPrefix, YADETargetProviderFile targetFile, Throwable e, String throwExceptionAdd)
             throws YADEEngineTransferFileException {
+        String target = targetFile == null ? "null" : targetFile.getFullPath();
         String msg = String.format("[%s][%s=%s][%s][%s]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
-                targetDelegator.getLabel(), targetFile.getFullPath(), throwExceptionAdd + e);
+                targetDelegator.getLabel(), target, throwExceptionAdd + e);
         logger.error(msg);
+        if (logger.isTraceEnabled()) {
+            logger.trace("  [StackTrace]" + SOSClassUtil.getStackTrace(e));
+        }
         throw new YADEEngineTransferFileException(msg, e);
     }
 

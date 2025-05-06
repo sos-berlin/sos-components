@@ -90,7 +90,7 @@ public class YADEClientBannerWriter {
                 if (needsDetails) {
                     detailsLines.append(formatState(state) + ":").append(NEW_LINE);
                     for (YADEProviderFile file : fileList) {
-                        detailsLines.append(formatFile(sourceDelegator, targetDelegator, file));
+                        detailsLines.append(formatFile(sourceDelegator, targetDelegator, file)).append(NEW_LINE);
                     }
                 }
 
@@ -473,6 +473,7 @@ public class YADEClientBannerWriter {
             if (file.getSubState() != null) {
                 sb.append("(").append(formatState(file.getSubState())).append(")");
             }
+            sb.append(", ");
         }
         sb.append(file.getFinalFullPath());
         return sb.toString();

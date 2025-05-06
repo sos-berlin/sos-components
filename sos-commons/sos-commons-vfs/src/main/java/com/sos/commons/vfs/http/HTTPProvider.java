@@ -71,7 +71,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return SOSHTTPUtils.normalizePathEncoded(getArguments().getBaseURI(), path);
+        return SOSHTTPUtils.normalizePath(getArguments().getBaseURI(), path);
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -126,7 +126,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
         URI uri = null;
         try {
-            uri = new URI(normalizePathEncoded(path));
+            uri = new URI(normalizePath(path));
 
             ExecuteResult<Void> result = client.executeHEADOrGET(uri);
             int code = result.response().statusCode();
@@ -139,14 +139,14 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             return true;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(uri == null ? path : uri.toString()), e);
         }
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        if (exists(path)) {
+        if (exists(SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(path))) {
             return false;
         }
         throw new ProviderException(getPathOperationPrefix(path) + "[does not exist]a directory cannot be created via " + getArguments().getProtocol()
@@ -159,7 +159,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("deleteIfExists", path, "path");
 
         try {
-            URI uri = new URI(normalizePathEncoded(path));
+            URI uri = new URI(normalizePath(path));
 
             ExecuteResult<Void> result = client.executeDELETE(uri);
             int code = result.response().statusCode();
@@ -208,8 +208,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             deleteIfExists(target);
 
-            URI sourceURI = new URI(normalizePathEncoded(source));
-            URI targetURI = new URI(normalizePathEncoded(target));
+            URI sourceURI = new URI(normalizePath(source));
+            URI targetURI = new URI(normalizePath(target));
 
             ExecuteResult<Void> result;
             int code;
@@ -250,7 +250,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getFileIfExists", path, "path");
 
         try {
-            URI uri = new URI(normalizePathEncoded(path));
+            URI uri = new URI(normalizePath(path));
 
             ExecuteResult<Void> result = client.executeGET(uri);
             int code = result.response().statusCode();
@@ -277,8 +277,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
-        try (InputStream is = client.getHTTPInputStream(new URI(normalizePathEncoded(path))); Reader r = new InputStreamReader(is,
-                StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(r)) {
+        try (InputStream is = client.getHTTPInputStream(new URI(normalizePath(path))); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
             return content.toString();
         } catch (SOSNoSuchFileException e) {
@@ -312,7 +312,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getInputStream", path, "path");
 
         try {
-            return client.getHTTPInputStream(new URI(normalizePathEncoded(path)));
+            return client.getHTTPInputStream(new URI(normalizePath(path)));
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -327,7 +327,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
-            return new HTTPOutputStream(client, new URI(normalizePathEncoded(path)), false);
+            return new HTTPOutputStream(client, new URI(normalizePath(path)), false);
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -341,8 +341,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("upload", path, "path");
         validateArgument("upload", source, "InputStream source");
 
+        URI uri = null;
         try {
-            URI uri = new URI(normalizePathEncoded(path));
+            uri = new URI(normalizePath(path));
             ExecuteResult<Void> result = client.executePUT(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!SOSHTTPUtils.isSuccessful(code)) {
@@ -356,7 +357,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             }
             return getFileSize(uri, result.response());
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(uri == null ? path : uri.toString()), e);
         }
     }
 
@@ -372,7 +373,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         validatePrerequisites("writeFile", path, "path");
 
         try {
-            URI uri = new URI(normalizePathEncoded(path));
+            URI uri = new URI(normalizePath(path));
 
             ExecuteResult<Void> result = client.executePUT(uri, content, isWebDAV);
             int code = result.response().statusCode();
@@ -391,10 +392,6 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     public void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
         validatePrerequisites(method);
         validateArgument(method, argValue, msg);
-    }
-
-    public String normalizePathEncoded(String path) {
-        return SOSHTTPUtils.normalizePathEncoded(getArguments().getBaseURI(), path);
     }
 
     public boolean isSecureConnectionEnabled() {

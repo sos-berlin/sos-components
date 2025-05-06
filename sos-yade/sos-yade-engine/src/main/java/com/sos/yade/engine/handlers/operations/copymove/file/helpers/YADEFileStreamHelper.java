@@ -43,7 +43,7 @@ public class YADEFileStreamHelper {
 
     /** Target: OutputStream */
     public static OutputStream getTargetOutputStream(YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
-            YADEProviderFile targetFile, boolean useBufferedStreams) throws ProviderException {
+            YADETargetProviderFile targetFile, boolean useBufferedStreams) throws ProviderException {
         OutputStream os = targetDelegator.getProvider().getOutputStream(targetFile.getFullPath(), config.getTarget().isAppendEnabled());
         if (useBufferedStreams) {
             return new BufferedOutputStream(os, config.getBufferSize());
@@ -51,7 +51,7 @@ public class YADEFileStreamHelper {
         return os;
     }
 
-    public static void finishTargetOutputStream(ISOSLogger logger, YADEProviderFile targetFile, OutputStream targetStream, boolean isCompress) {
+    public static void finishTargetOutputStream(ISOSLogger logger, YADETargetProviderFile targetFile, OutputStream targetStream, boolean isCompress) {
         try {
             if (isCompress) {
                 ((GZIPOutputStream) targetStream).finish();

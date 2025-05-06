@@ -1,6 +1,7 @@
 package com.sos.yade.engine.commons.delegators;
 
 import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
@@ -17,12 +18,14 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final String directoryWithTrailingPathSeparator;
 
     private final boolean isHTTP;
+    private final boolean isWindows;
 
     public AYADEProviderDelegator(AProvider<?> provider, YADESourceTargetArguments args) {
         this.provider = provider;
         this.args = args;
         this.label = args.getLabel().getValue();
         this.isHTTP = isHTTPProvider();
+        this.isWindows = isWindowsProvider();
         this.directory = getDirectoryPath(args.getDirectory().getValue());
         this.directoryWithTrailingPathSeparator = getDirectoryPathWithTrailingPathSeparator(directory);
     }
@@ -73,6 +76,10 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return isHTTP;
     }
 
+    public boolean isWindows() {
+        return isWindows;
+    }
+
     public boolean isJumpHost() {
         return YADEJumpHostArguments.LABEL.equals(label);
     }
@@ -89,6 +96,16 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         }
     }
 
+    // TODO optimize for SFTP + isHTTPProvider/isWindowsProvider
+    private boolean isWindowsProvider() {
+        switch (getArgs().getProvider().getProtocol().getValue()) {
+        case LOCAL:
+            return SOSShell.IS_WINDOWS;
+        default:
+            return false;
+        }
+    }
+
     private String getDirectoryPath(String path) {
         if (SOSString.isEmpty(path)) {
             return null;
@@ -98,8 +115,9 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         // JumpHost Note: the java nio methods such as 'normalize' or 'absolutePath' cannot be used,
         // because the paths are created based on the current system and not on the JumpHost system on which the JumpHost client is installed */
         // TODO - normalizePath were updated - re-check if if (!isJumpHost()) { is needed
-        if (!isJumpHost()) {
-            dir = provider.normalizePath(path);
+        if (!isJumpHost() && !isHTTP) {
+            // HTTP/WebDAV returns an absolutely encoded path with the base URI, e.g.: http://<server>:<port>/<dir>
+            dir = provider.normalizePath(dir);
         }
 
         return SOSPathUtils.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtils.getUnixStyleDirectoryWithoutTrailingSeparator(

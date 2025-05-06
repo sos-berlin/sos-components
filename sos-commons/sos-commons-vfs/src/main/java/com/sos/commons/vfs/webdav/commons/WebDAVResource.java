@@ -4,19 +4,19 @@ import java.net.URI;
 
 public class WebDAVResource {
 
-    private final URI uri;
+    private final String uri;
     private final boolean isDirectory;
     private final long size;
     private final long lastModifiedInMillis;
 
     public WebDAVResource(URI uri, boolean isDirectory, long size, long lastModifiedInMillis) {
-        this.uri = uri;
+        this.uri = uri.toString();
         this.isDirectory = isDirectory;
         this.size = size;
         this.lastModifiedInMillis = lastModifiedInMillis;
     }
 
-    public URI getURI() {
+    public String getURI() {
         return uri;
     }
 

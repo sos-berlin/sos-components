@@ -78,6 +78,10 @@ public class YADEProviderFile extends ProviderFile {
         finalFullPath = delegator.appendPath(parentFullPath, newName);
     }
 
+    public void setFinalFullPath(String path) {
+        finalFullPath = path;
+    }
+
     public String getFinalFullPath() {
         return finalFullPath == null ? getFullPath() : finalFullPath;
     }

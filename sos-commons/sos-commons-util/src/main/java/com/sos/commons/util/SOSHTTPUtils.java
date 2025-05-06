@@ -37,6 +37,9 @@ public class SOSHTTPUtils {
             DateTimeFormatter.ofPattern("EEE MMM d HH:mm:ss yyyy", Locale.US).withZone(ZoneOffset.UTC));
 
     public static String getAccessInfo(URI baseURI, String username) {
+        if (baseURI == null) {
+            return null;
+        }
         String uri = SOSString.trimEnd(baseURI.toString(), "/");
         if (SOSString.isEmpty(username)) {
             return uri;
@@ -47,34 +50,24 @@ public class SOSHTTPUtils {
         }
     }
 
-    /** Normalizes the given path by resolving it against the base URI and ensuring proper encoding.
-     * <p>
-     * This method ensures that both relative and absolute paths are handled correctly.<br/>
-     * It avoids using {@code new URI(String)} directly, as it would throw an exception<br/>
-     * if the input contains invalid characters (e.g., spaces, special symbols).<br/>
-     * Similarly, {@code new URL(String)} is not used for relative paths since it requires an absolute URL.
-     * </p>
-     * Note: Without a trailing slash, relative resolution may produce incorrect results.<br/>
-     * - see toBaseURI(String)
-     *
-     * @param path The input path, which can be relative or absolute.
-     * @return A properly normalized and encoded URL string. */
-    public static String normalizePathEncoded(URI baseURI, String path) {
-        try {
-            // new URI(null, path, null) not throw an exception if the path contains invalid characters
-            return baseURI.resolve(new URI(null, path, null)).normalize().toString();
-        } catch (URISyntaxException e) {
-            return normalizePath(baseURI, path);
-        }
-    }
-
-    /** Normalizes the given path by resolving it against the base URI - without encoding
+    /** Normalizes the given path by resolving it against the base URI - without encoding/fallback with encoding
      * 
      * @param baseURI
      * @param path
      * @return */
     public static String normalizePath(URI baseURI, String path) {
-        return baseURI.resolve(path).normalize().toString();
+        try {
+            if (baseURI == null) {
+                if (SOSPathUtils.isAbsoluteURIPath(path)) {
+                    // new URI() instead of URI.create (due to possible double encoding)
+                    return new URI(path).normalize().toString();
+                }
+                return SOSPathUtils.toUnixStyle(path);
+            }
+            return baseURI.resolve(path).normalize().toString();
+        } catch (IllegalArgumentException | NullPointerException | URISyntaxException e) {
+            return normalizePathEncoded(baseURI, path);
+        }
     }
 
     public static URI getParentURI(final URI uri) {
@@ -94,29 +87,26 @@ public class SOSHTTPUtils {
     }
 
     public static URI ensureDirectoryURI(URI uri) {
-        if (uri.getPath() != null && !uri.getPath().endsWith("/")) {
+        if (uri != null && uri.getPath() != null && !uri.getPath().endsWith("/")) {
             return URI.create(uri.toString() + "/");
         }
         return uri;
     }
 
-    public static String encode(String input) {
-        // URLEncoder.encode converts blank to +
-        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
-    }
-
-    public static String decode(URI uri) {
-        return decode(uri.toString());
-    }
-
-    public static String decode(String uri) {
-        // e.g. converts %20 to blank etc
-        return URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8);
-    }
-
-    public static String toValidFileSystemName(String input) {
-        // e.g. converts %20 to blank etc
-        return URLDecoder.decode(input, StandardCharsets.UTF_8).replaceAll("[<>:\"/\\|?*]", "_");
+    public static String toValidFileSystemName(String input, boolean isWindows) {
+        if (input == null) {
+            return null;
+        }
+        // URLDecoder.decode e.g. converts %20 to blank etc
+        // return URLDecoder.decode(input, StandardCharsets.UTF_8).replaceAll("[<>:\"/\\|?*]", "_");
+        String illegalChars = isWindows ? SOSPathUtils.FILENAME_ILLEGAL_CHARS_REGEX_WINDOWS : SOSPathUtils.FILENAME_ILLEGAL_CHARS_REGEX_UNIX;
+        try {
+            // Replace invalid percent sequences (e.g., "%&" -> "%25&") for URLDecoder.decode
+            input = input.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+            return URLDecoder.decode(input, StandardCharsets.UTF_8).replaceAll(illegalChars, "_");
+        } catch (IllegalArgumentException e) {
+            return input.replaceAll(illegalChars, "_");
+        }
     }
 
     public static long httpDateToMillis(String httpDate) {
@@ -332,6 +322,51 @@ public class SOSHTTPUtils {
         case 999 -> "[?]Non-standard";
         default -> null;
         };
+    }
+
+    /** Normalizes the given path by resolving it against the base URI and ensuring proper encoding.
+     * <p>
+     * This method ensures that both relative and absolute paths are handled correctly.<br/>
+     * It avoids using {@code new URI(String)} directly, as it would throw an exception<br/>
+     * if the input contains invalid characters (e.g., spaces, special symbols).<br/>
+     * Similarly, {@code new URL(String)} is not used for relative paths since it requires an absolute URL.
+     * </p>
+     * Note: Without a trailing slash, relative resolution may produce incorrect results.<br/>
+     * - see toBaseURI(String)
+     *
+     * @param path The input path, which can be relative or absolute.
+     * @return A properly normalized and encoded URL string. */
+    private static String normalizePathEncoded(URI baseURI, String path) {
+        try {
+            // new URI(null, path, null) not throw an exception if the path contains invalid characters
+            if (baseURI == null) {
+                return new URI(null, path, null).normalize().toString();
+            }
+            return baseURI.resolve(new URI(null, path, null)).normalize().toString();
+        } catch (URISyntaxException e) {
+            if (baseURI == null) {
+                return SOSPathUtils.toUnixStyle(path);
+            }
+            return SOSPathUtils.appendPath(baseURI.toString(), path, "/");
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private static String encode(String input) {
+        if (input == null) {
+            return null;
+        }
+        // URLEncoder.encode converts blank to +
+        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    @SuppressWarnings("unused")
+    private static String decode(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        // e.g. converts %20 to blank etc
+        return URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8);
     }
 
 }
