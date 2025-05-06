@@ -38,7 +38,7 @@ public class SSHYADEEngineTest {
             /** Source */
             argsLoader.getSourceArgs().setProvider(LocalYADEEngineTest.createProviderArgs());
             argsLoader.getSourceArgs().getDirectory().setValue(LocalYADEEngineTest.SOURCE_DIR);
-            argsLoader.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            argsLoader.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.TRUE);
             argsLoader.getSourceArgs().getRecursive().setValue(true);
 
             /** Target */

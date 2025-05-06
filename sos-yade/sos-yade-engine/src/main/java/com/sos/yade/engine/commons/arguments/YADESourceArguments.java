@@ -12,7 +12,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     public final static String LABEL = "Source";
 
     public static enum ZeroByteTransfer {
-        YES, NO, STRICT, RELAXED;
+        TRUE, FALSE, STRICT, RELAXED;
     }
 
     /** - Polling Arguments ------- */
@@ -44,7 +44,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     private SOSArgument<Integer> checkSteadyCount = new SOSArgument<>("CheckSteadyStateCount", false, Integer.valueOf(10));
 
     /** - Zero Byte files handling ------- */
-    private SOSArgument<ZeroByteTransfer> zeroByteTransfer = new SOSArgument<>("TransferZeroByteFiles", false, ZeroByteTransfer.YES);
+    private SOSArgument<ZeroByteTransfer> zeroByteTransfer = new SOSArgument<>("TransferZeroByteFiles", false, ZeroByteTransfer.TRUE);
 
     /** - Remove files ------- */
     // YADE1 - not needed? due to MOVE operation

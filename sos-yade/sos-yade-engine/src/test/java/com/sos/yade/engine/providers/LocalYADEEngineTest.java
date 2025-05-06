@@ -34,7 +34,7 @@ public class LocalYADEEngineTest {
             /** Source */
             argsLoader.getSourceArgs().setProvider(createProviderArgs());
             argsLoader.getSourceArgs().getDirectory().setValue(SOURCE_DIR);
-            argsLoader.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.YES);
+            argsLoader.getSourceArgs().getZeroByteTransfer().setValue(ZeroByteTransfer.TRUE);
             argsLoader.getSourceArgs().getRecursive().setValue(true);
 
             /** Source Check Steady State */

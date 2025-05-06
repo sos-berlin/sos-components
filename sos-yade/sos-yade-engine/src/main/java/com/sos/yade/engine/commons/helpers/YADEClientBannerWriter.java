@@ -282,7 +282,7 @@ public class YADEClientBannerWriter {
         if (sourceArgs.getErrorOnNoFilesFound().isDirty()) {
             sb.append(", ").append(YADEArgumentsHelper.toStringAsOppositeValue(sourceArgs.getErrorOnNoFilesFound()));
         }
-        if (!ZeroByteTransfer.YES.equals(sourceArgs.getZeroByteTransfer().getValue())) {
+        if (!ZeroByteTransfer.TRUE.equals(sourceArgs.getZeroByteTransfer().getValue())) {
             sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getZeroByteTransfer()));
         }
         if (!sourceArgs.getMaxFiles().isEmpty()) {

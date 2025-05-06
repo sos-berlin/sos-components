@@ -244,9 +244,9 @@ public class YADESourceFilesSelector {
         YADESourceArguments args = sourceDelegator.getArgs();
         List<ProviderFile> zeroSizeFiles;
         switch (args.getZeroByteTransfer().getValue()) {
-        case YES:      // transfer zero byte files
+        case TRUE:      // transfer zero byte files
             break;
-        case NO:       // transfer only if least one is not a zero byte file
+        case FALSE:       // transfer only if least one is not a zero byte file
             zeroSizeFiles = getZeroSizeFiles(sourceFiles);
             if (zeroSizeFiles.size() == sourceFiles.size()) {
                 i = 1;
