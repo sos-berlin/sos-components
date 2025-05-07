@@ -31,8 +31,8 @@ public class DBItemJocApprovalRequests extends DBItem {
     @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_JOC_APPROVAL_REQUESTS_SEQUENCE)
     private Long id;
 
-    @Column(name = "[REQUESTER]", nullable = false)
-    private String requester;
+    @Column(name = "[REQUESTOR]", nullable = false)
+    private String requestor;
 
     @Column(name = "[REQUEST]", nullable = false)
     private String request;
@@ -71,12 +71,12 @@ public class DBItemJocApprovalRequests extends DBItem {
         id = val;
     }
 
-    public void setRequester(String val) {
-        requester = val;
+    public void setRequestor(String val) {
+        requestor = val;
     }
 
-    public String getRequester() {
-        return requester;
+    public String getRequestor() {
+        return requestor;
     }
 
     public String getApprover() {
