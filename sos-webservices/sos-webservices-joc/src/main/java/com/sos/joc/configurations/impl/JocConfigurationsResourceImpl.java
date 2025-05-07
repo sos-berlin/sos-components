@@ -251,7 +251,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_PROFILES, null, accessToken);
+            body = initLogging(API_CALL_PROFILES, body, accessToken);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
                     .getManage()));

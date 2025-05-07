@@ -37,7 +37,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
     public JOCDefaultResponse postAuthRead(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            body = initLogging(API_CALL_READ, null, accessToken);
+            body = initLogging(API_CALL_READ, body, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
                     .getView());
             if (jocDefaultResponse != null) {
@@ -45,7 +45,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             }
 
             IdentityServiceFilter identityServiceFilter = null;
-            if (body.length > 0) {
+            if (body != null && body.length > 0) {
                 JsonValidator.validate(body, IdentityServiceFilter.class);
                 identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             } else {
