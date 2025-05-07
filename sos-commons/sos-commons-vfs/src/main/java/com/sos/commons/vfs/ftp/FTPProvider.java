@@ -411,7 +411,17 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
         try {
             if (!client.setModificationTime(path, FTPProviderUtils.millisecondsToModificationTimeString(milliseconds))) {
-                throw new ProviderException(String.format("%s[failed]%s", getPathOperationPrefix(path), new FTPProtocolReply(client)));
+                FTPProtocolReply mfmtReply = new FTPProtocolReply(client);
+
+                String featReplyMessage;
+                if (client.features()) {
+                    FTPProtocolReply featuresReply = new FTPProtocolReply(client);
+                    featReplyMessage = String.format("[FEAT]Server supports the following features: %s", featuresReply);
+                } else {
+                    featReplyMessage =
+                            "[FEAT]Server was queried to check support for the MFMT command, but did not respond with any supported features. It is likely that MFMT is not supported.";
+                }
+                throw new ProviderException(String.format("%s[failed][MFMT]%s %s", getPathOperationPrefix(path), mfmtReply, featReplyMessage));
             }
         } catch (ProviderException e) {
             throw e;
@@ -629,8 +639,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     }
 
     private void postLoginOperations() throws Exception {
-        // Keep Alive
-        // client.setControlKeepAliveTimeout(getKeepAliveTimeout());
         features();
 
         postLoginOperationsIfFTPS();
@@ -669,33 +677,41 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         client.sendNoOp();// NOOP command
     }
 
-    // not used, more for documentation purposes
     // see notes: autodetectUTF8Enabled
     private void features() {
         if (autodetectUTF8Enabled) {
-            return;
-        }
-        try {
-            client.features();
-            FTPProtocolReply reply = new FTPProtocolReply(client);
-            if (reply.isSystemStatusReply()) {
-                if (getLogger().isDebugEnabled()) {
-                    for (String feature : client.getReplyStrings()) {
-                        getLogger().debug("%s[feature]%s", getLogPrefix(), feature);
+            if (getLogger().isDebugEnabled()) {
+                try {
+                    if (client.features()) {
+                        getLogger().debug("%s[FEAT][Server supports the following features]%s", getLogPrefix(), new FTPProtocolReply(client));
+                    } else {
+                        getLogger().debug("%s[FEAT]Server did not return any supported features in response to FEAT.", getLogPrefix());
                     }
+                } catch (IOException e) {
+                    getLogger().debug("%s[FEAT][exception]%s", getLogPrefix(), e);
                 }
             }
-            String charsetUTF8 = StandardCharsets.UTF_8.name();
-            if (client.hasFeature("UTF8") || client.hasFeature(charsetUTF8)) {
-                // apiNote: Please note that this has to be set before the connection is established.
-                client.setControlEncoding(charsetUTF8);
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[setControlEncoding]%s", getLogPrefix(), charsetUTF8);
+        } else {
+            // apiNote: Please note that this has to be set before the connection is established.
+            // client.setControlEncoding(charsetUTF8);
+            try {
+                if (client.features()) {
+                    getLogger().debug("%s[setControlEncoding][FEAT][Server supports the following features]%s", getLogPrefix(), new FTPProtocolReply(
+                            client));
+                    String charsetUTF8 = StandardCharsets.UTF_8.name();
+                    if (client.hasFeature("UTF8") || client.hasFeature(charsetUTF8)) {
+                        client.setControlEncoding(charsetUTF8);
+                        if (getLogger().isDebugEnabled()) {
+                            getLogger().debug("%s[setControlEncoding]%s", getLogPrefix(), charsetUTF8);
+                        }
+                    }
+                } else {
+                    getLogger().debug("%s[setControlEncoding][FEAT]Server did not return any supported features in response to FEAT.",
+                            getLogPrefix());
                 }
+            } catch (IOException e) {
+                getLogger().debug("%s[setControlEncoding][FEAT][exception]%s", getLogPrefix(), e);
             }
-
-        } catch (Throwable e) {
-
         }
     }
 
