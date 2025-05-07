@@ -35,7 +35,7 @@ public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResou
 
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, SendMail.class);
             SendMail sendMail = Globals.objectMapper.readValue(filterBytes, SendMail.class);
 

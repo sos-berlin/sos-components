@@ -53,7 +53,7 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
     @Override
     public JOCDefaultResponse postState(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
             String controllerId = workflowFilter.getControllerId();

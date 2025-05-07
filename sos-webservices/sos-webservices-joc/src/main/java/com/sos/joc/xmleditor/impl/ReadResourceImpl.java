@@ -32,9 +32,9 @@ import jakarta.ws.rs.Path;
 public class ReadResourceImpl extends ACommonResourceImpl implements IReadResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ReadConfiguration.class);
             ReadConfiguration in = Globals.objectMapper.readValue(filterBytes, ReadConfiguration.class);
 

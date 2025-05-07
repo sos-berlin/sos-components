@@ -35,7 +35,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_BLOCKLIST_STORE, body, accessToken);
+            body = initLogging(API_CALL_BLOCKLIST_STORE, body, accessToken);
             BlockedAccount blockedAccount = Globals.objectMapper.readValue(body, BlockedAccount.class);
             JsonValidator.validateFailFast(body, BlockedAccount.class);
 
@@ -72,7 +72,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_BLOCKLISTS_DELETE, body, accessToken);
+            body = initLogging(API_CALL_BLOCKLISTS_DELETE, body, accessToken);
             JsonValidator.validate(body, BlockedAccountsDeleteFilter.class);
             BlockedAccountsDeleteFilter blockedAccountsDeleteFilter = Globals.objectMapper.readValue(body, BlockedAccountsDeleteFilter.class);
 
@@ -108,7 +108,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_BLOCKLISTS, body, accessToken);
+            body = initLogging(API_CALL_BLOCKLISTS, body, accessToken);
             JsonValidator.validateFailFast(body, BlockedAccountsFilter.class);
             BlockedAccountsFilter blocklistFilter = Globals.objectMapper.readValue(body, BlockedAccountsFilter.class);
 

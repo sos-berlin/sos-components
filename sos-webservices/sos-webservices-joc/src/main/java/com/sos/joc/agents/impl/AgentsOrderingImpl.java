@@ -35,7 +35,7 @@ public class AgentsOrderingImpl extends JOCResourceImpl implements IAgentsOrderi
         SOSHibernateSession connection = null;
         try {
             String apiCall = forStandaloneAgents ? API_CALL_STANDALONE : API_CALL_CLUSTER;
-            initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
 
             // AgentHelper.throwJocMissingLicenseException();
 

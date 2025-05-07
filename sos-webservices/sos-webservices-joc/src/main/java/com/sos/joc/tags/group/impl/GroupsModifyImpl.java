@@ -1,6 +1,5 @@
 package com.sos.joc.tags.group.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Date;
@@ -30,7 +29,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.tag.group.RequestFilters;
 import com.sos.joc.tags.resource.ITagsModify;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import jakarta.ws.rs.Path;
 
@@ -78,9 +76,8 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
         }
     }
 
-    private RequestFilters initModifyRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException,
-            IOException {
-        initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+    private RequestFilters initModifyRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, RequestFilters.class);
         return Globals.objectMapper.readValue(filterBytes, RequestFilters.class);
     }

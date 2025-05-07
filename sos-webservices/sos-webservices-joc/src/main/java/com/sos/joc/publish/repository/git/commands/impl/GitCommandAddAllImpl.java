@@ -43,7 +43,7 @@ public class GitCommandAddAllImpl extends JOCResourceImpl implements IGitCommand
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** add all started ***" + started);
-            initLogging(API_CALL, commonFilter, xAccessToken);
+            commonFilter = initLogging(API_CALL, commonFilter, xAccessToken);
             JsonValidator.validate(commonFilter, CommonFilter.class);
             CommonFilter filter = Globals.objectMapper.readValue(commonFilter, CommonFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));

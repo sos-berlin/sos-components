@@ -15,9 +15,9 @@ import jakarta.ws.rs.Path;
 public class RenameConfigurationResourceImpl extends ARenameConfiguration implements IRenameConfigurationResource {
 
     @Override
-    public JOCDefaultResponse rename(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse rename(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 

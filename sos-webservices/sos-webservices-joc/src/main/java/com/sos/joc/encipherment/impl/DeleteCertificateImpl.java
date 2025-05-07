@@ -23,7 +23,7 @@ public class DeleteCertificateImpl extends JOCResourceImpl implements IDeleteCer
     public JOCDefaultResponse postDeleteCertificate(String xAccessToken, byte[] deleteCertificateFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, deleteCertificateFilter, xAccessToken);
+            deleteCertificateFilter = initLogging(API_CALL, deleteCertificateFilter, xAccessToken);
             JsonValidator.validateFailFast(deleteCertificateFilter, DeleteCertificateRequestFilter.class);
             DeleteCertificateRequestFilter filter = Globals.objectMapper.readValue(deleteCertificateFilter, DeleteCertificateRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

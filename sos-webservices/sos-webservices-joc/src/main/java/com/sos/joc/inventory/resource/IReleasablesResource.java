@@ -21,13 +21,13 @@ public interface IReleasablesResource {
     @Path(PATH_OLD)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse releasables(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse releasables(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse releasablesTree(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse releasablesTree(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 
 }

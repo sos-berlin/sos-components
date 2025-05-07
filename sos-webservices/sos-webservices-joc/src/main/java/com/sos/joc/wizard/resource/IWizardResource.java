@@ -22,6 +22,6 @@ public interface IWizardResource {
     @Path("job")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postJob(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse postJob(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

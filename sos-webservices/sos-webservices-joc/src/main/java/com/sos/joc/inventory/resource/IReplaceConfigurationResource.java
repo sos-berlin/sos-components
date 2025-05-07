@@ -21,12 +21,12 @@ public interface IReplaceConfigurationResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse replace(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse replace(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(PATH_FOLDER)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse replaceFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse replaceFolder(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

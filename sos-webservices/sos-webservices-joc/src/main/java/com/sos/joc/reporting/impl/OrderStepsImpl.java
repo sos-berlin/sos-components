@@ -124,7 +124,7 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
     private JOCDefaultResponse orderSteps(String accessToken, String acceptEncoding, byte[] filterBytes, String action) {
 
         try {
-            initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken);
 //            JsonValidator.validateFailFast(filterBytes, OrderSteps.class);
 //            OrderSteps in = Globals.objectMapper.readValue(filterBytes, OrderSteps.class);
 //

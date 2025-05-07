@@ -34,10 +34,10 @@ import com.sos.schema.JsonValidator;
 public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasableResource {
 
     @Override
-    public JOCDefaultResponse releasable(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse releasable(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, ReleasableFilter.class, true);
             ReleasableFilter in = Globals.objectMapper.readValue(inBytes, ReleasableFilter.class);
 

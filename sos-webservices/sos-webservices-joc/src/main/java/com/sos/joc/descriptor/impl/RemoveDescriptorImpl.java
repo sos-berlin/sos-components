@@ -24,7 +24,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
     public JOCDefaultResponse remove(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_REMOVE, body, accessToken);
+            body = initLogging(IMPL_PATH_REMOVE, body, accessToken);
             JsonValidator.validate(body, RequestFilters.class, true);
             RequestFilters filters = Globals.objectMapper.readValue(body, RequestFilters.class);;
             com.sos.joc.model.inventory.delete.RequestFilters in = mapTo(filters);
@@ -45,7 +45,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
     public JOCDefaultResponse removeFolder(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_REMOVE_FOLDER, body, accessToken);
+            body = initLogging(IMPL_PATH_REMOVE_FOLDER, body, accessToken);
             JsonValidator.validate(body, RequestFolder.class, true);
             com.sos.joc.model.inventory.delete.RequestFolder in = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.delete.RequestFolder.class);
@@ -67,7 +67,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
     public JOCDefaultResponse deleteFromTrash(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IRemoveDescriptor.IMPL_PATH_TRASH_DELETE, body, accessToken);
+            body = initLogging(IRemoveDescriptor.IMPL_PATH_TRASH_DELETE, body, accessToken);
             JsonValidator.validate(body, RequestFilters.class, true);
             RequestFilters filters = Globals.objectMapper.readValue(body, RequestFilters.class);;
             com.sos.joc.model.inventory.delete.RequestFilters in = mapTo(filters);
@@ -89,7 +89,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
     public JOCDefaultResponse deleteFolderFromTrash(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IRemoveDescriptor.IMPL_PATH_TRASH_DELETE, body, accessToken);
+            body = initLogging(IRemoveDescriptor.IMPL_PATH_TRASH_DELETE, body, accessToken);
             JsonValidator.validate(body, RequestFolder.class, true);
             com.sos.joc.model.inventory.delete.RequestFolder in = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.delete.RequestFolder.class);

@@ -294,17 +294,17 @@ public class SOSAuthHelper {
     }
 
     public static Set<String> getSetOfPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
-        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getFourEyesRole().getValue();
+        String approvalRequestorRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
         Stream<DBItemIamPermissionWithName> stream = listOfPermissions.stream();
-        if (fourEyesRole != null && !fourEyesRole.isEmpty()) {
-            Predicate<DBItemIamPermissionWithName> isNot4EyesRole = i -> !i.getRoleName().equals(fourEyesRole);
-            stream = stream.filter(isNot4EyesRole);
+        if (approvalRequestorRole != null && !approvalRequestorRole.isEmpty()) {
+            Predicate<DBItemIamPermissionWithName> isNotApprovalRequestorRole = i -> !i.getRoleName().equals(approvalRequestorRole);
+            stream = stream.filter(isNotApprovalRequestorRole);
         }
         return stream.map(SOSAuthHelper::getPermission).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toSet());
     }
     
     public static Set<String> getSetOf4EyesRolePermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
-        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getFourEyesRole().getValue();
+        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
         if (fourEyesRole == null || fourEyesRole.isEmpty()) {
             return Collections.emptySet();
         }

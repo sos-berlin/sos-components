@@ -30,7 +30,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
     @Override
     public JOCDefaultResponse postLockerGet(byte[] body) {
         try {
-            initLogging(API_CALL_LOCKER_GET, body);
+            body = initLogging(API_CALL_LOCKER_GET, body);
             JsonValidator.validateFailFast(body, LockerFilter.class);
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
 
@@ -62,7 +62,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
     @Override
     public JOCDefaultResponse postLockerPut(byte[] body) {
         try {
-            initLogging(API_CALL_LOCKER_PUT, body);
+            body = initLogging(API_CALL_LOCKER_PUT, body);
             JsonValidator.validateFailFast(body, Locker.class);
             Locker locker = Globals.objectMapper.readValue(body, Locker.class);
             SOSLocker sosLocker = Globals.jocWebserviceDataContainer.getSOSLocker();
@@ -90,7 +90,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
     public JOCDefaultResponse postLockerRenew(byte[] body) {
         try {
 
-            initLogging(API_CALL_LOCKER_RENEW, body);
+            body = initLogging(API_CALL_LOCKER_RENEW, body);
             JsonValidator.validateFailFast(body, Locker.class);
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().renewContent(lockerFilter.getKey());
@@ -108,7 +108,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
     public JOCDefaultResponse postLockerRemove(byte[] body) {
         try {
 
-            initLogging(API_CALL_LOCKER_REMOVE, body);
+            body = initLogging(API_CALL_LOCKER_REMOVE, body);
             JsonValidator.validateFailFast(body, Locker.class);
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().removeContent(lockerFilter.getKey());

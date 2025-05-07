@@ -22,7 +22,7 @@ public class ReadNotificationImpl extends JOCResourceImpl implements IReadNotifi
     @Override
     public JOCDefaultResponse postReadNotification(String xAccessToken, byte[] readNotificationFilter) {
         try {
-            initLogging(API_CALL, readNotificationFilter, xAccessToken);
+            readNotificationFilter = initLogging(API_CALL, readNotificationFilter, xAccessToken);
             JsonValidator.validateFailFast(readNotificationFilter, ReadNotificationFilter.class);
             ReadConfiguration in = Globals.objectMapper.readValue(readNotificationFilter, ReadConfiguration.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(xAccessToken).getNotification().getView());

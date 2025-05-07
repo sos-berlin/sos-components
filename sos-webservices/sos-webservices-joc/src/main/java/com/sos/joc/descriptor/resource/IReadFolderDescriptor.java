@@ -21,12 +21,12 @@ public interface IReadFolderDescriptor {
     @Path(PATH_READ_FOLDER)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postReadFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse postReadFolder(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
     @POST
     @Path(PATH_TRASH_READ_FOLDER)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postReadTrashFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse postReadTrashFolder(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

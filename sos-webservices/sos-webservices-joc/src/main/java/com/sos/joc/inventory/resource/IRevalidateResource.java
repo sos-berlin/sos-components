@@ -19,5 +19,5 @@ public interface IRevalidateResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse revalidate(@HeaderParam("X-Access-Token") final String xAccessToken, final byte[] body);
+    public JOCDefaultResponse revalidate(@HeaderParam("X-Access-Token") final String xAccessToken, byte[] body);
 }

@@ -47,10 +47,10 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     private List<RequestFilter> deleted = new ArrayList<>();
 
     @Override
-    public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse delete(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
@@ -67,10 +67,10 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     }
     
     @Override
-    public JOCDefaultResponse deleteFolder(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse deleteFolder(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
-            initLogging(IMPL_PATH_FOLDER, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_FOLDER, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));

@@ -1,6 +1,5 @@
 package com.sos.joc.workflow.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -20,7 +19,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflow;
 import com.sos.joc.workflow.resource.IWorkflowModify;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
@@ -107,8 +105,8 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
                 workflow.id(), dbAuditLog));
     }
     
-    private ModifyWorkflow initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
-        initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+    private ModifyWorkflow initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyWorkflow.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflow.class);
     }

@@ -46,7 +46,7 @@ public class WorkflowsSearchImpl extends JOCResourceImpl implements ISearchResou
     @Override
     public JOCDefaultResponse postSearch(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowSearchFilter.class);
             DeployedWorkflowSearchFilter in = Globals.objectMapper.readValue(filterBytes, DeployedWorkflowSearchFilter.class);
             in.setReturnType(RequestSearchReturnType.WORKFLOW);

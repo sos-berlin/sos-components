@@ -39,9 +39,9 @@ import com.sos.schema.JsonValidator;
 public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements IReplaceConfigurationResource {
 
     @Override
-    public JOCDefaultResponse replace(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse replace(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
@@ -59,9 +59,9 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     }
 
     @Override
-    public JOCDefaultResponse replaceFolder(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse replaceFolder(final String accessToken,  byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 

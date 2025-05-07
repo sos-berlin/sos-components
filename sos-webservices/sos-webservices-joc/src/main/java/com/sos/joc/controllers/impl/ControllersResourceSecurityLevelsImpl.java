@@ -69,7 +69,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
         SOSHibernateSession connection = null;
 
         try {
-            initLogging(API_CALL_TAKEOVER, null, accessToken);
+            filterBytes = initLogging(API_CALL_TAKEOVER, null, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             

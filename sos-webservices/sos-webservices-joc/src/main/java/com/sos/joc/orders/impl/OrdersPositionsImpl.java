@@ -25,7 +25,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
     @Override
     public JOCDefaultResponse resumeOrderPositions(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_RESUME, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RESUME, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, ModifyOrders.class);
             ModifyOrders ordersFilter = Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
             String controllerId = ordersFilter.getControllerId();
@@ -55,7 +55,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
     @Override
     public JOCDefaultResponse addOrderPositions(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_ADD, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_ADD, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
             String controllerId = workflowFilter.getControllerId();

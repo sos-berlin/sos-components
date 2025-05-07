@@ -48,7 +48,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
     private JOCDefaultResponse storeOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken);
 
             AgentHelper.throwJocMissingLicenseException();
 

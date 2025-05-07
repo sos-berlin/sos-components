@@ -39,7 +39,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     @Override
     public JOCDefaultResponse postClusterNodeSwitchOver(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
@@ -79,7 +79,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     @Override
     public JOCDefaultResponse postClusterAppointNodes(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
             
             if (!StateImpl.isActive(API_CALL_APPOINT_NODES, null)) {
                 throw new JocServiceException("Appointing the Controller cluster nodes is possible only in the active JOC node.");
@@ -111,7 +111,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     public JOCDefaultResponse postConfirmClusterNodeLoss(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_CONFIRM_LOSS_NODES, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_CONFIRM_LOSS_NODES, filterBytes, accessToken);
             
             if (!StateImpl.isActive(API_CALL_CONFIRM_LOSS_NODES, null)) {
                 throw new JocServiceException("Confirming the Controller cluster loss node is possible only in the active JOC node.");

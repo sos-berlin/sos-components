@@ -58,7 +58,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
     public JOCDefaultResponse postTasksHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, JobsFilter.class);
             JobsFilter in = Globals.objectMapper.readValue(inBytes, JobsFilter.class);
 

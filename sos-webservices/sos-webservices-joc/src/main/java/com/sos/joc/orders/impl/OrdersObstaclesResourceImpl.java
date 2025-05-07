@@ -39,7 +39,7 @@ public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrd
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
             String controllerId = ordersFilter.getControllerId();

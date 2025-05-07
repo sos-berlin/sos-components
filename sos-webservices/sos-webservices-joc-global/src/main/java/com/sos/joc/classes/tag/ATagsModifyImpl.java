@@ -1,6 +1,5 @@
 package com.sos.joc.classes.tag;
 
-import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.time.Instant;
 import java.util.Collection;
@@ -56,7 +55,6 @@ import com.sos.joc.model.tag.common.RequestFolder;
 import com.sos.joc.model.tag.group.Groups;
 import com.sos.joc.model.tag.rename.RequestFilter;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceImpl {
     
@@ -300,7 +298,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     protected JOCDefaultResponse postUsedBy(String apiCall, String accessToken, byte[] filterBytes, ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
         try {
-            initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             JsonValidator.validateFailFast(filterBytes, RequestFolder.class);
             RequestFolder in =  Globals.objectMapper.readValue(filterBytes, RequestFolder.class);
@@ -352,7 +350,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
         try {
-            initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
             RequestFilter modifyTag = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
             
@@ -495,9 +493,8 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         return initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
     }
 
-    private RequestFilters initModifyRequest(String apiCall, Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException,
-            IOException {
-        initLogging(apiCall + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+    private RequestFilters initModifyRequest(String apiCall, Action action, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(apiCall + "/" + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, RequestFilters.class);
         return Globals.objectMapper.readValue(filterBytes, RequestFilters.class);
     }

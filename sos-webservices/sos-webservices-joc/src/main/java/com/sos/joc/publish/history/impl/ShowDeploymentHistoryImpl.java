@@ -41,7 +41,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
     public JOCDefaultResponse postShowDeploymentHistory(String xAccessToken, byte[] showDepHistoryFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, showDepHistoryFilter, xAccessToken);
+            showDepHistoryFilter = initLogging(API_CALL, showDepHistoryFilter, xAccessToken);
             JsonValidator.validate(showDepHistoryFilter, ShowDepHistoryFilter.class);
             ShowDepHistoryFilter filter = Globals.objectMapper.readValue(showDepHistoryFilter, ShowDepHistoryFilter.class);
             

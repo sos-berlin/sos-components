@@ -29,7 +29,7 @@ public class GroupImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> implemen
     public JOCDefaultResponse readGroups(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());

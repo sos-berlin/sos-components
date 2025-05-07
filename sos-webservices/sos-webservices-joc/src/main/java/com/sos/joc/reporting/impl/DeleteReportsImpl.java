@@ -27,7 +27,7 @@ public class DeleteReportsImpl extends JOCResourceImpl implements IDeleteReports
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteReports.class);
             DeleteReports in = Globals.objectMapper.readValue(filterBytes, DeleteReports.class);
             

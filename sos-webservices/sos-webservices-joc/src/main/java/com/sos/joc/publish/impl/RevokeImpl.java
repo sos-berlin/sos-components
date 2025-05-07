@@ -49,15 +49,11 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
 
     @Override
     public JOCDefaultResponse postRevoke(String xAccessToken, byte[] filter) throws Exception {
-        return postRevoke(xAccessToken, filter, false);
-    }
-
-    public JOCDefaultResponse postRevoke(String xAccessToken, byte[] filter, boolean withoutFolderDeletion) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** revoke started ***" + started);
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, RevokeFilter.class);
             RevokeFilter revokeFilter = Globals.objectMapper.readValue(filter, RevokeFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));

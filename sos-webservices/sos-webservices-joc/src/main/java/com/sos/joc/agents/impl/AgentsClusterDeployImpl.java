@@ -52,7 +52,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
     public JOCDefaultResponse postDeploy(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             
             AgentHelper.throwJocMissingLicenseException();
             

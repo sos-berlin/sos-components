@@ -19,7 +19,7 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
     public JOCDefaultResponse read(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_READ, body, accessToken);
+            body = initLogging(IMPL_PATH_READ, body, accessToken);
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.read.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.read.RequestFilter.class);
@@ -41,7 +41,7 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
     public JOCDefaultResponse readTrash(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_TRASH_READ, body, accessToken);
+            body = initLogging(IMPL_PATH_TRASH_READ, body, accessToken);
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.read.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.read.RequestFilter.class);

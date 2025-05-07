@@ -21,7 +21,7 @@ public class ChangesDeleteImpl extends ADeleteChange implements IChangesDelete {
     public JOCDefaultResponse postChangesDelete(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, DeleteChangesRequest.class);
             DeleteChangesRequest deletefilter = Globals.objectMapper.readValue(filter, DeleteChangesRequest.class);
             

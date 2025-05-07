@@ -87,9 +87,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             Arrays.asList(ConfigurationType.SCHEDULE)));
 
     @Override
-    public JOCDefaultResponse release(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse release(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, ReleaseFilter.class, true);
             ReleaseFilter in = Globals.objectMapper.readValue(inBytes, ReleaseFilter.class);
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());

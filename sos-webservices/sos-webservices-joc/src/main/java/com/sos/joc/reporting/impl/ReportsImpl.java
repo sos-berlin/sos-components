@@ -38,7 +38,7 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
     public JOCDefaultResponse reports(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ReportsFilter.class);
             ReportsFilter in = Globals.objectMapper.readValue(filterBytes, ReportsFilter.class);
             

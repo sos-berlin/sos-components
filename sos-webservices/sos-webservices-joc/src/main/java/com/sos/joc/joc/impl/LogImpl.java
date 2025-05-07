@@ -37,7 +37,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     @Override
     public JOCDefaultResponse postLog(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JOClog jocLog = Globals.objectMapper.readValue(filterBytes, JOClog.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {

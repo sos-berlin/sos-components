@@ -1,6 +1,5 @@
 package com.sos.joc.workflow.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +39,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowPositions;
 import com.sos.joc.workflow.resource.IWorkflowPositionsModify;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
@@ -208,8 +206,8 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
         }
     }
 
-    private ModifyWorkflowPositions initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
-        initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+    private ModifyWorkflowPositions initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyWorkflowPositions.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflowPositions.class);
     }

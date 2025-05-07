@@ -21,9 +21,10 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     // private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
 
     @Override
-    public JOCDefaultResponse validate(final String accessToken, String objectType, final byte[] inBytes) {
+    public JOCDefaultResponse validate(final String accessToken, String objectType, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            String apiCall = String.format("./%s/%s/validate", JocInventory.APPLICATION_PATH, objectType);
+            inBytes = initLogging(apiCall, inBytes, accessToken);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response != null) {
                 return response;

@@ -1,6 +1,5 @@
 package com.sos.joc.controller.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -28,7 +27,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import jakarta.ws.rs.Path;
 
@@ -107,8 +105,8 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         }
     }
 
-    private UrlParameter getUrlParameter(byte[] filterBytes, String accessToken, String request) throws SOSJsonSchemaException, IOException {
-        initLogging(API_CALL + request, filterBytes, accessToken);
+    private UrlParameter getUrlParameter(byte[] filterBytes, String accessToken, String request) throws Exception {
+        filterBytes = initLogging(API_CALL + request, filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
         return Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
     }

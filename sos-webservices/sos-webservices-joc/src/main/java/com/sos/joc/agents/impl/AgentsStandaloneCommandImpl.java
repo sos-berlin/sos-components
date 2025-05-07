@@ -53,7 +53,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
     public JOCDefaultResponse postRevoke(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_REVOKE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REVOKE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
             
@@ -156,7 +156,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
         SOSHibernateSession connection = null;
         try {
             final String apiCall = disabled ? API_CALL_DISABLE : API_CALL_ENABLE;
-            initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             
             DeployAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);

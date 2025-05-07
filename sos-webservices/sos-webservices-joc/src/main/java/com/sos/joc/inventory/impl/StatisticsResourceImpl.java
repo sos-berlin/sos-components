@@ -28,7 +28,7 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
     public JOCDefaultResponse getStatistics(final String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();

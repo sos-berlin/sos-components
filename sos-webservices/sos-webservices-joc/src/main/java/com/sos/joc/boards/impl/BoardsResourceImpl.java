@@ -59,7 +59,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
     @Override
     public JOCDefaultResponse postBoards(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, BoardsFilter.class);
             BoardsFilter filter = Globals.objectMapper.readValue(filterBytes, BoardsFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),

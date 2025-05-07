@@ -15,9 +15,9 @@ import jakarta.ws.rs.Path;
 public class CopyConfigurationResourceImpl extends ACopyConfiguration implements ICopyConfigurationResource {
 
     @Override
-    public JOCDefaultResponse copy(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse copy(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 

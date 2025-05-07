@@ -1,6 +1,5 @@
 package com.sos.joc.tags.job.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -42,7 +41,6 @@ import com.sos.joc.model.tag.common.RequestWorkflowJobFilter;
 import com.sos.joc.model.tag.tagging.RequestJobFilter;
 import com.sos.joc.tags.job.resource.ITagging;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import jakarta.ws.rs.Path;
 
@@ -252,8 +250,8 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         }
     }
     
-    private <T> T initRequest(String apiCall, Class<T> clazz, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
-        initLogging(apiCall, filterBytes, accessToken);
+    private <T> T initRequest(String apiCall, Class<T> clazz, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(apiCall, filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, clazz);
         return Globals.objectMapper.readValue(filterBytes, clazz);
     }

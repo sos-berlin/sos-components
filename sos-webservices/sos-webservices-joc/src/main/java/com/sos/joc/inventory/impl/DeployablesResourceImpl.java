@@ -51,10 +51,10 @@ import js7.data_for_java.controller.JControllerState;
 public class DeployablesResourceImpl extends JOCResourceImpl implements IDeployablesResource {
 
     @Override
-    public JOCDefaultResponse deployables(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse deployables(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_OLD, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_OLD, inBytes, accessToken);
             JsonValidator.validate(inBytes, DeployablesFilter.class, true);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
@@ -76,10 +76,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     }
     
     @Override
-    public JOCDefaultResponse deployablesTree(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse deployablesTree(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, DeployablesFilter.class, true);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 

@@ -38,7 +38,7 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
             String controllerId = orderFilter.getControllerId();

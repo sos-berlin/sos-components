@@ -55,7 +55,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
     public JOCDefaultResponse postConfigurations(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsFilter.class);
             ConfigurationsFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
@@ -219,7 +219,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
     public JOCDefaultResponse postConfigurationsDelete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsDeleteFilter.class);
             ConfigurationsDeleteFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsDeleteFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration()
@@ -251,7 +251,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_PROFILES, null, accessToken);
+            body = initLogging(API_CALL_PROFILES, null, accessToken);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
                     .getManage()));

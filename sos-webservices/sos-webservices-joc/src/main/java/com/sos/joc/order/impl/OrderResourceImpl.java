@@ -46,7 +46,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
             String controllerId = orderFilter.getControllerId();

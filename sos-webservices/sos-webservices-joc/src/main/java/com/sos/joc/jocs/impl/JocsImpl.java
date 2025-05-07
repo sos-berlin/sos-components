@@ -41,7 +41,7 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
     @Override
     public JOCDefaultResponse postJocs(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, CockpitFilter.class);
             CockpitFilter in = Globals.objectMapper.readValue(filterBytes, CockpitFilter.class);
 

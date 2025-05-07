@@ -27,24 +27,24 @@ public interface IRemoveDescriptor {
     @Path(PATH_REMOVE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse remove(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse remove(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
     @POST
     @Path(PATH_REMOVE_FOLDER)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse removeFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse removeFolder(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
     @POST
     @Path(IRemoveDescriptor.PATH_TRASH_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deleteFromTrash(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse deleteFromTrash(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
     @POST
     @Path(PATH_TRASH_DELETE_FOLDER)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deleteFolderFromTrash(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse deleteFolderFromTrash(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

@@ -39,7 +39,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowLabels;
 import com.sos.joc.workflow.resource.IWorkflowLabelsModify;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
@@ -380,8 +379,8 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         return Collections.emptySet();
     }
     
-    private ModifyWorkflowLabels initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
-        initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+    private ModifyWorkflowLabels initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, ModifyWorkflowLabels.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflowLabels.class);
     }

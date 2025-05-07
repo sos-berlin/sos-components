@@ -57,7 +57,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, OrdersFilter.class);
             OrdersFilter in = Globals.objectMapper.readValue(inBytes, OrdersFilter.class);
 

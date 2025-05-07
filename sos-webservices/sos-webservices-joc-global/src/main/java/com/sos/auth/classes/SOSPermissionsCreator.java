@@ -74,10 +74,10 @@ public class SOSPermissionsCreator {
     }
     
     public Permissions create4EyesJocCockpitPermissionControllerObjectList(SecurityConfiguration secConf) {
-        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getFourEyesRole().getValue();
-        if (currentAccount.getRoles().contains(fourEyesRole)) {
+        String approvalRequestorRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
+        if (currentAccount.getRoles().contains(approvalRequestorRole)) {
             only4EyesRole = true;
-            Permissions permissions = new Permissions(Collections.singleton(fourEyesRole), getJocPermissions(), getControllerPermissions(""),
+            Permissions permissions = new Permissions(Collections.singleton(approvalRequestorRole), getJocPermissions(), getControllerPermissions(""),
                     new com.sos.joc.model.security.configuration.permissions.Controllers());
 
             secConf.getRoles().getAdditionalProperties().entrySet().stream().filter(c -> permissions.getRoles().contains(c.getKey())).flatMap(e -> e

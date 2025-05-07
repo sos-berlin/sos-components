@@ -37,7 +37,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
     @Override
     public JOCDefaultResponse postSchedules(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ScheduleSelector.class);
             ScheduleSelector in = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
 

@@ -43,7 +43,7 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** store to repository started ***" + started);
-            initLogging(API_CALL, copyToFilter, xAccessToken);
+            copyToFilter = initLogging(API_CALL, copyToFilter, xAccessToken);
             JsonValidator.validate(copyToFilter, CopyToFilter.class);
             CopyToFilter filter = Globals.objectMapper.readValue(copyToFilter, CopyToFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));

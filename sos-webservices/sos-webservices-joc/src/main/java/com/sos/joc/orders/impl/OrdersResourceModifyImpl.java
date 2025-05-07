@@ -71,7 +71,6 @@ import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Position;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
@@ -971,8 +970,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private ModifyOrders initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
-        initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+    private ModifyOrders initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyOrders.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
     }

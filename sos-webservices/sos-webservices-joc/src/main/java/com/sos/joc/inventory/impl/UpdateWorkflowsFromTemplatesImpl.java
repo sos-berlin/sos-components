@@ -44,9 +44,9 @@ import jakarta.ws.rs.Path;
 public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements IUpdateWorkflowsFromTemplates {
 
     @Override
-    public JOCDefaultResponse update(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse update(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, WorkflowPropagateFilter.class);
             WorkflowPropagateFilter in = Globals.objectMapper.readValue(inBytes, WorkflowPropagateFilter.class);
 

@@ -21,7 +21,7 @@ public class ChangesShowImpl extends AShowChange implements IChangesShow {
     public JOCDefaultResponse postShowChanges(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, ShowChangesFilter.class);
             ShowChangesFilter showFilter = Globals.objectMapper.readValue(filter, ShowChangesFilter.class);
             

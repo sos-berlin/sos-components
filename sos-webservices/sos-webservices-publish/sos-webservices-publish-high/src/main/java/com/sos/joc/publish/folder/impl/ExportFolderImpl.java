@@ -53,7 +53,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
 	public JOCDefaultResponse postExportFolder(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, exportFilter, xAccessToken);
+            exportFilter = initLogging(API_CALL, exportFilter, xAccessToken);
             JsonValidator.validate(exportFilter, ExportFolderFilter.class);
             ExportFolderFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFolderFilter.class);
             

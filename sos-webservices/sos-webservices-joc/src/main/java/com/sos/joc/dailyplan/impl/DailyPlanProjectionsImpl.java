@@ -77,7 +77,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
         SOSHibernateSession session = null;
         try {
-            initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ProjectionsRequest.class);
             ProjectionsRequest in = Globals.objectMapper.readValue(filterBytes, ProjectionsRequest.class);
 
@@ -351,7 +351,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
     @Override
     public JOCDefaultResponse recreate(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken);
 
             // TODO run async
             CompletableFuture.runAsync(() -> {

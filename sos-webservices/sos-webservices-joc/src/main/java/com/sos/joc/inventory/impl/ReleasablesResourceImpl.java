@@ -44,10 +44,10 @@ import com.sos.schema.JsonValidator;
 public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasablesResource {
 
     @Override
-    public JOCDefaultResponse releasables(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse releasables(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_OLD, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_OLD, inBytes, accessToken);
             JsonValidator.validate(inBytes, ReleasablesFilter.class, true);
             ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 
@@ -69,10 +69,10 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     }
     
     @Override
-    public JOCDefaultResponse releasablesTree(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse releasablesTree(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, ReleasablesFilter.class, true);
             ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 

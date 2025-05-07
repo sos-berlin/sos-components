@@ -52,7 +52,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     @Override
     public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_RUNNING, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogFilter.class);
             RunningTaskLog taskLog = Globals.objectMapper.readValue(filterBytes, RunningTaskLog.class);
 
@@ -165,7 +165,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     public JOCDefaultResponse execute(String apiCall, String accessToken, byte[] filterBytes) {
 
         try {
-            initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, TaskFilter.class);
             TaskFilter taskFilter = Globals.objectMapper.readValue(filterBytes, TaskFilter.class);
 

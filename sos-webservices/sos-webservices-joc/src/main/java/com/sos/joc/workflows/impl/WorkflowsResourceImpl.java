@@ -54,7 +54,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     public JOCDefaultResponse postWorkflowsPermanent(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
             String controllerId = workflowsFilter.getControllerId();

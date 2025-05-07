@@ -17,7 +17,7 @@ public class RestoreDescriptorImpl extends ARestoreConfiguration implements IRes
     @Override
     public JOCDefaultResponse postRestoreFromTrash(String accessToken, byte[] body) {
         try {
-            initLogging(IMPL_PATH_RESTORE, body, accessToken);
+            body = initLogging(IMPL_PATH_RESTORE, body, accessToken);
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.restore.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.restore.RequestFilter.class);

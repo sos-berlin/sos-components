@@ -59,7 +59,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
     @Override
     public JOCDefaultResponse deleteNotices(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL + Action.DELETE.name().toLowerCase(), filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL + Action.DELETE.name().toLowerCase(), filterBytes, accessToken);
             JsonValidator.validate(filterBytes, DeleteNotices.class, true);
             DeleteNotices in = Globals.objectMapper.readValue(filterBytes, DeleteNotices.class);
             String controllerId = in.getControllerId();
@@ -101,7 +101,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
     @Override
     public JOCDefaultResponse postNotices(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL + Action.POST.name().toLowerCase(), filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL + Action.POST.name().toLowerCase(), filterBytes, accessToken);
             JsonValidator.validate(filterBytes, PostNotices.class, true);
             PostNotices in = Globals.objectMapper.readValue(filterBytes, PostNotices.class);
             String controllerId = in.getControllerId();
@@ -157,7 +157,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
     @Override
     public JOCDefaultResponse postExpectedNotices(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL + Action.POST.name().toLowerCase() + "/expected", filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL + Action.POST.name().toLowerCase() + "/expected", filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PostExpectedNotices.class);
             PostExpectedNotices in = Globals.objectMapper.readValue(filterBytes, PostExpectedNotices.class);
             String controllerId = in.getControllerId();

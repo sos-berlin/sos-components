@@ -26,7 +26,7 @@ public class CalendarsSearchImpl extends JOCResourceImpl implements ISearchResou
     @Override
     public JOCDefaultResponse postSearch(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RequestBaseSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(filterBytes, RequestSearchFilter.class);
             in.setReturnType(RequestSearchReturnType.CALENDAR);

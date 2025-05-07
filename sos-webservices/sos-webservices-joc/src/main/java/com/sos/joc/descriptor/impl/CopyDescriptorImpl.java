@@ -17,7 +17,7 @@ public class CopyDescriptorImpl extends ACopyConfiguration implements ICopyDescr
     @Override
     public JOCDefaultResponse copy(String accessToken, byte[] body) {
         try {
-            initLogging(IMPL_PATH_COPY, body, accessToken);
+            body = initLogging(IMPL_PATH_COPY, body, accessToken);
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.copy.RequestFilter in = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.copy.RequestFilter.class);

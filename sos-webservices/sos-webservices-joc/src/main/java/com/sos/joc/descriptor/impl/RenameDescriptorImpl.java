@@ -17,7 +17,7 @@ public class RenameDescriptorImpl extends ARenameConfiguration implements IRenam
     @Override
     public JOCDefaultResponse postRename(String accessToken, byte[] body) {
         try {
-            initLogging(IMPL_PATH_RENAME, body, accessToken);
+            body = initLogging(IMPL_PATH_RENAME, body, accessToken);
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.rename.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.rename.RequestFilter.class);

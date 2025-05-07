@@ -63,9 +63,9 @@ public class RevalidateResourceImpl extends JOCResourceImpl implements IRevalida
             ConfigurationType.WORKINGDAYSCALENDAR);
 
     @Override
-    public JOCDefaultResponse revalidate(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse revalidate(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 

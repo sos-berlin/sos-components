@@ -44,7 +44,7 @@ public class WorkflowsSnapshotImpl extends JOCResourceImpl implements IWorkflows
     public JOCDefaultResponse snapshot(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq in = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = in.getControllerId();

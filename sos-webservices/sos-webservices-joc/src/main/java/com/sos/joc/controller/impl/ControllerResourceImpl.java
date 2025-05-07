@@ -53,7 +53,7 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             if (onlyDb) {
                 apiCall += "/p";
             }
-            initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = jobSchedulerBody.getControllerId();

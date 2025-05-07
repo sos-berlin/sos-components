@@ -15,10 +15,10 @@ import jakarta.ws.rs.Path;
 public class ReadConfigurationResourceImpl extends AReadConfiguration implements IReadConfigurationResource {
 
     @Override
-    public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse read(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
@@ -37,10 +37,10 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
     }
 
     @Override
-    public JOCDefaultResponse readTrash(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse readTrash(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 

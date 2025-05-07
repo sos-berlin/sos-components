@@ -60,7 +60,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RunHistoryFilter.class);
             RunHistoryFilter in = Globals.objectMapper.readValue(filterBytes, RunHistoryFilter.class);
 

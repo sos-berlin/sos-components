@@ -76,7 +76,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     @Override
     public JOCDefaultResponse postOrdersGenerate(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 

@@ -21,7 +21,7 @@ public class Locks {
      */
     @JsonProperty("view")
     @JsonPropertyDescription("show resource tab 'locks'")
-    private Boolean view = true;
+    private Boolean view = false;
 
     /**
      * No args constructor for use in serialization

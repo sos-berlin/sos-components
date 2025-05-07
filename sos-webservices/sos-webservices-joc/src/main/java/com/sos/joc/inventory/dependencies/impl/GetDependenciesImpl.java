@@ -56,7 +56,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     public JOCDefaultResponse postGetDependencies(String xAccessToken, byte[] dependencyFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, dependencyFilter, xAccessToken);
+            dependencyFilter = initLogging(API_CALL, dependencyFilter, xAccessToken);
             JsonValidator.validate(dependencyFilter, GetDependenciesRequest.class);
             GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);

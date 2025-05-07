@@ -25,7 +25,7 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
     public JOCDefaultResponse postOrderVariables(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter in = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
 

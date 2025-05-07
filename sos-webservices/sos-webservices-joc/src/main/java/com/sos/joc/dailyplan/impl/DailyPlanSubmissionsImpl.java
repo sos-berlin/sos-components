@@ -39,7 +39,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         try {
             // TODO redefine raml and remove filter class
 
-            initLogging(IMPL_PATH_MAIN, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_MAIN, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
@@ -84,7 +84,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         SOSHibernateSession session = null;
         try {
             // TODO redefine raml and remove filter class
-            initLogging(IMPL_PATH_DELETE, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_DELETE, inBytes, accessToken);
             // use validate instead of validateFailFast when anyOf/oneOf is defined
             JsonValidator.validate(inBytes, SubmissionsDeleteRequest.class);
             SubmissionsDeleteRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsDeleteRequest.class);

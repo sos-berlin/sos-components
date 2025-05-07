@@ -34,7 +34,7 @@ public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginH
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL, null, accessToken);
+            body = initLogging(API_CALL, body, accessToken);
             JsonValidator.validateFailFast(body, LoginHistoryFilter.class);
             LoginHistoryFilter loginHistoryFilter = Globals.objectMapper.readValue(body, LoginHistoryFilter.class);
 

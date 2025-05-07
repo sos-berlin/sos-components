@@ -59,7 +59,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         SOSHibernateSession connection = null;
 
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controllerIdObj.getControllerId();

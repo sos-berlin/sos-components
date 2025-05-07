@@ -46,7 +46,7 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ReadAgents.class);
             ReadAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ReadAgents.class);
             

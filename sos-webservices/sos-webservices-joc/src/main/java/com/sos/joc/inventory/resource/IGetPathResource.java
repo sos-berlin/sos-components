@@ -15,5 +15,5 @@ public interface IGetPathResource {
     @Path("path")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postGetPath(@HeaderParam("X-Access-Token") final String xAccessToken, final byte[] body);
+    public JOCDefaultResponse postGetPath(@HeaderParam("X-Access-Token") final String xAccessToken, byte[] body);
 }

@@ -31,7 +31,7 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_SESSIONS, body, accessToken);
+            body = initLogging(API_CALL_SESSIONS, body, accessToken);
             JsonValidator.validateFailFast(body, ActiveSessionsFilter.class);
             ActiveSessionsFilter activeSessionsFilter = Globals.objectMapper.readValue(body, ActiveSessionsFilter.class);
 
@@ -95,7 +95,7 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
     public JOCDefaultResponse postSessionsCancel(String accessToken, byte[] body) {
 
         try {
-            initLogging(API_CALL_SESSIONS_DELETE, body, accessToken);
+            body = initLogging(API_CALL_SESSIONS_DELETE, body, accessToken);
             JsonValidator.validate(body, ActiveSessionsCancelFilter.class);
             ActiveSessionsCancelFilter activeSessionsCancelFilter = Globals.objectMapper.readValue(body, ActiveSessionsCancelFilter.class);
 

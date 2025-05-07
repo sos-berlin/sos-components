@@ -29,7 +29,7 @@ public class YadeFilesResourceImpl extends JOCResourceImpl implements IYadeFiles
     public JOCDefaultResponse postYadeFiles(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, FilesFilter.class);
             FilesFilter in = Globals.objectMapper.readValue(inBytes, FilesFilter.class);
 

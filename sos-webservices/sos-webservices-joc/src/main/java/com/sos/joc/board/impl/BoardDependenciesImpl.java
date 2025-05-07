@@ -38,7 +38,7 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
     @Override
     public JOCDefaultResponse postBoardDeps(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, BoardFilter.class);
             BoardPathFilter filter = Globals.objectMapper.readValue(filterBytes, BoardPathFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(), accessToken)

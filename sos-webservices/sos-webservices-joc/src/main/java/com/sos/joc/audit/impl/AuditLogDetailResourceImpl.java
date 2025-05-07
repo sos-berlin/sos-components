@@ -39,7 +39,7 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
     public JOCDefaultResponse postAuditLogDetails(String accessToken, byte[] bytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, bytes, accessToken);
+            bytes = initLogging(API_CALL, bytes, accessToken);
             JsonValidator.validateFailFast(bytes, AuditLogDetailFilter.class);
             AuditLogDetailFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogDetailFilter.class);
 

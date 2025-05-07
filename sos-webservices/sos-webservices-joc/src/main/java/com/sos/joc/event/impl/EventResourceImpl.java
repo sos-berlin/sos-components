@@ -46,7 +46,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         Event entity = new Event();
         ISOSSession session = null;
         try {
-            initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, Controller.class);
             Controller in = Globals.objectMapper.readValue(inBytes, Controller.class);
             String controllerId = in.getControllerId();

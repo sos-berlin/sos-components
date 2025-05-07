@@ -44,7 +44,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_ROLE_READ, body, accessToken);
+            body = initLogging(API_CALL_ROLE_READ, body, accessToken);
             JsonValidator.validateFailFast(body, RoleFilter.class);
             RoleFilter roleFilter = Globals.objectMapper.readValue(body, RoleFilter.class);
 
@@ -57,7 +57,6 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             Role role = new Role();
             role.setControllers(new ArrayList<String>());
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_READ);
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_READ);
 
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, roleFilter
@@ -93,7 +92,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_ROLE_STORE, body, accessToken);
+            body = initLogging(API_CALL_ROLE_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, Role.class);
             RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
 
@@ -156,7 +155,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_ROLE_RENAME, body, accessToken);
+            body = initLogging(API_CALL_ROLE_RENAME, body, accessToken);
             JsonValidator.validate(body, RoleRename.class);
             RoleRename roleRename = Globals.objectMapper.readValue(body, RoleRename.class);
 
@@ -214,7 +213,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_ROLE_DELETE, body, accessToken);
+            body = initLogging(API_CALL_ROLE_DELETE, body, accessToken);
             JsonValidator.validate(body, RolesFilter.class);
             RolesFilter rolesFilter = Globals.objectMapper.readValue(body, RolesFilter.class);
 
@@ -248,9 +247,11 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
+            Globals.rollback(sosHibernateSession);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);
@@ -262,7 +263,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_ROLES, body, accessToken);
+            body = initLogging(API_CALL_ROLES, body, accessToken);
             JsonValidator.validateFailFast(body, RoleListFilter.class);
             RoleListFilter roleListFilter = Globals.objectMapper.readValue(body, RoleListFilter.class);
 
@@ -310,7 +311,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_ROLE_STORE, body, accessToken);
+            body = initLogging(API_CALL_ROLE_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, RolesFilter.class);
             RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
 

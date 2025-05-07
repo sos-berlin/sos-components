@@ -74,7 +74,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
     public JOCDefaultResponse postWorkflowBoards(String accessToken, String acceptEncoding, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             String controllerId = filter.getControllerId();

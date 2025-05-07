@@ -26,7 +26,7 @@ public class RemoveFromChangeImpl extends ARemoveFromChange implements IRemoveFr
     public JOCDefaultResponse postRemoveFromChange(String xAccessToken, byte[] filter) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, RemoveFromChangeRequest.class);
             RemoveFromChangeRequest removeFilter = Globals.objectMapper.readValue(filter, RemoveFromChangeRequest.class);
 

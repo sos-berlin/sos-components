@@ -1,13 +1,9 @@
 package com.sos.joc.board.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.Globals;
 import com.sos.joc.board.resource.INoticeResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -20,7 +16,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.ModifyNotice;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import jakarta.ws.rs.Path;
 import js7.data.board.NoticeId;
@@ -61,10 +56,9 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         }
     }
 
-    private JOCDefaultResponse modifyNotice(String accessToken, byte[] filterBytes, Action action) throws JsonParseException,
-            JsonMappingException, JocException, IOException, SOSJsonSchemaException, ExecutionException {
+    private JOCDefaultResponse modifyNotice(String accessToken, byte[] filterBytes, Action action) throws Exception {
 
-        initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, ModifyNotice.class);
         ModifyNotice filter = Globals.objectMapper.readValue(filterBytes, ModifyNotice.class);
         String controllerId = filter.getControllerId();

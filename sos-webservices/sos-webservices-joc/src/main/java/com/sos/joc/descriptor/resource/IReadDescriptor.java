@@ -21,12 +21,12 @@ public interface IReadDescriptor {
     @Path(PATH_READ)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse read(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse read(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
     @POST
     @Path(PATH_TRASH_READ)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse readTrash(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse readTrash(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

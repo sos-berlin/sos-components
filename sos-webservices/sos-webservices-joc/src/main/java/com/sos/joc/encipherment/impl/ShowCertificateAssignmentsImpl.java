@@ -27,7 +27,7 @@ public class ShowCertificateAssignmentsImpl extends JOCResourceImpl implements I
     public JOCDefaultResponse postShowCertificateAssignment(String xAccessToken, byte[] showAssignmentFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, showAssignmentFilter, xAccessToken);
+            showAssignmentFilter = initLogging(API_CALL, showAssignmentFilter, xAccessToken);
             JsonValidator.validate(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
             ShowAgentAssignmentsRequestFilter filter = Globals.objectMapper.readValue(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()

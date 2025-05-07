@@ -50,7 +50,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** update from repository started ***" + started);
-            initLogging(API_CALL, updateFromFilter, xAccessToken);
+            updateFromFilter = initLogging(API_CALL, updateFromFilter, xAccessToken);
             JsonValidator.validate(updateFromFilter, UpdateFromFilter.class);
             UpdateFromFilter filter = Globals.objectMapper.readValue(updateFromFilter, UpdateFromFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));

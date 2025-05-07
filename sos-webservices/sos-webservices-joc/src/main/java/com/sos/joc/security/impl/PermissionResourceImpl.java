@@ -44,7 +44,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_PERMISSION_READ, body, accessToken);
+            body = initLogging(API_CALL_PERMISSION_READ, body, accessToken);
             JsonValidator.validateFailFast(body, PermissionFilter.class);
             PermissionFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionFilter.class);
 
@@ -104,7 +104,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         Permissions permissions = null;
         try {
 
-            initLogging(API_CALL_PERMISSIONS_STORE, body, accessToken);
+            body = initLogging(API_CALL_PERMISSIONS_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, Permissions.class);
             permissions = Globals.objectMapper.readValue(body, Permissions.class);
 
@@ -173,7 +173,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_PERMISSION_RENAME, body, accessToken);
+            body = initLogging(API_CALL_PERMISSION_RENAME, body, accessToken);
             JsonValidator.validate(body, PermissionRename.class);
             PermissionRename permissionRename = Globals.objectMapper.readValue(body, PermissionRename.class);
 
@@ -225,7 +225,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_PERMISSIONS_DELETE, body, accessToken);
+            body = initLogging(API_CALL_PERMISSIONS_DELETE, body, accessToken);
             JsonValidator.validate(body, PermissionsFilter.class);
             PermissionsFilter permissionsFilter = Globals.objectMapper.readValue(body, PermissionsFilter.class);
 
@@ -277,7 +277,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_PERMISSIONS, body, accessToken);
+            body = initLogging(API_CALL_PERMISSIONS, body, accessToken);
             JsonValidator.validateFailFast(body, PermissionListFilter.class);
             PermissionListFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionListFilter.class);
 

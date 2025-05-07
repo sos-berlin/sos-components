@@ -21,7 +21,7 @@ public class ChangesStoreImpl extends AStoreChange implements IChangesStore {
     public JOCDefaultResponse postChangesStore(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, StoreChangeRequest.class);
             StoreChangeRequest storeFilter = Globals.objectMapper.readValue(filter, StoreChangeRequest.class);
             

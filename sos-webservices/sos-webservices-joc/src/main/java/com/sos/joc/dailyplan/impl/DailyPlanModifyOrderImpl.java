@@ -118,7 +118,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     @Override
     public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, DailyPlanModifyOrder.class);
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
@@ -136,7 +136,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
                 }
                 if (hasManagePositionsPermission.get(1)) {
-                    return fourEyesResponse("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions.");
+                    response = approvalRequestResponse("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions.");
+                    if (response != null) {
+                        return response;
+                    }
                 }
             }
 

@@ -40,9 +40,9 @@ import com.sos.schema.JsonValidator;
 public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpdateJobFromTemplates {
 
     @Override
-    public JOCDefaultResponse update(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse update(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, JobPropagateFilter.class);
             JobPropagateFilter in = Globals.objectMapper.readValue(inBytes, JobPropagateFilter.class);
 

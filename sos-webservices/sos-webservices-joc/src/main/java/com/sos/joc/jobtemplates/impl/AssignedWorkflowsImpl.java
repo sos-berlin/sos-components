@@ -68,7 +68,7 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
     public JOCDefaultResponse postWorkflows(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobTemplatesFilter.class);
             JobTemplatesFilter jobTemplatesFilter = Globals.objectMapper.readValue(filterBytes, JobTemplatesFilter.class);
 

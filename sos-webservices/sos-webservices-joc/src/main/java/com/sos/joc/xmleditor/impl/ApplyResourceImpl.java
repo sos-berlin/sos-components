@@ -26,10 +26,10 @@ import jakarta.ws.rs.Path;
 public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ApplyConfiguration.class);
             ApplyConfiguration in = Globals.objectMapper.readValue(filterBytes, ApplyConfiguration.class);
 

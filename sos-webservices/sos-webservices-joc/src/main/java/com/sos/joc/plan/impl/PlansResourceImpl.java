@@ -68,7 +68,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
     @Override
     public JOCDefaultResponse postPlans(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
@@ -97,7 +97,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
     @Override
     public JOCDefaultResponse postPlanIds(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_IDS, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_IDS, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PlansOpenCloseFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),

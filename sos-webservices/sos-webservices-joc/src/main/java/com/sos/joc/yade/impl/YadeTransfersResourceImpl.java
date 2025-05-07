@@ -54,7 +54,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
     public JOCDefaultResponse postYadeTransfer(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH_TRANSFER, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_TRANSFER, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, TransferId.class);
             TransferId in = Globals.objectMapper.readValue(inBytes, TransferId.class);
 
@@ -98,7 +98,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
     public JOCDefaultResponse postYadeTransfers(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH_TRANSFERS, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_TRANSFERS, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 

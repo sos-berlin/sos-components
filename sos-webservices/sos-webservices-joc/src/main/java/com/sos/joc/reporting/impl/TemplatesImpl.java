@@ -26,7 +26,7 @@ public class TemplatesImpl extends JOCResourceImpl implements ITemplatesResource
     @Override
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             
             JocPermissions permission = getBasicJocPermissions(accessToken);
             JOCDefaultResponse response = initPermissions(null, permission.getReports().getView() || permission.getInventory().getView());

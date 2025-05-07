@@ -12,8 +12,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentCommand;
@@ -63,7 +61,12 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_REMOVE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REMOVE, filterBytes, accessToken);
+
+            AgentHelper.throwJocMissingLicenseException();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -147,7 +150,12 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     public JOCDefaultResponse revoke(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_REVOKE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REVOKE, filterBytes, accessToken);
+
+            AgentHelper.throwJocMissingLicenseException();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -223,7 +231,12 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     @Override
     public JOCDefaultResponse reset(String accessToken, byte[] filterBytes) {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RESET, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RESET, filterBytes, accessToken);
+
+            AgentHelper.throwJocMissingLicenseException();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -277,7 +290,12 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
         SOSHibernateSession connection = null;
         try {
             final String apiCall = disabled ? API_CALL_DISABLE : API_CALL_ENABLE;
-            JOCDefaultResponse jocDefaultResponse = init(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+
+            AgentHelper.throwJocMissingLicenseException();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -344,15 +362,6 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
         } finally {
             Globals.disconnect(connection);
         }
-    }
-    
-    private JOCDefaultResponse init(String apiCall, byte[] filterBytes, String accessToken) throws JsonParseException,
-            JsonMappingException, JocException, IOException {
-        initLogging(apiCall, filterBytes, accessToken);
-
-        AgentHelper.throwJocMissingLicenseException();
-
-        return initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage()));
     }
     
     private static SubAgentsCommand getSubAgentsCommand(byte[] filterBytes) throws SOSJsonSchemaException, IOException {

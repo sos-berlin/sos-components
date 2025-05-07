@@ -56,7 +56,7 @@ public class PlanModifyImpl extends JOCResourceImpl implements IPlanModify {
     
     private JOCDefaultResponse modifyPlan(Action action, String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, PlansModifyFilter.class);
             PlansModifyFilter filter = Globals.objectMapper.readValue(filterBytes, PlansModifyFilter.class);
             String controllerId = filter.getControllerId();

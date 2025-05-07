@@ -36,7 +36,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
 
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_STORE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_STORE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreFavorites.class);
             StoreFavorites favorites = Globals.objectMapper.readValue(filterBytes, StoreFavorites.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
@@ -80,7 +80,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
 
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_RENAME, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RENAME, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, RenameFavorites.class);
             RenameFavorites favorites = Globals.objectMapper.readValue(filterBytes, RenameFavorites.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);

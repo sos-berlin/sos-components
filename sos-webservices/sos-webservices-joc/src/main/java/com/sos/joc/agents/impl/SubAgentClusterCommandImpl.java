@@ -44,7 +44,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
     public JOCDefaultResponse revoke(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_REVOKE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REVOKE, filterBytes, accessToken);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -125,7 +125,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken);
 
             AgentHelper.throwJocMissingLicenseException();
 

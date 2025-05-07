@@ -37,9 +37,9 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     @Override
-    public JOCDefaultResponse getProfiles(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse getProfiles(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, FileFilter.class);
             Profiles in = Globals.objectMapper.readValue(inBytes, Profiles.class);
 

@@ -59,7 +59,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             if (onlyDb) {
                 apiCall += "/p";
             }
-            initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             

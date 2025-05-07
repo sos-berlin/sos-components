@@ -24,7 +24,7 @@ public class RemoveCertificateAssignmentImpl extends JOCResourceImpl implements 
     public JOCDefaultResponse postRemoveCertificateAssgnment(String xAccessToken, byte[] agentAssignmentFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, agentAssignmentFilter, xAccessToken);
+            agentAssignmentFilter = initLogging(API_CALL, agentAssignmentFilter, xAccessToken);
             JsonValidator.validateFailFast(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
             AgentAssignmentRequestFilter filter = Globals.objectMapper.readValue(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

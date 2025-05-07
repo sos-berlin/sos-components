@@ -51,7 +51,7 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
     public JOCDefaultResponse assignTags(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL_STORE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_STORE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, GroupTagsFilter.class);
             GroupTagsFilter modifyTags = Globals.objectMapper.readValue(filterBytes, GroupTagsFilter.class);
             

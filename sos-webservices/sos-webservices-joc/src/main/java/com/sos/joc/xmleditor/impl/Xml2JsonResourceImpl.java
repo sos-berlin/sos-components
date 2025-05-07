@@ -17,9 +17,9 @@ import com.sos.schema.JsonValidator;
 public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2JsonResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, Xml2JsonConfiguration.class);
             Xml2JsonConfiguration in = Globals.objectMapper.readValue(filterBytes, Xml2JsonConfiguration.class);
 

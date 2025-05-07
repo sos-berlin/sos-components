@@ -21,7 +21,7 @@ public class AddToChangeImpl extends AAddToChange implements IAddToChange {
     public JOCDefaultResponse postAddToChange(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, AddToChangeRequest.class);
             AddToChangeRequest addFilter = Globals.objectMapper.readValue(filter, AddToChangeRequest.class);
             

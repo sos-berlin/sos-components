@@ -28,7 +28,7 @@ public class ShowCertificateImpl extends JOCResourceImpl implements IShowCertifi
     public JOCDefaultResponse postShowCertificate(String xAccessToken, byte[] showCertificateFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, showCertificateFilter, xAccessToken);
+            showCertificateFilter = initLogging(API_CALL, showCertificateFilter, xAccessToken);
             ShowCertificateRequestFilter filter = null;
             if (showCertificateFilter != null && showCertificateFilter.length > 0) {
                 JsonValidator.validateFailFast(showCertificateFilter, ShowCertificateRequestFilter.class);

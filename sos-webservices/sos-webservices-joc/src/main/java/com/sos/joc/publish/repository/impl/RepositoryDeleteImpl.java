@@ -48,7 +48,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository started ***" + started);
-            initLogging(API_CALL, deleteFromFilter, xAccessToken);
+            deleteFromFilter = initLogging(API_CALL, deleteFromFilter, xAccessToken);
             JsonValidator.validate(deleteFromFilter, DeleteFromFilter.class);
             DeleteFromFilter filter = Globals.objectMapper.readValue(deleteFromFilter, DeleteFromFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));

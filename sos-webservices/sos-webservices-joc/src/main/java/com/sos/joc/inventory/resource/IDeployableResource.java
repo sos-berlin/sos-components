@@ -19,6 +19,6 @@ public interface IDeployableResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deployable(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse deployable(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

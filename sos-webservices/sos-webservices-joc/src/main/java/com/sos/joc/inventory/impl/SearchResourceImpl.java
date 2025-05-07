@@ -36,9 +36,9 @@ import com.sos.schema.JsonValidator;
 public class SearchResourceImpl extends JOCResourceImpl implements ISearchResource {
 
     @Override
-    public JOCDefaultResponse postSearch(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse postSearch(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestSearchFilter.class);
 

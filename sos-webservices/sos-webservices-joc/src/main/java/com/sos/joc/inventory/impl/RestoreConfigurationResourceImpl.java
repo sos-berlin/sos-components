@@ -15,9 +15,9 @@ import jakarta.ws.rs.Path;
 public class RestoreConfigurationResourceImpl extends ARestoreConfiguration implements IRestoreConfigurationResource {
 
     @Override
-    public JOCDefaultResponse restore(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse restore(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 

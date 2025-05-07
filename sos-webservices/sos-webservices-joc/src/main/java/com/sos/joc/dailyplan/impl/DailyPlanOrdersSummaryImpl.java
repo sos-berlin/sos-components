@@ -39,7 +39,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
         SOSHibernateSession session = null;
         try {
 
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilterDef.class);
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
 

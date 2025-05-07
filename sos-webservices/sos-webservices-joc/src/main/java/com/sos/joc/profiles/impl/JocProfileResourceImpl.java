@@ -31,7 +31,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_PROFILE_STORE, body, accessToken);
+            body = initLogging(API_CALL_PROFILE_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, Profile.class);
             Profile profile = Globals.objectMapper.readValue(body, Profile.class);
 
@@ -91,7 +91,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_PROFILE, body, accessToken);
+            body = initLogging(API_CALL_PROFILE, body, accessToken);
             JsonValidator.validateFailFast(body, ProfileFilter.class);
             ProfileFilter profileFilter = Globals.objectMapper.readValue(body, ProfileFilter.class);
 

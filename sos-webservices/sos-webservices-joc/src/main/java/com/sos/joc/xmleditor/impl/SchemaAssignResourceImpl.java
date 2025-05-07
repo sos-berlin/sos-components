@@ -21,9 +21,9 @@ import com.sos.schema.JsonValidator;
 public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISchemaAssignResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, SchemaAssignConfiguration.class);
             SchemaAssignConfiguration in = Globals.objectMapper.readValue(filterBytes, SchemaAssignConfiguration.class);
 

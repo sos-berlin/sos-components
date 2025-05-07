@@ -18,6 +18,6 @@ public interface IRenameDescriptor {
     @Path(PATH_RENAME)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postRename(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse postRename(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

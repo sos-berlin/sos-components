@@ -391,25 +391,6 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         entity.setApiCall(apiCall);
         return entity;
     }
-    
-    public static byte[] getError433Schema(String message, JocAuditLog jocAuditLog) {
-        FourEyesRequest entity = new FourEyesRequest();
-        entity.setAccountName(jocAuditLog.getUser());
-        entity.setRequestUrl(jocAuditLog.getRequest());
-        try {
-            entity.setRequestBody(Globals.objectMapper.readValue(jocAuditLog.getParams(), RequestBody.class));
-        } catch (Exception e) {
-            throw new JocException(e);
-        }
-        entity.setDeliveryDate(Date.from(Instant.now()));
-        entity.setTitle(null);
-        entity.setMessage(message);
-        try {
-            return Globals.objectMapper.writeValueAsBytes(entity);
-        } catch (Exception e) {
-            throw new JocException(e);
-        }
-    }
 
     public static String getErrorMessage(JocException e) {
         String errorOutput = e.getClass().getSimpleName() + ": ";

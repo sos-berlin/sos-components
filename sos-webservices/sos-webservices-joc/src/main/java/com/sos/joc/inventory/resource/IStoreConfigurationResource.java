@@ -19,6 +19,6 @@ public interface IStoreConfigurationResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse store(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse store(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

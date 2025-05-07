@@ -21,12 +21,12 @@ public interface IDeleteDraftResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(PATH_FOLDER)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deleteFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse deleteFolder(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

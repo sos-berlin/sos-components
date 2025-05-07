@@ -50,7 +50,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, AgentsFilter.class);
             AgentsFilter in = Globals.objectMapper.readValue(inBytes, AgentsFilter.class);
 

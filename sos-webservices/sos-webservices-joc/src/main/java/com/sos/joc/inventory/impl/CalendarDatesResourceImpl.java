@@ -24,10 +24,10 @@ import com.sos.schema.JsonValidator;
 public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalendarDatesResource {
 
     @Override
-    public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse read(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, CalendarDatesFilter.class, true);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 

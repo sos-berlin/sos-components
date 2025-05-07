@@ -34,7 +34,7 @@ public class UriImpl extends JOCResourceImpl implements IUriResource {
     public JOCDefaultResponse setUri(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, CockpitURI.class);
             CockpitURI in = Globals.objectMapper.readValue(filterBytes, CockpitURI.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getSettings()

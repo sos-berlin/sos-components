@@ -32,7 +32,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
     @Override
     public JOCDefaultResponse getDebugLog(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(LOG_API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(LOG_API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 

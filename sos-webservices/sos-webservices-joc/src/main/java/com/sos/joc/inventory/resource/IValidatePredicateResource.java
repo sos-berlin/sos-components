@@ -19,5 +19,5 @@ public interface IValidatePredicateResource {
     @Path(PATH)
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse parse(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse parse(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 }

@@ -33,7 +33,7 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
     public JOCDefaultResponse postYadeOverviewSummary(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 

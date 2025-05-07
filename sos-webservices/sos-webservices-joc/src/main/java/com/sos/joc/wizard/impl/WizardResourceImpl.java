@@ -130,7 +130,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
     public JOCDefaultResponse postJob(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_JOB, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_JOB, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobWizardFilter.class);
             JobWizardFilter body = Globals.objectMapper.readValue(filterBytes, JobWizardFilter.class);
 

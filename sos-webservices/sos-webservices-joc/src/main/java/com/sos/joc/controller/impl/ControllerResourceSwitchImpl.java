@@ -27,7 +27,7 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
     public JOCDefaultResponse postJobschedulerSwitch(String accessToken, byte[] filterBytes) {
 
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();

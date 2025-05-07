@@ -16,9 +16,9 @@ import jakarta.ws.rs.Path;
 public class FolderResourceImpl extends AReadFolder implements IFolderResource {
 
     @Override
-    public JOCDefaultResponse readFolder(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse readFolder(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
@@ -39,9 +39,9 @@ public class FolderResourceImpl extends AReadFolder implements IFolderResource {
     }
 
     @Override
-    public JOCDefaultResponse readTrashFolder(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse readTrashFolder(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 

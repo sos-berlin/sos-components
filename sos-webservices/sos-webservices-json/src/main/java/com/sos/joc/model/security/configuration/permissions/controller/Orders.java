@@ -49,14 +49,14 @@ public class Orders {
     @JsonPropertyDescription("resume failed orders")
     private Boolean resumeFailed = false;
     @JsonProperty("modify")
-    private Boolean modify = true;
+    private Boolean modify = false;
     /**
      * skip, unskip, stop, unstop workflow jobs and add/modify order with special start-/endposition
      * 
      */
     @JsonProperty("managePositions")
     @JsonPropertyDescription("skip, unskip, stop, unstop workflow jobs and add/modify order with special start-/endposition")
-    private Boolean managePositions = true;
+    private Boolean managePositions = false;
     @JsonProperty("confirm")
     private Boolean confirm = false;
 

@@ -28,10 +28,10 @@ import jakarta.ws.rs.Path;
 public class ReleaseResourceImpl extends ACommonResourceImpl implements IReleaseResource {
   
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ReleaseConfiguration.class);
             ReleaseConfiguration in = Globals.objectMapper.readValue(filterBytes, ReleaseConfiguration.class);
 

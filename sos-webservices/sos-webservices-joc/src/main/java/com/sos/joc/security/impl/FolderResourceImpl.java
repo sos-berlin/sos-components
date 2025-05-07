@@ -44,7 +44,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_FOLDER_READ, body, accessToken);
+            body = initLogging(API_CALL_FOLDER_READ, body, accessToken);
             JsonValidator.validateFailFast(body, FolderFilter.class);
             FolderFilter folderFilter = Globals.objectMapper.readValue(body, FolderFilter.class);
 
@@ -97,7 +97,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_FOLDERS_STORE, body, accessToken);
+            body = initLogging(API_CALL_FOLDERS_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, Folders.class);
             Folders folders = Globals.objectMapper.readValue(body, Folders.class);
 
@@ -165,7 +165,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_FOLDER_RENAME, body, accessToken);
+            body = initLogging(API_CALL_FOLDER_RENAME, body, accessToken);
             JsonValidator.validate(body, FolderRename.class);
             FolderRename folderRename = Globals.objectMapper.readValue(body, FolderRename.class);
 
@@ -215,7 +215,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_FOLDERS_DELETE, body, accessToken);
+            body = initLogging(API_CALL_FOLDERS_DELETE, body, accessToken);
             JsonValidator.validate(body, FoldersFilter.class);
             FoldersFilter foldersFilter = Globals.objectMapper.readValue(body, FoldersFilter.class);
 
@@ -266,7 +266,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_FOLDERS, body, accessToken);
+            body = initLogging(API_CALL_FOLDERS, body, accessToken);
             JsonValidator.validateFailFast(body, FolderListFilter.class);
             FolderListFilter folderListFilter = Globals.objectMapper.readValue(body, FolderListFilter.class);
 

@@ -25,24 +25,24 @@ public interface ITagResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse readTag(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse readTag(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(TRASH_PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse readTrashTag(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse readTrashTag(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(PATH_JOB)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse readJobTag(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse readJobTag(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(TRASH_PATH_JOB)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse readTrashJobTag(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse readTrashJobTag(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

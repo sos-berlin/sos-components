@@ -62,7 +62,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
     public JOCDefaultResponse deploy(String xAccessToken, byte[] filter, String action) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(action, filter, xAccessToken);
+            filter = initLogging(action, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, RedeployFilter.class);
             RedeployFilter redeployFilter = Globals.objectMapper.readValue(filter, RedeployFilter.class);
 

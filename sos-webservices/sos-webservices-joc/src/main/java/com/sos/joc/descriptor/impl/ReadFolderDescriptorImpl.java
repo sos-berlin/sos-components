@@ -21,7 +21,7 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
     @Override
     public JOCDefaultResponse postReadFolder(String accessToken, byte[] body) {
         try {
-            initLogging(IMPL_PATH_READ_FOLDER, body, accessToken);
+            body = initLogging(IMPL_PATH_READ_FOLDER, body, accessToken);
             JsonValidator.validate(body, RequestFolder.class);
             com.sos.joc.model.inventory.common.RequestFolder filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.common.RequestFolder.class);
@@ -41,7 +41,7 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
     @Override
     public JOCDefaultResponse postReadTrashFolder(String accessToken, byte[] body) {
         try {
-            initLogging(IMPL_PATH_TRASH_READ_FOLDER, body, accessToken);
+            body = initLogging(IMPL_PATH_TRASH_READ_FOLDER, body, accessToken);
             JsonValidator.validateFailFast(body, RequestFolder.class);
             com.sos.joc.model.inventory.common.RequestFolder filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.common.RequestFolder.class);

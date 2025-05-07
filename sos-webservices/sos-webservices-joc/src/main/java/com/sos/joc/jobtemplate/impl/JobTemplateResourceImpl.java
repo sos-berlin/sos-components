@@ -38,7 +38,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
     public JOCDefaultResponse postJobTemplate(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobTemplateFilter.class);
             JobTemplateFilter jobTemplateFilter = Globals.objectMapper.readValue(filterBytes, JobTemplateFilter.class);
 
@@ -89,7 +89,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
     public JOCDefaultResponse postJobTemplateState(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL_STATE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_STATE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobTemplateStateFilter.class);
             JobTemplateStateFilter jobTemplateFilter = Globals.objectMapper.readValue(filterBytes, JobTemplateStateFilter.class);
 

@@ -214,7 +214,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_IDENTITY_CLIENTS, body);
+            body = initLogging(API_CALL_IDENTITY_CLIENTS, body);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 

@@ -88,7 +88,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
             String controllerId = addOrders.getControllerId();

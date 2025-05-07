@@ -19,9 +19,9 @@ public class OrdersTagSearchImpl extends JOCResourceImpl implements ITagSearchRe
     private static final String API_CALL = "./orders/tag/search";
 
     @Override
-    public JOCDefaultResponse postTagSearch(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse postTagSearch(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, DeployedObjectQuickSearchFilter.class);
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 

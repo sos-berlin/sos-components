@@ -49,7 +49,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_SERVICES_READ, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_READ, body, accessToken);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -113,7 +113,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_SERVICES_STORE, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityService identityService = Globals.objectMapper.readValue(body, IdentityService.class);
 
@@ -176,17 +176,20 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             } else {
                 sosHibernateSession.update(dbItemIamIdentityService);
             }
+            
+            Globals.commit(sosHibernateSession);
 
             storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY);
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
+            Globals.rollback(sosHibernateSession);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.commit(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
 
@@ -197,7 +200,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_SERVICES_STORE, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, IdentityServiceRename.class);
             IdentityServiceRename identityServiceRename = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
 
@@ -253,7 +256,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
     public JOCDefaultResponse postIdentityServiceDelete(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_SERVICES_DELETE, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_DELETE, body, accessToken);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -306,7 +309,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_SERVICES, body, accessToken);
+            body = initLogging(API_CALL_SERVICES, body, accessToken);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -380,7 +383,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_SERVICES_REORDER, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_REORDER, body, accessToken);
             JsonValidator.validateFailFast(body, IdentityServicesFilter.class);
             IdentityServicesFilter identityServices = Globals.objectMapper.readValue(body, IdentityServicesFilter.class);
 

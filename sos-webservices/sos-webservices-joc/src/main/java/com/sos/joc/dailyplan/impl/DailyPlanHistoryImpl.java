@@ -55,7 +55,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     public JOCDefaultResponse postDates(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH_MAIN, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_MAIN, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, MainRequest.class);
             MainRequest in = Globals.objectMapper.readValue(inBytes, MainRequest.class);
 
@@ -167,7 +167,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     public JOCDefaultResponse postSubmissions(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
@@ -225,7 +225,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     public JOCDefaultResponse postSubmissionsOrders(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, SubmissionsOrdersRequest.class);
             SubmissionsOrdersRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsOrdersRequest.class);
 

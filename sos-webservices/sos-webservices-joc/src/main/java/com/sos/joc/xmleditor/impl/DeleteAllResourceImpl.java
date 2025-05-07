@@ -24,9 +24,9 @@ import jakarta.ws.rs.Path;
 public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDeleteAllResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             DeleteAll in = Globals.objectMapper.readValue(filterBytes, DeleteAll.class);
             

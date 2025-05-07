@@ -25,24 +25,24 @@ public interface IDeleteConfigurationResource {
     @Path(PATH_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse remove(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse remove(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(PATH_FOLDER_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse removeFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse removeFolder(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(PATH_TRASH_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
     
     @POST
     @Path(PATH_TRASH_FOLDER_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deleteFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse deleteFolder(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

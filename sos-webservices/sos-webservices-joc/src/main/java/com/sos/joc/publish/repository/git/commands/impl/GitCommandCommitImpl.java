@@ -43,7 +43,7 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** commit started ***" + started);
-            initLogging(API_CALL, commitFilter, xAccessToken);
+            commitFilter = initLogging(API_CALL, commitFilter, xAccessToken);
             JsonValidator.validate(commitFilter, CommitFilter.class);
             CommitFilter filter = Globals.objectMapper.readValue(commitFilter, CommitFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));

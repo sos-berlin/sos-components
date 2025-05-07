@@ -35,9 +35,10 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
             ConfigurationType.NOTICEBOARD);
 
     @Override
-    public JOCDefaultResponse post(final String accessToken, String objectType, final byte[] inBytes) {
+    public JOCDefaultResponse post(final String accessToken, String objectType, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            String apiCall = String.format("./%s/%s/%s", JocInventory.APPLICATION_PATH, objectType, "references"); 
+            inBytes = initLogging(apiCall, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
@@ -58,7 +59,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                     throw new JocBadRequestException("Unsupported objectType:" + objectType);
                 }
                 
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                session = Globals.createSosHibernateStatelessConnection(apiCall);
                 InventoryDBLayer dbLayer = new InventoryDBLayer(session);
                 
                 entity.setIsRenamed(dbLayer.isRenamed(name, type));

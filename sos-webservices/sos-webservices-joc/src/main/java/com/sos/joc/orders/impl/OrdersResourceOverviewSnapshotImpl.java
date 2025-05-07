@@ -61,7 +61,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     @Override
     public JOCDefaultResponse postOrdersOverviewSnapshot(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV body = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
 

@@ -46,7 +46,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
@@ -83,7 +83,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse downloadOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_DOWNLOAD, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DOWNLOAD, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
@@ -106,7 +106,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postRollingOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_RUNNING, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderRunningLogFilter.class);
             RunningOrderLogEvents orderLog = Globals.objectMapper.readValue(filterBytes, RunningOrderLogEvents.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderLog.getControllerId(), getBasicControllerPermissions(orderLog

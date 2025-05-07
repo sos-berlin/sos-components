@@ -33,7 +33,7 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
     public JOCDefaultResponse postGetPath(String accessToken, byte[] body) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(JocInventory.getResourceImplPath("path"), body, accessToken);
+            body = initLogging(JocInventory.getResourceImplPath("path"), body, accessToken);
             JsonValidator.validateFailFast(body, PathFilter.class);
             PathFilter filter = Globals.objectMapper.readValue(body, PathFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getInventory().getView());

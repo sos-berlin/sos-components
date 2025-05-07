@@ -24,7 +24,7 @@ public class FavoritesOrderingImpl extends JOCResourceImpl implements IFavorites
     public JOCDefaultResponse ordering(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderingFavorites.class);
             OrderingFavorites orderingParam = Globals.objectMapper.readValue(filterBytes, OrderingFavorites.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);

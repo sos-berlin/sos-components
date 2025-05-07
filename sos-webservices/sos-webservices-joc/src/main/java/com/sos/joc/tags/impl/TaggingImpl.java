@@ -1,6 +1,5 @@
 package com.sos.joc.tags.impl;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,12 +37,10 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tag.Tags;
-import com.sos.joc.model.tag.common.JobTags;
 import com.sos.joc.model.tag.tagging.RequestFilter;
 import com.sos.joc.model.tag.tagging.RequestModifyFilter;
 import com.sos.joc.tags.resource.ITagging;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import jakarta.ws.rs.Path;
 
@@ -164,7 +161,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
     public JOCDefaultResponse postFolderTagging(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_FOLDER_TAGGING, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_FOLDER_TAGGING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RequestModifyFilter.class);
             RequestModifyFilter in =  Globals.objectMapper.readValue(filterBytes, RequestModifyFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
@@ -286,8 +283,8 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         }
     }
     
-    private RequestFilter initRequest(String apiCall, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
-        initLogging(apiCall, filterBytes, accessToken);
+    private RequestFilter initRequest(String apiCall, String accessToken, byte[] filterBytes) throws Exception {
+        filterBytes = initLogging(apiCall, filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
         return Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
     }

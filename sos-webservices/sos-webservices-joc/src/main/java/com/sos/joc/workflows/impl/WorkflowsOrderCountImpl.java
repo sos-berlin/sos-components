@@ -33,7 +33,7 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
     @Override
     public JOCDefaultResponse postOrderCount(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowOrderCountFilter.class);
             WorkflowOrderCountFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowOrderCountFilter.class);
             String controllerId = workflowsFilter.getControllerId();

@@ -37,9 +37,9 @@ import js7.data_for_java.controller.JControllerState;
 public abstract class AReadTag extends JOCResourceImpl {
     
     public JOCDefaultResponse readTag(final String action, boolean forTrash, ATagDBLayer<? extends IDBItemTag> dbLayer, final String accessToken,
-            final byte[] inBytes) {
+            byte[] inBytes) {
         try {
-            initLogging(action, inBytes, accessToken);
+            inBytes = initLogging(action, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestTag.class);
             RequestTag in = Globals.objectMapper.readValue(inBytes, RequestTag.class);
 

@@ -37,7 +37,7 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** remove credentials started ***" + started);
-            initLogging(API_CALL, removeCredentialsFilter, xAccessToken);
+            removeCredentialsFilter = initLogging(API_CALL, removeCredentialsFilter, xAccessToken);
             JsonValidator.validate(removeCredentialsFilter, RemoveCredentialsFilter.class);
             RemoveCredentialsFilter filter = Globals.objectMapper.readValue(removeCredentialsFilter, RemoveCredentialsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));

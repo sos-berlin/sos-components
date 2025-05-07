@@ -43,10 +43,10 @@ import com.sos.schema.JsonValidator;
 public class DeployableResourceImpl extends JOCResourceImpl implements IDeployableResource {
 
     @Override
-    public JOCDefaultResponse deployable(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse deployable(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, DeployableFilter.class, true);
             DeployableFilter in = Globals.objectMapper.readValue(inBytes, DeployableFilter.class);
 

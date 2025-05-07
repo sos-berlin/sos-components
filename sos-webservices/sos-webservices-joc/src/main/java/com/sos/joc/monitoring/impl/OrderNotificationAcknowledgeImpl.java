@@ -30,7 +30,7 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, OrderNotificationAcknowledgeFilter.class);
             OrderNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationAcknowledgeFilter.class);
 

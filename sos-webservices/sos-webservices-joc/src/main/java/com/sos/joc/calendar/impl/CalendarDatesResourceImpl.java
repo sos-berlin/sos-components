@@ -27,10 +27,10 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
     private static final String API_CALL = "./calendar/dates";
 
     @Override
-    public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse read(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validate(inBytes, CalendarDatesFilter.class);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 

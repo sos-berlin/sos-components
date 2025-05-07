@@ -30,7 +30,7 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
     public JOCDefaultResponse postStoreCertificate(String xAccessToken, byte[] storeCertificateFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, storeCertificateFilter, xAccessToken);
+            storeCertificateFilter = initLogging(API_CALL, storeCertificateFilter, xAccessToken);
             JsonValidator.validateFailFast(storeCertificateFilter, StoreCertificateRequestFilter.class);
             StoreCertificateRequestFilter filter = Globals.objectMapper.readValue(storeCertificateFilter, StoreCertificateRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

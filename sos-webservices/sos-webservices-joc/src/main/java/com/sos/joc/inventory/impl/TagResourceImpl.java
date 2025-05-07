@@ -13,22 +13,22 @@ import jakarta.ws.rs.Path;
 public class TagResourceImpl extends AReadTag implements ITagResource {
 
     @Override
-    public JOCDefaultResponse readTag(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse readTag(final String accessToken, byte[] inBytes) {
         return readTag(IMPL_PATH, false, new InventoryTagDBLayer(null), accessToken, inBytes);
     }
 
     @Override
-    public JOCDefaultResponse readTrashTag(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse readTrashTag(final String accessToken, byte[] inBytes) {
         return readTag(TRASH_IMPL_PATH, true, new InventoryTagDBLayer(null), accessToken, inBytes);
     }
     
     @Override
-    public JOCDefaultResponse readJobTag(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse readJobTag(final String accessToken, byte[] inBytes) {
         return readTag(IMPL_PATH_JOB, false, new InventoryJobTagDBLayer(null), accessToken, inBytes);
     }
 
     @Override
-    public JOCDefaultResponse readTrashJobTag(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse readTrashJobTag(final String accessToken, byte[] inBytes) {
         return readTag(TRASH_IMPL_PATH_JOB, true, new InventoryJobTagDBLayer(null), accessToken, inBytes);
     }
 

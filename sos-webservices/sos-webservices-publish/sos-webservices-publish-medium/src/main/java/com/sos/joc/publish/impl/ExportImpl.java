@@ -56,7 +56,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
 	public JOCDefaultResponse postExportConfiguration(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, exportFilter, xAccessToken);
+            exportFilter = initLogging(API_CALL, exportFilter, xAccessToken);
             JsonValidator.validate(exportFilter, ExportFilter.class);
             ExportFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFilter.class);
             ExportForSigning forSigning = filter.getForSigning();

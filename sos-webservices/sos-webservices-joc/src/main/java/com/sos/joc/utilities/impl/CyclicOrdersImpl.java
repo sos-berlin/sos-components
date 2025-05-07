@@ -28,7 +28,7 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
     public JOCDefaultResponse postCyclicOrders(String accessToken, byte[] filterBytes) {
         LOGGER.debug("reading list of cyclic orders");
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV in = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
             String controllerId = in.getControllerId();

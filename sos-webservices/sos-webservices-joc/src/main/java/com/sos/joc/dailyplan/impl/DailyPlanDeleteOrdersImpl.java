@@ -56,7 +56,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
 
         LOGGER.debug("Delete orders from the daily plan");
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             // validation without required dailyPlanDateFrom 
             JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);

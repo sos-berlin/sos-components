@@ -19,5 +19,5 @@ public interface IStatisticsResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse getStatistics(@HeaderParam("X-Access-Token") final String accessToken, final byte[] requestBody);
+    public JOCDefaultResponse getStatistics(@HeaderParam("X-Access-Token") final String accessToken, byte[] requestBody);
 }

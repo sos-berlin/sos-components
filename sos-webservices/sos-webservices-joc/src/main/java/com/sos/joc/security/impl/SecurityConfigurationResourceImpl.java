@@ -37,7 +37,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
     public JOCDefaultResponse postAuthRead(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_READ, null, accessToken);
+            body = initLogging(API_CALL_READ, null, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
                     .getView());
             if (jocDefaultResponse != null) {
@@ -103,6 +103,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 securityConfigurationAccount.setRepeatedPassword("********");
             }
 
+            // TODO consider 4eyes body
             initLogging(API_CALL_WRITE, Globals.objectMapper.writeValueAsBytes(securityConfigurationMasked), accessToken);
             JsonValidator.validate(body, SecurityConfiguration.class);
             SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);

@@ -124,7 +124,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
                 if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
                     if (get4EyesJocPermissions().getAdministration().getSettings().getManage()) {
-                        return fourEyesResponse();
+                        JOCDefaultResponse response = approvalRequestResponse();
+                        if (response != null) {
+                            return response;
+                        }
                     }
                     // store only user settings without permissions
                     configuration.setConfigurationItem(StoreSettingsImpl.updateOnlyUserSection(configuration.getConfigurationItem(), oldConfiguration,
@@ -138,7 +141,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     return accessDeniedResponse();
                 }
                 if (get4EyesJocPermissions().getAdministration().getAccounts().getManage()) {
-                    return fourEyesResponse();
+                    JOCDefaultResponse response = approvalRequestResponse();
+                    if (response != null) {
+                        return response;
+                    }
                 }
 
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
@@ -177,15 +183,21 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                             return accessDeniedResponse();
                         }
                         if (get4EyesJocPermissions().getAdministration().getCustomization().getManage()) {
-                            return fourEyesResponse();
+                            JOCDefaultResponse response = approvalRequestResponse();
+                            if (response != null) {
+                                return response;
+                            }
                         }
                         boolean shareIsChanged = (dbItem.getShared() && !shouldBeShared) || (!dbItem.getShared() && shouldBeShared);
                         if (shareIsChanged) {
                             if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
                                 return accessDeniedResponse();
                             }
-                            if (!get4EyesJocPermissions().getAdministration().getCustomization().getShare()) {
-                                return fourEyesResponse();
+                            if (get4EyesJocPermissions().getAdministration().getCustomization().getShare()) {
+                                JOCDefaultResponse response = approvalRequestResponse();
+                                if (response != null) {
+                                    return response;
+                                }
                             }
                         }
                     }
@@ -469,7 +481,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         return accessDeniedResponse();
                     }
                     if (perms.get(1)) {
-                        return fourEyesResponse();
+                        JOCDefaultResponse response = approvalRequestResponse();
+                        if (response != null) {
+                            return response;
+                        }
                     }
                 }
                 dbItem.setShared(true);
@@ -525,7 +540,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         return accessDeniedResponse();
                     }
                     if (get4EyesJocPermissions().getAdministration().getCustomization().getShare()) {
-                        return fourEyesResponse();
+                        JOCDefaultResponse response = approvalRequestResponse();
+                        if (response != null) {
+                            return response;
+                        }
                     }
                 }
                 dbItem.setShared(false);
@@ -547,14 +565,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         }
     }
 
-    private ConfigurationRead getConfigurationRead(String action, String accessToken, byte[] body) throws SOSJsonSchemaException, IOException {
-        initLogging(action, body, accessToken);
+    private ConfigurationRead getConfigurationRead(String action, String accessToken, byte[] body) throws Exception {
+        body = initLogging(action, body, accessToken);
         JsonValidator.validateFailFast(body, ConfigurationRead.class);
         return Globals.objectMapper.readValue(body, ConfigurationRead.class);
     }
     
-    private Configuration getConfiguration(String action, String accessToken, byte[] body) throws SOSJsonSchemaException, IOException {
-        initLogging(action, body, accessToken);
+    private Configuration getConfiguration(String action, String accessToken, byte[] body) throws Exception {
+        body = initLogging(action, body, accessToken);
         JsonValidator.validateFailFast(body, Configuration.class);
         return Globals.objectMapper.readValue(body, Configuration.class);
     }

@@ -19,6 +19,6 @@ public interface IReleaseResource {
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse release(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse release(@HeaderParam("X-Access-Token") final String accessToken, byte[] body);
 
 }

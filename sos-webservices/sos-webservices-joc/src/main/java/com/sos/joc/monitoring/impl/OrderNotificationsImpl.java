@@ -43,7 +43,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, OrderNotificationsFilter.class);
             OrderNotificationsFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationsFilter.class);
 

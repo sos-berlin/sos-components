@@ -61,7 +61,7 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
     public JOCDefaultResponse postGetVersions(String xAccessToken, byte[] versionsFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL_VERSIONS, versionsFilter, xAccessToken);
+            versionsFilter = initLogging(API_CALL_VERSIONS, versionsFilter, xAccessToken);
             JsonValidator.validateFailFast(versionsFilter, VersionsFilter.class);
             VersionsFilter filter = Globals.objectMapper.readValue(versionsFilter, VersionsFilter.class);
             Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()

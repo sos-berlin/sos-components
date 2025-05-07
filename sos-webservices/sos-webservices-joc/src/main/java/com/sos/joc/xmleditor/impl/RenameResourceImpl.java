@@ -22,10 +22,10 @@ import com.sos.schema.JsonValidator;
 public class RenameResourceImpl extends ACommonResourceImpl implements IRenameResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RenameConfiguration.class);
             RenameConfiguration in = Globals.objectMapper.readValue(filterBytes, RenameConfiguration.class);
 

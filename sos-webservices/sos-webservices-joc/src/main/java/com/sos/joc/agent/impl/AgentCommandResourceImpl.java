@@ -58,7 +58,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse reset(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_RESET, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RESET, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
@@ -97,7 +97,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse remove(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_REMOVE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REMOVE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
@@ -148,7 +148,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse switchover(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
@@ -188,7 +188,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse confirmNodeLoss(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_CONFIRMNODELOSS, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_CONFIRMNODELOSS, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             

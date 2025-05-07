@@ -66,6 +66,7 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
+import com.sos.joc.db.joc.DBItemJocApprovalRequests;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.db.joc.DBItemJocCluster;
@@ -407,7 +408,13 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_ENC_AGENT_CERTIFICATES = DBItemEncAgentCertificate.class.getSimpleName();
     public static final String TABLE_ENC_AGENT_CERTIFICATES = "ENC_AGENT_CERTIFICATES";
+    
+    /** 4-eyes principle */
+    public static final String DBITEM_APPROVAL_REQUESTS = DBItemJocApprovalRequests.class.getSimpleName();
+    public static final String TABLE_JOC_APPROVAL_REQUESTS = "JOC_FOUR_EYES";
+    public static final String TABLE_JOC_APPROVAL_REQUESTS_SEQUENCE = "SEQ_JOC_FOUR_EYES";
 
+    
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";

@@ -139,7 +139,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     public JOCDefaultResponse getState(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ReadAgentsV.class);
             ReadAgentsV agentsParam = Globals.objectMapper.readValue(filterBytes, ReadAgentsV.class);
             String controllerId = agentsParam.getControllerId();

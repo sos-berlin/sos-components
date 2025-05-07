@@ -44,7 +44,7 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, AgentReportFilter.class);
             AgentReportFilter agentParameter = Globals.objectMapper.readValue(filterBytes, AgentReportFilter.class);
             

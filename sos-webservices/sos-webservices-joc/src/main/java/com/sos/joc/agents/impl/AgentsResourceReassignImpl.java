@@ -47,7 +47,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
     public JOCDefaultResponse reAssign(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter body = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             

@@ -23,7 +23,7 @@ public class NoticeBoards {
      */
     @JsonProperty("view")
     @JsonPropertyDescription("show resource tab 'notice boards'")
-    private Boolean view = true;
+    private Boolean view = false;
     /**
      * post notice
      * 

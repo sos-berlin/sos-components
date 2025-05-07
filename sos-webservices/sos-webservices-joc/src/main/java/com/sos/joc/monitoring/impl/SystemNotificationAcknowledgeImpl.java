@@ -30,7 +30,7 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, SystemNotificationAcknowledgeFilter.class);
             SystemNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationAcknowledgeFilter.class);
 

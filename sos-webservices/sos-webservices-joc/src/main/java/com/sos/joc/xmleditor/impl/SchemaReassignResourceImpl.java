@@ -22,9 +22,9 @@ import com.sos.schema.JsonValidator;
 public class SchemaReassignResourceImpl extends ACommonResourceImpl implements ISchemaReassignResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, SchemaReassignConfiguration.class);
             SchemaReassignConfiguration in = Globals.objectMapper.readValue(filterBytes, SchemaReassignConfiguration.class);
 

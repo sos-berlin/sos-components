@@ -22,9 +22,9 @@ public class ScheduleQuickSearchImpl extends JOCResourceImpl implements IQuickSe
     private static final String API_CALL = "./schedules/quick/search";
 
     @Override
-    public JOCDefaultResponse postSearch(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse postSearch(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 

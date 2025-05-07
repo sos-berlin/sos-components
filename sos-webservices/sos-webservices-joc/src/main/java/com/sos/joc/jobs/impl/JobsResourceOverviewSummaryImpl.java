@@ -40,7 +40,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
     public JOCDefaultResponse postJobsOverviewSummary(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
             JobsFilter jobsFilter = Globals.objectMapper.readValue(filterBytes, JobsFilter.class);
             

@@ -66,7 +66,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     @Override
     public JOCDefaultResponse postCancelOrder(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             // validation without required dailyPlanDateFrom
             JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);

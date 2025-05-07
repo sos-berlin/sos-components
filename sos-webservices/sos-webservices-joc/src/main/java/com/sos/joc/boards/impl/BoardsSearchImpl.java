@@ -26,7 +26,7 @@ public class BoardsSearchImpl extends JOCResourceImpl implements ISearchResource
     @Override
     public JOCDefaultResponse postSearch(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RequestDeployedSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(filterBytes, RequestSearchFilter.class);
             in.setReturnType(RequestSearchReturnType.NOTICEBOARD);

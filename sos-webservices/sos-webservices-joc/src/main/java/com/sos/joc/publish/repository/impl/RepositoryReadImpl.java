@@ -47,7 +47,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** read from repository started ***" + started);
-            initLogging(API_CALL, readFromFilter, xAccessToken);
+            readFromFilter = initLogging(API_CALL, readFromFilter, xAccessToken);
             JsonValidator.validate(readFromFilter, ReadFromFilter.class);
             ReadFromFilter filter = Globals.objectMapper.readValue(readFromFilter, ReadFromFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));

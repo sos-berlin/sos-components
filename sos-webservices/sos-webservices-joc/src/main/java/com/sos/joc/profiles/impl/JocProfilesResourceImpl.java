@@ -48,7 +48,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
     public JOCDefaultResponse postProfilesDelete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ProfilesFilter.class);
             ProfilesFilter profilesFilter = Globals.objectMapper.readValue(filterBytes, ProfilesFilter.class);
 
@@ -95,7 +95,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            initLogging(API_CALL_PROFILES, null, accessToken);
+            body = initLogging(API_CALL_PROFILES, null, accessToken);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
                     .getManage()));

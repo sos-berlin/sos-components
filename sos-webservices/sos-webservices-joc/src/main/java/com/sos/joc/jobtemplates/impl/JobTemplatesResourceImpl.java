@@ -41,7 +41,7 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
     public JOCDefaultResponse postJobTemplates(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobTemplatesFilter.class);
             JobTemplatesFilter jobTemplatesFilter = Globals.objectMapper.readValue(filterBytes, JobTemplatesFilter.class);
 

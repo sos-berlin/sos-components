@@ -28,7 +28,7 @@ public class DeleteSigningCaImpl extends JOCResourceImpl implements IDeleteSigni
     public JOCDefaultResponse postDeleteSigningCa(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, DeleteCaFilter.class);
             DeleteCaFilter deleteCaFilter = Globals.objectMapper.readValue(filter, DeleteCaFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()

@@ -34,7 +34,7 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
     public JOCDefaultResponse postSetRootCa(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, SetRootCaForSigningFilter.class);
             SetRootCaForSigningFilter setRootCaFilter = Globals.objectMapper.readValue(filter, SetRootCaForSigningFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()

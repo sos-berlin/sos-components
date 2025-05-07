@@ -36,7 +36,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
     public JOCDefaultResponse postCreateToken(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL_CREATE, filter, xAccessToken);
+            filter = initLogging(API_CALL_CREATE, filter, xAccessToken);
             JsonValidator.validate(filter, CreateOnetimeTokenFilter.class);
             CreateOnetimeTokenFilter createOnetimeTokenFilter = Globals.objectMapper.readValue(filter, CreateOnetimeTokenFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
@@ -111,7 +111,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
     @Override
     public JOCDefaultResponse postShowToken(String xAccessToken, byte[] filter) {
         try {
-            initLogging(API_CALL_SHOW, filter, xAccessToken);
+            filter = initLogging(API_CALL_SHOW, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, ShowOnetimeTokenFilter.class);
             ShowOnetimeTokenFilter showOnetimeTokenFilter = Globals.objectMapper.readValue(filter, ShowOnetimeTokenFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

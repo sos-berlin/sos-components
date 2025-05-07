@@ -27,7 +27,7 @@ public class RelativeDatesConverterImpl extends JOCResourceImpl implements IRela
     public JOCDefaultResponse postConvertRelativeDates(String accessToken, byte[] filterBytes) {
         LOGGER.debug("convert relative dates");
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RelativeDatesConverter.class);
             RelativeDatesConverter in = Globals.objectMapper.readValue(filterBytes, RelativeDatesConverter.class);
 

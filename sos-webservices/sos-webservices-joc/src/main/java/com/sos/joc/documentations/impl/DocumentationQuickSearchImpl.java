@@ -18,9 +18,9 @@ public class DocumentationQuickSearchImpl extends JOCResourceImpl implements IQu
     private static final String API_CALL = "./documentations/quick/search";
 
     @Override
-    public JOCDefaultResponse postSearch(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse postSearch(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
             RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
 

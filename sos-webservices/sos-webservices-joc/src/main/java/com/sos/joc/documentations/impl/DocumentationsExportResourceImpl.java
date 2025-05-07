@@ -52,7 +52,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));
@@ -168,7 +168,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         SOSHibernateSession sosHibernateSession = null;
         ZipOutputStream zipOut = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));

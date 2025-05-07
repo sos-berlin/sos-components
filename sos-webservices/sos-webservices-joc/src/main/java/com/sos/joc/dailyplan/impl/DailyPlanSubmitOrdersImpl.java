@@ -64,7 +64,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
     public JOCDefaultResponse postSubmitOrders(String accessToken, byte[] filterBytes) {
         LOGGER.debug("Submit orders to JS7 controller");
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             // validation without required dailyPlanDateFrom 
             JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);

@@ -42,7 +42,7 @@ public class EncryptImpl extends JOCResourceImpl implements IEncrypt {
     public JOCDefaultResponse postEncrypt(String xAccessToken, byte[] encryptFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, encryptFilter, xAccessToken);
+            encryptFilter = initLogging(API_CALL, encryptFilter, xAccessToken);
             JsonValidator.validate(encryptFilter, EncryptRequestFilter.class);
             EncryptRequestFilter filter = Globals.objectMapper.readValue(encryptFilter, EncryptRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getEncipherment().getEncrypt()));

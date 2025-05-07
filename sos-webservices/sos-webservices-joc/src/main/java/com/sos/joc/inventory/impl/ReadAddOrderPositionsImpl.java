@@ -28,9 +28,9 @@ import jakarta.ws.rs.Path;
 public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadAddOrderPositions {
 
     @Override
-    public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse read(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestWorkflowFilter.class);
             RequestWorkflowFilter in = Globals.objectMapper.readValue(inBytes, RequestWorkflowFilter.class);
 

@@ -40,7 +40,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
     public JOCDefaultResponse postVariables(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, OrderVariablesFilter.class);
             OrderVariablesFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderVariablesFilter.class);
             String controllerId = orderFilter.getControllerId();

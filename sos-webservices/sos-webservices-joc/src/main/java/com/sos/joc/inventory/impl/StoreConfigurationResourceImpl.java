@@ -16,9 +16,9 @@ import jakarta.ws.rs.Path;
 public class StoreConfigurationResourceImpl extends AStoreConfiguration implements IStoreConfigurationResource {
 
     @Override
-    public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse store(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, ConfigurationObject.class, true);
             ConfigurationObject in = Globals.objectMapper.readValue(inBytes, ConfigurationObject.class);
 

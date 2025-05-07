@@ -58,7 +58,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
     public JOCDefaultResponse postDeploy(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             
             AgentHelper.throwJocMissingLicenseException();
             

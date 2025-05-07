@@ -24,10 +24,10 @@ import jakarta.ws.rs.Path;
 public class StoreResourceImpl extends ACommonResourceImpl implements IStoreResource {
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreConfiguration.class);
             StoreConfiguration in = Globals.objectMapper.readValue(filterBytes, StoreConfiguration.class);
 

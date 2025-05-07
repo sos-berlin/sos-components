@@ -44,7 +44,7 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
     public JOCDefaultResponse postNames(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, null, accessToken);
+            filterBytes = initLogging(API_CALL, null, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId agentParameter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             String controllerId = agentParameter.getControllerId();

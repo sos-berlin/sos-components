@@ -24,7 +24,7 @@ public class SubAgentClusterOrderingImpl extends JOCResourceImpl implements ISub
     public JOCDefaultResponse ordering(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
 
             // AgentHelper.throwJocMissingLicenseException();
 

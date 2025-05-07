@@ -30,7 +30,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
     @Override
     public JOCDefaultResponse postTree(String accessToken, byte[] treeBodyBytes) {
         try {
-            initLogging(API_CALL, treeBodyBytes, accessToken);
+            treeBodyBytes = initLogging(API_CALL, treeBodyBytes, accessToken);
             JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 

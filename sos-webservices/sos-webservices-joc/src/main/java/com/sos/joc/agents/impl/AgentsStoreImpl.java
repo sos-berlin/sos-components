@@ -60,7 +60,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
     private JOCDefaultResponse inventoryStoreOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
             Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
@@ -137,7 +137,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
     private JOCDefaultResponse clusterInventoryStoreOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken);
 
             AgentHelper.throwJocMissingLicenseException();
 

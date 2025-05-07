@@ -30,9 +30,9 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoveAllResourceImpl.class);
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             RemoveAll in = Globals.objectMapper.readValue(filterBytes, RemoveAll.class);
 

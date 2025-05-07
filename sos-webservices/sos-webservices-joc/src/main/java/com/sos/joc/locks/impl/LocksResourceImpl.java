@@ -46,7 +46,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
     @Override
     public JOCDefaultResponse postLocks(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, LocksFilter.class);
             LocksFilter filter = Globals.objectMapper.readValue(filterBytes, LocksFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(), accessToken)

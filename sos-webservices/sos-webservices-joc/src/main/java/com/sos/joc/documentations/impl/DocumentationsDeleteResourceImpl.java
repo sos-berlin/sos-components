@@ -37,7 +37,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, DocumentationsDeleteFilter.class);
             DocumentationsDeleteFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsDeleteFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));

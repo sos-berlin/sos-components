@@ -28,7 +28,7 @@ public class LoadDataImpl extends JOCResourceImpl implements ILoadDataResource {
     @Override
     public JOCDefaultResponse create(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, LoadFilter.class);
             LoadFilter in = Globals.objectMapper.readValue(filterBytes, LoadFilter.class);
             

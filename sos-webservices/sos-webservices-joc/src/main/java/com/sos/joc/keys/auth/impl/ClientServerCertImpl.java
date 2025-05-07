@@ -50,7 +50,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
     public JOCDefaultResponse postCreateClientServerCert(String token, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, filter);
+            filter = initLogging(API_CALL, filter);
             JsonValidator.validateFailFast(filter, CreateCSRFilter.class);
             CreateCSRFilter createCsrFilter = Globals.objectMapper.readValue(filter, CreateCSRFilter.class);
             ClientServerCertificateUtil.cleanupInvalidatedTokens();

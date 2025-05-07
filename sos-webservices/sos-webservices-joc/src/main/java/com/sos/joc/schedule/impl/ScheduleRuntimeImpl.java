@@ -61,7 +61,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
     public JOCDefaultResponse postScheduleRuntime(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, ScheduleDatesFilter.class);
             ScheduleDatesFilter in = Globals.objectMapper.readValue(filterBytes, ScheduleDatesFilter.class);
             JocPermissions perms = getBasicJocPermissions(accessToken);

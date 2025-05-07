@@ -49,7 +49,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
         SOSHibernateSession session = null;
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ProjectionsDayRequest.class);
             ProjectionsDayRequest in = Globals.objectMapper.readValue(filterBytes, ProjectionsDayRequest.class);
 

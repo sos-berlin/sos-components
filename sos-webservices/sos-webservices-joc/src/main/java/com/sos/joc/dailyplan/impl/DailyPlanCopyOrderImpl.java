@@ -102,7 +102,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
     @Override
     public JOCDefaultResponse postCopyOrder(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, DailyPlanModifyOrder.class);
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();

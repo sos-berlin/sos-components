@@ -45,7 +45,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
     public JOCDefaultResponse postStoreSettings(String accessToken, byte[] storeSettingsFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, storeSettingsFilter, accessToken);
+            storeSettingsFilter = initLogging(API_CALL, storeSettingsFilter, accessToken);
             JsonValidator.validate(storeSettingsFilter, StoreSettingsFilter.class);
             StoreSettingsFilter filter = Globals.objectMapper.readValue(storeSettingsFilter, StoreSettingsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);

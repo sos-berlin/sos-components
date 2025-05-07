@@ -17,9 +17,9 @@ import jakarta.ws.rs.Path;
 public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSearchResource {
 
     @Override
-    public JOCDefaultResponse postSearch(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse postSearch(final String accessToken, byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
             RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
 

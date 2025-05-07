@@ -70,7 +70,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     public JOCDefaultResponse registerController(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_REGISTER, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REGISTER, filterBytes, accessToken);
             
             if (!StateImpl.isActive(API_CALL_REGISTER, null)) {
                 throw new JocServiceException("Registering the Controllers is possible only in the active JOC node.");
@@ -281,7 +281,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     public JOCDefaultResponse unregisterController(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken);
             
             if (!StateImpl.isActive(API_CALL_DELETE, null)) {
                 throw new JocServiceException("Deregistering the Controllers is possible only in the active JOC node.");
@@ -346,7 +346,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     @Override
     public JOCDefaultResponse testControllerConnection(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_TEST, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_TEST, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, TestConnect.class);
             TestConnect jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, TestConnect.class);
             

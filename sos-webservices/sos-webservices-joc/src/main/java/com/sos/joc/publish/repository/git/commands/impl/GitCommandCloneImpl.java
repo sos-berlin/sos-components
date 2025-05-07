@@ -43,7 +43,7 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** clone started ***" + started);
-            initLogging(API_CALL, cloneFilter, xAccessToken);
+            cloneFilter = initLogging(API_CALL, cloneFilter, xAccessToken);
             JsonValidator.validate(cloneFilter, CloneFilter.class);
             CloneFilter filter = Globals.objectMapper.readValue(cloneFilter, CloneFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));

@@ -64,6 +64,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
                }
             }
             byte[] filterForLog = Globals.objectMapper.writeValueAsBytes(filterForLogging);
+            // TODO consider 4eyes body
             initLogging(API_CALL, filterForLog, xAccessToken);
             JsonValidator.validate(addCredentialsFilter, AddCredentialsFilter.class);
             AddCredentialsFilter filter = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);

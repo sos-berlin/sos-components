@@ -36,7 +36,7 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
     @Override
     public JOCDefaultResponse reset(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             ResetAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ResetAgents.class);
             

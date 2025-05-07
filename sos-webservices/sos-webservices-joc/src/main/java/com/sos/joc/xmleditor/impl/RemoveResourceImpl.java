@@ -33,9 +33,9 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteResourceImpl.class);
 
     @Override
-    public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
             RemoveConfiguration in = Globals.objectMapper.readValue(filterBytes, RemoveConfiguration.class);
 
