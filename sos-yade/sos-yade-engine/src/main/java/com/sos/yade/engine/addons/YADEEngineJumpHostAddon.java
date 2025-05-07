@@ -151,6 +151,7 @@ public class YADEEngineJumpHostAddon {
             newSourceArgs.getRecursive().setValue(Boolean.valueOf(true));
             newSourceArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newSourceArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
+
             newSourceArgs.getCommands().addCommandBeforeOperation(config.getYADEClientCommand(config.settingsXML, config.profileId));
             // Source (Target Host)
             // Target (Any Provider) - the same as before
@@ -166,8 +167,11 @@ public class YADEEngineJumpHostAddon {
             newTargetArgs.getCreateDirectories().setValue(Boolean.valueOf(true));
             newTargetArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newTargetArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
-            newTargetArgs.getCommands().addCommandAfterOperationOnSuccess(config.getYADEClientCommand(config.settingsXML, config.profileId));
+            // only KeepModificationDate - all other TargetOptions such as AppendFiles, Atomic, CumulativeFile, etc.
+            // - are applied during the transfer from the JumpHost to the Target (generated with config.settingsXML)
+            newTargetArgs.getKeepModificationDate().setValue(argsLoader.getTargetArgs().getKeepModificationDate().getValue());
 
+            newTargetArgs.getCommands().addCommandAfterOperationOnSuccess(config.getYADEClientCommand(config.settingsXML, config.profileId));
             // Source (Any Provider) - the same as before
             // Target (Jump Host)
             argsLoader.setTargetArgs(newTargetArgs);
