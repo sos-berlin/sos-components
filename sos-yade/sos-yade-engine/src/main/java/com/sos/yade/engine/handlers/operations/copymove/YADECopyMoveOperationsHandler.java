@@ -114,7 +114,8 @@ public class YADECopyMoveOperationsHandler {
                     YADEProviderFile sourceFile = (YADEProviderFile) f;
                     try {
                         // useCumulativeTargetFile=false for transfers in parallel
-                        new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, sourceFile, cancel).run(isMoveOperation, false);
+                        // useLastModified=true for transfers in parallel
+                        new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, sourceFile, cancel).run(isMoveOperation, false, true);
                     } catch (Exception e) {
                         if (config.isTransactionalEnabled()) {
                             cancel.set(true);
@@ -140,8 +141,12 @@ public class YADECopyMoveOperationsHandler {
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, boolean useCumulativeTargetFile,
             AtomicBoolean cancel) throws Exception {
 
+        int lastFileIndex = 0;
         if (useCumulativeTargetFile) {
             YADETargetCumulativeFileHelper.tryDeleteFile(logger, config, targetDelegator);
+            if (config.getTarget().isKeepModificationDateEnabled()) {
+                lastFileIndex = sourceFiles.get(sourceFiles.size() - 1).getIndex();
+            }
         }
 
         int nonTransactionalErrorCounter = 0;
@@ -151,8 +156,10 @@ public class YADECopyMoveOperationsHandler {
                 return;
             }
             YADEProviderFile f = (YADEProviderFile) sourceFile;
+            boolean useLastModified = lastFileIndex == 0 || (lastFileIndex == f.getIndex());
             try {
-                new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(isMoveOperation, useCumulativeTargetFile);
+                new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(isMoveOperation, useCumulativeTargetFile,
+                        useLastModified);
             } catch (Throwable e) {
                 if (config.isTransactionalEnabled()) {
                     cancel.set(true);
@@ -194,11 +201,19 @@ public class YADECopyMoveOperationsHandler {
         try {
             String moved = isMoveOperation ? YADEClientBannerWriter.formatState(TransferEntryState.MOVED) : "";
             boolean isAtomicallyEnabled = config.getTarget().getAtomic() != null;
+            int lastFileIndex = 0;
+            if (useCumulativeTargetFile) {
+                if (config.getTarget().isKeepModificationDateEnabled()) {
+                    lastFileIndex = sourceFiles.get(sourceFiles.size() - 1).getIndex();
+                }
+            }
+
             for (ProviderFile pf : sourceFiles) {
                 YADEProviderFile sourceFile = (YADEProviderFile) pf;
                 String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
+                boolean useLastModified = lastFileIndex == 0 || (lastFileIndex == sourceFile.getIndex());
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
-                        isAtomicallyEnabled);
+                        isAtomicallyEnabled, useLastModified);
 
                 // TODO test SOURCE_TO_JUMP_HOST with MOVE
                 if (isMoveOperation && !sourceDelegator.isJumpHost()) {

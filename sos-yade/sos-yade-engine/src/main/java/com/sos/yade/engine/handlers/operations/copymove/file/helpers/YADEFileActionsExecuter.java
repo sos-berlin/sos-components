@@ -18,7 +18,7 @@ public class YADEFileActionsExecuter {
 
     public static void postProcessingOnSuccess(ISOSLogger logger, String fileTransferLogPrefix, YADECopyMoveOperationsConfig config,
             YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile,
-            boolean isAtomicallyEnabled) throws Exception {
+            boolean isAtomicallyEnabled, boolean useLastModified) throws Exception {
 
         boolean executeAfterFile = false;
         // 1) Target - individual operations
@@ -42,12 +42,15 @@ public class YADEFileActionsExecuter {
                     rename(logger, fileTransferLogPrefix, targetDelegator, sourceDelegator, targetDelegator, sourceFile, isAtomicallyEnabled, false);
                 }
                 // 2) Target - KeepModificationDate
-                if (config.getTarget().isKeepModificationDateEnabled()) {
+                // useLastModified - extra due to cumilativeFile case - setting only one time from the last source file
+                if (useLastModified && config.getTarget().isKeepModificationDateEnabled()) {
                     if (logger.isDebugEnabled()) {
                         logger.debug("[%s][%s][%s][setTargetFileModificationDate][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(),
                                 targetFile.getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
                     }
                     targetDelegator.getProvider().setFileLastModifiedFromMillis(targetFile.getFinalFullPath(), sourceFile.getLastModifiedMillis());
+                    logger.info("[%s][%s][%s][ModificationDate][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFile
+                            .getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
                 }
                 // 3) Target - CreateIntegrityHashFile
                 if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {

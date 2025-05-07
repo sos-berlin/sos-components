@@ -205,7 +205,7 @@ public class SSHJProvider extends SSHProvider {
         } catch (SOSNoSuchFileException e) {
             return false;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
     }
 
@@ -228,7 +228,7 @@ public class SSHJProvider extends SSHProvider {
         } catch (SOSNoSuchFileException e) {
             return false;
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
     }
 

@@ -26,17 +26,19 @@ public class YADETargetCumulativeFileHelper {
             return;
         }
         // final path
-        targetDelegator.getProvider().deleteFileIfExists(config.getTarget().getCumulate().getFile().getFinalFullPath());
+        if (targetDelegator.getProvider().deleteFileIfExists(config.getTarget().getCumulate().getFile().getFinalFullPath())) {
+            logger.info("[%s][%s][%s]deleted", targetDelegator.getLabel(), LABEL, config.getTarget().getCumulate().getFile().getFinalFullPath());
+        }
     }
 
     public static void rollback(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator) {
         String path = config.getTarget().getCumulate().getFile().getFullPath();
         try {
             if (targetDelegator.getProvider().deleteFileIfExists(path)) {
-                logger.info("[%s][rollback][%s]deleted", path);
+                logger.info("[%s][rollback][%s]deleted", targetDelegator.getLabel(), path);
             }
         } catch (Exception e) {
-            logger.info("[%s][rollback][%s]%s", path, e.toString());
+            logger.info("[%s][rollback][%s]%s", targetDelegator.getLabel(), path, e.toString());
         }
         if (config.getTarget().getCompress() != null) {
             // de-compressed original cumulative file
@@ -46,7 +48,7 @@ public class YADETargetCumulativeFileHelper {
                     logger.info("[%s][rollback][%s]deleted", targetDelegator.getLabel(), path);
                 }
             } catch (Exception e) {
-                logger.info("[%s][rollback][%s]%s", path, e.toString());
+                logger.info("[%s][rollback][%s]%s", targetDelegator.getLabel(), path, e.toString());
             }
         }
     }
