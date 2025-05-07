@@ -537,10 +537,10 @@ public class SMBJProvider extends SMBProvider {
                 smbPath = smbPath.substring(shareIndex + shareName.length() + 1); // +1 for pathSeparator
             }
         }
-        return sanitizeFilename(smbPath);
+        return smbPath;
     }
 
-    // TODO optimize ...
+    @SuppressWarnings("unused")
     private static String sanitizeFilename(String input) {
         Path path = Paths.get(input);
         String fileName = path.getFileName().toString();

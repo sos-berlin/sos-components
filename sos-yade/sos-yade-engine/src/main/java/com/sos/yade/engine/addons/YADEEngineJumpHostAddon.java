@@ -168,7 +168,7 @@ public class YADEEngineJumpHostAddon {
             newTargetArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newTargetArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
             // only KeepModificationDate - all other TargetOptions such as AppendFiles, Atomic, CumulativeFile, etc.
-            // - are applied during the transfer from the JumpHost to the Target (generated with config.settingsXML)
+            // - are applied during the transfer from the JumpHost to the Target (generated in the config.settingsXML)
             newTargetArgs.getKeepModificationDate().setValue(argsLoader.getTargetArgs().getKeepModificationDate().getValue());
 
             newTargetArgs.getCommands().addCommandAfterOperationOnSuccess(config.getYADEClientCommand(config.settingsXML, config.profileId));
