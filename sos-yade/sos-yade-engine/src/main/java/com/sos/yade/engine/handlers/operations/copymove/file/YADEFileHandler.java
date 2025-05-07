@@ -26,6 +26,7 @@ import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineTargetOutputStreamException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
+import com.sos.yade.engine.handlers.command.YADEFileCommandVariablesResolver;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsHandler;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
@@ -66,10 +67,14 @@ public class YADEFileHandler {
         String fileTransferLogPrefix = config.getParallelism() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
                 .currentThread().getName();
         YADETargetProviderFile targetFile = null;
+        String cumulativeTargetFileSeparator = null;
         try {
             // 1) Target - initialize/get Target file
             if (useCumulativeTargetFile) {
                 targetFile = config.getTarget().getCumulate().getFile();
+                cumulativeTargetFileSeparator = YADEFileCommandVariablesResolver.resolve(sourceDelegator, targetDelegator, sourceFile, config
+                        .getTarget().getCumulate().getFileSeparator()) + System.getProperty("line.separator");
+                sourceFile.setTarget(targetFile);
             } else {
                 // 1) Target: may create target directories if target replacement enabled
                 initializeTarget();
@@ -113,6 +118,7 @@ public class YADEFileHandler {
 
             int attempts = 0;
             boolean isCumulateTargetWritten = false;
+            // int cumulativeFileSeperatorLength = 0;
 
             Instant startTime = Instant.now();
             if (targetDelegator.isHTTP()) {
@@ -130,7 +136,7 @@ public class YADEFileHandler {
                 }
             } else {
                 l: while (attempts < config.getMaxRetries()) {
-                    // int cumulativeFileSeperatorLength = 0;
+                    // cumulativeFileSeperatorLength = 0;
                     Throwable exception = null;
                     try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
                             useBufferedStreams); OutputStream targetOutputStream = YADEFileStreamHelper.getTargetOutputStream(config, targetDelegator,
@@ -147,9 +153,7 @@ public class YADEFileHandler {
                         }
 
                         if (useCumulativeTargetFile && !isCumulateTargetWritten) {
-                            // TODO replace variables .... XML Schema description for CumulativeFileSeparator is wrong
-                            String fs = config.getTarget().getCumulate().getFileSeparator() + System.getProperty("line.separator");
-                            byte[] bytes = fs.getBytes();
+                            byte[] bytes = cumulativeTargetFileSeparator.getBytes();
                             // cumulativeFileSeperatorLength = bytes.length;
                             targetOutputStream.write(bytes);
 
