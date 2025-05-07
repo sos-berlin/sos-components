@@ -207,7 +207,7 @@ public class SMBJProvider extends SMBProvider {
                 return SMBJProviderUtils.deleteIfExists(reusable.getDiskShare(path), smbPath);
             }
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
     }
 
@@ -227,7 +227,7 @@ public class SMBJProvider extends SMBProvider {
                 return SMBJProviderUtils.deleteFileIfExists(reusable.getDiskShare(path), smbPath);
             }
         } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e.getCause());
+            throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
     }
 

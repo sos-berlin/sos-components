@@ -60,7 +60,7 @@ public class YADEFileHandler {
         this.cancel = cancel;
     }
 
-    public void run(boolean isMoveOperation, boolean useCumulativeTargetFile) throws YADEEngineTransferFileException {
+    public void run(boolean isMoveOperation, boolean useCumulativeTargetFile, boolean useLastModified) throws YADEEngineTransferFileException {
         this.sourceFile.resetSteady();
 
         // 'index' or 'index][thread name'
@@ -225,7 +225,7 @@ public class YADEFileHandler {
 
                 }
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
-                        config.getTarget().getAtomic() != null);
+                        config.getTarget().getAtomic() != null, useLastModified);
             }
         } catch (YADEEngineTransferFileException e) {
             throw e;

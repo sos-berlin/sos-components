@@ -120,7 +120,11 @@ public class SSHJProviderUtils {
         } catch (SFTPException e) {
             throwException(e, path);
         }
-        sftp.rm(path);
+        try {
+            sftp.rm(path);
+        } catch (SFTPException e) {
+            throwException(e, path);
+        }
     }
 
     protected static boolean exists(SFTPClient sftp, String path) throws IOException {
