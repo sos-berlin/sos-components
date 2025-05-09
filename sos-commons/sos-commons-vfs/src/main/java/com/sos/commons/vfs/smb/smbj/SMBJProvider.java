@@ -531,7 +531,7 @@ public class SMBJProvider extends SMBProvider {
             if (shareName.equalsIgnoreCase(smbPath)) {
                 return "";
             }
-            // finds the share name in the path and removes it.
+            // finds the share name in the path and removes it
             int shareIndex = smbPath.indexOf(shareName + getPathSeparator());
             if (shareIndex != -1) {
                 smbPath = smbPath.substring(shareIndex + shareName.length() + 1); // +1 for pathSeparator
@@ -540,8 +540,23 @@ public class SMBJProvider extends SMBProvider {
         return smbPath;
     }
 
+    private ProviderFile createProviderFile(String fullPath, FileAllInformation info) {
+        return createProviderFile(fullPath, info.getStandardInformation().getEndOfFile(), info.getBasicInformation().getLastWriteTime()
+                .toEpochMillis());
+    }
+
+    private void validatePrerequisites(String method, String paramValue, String msg) throws ProviderException {
+        validatePrerequisites(method);
+        validateArgument(method, paramValue, msg);
+    }
+
     @SuppressWarnings("unused")
-    private static String sanitizeFilename(String input) {
+    /** @apiNote Not currently used because this method changes the original name.<br/>
+     *          Can be enabled if file name sanitization is explicitly desired, e.g., controlled by a new property <br/>
+     *          private boolean sanitizeSMBPathFilename=false|true<br/>
+     *          and applying this method in:<br/>
+     *          getSMBPath() .. return sanitizeSMBPathFilename(smbPath) */
+    private static String sanitizeSMBPathFilename(String input) {
         Path path = Paths.get(input);
         String fileName = path.getFileName().toString();
 
@@ -556,16 +571,6 @@ public class SMBJProvider extends SMBProvider {
         Path parent = path.getParent();
         String finalPath = (parent != null) ? parent.resolve(sanitized).toString() : sanitized;
         return SOSPathUtils.toWindowsStyle(finalPath);
-    }
-
-    private ProviderFile createProviderFile(String fullPath, FileAllInformation info) {
-        return createProviderFile(fullPath, info.getStandardInformation().getEndOfFile(), info.getBasicInformation().getLastWriteTime()
-                .toEpochMillis());
-    }
-
-    private void validatePrerequisites(String method, String paramValue, String msg) throws ProviderException {
-        validatePrerequisites(method);
-        validateArgument(method, paramValue, msg);
     }
 
 }

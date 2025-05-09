@@ -129,6 +129,9 @@ public class YADEEngineJumpHostAddon {
 
     private void init() throws YADEEngineInitializationException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
+            // Source (Target Host)
+            // Target (Any Provider) - the same as before
+
             String profileId;
             switch (argsLoader.getArgs().getOperation().getValue()) {
             case GETLIST:
@@ -153,10 +156,11 @@ public class YADEEngineJumpHostAddon {
             newSourceArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
 
             newSourceArgs.getCommands().addCommandBeforeOperation(config.getYADEClientCommand(config.settingsXML, config.profileId));
-            // Source (Target Host)
-            // Target (Any Provider) - the same as before
             argsLoader.setSourceArgs(newSourceArgs);
         } else {
+            // Source (Any Provider) - the same as before
+            // Target (Jump Host)
+
             config.setJumpHostToTarget(JUMP_HOST_TO_TARGET_COPY_PROFILE_ID);
 
             YADETargetArguments newTargetArgs = new YADETargetArguments();
@@ -164,16 +168,15 @@ public class YADEEngineJumpHostAddon {
             newTargetArgs.getLabel().setValue(YADEJumpHostArguments.LABEL);
 
             newTargetArgs.getDirectory().setValue(config.dataDirectory);
+            // CreateDirectories - 1:1 transfer to the JumHost – creates the same structure on the JumHost as on the Source
             newTargetArgs.getCreateDirectories().setValue(Boolean.valueOf(true));
             newTargetArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newTargetArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
             // only KeepModificationDate - all other TargetOptions such as AppendFiles, Atomic, CumulativeFile, etc.
-            // - are applied during the transfer from the JumpHost to the Target (generated in the config.settingsXML)
+            // are applied during the transfer from the JumpHost to the Target (generated in the config.settingsXML)
             newTargetArgs.getKeepModificationDate().setValue(argsLoader.getTargetArgs().getKeepModificationDate().getValue());
 
             newTargetArgs.getCommands().addCommandAfterOperationOnSuccess(config.getYADEClientCommand(config.settingsXML, config.profileId));
-            // Source (Any Provider) - the same as before
-            // Target (Jump Host)
             argsLoader.setTargetArgs(newTargetArgs);
         }
         // logger.info(jumpHostSettingsXMLContent);
@@ -310,12 +313,12 @@ public class YADEEngineJumpHostAddon {
             }
 
             if (deleted) {
-                logger.info("[%s][%s]deleted", YADEJumpHostArguments.LABEL, dir);
+                logger.info("[%s][DeleteJumpDirectory][%s]deleted", YADEJumpHostArguments.LABEL, dir);
             } else {
-                logger.info("[%s][%s]not found", YADEJumpHostArguments.LABEL, dir);
+                logger.info("[%s][DeleteJumpDirectory][%s]not found", YADEJumpHostArguments.LABEL, dir);
             }
         } catch (ProviderException e) {
-            logger.warn("[%s][%s][delete]%s", YADEJumpHostArguments.LABEL, dir, e.toString(), e);
+            logger.warn("[%s][DeleteJumpDirectory][%s][delete]%s", YADEJumpHostArguments.LABEL, dir, e.toString(), e);
         }
     }
 

@@ -49,8 +49,8 @@ public class YADEFileActionsExecuter {
                                 targetFile.getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
                     }
                     targetDelegator.getProvider().setFileLastModifiedFromMillis(targetFile.getFinalFullPath(), sourceFile.getLastModifiedMillis());
-                    logger.info("[%s][%s][%s][ModificationDate][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFile
-                            .getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
+                    logger.info("[%s][%s][%s][%s][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
+                            .getKeepModificationDate().getName(), targetFile.getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
                 }
                 // 3) Target - CreateIntegrityHashFile
                 if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
@@ -123,8 +123,8 @@ public class YADEFileActionsExecuter {
             // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
 
             sourceOrTargetFile.setSubState(TransferEntryState.RENAMED);
-            logger.info("[%s][%s][%s]->[%s]%srenamed", fileTransferLogPrefix, delegator.getLabel(), oldPath, newPath, (isAtomicallyEnabled
-                    ? "atomically " : ""));
+            String renameCause = isAtomicallyEnabled ? "AtomicRename" : "Rename";
+            logger.info("[%s][%s][%s][%s]->[%s]renamed", fileTransferLogPrefix, delegator.getLabel(), renameCause, oldPath, newPath);
         }
     }
 

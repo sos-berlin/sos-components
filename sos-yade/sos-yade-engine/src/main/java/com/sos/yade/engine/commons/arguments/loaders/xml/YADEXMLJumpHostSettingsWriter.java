@@ -456,7 +456,10 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<LocalTarget ").append(generateJumpAttribute()).append("/>");
         sb.append("</CopyTargetFragmentRef>");
         sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        // only KeepModificationDate - see comments YADEEngineJumpHostAddon.init()
+        sb.append("<TargetFileOptions>");
         sb.append("<KeepModificationDate>").append(targetArgs.getKeepModificationDate().getValue()).append("</KeepModificationDate>");
+        sb.append("</TargetFileOptions>");
         sb.append("</CopyTarget>");
         return sb;
     }
@@ -570,7 +573,7 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<HashAlgorithm>").append(cdata(args.getIntegrityHashAlgorithm().getValue())).append("</HashAlgorithm>");
             sb.append("</CreateIntegrityHashFile>");
         }
-        
+
         sb.append("<KeepModificationDate>").append(args.getKeepModificationDate().getValue()).append("</KeepModificationDate>");
         sb.append("<DisableMakeDirectories>").append(getOppositeValue(args.getCreateDirectories())).append("</DisableMakeDirectories>");
         sb.append("<DisableOverwriteFiles>").append(getOppositeValue(args.getOverwriteFiles())).append("</DisableOverwriteFiles>");

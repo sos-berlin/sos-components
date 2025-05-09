@@ -44,7 +44,6 @@ public class SMBAuthenticationContextFactory {
         SMBAuthMethod authMethod = args.getAuthMethod().getValue();
         String username = args.getUser().getValue();
         String password = args.getPassword().getValue();
-        String domain = args.getDomain().getValue();
         String loginContextName = args.getLoginContextName().isEmpty() ? authMethod.getLoginContextName() : args.getLoginContextName().getValue();
         LoginContext loginContext;
         if (password == null) {
@@ -66,8 +65,10 @@ public class SMBAuthenticationContextFactory {
             });
         }
         loginContext.login();
-        return new GSSAuthenticationContext(username, domain == null ? "" : domain, loginContext.getSubject(), getGSSCredential(username, domain,
-                new Oid(authMethod.getOid())));
+
+        String domain = args.getDomain().getValue() == null ? "" : args.getDomain().getValue();
+        GSSCredential credentials = getGSSCredential(username, domain, new Oid(authMethod.getOid()));
+        return new GSSAuthenticationContext(username, domain, loginContext.getSubject(), credentials);
     }
 
     private static GSSCredential getGSSCredential(String username, String domain, Oid oid) throws GSSException {

@@ -443,9 +443,17 @@ public class YADEEngine {
             mail.setContentType(args.getContentType().getValue());
             mail.setEncoding(args.getEncoding().getValue());
 
-            mail.send(logger);
+            if (!args.getQueueDirectory().isEmpty()) {
+                mail.setQueueMailOnError(true);
+                mail.setQueueDir(args.getQueueDirectory().getValue());
+            }
+
+            // on error an exception is thrown or, if queueMailOnError is enabled, false is returned
+            if (!mail.send(logger)) {
+                logger.warn("[sendMail]failed");
+            }
         } catch (Exception e) {
-            logger.warn("[sendMail]%s", e);
+            logger.warn("[sendMail]" + e, e);
         }
 
     }

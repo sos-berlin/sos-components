@@ -93,6 +93,22 @@ public class SOSHTTPUtils {
         return uri;
     }
 
+    public static String encode(String input) {
+        if (input == null) {
+            return null;
+        }
+        // URLEncoder.encode converts blank to +
+        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    public static String decode(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        // e.g. converts %20 to blank etc
+        return URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8);
+    }
+
     public static String toValidFileSystemName(String input, boolean isWindows) {
         if (input == null) {
             return null;
@@ -349,24 +365,6 @@ public class SOSHTTPUtils {
             }
             return SOSPathUtils.appendPath(baseURI.toString(), path, "/");
         }
-    }
-
-    @SuppressWarnings("unused")
-    private static String encode(String input) {
-        if (input == null) {
-            return null;
-        }
-        // URLEncoder.encode converts blank to +
-        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
-    }
-
-    @SuppressWarnings("unused")
-    private static String decode(String uri) {
-        if (uri == null) {
-            return null;
-        }
-        // e.g. converts %20 to blank etc
-        return URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8);
     }
 
 }

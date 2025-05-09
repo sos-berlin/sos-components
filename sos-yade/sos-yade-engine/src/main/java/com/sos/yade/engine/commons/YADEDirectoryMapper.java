@@ -1,7 +1,5 @@
 package com.sos.yade.engine.commons;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -9,6 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -201,7 +200,7 @@ public class YADEDirectoryMapper {
                             logger.debug("    [getSourceDirectoryForMapping][3.1][result]%s", result);
                         }
                         //remove %20(empty) etc
-                        result = URLDecoder.decode(result, StandardCharsets.UTF_8);
+                        result = SOSHTTPUtils.decode(result);
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
                         // Temp

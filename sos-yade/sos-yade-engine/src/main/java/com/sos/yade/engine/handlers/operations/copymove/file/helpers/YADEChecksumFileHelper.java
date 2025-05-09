@@ -62,14 +62,15 @@ public class YADEChecksumFileHelper {
         String sourceIntegrityHashFile = sourceFile.getFullPath() + config.getIntegrityHashFileExtensionWithDot();
         sourceFile.setIntegrityHash(sourceDelegator.getProvider().getFileContentIfExists(sourceIntegrityHashFile));
 
-        String msg = String.format("%s][%s][%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceIntegrityHashFile);
+        String msg = String.format("%s][%s][%s][%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceDelegator.getArgs()
+                .getCheckIntegrityHash().getName(), sourceIntegrityHashFile);
         if (sourceFile.getIntegrityHash() == null) {
-            logger.info("[%s][integrity hash]file not found", msg);
+            logger.info("[%s]file not found", msg);
             return;
         }
         String checksum = toHexString(sourceMessageDigest);
         if (sourceFile.getIntegrityHash().equals(checksum)) {
-            logger.info("[%s][integrity hash]matches", msg);
+            logger.info("[%s]matches", msg);
         } else {
             targetDelegator.getProvider().deleteFileIfExists(sourceFile.getTarget().getFullPath());
             sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);

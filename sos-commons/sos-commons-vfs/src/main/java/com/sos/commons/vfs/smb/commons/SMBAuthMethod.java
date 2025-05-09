@@ -8,10 +8,11 @@ public enum SMBAuthMethod {
      * - NTLM: NT LAN Manager, an older authentication protocol from Microsoft, typically used when Kerberos is unavailable.<br/>
      * -- Simple, no special configuration required. Less secure, no SSO(Single Sign-On). Recommended For: Standalone servers, workgroups */
     ANONYMOUS(null, null, null), GUEST(null, null, null), NTLM(null, null, null)
+
     /** GSSAPI(Generic Security Service Application Program Interface) mechanisms:<br/>
      * - KERBEROS<br/>
-     * - SPNEGO<br/>
-     */
+     * - SPNEGO */
+
     /** Kerberos: The standard authentication protocol used in many enterprise environments like Active Directory. */
     /** Secure, SSO, no passwords transmitted over the network. Works only in Windows domains. Recommended For: Windows domains (Active Directory)<br/>
      * 
@@ -19,6 +20,7 @@ public enum SMBAuthMethod {
      * LoginContextName: Configurable, allows referencing a custom JAAS login entry (default is "KerberosLogin").<br/>
      */
     ,KERBEROS("Kerberos", "1.2.840.113554.1.2.2", "KerberosLogin")
+
     /** SPNEGO: The Simple and Protected GSSAPI Negotiation Mechanism, used to negotiate between different authentication mechanisms (e.g., Kerberos, NTLM).<br>
      * 
      * OID: "1.3.6.1.5.5.2" – This is the standard identifier for SPNEGO and must remain fixed.<br/>

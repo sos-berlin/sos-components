@@ -156,6 +156,7 @@ public class WebDAVProvider extends HTTPProvider {
         if (resource.getSize() < 0) {
             return null;
         }
+        // return createProviderFile(SOSHTTPUtils.decode(resource.getURI()), resource.getSize(), resource.getLastModifiedInMillis());
         return createProviderFile(resource.getURI(), resource.getSize(), resource.getLastModifiedInMillis());
     }
 

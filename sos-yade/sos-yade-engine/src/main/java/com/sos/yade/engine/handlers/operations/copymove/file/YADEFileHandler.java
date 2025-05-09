@@ -397,7 +397,7 @@ public class YADEFileHandler {
         if (logger.isTraceEnabled()) {
             logger.trace("  [StackTrace]" + SOSClassUtil.getStackTrace(e));
         }
-        throw new YADEEngineTransferFileException(msg, e);
+        throw new YADEEngineTransferFileException(msg, e.getCause() == null ? e : e.getCause());
     }
 
 }
