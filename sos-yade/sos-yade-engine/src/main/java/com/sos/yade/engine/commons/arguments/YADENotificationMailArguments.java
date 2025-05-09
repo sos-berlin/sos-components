@@ -5,16 +5,8 @@ import java.util.List;
 
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 
 public class YADENotificationMailArguments extends ASOSArguments {
-
-    private SOSArgument<String> hostname = new SOSArgument<>("Hostname", false);
-    private SOSArgument<Integer> port = new SOSArgument<>("Port", false, Integer.valueOf(25));
-    private SOSArgument<String> account = new SOSArgument<>("Account", false);
-    private SOSArgument<String> password = new SOSArgument<>("Password", false, DisplayMode.MASKED);
-
-    private SOSArgument<String> queueDirectory = new SOSArgument<>("QueueDirectory", false);
 
     private SOSArgument<String> headerFrom = new SOSArgument<>("From", false, "yade@sos-berlin.com");
     private SOSArgument<List<String>> headerTo = new SOSArgument<>("To", false);
@@ -28,31 +20,11 @@ public class YADENotificationMailArguments extends ASOSArguments {
     private SOSArgument<List<Path>> attachment = new SOSArgument<>("Attachment", false);
 
     public boolean isEnabled() {
-        return !hostname.isEmpty() && !headerTo.isEmpty();
+        return !headerTo.isEmpty();
     }
 
     public String getNewLine() {
         return contentType.getValue().toLowerCase().contains("html") ? "<br/>" : "\n";
-    }
-
-    public SOSArgument<String> getHostname() {
-        return hostname;
-    }
-
-    public SOSArgument<Integer> getPort() {
-        return port;
-    }
-
-    public SOSArgument<String> getAccount() {
-        return account;
-    }
-
-    public SOSArgument<String> getPassword() {
-        return password;
-    }
-
-    public SOSArgument<String> getQueueDirectory() {
-        return queueDirectory;
     }
 
     public SOSArgument<String> getHeaderFrom() {

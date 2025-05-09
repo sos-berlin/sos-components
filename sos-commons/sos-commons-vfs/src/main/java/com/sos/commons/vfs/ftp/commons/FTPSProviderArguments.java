@@ -48,7 +48,7 @@ public class FTPSProviderArguments extends FTPProviderArguments {
         if (sslEnabledPrtocols.length > 0) {
             ftpsInfo.append("(").append(String.join(", ", sslEnabledPrtocols)).append(")");
         }
-        ftpsInfo.append(" ").append(getSecurityMode().getValue().name().toLowerCase());
+        ftpsInfo.append(" ").append(getSecurityModeValue());
         return String.format("%s %s", super.getAccessInfo(), ftpsInfo);
     }
 
@@ -64,6 +64,10 @@ public class FTPSProviderArguments extends FTPProviderArguments {
 
     public SOSArgument<FTPSSecurityMode> getSecurityMode() {
         return securityMode;
+    }
+
+    public String getSecurityModeValue() {
+        return securityMode.getValue() == null ? null : securityMode.getValue().name().toLowerCase();
     }
 
 }

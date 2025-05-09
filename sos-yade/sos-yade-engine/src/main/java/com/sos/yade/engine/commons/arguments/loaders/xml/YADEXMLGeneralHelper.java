@@ -87,7 +87,7 @@ public class YADEXMLGeneralHelper {
                         parseMailHost(argsLoader, n);
                         break;
                     case "QueueDirectory":
-                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getQueueDirectory(), n);
+                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getQueueDirectory(), n);
                         break;
                     }
                 }
@@ -144,10 +144,13 @@ public class YADEXMLGeneralHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Hostname":
-                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHostname(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getHostname(), n);
                     break;
                 case "Port":
-                    argsLoader.setIntegerArgumentValue(argsLoader.getNotificationArgs().getMail().getPort(), n);
+                    argsLoader.setIntegerArgumentValue(argsLoader.getNotificationArgs().getMailServer().getPort(), n);
+                    break;
+                case "ConnectTimeout":
+                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getConnectTimeout(), n);
                     break;
                 }
             }
@@ -161,10 +164,10 @@ public class YADEXMLGeneralHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Account":
-                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getAccount(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getAccount(), n);
                     break;
                 case "Password":
-                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getPassword(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getPassword(), n);
                     break;
                 }
             }

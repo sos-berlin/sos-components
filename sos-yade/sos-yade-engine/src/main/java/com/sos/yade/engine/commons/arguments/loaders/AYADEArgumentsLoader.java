@@ -94,7 +94,6 @@ public abstract class AYADEArgumentsLoader {
     public void initializeNotificationArgsIfNull() {
         if (notificationArgs == null) {
             notificationArgs = new YADENotificationArguments();
-            notificationArgs.applyDefaultIfNullQuietly();
         }
     }
 }

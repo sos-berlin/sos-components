@@ -21,7 +21,15 @@ public class JavaKeyStoreArguments extends ASOSArguments {
     private SOSArgument<String> trustStorePassword = new SOSArgument<>("truststore_password", false, DisplayMode.MASKED);
 
     public boolean isEnabled() {
-        return !keyStoreFile.isEmpty() || !trustStoreFile.isEmpty();
+        return isTrustStoreEnabled() || isKeyStoreEnabled();
+    }
+
+    public boolean isTrustStoreEnabled() {
+        return !trustStoreFile.isEmpty();
+    }
+
+    public boolean isKeyStoreEnabled() {
+        return !keyStoreFile.isEmpty();
     }
 
     public SOSArgument<JavaKeyStoreType> getKeyStoreType() {

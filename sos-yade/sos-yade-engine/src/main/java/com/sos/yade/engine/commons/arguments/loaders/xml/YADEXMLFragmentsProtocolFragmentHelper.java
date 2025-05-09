@@ -301,6 +301,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
+    // @TODO parse URLConnection child nodes instead using of XPath
     protected static WebDAVProviderArguments parseWebDAV(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
         Node fragment = getProtocolFragment(argsLoader, ref, isSource, "WebDAV");
         String url = argsLoader.getValue(argsLoader.getXPath().selectNode(fragment, "URLConnection/URL"));
@@ -312,6 +313,11 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 : new WebDAVProviderArguments();
         args.applyDefaultIfNullQuietly();
         args.getHost().setValue(url);
+
+        String connectTimeout = argsLoader.getValue(argsLoader.getXPath().selectNode(fragment, "URLConnection/ConnectTimeout"));
+        if (connectTimeout != null) {
+            args.getConnectTimeout().setValue(connectTimeout);
+        }
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -510,6 +516,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 case "URL":
                     argsLoader.setStringArgumentValue(args.getHost(), n);
+                    break;
+                case "ConnectTimeout":// YADE JS7
+                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
                     break;
                 }
             }

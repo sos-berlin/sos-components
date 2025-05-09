@@ -17,6 +17,7 @@ import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.xml.SOSXML;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.commons.arguments.YADENotificationMailArguments;
 import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.arguments.YADESourcePollingArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
@@ -90,25 +91,36 @@ public class YADEXMLProfileHelper {
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
+                YADENotificationMailArguments trigger;
                 switch (n.getNodeName()) {
                 case "OnSuccess":
-                    parseNotificationTrigger(argsLoader, n, parentInfo);
-                    argsLoader.getNotificationArgs().getOnSuccess().setValue(true);
+                    trigger = new YADENotificationMailArguments();
+                    trigger.applyDefaultIfNullQuietly();
+
+                    parseNotificationTrigger(argsLoader, n, parentInfo, trigger);
+                    argsLoader.getNotificationArgs().setMailOnSuccess(trigger);
                     break;
                 case "OnError":
-                    parseNotificationTrigger(argsLoader, n, parentInfo);
-                    argsLoader.getNotificationArgs().getOnError().setValue(true);
+                    trigger = new YADENotificationMailArguments();
+                    trigger.applyDefaultIfNullQuietly();
+
+                    parseNotificationTrigger(argsLoader, n, parentInfo, trigger);
+                    argsLoader.getNotificationArgs().setMailOnError(trigger);
                     break;
                 case "OnEmptyFiles":
-                    parseNotificationTrigger(argsLoader, n, parentInfo);
-                    argsLoader.getNotificationArgs().getOnEmptyFiles().setValue(true);
+                    trigger = new YADENotificationMailArguments();
+                    trigger.applyDefaultIfNullQuietly();
+
+                    parseNotificationTrigger(argsLoader, n, parentInfo, trigger);
+                    argsLoader.getNotificationArgs().setMailOnEmptyFiles(trigger);
                     break;
                 }
             }
         }
     }
 
-    private static void parseNotificationTrigger(YADEXMLArgumentsLoader argsLoader, Node notificationTrigger, String parentInfo) throws Exception {
+    private static void parseNotificationTrigger(YADEXMLArgumentsLoader argsLoader, Node notificationTrigger, String parentInfo,
+            YADENotificationMailArguments mail) throws Exception {
         Node ref = SOSXML.getChildNode(notificationTrigger, "MailFragmentRef");
         if (ref == null) {
             return;
@@ -127,19 +139,19 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "Header":
-                        parseMailFragmentHeader(argsLoader, n);
+                        parseMailFragmentHeader(argsLoader, n, mail);
                         break;
                     case "Attachment":
-                        argsLoader.setListPathArgumentValue(argsLoader.getNotificationArgs().getMail().getAttachment(), n);
+                        argsLoader.setListPathArgumentValue(mail.getAttachment(), n);
                         break;
                     case "Body":
-                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getBody(), n);
+                        argsLoader.setStringArgumentValue(mail.getBody(), n);
                         break;
                     case "ContentType":
-                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getContentType(), n);
+                        argsLoader.setStringArgumentValue(mail.getContentType(), n);
                         break;
                     case "Encoding":
-                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getEncoding(), n);
+                        argsLoader.setStringArgumentValue(mail.getEncoding(), n);
                         break;
                     }
                 }
@@ -147,7 +159,7 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static void parseMailFragmentHeader(YADEXMLArgumentsLoader argsLoader, Node header) {
+    private static void parseMailFragmentHeader(YADEXMLArgumentsLoader argsLoader, Node header, YADENotificationMailArguments mail) {
         NodeList nl = header.getChildNodes();
         int len = nl.getLength();
         if (len > 0) {
@@ -156,19 +168,19 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "From":
-                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderFrom(), n);
+                        argsLoader.setStringArgumentValue(mail.getHeaderFrom(), n);
                         break;
                     case "To":
-                        argsLoader.setListStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderTo(), n);
+                        argsLoader.setListStringArgumentValue(mail.getHeaderTo(), n);
                         break;
                     case "CC":
-                        argsLoader.setListStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderCC(), n);
+                        argsLoader.setListStringArgumentValue(mail.getHeaderCC(), n);
                         break;
                     case "BCC":
-                        argsLoader.setListStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderBCC(), n);
+                        argsLoader.setListStringArgumentValue(mail.getHeaderBCC(), n);
                         break;
                     case "Subject":
-                        argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMail().getHeaderSubject(), n);
+                        argsLoader.setStringArgumentValue(mail.getHeaderSubject(), n);
                         break;
                     }
                 }

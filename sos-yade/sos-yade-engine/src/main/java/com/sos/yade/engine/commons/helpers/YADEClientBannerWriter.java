@@ -152,69 +152,39 @@ public class YADEClientBannerWriter {
             return;
         }
 
-        boolean triggersEnabled = args.triggersEnabled();
-        boolean mailEnabled = args.isMailEnabled();
-        if (!triggersEnabled && !mailEnabled) {
+        if (!args.isEnabled()) {
+            if (args.isTriggerEnabled()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("[").append(YADENotificationArguments.LABEL).append("]");
+                sb.append("[ignored due to MailServer not defined");
+                logger.info(sb);
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("[%s]%s", YADENotificationArguments.LABEL, SOSString.toString(args));
+            }
             return;
         }
 
         List<String> triggers = new ArrayList<>();
-        if (triggersEnabled) {
-            if (args.getOnSuccess().isTrue()) {
-                triggers.add(args.getOnSuccess().getName());
-            }
-            if (args.getOnError().isTrue()) {
-                triggers.add(args.getOnError().getName());
-            }
-            if (args.getOnEmptyFiles().isTrue()) {
-                triggers.add(args.getOnEmptyFiles().getName());
-            }
+        if (args.getMailOnSuccess() != null) {
+            triggers.add(YADENotificationArguments.LABEL_ON_SUCCESS);
         }
-
-        List<String> mail = new ArrayList<>();
-        if (mailEnabled) {
-            if (args.getMail().getHeaderSubject().isEmpty()) {
-                args.getMail().getHeaderSubject().setValue(String.join(", ", triggers));
-            }
-
-            mail.add(YADEArgumentsHelper.toString(args.getMail().getHostname().getName(), args.getMail().getHostname().getValue() + ":" + args
-                    .getMail().getPort().getValue()));
-            mail.add(YADEArgumentsHelper.toString(args.getMail().getHeaderFrom()));
-            mail.add(YADEArgumentsHelper.toString(args.getMail().getHeaderSubject()));
-            mail.add(YADEArgumentsHelper.toStringFromListString(args.getMail().getHeaderTo()));
-            if (!args.getMail().getHeaderCC().isEmpty()) {
-                mail.add(YADEArgumentsHelper.toStringFromListString(args.getMail().getHeaderCC()));
-            }
-            if (!args.getMail().getHeaderBCC().isEmpty()) {
-                mail.add(YADEArgumentsHelper.toStringFromListString(args.getMail().getHeaderBCC()));
-            }
+        if (args.getMailOnError() != null) {
+            triggers.add(YADENotificationArguments.LABEL_ON_ERROR);
+        }
+        if (args.getMailOnEmptyFiles() != null) {
+            triggers.add(YADENotificationArguments.LABEL_ON_EMPTY_FILES);
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(YADENotificationArguments.LABEL).append("]");
-        if (!triggersEnabled) {
-            sb.append("[ignored due to ").append(YADEXMLProfileHelper.ELEMENT_NAME_NOTIFICATION_TRIGGERS).append(" not defined");
 
-        } else if (!mailEnabled) {
-            sb.append("[ignored due to Mail not defined");
+        sb.append(YADEXMLProfileHelper.ELEMENT_NAME_NOTIFICATION_TRIGGERS);
+        sb.append("=").append(String.join(", ", triggers));
 
-        }
-        if (triggersEnabled) {
-            sb.append(YADEXMLProfileHelper.ELEMENT_NAME_NOTIFICATION_TRIGGERS);
-            sb.append("=").append(String.join(", ", triggers));
-        }
-        if (mailEnabled) {
-            if (triggersEnabled) {
-                sb.append(", ");
-            }
-            sb.append("Mail(");
-            sb.append(String.join(", ", mail));
-            sb.append(")");
-        }
         logger.info(sb);
-
         if (logger.isDebugEnabled()) {
-            logger.debug(YADEArgumentsHelper.toString(logger, YADENotificationArguments.LABEL, args));
+            logger.debug("[%s]%s", YADENotificationArguments.LABEL, SOSString.toString(args));
         }
     }
 
@@ -249,6 +219,12 @@ public class YADEClientBannerWriter {
     private static void writeSourceHeader(ISOSLogger logger, YADESourceArguments sourceArgs) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(sourceArgs.getLabel().isEmpty() ? YADESourceArguments.LABEL : sourceArgs.getLabel().getValue()).append("]");
+        if (sourceArgs.getProvider() == null) {
+            sb.append("Missing Provider");
+            logger.info(sb);
+            return;
+        }
+
         sb.append(YADEArgumentsHelper.toString("Protocol", sourceArgs.getProvider().getProtocol()));
         try {
             sb.append("(");

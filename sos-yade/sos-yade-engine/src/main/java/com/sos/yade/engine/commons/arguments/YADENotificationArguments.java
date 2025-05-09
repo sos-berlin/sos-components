@@ -1,48 +1,60 @@
 package com.sos.yade.engine.commons.arguments;
 
-import com.sos.commons.util.arguments.base.ASOSArguments;
-import com.sos.commons.util.arguments.base.SOSArgument;
-
-public class YADENotificationArguments extends ASOSArguments {
+public class YADENotificationArguments {
 
     public static final String LABEL = "Notification";
+    public static final String LABEL_ON_SUCCESS = "OnSuccess";
+    public static final String LABEL_ON_ERROR = "OnError";
+    public static final String LABEL_ON_EMPTY_FILES = "OnEmptyFiles";
 
-    private YADENotificationMailArguments mail;
+    private YADENotificationMailServerArguments mailServer;
 
-    private SOSArgument<Boolean> onSuccess = new SOSArgument<>("OnSuccess", false, Boolean.valueOf(false));
-    private SOSArgument<Boolean> onError = new SOSArgument<>("OnError", false, Boolean.valueOf(false));
-    private SOSArgument<Boolean> onEmptyFiles = new SOSArgument<>("OnEmptyFiles", false, Boolean.valueOf(false));
+    private YADENotificationMailArguments mailOnSuccess;
+    private YADENotificationMailArguments mailOnError;
+    private YADENotificationMailArguments mailOnEmptyFiles;
 
     public boolean isEnabled() {
-        return triggersEnabled() && isMailEnabled();
+        return mailServer != null && isTriggerEnabled();
     }
 
-    public boolean triggersEnabled() {
-        return (onSuccess.isTrue() || onError.isTrue() || onEmptyFiles.isTrue());
+    public boolean isTriggerEnabled() {
+        return mailOnSuccess != null || mailOnError != null || mailOnEmptyFiles != null;
     }
 
-    public boolean isMailEnabled() {
-        return mail != null && mail.isEnabled();
+    public void setMailServer(YADENotificationMailServerArguments val) {
+        mailServer = val;
     }
 
-    public YADENotificationMailArguments getMail() {
-        if (mail == null) {
-            mail = new YADENotificationMailArguments();
-            mail.applyDefaultIfNullQuietly();
+    public YADENotificationMailServerArguments getMailServer() {
+        if (mailServer == null) {
+            mailServer = new YADENotificationMailServerArguments();
+            mailServer.applyDefaultIfNullQuietly();
         }
-        return mail;
+        return mailServer;
     }
 
-    public SOSArgument<Boolean> getOnSuccess() {
-        return onSuccess;
+    public YADENotificationMailArguments getMailOnSuccess() {
+        return mailOnSuccess;
     }
 
-    public SOSArgument<Boolean> getOnError() {
-        return onError;
+    public void setMailOnSuccess(YADENotificationMailArguments val) {
+        mailOnSuccess = val;
     }
 
-    public SOSArgument<Boolean> getOnEmptyFiles() {
-        return onEmptyFiles;
+    public YADENotificationMailArguments getMailOnError() {
+        return mailOnError;
+    }
+
+    public void setMailOnError(YADENotificationMailArguments val) {
+        mailOnError = val;
+    }
+
+    public YADENotificationMailArguments getMailOnEmptyFiles() {
+        return mailOnEmptyFiles;
+    }
+
+    public void setMailOnEmptyFiles(YADENotificationMailArguments val) {
+        mailOnEmptyFiles = val;
     }
 
 }

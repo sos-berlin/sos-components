@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
@@ -12,6 +13,7 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 public class HTTPProviderArguments extends AProviderArguments {
 
     public static final int DEFAULT_PORT = 80;
+    public static final int DEFAULT_CONNECT_TIMEOUT_IN_SECONDS = 30;
 
     // declared here and not in HTTSPProviderArguments, because WebDAV extends HTTPProviderArguments and uses the same implementation logic
     // otherwise, the WebDAVSPProviderArguments should extend HTTSPProviderArguments and not the WebDAVPProviderArguments ...
@@ -32,6 +34,7 @@ public class HTTPProviderArguments extends AProviderArguments {
     public HTTPProviderArguments() {
         getProtocol().setValue(Protocol.HTTP);
         getPort().setDefaultValue(DEFAULT_PORT);
+        getConnectTimeout().setDefaultValue(DEFAULT_CONNECT_TIMEOUT_IN_SECONDS + "s");
     }
 
     /** Overrides {@link AProviderArguments#getAccessInfo() */
@@ -60,6 +63,10 @@ public class HTTPProviderArguments extends AProviderArguments {
             ssl.applyDefaultIfNullQuietly();
         }
         return ssl;
+    }
+
+    public int getConnectTimeoutAsSeconds() {
+        return (int) SOSArgumentHelper.asSeconds(getConnectTimeout(), DEFAULT_CONNECT_TIMEOUT_IN_SECONDS);
     }
 
     public void setSSL(SSLArguments val) {

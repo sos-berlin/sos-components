@@ -54,7 +54,7 @@ public class HTTPClient implements AutoCloseable {
     public static HTTPClient createAuthenticatedClient(HTTPProvider provider) throws Exception {
         HTTPAuthConfig authConfig = createAuthConfig(provider);
 
-        HttpClient.Builder builder = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30));
+        HttpClient.Builder builder = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(provider.getArguments().getConnectTimeoutAsSeconds()));
         builder.followRedirects(HttpClient.Redirect.ALWAYS);
 
         String ntlmMAuthToken = null;

@@ -10,12 +10,14 @@ import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.arguments.YADENotificationArguments;
 import com.sos.yade.engine.commons.arguments.YADENotificationMailArguments;
+import com.sos.yade.engine.commons.arguments.YADENotificationMailServerArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.delegators.YADEProviderDelegatorFactory;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -329,23 +331,29 @@ public class YADEEngine {
             return;
         }
 
-        YADENotificationMailArguments args = argsLoader.getNotificationArgs().getMail();
-        String body = args.getBody().getValue() == null ? "" : args.getBody().getValue() + args.getNewLine();
+        YADENotificationArguments args = argsLoader.getNotificationArgs();
+        YADENotificationMailServerArguments mailServerArgs = args.getMailServer();
         if (exceptions.size() > 0) {
-            if (!argsLoader.getNotificationArgs().getOnError().isTrue()) {
+            if (args.getMailOnError() == null) {
                 return;
             }
             // onError
+            YADENotificationMailArguments mailArgs = args.getMailOnError();
+            String body = mailArgs.getBody().getValue() == null ? "" : mailArgs.getBody().getValue() + mailArgs.getNewLine();
+
             StringBuilder sb = new StringBuilder();
             sb.append(body);
             for (Throwable e : exceptions) {
-                sb.append(SOSClassUtil.getStackTrace(e, args.getNewLine()));
+                sb.append(SOSClassUtil.getStackTrace(e, mailArgs.getNewLine()));
             }
-            args.getBody().setValue(sb.toString());
-            sendMail(logger, argsLoader.getNotificationArgs().getOnError(), args);
+            mailArgs.getBody().setValue(sb.toString());
+            sendMail(logger, mailServerArgs, mailArgs, YADENotificationArguments.LABEL_ON_ERROR);
         } else {
             // onSuccess
-            if (argsLoader.getNotificationArgs().getOnSuccess().isTrue()) {
+            if (argsLoader.getNotificationArgs().getMailOnSuccess() != null) {
+                YADENotificationMailArguments mailArgs = args.getMailOnSuccess();
+                String body = mailArgs.getBody().getValue() == null ? "" : mailArgs.getBody().getValue() + mailArgs.getNewLine();
+
                 StringBuilder sb = new StringBuilder();
                 for (ProviderFile f : files) {
                     YADEProviderFile file = (YADEProviderFile) f;
@@ -367,14 +375,17 @@ public class YADEEngine {
                         }
                     }
                     sb.append("[Bytes ").append(file.getSize()).append("]");
-                    sb.append(args.getNewLine());
+                    sb.append(mailArgs.getNewLine());
                 }
 
-                args.getBody().setValue(body + sb.toString());
-                sendMail(logger, argsLoader.getNotificationArgs().getOnSuccess(), args);
+                mailArgs.getBody().setValue(body + sb.toString());
+                sendMail(logger, mailServerArgs, mailArgs, YADENotificationArguments.LABEL_ON_SUCCESS);
             }
             // onEmptyFiles
-            if (argsLoader.getNotificationArgs().getOnEmptyFiles().isTrue()) {
+            if (argsLoader.getNotificationArgs().getMailOnEmptyFiles() != null) {
+                YADENotificationMailArguments mailArgs = args.getMailOnEmptyFiles();
+                String body = mailArgs.getBody().getValue() == null ? "" : mailArgs.getBody().getValue() + mailArgs.getNewLine();
+
                 StringBuilder sb = new StringBuilder();
                 int counterEmpyFiles = 0;
                 for (ProviderFile f : files) {
@@ -402,50 +413,53 @@ public class YADEEngine {
                         }
                     }
                     sb.append("[Bytes ").append(file.getSize()).append("]");
-                    sb.append(args.getNewLine());
+                    sb.append(mailArgs.getNewLine());
                 }
                 if (counterEmpyFiles > 0) {
-                    args.getBody().setValue(body + sb.toString());
-                    sendMail(logger, argsLoader.getNotificationArgs().getOnSuccess(), args);
+                    mailArgs.getBody().setValue(body + sb.toString());
+                    sendMail(logger, mailServerArgs, mailArgs, YADENotificationArguments.LABEL_ON_EMPTY_FILES);
                 }
             }
         }
     }
 
-    private void sendMail(ISOSLogger logger, SOSArgument<Boolean> trigger, YADENotificationMailArguments args) {
+    private void sendMail(ISOSLogger logger, YADENotificationMailServerArguments mailServerArgs, YADENotificationMailArguments mailArgs,
+            String label) {
         try {
-            SOSMail mail = new SOSMail(args.getHostname().getValue(), String.valueOf(args.getPort().getValue()), args.getAccount().getValue(), args
-                    .getPassword().getValue());
+            SOSMail mail = new SOSMail(mailServerArgs.getHostname().getValue(), String.valueOf(mailServerArgs.getPort().getValue()), mailServerArgs
+                    .getAccount().getValue(), mailServerArgs.getPassword().getValue());
 
-            mail.setFrom(args.getHeaderFrom().getValue());
-            for (String to : args.getHeaderTo().getValue()) {
+            mail.setFrom(mailArgs.getHeaderFrom().getValue());
+            for (String to : mailArgs.getHeaderTo().getValue()) {
                 mail.addRecipient(to);
             }
-            if (!args.getHeaderCC().isEmpty()) {
-                for (String cc : args.getHeaderCC().getValue()) {
+            if (!mailArgs.getHeaderCC().isEmpty()) {
+                for (String cc : mailArgs.getHeaderCC().getValue()) {
                     mail.addCC(cc);
                 }
             }
-            if (!args.getHeaderBCC().isEmpty()) {
-                for (String bcc : args.getHeaderBCC().getValue()) {
+            if (!mailArgs.getHeaderBCC().isEmpty()) {
+                for (String bcc : mailArgs.getHeaderBCC().getValue()) {
                     mail.addBCC(bcc);
                 }
             }
-            if (!args.getAttachment().isEmpty()) {
-                for (Path attachment : args.getAttachment().getValue()) {
+            if (!mailArgs.getAttachment().isEmpty()) {
+                for (Path attachment : mailArgs.getAttachment().getValue()) {
                     mail.addAttachment(SOSPath.toAbsoluteNormalizedPath(attachment).toString());
                 }
             }
 
-            mail.setSubject(args.getHeaderSubject().getValue() == null ? trigger.getName() : args.getHeaderSubject().getValue());
-            mail.setBody(args.getBody().getValue());
+            mail.setTimeout((int) SOSArgumentHelper.asMillis(mailServerArgs.getConnectTimeout()));
 
-            mail.setContentType(args.getContentType().getValue());
-            mail.setEncoding(args.getEncoding().getValue());
+            mail.setSubject(mailArgs.getHeaderSubject().getValue() == null ? label : mailArgs.getHeaderSubject().getValue());
+            mail.setBody(mailArgs.getBody().getValue());
 
-            if (!args.getQueueDirectory().isEmpty()) {
+            mail.setContentType(mailArgs.getContentType().getValue());
+            mail.setEncoding(mailArgs.getEncoding().getValue());
+
+            if (!mailServerArgs.getQueueDirectory().isEmpty()) {
                 mail.setQueueMailOnError(true);
-                mail.setQueueDir(args.getQueueDirectory().getValue());
+                mail.setQueueDir(mailServerArgs.getQueueDirectory().getValue());
             }
 
             // on error an exception is thrown or, if queueMailOnError is enabled, false is returned
