@@ -726,21 +726,17 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<Operation>");
         sb.append("<Remove>");
 
-        // Source (SFTPFragment) -----------------------
         sb.append("<RemoveSource>");
         sb.append("<RemoveSourceFragmentRef>");
-        sb.append("<SFTPFragmentRef ref=").append(attrValue(FRAGMENT_NAME)).append(" />");
+        sb.append("<").append(sourceArgs.getProvider().getProtocol().getValue().name()).append("FragmentRef ref=").append(attrValue(FRAGMENT_NAME))
+                .append(" />");
         sb.append("</RemoveSourceFragmentRef>");
 
         sb.append("<SourceFileOptions>");
         // Source - Selection
         sb.append("<Selection>");
         sb.append("<FileListSelection>");
-        if (config.getSourceToJumpHost().getFileList() == null) {
-            sb.append("<FileList>").append(cdata(config.getSourceToJumpHost().getResultSetFile().getJumpHostFile())).append("</FileList>");
-        } else {
-            sb.append("<FileList>").append(cdata(config.getSourceToJumpHost().getFileList().getJumpHostFile())).append("</FileList>");
-        }
+        sb.append("<FileList>").append(cdata(config.getSourceToJumpHost().getResultSetFile().getJumpHostFile())).append("</FileList>");
         sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
         sb.append("</FileListSelection>");
         sb.append("</Selection>");

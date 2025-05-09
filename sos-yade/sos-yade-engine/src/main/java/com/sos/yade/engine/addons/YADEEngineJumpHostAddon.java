@@ -92,6 +92,8 @@ public class YADEEngineJumpHostAddon {
 
     /*** Name of the main configuration file uploaded to the Jump Host temporary config directory */
     private static final String SETTINGS_XML = "settings.xml";
+    /** MOVE operation SOURCE -> JUMP_HOST fro Remove Source */
+    private static final String SETTINGS_REMOVE_SOURCE_XML = SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE.toLowerCase() + ".xml";
 
     private final ISOSLogger logger;
     private final AYADEArgumentsLoader argsLoader;
@@ -129,7 +131,7 @@ public class YADEEngineJumpHostAddon {
 
     private void init() throws YADEEngineInitializationException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            // Source (Target Host)
+            // Source (Jump Host)
             // Target (Any Provider) - the same as before
 
             String profileId;
@@ -189,6 +191,9 @@ public class YADEEngineJumpHostAddon {
     public void onAfterSourceDelegatorConnected(YADESourceProviderDelegator sourceDelegator) throws YADEEngineJumpHostException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
             upload(sourceDelegator); // upload settings.xml
+            if (config.sourceToJumpHost.deleteSourceFiles) {// MOVE operation
+                uploadRemoveSource(sourceDelegator);
+            }
 
             if (config.sourceToJumpHost.fileList != null) {
                 try {
@@ -228,18 +233,8 @@ public class YADEEngineJumpHostAddon {
 
                 if (isTransferSucceeded) {
                     if (config.sourceToJumpHost.deleteSourceFiles) {
-                        String settingsXML = config.configDirectory + "/" + SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE.toLowerCase()
-                                + "_settings.xml";
-                        String profileId = SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE;
-                        try {
-                            String settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostMOVERemove(argsLoader, config, profileId);
-                            upload(sourceDelegator, settingsXMLContent, settingsXML);
-                            logger.info("[%s][upload][Settings][%s=%s]uploaded", YADEClientArguments.LABEL, sourceDelegator.getLabel(), settingsXML);
-                        } catch (Exception e) {
-                            throw new YADEEngineJumpHostException(String.format("[%s][upload][Settings][%s=%s]%s", YADEClientArguments.LABEL,
-                                    sourceDelegator.getLabel(), settingsXML, e), e);
-                        }
-                        YADECommandExecutor.executeJumpHostCommand(logger, sourceDelegator, config.getYADEClientCommand(settingsXML, profileId));
+                        YADECommandExecutor.executeJumpHostCommand(logger, sourceDelegator, config.getYADEClientCommand(
+                                config.settingsRemoveSourceXML, SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE));
                     }
                     if (config.sourceToJumpHost.resultSetFile != null) {
                         try {
@@ -278,6 +273,9 @@ public class YADEEngineJumpHostAddon {
     }
 
     private void setFailed(List<ProviderFile> sourceFiles) {
+        if (sourceFiles == null) {
+            return;
+        }
         l: for (ProviderFile pf : sourceFiles) {
             YADEProviderFile sourceFile = (YADEProviderFile) pf;
             YADEProviderFile targetFile = sourceFile.getTarget();
@@ -324,6 +322,10 @@ public class YADEEngineJumpHostAddon {
 
     /** deletes files on the Source because the Source is accessible */
     private void jumpHostToTargetDeleteSourceFiles(AYADEProviderDelegator delegator, List<ProviderFile> files) throws YADEEngineJumpHostException {
+        if (files == null) {
+            return;
+        }
+
         delegator.getProvider().enableReusableResource();
         for (ProviderFile f : files) {
             try {
@@ -345,6 +347,17 @@ public class YADEEngineJumpHostAddon {
         } catch (Exception e) {
             throw new YADEEngineJumpHostException(String.format("[%s][upload][Settings][%s=%s]%s", label, delegator.getLabel(), config.settingsXML,
                     e), e);
+        }
+    }
+
+    private void uploadRemoveSource(AYADEProviderDelegator delegator) throws YADEEngineJumpHostException {
+        String label = YADEClientArguments.LABEL;
+        try {
+            upload(delegator, config.settingsRemoveSourceXMLContent, config.settingsRemoveSourceXML);
+            logger.info("[%s][upload][Settings][%s=%s]uploaded", label, delegator.getLabel(), config.settingsRemoveSourceXML);
+        } catch (Exception e) {
+            throw new YADEEngineJumpHostException(String.format("[%s][upload][Settings][%s=%s]%s", label, delegator.getLabel(),
+                    config.settingsRemoveSourceXML, e), e);
         }
     }
 
@@ -384,7 +397,9 @@ public class YADEEngineJumpHostAddon {
         private final String directory;
         private final String configDirectory;
         private final String dataDirectory;
+
         private final String settingsXML;
+        private final String settingsRemoveSourceXML;
 
         private boolean transactional;
         private String atomicPrefix;
@@ -392,6 +407,7 @@ public class YADEEngineJumpHostAddon {
 
         private String profileId;
         private String settingsXMLContent;
+        private String settingsRemoveSourceXMLContent;
 
         private SourceToJumpHost sourceToJumpHost;
         private JumpHostToTarget jumpHostToTarget;
@@ -401,6 +417,7 @@ public class YADEEngineJumpHostAddon {
             configDirectory = directory + "/config";
             dataDirectory = directory + "/data";
             settingsXML = configDirectory + "/" + SETTINGS_XML;
+            settingsRemoveSourceXML = configDirectory + "/" + SETTINGS_REMOVE_SOURCE_XML;
 
             if (argsLoader.getTargetArgs() != null) {// COPY/MOVE
                 if (transferToJumpHostAlwaysTransactional) {
@@ -473,6 +490,8 @@ public class YADEEngineJumpHostAddon {
                             .toLowerCase() + "_" + new Date().getTime() + ".sos.rs");
                 }
                 this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(argsLoader, this);
+                this.settingsRemoveSourceXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostMOVERemove(argsLoader, this,
+                        SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE);
                 break;
             case COPY:
             default:
