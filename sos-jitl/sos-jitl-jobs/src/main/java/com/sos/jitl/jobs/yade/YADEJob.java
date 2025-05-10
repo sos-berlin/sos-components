@@ -77,6 +77,7 @@ public class YADEJob extends Job<YADEJobArguments> {
     private void setOutcomeHistory(OrderProcessStep<YADEJobArguments> step, YADEJobArguments args, AYADEArgumentsLoader argsLoader,
             List<ProviderFile> files, Throwable exception) {
         try {
+            // see YADEEngineMain.writeHistoryToReturnValuesFile
             if (argsLoader == null || argsLoader.getArgs() == null) {
                 return;
             }

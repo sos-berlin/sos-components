@@ -33,20 +33,22 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 
-/** SOURCE_TO_JUMP_HOST_...: Source(SSHProvider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET<br/>
+/** SOURCE_TO_JUMP_HOST_...: Source(Any Provider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET<br/>
  * - 1) Current YADE Client:<br/>
  * - 1.1) Changes the configuration on the fly:<br/>
  * - 1.1.1) Source - Jump Host<br/>
  * - 1.1.2) Target - the same as before - Any Provider<br/>
  * - 1.1.3) Note: so, the Current YADE Client will transfer files between the Jump Host and Target(Any Provider)<br/>
  * - 1.2) Connects to the Source(Jump Host)<br/>
- * - 1.3) Uploads generated settings.xml to the Jump Host<br/>
- * - 1.3.1) Note: the settings.xml contains configuration for transfer between "old" Source(SSHProvider) -> Jump Host(Local)<br/>
- * - 1.4) Optional uploads a FileList file to the Jump Host for the files selection on the "old" Source(SSHProvider) based on this file<br/>
+ * - 1.3) Uploads generated configuration to the Jump Host<br/>
+ * - 1.3.1) Uploads generated settings.xml(SETTINGS_XML) to the Jump Host<br/>
+ * - 1.3.1.1) Note: the settings.xml contains configuration for transfer between "old" Source(Any Provider) -> Jump Host(Local)<br/>
+ * - 1.3.2) If MOVE - Uploads generated move_operation_remove_source.xml(SETTINGS_XML_MOVE_REMOVE_SOURCE) to the Jump Host<br/>
+ * - 1.4) Optional uploads a FileList file to the Jump Host for the files selection on the "old" Source(Any Provider) based on this file<br/>
  * - 2) Jump Host YADE Client (the JumpHost connection is already established - see 1.2))<br/>
- * - 2.1) CommandBeforeOperation - uses 1.3) to transfer files from Source(SSHProvider) -> Jump Host(Local)<br/>
- * - 2.2) Optional - writes a ResultSetFile of the file selection on the "old" Source(SSHProvider) in a temporary config dir on the Jump Host<br/>
- * - 2.3) Jump Host YADE Client - completed - "old" Source(SSHProvider) is disconnected<br/>
+ * - 2.1) CommandBeforeOperation - uses 1.3) to transfer files from Source(Any Provider) -> Jump Host(Local)<br/>
+ * - 2.2) Optional - writes a ResultSetFile of the file selection on the "old" Source(Any Provider) in a temporary config directory on the Jump Host<br/>
+ * - 2.3) Jump Host YADE Client - completed - "old" Source(Any Provider) is disconnected<br/>
  * - 3) Current YADE Client:<br/>
  * - 3.1)<br/>
  * - 3.1.1) if 2.3) completed successfully<br/>
@@ -55,18 +57,18 @@ import com.sos.yade.engine.handlers.command.YADECommandExecutor;
  * - 3.1.1.1.1.1) Source(Jump Host) - nothing should be extra rolled back, due to entire Jump Host temporary directory will be deleted anyway<br/>
  * - 3.1.1.1.1.2) Target(Any Provider) - the already transferred files should be rolled back<br/>
  * 
- * - Extra case MOVE operation and transactional (Remove files on the "old" Source(SSHProvider))<br/>
+ * - Extra case MOVE operation and transactional (Remove files on the "old" Source(Any Provider))<br/>
  * - 1) if all previous steps completed successfully<br/>
- * - 1.1) Note: the "old" Source(SSHProvider) is already disconnected<br/>
+ * - 1.1) Note: the "old" Source(Any Provider) is already disconnected<br/>
  * - 1.2) Note: the current Source(Jump Host) stays connected<br/>
- * - 1.3) Jump Host YADE Client is called again with a new generated settings XML<br/>
+ * - 1.3) Jump Host YADE Client is called again with the 1.3.2) generated settings XML(SETTINGS_XML_MOVE_REMOVE_SOURCE)<br/>
  * - 1.3.1) REMOVE Operation based on a ResultSetFile created with 2.2)<br/>
  * - 1.3.2) Note: if the ResultSetFile argument was not declared<br/>
  * - 1.3.2.1) 2.2) will creates in MOVE case a temporary ResultSetFile but not transfers it later to 1)<br/>
  * - 1.3.3) Note: if the ResultSetFile argument was declared<br/>
  * - 1.3.3.1) 2.2) this ResultSetFile is used and will be transferred to 1)<br/>
  * 
- * JUMP_HOST_TO_TARGET...: Source(Any Provider) -> Jump(SSHProvider) -> Target(SSHProvider) - old name - TO INTERNET<br/>
+ * JUMP_HOST_TO_TARGET...: Source(Any Provider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - TO INTERNET<br/>
  * - Note: Jump(DMZ) operations: COPY/MOVE.<br/>
  * -- REMOVE/GETLIST not needs Jump functionality because executed on the Source(Any Provider)
  * --------------------------------------------------------------------------------------------------------------<br/>
@@ -83,7 +85,7 @@ public class YADEEngineJumpHostAddon {
     private static final String SOURCE_TO_JUMP_HOST_COPY_PROFILE_ID = "SOURCE_TO_JUMP_HOST_COPY";
     private static final String SOURCE_TO_JUMP_HOST_GETLIST_PROFILE_ID = "SOURCE_TO_JUMP_HOST_GETLIST";
     private static final String SOURCE_TO_JUMP_HOST_REMOVE_PROFILE_ID = "SOURCE_TO_JUMP_HOST_REMOVE";
-    private static final String SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE = "REMOVE_SOURCE";
+    private static final String SOURCE_TO_JUMP_HOST_MOVE_OPERATION_REMOVE_SOURCE_LABEL = "MOVE_OPERATION_REMOVE_SOURCE";
 
     // -- Step 1) Target will be replaced by Jump (Source will "transfer" files to Jump)
     // -- Step 2) Configuration(Settings XML) will be generated for "transfers" files from Jump to Target
@@ -93,7 +95,7 @@ public class YADEEngineJumpHostAddon {
     /*** Name of the main configuration file uploaded to the Jump Host temporary config directory */
     private static final String SETTINGS_XML = "settings.xml";
     /** MOVE operation SOURCE -> JUMP_HOST fro Remove Source */
-    private static final String SETTINGS_REMOVE_SOURCE_XML = SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE.toLowerCase() + ".xml";
+    private static final String SETTINGS_XML_MOVE_REMOVE_SOURCE = SOURCE_TO_JUMP_HOST_MOVE_OPERATION_REMOVE_SOURCE_LABEL.toLowerCase() + ".xml";
 
     private final ISOSLogger logger;
     private final AYADEArgumentsLoader argsLoader;
@@ -188,11 +190,14 @@ public class YADEEngineJumpHostAddon {
         }
     }
 
+    // Source - JumpHost
     public void onAfterSourceDelegatorConnected(YADESourceProviderDelegator sourceDelegator) throws YADEEngineJumpHostException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            upload(sourceDelegator); // upload settings.xml
-            if (config.sourceToJumpHost.deleteSourceFiles) {// MOVE operation
-                uploadRemoveSource(sourceDelegator);
+            // upload settings.xml to the JumpHost
+            upload(sourceDelegator);
+            // MOVE operation - upload move_operation_remove_source.xml to the JumpHost
+            if (config.sourceToJumpHost.deleteSourceFiles) {
+                uploadMoveRemoveSource(sourceDelegator);
             }
 
             if (config.sourceToJumpHost.fileList != null) {
@@ -207,9 +212,11 @@ public class YADEEngineJumpHostAddon {
         }
     }
 
+    // Target - JumpHost
     public void onAfterTargetDelegatorConnected(YADETargetProviderDelegator targetDelegator) throws YADEEngineJumpHostException {
         if (!argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            upload(targetDelegator);// upload settings.xml
+            // upload settings.xml to the JumpHost
+            upload(targetDelegator);
         }
         isReady = true;
     }
@@ -232,9 +239,10 @@ public class YADEEngineJumpHostAddon {
                 jumpHostDelegator = sourceDelegator;
 
                 if (isTransferSucceeded) {
+                    // MOVE operation - extra call to delete files on Source
                     if (config.sourceToJumpHost.deleteSourceFiles) {
                         YADECommandExecutor.executeJumpHostCommand(logger, sourceDelegator, config.getYADEClientCommand(
-                                config.settingsRemoveSourceXML, SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE));
+                                config.settingsXMLMoveRemoveSource, SOURCE_TO_JUMP_HOST_MOVE_OPERATION_REMOVE_SOURCE_LABEL));
                     }
                     if (config.sourceToJumpHost.resultSetFile != null) {
                         try {
@@ -350,14 +358,14 @@ public class YADEEngineJumpHostAddon {
         }
     }
 
-    private void uploadRemoveSource(AYADEProviderDelegator delegator) throws YADEEngineJumpHostException {
+    private void uploadMoveRemoveSource(AYADEProviderDelegator delegator) throws YADEEngineJumpHostException {
         String label = YADEClientArguments.LABEL;
         try {
-            upload(delegator, config.settingsRemoveSourceXMLContent, config.settingsRemoveSourceXML);
-            logger.info("[%s][upload][Settings][%s=%s]uploaded", label, delegator.getLabel(), config.settingsRemoveSourceXML);
+            upload(delegator, config.settingsXMLMoveRemoveSourceContent, config.settingsXMLMoveRemoveSource);
+            logger.info("[%s][upload][Settings][%s=%s]uploaded", label, delegator.getLabel(), config.settingsXMLMoveRemoveSource);
         } catch (Exception e) {
             throw new YADEEngineJumpHostException(String.format("[%s][upload][Settings][%s=%s]%s", label, delegator.getLabel(),
-                    config.settingsRemoveSourceXML, e), e);
+                    config.settingsXMLMoveRemoveSource, e), e);
         }
     }
 
@@ -399,7 +407,7 @@ public class YADEEngineJumpHostAddon {
         private final String dataDirectory;
 
         private final String settingsXML;
-        private final String settingsRemoveSourceXML;
+        private final String settingsXMLMoveRemoveSource;
 
         private boolean transactional;
         private String atomicPrefix;
@@ -407,7 +415,7 @@ public class YADEEngineJumpHostAddon {
 
         private String profileId;
         private String settingsXMLContent;
-        private String settingsRemoveSourceXMLContent;
+        private String settingsXMLMoveRemoveSourceContent;
 
         private SourceToJumpHost sourceToJumpHost;
         private JumpHostToTarget jumpHostToTarget;
@@ -417,7 +425,7 @@ public class YADEEngineJumpHostAddon {
             configDirectory = directory + "/config";
             dataDirectory = directory + "/data";
             settingsXML = configDirectory + "/" + SETTINGS_XML;
-            settingsRemoveSourceXML = configDirectory + "/" + SETTINGS_REMOVE_SOURCE_XML;
+            settingsXMLMoveRemoveSource = configDirectory + "/" + SETTINGS_XML_MOVE_REMOVE_SOURCE;
 
             if (argsLoader.getTargetArgs() != null) {// COPY/MOVE
                 if (transferToJumpHostAlwaysTransactional) {
@@ -486,12 +494,12 @@ public class YADEEngineJumpHostAddon {
                 argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
                 this.sourceToJumpHost.deleteSourceFiles = true;
                 if (this.sourceToJumpHost.resultSetFile == null) {
-                    this.sourceToJumpHost.setResultSetFile(argsLoader.getClientArgs().getResultSetFile(), SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE
-                            .toLowerCase() + "_" + new Date().getTime() + ".sos.rs");
+                    this.sourceToJumpHost.setResultSetFile(argsLoader.getClientArgs().getResultSetFile(),
+                            SOURCE_TO_JUMP_HOST_MOVE_OPERATION_REMOVE_SOURCE_LABEL.toLowerCase() + "_" + new Date().getTime() + ".sos.rs");
                 }
                 this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(argsLoader, this);
-                this.settingsRemoveSourceXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostMOVERemove(argsLoader, this,
-                        SOURCE_TO_JUMP_HOST_MOVE_LABEL_REMOVE_SOURCE);
+                this.settingsXMLMoveRemoveSourceContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostMOVERemove(argsLoader, this,
+                        SOURCE_TO_JUMP_HOST_MOVE_OPERATION_REMOVE_SOURCE_LABEL);
                 break;
             case COPY:
             default:
@@ -570,12 +578,13 @@ public class YADEEngineJumpHostAddon {
 
             private ConfigFile fileList;
             private ConfigFile resultSetFile;
-            // Source(SSHProvider) -> Jump(SSHProvider) -> Target(Any Provider)
+            // Source(Any Provider) -> Jump(SSHProvider) -> Target(Any Provider)
             // The MOVE operation is internally converted to a COPY operation if "To Jump" is transactional.
             // Otherwise, the current YADE Client deletes the Source files
-            // - after the Source(SSHProvider) -> Jump(SSHProvider) step due to MOVE
+            // - after the Source(Any Provider) -> Jump(SSHProvider) step due to MOVE
             // - and not after the Jump(SSHProvider) -> Target(Any Provider) step is completed
-            // - JumpHost MOVE implementation: Source(SSHProvider) - COPY -> Jump(SSHProvider) -> Target(Any Provider) -> Source(SSHProvider) delete files
+            // - JumpHost MOVE implementation:
+            // -- Source(Any Provider) - COPY -> Jump(SSHProvider) -> Target(Any Provider) -> Source(Any Provider) delete files
             private boolean deleteSourceFiles;
 
             public ConfigFile getFileList() {
@@ -601,12 +610,13 @@ public class YADEEngineJumpHostAddon {
 
         public class JumpHostToTarget {
 
-            // Source(Any Provider) -> Jump(SSHProvider) -> Target(SSHProvider)
+            // Source(Any Provider) -> Jump(SSHProvider) -> Target(Any Provider)
             // The MOVE operation is internally converted to a COPY operation if "To Jump" is transactional.
             // Otherwise, the current YADE Client deletes the Source files
             // - after the Source(Any Provider) -> Jump(SSHProvider) step due to MOVE
-            // - and not after the Jump(SSHProvider) -> Target(SSHProvider) step is completed
-            // - JumpHost MOVE implementation: Source(Any Provider) - COPY -> Jump(SSHProvider) -> Target(SSHProvider) -> Source(Any Provider) delete files
+            // - and not after the Jump(SSHProvider) -> Target(Any Provider) step is completed
+            // - JumpHost MOVE implementation: 
+            // -- Source(Any Provider) - COPY -> Jump(SSHProvider) -> Target(Any Provider) -> Source(Any Provider) delete files
             private boolean deleteSourceFiles;
         }
 
@@ -633,7 +643,5 @@ public class YADEEngineJumpHostAddon {
             }
 
         }
-
     }
-
 }

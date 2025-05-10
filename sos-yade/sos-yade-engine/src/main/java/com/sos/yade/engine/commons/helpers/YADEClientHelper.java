@@ -56,13 +56,18 @@ public class YADEClientHelper {
         }
         Path file = SOSPath.toAbsoluteNormalizedPath(clientArgs.getResultSetFile().getValue());
         boolean logEntries = TransferOperation.GETLIST.equals(operation);
-        if (logEntries) {
-            logger.info("[%s][%s=%s]write %s entries:", YADEClientArguments.LABEL, clientArgs.getResultSetFile().getName(), file, sourceFiles.size());
-        }
         StringBuilder sb = new StringBuilder();
         if (SOSCollection.isEmpty(sourceFiles)) {
+            if (logEntries) {
+                logger.info("[%s][%s=%s]write a new line (because of 0 entries)", YADEClientArguments.LABEL, clientArgs.getResultSetFile().getName(),
+                        file);
+            }
             sb.append(NEW_LINE);
         } else {
+            if (logEntries) {
+                logger.info("[%s][%s=%s]write %s entries:", YADEClientArguments.LABEL, clientArgs.getResultSetFile().getName(), file, sourceFiles
+                        .size());
+            }
             sourceFiles.stream().forEach(f -> {
                 String entry = f.getFullPath();
                 if (logEntries) {

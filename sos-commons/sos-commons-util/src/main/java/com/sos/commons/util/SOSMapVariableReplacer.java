@@ -61,6 +61,9 @@ public class SOSMapVariableReplacer {
     }
 
     private String replaceVars(String input, Pattern pattern) {
+        if (input == null) {
+            return null;
+        }
         Matcher matcher = pattern.matcher(input);
         StringBuilder result = new StringBuilder();
         while (matcher.find()) {

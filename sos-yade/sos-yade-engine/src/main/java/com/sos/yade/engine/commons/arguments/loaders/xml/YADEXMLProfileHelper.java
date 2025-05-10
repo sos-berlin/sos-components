@@ -228,8 +228,6 @@ public class YADEXMLProfileHelper {
                 // e.g. CopySourceFragmentRef
                 if (nodeName.equals(operationIdentifier + "SourceFragmentRef")) {
                     parseFragmentRef(argsLoader, n, true);
-                } else if (nodeName.equals("Alternative" + operationIdentifier + "SourceFragmentRef")) {
-                    parseAlternativeFragmentRef(argsLoader, n, true);
                 } else if (nodeName.equals("SourceFileOptions")) {
                     parseSourceOptions(argsLoader, n);
                 }
@@ -246,8 +244,6 @@ public class YADEXMLProfileHelper {
                 // e.g. CopyTargetFragmentRef
                 if (nodeName.equals(operationIdentifier + "TargetFragmentRef")) {
                     parseFragmentRef(argsLoader, n, false);
-                } else if (nodeName.equals("Alternative" + operationIdentifier + "TargetFragmentRef")) {
-                    parseAlternativeFragmentRef(argsLoader, n, false);
                 } else if (nodeName.equals("Directory")) {
                     argsLoader.setStringArgumentValue(argsLoader.getTargetArgs().getDirectory(), n);
                 } else if (nodeName.equals("TargetFileOptions")) {
@@ -275,10 +271,6 @@ public class YADEXMLProfileHelper {
                 }
             }
         }
-    }
-
-    private static void parseAlternativeFragmentRef(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        // YADEEngine - not argsLoaderemented
     }
 
     private static void parseFragmentRef(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {

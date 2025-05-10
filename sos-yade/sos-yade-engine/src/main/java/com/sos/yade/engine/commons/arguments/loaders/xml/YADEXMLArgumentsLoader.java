@@ -97,34 +97,58 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
     }
 
     protected String getValue(Node node) {
+        if (node == null) {
+            return null;
+        }
         return varReplacer.replaceAllVars(SOSXML.getTrimmedValue(node));
     }
 
     protected void setIntegerArgumentValue(SOSArgument<Integer> arg, Node node) {
+        if (arg == null || node == null) {
+            return;
+        }
         arg.setValue(Integer.parseInt(getValue(node)));
     }
 
     protected void setBooleanArgumentValue(SOSArgument<Boolean> arg, Node node) {
+        if (arg == null || node == null) {
+            return;
+        }
         arg.setValue(Boolean.parseBoolean(getValue(node)));
     }
 
     protected void setOppositeBooleanArgumentValue(SOSArgument<Boolean> arg, Node node) {
+        if (arg == null || node == null) {
+            return;
+        }
         arg.setValue(!Boolean.parseBoolean(getValue(node)));
     }
 
     protected void setStringArgumentValue(SOSArgument<String> arg, Node node) {
+        if (arg == null || node == null) {
+            return;
+        }
         arg.setValue(getValue(node));
     }
 
     protected void setListStringArgumentValue(SOSArgument<List<String>> arg, Node node) {
+        if (arg == null || node == null) {
+            return;
+        }
         SOSArgumentHelper.setListStringArgumentValue(arg, getValue(node));
     }
 
     protected void setListPathArgumentValue(SOSArgument<List<Path>> arg, Node node) {
+        if (arg == null || node == null) {
+            return;
+        }
         SOSArgumentHelper.setListPathArgumentValue(arg, getValue(node));
     }
 
     protected void setPathArgumentValue(SOSArgument<Path> arg, Node node) {
+        if (arg == null || node == null) {
+            return;
+        }
         arg.setValue(Path.of(getValue(node)));
     }
 }

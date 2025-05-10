@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
@@ -23,6 +24,10 @@ import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 public class YADEOutcomeHistory {
 
     public static String get(AYADEArgumentsLoader argsLoader, List<ProviderFile> files, Throwable exception) throws Exception {
+        if (argsLoader == null) {
+            throw new SOSMissingDataException("argsLoader");
+        }
+
         YadeTransferResult result = new YadeTransferResult();
 
         result.setSource(getProviderResult(argsLoader.getSourceArgs()));

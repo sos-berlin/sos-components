@@ -160,6 +160,10 @@ public class YADEEngineMain {
 
     private static void writeHistoryToReturnValuesFile(ISOSLogger logger, String historyReturnValuesFile, AYADEArgumentsLoader argsLoader,
             List<ProviderFile> files, Throwable exception) {
+        // see YADEJob.setOutcomeHistory
+        if (argsLoader == null || argsLoader.getArgs() == null) {
+            return;
+        }
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("[writeHistoryToReturnValuesFile][%s]...", historyReturnValuesFile);

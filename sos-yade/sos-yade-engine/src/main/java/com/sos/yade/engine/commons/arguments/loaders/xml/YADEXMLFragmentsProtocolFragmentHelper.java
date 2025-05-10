@@ -301,22 +301,25 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    // @TODO parse URLConnection child nodes instead using of XPath
     protected static WebDAVProviderArguments parseWebDAV(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
+        // throws on exception if not found
         Node fragment = getProtocolFragment(argsLoader, ref, isSource, "WebDAV");
-        String url = argsLoader.getValue(argsLoader.getXPath().selectNode(fragment, "URLConnection/URL"));
-        if (url == null) {
-            return null;
+        // Node refRef = argsLoader.getXPath().selectNode(ref, "*[1]"); // first child
+        Node urlConnectionURL = argsLoader.getXPath().selectNode(fragment, "URLConnection/URL");
+        if (urlConnectionURL == null) {
+            throw new SOSMissingDataException("[WebDAV]URLConnection/URL");
         }
+
+        String url = argsLoader.getValue(urlConnectionURL);
         String urlLC = url.toLowerCase();
         WebDAVProviderArguments args = urlLC.startsWith("https://") || urlLC.startsWith("webdavs://") ? new WebDAVSProviderArguments()
                 : new WebDAVProviderArguments();
         args.applyDefaultIfNullQuietly();
         args.getHost().setValue(url);
 
-        String connectTimeout = argsLoader.getValue(argsLoader.getXPath().selectNode(fragment, "URLConnection/ConnectTimeout"));
-        if (connectTimeout != null) {
-            args.getConnectTimeout().setValue(connectTimeout);
+        Node urlConnectionConnectTimeout = argsLoader.getXPath().selectNode(fragment, "URLConnection/ConnectTimeout");
+        if (urlConnectionConnectTimeout != null) {
+            args.getConnectTimeout().setValue(argsLoader.getValue(urlConnectionConnectTimeout));
         }
 
         NodeList nl = fragment.getChildNodes();

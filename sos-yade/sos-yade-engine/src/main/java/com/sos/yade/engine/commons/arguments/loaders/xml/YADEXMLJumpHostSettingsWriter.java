@@ -7,6 +7,7 @@ import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
@@ -86,12 +87,10 @@ public class YADEXMLJumpHostSettingsWriter {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.append("<Configurations>");
-        sb.append("<Fragments>");
-        sb.append(fragments);
-        sb.append("</Fragments>");
-        sb.append("<Profiles>");
-        sb.append(profile);
-        sb.append("</Profiles>");
+
+        sb.append("<Fragments>").append(fragments).append("</Fragments>");
+        sb.append("<Profiles>").append(profile).append("</Profiles>");
+
         sb.append("</Configurations>");
         return sb;
     }
@@ -167,7 +166,7 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateProtocolFragmentSFTP(SSHProviderArguments args, boolean generateCSRef) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SFTPFragment name=").append(attrValue(FRAGMENT_NAME)).append(">");
-        sb.append(generateProtocolFragmentBasicConnection(args.getHost(), args.getPort()));
+        sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
         // SSHAuthentication
         sb.append("<SSHAuthentication>");
         sb.append("<Account>").append(cdata(args.getUser().getValue())).append("</Account>");
@@ -201,7 +200,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
 
         // ProxyForSFTP
-        sb.append(generateProxy(args.getProxy(), "ProxyForSFTP"));
+        sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForSFTP"));
         // Other
         if (args.getStrictHostkeyChecking().isDirty()) {
             sb.append("<StrictHostkeyChecking>").append(args.getStrictHostkeyChecking().getValue()).append("</StrictHostkeyChecking>");
@@ -233,8 +232,8 @@ public class YADEXMLJumpHostSettingsWriter {
         String fragmentElementName = isFTPS ? "FTPSFragment" : "FTPFragment";
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentElementName).append(" name=").append(attrValue(FRAGMENT_NAME)).append(">");
-        sb.append(generateProtocolFragmentBasicConnection(args.getHost(), args.getPort()));
-        sb.append(generateProtocolFragmentBasicAuthentication(args.getUser(), args.getPassword()));
+        sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
+        sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
         }
@@ -245,18 +244,18 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<FTPSClientSecurity>");
             sb.append("<SecurityMode>").append(cdata(ftps.getSecurityModeValue())).append("</SecurityMode>");
             if (ftps.getSSL().getTrustedSSL().isTrustStoreEnabled()) {
-                sb.append(generateYADE1KeyStore(ssl));
+                sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             sb.append("<FTPSClientSecurity>");
             // YADE JS7
-            sb.append(generateSSL(ssl));
+            sb.append(generateProtocolFragmentPartSSL(ssl));
         } else {
             sb.append("<PassiveMode>").append(args.getPassiveMode().getValue()).append("</PassiveMode>");
             if (args.getTransferMode().getValue() != null) {
                 sb.append("<TransferMode>").append(cdata(args.getTransferModeValue())).append("</TransferMode>");
             }
         }
-        sb.append(generateProxy(args.getProxy(), isFTPS ? "ProxyForFTPS" : "ProxyForFTP"));
+        sb.append(generateProtocolFragmentPartProxy(args.getProxy(), isFTPS ? "ProxyForFTPS" : "ProxyForFTP"));
         // Other
         if (args.getConnectTimeout().isDirty()) {
             sb.append("<ConnectTimeout>").append(cdata(args.getConnectTimeout().getValue())).append("</ConnectTimeout>");
@@ -269,8 +268,8 @@ public class YADEXMLJumpHostSettingsWriter {
         String fragmentElementName = isHTTPS ? "HTTPSFragment" : "HTTPFragment";
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentElementName).append(" name=").append(attrValue(FRAGMENT_NAME)).append(">");
-        sb.append(generateProtocolFragmentURLConnection(args.getHost(), args.getConnectTimeout()));
-        sb.append(generateProtocolFragmentBasicAuthentication(args.getUser(), args.getPassword()));
+        sb.append(generateProtocolFragmentPartURLConnection(args.getHost(), args.getConnectTimeout()));
+        sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
         }
@@ -280,18 +279,18 @@ public class YADEXMLJumpHostSettingsWriter {
             if (ssl.getUntrustedSSL().isTrue()) {
                 sb.append("<AcceptUntrustedCertificate>true</AcceptUntrustedCertificate>");
                 sb.append("<DisableCertificateHostnameVerification>");
-                sb.append(!ssl.getUntrustedSSLVerifyCertificateHostname().getValue());
+                sb.append(getOppositeValue(ssl.getUntrustedSSLVerifyCertificateHostname()));
                 sb.append("</DisableCertificateHostnameVerification>");
             }
             if (ssl.getTrustedSSL().isTrustStoreEnabled()) {
-                sb.append(generateYADE1KeyStore(ssl));
+                sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             // YADE JS7
-            sb.append(generateSSL(ssl));
+            sb.append(generateProtocolFragmentPartSSL(ssl));
         }
 
-        sb.append(generateProxy(args.getProxy(), "ProxyForHTTP"));
-        sb.append(generateHTTPHeaders(args.getHTTPHeaders()));
+        sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForHTTP"));
+        sb.append(generateProtocolFragmentPartHTTPHeaders(args.getHTTPHeaders()));
 
         sb.append("</").append(fragmentElementName).append(">");
         return sb;
@@ -302,8 +301,8 @@ public class YADEXMLJumpHostSettingsWriter {
         String fragmentElementName = isWEBDAVS ? "WebDAVFragment" : "WebDAVFragment";
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentElementName).append(" name=").append(attrValue(FRAGMENT_NAME)).append(">");
-        sb.append(generateProtocolFragmentURLConnection(args.getHost(), args.getConnectTimeout()));
-        sb.append(generateProtocolFragmentBasicAuthentication(args.getUser(), args.getPassword()));
+        sb.append(generateProtocolFragmentPartURLConnection(args.getHost(), args.getConnectTimeout()));
+        sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
         }
@@ -313,18 +312,18 @@ public class YADEXMLJumpHostSettingsWriter {
             if (ssl.getUntrustedSSL().isTrue()) {
                 sb.append("<AcceptUntrustedCertificate>true</AcceptUntrustedCertificate>");
                 sb.append("<DisableCertificateHostnameVerification>");
-                sb.append(!ssl.getUntrustedSSLVerifyCertificateHostname().getValue());
+                sb.append(getOppositeValue(ssl.getUntrustedSSLVerifyCertificateHostname()));
                 sb.append("</DisableCertificateHostnameVerification>");
             }
             if (ssl.getTrustedSSL().isTrustStoreEnabled()) {
-                sb.append(generateYADE1KeyStore(ssl));
+                sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             // YADE JS7
-            sb.append(generateSSL(ssl));
+            sb.append(generateProtocolFragmentPartSSL(ssl));
         }
 
-        sb.append(generateProxy(args.getProxy(), "ProxyForWebDAV"));
-        sb.append(generateHTTPHeaders(args.getHTTPHeaders()));
+        sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForWebDAV"));
+        sb.append(generateProtocolFragmentPartHTTPHeaders(args.getHTTPHeaders()));
 
         sb.append("</").append(fragmentElementName).append(">");
         return sb;
@@ -349,7 +348,7 @@ public class YADEXMLJumpHostSettingsWriter {
 
         sb.append("<SMBAuthentication>");
         // YADE1 - compatibility at this level
-        sb.append(generateProtocolFragmentSMBAuthChildren(args));
+        sb.append(generateProtocolFragmentPartSMBAuthChildren(args));
         // YADE JS7
         switch (args.getAuthMethod().getValue()) {
         case ANONYMOUS:
@@ -360,17 +359,17 @@ public class YADEXMLJumpHostSettingsWriter {
             break;
         case NTLM:
             sb.append("<SMBAuthenticationMethodNTLM>");
-            sb.append(generateProtocolFragmentSMBAuthChildren(args));
+            sb.append(generateProtocolFragmentPartSMBAuthChildren(args));
             sb.append("</SMBAuthenticationMethodNTLM>");
             break;
         case KERBEROS:
             sb.append("<SMBAuthenticationMethodKerberos>");
-            sb.append(generateProtocolFragmentSMBAuthChildren(args));
+            sb.append(generateProtocolFragmentPartSMBAuthChildren(args));
             sb.append("</SMBAuthenticationMethodKerberos>");
             break;
         case SPNEGO:
             sb.append("<SMBAuthenticationMethodSPNEGO>");
-            sb.append(generateProtocolFragmentSMBAuthChildren(args));
+            sb.append(generateProtocolFragmentPartSMBAuthChildren(args));
             sb.append("</SMBAuthenticationMethodSPNEGO>");
             break;
         default:
@@ -394,11 +393,13 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentSMBAuthChildren(SMBProviderArguments args) {
+    private static StringBuilder generateProtocolFragmentPartSMBAuthChildren(SMBProviderArguments args) {
         StringBuilder sb = new StringBuilder();
         // YADE1/YADE JS7
         if (!args.getUser().isEmpty()) {
-            sb.append("<Account>").append(cdata(args.getUser().getValue())).append("</Account>");
+            sb.append("<Account>");
+            sb.append(cdata(args.getUser().getValue()));
+            sb.append("</Account>");
         }
         if (!args.getDomain().isEmpty()) {
             sb.append("<Domain>");
@@ -419,20 +420,20 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateHTTPHeaders(SOSArgument<List<String>> headers) {
+    private static StringBuilder generateProtocolFragmentPartHTTPHeaders(SOSArgument<List<String>> headers) {
         StringBuilder sb = new StringBuilder();
         if (headers.getValue() == null || headers.getValue().size() == 0) {
             return sb;
         }
         sb.append("<HTTPHeaders>");
         for (String header : headers.getValue()) {
-            sb.append("<HTTPHeader >").append(cdata(header)).append("</HTTPHeader >");
+            sb.append("<HTTPHeader >").append(cdata(header)).append("</HTTPHeader>");
         }
         sb.append("</HTTPHeaders>");
         return sb;
     }
 
-    private static StringBuilder generateProxy(ProxyArguments args, String elementName) {
+    private static StringBuilder generateProtocolFragmentPartProxy(ProxyArguments args, String elementName) {
         StringBuilder sb = new StringBuilder();
         if (args == null) {
             return sb;
@@ -441,21 +442,21 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<").append(elementName).append(">");
         if (args.isHTTP()) {
             sb.append("<HTTPProxy>");
-            sb.append(generateProtocolFragmentBasicConnection(args.getHost(), args.getPort()));
-            sb.append(generateProtocolFragmentBasicAuthentication(args.getUser(), args.getPassword()));
+            sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
+            sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
             sb.append("</HTTPProxy>");
         } else {
             // YADE1 - compatibility (OK for YADE JS7)
             sb.append("<SOCKS5Proxy>");
-            sb.append(generateProtocolFragmentBasicConnection(args.getHost(), args.getPort()));
-            sb.append(generateProtocolFragmentBasicAuthentication(args.getUser(), args.getPassword()));
+            sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
+            sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
             sb.append("</SOCKS5Proxy>");
         }
         sb.append("</").append(elementName).append(">");
         return sb;
     }
 
-    private static StringBuilder generateYADE1KeyStore(SSLArguments args) {
+    private static StringBuilder generateProtocolFragmentPartYADE1KeyStore(SSLArguments args) {
         StringBuilder sb = new StringBuilder();
         sb.append("<KeyStoreType>");
         sb.append(cdata(args.getTrustedSSL().getTrustStoreType().getValue().name()));
@@ -472,13 +473,14 @@ public class YADEXMLJumpHostSettingsWriter {
     }
 
     // YADE JS7
-    private static StringBuilder generateSSL(SSLArguments args) {
+    private static StringBuilder generateProtocolFragmentPartSSL(SSLArguments args) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SSL>");
+
         if (args.getUntrustedSSL().isTrue()) {
             sb.append("<UntrustedSSL>");
             sb.append("<DisableCertificateHostnameVerification>");
-            sb.append(!args.getUntrustedSSLVerifyCertificateHostname().getValue());
+            sb.append(getOppositeValue(args.getUntrustedSSLVerifyCertificateHostname()));
             sb.append("</DisableCertificateHostnameVerification>");
             sb.append("</UntrustedSSL>");
         } else {
@@ -523,39 +525,44 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentURLConnection(SOSArgument<String> host, SOSArgument<String> connectTimeout) {
+    private static StringBuilder generateProtocolFragmentPartURLConnection(SOSArgument<String> host, SOSArgument<String> connectTimeout) {
         StringBuilder sb = new StringBuilder();
         sb.append("<URLConnection>");
+
         sb.append("<URL>").append(cdata(host.getValue())).append("</URL>");
         if (connectTimeout.isDirty()) {
             sb.append("<ConnectTimeout>").append(cdata(connectTimeout.getValue())).append("</ConnectTimeout>");
         }
+
         sb.append("</URLConnection>");
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentBasicConnection(SOSArgument<String> host, SOSArgument<Integer> port) {
+    private static StringBuilder generateProtocolFragmentPartBasicConnection(SOSArgument<String> host, SOSArgument<Integer> port) {
         StringBuilder sb = new StringBuilder();
         sb.append("<BasicConnection>");
+
         sb.append("<Hostname>").append(cdata(host.getValue())).append("</Hostname>");
         if (port.isDirty()) {
             sb.append("<Port>").append(cdata(String.valueOf(port.getValue()))).append("</Port>");
         }
+
         sb.append("</BasicConnection>");
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentBasicAuthentication(SOSArgument<String> user, SOSArgument<String> password) {
+    private static StringBuilder generateProtocolFragmentPartBasicAuthentication(SOSArgument<String> user, SOSArgument<String> password) {
         StringBuilder sb = new StringBuilder();
         if (user.isEmpty()) {
             return sb;
         }
-
         sb.append("<BasicAuthentication>");
+
         sb.append("<Account>").append(cdata(user.getValue())).append("</Account>");
         if (password.isDirty()) {
             sb.append("<Password>").append(cdata(password.getValue())).append("</Password>");
         }
+
         sb.append("</BasicAuthentication>");
         return sb;
     }
@@ -570,8 +577,9 @@ public class YADEXMLJumpHostSettingsWriter {
         String sourcePrefix = operation + "Source";
         sb.append("<").append(sourcePrefix).append(">");
         sb.append("<").append(sourcePrefix).append("FragmentRef>");
-        sb.append(generateProfileTargetFragmentRef(sourceArgs));
+        sb.append(generateProfilePartTargetFragmentRef(sourceArgs));
         sb.append("</").append(sourcePrefix).append("FragmentRef>");
+
         sb.append("<SourceFileOptions>");
         // Source - Selection
         sb.append("<Selection>");
@@ -610,6 +618,7 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("</FileSpecSelection>");
         }
         sb.append("</Selection>");
+
         // Source - CheckSteadyState
         if (sourceArgs.isCheckSteadyStateEnabled()) {
             sb.append("<CheckSteadyState>");
@@ -628,7 +637,7 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<Directives>");
             if (sourceArgs.getErrorOnNoFilesFound().isDirty()) {
                 sb.append("<DisableErrorOnNoFilesFound>");
-                sb.append(!sourceArgs.getErrorOnNoFilesFound().getValue());
+                sb.append(getOppositeValue(sourceArgs.getErrorOnNoFilesFound()));
                 sb.append("</DisableErrorOnNoFilesFound>");
             }
             if (sourceArgs.getZeroByteTransfer().isDirty()) {
@@ -705,15 +714,16 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<HashAlgorithm>").append(cdata(sourceArgs.getIntegrityHashAlgorithm().getValue())).append("</HashAlgorithm>");
             sb.append("</CheckIntegrityHash>");
         }
-
         sb.append("</SourceFileOptions>");
         sb.append("</").append(sourcePrefix).append(">");
+
         if (useTarget) {
             // Target (Jump) ----------------------------------
-            sb.append(generateJumpHostLocalCopyTarget(targetArgs, config));
+            sb.append(generateProfilePartJumpHostLocalCopyTarget(targetArgs, config));
             // TransferOptions
-            sb.append(generateProfileTransferOptions(args, sourceArgs, config));
+            sb.append(generateProfilePartTransferOptions(args, sourceArgs, config));
         }
+
         sb.append("</").append(operation).append(">");
         sb.append("</Operation>");
         sb.append("</Profile>");
@@ -725,11 +735,11 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<Profile profile_id=").append(attrValue(profileId)).append(">");
         sb.append("<Operation>");
         sb.append("<Remove>");
-
         sb.append("<RemoveSource>");
+
         sb.append("<RemoveSourceFragmentRef>");
-        sb.append("<").append(sourceArgs.getProvider().getProtocol().getValue().name()).append("FragmentRef ref=").append(attrValue(FRAGMENT_NAME))
-                .append(" />");
+        sb.append("<").append(getFragmentNamePrefix(sourceArgs.getProvider().getProtocol())).append("FragmentRef ref=");
+        sb.append(attrValue(FRAGMENT_NAME)).append(" />");
         sb.append("</RemoveSourceFragmentRef>");
 
         sb.append("<SourceFileOptions>");
@@ -743,11 +753,9 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("</SourceFileOptions>");
 
         sb.append("</RemoveSource>");
-
         sb.append("</Remove>");
         sb.append("</Operation>");
         sb.append("</Profile>");
-
         return sb;
     }
 
@@ -758,17 +766,19 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<Copy>");
 
         // Source (Jump)
-        sb.append(generateJumpHostLocalCopySource(config));
+        sb.append(generateProfilePartJumpHostLocalCopySource(config));
         // Target
         sb.append("<CopyTarget>");
-        sb.append("<CopyTargetFragmentRef>").append(generateProfileTargetFragmentRef(targetArgs)).append("</CopyTargetFragmentRef>");
+        sb.append("<CopyTargetFragmentRef>");
+        sb.append(generateProfilePartTargetFragmentRef(targetArgs));
+        sb.append("</CopyTargetFragmentRef>");
         if (targetArgs.getDirectory().isDirty()) {
             sb.append("<Directory>").append(cdata(targetArgs.getDirectory().getValue())).append("</Directory>");
         }
-        sb.append(generateProfileTargetFileOptions(targetArgs, config));
+        sb.append(generateProfilePartTargetFileOptions(targetArgs, config));
         sb.append("</CopyTarget>");
         // TransferOptions
-        sb.append(generateProfileTransferOptions(args, targetArgs, config));
+        sb.append(generateProfilePartTransferOptions(args, targetArgs, config));
 
         sb.append("</Copy>");
         sb.append("</Operation>");
@@ -776,12 +786,14 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateJumpHostLocalCopySource(JumpHostConfig config) {
+    private static StringBuilder generateProfilePartJumpHostLocalCopySource(JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<CopySource>");
+
         sb.append("<CopySourceFragmentRef>");
         sb.append("<LocalSource ").append(generateJumpAttribute()).append("/>");
         sb.append("</CopySourceFragmentRef>");
+
         sb.append("<SourceFileOptions>");
         sb.append("<Selection>");
         sb.append("<FileSpecSelection>");
@@ -791,31 +803,32 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("</FileSpecSelection>");
         sb.append("</Selection>");
         sb.append("</SourceFileOptions>");
+
         sb.append("</CopySource>");
         return sb;
     }
 
-    private static StringBuilder generateJumpHostLocalCopyTarget(YADETargetArguments targetArgs, JumpHostConfig config) {
+    private static StringBuilder generateProfilePartJumpHostLocalCopyTarget(YADETargetArguments targetArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<CopyTarget>");
+
         sb.append("<CopyTargetFragmentRef>");
         sb.append("<LocalTarget ").append(generateJumpAttribute()).append("/>");
         sb.append("</CopyTargetFragmentRef>");
+
         sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+
         // only KeepModificationDate - see comments YADEEngineJumpHostAddon.init()
         sb.append("<TargetFileOptions>");
         sb.append("<KeepModificationDate>").append(targetArgs.getKeepModificationDate().getValue()).append("</KeepModificationDate>");
         sb.append("</TargetFileOptions>");
+
         sb.append("</CopyTarget>");
         return sb;
     }
 
-    private static String generateJumpAttribute() {
-        return YADEXMLArgumentsLoader.INTERNAL_ATTRIBUTE_LABEL + "=" + attrValue(YADEJumpHostArguments.LABEL);
-    }
-
-    private static StringBuilder generateProfileTargetFragmentRef(YADESourceTargetArguments args) {
-        String fragmentPrefix = args.getProvider().getProtocol().getValue().name();
+    private static StringBuilder generateProfilePartTargetFragmentRef(YADESourceTargetArguments args) {
+        String fragmentPrefix = getFragmentNamePrefix(args.getProvider().getProtocol());
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentPrefix).append("FragmentRef ref=").append(attrValue(FRAGMENT_NAME)).append(">");
         // Pre-Processing
@@ -884,9 +897,10 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfileTargetFileOptions(YADETargetArguments args, JumpHostConfig config) {
+    private static StringBuilder generateProfilePartTargetFileOptions(YADETargetArguments args, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<TargetFileOptions>");
+
         if (args.getAppendFiles().isDirty()) {
             sb.append("<AppendFiles>").append(args.getAppendFiles().getValue()).append("</AppendFiles>");
         }
@@ -920,18 +934,19 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<HashAlgorithm>").append(cdata(args.getIntegrityHashAlgorithm().getValue())).append("</HashAlgorithm>");
             sb.append("</CreateIntegrityHashFile>");
         }
-
         sb.append("<KeepModificationDate>").append(args.getKeepModificationDate().getValue()).append("</KeepModificationDate>");
         sb.append("<DisableMakeDirectories>").append(getOppositeValue(args.getCreateDirectories())).append("</DisableMakeDirectories>");
         sb.append("<DisableOverwriteFiles>").append(getOppositeValue(args.getOverwriteFiles())).append("</DisableOverwriteFiles>");
+
         sb.append("</TargetFileOptions>");
         return sb;
     }
 
-    private static StringBuilder generateProfileTransferOptions(YADEArguments args, YADESourceTargetArguments sourceTargetArgs,
+    private static StringBuilder generateProfilePartTransferOptions(YADEArguments args, YADESourceTargetArguments sourceTargetArgs,
             JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<TransferOptions>");
+
         sb.append("<Transactional>").append(config.isTransactional()).append("</Transactional>");
         if (args.getBufferSize().isDirty()) {
             sb.append("<BufferSize>").append(args.getBufferSize().getValue()).append("</BufferSize>");
@@ -942,8 +957,25 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<RetryInterval>").append(cdata(sourceTargetArgs.getConnectionErrorRetryInterval().getValue())).append("</RetryInterval>");
             sb.append("</RetryOnConnectionError>");
         }
+
         sb.append("</TransferOptions>");
         return sb;
+    }
+
+    private static String getFragmentNamePrefix(SOSArgument<Protocol> protocol) {
+        switch (protocol.getValue()) {
+        case LOCAL:
+            return "Local";
+        case WEBDAV:
+        case WEBDAVS:
+            return "WebDAV";
+        default:
+            return protocol.getValue().name();
+        }
+    }
+
+    private static String generateJumpAttribute() {
+        return YADEXMLArgumentsLoader.INTERNAL_ATTRIBUTE_LABEL + "=" + attrValue(YADEJumpHostArguments.LABEL);
     }
 
     private static String attrValue(String val) {
