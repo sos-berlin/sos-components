@@ -16,6 +16,7 @@ public class WebDAVResource {
         this.lastModifiedInMillis = lastModifiedInMillis;
     }
 
+    /** @return original WebDAV encoded URI as string */
     public String getURI() {
         return uri;
     }

@@ -260,14 +260,15 @@ public class YADEFileHandler {
             // without base URI because of possible double encoding etc
             httpOriginalParentFullPath = targetDelegator.getParentPath(transferFileFullPath);
             // adds baseURI (+ encoding)
-            transferFileFullPath = targetDelegator.getProvider().normalizePath(transferFileFullPath);
+            // transferFileFullPath = targetDelegator.getProvider().normalizePath(transferFileFullPath);
         }
         YADETargetProviderFile target = new YADETargetProviderFile(targetDelegator, transferFileFullPath);
         /** the final path of the file after transfer */
 
         if (targetDelegator.isHTTP()) {
             String httpFinalPath = targetDelegator.appendPath(httpOriginalParentFullPath, finalFileName);
-            target.setFinalFullPath(targetDelegator.getProvider().normalizePath(httpFinalPath));
+            // target.setFinalFullPath(targetDelegator.getProvider().normalizePath(httpFinalPath));
+            target.setFinalFullPath(httpFinalPath);
         } else {
             target.setFinalFullPath(targetDelegator, finalFileName);
         }

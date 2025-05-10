@@ -64,6 +64,11 @@ public class SOSHTTPUtils {
                 }
                 return SOSPathUtils.toUnixStyle(path);
             }
+            // uses toString() and not toASCIIString() (see normalizePathEncoded) because
+            // this method assumes the input is already a well-formed URI or path.
+            // Using toASCIIString() here could incorrectly double-encode percent-encoded characters
+            // (e.g., "%20" would become "%2520"), which breaks correct URIs.
+            // Encoding is only performed in normalizePathEncoded when needed.
             return baseURI.resolve(path).normalize().toString();
         } catch (IllegalArgumentException | NullPointerException | URISyntaxException e) {
             return normalizePathEncoded(baseURI, path);
@@ -113,13 +118,11 @@ public class SOSHTTPUtils {
         if (input == null) {
             return null;
         }
-        // URLDecoder.decode e.g. converts %20 to blank etc
-        // return URLDecoder.decode(input, StandardCharsets.UTF_8).replaceAll("[<>:\"/\\|?*]", "_");
         String illegalChars = isWindows ? SOSPathUtils.FILENAME_ILLEGAL_CHARS_REGEX_WINDOWS : SOSPathUtils.FILENAME_ILLEGAL_CHARS_REGEX_UNIX;
         try {
             // Replace invalid percent sequences (e.g., "%&" -> "%25&") for URLDecoder.decode
             input = input.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
-            return URLDecoder.decode(input, StandardCharsets.UTF_8).replaceAll(illegalChars, "_");
+            return decode(input).replaceAll(illegalChars, "_");
         } catch (IllegalArgumentException e) {
             return input.replaceAll(illegalChars, "_");
         }
@@ -347,6 +350,9 @@ public class SOSHTTPUtils {
      * if the input contains invalid characters (e.g., spaces, special symbols).<br/>
      * Similarly, {@code new URL(String)} is not used for relative paths since it requires an absolute URL.
      * </p>
+     * <p>
+     * toASCIIString - because of RFC-3986-conform ASCII-Version, with UTF-8 percent-encoding (e.g for: ß ...)
+     * </p>
      * Note: Without a trailing slash, relative resolution may produce incorrect results.<br/>
      * - see toBaseURI(String)
      *
@@ -356,9 +362,9 @@ public class SOSHTTPUtils {
         try {
             // new URI(null, path, null) not throw an exception if the path contains invalid characters
             if (baseURI == null) {
-                return new URI(null, path, null).normalize().toString();
+                return new URI(null, path, null).normalize().toASCIIString();
             }
-            return baseURI.resolve(new URI(null, path, null)).normalize().toString();
+            return baseURI.resolve(new URI(null, path, null)).normalize().toASCIIString();
         } catch (URISyntaxException e) {
             if (baseURI == null) {
                 return SOSPathUtils.toUnixStyle(path);
