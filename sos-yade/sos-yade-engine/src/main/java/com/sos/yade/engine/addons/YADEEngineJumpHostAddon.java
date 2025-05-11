@@ -615,7 +615,7 @@ public class YADEEngineJumpHostAddon {
             // Otherwise, the current YADE Client deletes the Source files
             // - after the Source(Any Provider) -> Jump(SSHProvider) step due to MOVE
             // - and not after the Jump(SSHProvider) -> Target(Any Provider) step is completed
-            // - JumpHost MOVE implementation: 
+            // - JumpHost MOVE implementation:
             // -- Source(Any Provider) - COPY -> Jump(SSHProvider) -> Target(Any Provider) -> Source(Any Provider) delete files
             private boolean deleteSourceFiles;
         }

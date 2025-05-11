@@ -199,8 +199,8 @@ public class YADEDirectoryMapper {
                         if (logger.isDebugEnabled()) {
                             logger.debug("    [getSourceDirectoryForMapping][3.1][result]%s", result);
                         }
-                        //remove %20(empty) etc
-                        result = SOSHTTPUtils.decode(result);
+                        // remove %20(empty) etc
+                        result = SOSHTTPUtils.decodeUriPath(result);
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
                         // Temp

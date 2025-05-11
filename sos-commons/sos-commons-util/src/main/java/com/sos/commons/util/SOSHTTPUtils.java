@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -98,31 +99,102 @@ public class SOSHTTPUtils {
         return uri;
     }
 
-    public static String encode(String input) {
+    /** Encodes a string for safe use as a URL query parameter.
+     * <p>
+     * This method uses {@link URLEncoder} with UTF-8 encoding to escape characters that are unsafe in query parameters.<br/>
+     * Note that {@code URLEncoder} encodes spaces as {@code +}, which is valid and expected in application/x-www-form-urlencoded data.
+     * </p>
+     *
+     * @param input the raw query parameter value to encode
+     * @return the encoded query string, or {@code null} if the input is null */
+    public static String encodeQueryParam(String input) {
         if (input == null) {
             return null;
         }
-        // URLEncoder.encode converts blank to +
-        return URLEncoder.encode(input, StandardCharsets.UTF_8).replace("+", "%20");
+        return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
-    public static String decode(String uri) {
-        if (uri == null) {
+    /** Decodes a URL-encoded query parameter string using UTF-8.
+     * <p>
+     * This method decodes percent-encoded characters (e.g. {@code %20} → space) and converts {@code +} to space,<br/>
+     * as defined in the application/x-www-form-urlencoded format.
+     * </p>
+     *
+     * @param input the encoded query parameter string to decode
+     * @return the decoded string, or {@code null} if the input is null */
+    public static String decodeQueryParam(String input) {
+        if (input == null) {
             return null;
         }
-        // e.g. converts %20 to blank etc
-        return URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8);
+        return URLDecoder.decode(input, StandardCharsets.UTF_8);
     }
 
+    /** Safely encodes a string for use in a URI path segment using {@link URI}.
+     * <p>
+     * Falls back to the original input if encoding fails.<br/>
+     * This avoids {@link URLEncoder} and preserves {@code +} characters.
+     * </p>
+     *
+     * @param input the raw path or segment
+     * @return the percent-encoded path string, or the original input if encoding fails */
+    public static String encodeUriPath(String input) {
+        if (input == null)
+            return null;
+        try {
+            return new URI(null, input, null).getRawPath();
+        } catch (URISyntaxException e) {
+            return input;
+        }
+    }
+
+    /** Safely decodes a URI-encoded string, while preserving the '+' character as is.
+     * <p>
+     * This method decodes all percent-encoded sequences while ensuring that the '+' character is preserved and not converted into a space. The method decodes
+     * characters like '%20' (space) but leaves '+' as it is.
+     * </p>
+     * 
+     * @param encoded the URI-encoded string
+     * @return the decoded string, or the original string if decoding fails */
+    public static String decodeUriPath(String encoded) {
+        if (encoded == null) {
+            return null;
+        }
+
+        try {
+            // Temporarily replace '+' with a placeholder to avoid URLDecoder treating it as a space
+            String replacedPlus = encoded.replace("+", "%2B");
+
+            // Decode the URI-encoded string, now '%20' becomes a space but '%2B' stays as '+'
+            String decoded = URLDecoder.decode(replacedPlus, "UTF-8");
+
+            // Return the decoded string with the placeholder '%2B' converted back to '+'
+            return decoded.replace("%2B", "+");
+        } catch (UnsupportedEncodingException e) {
+            return encoded;
+        }
+    }
+
+    /** Converts a potentially URI-encoded string into a valid filesystem name.
+     * <p>
+     * This method safely decodes percent-encoded sequences (e.g., {@code %20} -> space) and replaces illegal filesystem characters with underscores.<br/>
+     * It also handles malformed percent-encodings (e.g., {@code %&} → {@code %25&}) to avoid decoding exceptions.
+     * </p>
+     * 
+     * @param input the original string, possibly URI-encoded
+     * @param isWindows true if the resulting name should be valid on Windows, false for Unix
+     * @return a sanitized string safe to use as a file or directory name */
     public static String toValidFileSystemName(String input, boolean isWindows) {
         if (input == null) {
             return null;
         }
         String illegalChars = isWindows ? SOSPathUtils.FILENAME_ILLEGAL_CHARS_REGEX_WINDOWS : SOSPathUtils.FILENAME_ILLEGAL_CHARS_REGEX_UNIX;
         try {
-            // Replace invalid percent sequences (e.g., "%&" -> "%25&") for URLDecoder.decode
-            input = input.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
-            return decode(input).replaceAll(illegalChars, "_");
+            // Replace invalid percent sequences (e.g., "%&") with "%25&" to avoid URI decoding failures
+            if (input.contains("%")) {
+                input = input.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+                input = decodeUriPath(input);
+            }
+            return input.replaceAll(illegalChars, "_");
         } catch (IllegalArgumentException e) {
             return input.replaceAll(illegalChars, "_");
         }
@@ -345,19 +417,22 @@ public class SOSHTTPUtils {
 
     /** Normalizes the given path by resolving it against the base URI and ensuring proper encoding.
      * <p>
-     * This method ensures that both relative and absolute paths are handled correctly.<br/>
-     * It avoids using {@code new URI(String)} directly, as it would throw an exception<br/>
-     * if the input contains invalid characters (e.g., spaces, special symbols).<br/>
-     * Similarly, {@code new URL(String)} is not used for relative paths since it requires an absolute URL.
+     * This method uses {@code new URI(null, path, null)} instead of {@code URLEncoder.encode()},<br/>
+     * because {@code URLEncoder} is designed for query parameters, not path components.<br/>
+     * It encodes slashes ('/') and replaces spaces with plus signs ('+'), which breaks URI path semantics. <br/>
+     * <br/>
+     * {@code new URI(null, path, null)} correctly encodes only illegal characters in the path segment while preserving slashes and path structure.<br/>
+     * It produces a valid percent-encoded URI path without over-encoding already-safe characters.
      * </p>
      * <p>
-     * toASCIIString - because of RFC-3986-conform ASCII-Version, with UTF-8 percent-encoding (e.g for: ß ...)
+     * The result is returned using {@code toASCIIString()} to ensure it's safe for transmission in HTTP or WebDAV headers,<br/>
+     * where non-ASCII characters must be percent-encoded.<br/>
+     * - {@code toASCIIString()}: RFC-3986-conform ASCII-Version, with UTF-8 percent-encoding (e.g for: ß ...)
      * </p>
-     * Note: Without a trailing slash, relative resolution may produce incorrect results.<br/>
-     * - see toBaseURI(String)
      *
-     * @param path The input path, which can be relative or absolute.
-     * @return A properly normalized and encoded URL string. */
+     * @param baseURI the base URI to resolve against, or {@code null} if the path is absolute
+     * @param path the path to normalize and encode
+     * @return a properly normalized and ASCII-encoded URI path */
     private static String normalizePathEncoded(URI baseURI, String path) {
         try {
             // new URI(null, path, null) not throw an exception if the path contains invalid characters

@@ -73,10 +73,10 @@ public class SSHProviderArguments extends AProviderArguments {
     @Override
     public String getAdvancedAccessInfo() {
         if (!getRequiredAuthentications().isEmpty()) {
-            return ARG_NAME_REQUIRED_AUTHENTICATIONS_DISPLAY_NAME;
+            return ARG_NAME_REQUIRED_AUTHENTICATIONS_DISPLAY_NAME + "=" + getRequiredAuthenticationsAsString();
         }
         if (!getPreferredAuthentications().isEmpty()) {
-            return ARG_NAME_PREFERRED_AUTHENTICATIONS_DISPLAY_NAME;
+            return ARG_NAME_PREFERRED_AUTHENTICATIONS_DISPLAY_NAME + "=" + getPreferredAuthenticationsAsString();
         }
         if (!getAuthMethod().isEmpty()) {
             switch (getAuthMethod().getValue()) {
@@ -109,8 +109,16 @@ public class SSHProviderArguments extends AProviderArguments {
         return preferredAuthentications;
     }
 
+    public String getPreferredAuthenticationsAsString() {
+        return SSHAuthMethod.toString(preferredAuthentications.getValue());
+    }
+
     public SOSArgument<List<SSHAuthMethod>> getRequiredAuthentications() {
         return requiredAuthentications;
+    }
+
+    public String getRequiredAuthenticationsAsString() {
+        return SSHAuthMethod.toString(requiredAuthentications.getValue());
     }
 
     public SOSArgument<String> getSocketTimeout() {
@@ -156,4 +164,5 @@ public class SSHProviderArguments extends AProviderArguments {
     public SOSArgument<SSHProviderType> getSSHProviderType() {
         return sshProviderType;
     }
+
 }

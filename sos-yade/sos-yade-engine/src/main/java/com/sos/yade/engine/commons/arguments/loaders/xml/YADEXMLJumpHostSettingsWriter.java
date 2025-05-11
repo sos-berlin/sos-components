@@ -172,12 +172,12 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<Account>").append(cdata(args.getUser().getValue())).append("</Account>");
         if (!args.getPreferredAuthentications().isEmpty()) {
             sb.append("<PreferredAuthentications>");
-            sb.append(cdata(args.getPreferredAuthentications().getValue().toString()));
+            sb.append(cdata(args.getPreferredAuthenticationsAsString()));
             sb.append("</PreferredAuthentications>");
         }
         if (!args.getRequiredAuthentications().isEmpty()) {
             sb.append("<RequiredAuthentications>");
-            sb.append(cdata(args.getRequiredAuthentications().getValue().toString()));
+            sb.append(cdata(args.getRequiredAuthenticationsAsString()));
             sb.append("</RequiredAuthentications>");
         }
         if (!args.getPassword().isEmpty()) {
