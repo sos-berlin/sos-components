@@ -103,7 +103,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 securityConfigurationAccount.setRepeatedPassword("********");
             }
 
-            // TODO consider 4eyes body
             initLogging(API_CALL_WRITE, Globals.objectMapper.writeValueAsBytes(securityConfigurationMasked), accessToken);
             JsonValidator.validate(body, SecurityConfiguration.class);
             SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
@@ -117,8 +116,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     }
                 }
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

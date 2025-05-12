@@ -96,8 +96,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, Role.class);
             RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -159,8 +158,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validate(body, RoleRename.class);
             RoleRename roleRename = Globals.objectMapper.readValue(body, RoleRename.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -217,8 +215,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validate(body, RolesFilter.class);
             RolesFilter rolesFilter = Globals.objectMapper.readValue(body, RolesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -315,8 +312,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, RolesFilter.class);
             RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

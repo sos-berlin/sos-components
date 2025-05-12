@@ -1,6 +1,5 @@
 package com.sos.joc.configuration.impl;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.joc.settings.impl.StoreSettingsImpl;
 import com.sos.schema.JsonValidator;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 import jakarta.ws.rs.Path;
 
@@ -141,10 +139,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     return accessDeniedResponse();
                 }
                 if (get4EyesJocPermissions().getAdministration().getAccounts().getManage()) {
-                    JOCDefaultResponse response = approvalRequestResponse();
-                    if (response != null) {
-                        return response;
-                    }
+                    return accessDeniedResponseByUnsupported4EyesPrinciple();
                 }
 
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;

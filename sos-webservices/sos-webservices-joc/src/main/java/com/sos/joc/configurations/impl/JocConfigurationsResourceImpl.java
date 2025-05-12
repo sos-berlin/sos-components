@@ -253,8 +253,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         try {
             body = initLogging(API_CALL_PROFILES, body, accessToken);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

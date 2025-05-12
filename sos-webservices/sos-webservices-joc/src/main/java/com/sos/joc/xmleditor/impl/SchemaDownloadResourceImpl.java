@@ -39,7 +39,6 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
                 builder.add("schemaIdentifier", URLDecoder.decode(schemaIdentifier, JocXmlEditor.CHARSET));
             }
             String json = builder.build().toString();
-            // TODO consider 4eyes body
             initLogging(IMPL_PATH, json.getBytes(), accessToken);
             JsonValidator.validateFailFast(json.getBytes(), SchemaDownloadConfiguration.class);
             SchemaDownloadConfiguration in = Globals.objectMapper.readValue(json.getBytes(), SchemaDownloadConfiguration.class);

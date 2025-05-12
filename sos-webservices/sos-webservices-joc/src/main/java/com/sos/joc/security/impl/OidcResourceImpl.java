@@ -291,8 +291,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         try {
             initLogging(API_CALL_IMPORT_ICON, null, xAccessToken);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getAccounts()
-                    .getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(xAccessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

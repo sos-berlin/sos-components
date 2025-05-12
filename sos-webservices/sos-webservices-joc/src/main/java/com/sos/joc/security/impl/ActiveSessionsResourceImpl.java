@@ -99,8 +99,7 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
             JsonValidator.validate(body, ActiveSessionsCancelFilter.class);
             ActiveSessionsCancelFilter activeSessionsCancelFilter = Globals.objectMapper.readValue(body, ActiveSessionsCancelFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

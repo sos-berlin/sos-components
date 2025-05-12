@@ -150,7 +150,6 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
     public JOCDefaultResponse postFidoRequestRegistration(byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            // TODO consider 4eyes body
             initLogging(API_CALL_FIDO_REGISTRATION_STORE, null);
             JsonValidator.validateFailFast(body, FidoRegistration.class);
             FidoRegistration fidoRegistration = Globals.objectMapper.readValue(body, FidoRegistration.class);
@@ -259,7 +258,6 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
     public JOCDefaultResponse postFidoAddDevice(byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            // TODO consider 4eyes body
             initLogging(API_CALL_FIDO_ADD_DEVICE, null);
             JsonValidator.validateFailFast(body, FidoAddDevice.class);
             FidoAddDevice fidoAddDevice = Globals.objectMapper.readValue(body, FidoAddDevice.class);
@@ -320,7 +318,6 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
     public JOCDefaultResponse postFidoRemoveDevices(byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            // TODO consider 4eyes body
             initLogging(API_CALL_FIDO_REMOVE_DEVICES, null);
             JsonValidator.validateFailFast(body, FidoRemoveDevices.class);
             FidoRemoveDevices fidoRemoveDevices = Globals.objectMapper.readValue(body, FidoRemoveDevices.class);
@@ -377,7 +374,6 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         FidoRegistrationStartResponse fido2RegistrationStartResponse = new FidoRegistrationStartResponse();
 
         try {
-            // TODO consider 4eyes body
             initLogging(API_CALL_FIDO_REGISTRATION_STORE, null);
             JsonValidator.validateFailFast(body, FidoRegistration.class);
             FidoRegistration fidoRegistration = Globals.objectMapper.readValue(body, FidoRegistration.class);
@@ -542,7 +538,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_IDENTITY_CLIENTS, body);
+            initLogging(API_CALL_IDENTITY_CLIENTS, null);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -597,7 +593,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_REQUEST_AUTHENTICATION, body);
+            initLogging(API_CALL_REQUEST_AUTHENTICATION, null);
             JsonValidator.validateFailFast(body, FidoRequestAuthentication.class);
             FidoRequestAuthentication fidoRequestAuthentication = Globals.objectMapper.readValue(body, FidoRequestAuthentication.class);
 
@@ -690,8 +686,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             JsonValidator.validate(body, FidoRegistrationsFilter.class);
             FidoRegistrationsFilter fidoRegistrationsFilter = Globals.objectMapper.readValue(body, FidoRegistrationsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -939,8 +934,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             JsonValidator.validate(body, FidoRegistrationsFilter.class);
             fidoRegistrationsFilter = Globals.objectMapper.readValue(body, FidoRegistrationsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -1006,7 +1000,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         FidoConfirmationFilter fidoConfirmationFilter = null;
         try {
 
-            body = initLogging(API_CALL_CONFIRM, body);
+            initLogging(API_CALL_CONFIRM, null);
             JsonValidator.validateFailFast(body, FidoConfirmationFilter.class);
             fidoConfirmationFilter = Globals.objectMapper.readValue(body, FidoConfirmationFilter.class);
 

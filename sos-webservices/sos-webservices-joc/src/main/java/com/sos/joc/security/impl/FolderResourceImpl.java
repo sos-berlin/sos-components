@@ -101,8 +101,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             JsonValidator.validateFailFast(body, Folders.class);
             Folders folders = Globals.objectMapper.readValue(body, Folders.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -169,8 +168,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             JsonValidator.validate(body, FolderRename.class);
             FolderRename folderRename = Globals.objectMapper.readValue(body, FolderRename.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -219,8 +217,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             JsonValidator.validate(body, FoldersFilter.class);
             FoldersFilter foldersFilter = Globals.objectMapper.readValue(body, FoldersFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -23,9 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
-import com.sos.joc.db.joc.DBItemJocApprovalRequests;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -39,7 +37,6 @@ import com.sos.joc.model.security.configuration.permissions.ControllerPermission
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.model.security.foureyes.FourEyesRequest;
 import com.sos.joc.model.security.foureyes.RequestBody;
-import com.sos.joc.model.security.foureyes.RequestorState;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.HeaderParam;
@@ -337,6 +334,15 @@ public class JOCResourceImpl {
         jocError.setMessage(message);
         return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
+    
+    public JOCDefaultResponse accessDeniedResponseByUnsupported4EyesPrinciple() {
+        String approvalRequestorRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
+        String message = String.format(
+                "An approval should be requested according to the permissions configuration '%s' (Role: %s) but this is unsupported. Access denied.",
+                "joc:adminstration:accounts:manage", approvalRequestorRole);
+        jocError.setMessage(message);
+        return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+    }
 
     public byte[] initLogging(String request, byte[] body, String accessToken) throws Exception {
         headerAccessToken = accessToken;
@@ -463,6 +469,11 @@ public class JOCResourceImpl {
         return initPermissions(controllerId, permissions.toList());
     }
     
+    public JOCDefaultResponse initManageAccountPermissions(String accessToken) throws JocException {
+        List<Boolean> perms = getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts().getManage()).toList();
+        return initPermissions(null, perms.get(0), perms.get(1), true);
+    }
+    
     public JOCDefaultResponse initPermissions(String controllerId, List<Boolean> permissions) throws JocException {
         return initPermissions(controllerId, permissions.get(0), permissions.get(1));
     }
@@ -523,6 +534,10 @@ public class JOCResourceImpl {
     }
     
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission) throws JocException {
+        return initPermissions(controllerId, permission, fourEyesPermission, false);
+    }
+    
+    private JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission, boolean unsupported4eyes) throws JocException {
         JOCDefaultResponse jocDefaultResponse = null;
         
         if (!jobschedulerUser.isAuthenticated()) {
@@ -534,6 +549,9 @@ public class JOCResourceImpl {
             return accessDeniedResponse();
         }
         if (fourEyesPermission) {
+            if (unsupported4eyes) {
+                return accessDeniedResponseByUnsupported4EyesPrinciple();
+            }
             jocDefaultResponse = approvalRequestResponse();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

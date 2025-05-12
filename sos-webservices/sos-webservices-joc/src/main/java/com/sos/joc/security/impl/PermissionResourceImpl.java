@@ -108,8 +108,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             JsonValidator.validateFailFast(body, Permissions.class);
             permissions = Globals.objectMapper.readValue(body, Permissions.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -177,8 +176,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             JsonValidator.validate(body, PermissionRename.class);
             PermissionRename permissionRename = Globals.objectMapper.readValue(body, PermissionRename.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -229,8 +227,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             JsonValidator.validate(body, PermissionsFilter.class);
             PermissionsFilter permissionsFilter = Globals.objectMapper.readValue(body, PermissionsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

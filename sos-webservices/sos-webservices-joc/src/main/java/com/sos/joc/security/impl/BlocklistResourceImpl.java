@@ -39,8 +39,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
             BlockedAccount blockedAccount = Globals.objectMapper.readValue(body, BlockedAccount.class);
             JsonValidator.validateFailFast(body, BlockedAccount.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -76,8 +75,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
             JsonValidator.validate(body, BlockedAccountsDeleteFilter.class);
             BlockedAccountsDeleteFilter blockedAccountsDeleteFilter = Globals.objectMapper.readValue(body, BlockedAccountsDeleteFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

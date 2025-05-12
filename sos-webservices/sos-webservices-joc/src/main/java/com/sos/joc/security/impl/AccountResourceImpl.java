@@ -141,13 +141,11 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             Account accountMasked = Globals.objectMapper.readValue(body, Account.class);
 
             accountMasked.setPassword("********");
-            // TODO consider 4eyes body
             initLogging(API_CALL_ACCOUNT_STORE, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken);
             JsonValidator.validateFailFast(body, Account.class);
             Account account = Globals.objectMapper.readValue(body, Account.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -288,8 +286,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, AccountRename.class);
             AccountRename accountRename = Globals.objectMapper.readValue(body, AccountRename.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -347,8 +344,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, AccountsFilter.class);
             AccountsFilter accountsFilter = Globals.objectMapper.readValue(body, AccountsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -627,6 +623,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, Account.class);
             account = Globals.objectMapper.readValue(body, AccountChangePassword.class);
 
+            // TODO why permissions == true? better adminstration:accouts:manage or not?
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -668,8 +665,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, AccountsFilter.class);
             accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
