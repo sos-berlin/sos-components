@@ -7,6 +7,7 @@ import org.hibernate.annotations.Proxy;
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.RequestorState;
 
@@ -48,6 +49,9 @@ public class DBItemJocApprovalRequests extends DBItem {
 
     @Column(name = "[APPROVER_STATUS]", nullable = false)
     private Integer approverState;
+    
+    @Column(name = "[CATEGORY]", nullable = false)
+    private Integer category;
     
     @Column(name = "[ACTION]", nullable = false)
     private String action;
@@ -147,6 +151,23 @@ public class DBItemJocApprovalRequests extends DBItem {
 
     public void setApproverState(Integer val) {
         approverState = val;
+    }
+    
+    public Integer getCategory() {
+        return category;
+    }
+
+    @Transient
+    public CategoryType getTypeAsEnum() {
+        try {
+            return CategoryType.fromValue(category);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public void setCategory(Integer val) {
+        category = val;
     }
     
     public String getAction() {
