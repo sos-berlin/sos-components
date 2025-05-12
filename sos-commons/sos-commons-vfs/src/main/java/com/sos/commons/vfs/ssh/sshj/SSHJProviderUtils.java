@@ -180,8 +180,9 @@ public class SSHJProviderUtils {
 
     protected static void writeFile(SFTPClient sftp, String path, String content) throws IOException {
         EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT, OpenMode.TRUNC);
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
         try (RemoteFile remoteFile = sftp.open(path, mode)) {
-            remoteFile.write(0, content.getBytes(StandardCharsets.UTF_8), 0, content.length());
+            remoteFile.write(0, bytes, 0, bytes.length);
         }
     }
 
