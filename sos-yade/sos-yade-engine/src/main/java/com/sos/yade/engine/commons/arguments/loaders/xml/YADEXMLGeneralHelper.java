@@ -132,6 +132,9 @@ public class YADEXMLGeneralHelper {
                 case "BasicAuthentication":
                     parseMailHostBasicAuthentication(argsLoader, n);
                     break;
+                case "MailSettings":
+                    parseMailHostMailSettings(argsLoader, n);
+                    break;
                 }
             }
         }
@@ -144,13 +147,13 @@ public class YADEXMLGeneralHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Hostname":
-                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getHostname(), n);
+                    argsLoader.getNotificationArgs().getMailServer().applyHostname(argsLoader.getValue(n));
                     break;
                 case "Port":
-                    argsLoader.setIntegerArgumentValue(argsLoader.getNotificationArgs().getMailServer().getPort(), n);
+                    argsLoader.getNotificationArgs().getMailServer().applyPort(argsLoader.getValue(n));
                     break;
                 case "ConnectTimeout":
-                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getConnectTimeout(), n);
+                    argsLoader.getNotificationArgs().getMailServer().applyConnectTimeout(argsLoader.getValue(n));
                     break;
                 }
             }
@@ -164,10 +167,26 @@ public class YADEXMLGeneralHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "Account":
-                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getAccount(), n);
+                    argsLoader.getNotificationArgs().getMailServer().applyAccount(argsLoader.getValue(n));
                     break;
                 case "Password":
-                    argsLoader.setStringArgumentValue(argsLoader.getNotificationArgs().getMailServer().getPassword(), n);
+                    argsLoader.getNotificationArgs().getMailServer().applyPassword(argsLoader.getValue(n));
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void parseMailHostMailSettings(YADEXMLArgumentsLoader argsLoader, Node mailHostMailSettings) throws Exception {
+        NodeList nl = mailHostMailSettings.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "MailSetting":
+                    String name = argsLoader.getValue(n, "name");
+                    String value = argsLoader.getValue(n);
+                    argsLoader.getNotificationArgs().getMailServer().addMailSetting(name, value);
                     break;
                 }
             }

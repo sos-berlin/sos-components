@@ -10,7 +10,6 @@ import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
@@ -426,8 +425,7 @@ public class YADEEngine {
     private void sendMail(ISOSLogger logger, YADENotificationMailServerArguments mailServerArgs, YADENotificationMailArguments mailArgs,
             String label) {
         try {
-            SOSMail mail = new SOSMail(mailServerArgs.getHostname().getValue(), String.valueOf(mailServerArgs.getPort().getValue()), mailServerArgs
-                    .getAccount().getValue(), mailServerArgs.getPassword().getValue());
+            SOSMail mail = new SOSMail(mailServerArgs.getMailSettings());
 
             mail.setFrom(mailArgs.getHeaderFrom().getValue());
             for (String to : mailArgs.getHeaderTo().getValue()) {
@@ -448,8 +446,6 @@ public class YADEEngine {
                     mail.addAttachment(SOSPath.toAbsoluteNormalizedPath(attachment).toString());
                 }
             }
-
-            mail.setTimeout((int) SOSArgumentHelper.asMillis(mailServerArgs.getConnectTimeout()));
 
             mail.setSubject(mailArgs.getHeaderSubject().getValue() == null ? label : mailArgs.getHeaderSubject().getValue());
             mail.setBody(mailArgs.getBody().getValue());

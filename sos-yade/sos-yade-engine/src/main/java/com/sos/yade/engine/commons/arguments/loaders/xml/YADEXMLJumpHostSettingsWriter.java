@@ -25,6 +25,7 @@ import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 
 /** TODO Not supported for SFTPFragment: <ZlibCompression> <ZlibCompressionLevel>1</ZlibCompressionLevel> </ZlibCompression> */
+/** TODO MailServer */
 public class YADEXMLJumpHostSettingsWriter {
 
     private static final String FRAGMENT_NAME = "fragment";
@@ -166,7 +167,7 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateProtocolFragmentSFTP(SSHProviderArguments args, boolean generateCSRef) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SFTPFragment name=").append(attrValue(FRAGMENT_NAME)).append(">");
-        sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
+        sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort(), args.getConnectTimeout()));
         // SSHAuthentication
         sb.append("<SSHAuthentication>");
         sb.append("<Account>").append(cdata(args.getUser().getValue())).append("</Account>");
@@ -212,6 +213,7 @@ public class YADEXMLJumpHostSettingsWriter {
             }
             sb.append("</ConfigurationFiles>");
         }
+        // YADE 1 - compatibility
         if (args.getServerAliveInterval().isDirty()) {
             sb.append("<ServerAliveInterval>").append(cdata(args.getServerAliveInterval().getValue())).append("</ServerAliveInterval>");
         }
@@ -224,6 +226,7 @@ public class YADEXMLJumpHostSettingsWriter {
         if (args.getSocketTimeout().isDirty()) {
             sb.append("<ChannelConnectTimeout>").append(cdata(args.getSocketTimeout().getValue())).append("</ChannelConnectTimeout>");
         }
+        // YADE 1 - compatibility - end
         sb.append("</SFTPFragment>");
         return sb;
     }
@@ -232,7 +235,7 @@ public class YADEXMLJumpHostSettingsWriter {
         String fragmentElementName = isFTPS ? "FTPSFragment" : "FTPFragment";
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentElementName).append(" name=").append(attrValue(FRAGMENT_NAME)).append(">");
-        sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
+        sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort(), args.getConnectTimeout()));
         sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
@@ -240,7 +243,7 @@ public class YADEXMLJumpHostSettingsWriter {
         if (isFTPS) {
             FTPSProviderArguments ftps = (FTPSProviderArguments) args;
             SSLArguments ssl = ftps.getSSL();
-            // YADE1 - compatibility
+            // YADE 1 - compatibility
             sb.append("<FTPSClientSecurity>");
             sb.append("<SecurityMode>").append(cdata(ftps.getSecurityModeValue())).append("</SecurityMode>");
             if (ftps.getSSL().getTrustedSSL().isTrustStoreEnabled()) {
@@ -256,7 +259,7 @@ public class YADEXMLJumpHostSettingsWriter {
             }
         }
         sb.append(generateProtocolFragmentPartProxy(args.getProxy(), isFTPS ? "ProxyForFTPS" : "ProxyForFTP"));
-        // Other
+        // Other - YADE 1 - compatibility
         if (args.getConnectTimeout().isDirty()) {
             sb.append("<ConnectTimeout>").append(cdata(args.getConnectTimeout().getValue())).append("</ConnectTimeout>");
         }
@@ -275,7 +278,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
         if (isHTTPS) {
             SSLArguments ssl = ((HTTPSProviderArguments) args).getSSL();
-            // YADE1 - compatibility
+            // YADE 1 - compatibility
             if (ssl.getUntrustedSSL().isTrue()) {
                 sb.append("<AcceptUntrustedCertificate>true</AcceptUntrustedCertificate>");
                 sb.append("<DisableCertificateHostnameVerification>");
@@ -308,7 +311,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
         if (isWEBDAVS) {
             SSLArguments ssl = ((HTTPSProviderArguments) args).getSSL();
-            // YADE1 - compatibility
+            // YADE 1 - compatibility
             if (ssl.getUntrustedSSL().isTrue()) {
                 sb.append("<AcceptUntrustedCertificate>true</AcceptUntrustedCertificate>");
                 sb.append("<DisableCertificateHostnameVerification>");
@@ -332,7 +335,7 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateProtocolFragmentSMB(SMBProviderArguments args, boolean generateCSRef) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SMBFragment name=").append(attrValue(FRAGMENT_NAME)).append(">");
-        // YADE1 - compatibility
+        // YADE 1 - compatibility
         sb.append("<Hostname>").append(cdata(args.getHost().getValue())).append("</Hostname>");
 
         if (args.getPort().isDirty() || !args.getShareName().isEmpty()) {
@@ -347,7 +350,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
 
         sb.append("<SMBAuthentication>");
-        // YADE1 - compatibility at this level
+        // YADE 1 - compatibility at this level
         sb.append(generateProtocolFragmentPartSMBAuthChildren(args));
         // YADE JS7
         switch (args.getAuthMethod().getValue()) {
@@ -395,7 +398,7 @@ public class YADEXMLJumpHostSettingsWriter {
 
     private static StringBuilder generateProtocolFragmentPartSMBAuthChildren(SMBProviderArguments args) {
         StringBuilder sb = new StringBuilder();
-        // YADE1/YADE JS7
+        // YADE 1/YADE JS7
         if (!args.getUser().isEmpty()) {
             sb.append("<Account>");
             sb.append(cdata(args.getUser().getValue()));
@@ -442,13 +445,13 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<").append(elementName).append(">");
         if (args.isHTTP()) {
             sb.append("<HTTPProxy>");
-            sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
+            sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort(), args.getConnectTimeout()));
             sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
             sb.append("</HTTPProxy>");
         } else {
-            // YADE1 - compatibility (OK for YADE JS7)
+            // YADE 1 - compatibility (OK for YADE JS7)
             sb.append("<SOCKS5Proxy>");
-            sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort()));
+            sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort(), args.getConnectTimeout()));
             sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
             sb.append("</SOCKS5Proxy>");
         }
@@ -530,7 +533,7 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<URLConnection>");
 
         sb.append("<URL>").append(cdata(host.getValue())).append("</URL>");
-        if (connectTimeout.isDirty()) {
+        if (connectTimeout.isDirty()) { // YADE JS7
             sb.append("<ConnectTimeout>").append(cdata(connectTimeout.getValue())).append("</ConnectTimeout>");
         }
 
@@ -538,7 +541,8 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentPartBasicConnection(SOSArgument<String> host, SOSArgument<Integer> port) {
+    private static StringBuilder generateProtocolFragmentPartBasicConnection(SOSArgument<String> host, SOSArgument<Integer> port,
+            SOSArgument<String> connectTimeout) {
         StringBuilder sb = new StringBuilder();
         sb.append("<BasicConnection>");
 
@@ -546,7 +550,9 @@ public class YADEXMLJumpHostSettingsWriter {
         if (port.isDirty()) {
             sb.append("<Port>").append(cdata(String.valueOf(port.getValue()))).append("</Port>");
         }
-
+        if (connectTimeout.isDirty()) { // YADE JS7
+            sb.append("<ConnectTimeout>").append(cdata(connectTimeout.getValue())).append("</ConnectTimeout>");
+        }
         sb.append("</BasicConnection>");
         return sb;
     }

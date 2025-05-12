@@ -96,6 +96,17 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         return xpath;
     }
 
+    protected String getValue(Node node, String attrName) {
+        if (node == null) {
+            return null;
+        }
+        String attrValue = SOSXML.getAttributeValue(node, attrName);
+        if (attrValue == null) {
+            return null;
+        }
+        return varReplacer.replaceAllVars(attrValue);
+    }
+
     protected String getValue(Node node) {
         if (node == null) {
             return null;

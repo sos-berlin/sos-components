@@ -58,6 +58,7 @@ public class SOSMail {
     public static final String PROPERTY_NAME_SMTP_PORT = "mail.smtp.port";
     public static final String PROPERTY_NAME_SMTP_USER = "mail.smtp.user";
     public static final String PROPERTY_NAME_SMTP_PASSWORD = "mail.smtp.password";
+    public static final String PROPERTY_NAME_SMTP_CONNECTION_TIMEOUT = "mail.smtp.connectiontimeout";
 
     private CredentialStoreArguments credentialStoreArguments;
     protected String subject = "";

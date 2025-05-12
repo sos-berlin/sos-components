@@ -39,6 +39,12 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
+                // YADE 1 - compatibility
+                case "ConnectTimeout":
+                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
+                    break;
+
+                // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
@@ -66,9 +72,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                         args.getTransferMode().setValue(transferMode);
                     }
                     break;
-                case "ConnectTimeout":// YADE1 - compatibility
-                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
-                    break;
                 }
             }
         }
@@ -86,6 +89,18 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
+                // YADE 1 - compatibility
+                case "FTPSClientSecurity":
+                    parseYADE1FTPSClientSecurity(argsLoader, args, n);
+                    break;
+                case "FTPSProtocol":
+                    args.getSSL().getEnabledProtocols().setValue(argsLoader.getValue(n));
+                    break;
+                case "ConnectTimeout":
+                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
+                    break;
+
+                // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
@@ -112,15 +127,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "SSL":// YADE JS7 - YADE-626
                     parseSSL(argsLoader, args.getSSL(), n);
-                    break;
-                case "FTPSClientSecurity": // YADE1 - compatibility
-                    parseYADE1FTPSClientSecurity(argsLoader, args, n);
-                    break;
-                case "FTPSProtocol": // YADE1 - compatibility
-                    args.getSSL().getEnabledProtocols().setValue(argsLoader.getValue(n));
-                    break;
-                case "ConnectTimeout": // YADE1 - compatibility
-                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
                     break;
                 }
             }
@@ -174,6 +180,18 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
+                // YADE 1 - compatibility
+                case "AcceptUntrustedCertificate":
+                    argsLoader.setBooleanArgumentValue(args.getSSL().getUntrustedSSL(), n);
+                    break;
+                case "DisableCertificateHostnameVerification":
+                    argsLoader.setOppositeBooleanArgumentValue(args.getSSL().getUntrustedSSLVerifyCertificateHostname(), n);
+                    break;
+                case "KeyStore":
+                    parseYADE1KeyStore(argsLoader, args.getSSL(), n);
+                    break;
+
+                // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
@@ -195,15 +213,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "SSL": // JS7 - YADE-626
                     parseSSL(argsLoader, args.getSSL(), n);
                     break;
-                case "AcceptUntrustedCertificate": // YADE1 - compatibility
-                    argsLoader.setBooleanArgumentValue(args.getSSL().getUntrustedSSL(), n);
-                    break;
-                case "DisableCertificateHostnameVerification":
-                    argsLoader.setOppositeBooleanArgumentValue(args.getSSL().getUntrustedSSLVerifyCertificateHostname(), n);
-                    break;
-                case "KeyStore": // YADE1 - compatibility
-                    parseYADE1KeyStore(argsLoader, args.getSSL(), n);
-                    break;
                 }
             }
         }
@@ -221,6 +230,21 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
+                // YADE 1 - compatibility
+                case "ServerAliveInterval":
+                    argsLoader.setStringArgumentValue(args.getServerAliveInterval(), n);
+                    break;
+                case "ServerAliveCountMax":
+                    argsLoader.setIntegerArgumentValue(args.getServerAliveCountMax(), n);
+                    break;
+                case "ConnectTimeout":
+                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
+                    break;
+                case "ChannelConnectTimeout":
+                    argsLoader.setStringArgumentValue(args.getSocketTimeout(), n);
+                    break;
+
+                // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
@@ -250,18 +274,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "ConfigurationFiles":
                     parseConfigurationFiles(argsLoader, args, n);
                     break;
-                case "ServerAliveInterval": // YAD1 - compatibility
-                    argsLoader.setStringArgumentValue(args.getServerAliveInterval(), n);
-                    break;
-                case "ServerAliveCountMax": // YAD1 - compatibility
-                    argsLoader.setIntegerArgumentValue(args.getServerAliveCountMax(), n);
-                    break;
-                case "ConnectTimeout": // YAD1 - compatibility
-                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
-                    break;
-                case "ChannelConnectTimeout": // YAD1 - compatibility
-                    argsLoader.setStringArgumentValue(args.getSocketTimeout(), n);
-                    break;
                 }
             }
         }
@@ -279,6 +291,13 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
+                // YADE 1 - compatibility
+                case "Hostname":
+                    argsLoader.setStringArgumentValue(args.getHost(), n);
+                    args.tryRedefineHostPort();
+                    break;
+
+                // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
@@ -290,10 +309,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "ConfigurationFiles":
                     parseConfigurationFiles(argsLoader, args, n);
-                    break;
-                case "Hostname": // YADE1 - compatibility
-                    argsLoader.setStringArgumentValue(args.getHost(), n);
-                    args.tryRedefineHostPort();
                     break;
                 }
             }
@@ -327,6 +342,18 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
+                // YADE 1 - compatibility
+                case "AcceptUntrustedCertificate":
+                    argsLoader.setBooleanArgumentValue(args.getSSL().getUntrustedSSL(), n);
+                    break;
+                case "DisableCertificateHostnameVerification":
+                    argsLoader.setOppositeBooleanArgumentValue(args.getSSL().getUntrustedSSLVerifyCertificateHostname(), n);
+                    break;
+                case "KeyStore":
+                    parseYADE1KeyStore(argsLoader, args.getSSL(), n);
+                    break;
+
+                // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
@@ -348,17 +375,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "SSL": // JS7 - YADE-626
                     parseSSL(argsLoader, args.getSSL(), n);
                     break;
-
-                case "AcceptUntrustedCertificate": // YADE1 - compatibility
-                    argsLoader.setBooleanArgumentValue(args.getSSL().getUntrustedSSL(), n);
-                    break;
-                case "DisableCertificateHostnameVerification": // YADE1 - compatibility
-                    argsLoader.setOppositeBooleanArgumentValue(args.getSSL().getUntrustedSSLVerifyCertificateHostname(), n);
-                    break;
-                case "KeyStore": // YADE1 - compatibility
-                    parseYADE1KeyStore(argsLoader, args.getSSL(), n);
-                    break;
-
                 }
             }
         }
@@ -435,6 +451,17 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 Node n = nl.item(i);
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
+                    // YADE 1 -compatibility
+                    case "SOCKS4Proxy":
+                        proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
+                        parseProxy(argsLoader, proxyArgs, n);
+                        break;
+                    case "SOCKS5Proxy":
+                        proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
+                        parseProxy(argsLoader, proxyArgs, n);
+                        break;
+
+                    // YADE JS7
                     case "HTTPProxy":
                         proxyArgs.getType().setValue(java.net.Proxy.Type.HTTP);
                         parseProxy(argsLoader, proxyArgs, n);
@@ -443,14 +470,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                         proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
                         parseProxy(argsLoader, proxyArgs, n);
                         break;
-                    case "SOCKS4Proxy": // YADE1 - compatibility
-                        proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
-                        parseProxy(argsLoader, proxyArgs, n);
-                        break;
-                    case "SOCKS5Proxy":  // YADE1 - compatibility
-                        proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
-                        parseProxy(argsLoader, proxyArgs, n);
-                        break;
+
                     }
                 }
             }
@@ -780,6 +800,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
+    // YADE JS7
     private static void parseSMBConnection(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node smbAuthentication) {
         NodeList nl = smbAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -807,16 +828,19 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
-                case "Account": // YADE 1 - deprecated
+                // YADE 1 - compatibility
+                case "Account":
                     argsLoader.setStringArgumentValue(args.getUser(), n);
                     account = true;
                     break;
-                case "Domain": // YADE 1 - deprecated
+                case "Domain":
                     argsLoader.setStringArgumentValue(args.getDomain(), n);
                     break;
-                case "Password": // YADE 1 - deprecated
+                case "Password":
                     argsLoader.setStringArgumentValue(args.getPassword(), n);
                     break;
+
+                // YADE JS7
                 case "SMBAuthenticationMethodAnonymous":
                     args.getAuthMethod().setValue(SMBAuthMethod.ANONYMOUS);
                     break;
