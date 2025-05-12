@@ -4,8 +4,9 @@ package com.sos.joc.model.security.foureyes;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.tree.TreeType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -19,54 +20,18 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "deliveryDate",
-    "accountName",
-    "requestUrl",
-    "requestBody",
     "title",
-    "message"
+    "reason"
 })
-public class FourEyesRequest {
+public class FourEyesRequest
+    extends FourEyesResponse
+{
 
     /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date deliveryDate;
-    /**
      * string without < and >
      * <p>
      * 
      * (Required)
-     * 
-     */
-    @JsonProperty("accountName")
-    private String accountName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("requestUrl")
-    private String requestUrl;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("requestBody")
-    private RequestBody requestBody;
-    /**
-     * string without < and >
-     * <p>
-     * 
      * 
      */
     @JsonProperty("title")
@@ -77,8 +42,8 @@ public class FourEyesRequest {
      * 
      * 
      */
-    @JsonProperty("message")
-    private String message;
+    @JsonProperty("reason")
+    private String reason;
 
     /**
      * No args constructor for use in serialization
@@ -89,45 +54,23 @@ public class FourEyesRequest {
 
     /**
      * 
+     * @param reason
      * @param accountName
      * @param requestBody
+     * @param numOfObjects
      * @param requestUrl
-     * @param deliveryDate
+     * @param action
+     * @param objectName
      * @param title
+     * @param deliveryDate
+     * @param category
      * @param message
+     * @param objectType
      */
-    public FourEyesRequest(Date deliveryDate, String accountName, String requestUrl, RequestBody requestBody, String title, String message) {
-        super();
-        this.deliveryDate = deliveryDate;
-        this.accountName = accountName;
-        this.requestUrl = requestUrl;
-        this.requestBody = requestBody;
+    public FourEyesRequest(String title, String reason, Date deliveryDate, String accountName, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
+        super(deliveryDate, accountName, requestUrl, requestBody, category, action, objectType, objectName, numOfObjects, message);
         this.title = title;
-        this.message = message;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    public Date getDeliveryDate() {
-        return deliveryDate;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("deliveryDate")
-    public void setDeliveryDate(Date deliveryDate) {
-        this.deliveryDate = deliveryDate;
+        this.reason = reason;
     }
 
     /**
@@ -135,73 +78,6 @@ public class FourEyesRequest {
      * <p>
      * 
      * (Required)
-     * 
-     */
-    @JsonProperty("accountName")
-    public String getAccountName() {
-        return accountName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("accountName")
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("requestUrl")
-    public String getRequestUrl() {
-        return requestUrl;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("requestUrl")
-    public void setRequestUrl(String requestUrl) {
-        this.requestUrl = requestUrl;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("requestBody")
-    public RequestBody getRequestBody() {
-        return requestBody;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("requestBody")
-    public void setRequestBody(RequestBody requestBody) {
-        this.requestBody = requestBody;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
      * 
      */
     @JsonProperty("title")
@@ -213,6 +89,7 @@ public class FourEyesRequest {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("title")
@@ -226,9 +103,9 @@ public class FourEyesRequest {
      * 
      * 
      */
-    @JsonProperty("message")
-    public String getMessage() {
-        return message;
+    @JsonProperty("reason")
+    public String getReason() {
+        return reason;
     }
 
     /**
@@ -237,19 +114,19 @@ public class FourEyesRequest {
      * 
      * 
      */
-    @JsonProperty("message")
-    public void setMessage(String message) {
-        this.message = message;
+    @JsonProperty("reason")
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("accountName", accountName).append("requestUrl", requestUrl).append("requestBody", requestBody).append("title", title).append("message", message).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("title", title).append("reason", reason).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(accountName).append(requestBody).append(requestUrl).append(deliveryDate).append(title).append(message).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(title).append(reason).toHashCode();
     }
 
     @Override
@@ -261,7 +138,7 @@ public class FourEyesRequest {
             return false;
         }
         FourEyesRequest rhs = ((FourEyesRequest) other);
-        return new EqualsBuilder().append(accountName, rhs.accountName).append(requestBody, rhs.requestBody).append(requestUrl, rhs.requestUrl).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(title, rhs.title).append(reason, rhs.reason).isEquals();
     }
 
 }
