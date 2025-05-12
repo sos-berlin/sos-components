@@ -178,7 +178,7 @@ public class SSHJProviderUtils {
         return baos.toString(StandardCharsets.UTF_8);
     }
 
-    protected static void writeFile(SFTPClient sftp, String path, String content) throws IOException {
+    protected static void uploadContent(SFTPClient sftp, String path, String content) throws IOException {
         EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT, OpenMode.TRUNC);
         byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
         try (RemoteFile remoteFile = sftp.open(path, mode)) {

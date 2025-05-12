@@ -294,7 +294,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
      */
     @Override
     public void writeFile(String path, String content) throws ProviderException {
-        writeFile(path, content, false);
+        uploadContent(path, content, false);
     }
 
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String, long)} */
@@ -369,8 +369,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    public void writeFile(String path, String content, boolean isWebDAV) throws ProviderException {
-        validatePrerequisites("writeFile", path, "path");
+    public void uploadContent(String path, String content, boolean isWebDAV) throws ProviderException {
+        validatePrerequisites("uploadContent", path, "path");
 
         try {
             URI uri = new URI(normalizePath(path));

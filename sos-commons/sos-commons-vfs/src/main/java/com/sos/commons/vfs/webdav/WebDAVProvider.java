@@ -139,7 +139,7 @@ public class WebDAVProvider extends HTTPProvider {
      */
     @Override
     public void writeFile(String path, String content) throws ProviderException {
-        writeFile(path, content, true);
+        uploadContent(path, content, true);
     }
 
     /** Overrides {@link HTTPProvider#upload(String, InputStream, long, boolean)} */

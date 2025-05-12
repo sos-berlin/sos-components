@@ -311,10 +311,10 @@ public class SSHJProvider extends SSHProvider {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
                 try (SFTPClient sftp = sshClient.newSFTPClient()) {
-                    SSHJProviderUtils.writeFile(sftp, path, content);
+                    SSHJProviderUtils.uploadContent(sftp, path, content);
                 }
             } else {
-                SSHJProviderUtils.writeFile(reusable.getSFTPClient(), path, content);
+                SSHJProviderUtils.uploadContent(reusable.getSFTPClient(), path, content);
             }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
