@@ -23,7 +23,7 @@ import jakarta.persistence.Transient;
 @Entity
 @Table(name = DBLayer.TABLE_JOC_APPROVAL_REQUESTS)
 @Proxy(lazy = false)
-public class DBItemJocApprovalRequests extends DBItem {
+public class DBItemJocApprovalRequest extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -41,13 +41,13 @@ public class DBItemJocApprovalRequests extends DBItem {
     @Column(name = "[PARAMETERS]", nullable = true)
     private String parameters;
 
-    @Column(name = "[REQUESTOR_STATUS]", nullable = false)
+    @Column(name = "[REQUESTOR_STATE]", nullable = false)
     private Integer requestorState;
 
     @Column(name = "[APPROVER]", nullable = true)
     private String approver;
 
-    @Column(name = "[APPROVER_STATUS]", nullable = false)
+    @Column(name = "[APPROVER_STATE]", nullable = false)
     private Integer approverState;
     
     @Column(name = "[CATEGORY]", nullable = false)
@@ -62,7 +62,7 @@ public class DBItemJocApprovalRequests extends DBItem {
     @Column(name = "[OBJECT_NAME]", nullable = true)
     private String objectName;
 
-    @Column(name = "[NUM_OF_OBJECTS]", nullable = true)
+    @Column(name = "[NUM_OF_OBJECTS]", nullable = false)
     private Integer numOfObjects;
 
     @Column(name = "[TITLE]", nullable = false)
@@ -191,6 +191,9 @@ public class DBItemJocApprovalRequests extends DBItem {
     }
 
     public void setObjectName(String val) {
+        if (val != null && val.length() > 30) {
+            val = val.substring(0, 255);
+        }
         objectName = val;
     }
     

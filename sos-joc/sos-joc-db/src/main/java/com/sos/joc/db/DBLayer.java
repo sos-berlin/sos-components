@@ -66,7 +66,7 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
-import com.sos.joc.db.joc.DBItemJocApprovalRequests;
+import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
@@ -411,7 +411,7 @@ public class DBLayer implements Serializable {
     public static final String TABLE_ENC_AGENT_CERTIFICATES = "ENC_AGENT_CERTIFICATES";
     
     /** 4-eyes principle */
-    public static final String DBITEM_JOC_APPROVAL_REQUESTS = DBItemJocApprovalRequests.class.getSimpleName();
+    public static final String DBITEM_JOC_APPROVAL_REQUESTS = DBItemJocApprovalRequest.class.getSimpleName();
     public static final String TABLE_JOC_APPROVAL_REQUESTS = "JOC_APPROVAL_REQUESTS";
     public static final String TABLE_JOC_APPROVAL_REQUESTS_SEQUENCE = "SEQ_JOC_AR";
     
@@ -620,7 +620,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemHistoryOrderTag.class);
         
         cl.add(DBItemJocApprover.class);
-        cl.add(DBItemJocApprovalRequests.class);
+        cl.add(DBItemJocApprovalRequest.class);
         return cl;
     }
 

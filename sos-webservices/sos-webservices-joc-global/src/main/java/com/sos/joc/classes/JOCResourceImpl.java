@@ -23,7 +23,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -37,6 +39,7 @@ import com.sos.joc.model.security.configuration.permissions.ControllerPermission
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.model.security.foureyes.FourEyesResponse;
 import com.sos.joc.model.security.foureyes.RequestBody;
+import com.sos.joc.model.security.foureyes.RequestorState;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.HeaderParam;
@@ -410,52 +413,52 @@ public class JOCResourceImpl {
     private Either<Exception, byte[]> getApprovalRequestBody(String request, String user, byte[] body) {
         Either<Exception, byte[]> either = Either.right(body);
         if (approvalRequestId != null && approvalRequestId.trim().matches("\\d+") && !approvalRequestId.trim().equals("0")) {
-//            SOSHibernateSession hibernateSession = null;
-//            try {
-//                hibernateSession = Globals.createSosHibernateStatelessConnection(request);
-//                Long aRId = Long.valueOf(approvalRequestId.trim());
-//                DBItemJocApprovalRequests item = hibernateSession.get(DBItemJocApprovalRequests.class, aRId);
-//                if (item == null) {
-//                    throw new JocAccessDeniedException("Approval request: Couldn't find request.");
-//                }
-//                if (!item.getRequester().equals(user)) {
-//                    throw new JocAccessDeniedException("Approval request: wrong requestor.");
-//                }
-//                if (!item.getRequest().equals(request)) {
-//                    throw new JocAccessDeniedException("Approval request: wrong requested URL.");
-//                }
-//                switch (item.getApproverStateAsEnum()) {
-//                case OPEN:
-//                    throw new JocAccessDeniedException("Approval request: request is not approved.");
-//                case APPROVED: // expected state
-//                    break;
-//                case REJECTED:
-//                    throw new JocAccessDeniedException("Approval request: request is rejected.");
-//                }
-//                switch (item.getRequestorStateAsEnum()) {
-//                case REQUESTED: // expected state
-//                    break;
-//                case WITHDRAWN:
-//                    throw new JocAccessDeniedException("Approval request: request is already revoked.");
-//                case IN_PROGRESS:
-//                    throw new JocAccessDeniedException("Approval request: request is already in progress.");
-//                case SUCCESSFUL:
-//                    throw new JocAccessDeniedException("Approval request: request is already successfully completed");
-//                case FAILED:
-//                    throw new JocAccessDeniedException("Approval request: request is already unsuccessfully completed");
-//                }
-//                
-//                // TODO use executeUpdate instead
-//                item.setModified(Date.from(Instant.now()));
-//                item.setRequestorState(RequestorState.IN_PROGRESS.intValue());
-//                hibernateSession.update(item);
-//                
-//                either = Either.right(item.getParameters() == null ? null : item.getParameters().getBytes(StandardCharsets.UTF_8));
-//            } catch (Exception e) {
-//                either = Either.left(e);
-//            } finally {
-//                Globals.disconnect(hibernateSession);
-//            }
+            SOSHibernateSession hibernateSession = null;
+            try {
+                hibernateSession = Globals.createSosHibernateStatelessConnection(request);
+                Long aRId = Long.valueOf(approvalRequestId.trim());
+                DBItemJocApprovalRequest item = hibernateSession.get(DBItemJocApprovalRequest.class, aRId);
+                if (item == null) {
+                    throw new JocAccessDeniedException("Approval request: Couldn't find request.");
+                }
+                if (!item.getRequestor().equals(user)) {
+                    throw new JocAccessDeniedException("Approval request: wrong requestor.");
+                }
+                if (!item.getRequest().equals(request)) {
+                    throw new JocAccessDeniedException("Approval request: wrong requested URL.");
+                }
+                switch (item.getApproverStateAsEnum()) {
+                case OPEN:
+                    throw new JocAccessDeniedException("Approval request: request is not approved.");
+                case APPROVED: // expected state
+                    break;
+                case REJECTED:
+                    throw new JocAccessDeniedException("Approval request: request is rejected.");
+                }
+                switch (item.getRequestorStateAsEnum()) {
+                case REQUESTED: // expected state
+                    break;
+                case WITHDRAWN:
+                    throw new JocAccessDeniedException("Approval request: request is already revoked.");
+                case IN_PROGRESS:
+                    throw new JocAccessDeniedException("Approval request: request is already in progress.");
+                case SUCCESSFUL:
+                    throw new JocAccessDeniedException("Approval request: request is already successfully completed");
+                case FAILED:
+                    throw new JocAccessDeniedException("Approval request: request is already unsuccessfully completed");
+                }
+                
+                // TODO use executeUpdate instead
+                item.setModified(Date.from(Instant.now()));
+                item.setRequestorState(RequestorState.IN_PROGRESS.intValue());
+                hibernateSession.update(item);
+                
+                either = Either.right(item.getParameters() == null ? null : item.getParameters().getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                either = Either.left(e);
+            } finally {
+                Globals.disconnect(hibernateSession);
+            }
         }
         return either;
     }
