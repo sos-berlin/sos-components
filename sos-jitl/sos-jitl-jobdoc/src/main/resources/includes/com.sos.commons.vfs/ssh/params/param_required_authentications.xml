@@ -61,13 +61,10 @@
 			<b>Note:</b>
 			Use
 			<em>required_authentications</em>
-			only when all specified methods must succeed.
+			only if the SSH server is configured to require all specified methods
+			in sequence.
 			<br />
-			If only one method from a list should succeed, use
-			<em>
-				preferred_authentications
-			</em>
-			instead.
+			Use <em>preferred_authentications</em> if only one method from a list should succeed.
 			<br />
 			The
 			<em>auth_method</em>
