@@ -412,11 +412,16 @@ public class OrderProcessStep<A extends JobArguments> {
                 DetailValue dv = e.getValue();
                 JobArgument<?> aja = allArguments.get(name);
                 // if (!allArguments.containsKey(e.getKey())) {
+                // TODO - clarify what it means ???: workaround js: job resource changed and declaredArgumens defined
                 if (aja == null || aja.getValue() == null) {// workaround js: job resource changed and declaredArgumens defined
                     try {
                         ValueSource vs = new ValueSource(ValueSourceType.JOB_RESOURCE);
                         vs.setSource(dv.getSource());
-                        allArguments.put(name, JobArgument.createUndeclaredArgument(name, dv.getValue(), vs));
+                        if (aja == null) { // create an undeclared
+                            allArguments.put(name, JobArgument.createUndeclaredArgument(name, dv.getValue(), vs));
+                        } else {
+                            // aja.setValueSource(vs);
+                        }
                         // allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
                     } catch (Throwable ex) {
                         getLogger().error("[JobResources][" + dv.getSource() + "][" + e.getKey() + "]" + ex.toString());
