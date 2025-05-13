@@ -5,7 +5,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	name="required_authentications" required="false"
 	usageNote="one of: auth_method, preferred_authentications, required_authentications"
-	DataType="java.util.List&lt;com.sos.commons.vfs.ssh.common.AuthMethod&gt;">
+	DataType="java.util.List&lt;com.sos.commons.vfs.ssh.commons.SSHAuthMethod&gt;">
 	<note>
 		<p>
 			This argument specifies a list of authentication methods that must

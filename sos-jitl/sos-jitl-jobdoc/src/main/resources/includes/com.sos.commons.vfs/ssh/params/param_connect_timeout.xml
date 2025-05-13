@@ -1,12 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+<param
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	name="connect_timeout" required="false" DataType="java.lang.Integer" DefaultValue="0">
-        <note>
-			<p>
-				The argument limits the waiting period in seconds for a connection to a remote host to be established.
-				A value of 0 (the default value) indicates no timeout.
-			</p>
-        </note>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="connect_timeout" required="false" DataType="java.lang.String"
+	DefaultValue="0">
+	<note>
+		<p>
+			The argument limits the waiting period in seconds for a connection
+			to a
+			remote host to be established.
+			A value of 0 (the default value)
+			indicates no timeout.
+		</p>
+		<br />
+		<p>
+			Possible values:
+			<ul>
+				<li>
+					<em>&lt;n&gt;s</em>
+					- duration in seconds, e.g.:
+					<em>30s</em>
+				</li>
+				<li>
+					<em>&lt;n&gt;s</em>
+					- duration in seconds, e.g.:
+					<em>30s</em>
+				</li>
+				<li>
+					Combined values (with blank as separator): e.g.:
+					<em>1m 30s</em>
+				</li>
+
+			</ul>
+		</p>
+	</note>
 </param>

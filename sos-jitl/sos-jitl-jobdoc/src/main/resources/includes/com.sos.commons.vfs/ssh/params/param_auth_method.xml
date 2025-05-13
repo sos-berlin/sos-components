@@ -3,7 +3,10 @@
 	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	name="auth_method" required="false" usageNote="one of: auth_method, preferred_authentications, required_authentications" DataType="com.sos.commons.vfs.ssh.common.AuthMethod">
+	name="auth_method" required="false"
+	usageNote="one of: auth_method, preferred_authentications, required_authentications"
+	DataType="
+com.sos.commons.vfs.ssh.commons.SSHAuthMethod">
 	<values>
 		<value>publickey</value>
 		<value>password</value>
@@ -11,11 +14,14 @@
 	<note>
 		<p>
 			This argument specifies a
-			<b>single authentication method</b> to use for the connection to the SSH server (case-insensitive):
+			<b>single authentication method</b>
+			to use for the connection to the SSH server (case-insensitive):
 			<ul>
 				<li>
 					<b>publickey</b>
-					<br/> If this authentication method is used, the following arguments must or can be specified:
+					<br />
+					If this authentication method is used, the following arguments must
+					or can be specified:
 					<ul>
 						<li>
 							<em>auth_file</em>
@@ -30,10 +36,12 @@
 				</li>
 				<li>
 					<b>password</b>
-					<br/> If this authentication method is used, the following argument must be specified:
+					<br />
+					If this authentication method is used, the following argument must
+					be specified:
 					<ul>
 						<li>
-							<em>password</em> 
+							<em>password</em>
 							(required): Password for SSH login.
 						</li>
 					</ul>
@@ -45,7 +53,7 @@
 			not dispose of a keyboard to type
 			passwords on-the-fly.
 		</p>
-		<br/>
+		<br />
 		<p>
 			<b>Note:</b>
 			The

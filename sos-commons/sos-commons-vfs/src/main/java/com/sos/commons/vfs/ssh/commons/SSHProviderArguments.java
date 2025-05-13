@@ -39,7 +39,7 @@ public class SSHProviderArguments extends AProviderArguments {
     // Socket timeout SO_TIMEOUT in seconds based on socket.setSoTimeout
     // - Read Timeout Maximum time to wait for a response after the connection is established.
     /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
-    private SOSArgument<String> socketTimeout = new SOSArgument<>("socket_timeout", false, "0s");
+    private SOSArgument<String> socketTimeout = new SOSArgument<>("socket_timeout", false, "0");
 
     // KeepAlive - timeout interval in seconds
     /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
