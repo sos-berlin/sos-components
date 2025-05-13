@@ -137,7 +137,7 @@ pre {
 }
 
 b, strong {
-    font-weight: bold;
+    font-weight: 700 !important;
 }
 
 dfn {
