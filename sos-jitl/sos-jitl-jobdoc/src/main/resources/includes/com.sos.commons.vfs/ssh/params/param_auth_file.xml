@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+<param
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	name="auth_file" required="false" DataType="java.lang.String">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="auth_file"
+	required="false" DataType="java.lang.String">
 	<note>
 		<p>
-			The argument specifies the path to the client's private key file that is used for authentication with an SSH server.
+			Authentication method:
+			<em>publickey</em>.
 			<br />
 			<br />
-			This argument has to be used if the <em>publickey</em> authentication method is specified as the value of the <paramref>auth_method</paramref> argument.
+			The argument specifies the path to the client's private key file that
+			is used for authentication with an SSH server.
 			<br />
-			<br />
-			Should the private key file be secured by a passphrase, then the passphrase has to be specified with the <paramref>password</paramref> argument.
-			</p>
+			Should the private key file be secured by a passphrase, then the
+			<em>passphrase</em>
+			argument has to be specified.
+		</p>
 	</note>
 </param>
