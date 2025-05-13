@@ -37,7 +37,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             }
             
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
-            String accountNameFromRequest = in.getAccountName();
+            String accountNameFromRequest = in.getRequestor();
             if (!accountNameFromRequest.equals(curAccountName)) {
                 // throw new 
             }
