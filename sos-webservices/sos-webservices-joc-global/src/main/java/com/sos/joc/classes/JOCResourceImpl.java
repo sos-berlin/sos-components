@@ -35,7 +35,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
-import com.sos.joc.model.security.foureyes.FourEyesRequest;
+import com.sos.joc.model.security.foureyes.FourEyesResponse;
 import com.sos.joc.model.security.foureyes.RequestBody;
 
 import io.vavr.control.Either;
@@ -312,7 +312,7 @@ public class JOCResourceImpl {
     }
     
     private byte[] getError433Schema(String message) {
-        FourEyesRequest entity = new FourEyesRequest();
+        FourEyesResponse entity = new FourEyesResponse();
         entity.setAccountName(jocAuditLog.getUser());
         entity.setRequestUrl(jocAuditLog.getRequest());
         try {
@@ -321,7 +321,6 @@ public class JOCResourceImpl {
             throw new JocException(e);
         }
         entity.setDeliveryDate(Date.from(Instant.now()));
-        entity.setTitle(null);
         entity.setMessage(message);
         try {
             return Globals.objectMapper.writeValueAsBytes(entity);
@@ -549,6 +548,7 @@ public class JOCResourceImpl {
             return accessDeniedResponse();
         }
         if (fourEyesPermission) {
+            // check if approver are configured -> otherwise ignore fourEyesPermission?
             if (unsupported4eyes) {
                 return accessDeniedResponseByUnsupported4EyesPrinciple();
             }

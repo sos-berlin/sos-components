@@ -107,8 +107,11 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             body = initLogging(API_CALL_PERMISSIONS_STORE, body, accessToken);
             JsonValidator.validateFailFast(body, Permissions.class);
             permissions = Globals.objectMapper.readValue(body, Permissions.class);
-
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            
+            // only basic permissions because if someone has this permission and has configured the approval requestor role
+            // with this permission == true too then he cannot roll back this setting.
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getAdministration().getAccounts()
+                    .getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

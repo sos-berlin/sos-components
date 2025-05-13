@@ -21,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "title",
+    "approver",
     "reason"
 })
 public class FourEyesRequest
@@ -40,6 +41,15 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("approver")
+    private String approver;
+    /**
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("reason")
@@ -54,22 +64,24 @@ public class FourEyesRequest
 
     /**
      * 
+     * @param approver
      * @param reason
      * @param accountName
+     * @param title
+     * @param message
+     * @param objectType
      * @param requestBody
      * @param numOfObjects
      * @param requestUrl
      * @param action
      * @param objectName
-     * @param title
      * @param deliveryDate
      * @param category
-     * @param message
-     * @param objectType
      */
-    public FourEyesRequest(String title, String reason, Date deliveryDate, String accountName, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
+    public FourEyesRequest(String title, String approver, String reason, Date deliveryDate, String accountName, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
         super(deliveryDate, accountName, requestUrl, requestBody, category, action, objectType, objectName, numOfObjects, message);
         this.title = title;
+        this.approver = approver;
         this.reason = reason;
     }
 
@@ -101,6 +113,30 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("approver")
+    public String getApprover() {
+        return approver;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("approver")
+    public void setApprover(String approver) {
+        this.approver = approver;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("reason")
@@ -121,12 +157,12 @@ public class FourEyesRequest
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("title", title).append("reason", reason).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("title", title).append("approver", approver).append("reason", reason).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(title).append(reason).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(approver).append(reason).append(title).toHashCode();
     }
 
     @Override
@@ -138,7 +174,7 @@ public class FourEyesRequest
             return false;
         }
         FourEyesRequest rhs = ((FourEyesRequest) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(title, rhs.title).append(reason, rhs.reason).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(approver, rhs.approver).append(reason, rhs.reason).append(title, rhs.title).isEquals();
     }
 
 }
