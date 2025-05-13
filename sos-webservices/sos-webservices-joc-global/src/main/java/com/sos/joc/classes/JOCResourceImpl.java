@@ -316,7 +316,7 @@ public class JOCResourceImpl {
     
     private byte[] getError433Schema(String message) {
         FourEyesResponse entity = new FourEyesResponse();
-        entity.setAccountName(jocAuditLog.getUser());
+        entity.setRequestor(jocAuditLog.getUser());
         entity.setRequestUrl(jocAuditLog.getRequest());
         try {
             entity.setRequestBody(Globals.objectMapper.readValue(jocAuditLog.getParams(), RequestBody.class));
@@ -439,13 +439,13 @@ public class JOCResourceImpl {
                 case REQUESTED: // expected state
                     break;
                 case WITHDRAWN:
-                    throw new JocAccessDeniedException("Approval request: request is already revoked.");
+                    throw new JocAccessDeniedException("Approval request: request has already been withdrawn.");
                 case IN_PROGRESS:
-                    throw new JocAccessDeniedException("Approval request: request is already in progress.");
+                    throw new JocAccessDeniedException("Approval request: approved request is already in progress.");
                 case SUCCESSFUL:
-                    throw new JocAccessDeniedException("Approval request: request is already successfully completed");
+                    throw new JocAccessDeniedException("Approval request: approved request is already successfully completed");
                 case FAILED:
-                    throw new JocAccessDeniedException("Approval request: request is already unsuccessfully completed");
+                    throw new JocAccessDeniedException("Approval request: approved request is already unsuccessfully completed");
                 }
                 
                 // TODO use executeUpdate instead

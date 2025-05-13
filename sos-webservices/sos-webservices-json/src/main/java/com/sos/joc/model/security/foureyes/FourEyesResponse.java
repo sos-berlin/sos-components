@@ -22,7 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "accountName",
+    "requestor",
     "requestUrl",
     "requestBody",
     "category",
@@ -51,8 +51,8 @@ public class FourEyesResponse {
      * (Required)
      * 
      */
-    @JsonProperty("accountName")
-    private String accountName;
+    @JsonProperty("requestor")
+    private String requestor;
     /**
      * string without < and >
      * <p>
@@ -131,7 +131,7 @@ public class FourEyesResponse {
 
     /**
      * 
-     * @param accountName
+     * @param requestor
      * @param requestBody
      * @param numOfObjects
      * @param requestUrl
@@ -142,10 +142,10 @@ public class FourEyesResponse {
      * @param message
      * @param objectType
      */
-    public FourEyesResponse(Date deliveryDate, String accountName, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
+    public FourEyesResponse(Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
         super();
         this.deliveryDate = deliveryDate;
-        this.accountName = accountName;
+        this.requestor = requestor;
         this.requestUrl = requestUrl;
         this.requestBody = requestBody;
         this.category = category;
@@ -187,9 +187,9 @@ public class FourEyesResponse {
      * (Required)
      * 
      */
-    @JsonProperty("accountName")
-    public String getAccountName() {
-        return accountName;
+    @JsonProperty("requestor")
+    public String getRequestor() {
+        return requestor;
     }
 
     /**
@@ -199,9 +199,9 @@ public class FourEyesResponse {
      * (Required)
      * 
      */
-    @JsonProperty("accountName")
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
+    @JsonProperty("requestor")
+    public void setRequestor(String requestor) {
+        this.requestor = requestor;
     }
 
     /**
@@ -390,12 +390,12 @@ public class FourEyesResponse {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("accountName", accountName).append("requestUrl", requestUrl).append("requestBody", requestBody).append("category", category).append("action", action).append("objectType", objectType).append("objectName", objectName).append("numOfObjects", numOfObjects).append("message", message).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("requestor", requestor).append("requestUrl", requestUrl).append("requestBody", requestBody).append("category", category).append("action", action).append("objectType", objectType).append("objectName", objectName).append("numOfObjects", numOfObjects).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(accountName).append(requestBody).append(numOfObjects).append(requestUrl).append(action).append(objectName).append(deliveryDate).append(category).append(message).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(requestor).append(requestBody).append(numOfObjects).append(requestUrl).append(action).append(objectName).append(deliveryDate).append(category).append(message).append(objectType).toHashCode();
     }
 
     @Override
@@ -407,7 +407,7 @@ public class FourEyesResponse {
             return false;
         }
         FourEyesResponse rhs = ((FourEyesResponse) other);
-        return new EqualsBuilder().append(accountName, rhs.accountName).append(requestBody, rhs.requestBody).append(numOfObjects, rhs.numOfObjects).append(requestUrl, rhs.requestUrl).append(action, rhs.action).append(objectName, rhs.objectName).append(deliveryDate, rhs.deliveryDate).append(category, rhs.category).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(requestor, rhs.requestor).append(requestBody, rhs.requestBody).append(numOfObjects, rhs.numOfObjects).append(requestUrl, rhs.requestUrl).append(action, rhs.action).append(objectName, rhs.objectName).append(deliveryDate, rhs.deliveryDate).append(category, rhs.category).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
     }
 
 }
