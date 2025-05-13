@@ -454,13 +454,19 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
         }
         Query<T> q = null;
         try {
-            if (resultType == null) {// default case with a mapped class - single item
+            if (resultType == null) {
+                // Default case: mapped entity class – result type matches the query result directly
                 q = currentSession.createQuery(hql, null);
             } else {// custom entity
-                q = currentSession.createQuery(hql, resultType);
-                // 1) without tupleTransfomer the custom entity must have an appropriate constructor with parameter types matching the select items:
-                // ----------- MyCustomEntity.<init>(java.lang.String,java.lang.Long,java.lang.String,....)
-                // 2) the bean field names are used instead of the constructor
+                // Custom result type (not a mapped entity)
+                // JOC-1974 (Hibernate 6.6.14): unlike earlier versions, createQuery(hql, resultType) performs type validation immediately and will throw an
+                // exception if the result does not directly match the constructor of the given resultType.
+                // Therefore, we avoid passing resultType here.
+                // q = currentSession.createQuery(hql, resultType);
+                q = currentSession.createQuery(hql, null);
+                // 1) Without a TupleTransformer, the custom class must have a constructor matching the selected fields in the query:
+                // Example: MyCustomEntity(String, Long, String, ...)
+                // 2) With a TupleTransformer, field names in the query (aliases) are mapped to the bean properties of the resultType
                 q.setTupleTransformer(new SOSAliasToBeanResultTransformer<T>(resultType));
             }
         } catch (IllegalStateException e) {

@@ -1,6 +1,5 @@
 package com.sos.joc.db.history;
 
-import java.time.LocalDate;
 import java.util.Date;
 
 import org.hibernate.annotations.Proxy;
