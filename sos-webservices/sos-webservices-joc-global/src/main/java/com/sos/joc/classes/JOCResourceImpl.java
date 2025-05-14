@@ -430,29 +430,29 @@ public class JOCResourceImpl {
                 Long aRId = Long.valueOf(approvalRequestId.trim());
                 DBItemJocApprovalRequest item = hibernateSession.get(DBItemJocApprovalRequest.class, aRId);
                 if (item == null) {
-                    throw new JocAccessDeniedException("Approval request: Couldn't find request.");
+                    throw new JocAccessDeniedException("Approval request: Couldn't find request");
                 }
                 if (!item.getRequestor().equals(user)) {
-                    throw new JocAccessDeniedException("Approval request: wrong requestor.");
+                    throw new JocAccessDeniedException("Approval request: wrong requestor");
                 }
                 if (!item.getRequest().equals(request)) {
-                    throw new JocAccessDeniedException("Approval request: wrong requested URL.");
+                    throw new JocAccessDeniedException("Approval request: wrong requested URL");
                 }
                 switch (item.getApproverStateAsEnum()) {
                 case OPEN:
-                    throw new JocAccessDeniedException("Approval request: request is not approved.");
+                    throw new JocAccessDeniedException("Approval request: request is not approved");
                 case APPROVED: // expected state
                     break;
                 case REJECTED:
-                    throw new JocAccessDeniedException("Approval request: request is rejected.");
+                    throw new JocAccessDeniedException("Approval request: request is rejected");
                 }
                 switch (item.getRequestorStateAsEnum()) {
                 case REQUESTED: // expected state
                     break;
                 case WITHDRAWN:
-                    throw new JocAccessDeniedException("Approval request: request has already been withdrawn.");
+                    throw new JocAccessDeniedException("Approval request: request has already been withdrawn");
                 case IN_PROGRESS:
-                    throw new JocAccessDeniedException("Approval request: approved request is already in progress.");
+                    throw new JocAccessDeniedException("Approval request: approved request is already in progress");
                 case SUCCESSFUL:
                     throw new JocAccessDeniedException("Approval request: approved request is already successfully completed");
                 case FAILED:

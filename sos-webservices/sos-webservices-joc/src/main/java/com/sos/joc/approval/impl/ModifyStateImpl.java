@@ -10,7 +10,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
@@ -53,10 +52,6 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
 
             DBItemJocApprovalRequest item = dbLayer.getApprovalRequest(in.getId());
-            if (item == null) {
-                throw new DBMissingDataException("Couldn't find an approval request with id " + in.getId());
-            }
-
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             if (!item.getRequestor().equals(curAccountName)) {
                 throw new JocBadRequestException("The current user is not the requestor of the approval request with id " + in.getId());
@@ -93,10 +88,6 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             
             DBItemJocApprovalRequest item = dbLayer.getApprovalRequest(in.getId());
-            if (item == null) {
-                throw new DBMissingDataException("Couldn't find an approval request with id " + in.getId());
-            }
-            
             ApproverState newState = action.equals(Action.APPROVE) ? ApproverState.APPROVED : ApproverState.REJECTED;
 
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();

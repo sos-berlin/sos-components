@@ -158,7 +158,7 @@ public class DBItemJocApprovalRequest extends DBItem {
     }
 
     @Transient
-    public CategoryType getTypeAsEnum() {
+    public CategoryType getCategoryTypeAsEnum() {
         try {
             return CategoryType.fromValue(category);
         } catch (Exception e) {

@@ -23,14 +23,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "requestor",
-    "requestUrl",
-    "requestBody",
-    "category",
     "message",
     "approvers"
 })
-public class FourEyesResponse {
+public class FourEyesResponse
+    extends ApprovalBase
+{
 
     /**
      * timestamp
@@ -41,32 +39,6 @@ public class FourEyesResponse {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("requestor")
-    private String requestor;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("requestUrl")
-    private String requestUrl;
-    @JsonProperty("requestBody")
-    private RequestBody requestBody;
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    private CategoryType category;
     /**
      * string without < and >
      * <p>
@@ -91,17 +63,13 @@ public class FourEyesResponse {
      * @param requestUrl
      * @param approvers
      * @param deliveryDate
-     * @param category
      * @param message
+     * @param category
      * @param requestor
      */
-    public FourEyesResponse(Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String message, List<Approver> approvers) {
-        super();
+    public FourEyesResponse(Date deliveryDate, String message, List<Approver> approvers, String requestor, String requestUrl, RequestBody requestBody, CategoryType category) {
+        super(requestor, requestUrl, requestBody, category);
         this.deliveryDate = deliveryDate;
-        this.requestor = requestor;
-        this.requestUrl = requestUrl;
-        this.requestBody = requestBody;
-        this.category = category;
         this.message = message;
         this.approvers = approvers;
     }
@@ -126,82 +94,6 @@ public class FourEyesResponse {
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("requestor")
-    public String getRequestor() {
-        return requestor;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("requestor")
-    public void setRequestor(String requestor) {
-        this.requestor = requestor;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("requestUrl")
-    public String getRequestUrl() {
-        return requestUrl;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("requestUrl")
-    public void setRequestUrl(String requestUrl) {
-        this.requestUrl = requestUrl;
-    }
-
-    @JsonProperty("requestBody")
-    public RequestBody getRequestBody() {
-        return requestBody;
-    }
-
-    @JsonProperty("requestBody")
-    public void setRequestBody(RequestBody requestBody) {
-        this.requestBody = requestBody;
-    }
-
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    public CategoryType getCategory() {
-        return category;
-    }
-
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    public void setCategory(CategoryType category) {
-        this.category = category;
     }
 
     /**
@@ -238,12 +130,12 @@ public class FourEyesResponse {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("requestor", requestor).append("requestUrl", requestUrl).append("requestBody", requestBody).append("category", category).append("message", message).append("approvers", approvers).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("deliveryDate", deliveryDate).append("message", message).append("approvers", approvers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(requestBody).append(requestUrl).append(approvers).append(deliveryDate).append(category).append(message).append(requestor).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(approvers).append(deliveryDate).append(message).toHashCode();
     }
 
     @Override
@@ -255,7 +147,7 @@ public class FourEyesResponse {
             return false;
         }
         FourEyesResponse rhs = ((FourEyesResponse) other);
-        return new EqualsBuilder().append(requestBody, rhs.requestBody).append(requestUrl, rhs.requestUrl).append(approvers, rhs.approvers).append(deliveryDate, rhs.deliveryDate).append(category, rhs.category).append(message, rhs.message).append(requestor, rhs.requestor).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(approvers, rhs.approvers).append(deliveryDate, rhs.deliveryDate).append(message, rhs.message).isEquals();
     }
 
 }

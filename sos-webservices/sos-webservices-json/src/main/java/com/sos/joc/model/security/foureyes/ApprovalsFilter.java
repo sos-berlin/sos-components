@@ -13,7 +13,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * FourEyesRequestsFilter
+ * ApprovalsFilter
  * <p>
  * 
  * 
@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "requestorStates",
     "approverStates"
 })
-public class FourEyesRequestsFilter {
+public class ApprovalsFilter {
 
     /**
      * 
@@ -64,7 +64,7 @@ public class FourEyesRequestsFilter {
      * No args constructor for use in serialization
      * 
      */
-    public FourEyesRequestsFilter() {
+    public ApprovalsFilter() {
     }
 
     /**
@@ -74,7 +74,7 @@ public class FourEyesRequestsFilter {
      * @param approverStates
      * @param approvers
      */
-    public FourEyesRequestsFilter(Set<String> requestors, Set<String> approvers, Set<RequestorState> requestorStates, Set<ApproverState> approverStates) {
+    public ApprovalsFilter(Set<String> requestors, Set<String> approvers, Set<RequestorState> requestorStates, Set<ApproverState> approverStates) {
         super();
         this.requestors = requestors;
         this.approvers = approvers;
@@ -177,10 +177,10 @@ public class FourEyesRequestsFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FourEyesRequestsFilter) == false) {
+        if ((other instanceof ApprovalsFilter) == false) {
             return false;
         }
-        FourEyesRequestsFilter rhs = ((FourEyesRequestsFilter) other);
+        ApprovalsFilter rhs = ((ApprovalsFilter) other);
         return new EqualsBuilder().append(approverStates, rhs.approverStates).append(approvers, rhs.approvers).append(requestorStates, rhs.requestorStates).append(requestors, rhs.requestors).isEquals();
     }
 

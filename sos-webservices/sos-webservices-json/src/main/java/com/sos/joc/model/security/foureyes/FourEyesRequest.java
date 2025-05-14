@@ -1,8 +1,6 @@
 
 package com.sos.joc.model.security.foureyes;
 
-import java.util.Date;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -26,7 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "reason"
 })
 public class FourEyesRequest
-    extends FourEyesResponse
+    extends ApprovalBase
 {
 
     /**
@@ -77,16 +75,13 @@ public class FourEyesRequest
      * @param reason
      * @param requestBody
      * @param requestUrl
-     * @param approvers
      * @param id
      * @param title
-     * @param deliveryDate
      * @param category
-     * @param message
      * @param requestor
      */
-    public FourEyesRequest(Long id, String title, String approver, String reason, Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String message, List<Approver> approvers) {
-        super(deliveryDate, requestor, requestUrl, requestBody, category, message, approvers);
+    public FourEyesRequest(Long id, String title, String approver, String reason, String requestor, String requestUrl, RequestBody requestBody, CategoryType category) {
+        super(requestor, requestUrl, requestBody, category);
         this.id = id;
         this.title = title;
         this.approver = approver;

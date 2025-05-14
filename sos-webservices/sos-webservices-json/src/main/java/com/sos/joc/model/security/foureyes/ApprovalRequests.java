@@ -2,6 +2,7 @@
 package com.sos.joc.model.security.foureyes;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,7 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * FourEyesRequests
+ * ApprovalRequests
  * <p>
  * 
  * 
@@ -22,9 +23,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "requests"
+    "requests",
+    "approvers"
 })
-public class FourEyesRequests {
+public class ApprovalRequests {
 
     /**
      * timestamp
@@ -42,24 +44,28 @@ public class FourEyesRequests {
      * 
      */
     @JsonProperty("requests")
-    private List<FourEyesRequest> requests = new ArrayList<FourEyesRequest>();
+    private List<ApprovalRequest> requests = new ArrayList<ApprovalRequest>();
+    @JsonProperty("approvers")
+    private Collection<Approver> approvers = null;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public FourEyesRequests() {
+    public ApprovalRequests() {
     }
 
     /**
      * 
+     * @param approvers
      * @param requests
      * @param deliveryDate
      */
-    public FourEyesRequests(Date deliveryDate, List<FourEyesRequest> requests) {
+    public ApprovalRequests(Date deliveryDate, List<ApprovalRequest> requests, List<Approver> approvers) {
         super();
         this.deliveryDate = deliveryDate;
         this.requests = requests;
+        this.approvers = approvers;
     }
 
     /**
@@ -92,7 +98,7 @@ public class FourEyesRequests {
      * 
      */
     @JsonProperty("requests")
-    public List<FourEyesRequest> getRequests() {
+    public List<ApprovalRequest> getRequests() {
         return requests;
     }
 
@@ -102,18 +108,28 @@ public class FourEyesRequests {
      * 
      */
     @JsonProperty("requests")
-    public void setRequests(List<FourEyesRequest> requests) {
+    public void setRequests(List<ApprovalRequest> requests) {
         this.requests = requests;
+    }
+
+    @JsonProperty("approvers")
+    public List<Approver> getApprovers() {
+        return approvers;
+    }
+
+    @JsonProperty("approvers")
+    public void setApprovers(Collection<Approver> approvers) {
+        this.approvers = approvers;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("requests", requests).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("requests", requests).append("approvers", approvers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(requests).toHashCode();
+        return new HashCodeBuilder().append(approvers).append(requests).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -121,11 +137,11 @@ public class FourEyesRequests {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FourEyesRequests) == false) {
+        if ((other instanceof ApprovalRequests) == false) {
             return false;
         }
-        FourEyesRequests rhs = ((FourEyesRequests) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(requests, rhs.requests).isEquals();
+        ApprovalRequests rhs = ((ApprovalRequests) other);
+        return new EqualsBuilder().append(approvers, rhs.approvers).append(requests, rhs.requests).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

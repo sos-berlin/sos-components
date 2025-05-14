@@ -9,6 +9,7 @@ import com.sos.joc.approval.resource.IRequestResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
@@ -39,13 +40,13 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             String accountNameFromRequest = in.getRequestor();
             if (!accountNameFromRequest.equals(curAccountName)) {
-                // throw new 
+                throw new JocBadRequestException("The current user is not the requestor of the approval request");
             }
             
             Date now = Date.from(Instant.now());
             DBItemJocApprovalRequest item = new DBItemJocApprovalRequest();
             item.setId(null);
-            item.setAction("mock action"); // TODO
+            item.setAction("mock action"); // TODO delete column from db table
             item.setApprover(in.getApprover());
             item.setApproverState(ApproverState.OPEN.intValue());
             item.setCategory(CategoryType.INVENTORY.intValue()); // TODO in.getCategory().intValue()
