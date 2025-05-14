@@ -38,7 +38,6 @@ public class FourEyesResponse {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -48,7 +47,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("requestor")
@@ -57,23 +55,16 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("requestUrl")
     private String requestUrl;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestBody")
     private RequestBody requestBody;
     /**
      * Tree object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("category")
@@ -82,7 +73,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("action")
@@ -91,7 +81,6 @@ public class FourEyesResponse {
      * Tree object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("objectType")
@@ -108,7 +97,6 @@ public class FourEyesResponse {
      * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("numOfObjects")
@@ -131,7 +119,6 @@ public class FourEyesResponse {
 
     /**
      * 
-     * @param requestor
      * @param requestBody
      * @param numOfObjects
      * @param requestUrl
@@ -140,6 +127,7 @@ public class FourEyesResponse {
      * @param deliveryDate
      * @param category
      * @param message
+     * @param requestor
      * @param objectType
      */
     public FourEyesResponse(Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
@@ -160,7 +148,6 @@ public class FourEyesResponse {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -172,7 +159,6 @@ public class FourEyesResponse {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -184,7 +170,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("requestor")
@@ -196,7 +181,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("requestor")
@@ -208,7 +192,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("requestUrl")
@@ -220,7 +203,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("requestUrl")
@@ -228,21 +210,11 @@ public class FourEyesResponse {
         this.requestUrl = requestUrl;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestBody")
     public RequestBody getRequestBody() {
         return requestBody;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestBody")
     public void setRequestBody(RequestBody requestBody) {
         this.requestBody = requestBody;
@@ -252,7 +224,6 @@ public class FourEyesResponse {
      * Tree object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("category")
@@ -264,7 +235,6 @@ public class FourEyesResponse {
      * Tree object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("category")
@@ -276,7 +246,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("action")
@@ -288,7 +257,6 @@ public class FourEyesResponse {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("action")
@@ -300,7 +268,6 @@ public class FourEyesResponse {
      * Tree object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("objectType")
@@ -312,7 +279,6 @@ public class FourEyesResponse {
      * Tree object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("objectType")
@@ -346,7 +312,6 @@ public class FourEyesResponse {
      * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("numOfObjects")
@@ -358,7 +323,6 @@ public class FourEyesResponse {
      * non negative integer
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("numOfObjects")
@@ -395,7 +359,7 @@ public class FourEyesResponse {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(requestor).append(requestBody).append(numOfObjects).append(requestUrl).append(action).append(objectName).append(deliveryDate).append(category).append(message).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(requestBody).append(numOfObjects).append(requestUrl).append(action).append(objectName).append(deliveryDate).append(category).append(message).append(requestor).append(objectType).toHashCode();
     }
 
     @Override
@@ -407,7 +371,7 @@ public class FourEyesResponse {
             return false;
         }
         FourEyesResponse rhs = ((FourEyesResponse) other);
-        return new EqualsBuilder().append(requestor, rhs.requestor).append(requestBody, rhs.requestBody).append(numOfObjects, rhs.numOfObjects).append(requestUrl, rhs.requestUrl).append(action, rhs.action).append(objectName, rhs.objectName).append(deliveryDate, rhs.deliveryDate).append(category, rhs.category).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(requestBody, rhs.requestBody).append(numOfObjects, rhs.numOfObjects).append(requestUrl, rhs.requestUrl).append(action, rhs.action).append(objectName, rhs.objectName).append(deliveryDate, rhs.deliveryDate).append(category, rhs.category).append(message, rhs.message).append(requestor, rhs.requestor).append(objectType, rhs.objectType).isEquals();
     }
 
 }

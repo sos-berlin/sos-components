@@ -1,19 +1,16 @@
 
 package com.sos.joc.model.security.foureyes;
 
-import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.tree.TreeType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * FourEyesRequest
+ * FourEyesRequestEdit
  * <p>
  * 
  * 
@@ -25,14 +22,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "approver",
     "reason"
 })
-public class FourEyesRequest
-    extends FourEyesResponse
-{
+public class FourEyesRequestEdit {
 
     /**
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -41,7 +37,6 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("title")
@@ -50,7 +45,6 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("approver")
@@ -68,28 +62,18 @@ public class FourEyesRequest
      * No args constructor for use in serialization
      * 
      */
-    public FourEyesRequest() {
+    public FourEyesRequestEdit() {
     }
 
     /**
      * 
      * @param approver
      * @param reason
-     * @param title
-     * @param message
-     * @param requestor
-     * @param objectType
-     * @param requestBody
-     * @param numOfObjects
-     * @param requestUrl
-     * @param action
-     * @param objectName
      * @param id
-     * @param deliveryDate
-     * @param category
+     * @param title
      */
-    public FourEyesRequest(Integer id, String title, String approver, String reason, Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
-        super(deliveryDate, requestor, requestUrl, requestBody, category, action, objectType, objectName, numOfObjects, message);
+    public FourEyesRequestEdit(Integer id, String title, String approver, String reason) {
+        super();
         this.id = id;
         this.title = title;
         this.approver = approver;
@@ -100,6 +84,7 @@ public class FourEyesRequest
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -111,6 +96,7 @@ public class FourEyesRequest
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -122,7 +108,6 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("title")
@@ -134,7 +119,6 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("title")
@@ -146,7 +130,6 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("approver")
@@ -158,7 +141,6 @@ public class FourEyesRequest
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("approver")
@@ -190,12 +172,12 @@ public class FourEyesRequest
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("title", title).append("approver", approver).append("reason", reason).toString();
+        return new ToStringBuilder(this).append("id", id).append("title", title).append("approver", approver).append("reason", reason).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(approver).append(reason).append(id).append(title).toHashCode();
+        return new HashCodeBuilder().append(approver).append(reason).append(id).append(title).toHashCode();
     }
 
     @Override
@@ -203,11 +185,11 @@ public class FourEyesRequest
         if (other == this) {
             return true;
         }
-        if ((other instanceof FourEyesRequest) == false) {
+        if ((other instanceof FourEyesRequestEdit) == false) {
             return false;
         }
-        FourEyesRequest rhs = ((FourEyesRequest) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(approver, rhs.approver).append(reason, rhs.reason).append(id, rhs.id).append(title, rhs.title).isEquals();
+        FourEyesRequestEdit rhs = ((FourEyesRequestEdit) other);
+        return new EqualsBuilder().append(approver, rhs.approver).append(reason, rhs.reason).append(id, rhs.id).append(title, rhs.title).isEquals();
     }
 
 }
