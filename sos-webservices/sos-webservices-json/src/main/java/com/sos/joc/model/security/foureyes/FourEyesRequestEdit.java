@@ -25,14 +25,14 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class FourEyesRequestEdit {
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     /**
      * string without < and >
      * <p>
@@ -72,7 +72,7 @@ public class FourEyesRequestEdit {
      * @param id
      * @param title
      */
-    public FourEyesRequestEdit(Integer id, String title, String approver, String reason) {
+    public FourEyesRequestEdit(Long id, String title, String approver, String reason) {
         super();
         this.id = id;
         this.title = title;
@@ -81,26 +81,26 @@ public class FourEyesRequestEdit {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

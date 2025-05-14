@@ -60,6 +60,7 @@ public class SOSAuthCurrentAccount {
     private Set<ISOSAuthSubject> currentSubjects;
     private SOSLoginParameters sosLoginParameters;
     private String kid;
+    private boolean isApprover = false;
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
@@ -413,6 +414,14 @@ public class SOSAuthCurrentAccount {
 
     public void setKid(String kid) {
         this.kid = kid;
+    }
+
+    public boolean isApprover() {
+        return isApprover;
+    }
+
+    public void setIsApprover(boolean isApprover) {
+        this.isApprover = isApprover;
     }
 
 }

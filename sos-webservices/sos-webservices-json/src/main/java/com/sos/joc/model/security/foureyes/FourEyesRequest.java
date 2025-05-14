@@ -2,11 +2,11 @@
 package com.sos.joc.model.security.foureyes;
 
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.tree.TreeType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -30,13 +30,13 @@ public class FourEyesRequest
 {
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
     /**
      * string without < and >
      * <p>
@@ -75,21 +75,18 @@ public class FourEyesRequest
      * 
      * @param approver
      * @param reason
-     * @param title
-     * @param message
-     * @param requestor
-     * @param objectType
      * @param requestBody
-     * @param numOfObjects
      * @param requestUrl
-     * @param action
-     * @param objectName
+     * @param approvers
      * @param id
+     * @param title
      * @param deliveryDate
      * @param category
+     * @param message
+     * @param requestor
      */
-    public FourEyesRequest(Integer id, String title, String approver, String reason, Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
-        super(deliveryDate, requestor, requestUrl, requestBody, category, action, objectType, objectName, numOfObjects, message);
+    public FourEyesRequest(Long id, String title, String approver, String reason, Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String message, List<Approver> approvers) {
+        super(deliveryDate, requestor, requestUrl, requestBody, category, message, approvers);
         this.id = id;
         this.title = title;
         this.approver = approver;
@@ -97,24 +94,24 @@ public class FourEyesRequest
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

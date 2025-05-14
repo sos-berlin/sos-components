@@ -25,6 +25,7 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
+import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocError;
@@ -316,20 +317,23 @@ public class JOCResourceImpl {
     }
     
     private byte[] getError433Schema(String message) {
-        FourEyesResponse entity = new FourEyesResponse();
-        entity.setRequestor(jocAuditLog.getUser());
-        entity.setRequestUrl(jocAuditLog.getRequest());
+        SOSHibernateSession session = null;
         try {
+            FourEyesResponse entity = new FourEyesResponse();
+            entity.setRequestor(jocAuditLog.getUser());
+            entity.setRequestUrl(jocAuditLog.getRequest());
             entity.setRequestBody(Globals.objectMapper.readValue(jocAuditLog.getParams(), RequestBody.class));
-        } catch (Exception e) {
-            throw new JocException(e);
-        }
-        entity.setDeliveryDate(Date.from(Instant.now()));
-        entity.setMessage(message);
-        try {
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            entity.setMessage(message);
+            entity.setCategory(null); // TODO
+            session = Globals.createSosHibernateStatelessConnection("getApprovers");
+            ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
+            entity.setApprovers(dbLayer.getApprovers().stream().map(DBItemJocApprover::mapToApproverWithoutEmail).toList());
             return Globals.objectMapper.writeValueAsBytes(entity);
         } catch (Exception e) {
             throw new JocException(e);
+        } finally {
+            Globals.disconnect(session);
         }
     }
 
@@ -541,7 +545,8 @@ public class JOCResourceImpl {
         return initPermissions(controllerId, permission, fourEyesPermission, false);
     }
     
-    private JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission, boolean unsupported4eyes) throws JocException {
+    private JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission, boolean unsupported4eyes)
+            throws JocException {
         JOCDefaultResponse jocDefaultResponse = null;
         
         if (!jobschedulerUser.isAuthenticated()) {

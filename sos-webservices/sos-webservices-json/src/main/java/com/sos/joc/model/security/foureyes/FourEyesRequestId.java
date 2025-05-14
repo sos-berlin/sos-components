@@ -22,14 +22,14 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class FourEyesRequestId {
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     /**
      * No args constructor for use in serialization
@@ -42,32 +42,32 @@ public class FourEyesRequestId {
      * 
      * @param id
      */
-    public FourEyesRequestId(Integer id) {
+    public FourEyesRequestId(Long id) {
         super();
         this.id = id;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("id")
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

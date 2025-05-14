@@ -14,6 +14,6 @@ public interface IRequestResource {
     @POST
     @Path("request")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postRequest(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postRequest(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 
 }

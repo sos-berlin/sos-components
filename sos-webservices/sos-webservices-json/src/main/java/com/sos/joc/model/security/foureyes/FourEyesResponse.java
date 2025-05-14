@@ -1,13 +1,14 @@
 
 package com.sos.joc.model.security.foureyes;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.tree.TreeType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -26,11 +27,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "requestUrl",
     "requestBody",
     "category",
-    "action",
-    "objectType",
-    "objectName",
-    "numOfObjects",
-    "message"
+    "message",
+    "approvers"
 })
 public class FourEyesResponse {
 
@@ -75,40 +73,10 @@ public class FourEyesResponse {
      * 
      * 
      */
-    @JsonProperty("action")
-    private String action;
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectType")
-    private TreeType objectType;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectName")
-    private String objectName;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfObjects")
-    private Integer numOfObjects;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("message")
     private String message;
+    @JsonProperty("approvers")
+    private List<Approver> approvers = new ArrayList<Approver>();
 
     /**
      * No args constructor for use in serialization
@@ -120,28 +88,22 @@ public class FourEyesResponse {
     /**
      * 
      * @param requestBody
-     * @param numOfObjects
      * @param requestUrl
-     * @param action
-     * @param objectName
+     * @param approvers
      * @param deliveryDate
      * @param category
      * @param message
      * @param requestor
-     * @param objectType
      */
-    public FourEyesResponse(Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String action, TreeType objectType, String objectName, Integer numOfObjects, String message) {
+    public FourEyesResponse(Date deliveryDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category, String message, List<Approver> approvers) {
         super();
         this.deliveryDate = deliveryDate;
         this.requestor = requestor;
         this.requestUrl = requestUrl;
         this.requestBody = requestBody;
         this.category = category;
-        this.action = action;
-        this.objectType = objectType;
-        this.objectName = objectName;
-        this.numOfObjects = numOfObjects;
         this.message = message;
+        this.approvers = approvers;
     }
 
     /**
@@ -248,94 +210,6 @@ public class FourEyesResponse {
      * 
      * 
      */
-    @JsonProperty("action")
-    public String getAction() {
-        return action;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("action")
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectType")
-    public TreeType getObjectType() {
-        return objectType;
-    }
-
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectType")
-    public void setObjectType(TreeType objectType) {
-        this.objectType = objectType;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectName")
-    public String getObjectName() {
-        return objectName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("objectName")
-    public void setObjectName(String objectName) {
-        this.objectName = objectName;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfObjects")
-    public Integer getNumOfObjects() {
-        return numOfObjects;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("numOfObjects")
-    public void setNumOfObjects(Integer numOfObjects) {
-        this.numOfObjects = numOfObjects;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("message")
     public String getMessage() {
         return message;
@@ -352,14 +226,24 @@ public class FourEyesResponse {
         this.message = message;
     }
 
+    @JsonProperty("approvers")
+    public List<Approver> getApprovers() {
+        return approvers;
+    }
+
+    @JsonProperty("approvers")
+    public void setApprovers(List<Approver> approvers) {
+        this.approvers = approvers;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("requestor", requestor).append("requestUrl", requestUrl).append("requestBody", requestBody).append("category", category).append("action", action).append("objectType", objectType).append("objectName", objectName).append("numOfObjects", numOfObjects).append("message", message).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("requestor", requestor).append("requestUrl", requestUrl).append("requestBody", requestBody).append("category", category).append("message", message).append("approvers", approvers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(requestBody).append(numOfObjects).append(requestUrl).append(action).append(objectName).append(deliveryDate).append(category).append(message).append(requestor).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(requestBody).append(requestUrl).append(approvers).append(deliveryDate).append(category).append(message).append(requestor).toHashCode();
     }
 
     @Override
@@ -371,7 +255,7 @@ public class FourEyesResponse {
             return false;
         }
         FourEyesResponse rhs = ((FourEyesResponse) other);
-        return new EqualsBuilder().append(requestBody, rhs.requestBody).append(numOfObjects, rhs.numOfObjects).append(requestUrl, rhs.requestUrl).append(action, rhs.action).append(objectName, rhs.objectName).append(deliveryDate, rhs.deliveryDate).append(category, rhs.category).append(message, rhs.message).append(requestor, rhs.requestor).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(requestBody, rhs.requestBody).append(requestUrl, rhs.requestUrl).append(approvers, rhs.approvers).append(deliveryDate, rhs.deliveryDate).append(category, rhs.category).append(message, rhs.message).append(requestor, rhs.requestor).isEquals();
     }
 
 }

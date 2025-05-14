@@ -103,4 +103,9 @@ public class DBItemJocApprover extends DBItem {
     public Approver mapToApprover() {
         return new Approver(accountName, firstName, lastName, email);
     }
+    
+    @Transient
+    public Approver mapToApproverWithoutEmail() {
+        return new Approver(accountName, firstName, lastName, null);
+    }
 }

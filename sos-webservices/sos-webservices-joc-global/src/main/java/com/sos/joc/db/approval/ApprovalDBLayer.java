@@ -1,7 +1,9 @@
 package com.sos.joc.db.approval;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import org.hibernate.query.Query;
 
@@ -11,6 +13,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
+import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.security.foureyes.ApproverState;
@@ -24,29 +27,37 @@ public class ApprovalDBLayer extends DBLayer {
         super(session);
     }
 
-    public DBItemJocApprovalRequest getRequests(Long id) throws SOSHibernateException {
+    public DBItemJocApprovalRequest getApprovalRequest(Long id) throws SOSHibernateException {
         return getSession().get(DBItemJocApprovalRequest.class, id);
     }
     
     public void updateRequestorStatus(Long id, RequestorState state) throws SOSHibernateException {
-        updateStatus(id, state.intValue(), "requestorState");
+        updateStatus(id, state.intValue(), "requestorState", null);
     }
     
     public void updateRequestorStatusInclusiveTransaction(Long id, RequestorState state) throws SOSHibernateException {
-        updateStatusInclusiveTransaction(id, state.intValue(), "requestorState");
+        updateStatusInclusiveTransaction(id, state.intValue(), "requestorState", null);
     }
     
     public void updateApproverStatus(Long id, ApproverState state) throws SOSHibernateException {
-        updateStatus(id, state.intValue(), "approverState");
+        updateApproverStatus(id, state, null);
+    }
+    
+    public void updateApproverStatus(Long id, ApproverState state, String approver) throws SOSHibernateException {
+        updateStatus(id, state.intValue(), "approverState", approver);
     }
     
     public void updateApproverStatusInclusiveTransaction(Long id, ApproverState state) throws SOSHibernateException {
-        updateStatusInclusiveTransaction(id, state.intValue(), "approverState");
+        updateApproverStatusInclusiveTransaction(id, state, null);
     }
     
-    private void updateStatus(Long id, Integer state, String field) throws SOSHibernateException {
+    public void updateApproverStatusInclusiveTransaction(Long id, ApproverState state, String approver) throws SOSHibernateException {
+        updateStatusInclusiveTransaction(id, state.intValue(), "approverState", approver);
+    }
+    
+    private void updateStatus(Long id, Integer state, String field, String approver) throws SOSHibernateException {
         try {
-            getSession().executeUpdate(getUpdateStatusQuery(id, state, field));
+            getSession().executeUpdate(getUpdateStatusQuery(id, state, field, approver));
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -54,10 +65,10 @@ public class ApprovalDBLayer extends DBLayer {
         }
     }
     
-    private void updateStatusInclusiveTransaction(Long id, Integer state, String field) throws SOSHibernateException {
+    private void updateStatusInclusiveTransaction(Long id, Integer state, String field, String approver) throws SOSHibernateException {
         try {
             Globals.beginTransaction(getSession());
-            getSession().executeUpdate(getUpdateStatusQuery(id, state, field));
+            getSession().executeUpdate(getUpdateStatusQuery(id, state, field, approver));
             Globals.commit(getSession());
         } catch (SOSHibernateInvalidSessionException ex) {
             Globals.rollback(getSession());
@@ -68,15 +79,38 @@ public class ApprovalDBLayer extends DBLayer {
         }
     }
     
-    private Query<?> getUpdateStatusQuery(Long id, Integer state, String field) throws SOSHibernateException {
+    private Query<?> getUpdateStatusQuery(Long id, Integer state, String stateField, String approver) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
-        hql.append("update ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS).append(" set ").append(field).append(
-                "=:state, modified=:now where id=:id");
+        hql.append("update ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS).append(" set ").append(stateField).append("=:state");
+        if (approver != null) {
+            hql.append(", approver=:approver");
+        }
+        hql.append(", modified=:now where id=:id");
         Query<?> query = getSession().createQuery(hql);
         query.setParameter("id", id);
-        query.setParameter(field, state);
+        query.setParameter(stateField, state);
+        if (approver != null) {
+            query.setParameter("approver", approver);
+        }
         query.setParameter("now", Date.from(Instant.now()));
         return query;
+    }
+    
+    public List<DBItemJocApprover> getApprovers() {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_JOC_APPROVERS).append(" order by ordering");
+            Query<DBItemJocApprover> query = getSession().createQuery(hql);
+            List<DBItemJocApprover> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
     
 }

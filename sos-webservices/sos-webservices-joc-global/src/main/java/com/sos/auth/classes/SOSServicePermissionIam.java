@@ -31,6 +31,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
@@ -844,6 +845,12 @@ public class SOSServicePermissionIam {
                             .create4EyesJocCockpitPermissionControllerObjectList(securityConfigurationEntry);
                     currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
                     currentAccount.set4EyesRolePermissionJocCockpitControllers(sos4EyesRolePermissionJocCockpitControllers);
+                    
+                    ApprovalDBLayer approvalDbLayer = new ApprovalDBLayer(sosHibernateSession);
+                    // TODO create select count(*) from ... where accountName=
+                    currentAccount.setIsApprover(approvalDbLayer.getApprovers().stream().anyMatch(i -> i.getAccountName().equals(currentAccount
+                            .getAccountname())));
+
                 } else {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, false);
                 }
@@ -889,6 +896,7 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setCallerIpAddress(currentAccount.getCallerIpAddress());
             sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentyServiceType() + ":" + currentAccount
                     .getIdentityService().getIdentityServiceName());
+            sosAuthCurrentUserAnswer.setIsApprover(currentAccount.isApprover());
 
             sosAuthCurrentUserAnswer.setMessage(msg);
 
