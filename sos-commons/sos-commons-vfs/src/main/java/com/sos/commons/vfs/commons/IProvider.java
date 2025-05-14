@@ -139,7 +139,11 @@ public interface IProvider {
      * @throws ProviderException if an error occurs while retrieving the file content */
     public String getFileContentIfExists(String path) throws ProviderException;
 
-    /** Creates a new file or overwrites an existing file at the specified path with the provided content.
+    /** Creates a new file or overwrites an existing file at the specified path with the provided content.<br/>
+     * For most providers, this method is an upload method.<br/>
+     * - However, since the LocalProvider is used, the method name is "writeFile" and not "uploadContent...".<br/>
+     * Should be used for writing "small" content files.<br/>
+     * - Otherwise, a new method must be implemented or the existing Input/OutputStream must be used.
      * 
      * @param path the path of the file to create or overwrite
      * @param content the content to write to the file
