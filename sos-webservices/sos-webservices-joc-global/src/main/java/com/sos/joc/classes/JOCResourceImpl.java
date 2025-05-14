@@ -23,6 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocAccessDeniedException;
@@ -448,10 +449,11 @@ public class JOCResourceImpl {
                     throw new JocAccessDeniedException("Approval request: approved request is already unsuccessfully completed");
                 }
                 
-                // TODO use executeUpdate instead
-                item.setModified(Date.from(Instant.now()));
-                item.setRequestorState(RequestorState.IN_PROGRESS.intValue());
-                hibernateSession.update(item);
+                new ApprovalDBLayer(hibernateSession).updateRequestorStatusInclusiveTransaction(aRId, RequestorState.IN_PROGRESS);
+
+//                item.setModified(Date.from(Instant.now()));
+//                item.setRequestorState(RequestorState.IN_PROGRESS.intValue());
+//                hibernateSession.update(item);
                 
                 either = Either.right(item.getParameters() == null ? null : item.getParameters().getBytes(StandardCharsets.UTF_8));
             } catch (Exception e) {
