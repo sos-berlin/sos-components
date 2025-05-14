@@ -28,6 +28,7 @@ import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocAccessDeniedException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -298,7 +299,7 @@ public class JOCResourceImpl {
     }
     
     public JOCDefaultResponse approvalRequestResponse() {
-        return approvalRequestResponse("4-eyes principle: Operation needs approval process.");
+        return approvalRequestResponse("4-eyes principle: Operation needs approval process");
     }
     
     public JOCDefaultResponse approvalRequestResponse(String message) {
@@ -329,7 +330,12 @@ public class JOCResourceImpl {
             session = Globals.createSosHibernateStatelessConnection("getApprovers");
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             entity.setApprovers(dbLayer.getApprovers().stream().map(DBItemJocApprover::mapToApproverWithoutEmail).toList());
+            if (entity.getApprovers().isEmpty()) {
+                throw new JocBadRequestException(message + " but no approvers are defined");
+            }
             return Globals.objectMapper.writeValueAsBytes(entity);
+        } catch (JocException e) {
+            throw e;
         } catch (Exception e) {
             throw new JocException(e);
         } finally {

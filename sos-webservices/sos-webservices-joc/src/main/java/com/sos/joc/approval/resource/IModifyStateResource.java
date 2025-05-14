@@ -20,5 +20,10 @@ public interface IModifyStateResource {
     @Path("reject")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postReject(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("withdraw")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postWithdraw(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 
 }

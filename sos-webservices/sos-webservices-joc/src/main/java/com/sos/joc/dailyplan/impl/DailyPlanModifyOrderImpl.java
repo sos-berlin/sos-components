@@ -136,7 +136,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
                 }
                 if (hasManagePositionsPermission.get(1)) {
-                    response = approvalRequestResponse("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions.");
+                    response = approvalRequestResponse("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
                     if (response != null) {
                         return response;
                     }

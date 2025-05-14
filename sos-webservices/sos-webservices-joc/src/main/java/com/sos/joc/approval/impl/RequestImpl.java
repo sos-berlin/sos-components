@@ -52,9 +52,9 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             item.setComment(in.getReason());
             item.setCreated(now);
             item.setModified(now);
-            item.setNumOfObjects(0); // TODO in.getNumOfObjects()
-            item.setObjectName(in.getObjectName()); // TODO
-            item.setObjectType(TreeType.INVENTORY.intValue()); // TODO in.getObjectType()
+            item.setNumOfObjects(0); // TODO delete column from db table
+            item.setObjectName("unknown"); // TODO delete column from db table
+            item.setObjectType(TreeType.INVENTORY.intValue()); // TODO delete column from db table
             item.setParameters(Globals.objectMapper.writeValueAsString(in.getRequestBody()));
             item.setRequest(in.getRequestUrl());
             item.setRequestor(curAccountName);
@@ -64,6 +64,8 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             
             session.save(item);
+            
+            // TODO send events
 
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {
