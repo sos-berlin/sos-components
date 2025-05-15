@@ -319,7 +319,8 @@ public class JocAuditLog {
     }
     
     private static void sendAuditLogEvent(String controllerId, Integer type) {
-        if (!CategoryType.INVENTORY.intValue().equals(type) && !CategoryType.DOCUMENTATIONS.intValue().equals(type)) {
+        if (!CategoryType.INVENTORY.intValue().equals(type) && !CategoryType.DOCUMENTATIONS.intValue().equals(type) && !CategoryType.UNKNOWN
+                .intValue().equals(type)) {
             EventBus.getInstance().post(new AuditlogChangedEvent(controllerId));
         }
     }

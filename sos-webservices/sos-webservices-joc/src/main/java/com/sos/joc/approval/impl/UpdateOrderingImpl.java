@@ -16,7 +16,6 @@ import com.sos.joc.approval.resource.IUpdateOrderingResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.approval.UpdateOrderingFilter;
@@ -36,7 +35,7 @@ public class UpdateOrderingImpl extends JOCResourceImpl implements IUpdateOrderi
             filterBytes = initLogging(API_CALL, filterBytes, xAccessToken);
             JsonValidator.validateFailFast(filterBytes, UpdateOrderingFilter.class);
             UpdateOrderingFilter filter = Globals.objectMapper.readValue(filterBytes, UpdateOrderingFilter.class);
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getAccounts().getManage(), false);
+            JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);
             if (response != null) {
                 return response;
             }

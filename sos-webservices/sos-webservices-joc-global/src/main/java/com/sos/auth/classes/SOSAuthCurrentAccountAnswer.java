@@ -22,6 +22,9 @@ public class SOSAuthCurrentAccountAnswer {
     
     @JsonProperty("isApprover")
     private boolean isApprover = false;
+    
+    @JsonProperty("isApprovalRequestor")
+    private boolean isApprovalRequestor = false;
 
     @JsonProperty("isAuthenticated")
     private boolean isAuthenticated;
@@ -117,6 +120,14 @@ public class SOSAuthCurrentAccountAnswer {
 
     public boolean getIsApprover() {
         return this.isApprover;
+    }
+    
+    public void setIsApprovalRequestor(boolean isApprovalRequestor) {
+        this.isApprovalRequestor = isApprovalRequestor;
+    }
+
+    public boolean getIsApprovalRequestor() {
+        return this.isApprovalRequestor;
     }
 
     public void setAccessToken(String accessToken) {

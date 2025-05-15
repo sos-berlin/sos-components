@@ -145,7 +145,7 @@ public class DBItemJocApprovalRequest extends DBItem {
         try {
             return ApproverState.fromValue(approverState);
         } catch (Exception e) {
-            return ApproverState.OPEN;
+            return ApproverState.PENDING;
         }
     }
 
@@ -162,7 +162,7 @@ public class DBItemJocApprovalRequest extends DBItem {
         try {
             return CategoryType.fromValue(category);
         } catch (Exception e) {
-            return null;
+            return CategoryType.UNKNOWN;
         }
     }
 
@@ -191,7 +191,7 @@ public class DBItemJocApprovalRequest extends DBItem {
     }
 
     public void setObjectName(String val) {
-        if (val != null && val.length() > 30) {
+        if (val != null && val.length() > 255) {
             val = val.substring(0, 255);
         }
         objectName = val;
@@ -210,6 +210,9 @@ public class DBItemJocApprovalRequest extends DBItem {
     }
 
     public void setTitle(String val) {
+        if (val != null && val.length() > 255) {
+            val = val.substring(0, 255);
+        }
         title = val;
     }
 
@@ -218,6 +221,9 @@ public class DBItemJocApprovalRequest extends DBItem {
     }
 
     public void setComment(String val) {
+        if (val != null && val.length() > 255) {
+            val = val.substring(0, 255);
+        }
         comment = val;
     }
     

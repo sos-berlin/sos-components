@@ -326,7 +326,7 @@ public class JOCResourceImpl {
             entity.setRequestBody(Globals.objectMapper.readValue(jocAuditLog.getParams(), RequestBody.class));
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setMessage(message);
-            entity.setCategory(null); // TODO
+            entity.setCategory(CategoryType.UNKNOWN); // TODO
             session = Globals.createSosHibernateStatelessConnection("getApprovers");
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             entity.setApprovers(dbLayer.getApprovers().stream().map(DBItemJocApprover::mapToApproverWithoutEmail).toList());
@@ -439,7 +439,7 @@ public class JOCResourceImpl {
                     throw new JocAccessDeniedException("Approval request: wrong requested URL");
                 }
                 switch (item.getApproverStateAsEnum()) {
-                case OPEN:
+                case PENDING:
                     throw new JocAccessDeniedException("Approval request: request is not approved");
                 case APPROVED: // expected state
                     break;

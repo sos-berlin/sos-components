@@ -897,6 +897,7 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentyServiceType() + ":" + currentAccount
                     .getIdentityService().getIdentityServiceName());
             sosAuthCurrentUserAnswer.setIsApprover(currentAccount.isApprover());
+            sosAuthCurrentUserAnswer.setIsApprovalRequestor(currentAccount.isRequestor());
 
             sosAuthCurrentUserAnswer.setMessage(msg);
 

@@ -107,7 +107,7 @@ public class DBItemJocAuditLog extends DBItem {
         try {
             return CategoryType.fromValue(category);
         } catch (Exception e) {
-            return null;
+            return CategoryType.UNKNOWN;
         }
     }
 

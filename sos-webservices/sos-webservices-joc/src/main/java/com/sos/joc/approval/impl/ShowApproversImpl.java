@@ -26,7 +26,7 @@ public class ShowApproversImpl extends JOCResourceImpl implements IShowApprovers
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, null, xAccessToken);
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getAccounts().getView(), false);
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getAccounts().getView());
             if (response != null) {
                 return response;
             }
@@ -34,9 +34,9 @@ public class ShowApproversImpl extends JOCResourceImpl implements IShowApprovers
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             List<DBItemJocApprover> dbApprovers =  dbLayer.getApprovers();
             Approvers approvers = new Approvers();
-            approvers.getApprovers().addAll(dbApprovers.stream().map(dbItem -> dbItem.mapToApprover()).toList());
+            approvers.setApprovers(dbApprovers.stream().map(DBItemJocApprover::mapToApprover).toList());
             approvers.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(approvers);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(approvers));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

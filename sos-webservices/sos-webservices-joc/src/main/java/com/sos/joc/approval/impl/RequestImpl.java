@@ -48,7 +48,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             item.setId(null);
             item.setAction("mock action"); // TODO delete column from db table
             item.setApprover(in.getApprover());
-            item.setApproverState(ApproverState.OPEN.intValue());
+            item.setApproverState(ApproverState.PENDING.intValue());
             item.setCategory(CategoryType.INVENTORY.intValue()); // TODO in.getCategory().intValue()
             item.setComment(in.getReason());
             item.setCreated(now);

@@ -86,11 +86,14 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
                 r.setRequestorState(i.getRequestorStateAsEnum());
                 return r;
             };
-
+            
             ApprovalRequests entity = new ApprovalRequests();
             entity.setRequests(items.stream().map(mapper).toList());
-            approvers.keySet().removeIf(key -> !usedApprovers.contains(key));
-            entity.setApprovers(approvers.values());
+            
+            if (!entity.getRequests().isEmpty()) {
+                //approvers.keySet().removeIf(key -> !usedApprovers.contains(key));
+                entity.setApprovers(approvers.values());
+            }
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));

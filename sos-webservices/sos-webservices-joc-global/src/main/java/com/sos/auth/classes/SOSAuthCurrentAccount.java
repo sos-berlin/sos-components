@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
+import com.sos.joc.Globals;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
@@ -61,6 +62,7 @@ public class SOSAuthCurrentAccount {
     private SOSLoginParameters sosLoginParameters;
     private String kid;
     private boolean isApprover = false;
+    private boolean isRequestor = false;
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
@@ -197,6 +199,12 @@ public class SOSAuthCurrentAccount {
                     account -> account.getRoles().stream()), securityConf.getRoles().getAdditionalProperties().keySet().stream()).filter(
                             role -> currentSubject.hasRole(role)).collect(Collectors.toSet()));
 
+        }
+        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
+        if (fourEyesRole == null || fourEyesRole.isEmpty()) {
+            this.isRequestor = false;
+        } else {
+            this.isRequestor = this.roles.contains(fourEyesRole);
         }
     }
     
@@ -422,6 +430,10 @@ public class SOSAuthCurrentAccount {
 
     public void setIsApprover(boolean isApprover) {
         this.isApprover = isApprover;
+    }
+
+    public boolean isRequestor() {
+        return isRequestor;
     }
 
 }
