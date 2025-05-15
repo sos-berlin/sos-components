@@ -3,8 +3,10 @@ package com.sos.joc.approval.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -59,10 +61,10 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
             Map<String, Approver> approvers = items.isEmpty() ? Collections.emptyMap() : dbLayer.getApprovers().stream().map(
                     DBItemJocApprover::mapToApproverWithoutEmail).collect(Collectors.toMap(Approver::getAccountName, Function.identity(), (s1,
                             s2) -> s1));
-
-            ApprovalRequests entity = new ApprovalRequests();
+            Set<String> usedApprovers = new HashSet<>();
             
-            entity.setRequests(items.stream().map(i -> {
+            Function<DBItemJocApprovalRequest, ApprovalRequest> mapper = i -> {
+                usedApprovers.add(i.getApprover());
                 ApprovalRequest r = new ApprovalRequest();
                 r.setUnknownApprover(!approvers.containsKey(i.getApprover()));
                 r.setApprover(i.getApprover());
@@ -75,18 +77,20 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
                     } catch (Exception e) {
                         r.setRequestBody(null);
                     }
+                } else {
+                    r.setRequestBody(null);
                 }
                 r.setRequestor(i.getRequestor());
                 r.setRequestUrl(i.getRequest());
                 r.setApproverState(i.getApproverStateAsEnum());
                 r.setRequestorState(i.getRequestorStateAsEnum());
                 return r;
-            }).toList());
-            
-            if (!entity.getRequests().isEmpty()) {
-                entity.setApprovers(approvers.values());
-            }
-            
+            };
+
+            ApprovalRequests entity = new ApprovalRequests();
+            entity.setRequests(items.stream().map(mapper).toList());
+            approvers.keySet().removeIf(key -> !usedApprovers.contains(key));
+            entity.setApprovers(approvers.values());
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
