@@ -113,7 +113,7 @@ public class ApprovalRequests {
     }
 
     @JsonProperty("approvers")
-    public List<Approver> getApprovers() {
+    public Collection<Approver> getApprovers() {
         return approvers;
     }
 
