@@ -410,6 +410,10 @@ public class JsonValidator {
             put("com.sos.joc.model.reporting.RunHistoryFilter", "reporting/runHistory-request-schema.json");
             put("com.sos.joc.model.reporting.DeleteReports", "reporting/delete-request-schema.json");
 
+            // approvals
+            put("StoreApproverFilter", "approval/approver-delete-filter-schema.json");
+            put("DeleteApproverFilter", "approval/approver-store-filter-schema.json");
+            put("UpdateOrderingFilter", "approval/update-ordering-filter-schema.json");
             // TODO complete the map
         }
     });
