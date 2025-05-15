@@ -199,7 +199,7 @@ public class ApprovalDBLayer extends DBLayer {
     public List<DBItemJocApprover> getApprovers() {
         try {
             StringBuilder hql = new StringBuilder();
-            hql.append("from ").append(DBLayer.DBITEM_JOC_APPROVERS).append(" order by ordering");
+            hql.append("from ").append(DBLayer.DBITEM_JOC_APPROVERS).append(" order by ordering asc");
             Query<DBItemJocApprover> query = getSession().createQuery(hql);
             List<DBItemJocApprover> result = getSession().getResultList(query);
             if (result == null) {
@@ -213,4 +213,23 @@ public class ApprovalDBLayer extends DBLayer {
         }
     }
     
+    public DBItemJocApprover getApprover(String accountName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_JOC_APPROVERS).append(" where accountName = :accountName");
+        Query<DBItemJocApprover> query = getSession().createQuery(hql);
+        query.setParameter("accountName", accountName);
+        return getSession().getSingleResult(query);
+    }
+    
+    public Integer getMaxOrdering () throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append(" select max(ordering) from ").append(DBLayer.DBITEM_JOC_APPROVERS);
+        Query<Integer> query = getSession().createQuery(hql);
+        Integer result = getSession().getSingleResult(query);
+        if(result == null) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
 }
