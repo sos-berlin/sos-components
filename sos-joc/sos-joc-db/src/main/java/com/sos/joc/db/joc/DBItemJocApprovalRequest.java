@@ -53,18 +53,6 @@ public class DBItemJocApprovalRequest extends DBItem {
     @Column(name = "[CATEGORY]", nullable = false)
     private Integer category;
     
-    @Column(name = "[ACTION]", nullable = false)
-    private String action;
-    
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
-    private Integer objectType;
-    
-    @Column(name = "[OBJECT_NAME]", nullable = true)
-    private String objectName;
-
-    @Column(name = "[NUM_OF_OBJECTS]", nullable = false)
-    private Integer numOfObjects;
-
     @Column(name = "[TITLE]", nullable = false)
     private String title;
 
@@ -170,41 +158,6 @@ public class DBItemJocApprovalRequest extends DBItem {
         category = val;
     }
     
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String val) {
-        action = val;
-    }
-
-    public Integer getObjectType() {
-        return objectType;
-    }
-
-    public void setObjectType(Integer val) {
-        objectType = val;
-    }
-    
-    public String getObjectName() {
-        return objectName;
-    }
-
-    public void setObjectName(String val) {
-        if (val != null && val.length() > 255) {
-            val = val.substring(0, 255);
-        }
-        objectName = val;
-    }
-    
-    public Integer getNumOfObjects() {
-        return numOfObjects;
-    }
-
-    public void setNumOfObjects(Integer val) {
-        numOfObjects = val;
-    }
-
     public String getTitle() {
         return title;
     }

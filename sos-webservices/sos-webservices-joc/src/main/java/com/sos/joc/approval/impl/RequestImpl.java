@@ -11,11 +11,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.FourEyesRequest;
 import com.sos.joc.model.security.foureyes.RequestorState;
-import com.sos.joc.model.tree.TreeType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -46,16 +44,12 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             Date now = Date.from(Instant.now());
             DBItemJocApprovalRequest item = new DBItemJocApprovalRequest();
             item.setId(null);
-            item.setAction("mock action"); // TODO delete column from db table
             item.setApprover(in.getApprover());
             item.setApproverState(ApproverState.PENDING.intValue());
-            item.setCategory(CategoryType.INVENTORY.intValue()); // TODO in.getCategory().intValue()
+            item.setCategory(in.getCategory().intValue());
             item.setComment(in.getReason());
             item.setCreated(now);
             item.setModified(now);
-            item.setNumOfObjects(0); // TODO delete column from db table
-            item.setObjectName("unknown"); // TODO delete column from db table
-            item.setObjectType(TreeType.INVENTORY.intValue()); // TODO delete column from db table
             item.setParameters(Globals.objectMapper.writeValueAsString(in.getRequestBody()));
             item.setRequest(in.getRequestUrl());
             item.setRequestor(curAccountName);

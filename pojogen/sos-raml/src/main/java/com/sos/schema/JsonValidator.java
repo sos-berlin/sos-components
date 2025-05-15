@@ -414,6 +414,11 @@ public class JsonValidator {
             put("StoreApproverFilter", "approval/approver-delete-filter-schema.json");
             put("DeleteApproverFilter", "approval/approver-store-filter-schema.json");
             put("UpdateOrderingFilter", "approval/update-ordering-filter-schema.json");
+            put("FourEyesRequest", "security/fourEyes/four-eyes-request-schema.json");
+            put("FourEyesRequestId", "security/fourEyes/four-eyes-request-id-schema.json");
+            put("FourEyesRequestEdit", "security/fourEyes/four-eyes-request-edit-schema.json");
+            put("FourEyesRequestEdit", "security/fourEyes/four-eyes-request-edit-schema.json");
+            put("ApprovalsFilter", "security/fourEyes/approvals-filter-schema.json");
             // TODO complete the map
         }
     });
