@@ -67,7 +67,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "canLeave",
     "isContinuable",
     "isResumable",
-    "isSuspendible"
+    "isSuspendible",
+    "priority"
 })
 public class OrderV {
 
@@ -301,6 +302,8 @@ public class OrderV {
     private Boolean isResumable;
     @JsonProperty("isSuspendible")
     private Boolean isSuspendible;
+    @JsonProperty("priority")
+    private Integer priority = 0;
 
     /**
      * No args constructor for use in serialization
@@ -337,6 +340,7 @@ public class OrderV {
      * @param hasChildOrders
      * @param positionIsImplicitEnd
      * @param label
+     * @param priority
      * @param tags
      * @param endPositions
      * @param arguments
@@ -345,7 +349,7 @@ public class OrderV {
      * @param isSuspendible
      * @param workflowId
      */
-    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, PlanId planId, OrderCycleState cycleState, OrderRetryState retryState, OrderSleepState sleepState, List<ExpectedNotice> expectedNotices, String label, Set<String> tags, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder, Boolean hasChildOrders, Boolean canLeave, Boolean isContinuable, Boolean isResumable, Boolean isSuspendible) {
+    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, PlanId planId, OrderCycleState cycleState, OrderRetryState retryState, OrderSleepState sleepState, List<ExpectedNotice> expectedNotices, String label, Set<String> tags, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder, Boolean hasChildOrders, Boolean canLeave, Boolean isContinuable, Boolean isResumable, Boolean isSuspendible, Integer priority) {
         super();
         this.deliveryDate = deliveryDate;
         this.surveyDate = surveyDate;
@@ -380,6 +384,7 @@ public class OrderV {
         this.isContinuable = isContinuable;
         this.isResumable = isResumable;
         this.isSuspendible = isSuspendible;
+        this.priority = priority;
     }
 
     /**
@@ -1006,14 +1011,24 @@ public class OrderV {
         this.isSuspendible = isSuspendible;
     }
 
+    @JsonProperty("priority")
+    public Integer getPriority() {
+        return priority;
+    }
+
+    @JsonProperty("priority")
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("planId", planId).append("cycleState", cycleState).append("retryState", retryState).append("sleepState", sleepState).append("expectedNotices", expectedNotices).append("label", label).append("tags", tags).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).append("hasChildOrders", hasChildOrders).append("canLeave", canLeave).append("isContinuable", isContinuable).append("isResumable", isResumable).append("isSuspendible", isSuspendible).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("planId", planId).append("cycleState", cycleState).append("retryState", retryState).append("sleepState", sleepState).append("expectedNotices", expectedNotices).append("label", label).append("tags", tags).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).append("hasChildOrders", hasChildOrders).append("canLeave", canLeave).append("isContinuable", isContinuable).append("isResumable", isResumable).append("isSuspendible", isSuspendible).append("priority", priority).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(attachedState).append(expectedNotices).append(agentId).append(scheduledNever).append(orderId).append(lastOutcome).append(isResumable).append(retryState).append(historicOutcome).append(positionString).append(sleepState).append(scheduledFor).append(planId).append(state).append(deliveryDate).append(cycleState).append(cyclicOrder).append(marked).append(isContinuable).append(requirements).append(canLeave).append(surveyDate).append(question).append(hasChildOrders).append(positionIsImplicitEnd).append(label).append(tags).append(endPositions).append(arguments).append(subagentId).append(position).append(isSuspendible).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(expectedNotices).append(agentId).append(scheduledNever).append(orderId).append(lastOutcome).append(isResumable).append(retryState).append(historicOutcome).append(positionString).append(sleepState).append(scheduledFor).append(planId).append(state).append(deliveryDate).append(cycleState).append(cyclicOrder).append(marked).append(isContinuable).append(requirements).append(canLeave).append(surveyDate).append(question).append(hasChildOrders).append(positionIsImplicitEnd).append(label).append(priority).append(tags).append(endPositions).append(arguments).append(subagentId).append(position).append(isSuspendible).append(workflowId).toHashCode();
     }
 
     @Override
@@ -1025,7 +1040,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(expectedNotices, rhs.expectedNotices).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(isResumable, rhs.isResumable).append(retryState, rhs.retryState).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(sleepState, rhs.sleepState).append(scheduledFor, rhs.scheduledFor).append(planId, rhs.planId).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).append(marked, rhs.marked).append(isContinuable, rhs.isContinuable).append(requirements, rhs.requirements).append(canLeave, rhs.canLeave).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(hasChildOrders, rhs.hasChildOrders).append(positionIsImplicitEnd, rhs.positionIsImplicitEnd).append(label, rhs.label).append(tags, rhs.tags).append(endPositions, rhs.endPositions).append(arguments, rhs.arguments).append(subagentId, rhs.subagentId).append(position, rhs.position).append(isSuspendible, rhs.isSuspendible).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(expectedNotices, rhs.expectedNotices).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(isResumable, rhs.isResumable).append(retryState, rhs.retryState).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(sleepState, rhs.sleepState).append(scheduledFor, rhs.scheduledFor).append(planId, rhs.planId).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).append(marked, rhs.marked).append(isContinuable, rhs.isContinuable).append(requirements, rhs.requirements).append(canLeave, rhs.canLeave).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(hasChildOrders, rhs.hasChildOrders).append(positionIsImplicitEnd, rhs.positionIsImplicitEnd).append(label, rhs.label).append(priority, rhs.priority).append(tags, rhs.tags).append(endPositions, rhs.endPositions).append(arguments, rhs.arguments).append(subagentId, rhs.subagentId).append(position, rhs.position).append(isSuspendible, rhs.isSuspendible).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

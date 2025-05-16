@@ -25,7 +25,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "variables",
     "positions",
     "tags",
-    "forceJobAdmission"
+    "forceJobAdmission",
+    "priority"
 })
 public class OrderParameterisation {
 
@@ -54,6 +55,8 @@ public class OrderParameterisation {
     private Set<String> tags = null;
     @JsonProperty("forceJobAdmission")
     private Boolean forceJobAdmission;
+    @JsonProperty("priority")
+    private Integer priority = 0;
 
     @JsonProperty("orderName")
     public String getOrderName() {
@@ -129,14 +132,24 @@ public class OrderParameterisation {
         this.forceJobAdmission = forceJobAdmission;
     }
 
+    @JsonProperty("priority")
+    public Integer getPriority() {
+        return priority;
+    }
+
+    @JsonProperty("priority")
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("positions", positions).append("tags", tags).append("forceJobAdmission", forceJobAdmission).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("positions", positions).append("tags", tags).append("forceJobAdmission", forceJobAdmission).append("priority", priority).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(forceJobAdmission).append(variables).append(positions).append(orderName).append(tags).toHashCode();
+        return new HashCodeBuilder().append(variables).append(forceJobAdmission).append(positions).append(priority).append(orderName).append(tags).toHashCode();
     }
 
     @Override
@@ -148,7 +161,7 @@ public class OrderParameterisation {
             return false;
         }
         OrderParameterisation rhs = ((OrderParameterisation) other);
-        return new EqualsBuilder().append(forceJobAdmission, rhs.forceJobAdmission).append(variables, rhs.variables).append(positions, rhs.positions).append(orderName, rhs.orderName).append(tags, rhs.tags).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(forceJobAdmission, rhs.forceJobAdmission).append(positions, rhs.positions).append(priority, rhs.priority).append(orderName, rhs.orderName).append(tags, rhs.tags).isEquals();
     }
 
 }
