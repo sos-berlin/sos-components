@@ -85,7 +85,7 @@ public class ApprovalDBLayer extends DBLayer {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
                 }
             }
-            hql.append("order by modified desc");
+            hql.append(" order by modified desc");
             
             Query<DBItemJocApprovalRequest> query = getSession().createQuery(hql);
             if (filter != null) {
