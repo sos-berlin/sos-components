@@ -1,6 +1,7 @@
 
 package com.sos.joc.model.security.foureyes;
 
+import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -25,7 +26,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "unknownApprover",
     "approverState",
     "reason",
-    "requestorState"
+    "requestorState",
+    "created",
+    "modified"
 })
 public class ApprovalRequest
     extends ApprovalBase
@@ -86,6 +89,24 @@ public class ApprovalRequest
      */
     @JsonProperty("requestorState")
     private RequestorState requestorState;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("created")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date created;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("modified")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date modified;
 
     /**
      * No args constructor for use in serialization
@@ -97,18 +118,20 @@ public class ApprovalRequest
     /**
      * 
      * @param approver
-     * @param approverState
      * @param reason
+     * @param created
+     * @param title
+     * @param unknownApprover
+     * @param requestor
+     * @param approverState
      * @param requestBody
      * @param requestUrl
      * @param requestorState
+     * @param modified
      * @param id
-     * @param title
      * @param category
-     * @param unknownApprover
-     * @param requestor
      */
-    public ApprovalRequest(Long id, String title, String approver, Boolean unknownApprover, ApproverState approverState, String reason, RequestorState requestorState, String requestor, String requestUrl, RequestBody requestBody, CategoryType category) {
+    public ApprovalRequest(Long id, String title, String approver, Boolean unknownApprover, ApproverState approverState, String reason, RequestorState requestorState, Date created, Date modified, String requestor, String requestUrl, RequestBody requestBody, CategoryType category) {
         super(requestor, requestUrl, requestBody, category);
         this.id = id;
         this.title = title;
@@ -117,6 +140,8 @@ public class ApprovalRequest
         this.approverState = approverState;
         this.reason = reason;
         this.requestorState = requestorState;
+        this.created = created;
+        this.modified = modified;
     }
 
     /**
@@ -269,14 +294,58 @@ public class ApprovalRequest
         this.requestorState = requestorState;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("created")
+    public Date getCreated() {
+        return created;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("created")
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("modified")
+    public Date getModified() {
+        return modified;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("modified")
+    public void setModified(Date modified) {
+        this.modified = modified;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("title", title).append("approver", approver).append("unknownApprover", unknownApprover).append("approverState", approverState).append("reason", reason).append("requestorState", requestorState).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("title", title).append("approver", approver).append("unknownApprover", unknownApprover).append("approverState", approverState).append("reason", reason).append("requestorState", requestorState).append("created", created).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(approver).append(approverState).append(reason).append(requestorState).append(id).append(title).append(unknownApprover).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(approver).append(approverState).append(reason).append(created).append(requestorState).append(modified).append(id).append(title).append(unknownApprover).toHashCode();
     }
 
     @Override
@@ -288,7 +357,7 @@ public class ApprovalRequest
             return false;
         }
         ApprovalRequest rhs = ((ApprovalRequest) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(approver, rhs.approver).append(approverState, rhs.approverState).append(reason, rhs.reason).append(requestorState, rhs.requestorState).append(id, rhs.id).append(title, rhs.title).append(unknownApprover, rhs.unknownApprover).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(approver, rhs.approver).append(approverState, rhs.approverState).append(reason, rhs.reason).append(created, rhs.created).append(requestorState, rhs.requestorState).append(modified, rhs.modified).append(id, rhs.id).append(title, rhs.title).append(unknownApprover, rhs.unknownApprover).isEquals();
     }
 
 }

@@ -84,6 +84,8 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
                 r.setRequestUrl(i.getRequest());
                 r.setApproverState(i.getApproverStateAsEnum());
                 r.setRequestorState(i.getRequestorStateAsEnum());
+                r.setModified(i.getModified());
+                r.setCreated(i.getCreated());
                 return r;
             };
             

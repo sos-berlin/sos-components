@@ -58,6 +58,8 @@ public class JOCResourceImpl {
     
     @HeaderParam("X-Approval-Request-Id")
     private String approvalRequestId;
+    
+    private byte[] origBody;
 
     private JocError jocError = new JocError();
 
@@ -323,7 +325,12 @@ public class JOCResourceImpl {
             FourEyesResponse entity = new FourEyesResponse();
             entity.setRequestor(jocAuditLog.getUser());
             entity.setRequestUrl(jocAuditLog.getRequest());
-            entity.setRequestBody(Globals.objectMapper.readValue(jocAuditLog.getParams(), RequestBody.class));
+            if (origBody == null) {
+                // it could be that jocAuditLog.getParams() is a masked body (without password etc.)
+                entity.setRequestBody(Globals.objectMapper.readValue(jocAuditLog.getParams(), RequestBody.class));
+            } else {
+                entity.setRequestBody(Globals.objectMapper.readValue(origBody, RequestBody.class));
+            }
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setMessage(message);
             entity.setCategory(CategoryType.UNKNOWN); // TODO
@@ -355,6 +362,11 @@ public class JOCResourceImpl {
                 "joc:adminstration:accounts:manage", approvalRequestorRole);
         jocError.setMessage(message);
         return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+    }
+    
+    public byte[] initLogging(String request, byte[] maskedBody, byte[] originBody, String accessToken) throws Exception {
+        origBody = originBody;
+        return initLogging(request, maskedBody, accessToken);
     }
 
     public byte[] initLogging(String request, byte[] body, String accessToken) throws Exception {
