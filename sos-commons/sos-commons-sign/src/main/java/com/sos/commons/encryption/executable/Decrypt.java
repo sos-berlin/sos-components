@@ -117,6 +117,8 @@ public class Decrypt {
             iv = splittedValues[1];
             encryptedValue = splittedValues[2];
           }
+        } else {
+            encryptedValue = encryptedInput;
         }
         if(keyPath == null || encryptedKey == null || iv == null || (encryptedValue == null && encryptedFile == null)) {
           if(keyPath == null) {
