@@ -2,10 +2,10 @@
 <param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	name="exit_codes_to_ignore" required="false" DataType="java.util.List">
+	name="exit_codes_to_ignore" required="false" DataType="java.util.List&lt;java.lang.Integer&gt;">
 	<note>
 		<p>
-			This parameter configures one or more exit codes which will not be treated as errors. 
+			This parameter configures one or more exit codes which will not be treated as errors.<br/> 
 			Multiple exit codes can be defined as a List of Integers separated by semicolons.
 		</p>
 	</note>

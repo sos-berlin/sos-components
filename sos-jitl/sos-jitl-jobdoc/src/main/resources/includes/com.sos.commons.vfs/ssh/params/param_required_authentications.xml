@@ -1,11 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+<param
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	name="required_authentications" required="false" DataType="java.util.List">
-        <note>
-			<p>
-				Specifies the authentication methods that have to be completed successfully for a client to be granted access to the remote server.
-			</p>
-        </note>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="required_authentications" required="false"
+	usageNote="one of: auth_method, preferred_authentications, required_authentications"
+	DataType="java.util.List&lt;com.sos.commons.vfs.ssh.common.AuthMethod&gt;">
+	<note>
+		<p>
+			This argument specifies a list of authentication methods that must
+			all succeed in the given order for the SSH connection to be
+			established.
+			<br />
+			Unlike
+			<em>preferred_authentications</em>
+			, where any one method may be sufficient, all methods listed here are
+			mandatory.
+		</p>
+		<br />
+		This can be used for scenarios where multi-factor authentication is
+		enforced by the SSH server, such as requiring both
+		<em>publickey</em>
+		and
+		<em>password</em>
+		authentication.
+		<br />
+		<br />
+		<p>
+			<b>Important:</b>
+			The order of methods must match the SSH server configuration.
+			<br />
+			If the client specifies a different order than the server expects,
+			authentication will fail — even if all credentials are correct.
+		</p>
+		<br />
+		<p>
+			Possible values (case-insensitive, semicolon-separated):
+			<ul>
+				<li>
+					<b>publickey;password</b>
+					- The server requires key authentication followed by password
+					confirmation..
+				</li>
+				<li>
+					<b>password;publickey</b>
+					- The server requires password authentication followed by key
+					confirmation.
+				</li>
+			</ul>
+			For corresponding arguments that may need to be specified (e.g.
+			<em>auth_file</em>
+			,
+			<em>password</em>
+			), see the explanation for the
+			<em>auth_method</em>
+			argument.
+		</p>
+		<br />
+		<p>
+			<b>Note:</b>
+			Use
+			<em>required_authentications</em>
+			only if the SSH server is configured to require all specified methods
+			in sequence.
+			<br />
+			Use <em>preferred_authentications</em> if only one method from a list should succeed.
+			<br />
+			The
+			<em>auth_method</em>
+			argument is intended for specifying a single authentication method
+			only.
+		</p>
+
+	</note>
 </param>

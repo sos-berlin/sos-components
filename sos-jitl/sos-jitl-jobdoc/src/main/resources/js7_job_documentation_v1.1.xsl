@@ -421,6 +421,9 @@
 						<span class="labelSmall">[required]</span><br/><span class="labelSmall">(<xsl:value-of select="@required" />)</span>
 					</xsl:otherwise>
 				</xsl:choose>
+				<xsl:if test="@usageNote">
+					<br/><span class="labelSmall">(<xsl:value-of select="@usageNote" />)</span>
+				</xsl:if>
 			</td>
 			<td class="section2">
 				<span class="desc">
@@ -664,6 +667,9 @@
 				<xsl:if test="@required='true'">
 					<xsl:text>&#160;</xsl:text>
 				</xsl:if>
+				<xsl:if test="@usageNote">
+					<br/><span class="labelSmall">(<xsl:value-of select="@usageNote" />)</span>
+				</xsl:if>	
 			</td>
 			<td class="section2">
 				<span class="desc">
@@ -766,11 +772,14 @@
       .code           { color:#000000; font-weight:300; font-family:"Courier New",sans-serif;font-size:10pt; }
       pre.example     { background-color:#d0d6e6; font-family:"Courier New",sans-serif;font-size:10pt; padding:10px; border:1px solid #eaedf4; }
 
+ 	  b, strong {
+    	font-weight: 600 !important;
+	  }
       /*** LINK Formatierungen ***/
       a                   { font-weight:600; text-decoration:none; font-size:10pt; color:#de5906; font-weight:300;}
       /* Mail-Verweis */
       a.mail              { color:#de5906; font-weight:300;}
-
+      
     ]]></style>
 	</xsl:template>
 

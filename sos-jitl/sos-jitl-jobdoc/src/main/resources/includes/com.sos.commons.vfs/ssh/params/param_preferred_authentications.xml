@@ -1,16 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+<param
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	name="preferred_authentications" required="false" DataType="java.util.List">
-        <note>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="preferred_authentications" required="false"
+	usageNote="one of: auth_method, preferred_authentications, required_authentications"
+	DataType="java.util.List&lt;com.sos.commons.vfs.ssh.common.AuthMethod&gt;">
+	<note>
+		<p>
+			This argument specifies the order in which the SSH client should
+			attempt authentication methods.
+			<br />
+			It allows the client to prefer one method (e.g.
+			<em>publickey</em>
+			) over another (e.g.
+			<em>password</em>
+			) and to define a set of alternative methods, where any one of them
+			is sufficient for a successful connection.
+			<br />
+			<br />
+			If one method fails, the client will continue trying the remaining
+			methods in the specified order until authentication succeeds or all
+			options are exhausted.
+			<br />
+			<br />
 			<p>
-				Specifies the order in which an SSH client should try authentication methods.
-				This allows the SSH client to prefer one method (e.g. publickey) over another method (e.g. password).
-                In addition, it allows to specify a number of alternative authentication methods that can be used by a client,
-                for example, if password and publickey authentication methods are specified then one of them is sufficient.
-                This applies even in case of failure when using an authentication method as long as one of the
-                remaining authentication methods succeeds.
+				Possible values (case-insensitive, semicolon-separated):
+				<ul>
+					<li>
+						<b>publickey;password</b>
+						- Prefer
+						<em>publickey</em>
+						authentication for automation, fall back to
+						<em>password</em>
+						if the key is not accepted.
+					</li>
+					<li>
+						<b>password;publickey</b>
+						- Prefer
+						<em>password</em>
+						, use
+						<em>publickey</em>
+						only if password authentication fails.
+					</li>
+				</ul>
 			</p>
-        </note>
+			For corresponding arguments that may need to be specified (e.g.
+			<em>auth_file</em>
+			,
+			<em>password</em>
+			), see the explanation for the
+			<em>auth_method</em>
+			argument.
+		</p>
+		<br />
+		<b>Note:</b>
+		Use
+		<em>preferred_authentications</em>
+		or
+		<em>required_authentications</em>
+		when multiple authentication methods should be supported.
+		<br />
+		The
+		<em>auth_method</em>
+		argument is intended for a single authentication
+		method only.
+	</note>
 </param>
