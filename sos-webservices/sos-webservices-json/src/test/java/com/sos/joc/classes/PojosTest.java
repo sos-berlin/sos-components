@@ -58,7 +58,7 @@ public class PojosTest {
         vars.setAdditionalProperty("hallo", "welt");
         vars.setAdditionalProperty("hello", "world");
 //        System.out.println(objectMapper.writeValueAsString(order));
-        String expected = "{\"workflowPath\":\"/test\",\"scheduledFor\":1488888000000,\"arguments\":{\"hallo\":\"welt\",\"hello\":\"world\"}}";
+        String expected = "{\"workflowPath\":\"/test\",\"scheduledFor\":1488888000000,\"arguments\":{\"hallo\":\"welt\",\"hello\":\"world\"},\"priority\":0}";
         assertEquals("freshOrderTest", expected, objectMapper.writeValueAsString(order));
     }
     

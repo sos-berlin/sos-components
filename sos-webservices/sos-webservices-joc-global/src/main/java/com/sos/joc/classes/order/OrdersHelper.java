@@ -526,6 +526,7 @@ public class OrdersHelper {
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
         o.setPlanId(getPlanId(jOrder.asScala().planId()));
+        o.setPriority(jOrder.priority().intValue());
         o.setHasChildOrders(null);
         boolean isChildOrder = oItem.getId().contains("|");
         // List<js7.data.order.HistoricOutcome> hhh = JavaConverters.asJava(jOrder.asScala().historicOutcomes().toList());
@@ -1301,7 +1302,7 @@ public class OrdersHelper {
                 }
 
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), planSchemaId, args, scheduledFor, jBrachPath, startPos, endPoss,
-                        forceJobAdmission, zoneId);
+                        forceJobAdmission, order.priority(), zoneId);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
             } catch (Exception ex) {
@@ -1442,17 +1443,18 @@ public class OrdersHelper {
         return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, PlanSchemaId planSchemaId, ZoneId zoneId, Optional<JPositionOrLabel> startPos,
-            Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, PlanSchemaId planSchemaId, BigDecimal priority, ZoneId zoneId,
+            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-        return mapToFreshOrder(order, planSchemaId, scheduledFor, zoneId, startPos, endPoss, blockPosition, forceJobAdmission);
+        return mapToFreshOrder(order, planSchemaId, scheduledFor, priority, zoneId, startPos, endPoss, blockPosition, forceJobAdmission);
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, PlanSchemaId planSchemaId, Optional<Instant> scheduledFor, ZoneId zoneId,
-            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, PlanSchemaId planSchemaId, Optional<Instant> scheduledFor, BigDecimal priority,
+            ZoneId zoneId, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
         String orderId = getOrderId(order, zoneId);
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), planSchemaId,
-                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission, order.getPlanId());
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, priority, startPos, endPoss, blockPosition, forceJobAdmission,
+                order.getPlanId());
     }
     
     private static String getOrderId(AddOrder order, ZoneId zoneId) {
@@ -1468,7 +1470,7 @@ public class OrdersHelper {
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, PlanSchemaId planSchemaId, Map<String, Value> args,
-            Optional<Instant> scheduledFor, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition,
+            Optional<Instant> scheduledFor, BigDecimal priority, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition,
             boolean forceJobAdmission, PlanId planId) {
         if (blockPosition == null) {
             blockPosition = JBranchPath.empty();
@@ -1477,8 +1479,9 @@ public class OrdersHelper {
         if (planId != null) {
             pId = getPlanId(planId);
         }
-        // JS-2108 default priority
-        BigDecimal priority = new BigDecimal(0);
+        if (priority == null) {
+            priority = new BigDecimal(0);
+        }
         return JFreshOrder.of(orderId, workflowPath, args, scheduledFor, priority, pId, true, forceJobAdmission, blockPosition, startPos, endPoss);
     }
     

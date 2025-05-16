@@ -1,5 +1,6 @@
 package com.sos.joc.orders.impl;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -241,7 +242,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     
                     // TODO check if endPos not before startPos
                     Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, planSchemaId, scheduledFor, zoneId, startPos, endPoss, jBrachPath,
+                    BigDecimal priority = new BigDecimal(order.getPriority());
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, planSchemaId, scheduledFor, priority, zoneId, startPos, endPoss, jBrachPath,
                             forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
                     

@@ -493,6 +493,7 @@ public class DailyPlanRunner extends TimerTask {
                     OrderParameterisation storedOP = Globals.objectMapper.readValue(item.getOrderParameterisation(), OrderParameterisation.class);
                     orderParameterisation.setPositions(storedOP.getPositions());
                     orderParameterisation.setForceJobAdmission(storedOP.getForceJobAdmission());
+                    orderParameterisation.setPriority(storedOP.getPriority());
                 }
                 if (forceJobAdmission != null) {
                     orderParameterisation.setForceJobAdmission(forceJobAdmission);
@@ -852,6 +853,7 @@ public class DailyPlanRunner extends TimerTask {
         order.setWorkflowPath(scheduleWorkflow.getName());
         order.setPositions(orderParameterisation.getPositions());
         order.setForceJobAdmission(orderParameterisation.getForceJobAdmission());
+        order.setPriority(orderParameterisation.getPriority());
         return order;
     }
 

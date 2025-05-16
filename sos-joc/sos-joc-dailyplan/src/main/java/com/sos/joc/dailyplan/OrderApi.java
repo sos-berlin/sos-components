@@ -161,8 +161,7 @@ public class OrderApi {
 
         }
         boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
-        // JS-2108 default priority
-        BigDecimal priority = new BigDecimal(0);
+        BigDecimal priority = new BigDecimal(order.getPriority());
         return JFreshOrder.of(OrderId.of(order.getId()), workflowPath, arguments, scheduledFor, priority, OrdersHelper.getDailyPlanPlanId(
                 planSchemaId, order.getId()), false, forceJobAdmission, blockPosition, startPosition, endPositions);
     }

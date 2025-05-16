@@ -25,6 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "scheduledFor",
     "arguments",
     "positions",
+    "priority",
     "forceJobAdmission"
 })
 public class FreshOrder {
@@ -71,6 +72,8 @@ public class FreshOrder {
     @JsonProperty("positions")
     @JsonPropertyDescription("start and end position")
     private OrderPositions positions;
+    @JsonProperty("priority")
+    private Integer priority = 0;
     @JsonProperty("forceJobAdmission")
     private Boolean forceJobAdmission = false;
 
@@ -89,14 +92,16 @@ public class FreshOrder {
      * @param arguments
      * @param positions
      * @param id
+     * @param priority
      */
-    public FreshOrder(String id, String workflowPath, Long scheduledFor, Variables arguments, OrderPositions positions, Boolean forceJobAdmission) {
+    public FreshOrder(String id, String workflowPath, Long scheduledFor, Variables arguments, OrderPositions positions, Integer priority, Boolean forceJobAdmission) {
         super();
         this.id = id;
         this.workflowPath = workflowPath;
         this.scheduledFor = scheduledFor;
         this.arguments = arguments;
         this.positions = positions;
+        this.priority = priority;
         this.forceJobAdmission = forceJobAdmission;
     }
 
@@ -210,6 +215,16 @@ public class FreshOrder {
         this.positions = positions;
     }
 
+    @JsonProperty("priority")
+    public Integer getPriority() {
+        return priority;
+    }
+
+    @JsonProperty("priority")
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
     @JsonProperty("forceJobAdmission")
     public Boolean getForceJobAdmission() {
         return forceJobAdmission;
@@ -222,12 +237,12 @@ public class FreshOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("arguments", arguments).append("positions", positions).append("forceJobAdmission", forceJobAdmission).toString();
+        return new ToStringBuilder(this).append("id", id).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("arguments", arguments).append("positions", positions).append("priority", priority).append("forceJobAdmission", forceJobAdmission).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPath).append(scheduledFor).append(forceJobAdmission).append(arguments).append(positions).append(id).toHashCode();
+        return new HashCodeBuilder().append(workflowPath).append(scheduledFor).append(forceJobAdmission).append(arguments).append(positions).append(id).append(priority).toHashCode();
     }
 
     @Override
@@ -239,7 +254,7 @@ public class FreshOrder {
             return false;
         }
         FreshOrder rhs = ((FreshOrder) other);
-        return new EqualsBuilder().append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(positions, rhs.positions).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(positions, rhs.positions).append(id, rhs.id).append(priority, rhs.priority).isEquals();
     }
 
 }

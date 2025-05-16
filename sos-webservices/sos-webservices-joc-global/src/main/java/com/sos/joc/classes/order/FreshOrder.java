@@ -30,7 +30,6 @@ public class FreshOrder {
     private JBranchPath branchPath = JBranchPath.empty();
     private boolean forceJobAdmission = false;
     private PlanSchemaId planSchemaId = PlanSchemaId.Global;
-    // JS-2108 default priority
     private BigDecimal priority = new BigDecimal(0);
     // private boolean isDeleteWhenTerminated = false;
 
@@ -66,7 +65,7 @@ public class FreshOrder {
     
     public FreshOrder(OrderId oldOrderId, WorkflowPath workflowPath, PlanSchemaId planSchemaId, Map<String, Value> args, Optional<Instant> scheduledFor,
             JBranchPath branchPath, Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions, boolean forceJobAdmission, 
-            ZoneId zoneId) {
+            BigDecimal priority, ZoneId zoneId) {
         this.oldOrderId = oldOrderId;
         this.newOrderId = generateNewFromOldOrderId(oldOrderId, zoneId);
         this.workflowPath = workflowPath;
@@ -77,21 +76,7 @@ public class FreshOrder {
         this.endPositions = endPositions;
         this.branchPath = branchPath;
         this.forceJobAdmission = forceJobAdmission;
-    }
-
-    public FreshOrder(OrderId oldOrderId, OrderId newOrderId, WorkflowPath workflowPath, PlanSchemaId planSchemaId, Map<String, Value> args,
-            Optional<Instant> scheduledFor, JBranchPath branchPath, Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions,
-            boolean forceJobAdmission) {
-        this.oldOrderId = oldOrderId;
-        this.newOrderId = newOrderId;
-        this.workflowPath = workflowPath;
-        this.planSchemaId = planSchemaId;
-        this.args = args;
-        this.scheduledFor = scheduledFor;
-        this.startPosition = startPosition;
-        this.endPositions = endPositions;
-        this.branchPath = branchPath;
-        this.forceJobAdmission = forceJobAdmission;
+        this.priority = priority;
     }
 
     public OrderId getOldOrderId() {
