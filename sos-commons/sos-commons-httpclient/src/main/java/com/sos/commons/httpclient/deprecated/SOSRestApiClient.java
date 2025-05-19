@@ -121,7 +121,7 @@ public class SOSRestApiClient {
     }
 
     public int statusCode() {
-        if(httpResponse.getStatusLine() != null) {
+        if (httpResponse.getStatusLine() != null) {
             return httpResponse.getStatusLine().getStatusCode();
         } else {
             return -1;
@@ -238,7 +238,7 @@ public class SOSRestApiClient {
         }
         return kStoreType;
     }
-    
+
     public void setKeyStoreAlias(String keyStoreAlias) {
         this.keyStoreAlias = keyStoreAlias;
     }
@@ -362,12 +362,13 @@ public class SOSRestApiClient {
             }
         }
     }
-    
+
     public void setSSLContext(KeyStore clientCertificate, char[] clientCertificatePass, KeyStore truststore) throws SOSSSLException {
         setSSLContext(clientCertificate, clientCertificatePass, null, truststore);
     }
 
-    public void setSSLContext(KeyStore clientCertificate, char[] clientCertificatePass, String clientCertificateAlias, KeyStore truststore) throws SOSSSLException {
+    public void setSSLContext(KeyStore clientCertificate, char[] clientCertificatePass, String clientCertificateAlias, KeyStore truststore)
+            throws SOSSSLException {
         if (clientCertificate != null) {
             setClientCertificate(clientCertificate, clientCertificatePass, clientCertificateAlias);
         }
@@ -405,7 +406,7 @@ public class SOSRestApiClient {
 
         String result = "";
         if (body == null) {
-            body = SOSRestClient.getParameter(restCommand);
+            body = getParameter(restCommand);
         }
         if (restCommand.toLowerCase().startsWith("post")) {
             result = postRestService(uri, body);
@@ -997,5 +998,11 @@ public class SOSRestApiClient {
 
     public void setTruststore(KeyStore truststore) {
         this.truststore = truststore;
+    }
+
+    private static String getParameter(String p) {
+        String[] pParts = p.replaceFirst("\\)\\s*$", "").split("\\(", 2);
+        String s = (pParts.length == 2) ? pParts[1] : "";
+        return s.trim();
     }
 }
