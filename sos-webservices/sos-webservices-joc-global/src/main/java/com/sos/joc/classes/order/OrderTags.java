@@ -97,8 +97,10 @@ public class OrderTags {
 
     private static OrderTags instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderTags.class);
-    private static final TypeReference<Map<String, Set<String>>> typeRefAddOrderTags = new TypeReference<Map<String, Set<String>>>() {
-    };
+    private static final TypeReference<Map<String, Set<String>>> typeRefAddOrderTags = new TypeReference<Map<String, Set<String>>>() {};
+    /** rerun interval in seconds */
+    private static final long RERUN_INTERVAL = 1;
+    private static final int MAX_RERUNS = 3;
 
     private OrderTags() {
         EventBus.getInstance().register(this);
@@ -396,7 +398,7 @@ public class OrderTags {
                 Query<DBItemDailyPlanVariable> query = connection.createQuery(hql);
                 query.setParameterList("orderIds", orderIds);
                 query.setParameter("controllerId", controllerId);
-                connection.executeUpdate(query);
+                executeUpdate("deleteTags", query, connection);
             }
         }
     }
@@ -411,13 +413,43 @@ public class OrderTags {
                 Query<DBItemDailyPlanVariable> query = connection.createQuery(hql);
                 query.setParameter("controllerId", controllerId);
                 query.setParameter("orderId", orderId);
-                connection.executeUpdate(query);
+                executeUpdate("deleteTagsOfOrder", query, connection);
             } catch (SOSHibernateInvalidSessionException ex) {
                 throw new DBConnectionRefusedException(ex);
             } catch (Exception ex) {
                 throw new DBInvalidDataException(ex);
             }
         }
+    }
+    
+    private static <T> int executeUpdate(String callerMethodName, Query<T> query, SOSHibernateSession session) throws SOSHibernateException {
+        int result = 0;
+        int count = 0;
+        boolean run = true;
+        while (run) {
+            count++;
+            try {
+                result = session.executeUpdate(query);
+                run = false;
+            } catch (Exception e) {
+                if (count >= MAX_RERUNS) {
+                    throw e;
+                } else {
+                    Throwable te = SOSHibernate.findLockException(e);
+                    if (te == null) {
+                        throw e;
+                    } else {
+                        LOGGER.warn(String.format("%s: %s occured, wait %ss and try again (%s of %s) ...", callerMethodName, te.getClass().getName(),
+                                RERUN_INTERVAL, count, MAX_RERUNS));
+                        try {
+                            TimeUnit.SECONDS.sleep(RERUN_INTERVAL);
+                        } catch (InterruptedException e1) {
+                        }
+                    }
+                }
+            }
+        }
+        return Math.abs(result);
     }
 
     public static Either<Exception, Void> updateTagsOfOrders(String controllerId, Map<OrderId, JFreshOrder> oldNewOrderIds) {
