@@ -12,7 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IUpdateOrderingResource {
 
     @POST
-    @Path("ordering")
+    @Path("approvers/ordering")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postOrdering(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 

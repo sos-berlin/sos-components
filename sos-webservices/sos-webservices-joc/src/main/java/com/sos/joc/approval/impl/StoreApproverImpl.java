@@ -16,7 +16,7 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
-@Path("approval/approver")
+@Path("approval")
 public class StoreApproverImpl extends JOCResourceImpl implements IStoreApproverResource {
 
     private static final String API_CALL = "./approval/approver/store";

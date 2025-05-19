@@ -12,7 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IDeleteApproverResource {
 
     @POST
-    @Path("delete")
+    @Path("approver/delete")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postDelete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 

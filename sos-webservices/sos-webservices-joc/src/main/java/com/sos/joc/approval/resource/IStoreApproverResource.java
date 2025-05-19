@@ -12,7 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IStoreApproverResource {
 
     @POST
-    @Path("store")
+    @Path("approver/store")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 

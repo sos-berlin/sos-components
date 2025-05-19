@@ -23,7 +23,7 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
-@Path("approval/approvers")
+@Path("approval")
 public class UpdateOrderingImpl extends JOCResourceImpl implements IUpdateOrderingResource {
 
     private static final String API_CALL = "./approval/approvers/ordering";
