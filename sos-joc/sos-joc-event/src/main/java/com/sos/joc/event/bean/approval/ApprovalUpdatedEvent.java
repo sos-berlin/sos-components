@@ -16,10 +16,12 @@ public class ApprovalUpdatedEvent extends JOCEvent {
      * @param requestor
      * @param approver
      */
-    public ApprovalUpdatedEvent(String requestor, String approver) {
+    public ApprovalUpdatedEvent(String requestor, String approver, boolean withNotification, Long numOfPending) {
         super("ApprovalUpdated", null, null);
         putVariable("requestor", requestor);
         putVariable("approver", approver);
+        putVariable("withNotification", withNotification);
+        putVariable("numOfPending", numOfPending);
     }
     
     @JsonIgnore
@@ -30,5 +32,15 @@ public class ApprovalUpdatedEvent extends JOCEvent {
     @JsonIgnore
     public String getApprover() {
         return (String) getVariables().get("approver");
+    }
+    
+    @JsonIgnore
+    public Boolean withNotification() {
+        return (Boolean) getVariables().get("withNotification");
+    }
+    
+    @JsonIgnore
+    public Long numOfPending() {
+        return (Long) getVariables().get("numOfPending");
     }
 }

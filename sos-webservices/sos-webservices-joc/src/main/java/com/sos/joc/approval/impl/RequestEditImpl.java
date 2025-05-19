@@ -10,6 +10,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.foureyes.FourEyesRequestEdit;
@@ -44,8 +46,10 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
             }
             
             boolean updateDB = false;
+            boolean approverIsChanged = false;
             if (in.getApprover() != null && !in.getApprover().equals(item.getApprover())) {
                 updateDB = true;
+                approverIsChanged = true;
                 item.setApprover(in.getApprover());
             }
             if (in.getTitle() != null && !in.getTitle().equals(item.getTitle())) {
@@ -61,7 +65,12 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
                 item.setModified(now);
                 session.update(item);
                 
-                // TODO send events if approver is changed
+                if (approverIsChanged) {
+                    EventBus.getInstance().post(new ApprovalUpdatedEvent(null, item.getApprover(), true, dbLayer.getNumOfPendingApprovals(item
+                            .getApprover())));
+                } else {
+                    EventBus.getInstance().post(new ApprovalUpdatedEvent(null, null, false, 0L));
+                }
             }
             
             return JOCDefaultResponse.responseStatusJSOk(now);

@@ -33,6 +33,7 @@ import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.JOCEvent;
 import com.sos.joc.event.bean.agent.AgentClusterNodeLossEvent;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
@@ -67,6 +68,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.IEventObject;
+import com.sos.joc.model.event.EventApprovalNotification;
 import com.sos.joc.model.event.EventMonitoring;
 import com.sos.joc.model.event.EventOrderMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
@@ -418,6 +420,31 @@ public class EventService {
             }
             eventO.setMessage(evt.getMessage());
             addEventO(eventO);
+        }
+    }
+    
+    @Subscribe({ ApprovalUpdatedEvent.class })
+    public void createEvent(ApprovalUpdatedEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey());
+        eventSnapshot.setObjectType(EventType.APPROVAL);
+        addEvent(eventSnapshot);
+        
+        if (evt.withNotification()) {
+            if (evt.getApprover() != null) {
+                EventApprovalNotification eventA = new EventApprovalNotification();
+                eventA.setApprover(evt.getApprover());
+                eventA.setNumOfPendingApprovals(evt.numOfPending());
+                eventA.setEventType("ApproverNotification");
+                addEventA(eventA);
+            }
+            if (evt.getRequestor() != null) {
+                EventApprovalNotification eventA = new EventApprovalNotification();
+                eventA.setRequestor(evt.getRequestor());
+                eventA.setEventType("RequestorNotification");
+                addEventA(eventA);
+            }
         }
     }
 
@@ -926,6 +953,17 @@ public class EventService {
         if (eventOrderMonitoring != null && eventOrderMonitoring.getEventId() != null && events.add(eventOrderMonitoring)) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("add order monitoring event for " + controllerId + ": " + eventOrderMonitoring.toString());
+            }
+            if (atLeastOneConditionIsHold()) {
+                signalAll();
+            }
+        }
+    }
+    
+    private void addEventA(EventApprovalNotification eventApprovalNotification) {
+        if (eventApprovalNotification != null && eventApprovalNotification.getEventId() != null && events.add(eventApprovalNotification)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("add approval notification event for " + eventApprovalNotification.toString());
             }
             if (atLeastOneConditionIsHold()) {
                 signalAll();

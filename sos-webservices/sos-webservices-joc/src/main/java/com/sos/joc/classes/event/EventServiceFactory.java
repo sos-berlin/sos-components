@@ -25,6 +25,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
+import com.sos.joc.model.event.EventApprovalNotification;
 import com.sos.joc.model.event.EventMonitoring;
 import com.sos.joc.model.event.EventOrderMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
@@ -153,6 +154,7 @@ public class EventServiceFactory {
             Set<EventSnapshot> agentEvt = new HashSet<>();
             Set<EventMonitoring> evtM = new HashSet<>();
             Set<EventOrderMonitoring> evtO = new HashSet<>();
+            Set<EventApprovalNotification> evtA = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (Mode.FALSE.equals(mode)) {
                 long delay = Math.min(responsePeriodInMillis - 1000, getSessionTimeout(session));
@@ -189,6 +191,8 @@ public class EventServiceFactory {
                             evtM.add((EventMonitoring) e);
                         } else if (e instanceof EventOrderMonitoring) {
                             evtO.add((EventOrderMonitoring) e);
+                        } else if (e instanceof EventApprovalNotification) {
+                            evtA.add((EventApprovalNotification) e);
                         }
                         evtIds.add(e.getEventId());
                     }
@@ -207,6 +211,8 @@ public class EventServiceFactory {
                             evtM.add((EventMonitoring) e);
                         } else if (e instanceof EventOrderMonitoring) {
                             evtO.add((EventOrderMonitoring) e);
+                        } else if (e instanceof EventApprovalNotification) {
+                            evtA.add((EventApprovalNotification) e);
                         }
                         evtIds.add(e.getEventId());
                     }
@@ -217,7 +223,7 @@ public class EventServiceFactory {
                     evt.add(e.get(0));
                 }
             });
-            if (evt.isEmpty() && agentEvt.isEmpty() && evtM.isEmpty() && evtO.isEmpty()) {
+            if (evt.isEmpty() && agentEvt.isEmpty() && evtM.isEmpty() && evtO.isEmpty() && evtA.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
                 if (isDebugEnabled) {
@@ -230,11 +236,15 @@ public class EventServiceFactory {
                     if (!evtO.isEmpty()) {
                         LOGGER.debug("Order monitoring events for " + controllerId + ": " + evtO.toString());
                     }
+                    if (!evtA.isEmpty()) {
+                        LOGGER.debug("Approval notification events for " + evtA.toString());
+                    }
                 }
                 events.setEventId(evtIds.last());
                 events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
                 events.setEventsFromSystemMonitoring(evtM.stream().map(e -> cloneEventM(e)).distinct().collect(Collectors.toList()));
                 events.setEventsFromOrderMonitoring(evtO.stream().map(e -> cloneEventO(e)).distinct().collect(Collectors.toList()));
+                events.setEventsFromApprovalRequests(evtA.stream().map(e -> cloneEventA(e)).distinct().collect(Collectors.toList()));
             }
         } catch (SessionNotExistException e1) {
             throw e1;
@@ -319,6 +329,17 @@ public class EventServiceFactory {
         es.setOrderId(e.getOrderId());
         es.setWorkflowName(e.getWorkflowName());
         es.setTimestamp(e.getTimestamp());
+        return es;
+    }
+    
+    private static EventApprovalNotification cloneEventA(EventApprovalNotification e) {
+        //LOGGER.info("Clone events for " + e.toString());
+        EventApprovalNotification es = new EventApprovalNotification();
+        es.setEventId(null);
+        es.setApprover(e.getApprover());
+        es.setRequestor(e.getRequestor());
+        es.setNumOfPendingApprovals(e.getNumOfPendingApprovals());
+        es.setEventType(e.getEventType());
         return es;
     }
     

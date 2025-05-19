@@ -10,6 +10,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
@@ -59,7 +61,12 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             
             dbLayer.updateRequestorStatusInclusiveTransaction(item.getId(), RequestorState.WITHDRAWN);
             
-            // TODO send events
+            if (item.getApproverState().equals(ApproverState.PENDING.intValue())) {
+                long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(item.getApprover());
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(null, item.getApprover(), true, numOfPendingApprovals));
+            } else {
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(null, null, false, 0L));
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -88,18 +95,40 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             
             DBItemJocApprovalRequest item = dbLayer.getApprovalRequest(in.getId());
+            ApproverState prevApproverState = item.getApproverStateAsEnum();
+            RequestorState requestorState = item.getRequestorStateAsEnum();
+            
+            if (requestorState.equals(RequestorState.WITHDRAWN)) {
+                throw new JocBadRequestException("The approval request is already withdrawn by the requestor");
+            } else if (!requestorState.equals(RequestorState.REQUESTED)) {
+                throw new JocBadRequestException("The approval request has already been used by the requestor");
+            }
+            
             ApproverState newState = action.equals(Action.APPROVE) ? ApproverState.APPROVED : ApproverState.REJECTED;
+            
+            if (newState.equals(prevApproverState)) {
+                switch(prevApproverState) {
+                case APPROVED:
+                    throw new JocBadRequestException("The approval request is already approved");
+                case REJECTED:
+                    throw new JocBadRequestException("The approval request is already rejected");
+                default: //never reached
+                    break;
+                }
+            }
 
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             if (item.getApprover().equals(curAccountName)) {
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState);
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), null, true, 0L));
             } else {
                 // with take over
+                String prevApprover = item.getApprover();
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState, curAccountName);
+                Long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(prevApprover);
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), prevApprover, true, numOfPendingApprovals));
             }
             
-            // TODO send events
-
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

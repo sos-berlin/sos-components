@@ -38,7 +38,8 @@ public enum EventType {
     MONITORINGCONTROLLER("MONITORINGCONTROLLER"),
     MONITORINGAGENT("MONITORINGAGENT"),
     AUDITLOG("AUDITLOG"),
-    PLAN("PLAN");
+    PLAN("PLAN"),
+    APPROVAL("APPROVAL");
     private final String value;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 

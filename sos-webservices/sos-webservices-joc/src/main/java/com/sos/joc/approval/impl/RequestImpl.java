@@ -8,7 +8,10 @@ import com.sos.joc.Globals;
 import com.sos.joc.approval.resource.IRequestResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.foureyes.ApproverState;
@@ -60,7 +63,9 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             
             session.save(item);
             
-            // TODO send events
+            ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
+            EventBus.getInstance().post(new ApprovalUpdatedEvent(null, item.getApprover(), true, dbLayer.getNumOfPendingApprovals(item
+                    .getApprover())));
 
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {

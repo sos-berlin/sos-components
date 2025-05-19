@@ -131,6 +131,23 @@ public class ApprovalDBLayer extends DBLayer {
         }
     }
     
+    public Long getNumOfPendingApprovals(String approver) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("select count(*) from ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS);
+            hql.append(" where approver=:approver");
+            hql.append(" and approverState=:approverState");
+            Query<Long> query = getSession().createQuery(hql);
+            query.setParameter("approver", approver);
+            query.setParameter("approverState", ApproverState.PENDING.intValue());
+            return query.getSingleResult();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public void updateRequestorStatus(Long id, RequestorState state) {
         updateStatus(id, state.intValue(), "requestorState", null);
     }
