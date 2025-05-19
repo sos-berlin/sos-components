@@ -18,7 +18,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 

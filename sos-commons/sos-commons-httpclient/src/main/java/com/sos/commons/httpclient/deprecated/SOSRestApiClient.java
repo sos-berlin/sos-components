@@ -1,4 +1,4 @@
-package com.sos.commons.httpclient;
+package com.sos.commons.httpclient.deprecated;
 
 import java.io.IOException;
 import java.io.InputStream;

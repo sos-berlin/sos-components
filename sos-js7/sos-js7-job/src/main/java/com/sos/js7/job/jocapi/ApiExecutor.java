@@ -39,7 +39,7 @@ import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.encryption.exception.SOSEncryptionException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.sign.keys.key.KeyUtil;

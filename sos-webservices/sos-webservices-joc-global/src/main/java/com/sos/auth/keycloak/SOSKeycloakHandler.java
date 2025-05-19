@@ -25,7 +25,7 @@ import com.sos.auth.keycloak.classes.SOSKeycloakRoleRepresentation;
 import com.sos.auth.keycloak.classes.SOSKeycloakUserRepresentation;
 import com.sos.auth.keycloak.classes.SOSKeycloakWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocError;

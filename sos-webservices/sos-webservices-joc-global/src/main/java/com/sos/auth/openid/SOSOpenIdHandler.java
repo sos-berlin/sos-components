@@ -37,7 +37,7 @@ import com.sos.auth.openid.classes.SOSJWTVerifier;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
