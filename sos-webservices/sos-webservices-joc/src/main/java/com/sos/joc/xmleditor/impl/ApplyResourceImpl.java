@@ -4,11 +4,9 @@ import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocException;
@@ -16,7 +14,10 @@ import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.apply.ApplyConfiguration;
 import com.sos.joc.model.xmleditor.apply.ApplyConfigurationAnswer;
 import com.sos.joc.model.xmleditor.common.ObjectType;
-import com.sos.joc.xmleditor.common.Xml2JsonConverter;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.Xml2JsonConverter;
+import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.IApplyResource;
 import com.sos.schema.JsonValidator;
 
@@ -38,13 +39,26 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 // step 1 - check for vulnerabilities and validate
-                response = check(in, false);
+                String schema = null;
+                switch (in.getObjectType()) {
+                case YADE:
+                    schema = StandardSchemaHandler.getYADESchema();
+                    break;
+                case NOTIFICATION:
+                    schema = StandardSchemaHandler.getNotificationSchema();
+                    break;
+                case OTHER:
+                    schema = OtherSchemaHandler.getSchema(in.getSchemaIdentifier(), false);
+                    break;
+                }
+
+                response = check(in, schema, false);
                 if (response != null) {
                     return response;
                 }
 
                 // step 2 - xml2json
-                String json = convertXml2Json(in);
+                String json = convertXml2Json(in, schema);
 
                 // step 3 - store in the database TODO same code as in store
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -56,11 +70,13 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                 case YADE:
                 case OTHER:
                     name = in.getName();
-                    item = getObject(dbLayer, in, name);
+                    if (in.getId() != null && in.getId() > 0) {
+                        item = dbLayer.getObject(in.getId());
+                    }
                     break;
-                default:
-                    name = JocXmlEditor.getConfigurationName(in.getObjectType());
-                    item = getStandardObject(dbLayer, in);
+                case NOTIFICATION:
+                    name = StandardSchemaHandler.getDefaultConfigurationName(in.getObjectType());
+                    item = dbLayer.getObject(in.getObjectType().name(), name);
                     break;
                 }
                 if (item == null) {
@@ -86,21 +102,11 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         }
     }
 
-    private JOCDefaultResponse check(ApplyConfiguration in, boolean validate) throws Exception {
+    private JOCDefaultResponse check(ApplyConfiguration in, String schema, boolean validate) throws Exception {
         if (validate) {
-            java.nio.file.Path schema = null;
-            switch (in.getObjectType()) {
-            case YADE:
-            case OTHER:
-                schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
-                break;
-            default:
-                schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
-                break;
-            }
             // check for vulnerabilities and validate
             try {
-                SOSXMLXSDValidator.validate(schema, in.getConfiguration());
+                JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
                 return JOCDefaultResponse.responseStatus200(getError(e));
             }
@@ -115,15 +121,13 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
         answer.setId(item.getId());
         answer.setName(item.getName());
-        switch (in.getObjectType()) {
-        case YADE:
-        case OTHER:
-            answer.setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(item.getSchemaLocation()));
-            break;
-        default:
-            answer.setSchemaIdentifier(JocXmlEditor.getStandardSchemaIdentifier(in.getObjectType()));
-            break;
+        String schemaIdentifier;
+        if (JocXmlEditor.isOther(in.getObjectType())) {
+            schemaIdentifier = OtherSchemaHandler.getHttpOrFileSchemaIdentifier(item.getSchemaLocation());
+        } else {
+            schemaIdentifier = StandardSchemaHandler.getSchemaIdentifier(in.getObjectType());
         }
+        answer.setSchemaIdentifier(schemaIdentifier);
         answer.setConfiguration(item.getConfigurationDraft());
         answer.setConfigurationJson(json);
         answer.setRecreateJson(true);
@@ -141,19 +145,8 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         return answer;
     }
 
-    private String convertXml2Json(ApplyConfiguration in) throws Exception {
-        java.nio.file.Path schema = null;
-        switch (in.getObjectType()) {
-        case YADE:
-        case OTHER:
-            schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
-            break;
-        default:
-            schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
-            break;
-        }
-        Xml2JsonConverter converter = new Xml2JsonConverter();
-        return converter.convert(in.getObjectType(), schema, in.getConfiguration());
+    private String convertXml2Json(ApplyConfiguration in, String schema) throws Exception {
+        return new Xml2JsonConverter().convert(in.getObjectType(), schema, in.getConfiguration());
     }
 
     public static ApplyConfigurationAnswer getError(SOSXMLXSDValidatorException e) {
@@ -163,9 +156,11 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
     }
 
     private void checkRequiredParameters(final ApplyConfiguration in) throws Exception {
-        // made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         switch (in.getObjectType()) {
         case YADE:
+            checkRequiredParameter("id", in.getId());
+            checkRequiredParameter("name", in.getName());
+            break;
         case OTHER:
             checkRequiredParameter("id", in.getId());
             checkRequiredParameter("name", in.getName());
@@ -175,18 +170,6 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
             checkRequiredParameter("configuration", in.getConfiguration());
             break;
         }
-    }
-
-    private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, ApplyConfiguration in, String name) throws Exception {
-        DBItemXmlEditorConfiguration item = null;
-        if (in.getId() != null && in.getId() > 0) {
-            item = dbLayer.getObject(in.getId());
-        }
-        return item;
-    }
-
-    private DBItemXmlEditorConfiguration getStandardObject(XmlEditorDbLayer dbLayer, ApplyConfiguration in) throws Exception {
-        return dbLayer.getObject(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in.getName()));
     }
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, ApplyConfiguration in, String name) throws Exception {

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 public class SOSClassUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSClassUtil.class);
-    private static final String NEW_LINE = "\r\n";
+    private static final String NEW_LINE = "\n";
 
     public static String getMethodName() {
         return getMethodName(1);
@@ -103,10 +103,6 @@ public class SOSClassUtil {
         return sb.toString();
     }
 
-    private static String getSimpleName(String className) {
-        return className.substring(className.lastIndexOf('.') + 1);
-    }
-
     public static URL getLocation(String fullyQualifiedClassName) throws ClassNotFoundException {
         return getLocation(SOSClassUtil.class.getClassLoader(), fullyQualifiedClassName);
     }
@@ -154,6 +150,37 @@ public class SOSClassUtil {
         try (OutputStream nullOutputStream = OutputStream.nullOutputStream()) {
             return inputStream.transferTo(nullOutputStream);
         }
+    }
+
+    /** @param contextClass
+     * @param resourcePath no leading slash – path is relative to the classpath
+     * @return InputStream */
+    public static InputStream openResourceStream(Class<?> contextClass, String resourcePath) {
+        if (contextClass == null || resourcePath == null) {
+            return null;
+        }
+        InputStream is = contextClass.getClassLoader().getResourceAsStream(resourcePath);
+        if (is == null) {
+            throw new IllegalArgumentException("[" + contextClass.getName() + "]Resource not found: " + resourcePath);
+        }
+        return is;
+    }
+
+    /** @param contextClass
+     * @param resourcePath - no leading slash – path is relative to the classpath
+     * @return resource file content
+     * @throws Exception */
+    public static String readResourceFile(Class<?> contextClass, String resourcePath) throws Exception {
+        if (contextClass == null || resourcePath == null) {
+            return null;
+        }
+        try (InputStream is = openResourceStream(contextClass, resourcePath)) {
+            return SOSString.toString(is);
+        }
+    }
+
+    private static String getSimpleName(String className) {
+        return className.substring(className.lastIndexOf('.') + 1);
     }
 
 }

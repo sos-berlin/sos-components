@@ -1,11 +1,9 @@
 package com.sos.joc.notification.impl;
 
-import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -16,9 +14,10 @@ import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.release.ReleaseConfiguration;
 import com.sos.joc.notification.resource.IReleaseNotification;
-import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.impl.ReadResourceImpl;
-import com.sos.joc.xmleditor.impl.ReleaseResourceImpl;
+import com.sos.joc.xmleditor.impl.StandardNotificationReleaseResourceImpl;
 import com.sos.joc.xmleditor.impl.ValidateResourceImpl;
 import com.sos.schema.JsonValidator;
 
@@ -42,12 +41,12 @@ public class ReleaseNotificationImpl extends JOCResourceImpl implements IRelease
 
             DBItemJocAuditLog dbAuditlog = storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
             in.setObjectType(ObjectType.NOTIFICATION);
-            
+
             // step 0 - use existing configuration if it is not set in the request
             if (in.getConfiguration() == null || in.getConfiguration().isEmpty()) {
-                DBItemXmlEditorConfiguration item = ReadResourceImpl.getItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
-                        .getObjectType()));
-                ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
+                DBItemXmlEditorConfiguration item = ReadResourceImpl.getItem(in.getObjectType().name(), StandardSchemaHandler
+                        .getDefaultConfigurationName(in.getObjectType()));
+                StandardSchemaHandler handler = new StandardSchemaHandler(in.getObjectType());
                 handler.readCurrent(item, false);
                 ReadStandardConfigurationAnswer answer = handler.getAnswer();
                 if (answer.getConfiguration() == null || answer.getConfiguration().isEmpty()) {
@@ -58,17 +57,16 @@ public class ReleaseNotificationImpl extends JOCResourceImpl implements IRelease
             }
 
             // step 1 - check for vulnerabilities and validate
-            java.nio.file.Path schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
             try {
-                SOSXMLXSDValidator.validate(schema, in.getConfiguration());
+                JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getNotificationSchema(), in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
                 // LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
                 return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
             }
 
             // step 2 - update db
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(ReleaseResourceImpl.handleStandardConfiguration(in,
-                    getAccount(), dbAuditlog.getId())));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(StandardNotificationReleaseResourceImpl
+                    .handleStandardConfiguration(in, getAccount(), dbAuditlog.getId())));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

@@ -23,6 +23,7 @@ import javax.xml.validation.SchemaFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -38,14 +39,14 @@ public class SOSXMLXSDValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSXMLXSDValidator.class);
 
-    public static void validate(URL schema, String xml) throws Exception {
+    public static Document validate(URL schema, String xml, boolean awareness) throws Exception {
         if (schema == null) {
             throw new SOSXMLException("missing schema");
         }
-        validate(new StreamSource(schema.toExternalForm()), xml);
+        return validate(new StreamSource(schema.toExternalForm()), xml, awareness);
     }
 
-    public static void validate(Path schema, String xml) throws Exception {
+    public static Document validate(Path schema, String xml, boolean awareness) throws Exception {
         if (schema == null) {
             throw new SOSXMLException("missing schema");
         }
@@ -55,10 +56,17 @@ public class SOSXMLXSDValidator {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[schema][path]%s", schema));
         }
-        validate(new StreamSource(schema.toFile()), xml);
+        return validate(new StreamSource(schema.toFile()), xml, awareness);
     }
 
-    public static void validate(Source schema, String xml) throws SOSXMLException, SOSXMLXSDValidatorException {
+    public static Document validate(String schema, String xml, boolean awareness) throws Exception {
+        if (schema == null) {
+            throw new SOSXMLException("missing schema");
+        }
+        return validate(new StreamSource(new StringReader(schema)), xml, awareness);
+    }
+
+    public static Document validate(Source schema, String xml, boolean awareness) throws SOSXMLException, SOSXMLXSDValidatorException {
         if (schema == null) {
             throw new SOSXMLException("missing schema");
         }
@@ -67,9 +75,10 @@ public class SOSXMLXSDValidator {
             throw new SOSXMLXSDValidatorException(cause, "XML", "1", 1, true);
         }
 
+        Document doc = null;
         try {
             // check for vulnerabilities
-            SOSXML.parse(xml);
+            doc = SOSXML.parse(xml);
         } catch (SOSXMLDoctypeException e) {
             throw e;
         } catch (Throwable e) {
@@ -77,12 +86,13 @@ public class SOSXMLXSDValidator {
 
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(false);
+            factory.setNamespaceAware(awareness);// was false
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             factory.setSchema(schemaFactory.newSchema(schema));
 
             SAXParser parser = factory.newSAXParser();
             parser.parse(new InputSource(new StringReader(xml)), new SOSXMLXSDValidator().new Handler());
+            return doc;
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new SOSXMLException(e);
         }
@@ -135,8 +145,8 @@ public class SOSXMLXSDValidator {
             }
             lastDepth = currentDepth;
 
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[startElement][depth=%s][%s][localName=%s][uri=%s]", currentDepth, currentElement, localName, uri));
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[startElement][depth=%s][%s][localName=%s][uri=%s]", currentDepth, currentElement, localName, uri));
             }
 
             if (qname.endsWith("Ref")) {

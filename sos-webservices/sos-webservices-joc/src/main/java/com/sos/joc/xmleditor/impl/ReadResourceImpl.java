@@ -6,23 +6,24 @@ import java.util.List;
 import java.util.Map;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.read.ReadConfiguration;
 import com.sos.joc.model.xmleditor.read.other.AnswerConfiguration;
 import com.sos.joc.model.xmleditor.read.other.ReadOtherConfigurationAnswer;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.validate.ValidateConfigurationAnswer;
-import com.sos.joc.xmleditor.common.Utils;
-import com.sos.joc.xmleditor.common.Xml2JsonConverter;
-import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.Utils;
+import com.sos.joc.xmleditor.commons.Xml2JsonConverter;
+import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.IReadResource;
 import com.sos.schema.JsonValidator;
 
@@ -42,14 +43,24 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
-                JocXmlEditor.setRealPath();
                 switch (in.getObjectType()) {
                 case YADE:
-                case OTHER:
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleConfigurations(in)));
+                    if (isReadAllMultipleConfigurations(in)) {
+                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getMultipleConfigurations(in)));
+                    } else {
+                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSingleYADEConfiguration(in)));
+                    }
                     break;
-                default:
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in)));
+                case NOTIFICATION:
+                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getNotificationConfiguration(in)));
+                    break;
+                case OTHER:
+                    if (isReadAllMultipleConfigurations(in)) {
+                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getMultipleConfigurations(in)));
+                    } else {
+                        OtherSchemaHandler.setRealPath();
+                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSingleOTHERConfiguration(in)));
+                    }
                     break;
                 }
             }
@@ -62,106 +73,133 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
     }
 
-    // private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
-    // made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-    // }
+    public static ReadStandardConfigurationAnswer getNotificationConfiguration(ReadConfiguration in) throws Exception {
+        DBItemXmlEditorConfiguration item = getItem(in.getObjectType().name(), StandardSchemaHandler.getDefaultConfigurationName(in.getObjectType()));
 
-    public static ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {
-        DBItemXmlEditorConfiguration item = getItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()));
-
-        ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
+        StandardSchemaHandler handler = new StandardSchemaHandler(ObjectType.NOTIFICATION);
         handler.readCurrent(item, (in.getForceRelease() != null && in.getForceRelease()));
         ReadStandardConfigurationAnswer answer = handler.getAnswer();
         if (answer.getConfiguration() != null) {
-            answer.setValidation(getValidation(JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType()), answer.getConfiguration()));
+            answer.setValidation(getValidationAnswer(ObjectType.NOTIFICATION, StandardSchemaHandler.getNotificationSchema(), answer
+                    .getConfiguration()));
         }
         return answer;
     }
 
-    private static ReadOtherConfigurationAnswer handleConfigurations(ReadConfiguration in) throws Exception {
+    private static boolean isReadAllMultipleConfigurations(ReadConfiguration in) {
+        return in.getId() == null || in.getId() <= 0;
+    }
+
+    public static ReadStandardConfigurationAnswer getSingleYADEConfiguration(ReadConfiguration in) throws Exception {
+        DBItemXmlEditorConfiguration item = getItem(in.getId());
+        if (item == null) {
+            throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s]no configuration found", in
+                    .getObjectType().name(), in.getId())));
+        }
+
+        StandardSchemaHandler handler = new StandardSchemaHandler(ObjectType.YADE);
+        handler.readCurrent(item, (in.getForceRelease() != null && in.getForceRelease()));
+        ReadStandardConfigurationAnswer answer = handler.getAnswer();
+        if (answer.getConfiguration() != null) {
+            answer.setValidation(getValidationAnswer(ObjectType.YADE, answer.getSchema(), answer.getConfiguration()));
+        }
+        return answer;
+    }
+
+    public static ReadOtherConfigurationAnswer getSingleOTHERConfiguration(ReadConfiguration in) throws Exception {
+        DBItemXmlEditorConfiguration item = getItem(in.getId());
+        if (item == null) {
+            throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s]no configuration found", in
+                    .getObjectType().name(), in.getId())));
+        }
 
         ReadOtherConfigurationAnswer answer = new ReadOtherConfigurationAnswer();
+        answer.setConfiguration(new AnswerConfiguration());
+        String schema = OtherSchemaHandler.getSchema(item.getSchemaLocation(), false);
+        answer.getConfiguration().setSchema(schema);
+        answer.getConfiguration().setSchemaIdentifier(OtherSchemaHandler.getHttpOrFileSchemaIdentifier(item.getSchemaLocation()));
+        answer.getConfiguration().setConfiguration(item.getConfigurationDraft());
 
-        if (in.getId() == null || in.getId() <= 0) {
-            ArrayList<String> schemas = new ArrayList<String>();
-            List<Map<String, Object>> items = getConfigurationProperties(in, "id as id,name as name,schemaLocation as schemaLocation",
-                    "order by created");
-            if (items != null && items.size() > 0) {
-                ArrayList<AnswerConfiguration> configurations = new ArrayList<AnswerConfiguration>();
-                for (int i = 0; i < items.size(); i++) {
-                    Map<String, Object> item = items.get(i);
-                    AnswerConfiguration configuration = new AnswerConfiguration();
-                    configuration.setId(Long.parseLong(item.get("id").toString()));
-                    configuration.setName(item.get("name").toString());
+        ValidateConfigurationAnswer validation = getValidationAnswer(ObjectType.OTHER, schema, answer.getConfiguration().getConfiguration());
+
+        if (item.getConfigurationDraftJson() == null) {
+            if (item.getConfigurationDraft() == null) {
+                answer.getConfiguration().setRecreateJson(false);
+            } else {
+                answer.getConfiguration().setRecreateJson(true);
+                Xml2JsonConverter converter = new Xml2JsonConverter();
+                answer.getConfiguration().setConfigurationJson(converter.convert(in.getObjectType(), schema, item.getConfigurationDraft()));
+            }
+        } else {
+            answer.getConfiguration().setRecreateJson(false);
+            answer.getConfiguration().setConfigurationJson(Utils.deserializeJson(item.getConfigurationDraftJson()));
+        }
+        answer.getConfiguration().setValidation(validation);
+        answer.getConfiguration().setModified(item.getModified());
+
+        return answer;
+    }
+
+    private static ReadOtherConfigurationAnswer getMultipleConfigurations(ReadConfiguration in) throws Exception {
+        // YADE and OTHER
+        ReadOtherConfigurationAnswer answer = new ReadOtherConfigurationAnswer();
+
+        ArrayList<String> schemas = new ArrayList<String>();
+        List<Map<String, Object>> items = getConfigurationProperties(in, "id as id,name as name,schemaLocation as schemaLocation",
+                "order by created");
+        boolean isYADE = JocXmlEditor.isYADE(in.getObjectType());
+        boolean isOther = JocXmlEditor.isOther(in.getObjectType());
+        if (items != null && items.size() > 0) {
+            ArrayList<AnswerConfiguration> configurations = new ArrayList<AnswerConfiguration>();
+            for (int i = 0; i < items.size(); i++) {
+                Map<String, Object> item = items.get(i);
+                AnswerConfiguration configuration = new AnswerConfiguration();
+                configuration.setId(Long.parseLong(item.get("id").toString()));
+                configuration.setName(item.get("name").toString());
+                if (isYADE) {
+                    configuration.setSchemaIdentifier(JocXmlEditor.YADE_SCHEMA_FILENAME);
+                } else {
                     configuration.setSchemaIdentifier(item.get("schemaLocation").toString());// fileName or http(s) location
-
+                }
+                if (isOther) {
                     // only http(s), files will be checked later - maybe no longer exists (were removed from the resources directory)
-                    if (JocXmlEditor.isHttp(configuration.getSchemaIdentifier()) && !schemas.contains(configuration.getSchemaIdentifier())) {
+                    if (OtherSchemaHandler.isHttp(configuration.getSchemaIdentifier()) && !schemas.contains(configuration.getSchemaIdentifier())) {
                         schemas.add(configuration.getSchemaIdentifier());
                     }
-
-                    configurations.add(configuration);
                 }
-                answer.setConfigurations(configurations);
+
+                configurations.add(configuration);
             }
-            List<java.nio.file.Path> files = JocXmlEditor.getSchemaFiles(in.getObjectType());
+            answer.setConfigurations(configurations);
+        }
+        if (isOther) {
+            List<java.nio.file.Path> files = OtherSchemaHandler.getSchemaFiles();
             if (files != null && files.size() > 0) {
                 for (int i = 0; i < files.size(); i++) {
                     // fileName
-                    String schema = JocXmlEditor.getSchemaIdentifier(files.get(i));
+                    String schema = OtherSchemaHandler.getSchemaIdentifier(files.get(i));
                     if (!schemas.contains(schema)) {
                         schemas.add(schema);
                     }
                 }
             }
-            if (schemas.size() > 0) {
-                Collections.sort(schemas);
-                answer.setSchemas(schemas);
-            }
-
-        } else {
-            DBItemXmlEditorConfiguration item = getItem(in.getId());
-            answer.setConfiguration(new AnswerConfiguration());
-            if (item == null) {
-                throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s]no configuration found", in
-                        .getObjectType().name(), in.getId())));
-            }
-            answer.getConfiguration().setId(item.getId());
-            answer.getConfiguration().setName(item.getName());
-            answer.getConfiguration().setSchema(JocXmlEditor.readSchema(in.getObjectType(), item.getSchemaLocation()));
-            answer.getConfiguration().setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(item.getSchemaLocation()));
-            answer.getConfiguration().setConfiguration(item.getConfigurationDraft());
-            if (item.getConfigurationDraftJson() == null) {
-                if (item.getConfigurationDraft() == null) {
-                    answer.getConfiguration().setRecreateJson(false);
-                } else {
-                    answer.getConfiguration().setRecreateJson(true);
-                    Xml2JsonConverter converter = new Xml2JsonConverter();
-                    answer.getConfiguration().setConfigurationJson(converter.convert(in.getObjectType(), JocXmlEditor.getSchema(in.getObjectType(),
-                            item.getSchemaLocation(), false), item.getConfigurationDraft()));
-                }
-            } else {
-                answer.getConfiguration().setRecreateJson(false);
-                answer.getConfiguration().setConfigurationJson(Utils.deserializeJson(item.getConfigurationDraftJson()));
-            }
-            answer.getConfiguration().setValidation(getValidation(JocXmlEditor.getSchema(in.getObjectType(), answer.getConfiguration()
-                    .getSchemaIdentifier(), false), answer.getConfiguration().getConfiguration()));
-
-            answer.getConfiguration().setModified(item.getModified());
-
+        }
+        if (schemas.size() > 0) {
+            Collections.sort(schemas);
+            answer.setSchemas(schemas);
         }
         return answer;
     }
 
-    private static ValidateConfigurationAnswer getValidation(java.nio.file.Path schema, String content) throws Exception {
-        ValidateConfigurationAnswer validation = null;
+    private static ValidateConfigurationAnswer getValidationAnswer(ObjectType type, String schema, String xml) throws Exception {
+        ValidateConfigurationAnswer answer = null;
         try {
-            SOSXMLXSDValidator.validate(schema, content);
-            validation = ValidateResourceImpl.getSuccess();
+            JocXmlEditor.validate(type, schema, xml);
+            answer = ValidateResourceImpl.getSuccess();
         } catch (SOSXMLXSDValidatorException e) {
-            validation = ValidateResourceImpl.getError(e);
+            answer = ValidateResourceImpl.getError(e);
         }
-        return validation;
+        return answer;
     }
 
     private static DBItemXmlEditorConfiguration getItem(Long id) throws Exception {

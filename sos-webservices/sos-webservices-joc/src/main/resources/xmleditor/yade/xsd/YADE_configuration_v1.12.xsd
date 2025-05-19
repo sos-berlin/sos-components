@@ -57,7 +57,8 @@
       </xs:annotation>
 		    <xs:complexType>
 			      <xs:sequence>
-				        <xs:element ref="Fragments"/>
+				        <xs:element ref="JobResource" minOccurs="0"/>
+                <xs:element ref="Fragments"/>
 				        <xs:element ref="Profiles"/>
 				        <xs:element ref="General" minOccurs="0"/>
 			      </xs:sequence>
@@ -230,6 +231,13 @@
             <xs:element ref="CommandAfterOperationFinal" minOccurs="0"/>
             <xs:element ref="CommandBeforeRename" minOccurs="0"/>
 		    </xs:sequence>
+	  </xs:complexType>
+    <xs:complexType name="WebDAVPostProcessingType">
+		    <xs:sequence>
+			      <xs:element ref="CommandAfterOperationOnSuccess" minOccurs="0"/>
+            <xs:element ref="CommandAfterOperationOnError" minOccurs="0"/>
+            <xs:element ref="CommandAfterOperationFinal" minOccurs="0"/>
+    	</xs:sequence>
 	  </xs:complexType>
 	  <xs:complexType name="SFTPPreProcessingType">
 		    <xs:sequence>
@@ -1398,6 +1406,58 @@ SSH, etc.) server to which a connection has to be made.</p>
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
+    <xs:element name="JobResource">
+		    <xs:annotation>
+         <xs:documentation source="https://kb.sos-berlin.com/x/kYGyAw">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>Schema: <a target="_blank"
+                        href="https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12/YADE_configuration_v1_12_xsd_Element_JobResource.html">JobResource</a>, <a xmlns="" target="_blank" href="https://kb.sos-berlin.com/x/kYGyAw">JobResource</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+                  <br/>JobScheduler releases starting from <b>JS7 2.2.2</b>
+               </p>
+               <p>
+        This element specifies a <a href="  https://kb.sos-berlin.com/x/kYGyAw"
+                     target="_blank"
+                     shape="rect">JS7 Job Resource</a>.
+        </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This element specifies the name of a JS7 Job Resource.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+         </xs:attribute>
+            <xs:attribute name="environment_variable" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This element specifies the environment variable name of a JS7 Job Resource.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+         </xs:attribute>
+            <xs:attribute name="variable" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This element specifies the variable name of a JS7 Job Resource.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+         </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <xs:element name="Fragments">
 		    <xs:annotation>
          <xs:documentation source="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+Fragments">
@@ -1842,7 +1902,8 @@ SSH, etc.) server to which a connection has to be made.</p>
 				        <xs:element ref="CredentialStoreFragmentRef" minOccurs="0"/>
 				        <xs:element ref="JumpFragmentRef" minOccurs="0"/>
 				        <xs:element ref="ProxyForWebDAV" minOccurs="0"/>
-        	</xs:sequence>
+                <xs:element ref="KeyStore" minOccurs="0"/>
+         	</xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -1915,6 +1976,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 				        <xs:element ref="CredentialStoreFragmentRef" minOccurs="0"/>
 				        <xs:element ref="JumpFragmentRef" minOccurs="0"/>
 				        <xs:element ref="ProxyForHTTP" minOccurs="0"/>
+                <xs:element ref="HTTPHeaders" minOccurs="0"/>
          	</xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -1990,6 +2052,8 @@ SSH, etc.) server to which a connection has to be made.</p>
 				        <xs:element ref="CredentialStoreFragmentRef" minOccurs="0"/>
 				        <xs:element ref="JumpFragmentRef" minOccurs="0"/>
 				        <xs:element ref="ProxyForHTTP" minOccurs="0"/>
+                <xs:element ref="HTTPHeaders" minOccurs="0"/>
+                <xs:element ref="KeyStore" minOccurs="0"/>
             </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -4213,7 +4277,8 @@ SSH, etc.) server to which a connection has to be made.</p>
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="MoveSourceFragmentRef" type="WriteableFragmentRefType">
+    <!-- ap 2021-07-03 YADE-576 -->
+	  <xs:element name="MoveSourceFragmentRef" type="ReadableFragmentRefType">
 		    <xs:annotation>
          <xs:documentation source="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+MoveSourceFragmentRef">
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -4227,7 +4292,7 @@ SSH, etc.) server to which a connection has to be made.</p>
                </ul>
                <strong>Notes</strong>
                <p>
-			This element references a writeable fragment that is used to move files in a
+			This element references a readable fragment that is used to move files in a
 			<a target="_blank"
                      href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+Move"
                      shape="rect">Move</a> operation.
@@ -4878,6 +4943,21 @@ SSH, etc.) server to which a connection has to be made.</p>
                <p>
 			Post transfer commands execution in case of the successful transfers.
 		</p>
+               <p/>
+               <p>Built-in command functions:
+            <ul>
+                     <li>
+                        <i>REMOVE_DIRECTORY()</i>
+                        <ul>
+                           <li>
+                              <a href="https://change.sos-berlin.com/browse/YADE-590"
+                                 target="_blank"
+                                 shape="rect">YADE-590</a> Availability starting with 1.13.14</li>
+                           <li>Removes the directory defined with the corresponding <i>Directory</i> element, including all files and subdirectories.</li>
+                        </ul>
+                     </li>
+                  </ul>
+               </p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -4919,6 +4999,21 @@ SSH, etc.) server to which a connection has to be made.</p>
                <p>
 			Post transfer commands execution on transfer error. 
 		</p>
+               <p/>
+               <p>Built-in command functions:
+            <ul>
+                     <li>
+                        <i>REMOVE_DIRECTORY()</i>
+                        <ul>
+                           <li>
+                              <a href="https://change.sos-berlin.com/browse/YADE-590"
+                                 target="_blank"
+                                 shape="rect">YADE-590</a> Availability starting with 1.13.14</li>
+                           <li>Removes the directory defined with the corresponding <i>Directory</i> element, including all files and subdirectories.</li>
+                        </ul>
+                     </li>
+                  </ul>
+               </p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -4960,6 +5055,21 @@ SSH, etc.) server to which a connection has to be made.</p>
                <p>
 			Post transfer commands execution at transfer end independent of the transfer status. 
 		</p>
+               <p/>
+               <p>Built-in command functions:
+            <ul>
+                     <li>
+                        <i>REMOVE_DIRECTORY()</i>
+                        <ul>
+                           <li>
+                              <a href="https://change.sos-berlin.com/browse/YADE-590"
+                                 target="_blank"
+                                 shape="rect">YADE-590</a> Availability starting with 1.13.14</li>
+                           <li>Removes the directory defined with the corresponding <i>Directory</i> element, including all files and subdirectories.</li>
+                        </ul>
+                     </li>
+                  </ul>
+               </p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -5005,6 +5115,31 @@ SSH, etc.) server to which a connection has to be made.</p>
 			Specifies commands that are executed on the server where the YADE Client is located after transfer of files.
 			This includes shell commands.
 		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+    </xs:element>
+    <xs:element name="WebDAVPostProcessing" type="WebDAVPostProcessingType">
+        <xs:annotation>
+         <xs:appinfo>
+                <Release starting="1.13.14" issue="YADE-590"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>Schema: <a target="_blank"
+                        href="https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12/YADE_configuration_v1_12_xsd_Element_WebDAVPostProcessing.html">WebDAVPostProcessing</a>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/YADE-590">YADE-590</a> Availability starting with 1.13.14.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Specifies the built-in command functions that are executed on the server where the YADE Client is located after transfer of files.</p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -5083,6 +5218,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 		    <xs:complexType>
 			      <xs:sequence>
 				        <xs:element ref="Rename" minOccurs="0"/>
+                <xs:element ref="WebDAVPostProcessing" minOccurs="0"/>
 			      </xs:sequence>
 			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -5155,6 +5291,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 			      <xs:sequence>
                 <!-- re added 2017-12-01 JADE-287 -->
                 <xs:element ref="Rename" minOccurs="0"/>
+                <xs:element ref="HTTPHeaders" minOccurs="0"/>
 	        </xs:sequence>
             <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -5200,6 +5337,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 			      <xs:sequence>
                 <!-- re added 2017-12-01 JADE-287 -->
                 <xs:element ref="Rename" minOccurs="0"/>
+                <xs:element ref="HTTPHeaders" minOccurs="0"/>
 	        </xs:sequence>
             <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -5526,6 +5664,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 			      <xs:sequence>
 				        <xs:element ref="FilePath"/>
 				        <xs:element ref="Directory" minOccurs="0"/>
+                <xs:element ref="Recursive" minOccurs="0"/>
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
@@ -5636,6 +5775,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 			      <xs:sequence>
 				        <xs:element ref="FileSpec"/>
 				        <xs:element ref="Directory" minOccurs="0"/>
+                <xs:element ref="ExcludedDirectories" minOccurs="0"/>
 				        <xs:element ref="Recursive" minOccurs="0"/>
 			      </xs:sequence>
 		    </xs:complexType>
@@ -5758,6 +5898,47 @@ SSH, etc.) server to which a connection has to be made.</p>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
+    <xs:element name="ExcludedDirectories">
+		    <xs:annotation>
+         <xs:appinfo>
+				        <FlatParameter name="excluded_directories"/>
+                <Release starting="1.13.18" issue="YADE-601"/>
+			      </xs:appinfo>
+         <xs:documentation source="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+ExcludedDirectories">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>Schema: <a target="_blank"
+                        href="https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12/YADE_configuration_v1_12_xsd_Element_ExcludedDirectories.html">ExcludedDirectories</a>, <a xmlns=""
+                        target="_blank"
+                        href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+ExcludedDirectories">ExcludedDirectories</a>
+                  </li>
+                  <li>Mapping:
+            <ul>
+                        <li>
+                           <a target="_blank"
+                              href="https://kb.sos-berlin.com/display/PKB/YADE+-+Reference+Documentation+-+Parameter+Mapping#YADE-ReferenceDocumentation-ParameterMapping-MappingTables">excluded_directories</a>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/YADE-601">YADE-601</a> Availability starting with 1.13.18.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies a regular expression that matches the path to directories to be excluded when recursively traversing a Source directory.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
 	  <xs:element name="Recursive" type="xs:boolean" default="false">
 		    <xs:annotation>
          <xs:appinfo>
@@ -5798,11 +5979,29 @@ SSH, etc.) server to which a connection has to be made.</p>
                <p>
 			This parameter specifies wether files from subdirectories should be included recursively.
 			Recursion is effective exclusively if files are found in a directory.
-			Regular expression matches apply to files from subdirectories as specified by the
-			<a target="_blank"
-                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+FileSpec"
-                     shape="rect">FileSpec</a> parameter.
-		</p>
+            <ul>
+                     <li>
+                        <i>FileSpecSelection</i>
+                        <ul>
+                           <li>Regular expression matches apply to files from subdirectories as specified by the <a target="_blank"
+                                 href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+FileSpec"
+                                 shape="rect">FileSpec</a> and <a target="_blank"
+                                 href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+ExcludedDirectories"
+                                 shape="rect">ExcludedDirectories</a> parameters.</li>
+                        </ul>
+                     </li>
+                     <li>
+                        <i>FilePathSelection/FileListSelection</i>
+                        <ul>
+                           <li>
+                              <a target="_blank"
+                                 href="https://change.sos-berlin.com/browse/YADE-600"
+                                 shape="rect">YADE-600</a>. Availability starting with 1.13.18</li>
+                           <li>Specifies how the files should be transferred: flat in one Target folder or by creating the same sub-directories in the target system as from the source system.</li>
+                        </ul>
+                     </li>
+                  </ul>		
+		             </p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -5841,6 +6040,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 			      <xs:sequence>
 				        <xs:element ref="FileList"/>
 				        <xs:element ref="Directory" minOccurs="0"/>
+                <xs:element ref="Recursive" minOccurs="0"/>
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
@@ -6771,7 +6971,7 @@ SSH, etc.) server to which a connection has to be made.</p>
 	  <xs:element name="AppendFiles" type="xs:boolean" default="false">
 		    <xs:annotation>
          <xs:appinfo>
-				        <FlatParameter name="append_files"/>
+				        <FlatParameter name="append_files" suppress_prefix="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -8320,9 +8520,6 @@ log4j.rootLogger=info, stdout
                </ul>
                <strong>Notes</strong>
                <p>
-			This parameter has only an effect if the YADE Client is operated with JobScheduler.
-		</p>
-               <p>
 			This parameter specified a comparison operator.
 			With this parameter YADE can be caused to raise an error if the number of files that are subject to
 			a file transfer operation does not correspond to the expected number of files.
@@ -8569,7 +8766,7 @@ log4j.rootLogger=info, stdout
 	  <xs:element name="KeepModificationDate" type="xs:boolean" default="false">
 		    <xs:annotation>
          <xs:appinfo>
-				        <FlatParameter name="keep_modification_date"/>
+				        <FlatParameter name="keep_modification_date" suppress_prefix="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -9153,6 +9350,43 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
+    <xs:complexType name="KeyStoreComplexType">
+		    <xs:sequence>
+			      <xs:element ref="KeyStoreType" minOccurs="0"/>
+			      <xs:element ref="KeyStoreFile" minOccurs="1"/>
+			      <xs:element ref="KeyStorePassword" minOccurs="0"/>
+		    </xs:sequence>
+	  </xs:complexType>
+    <xs:element name="KeyStore" type="KeyStoreComplexType">
+		    <xs:annotation>
+         <xs:documentation source="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+KeyStore">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>Schema: <a target="_blank"
+                        href="https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12/YADE_configuration_v1_12_xsd_Element_KeyStore.html">KeyStore</a>, <a xmlns=""
+                        target="_blank"
+                        href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+KeyStore">KeyStore</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+		This parameter specifies the storage facility for cryptographic keys and certificates.
+		</p>
+               <p/>
+               <p>
+                  <strong>Notes</strong>
+               </p>
+               <p/>
+               <ul>
+                  <li>WebDAV - Availability starting with <a target="_blank"
+                        href="https://change.sos-berlin.com/browse/YADE-582"
+                        shape="rect">YADE-582</a>.</li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
 	  <xs:element name="KeyStoreType" default="JKS">
 		    <xs:annotation>
          <xs:appinfo>
@@ -9555,8 +9789,8 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="MaxFiles" default="-1">
 		    <xs:annotation>
          <xs:appinfo>
-				        <FlatParameter name="Max_Files"/>
-				        <FlatParameter name="MaxFiles"/>
+				        <FlatParameter name="Max_Files" suppress_prefix="true"/>
+				        <FlatParameter name="MaxFiles" suppress_prefix="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -10564,6 +10798,65 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
+    <xs:element name="CSKeePass">
+      <xs:annotation>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <p>
+			Specifies the configuration settings for KeePass.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		
+		    <xs:complexType>
+			      <xs:sequence>
+				        <xs:element ref="CSKeePassModule" minOccurs="1" maxOccurs="1"/>
+			      </xs:sequence>
+		    </xs:complexType>
+	  </xs:element>
+    <xs:element name="CSKeePassModule" default="JAXB">
+		    <xs:annotation>
+         <xs:appinfo>
+				        <FlatParameter name="CredentialStore_KeePass_Module"/>
+        		  <Release starting="1.13.9" issue="JITL-714"/>
+			      </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>Schema: <a target="_blank"
+                        href="https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12/YADE_configuration_v1_12_xsd_Element_CSKeePassModule.html">CSKeePassModule</a>
+                  </li>
+                  <li>Mapping:
+            <ul>
+                        <li>
+                           <a target="_blank"
+                              href="https://kb.sos-berlin.com/display/PKB/YADE+-+Reference+Documentation+-+Parameter+Mapping#YADE-ReferenceDocumentation-ParameterMapping-MappingTables">CredentialStore_KeePass_Module</a>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/JITL-714">JITL-714</a> Availability starting with 1.13.9.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			Specifies the desired approach (DOM or JAXB) to handle KDBX using the underlying KeePassJava2 interface.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+            <!-- not as xs:enumeration (DOM,JAXB) to enable the usage of an environment variable instead of a fixed value -->
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
 	  <!-- ap 2015-08-28: development status: not implemented -->
 	  <xs:element name="CSPermissionsForExportedFile" default="600">
       <xs:annotation>
@@ -10822,6 +11115,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:element ref="CSEntryPath" minOccurs="0"/>
 			      <xs:element ref="CSExportAttachment" minOccurs="0"/>
 			      <xs:element ref="CSStoreType" minOccurs="0"/>
+            <xs:element ref="CSKeePass" minOccurs="0"/>
 		    </xs:sequence>
 	  </xs:complexType>
 	  <xs:element name="Notifications" type="NotificationType">
@@ -12931,6 +13225,94 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:restriction base="xs:string">
 				        <xs:enumeration value="unix"/>
 				        <xs:enumeration value="windows"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
+    <xs:element name="HTTPHeaders">
+		    <xs:annotation>
+         <xs:appinfo>
+				        <FlatParameter name="http_headers"/>
+				        <Release starting="1.13.16" issue="YADE-594"/>
+        	</xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>Schema: <a target="_blank"
+                        href="https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12/YADE_configuration_v1_12_xsd_Element_HTTPHeaders.html">HTTPHeaders</a>
+                  </li>
+                  <li>Mapping:
+            <ul>
+                        <li>
+                           <a target="_blank"
+                              href="https://kb.sos-berlin.com/display/PKB/YADE+-+Reference+Documentation+-+Parameter+Mapping#YADE-ReferenceDocumentation-ParameterMapping-MappingTables">http_headers</a>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/YADE-594">YADE-594</a> Availability starting with 1.13.16.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			HTTP headers let the client and the server pass additional information with an HTTP request or response.<br/>
+            YADE allows to specify HTTP headers individually per HTTP(S) transfer fragment or HTTP(S) transfer fragment reference.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+                <xs:element ref="HTTPHeader" minOccurs="1" maxOccurs="unbounded"/>
+	        </xs:sequence>
+     	</xs:complexType>
+	  </xs:element>
+    <xs:element name="HTTPHeader">
+		    <xs:annotation>
+         <xs:appinfo>
+				        <Release starting="1.13.16" issue="YADE-594"/>
+        	</xs:appinfo>
+         <xs:documentation source="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+HTTPHeader">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>Schema: <a target="_blank"
+                        href="https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12/YADE_configuration_v1_12_xsd_Element_HTTPHeader.html">HTTPHeader</a>, <a xmlns=""
+                        target="_blank"
+                        href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+HTTPHeader">HTTPHeader</a>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/YADE-594">YADE-594</a> Availability starting with 1.13.16.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This parameter specifies a HTTP header, which is used for a HTTP(S) file transfer.<br/>
+            Name and value are separated by the first space, e.g.:
+            <ul>
+                     <li>
+                        <em>Accept text/html</em>
+                     </li>
+                     <li>
+                        <em>Content-Type application/json; charset=utf-8</em>
+                     </li>
+                     <li>
+                        <em>Keep-Alive timeout=5, max=1000</em>
+                     </li>
+                  </ul>
+		             </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>

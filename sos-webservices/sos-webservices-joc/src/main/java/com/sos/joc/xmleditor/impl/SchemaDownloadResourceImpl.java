@@ -4,28 +4,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
-import java.nio.file.Files;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.StreamingOutput;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.schema.SchemaDownloadConfiguration;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.ISchemaDownloadResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements ISchemaDownloadResource {
 
     @Override
-    public JOCDefaultResponse process(final String xAccessToken, String accessToken, String objectType, String show,
-            String schemaIdentifier) {
+    public JOCDefaultResponse process(final String xAccessToken, String accessToken, String objectType, String show, String schemaIdentifier) {
         try {
             accessToken = getAccessToken(xAccessToken, accessToken);
 
@@ -59,40 +59,47 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
     }
 
     private void checkRequiredParameters(final SchemaDownloadConfiguration in) throws Exception {
-        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
+        if (JocXmlEditor.isOther(in.getObjectType())) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
     }
 
     private JOCDefaultResponse download(SchemaDownloadConfiguration in) throws Exception {
 
-        java.nio.file.Path path = null;
+        final InputStream inputStream;
+        String downloadFileName = null;
         switch (in.getObjectType()) {
         case YADE:
+            inputStream = StandardSchemaHandler.getYADESchemaAsInputStream();
+            downloadFileName = JocXmlEditor.YADE_SCHEMA_FILENAME;
+            break;
+        case NOTIFICATION:
+            inputStream = StandardSchemaHandler.getNotificationSchemaAsInputStream();
+            downloadFileName = JocXmlEditor.NOTIFICATION_SCHEMA_FILENAME;
+            break;
         case OTHER:
-            path = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), true);
+            inputStream = OtherSchemaHandler.getSchemaAsInputStream(in.getSchemaIdentifier(), true);
+            downloadFileName = in.getSchemaIdentifier();
             break;
         default:
-            path = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
-            break;
-
+            inputStream = null;
         }
-        if (!Files.exists(path)) {
-            throw new Exception(String.format("[%s][%s]schema file not found", in.getSchemaIdentifier(), path.toString()));
+        if (inputStream == null) {
+            throw new Exception(String.format("[%s]inputStream missing", in.getSchemaIdentifier()));
+        }
+        if (downloadFileName == null) {
+            downloadFileName = in.getObjectType() + "_schema.xsd";
         }
 
-        final java.nio.file.Path downPath = path;
         StreamingOutput fileStream = new StreamingOutput() {
 
             @Override
             public void write(OutputStream output) throws IOException {
-                InputStream in = null;
                 try {
-                    in = Files.newInputStream(downPath);
+                    // in = Files.newInputStream(downPath);
                     byte[] buffer = new byte[4096];
                     int length;
-                    while ((length = in.read(buffer)) > 0) {
+                    while ((length = inputStream.read(buffer)) > 0) {
                         output.write(buffer, 0, length);
                     }
                     output.flush();
@@ -101,9 +108,9 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
                         output.close();
                     } catch (Exception e) {
                     }
-                    if (in != null) {
+                    if (inputStream != null) {
                         try {
-                            in.close();
+                            inputStream.close();
                         } catch (Exception e) {
                         }
                     }
@@ -113,7 +120,7 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
         if (in.getShow()) {
             return JOCDefaultResponse.responsePlainStatus200(fileStream);
         } else {
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, path.getFileName().toString());
+            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, downloadFileName);
         }
     }
 }

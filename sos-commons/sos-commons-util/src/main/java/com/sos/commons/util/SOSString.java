@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
@@ -49,6 +50,13 @@ public class SOSString {
         String add = newLine ? "\n" : "";
         o.forEach((k, v) -> sb.append("[").append(k).append("->").append(toString(v)).append("]").append(add));
         return sb.toString().trim();
+    }
+
+    public static String toString(InputStream is) throws Exception {
+        if (is == null) {
+            return null;
+        }
+        return new String(is.readAllBytes(), StandardCharsets.UTF_8);
     }
 
     public static String toString(Object o) {

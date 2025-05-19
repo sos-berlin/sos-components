@@ -2,12 +2,9 @@ package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocError;
@@ -15,8 +12,11 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.rename.RenameConfiguration;
 import com.sos.joc.model.xmleditor.rename.RenameConfigurationAnswer;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.resource.IRenameResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class RenameResourceImpl extends ACommonResourceImpl implements IRenameResource {

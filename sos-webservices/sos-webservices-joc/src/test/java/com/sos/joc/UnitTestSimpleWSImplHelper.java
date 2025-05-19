@@ -54,6 +54,8 @@ public class UnitTestSimpleWSImplHelper {
     private final Path propertiesFile;
     private Path hibernateConfigurationFile;
 
+    private List<String> controllerIds;
+
     private List<CompletableFuture<JOCDefaultResponse>> futures = new ArrayList<>();
 
     public UnitTestSimpleWSImplHelper(JOCResourceImpl instance) throws Exception {
@@ -79,6 +81,7 @@ public class UnitTestSimpleWSImplHelper {
 
         initJOCProperties();
         initConfigurationGlobals();
+        setControllerIds();
         // Globals.readUnmodifiables();
 
         // TODO Proxy etc
@@ -121,15 +124,14 @@ public class UnitTestSimpleWSImplHelper {
         }
     }
 
-    private List<String> getControllersId() {
+    private void setControllerIds() {
         SOSHibernateSession session = null;
         try {
             session = Globals.getHibernateFactory().openStatelessSession("getControllersId");
             Query<String> query = session.createQuery("select controllerId from " + DBLayer.DBITEM_INV_JS_INSTANCES);
-            return session.getResultList(query);
+            controllerIds = session.getResultList(query);
         } catch (Throwable e) {
             LOGGER.warn(String.format("[getControllersId]%s", e.toString()), e);
-            return null;
         } finally {
             Globals.getHibernateFactory().close(session);
         }
@@ -182,20 +184,28 @@ public class UnitTestSimpleWSImplHelper {
     }
 
     private void mockRootJOCPermissions(SOSAuthCurrentAccount a) {
-        JocPermissions jp = a.getJocPermissions();
+        JocPermissions p = a.getJocPermissions();
 
-        jp.getCalendars().setView(true);
-        jp.getDailyPlan().setView(true);
-        jp.getFileTransfer().setView(true);
-        jp.getInventory().setView(true);
-        jp.getNotification().setView(true);
-        jp.getOthers().setView(true);
-        jp.getReports().setView(true);
+        p.getCalendars().setView(true);
+        p.getDailyPlan().setView(true);
+
+        p.getFileTransfer().setView(true);
+        p.getFileTransfer().setManage(true);
+
+        p.getInventory().setView(true);
+        p.getInventory().setManage(true);
+
+        p.getNotification().setView(true);
+        p.getNotification().setManage(true);
+
+        p.getOthers().setView(true);
+        p.getOthers().setManage(true);
+
+        p.getReports().setView(true);
     }
 
     private void mockRootJOCControllersPermissions(SOSAuthCurrentAccount a) {
-        List<String> controllers = getControllersId();
-        for (String controllerId : controllers) {
+        for (String controllerId : controllerIds) {
             ControllerPermissions p = a.getControllerPermissions(controllerId);
 
             p.setView(true);
@@ -272,5 +282,9 @@ public class UnitTestSimpleWSImplHelper {
 
     public void setHibernateConfigurationFileFromWebservicesGlobal(String fileName) {
         hibernateConfigurationFile = Paths.get("../sos-webservices-joc-global/src/test/resources/hibernate/" + fileName);
+    }
+
+    public List<String> getControllerIds() {
+        return controllerIds;
     }
 }

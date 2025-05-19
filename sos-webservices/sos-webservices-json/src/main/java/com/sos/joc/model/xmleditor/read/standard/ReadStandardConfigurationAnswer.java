@@ -21,6 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
+    "name",
     "configuration",
     "configurationJson",
     "recreateJson",
@@ -34,6 +36,16 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class ReadStandardConfigurationAnswer {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
+    @JsonProperty("name")
+    private String name;
     /**
      * 
      * (Required)
@@ -85,6 +97,38 @@ public class ReadStandardConfigurationAnswer {
     @JsonProperty("configurationDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date configurationDate;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * 
@@ -246,12 +290,12 @@ public class ReadStandardConfigurationAnswer {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("schema", schema).append("schemaIdentifier", schemaIdentifier).append("state", state).append("released", released).append("hasReleases", hasReleases).append("validation", validation).append("configurationDate", configurationDate).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("schema", schema).append("schemaIdentifier", schemaIdentifier).append("state", state).append("released", released).append("hasReleases", hasReleases).append("validation", validation).append("configurationDate", configurationDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schema).append(configurationDate).append(configuration).append(configurationJson).append(recreateJson).append(schemaIdentifier).append(state).append(released).append(hasReleases).append(validation).toHashCode();
+        return new HashCodeBuilder().append(schema).append(configurationDate).append(configuration).append(name).append(configurationJson).append(recreateJson).append(id).append(schemaIdentifier).append(state).append(released).append(hasReleases).append(validation).toHashCode();
     }
 
     @Override
@@ -263,7 +307,7 @@ public class ReadStandardConfigurationAnswer {
             return false;
         }
         ReadStandardConfigurationAnswer rhs = ((ReadStandardConfigurationAnswer) other);
-        return new EqualsBuilder().append(schema, rhs.schema).append(configurationDate, rhs.configurationDate).append(configuration, rhs.configuration).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(schemaIdentifier, rhs.schemaIdentifier).append(state, rhs.state).append(released, rhs.released).append(hasReleases, rhs.hasReleases).append(validation, rhs.validation).isEquals();
+        return new EqualsBuilder().append(schema, rhs.schema).append(configurationDate, rhs.configurationDate).append(configuration, rhs.configuration).append(name, rhs.name).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(state, rhs.state).append(released, rhs.released).append(hasReleases, rhs.hasReleases).append(validation, rhs.validation).isEquals();
     }
 
 }

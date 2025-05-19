@@ -9,12 +9,11 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-
-public interface IYadeFilesResource {
+public interface IYADEFilesResource {
 
     @POST
     @Path("files")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postYadeFiles(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    public JOCDefaultResponse postYADEFiles(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 }

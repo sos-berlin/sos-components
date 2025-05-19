@@ -3,7 +3,6 @@ package com.sos.joc.notification.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.notification.ReadNotificationFilter;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -18,7 +17,7 @@ import jakarta.ws.rs.Path;
 public class ReadNotificationImpl extends JOCResourceImpl implements IReadNotification {
 
     private static final String API_CALL = "./notification";
-    
+
     @Override
     public JOCDefaultResponse postReadNotification(String xAccessToken, byte[] readNotificationFilter) {
         try {
@@ -30,8 +29,7 @@ public class ReadNotificationImpl extends JOCResourceImpl implements IReadNotifi
                 return jocDefaultResponse;
             }
             in.setObjectType(ObjectType.NOTIFICATION);
-            JocXmlEditor.setRealPath();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(ReadResourceImpl.handleStandardConfiguration(in)));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(ReadResourceImpl.getNotificationConfiguration(in)));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -39,5 +37,5 @@ public class ReadNotificationImpl extends JOCResourceImpl implements IReadNotifi
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
 }

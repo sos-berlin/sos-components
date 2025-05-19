@@ -1,0 +1,6 @@
+{
+	"controllerId": "js7.x",
+	"objectType": "OTHER",
+	"fileName": "TEST_configuration_vx.y.z.xsd",
+	"fileContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\"><xs:element name=\"Configurations\"/>"
+}

@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -19,6 +18,7 @@ import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAll;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAllAnswer;
 import com.sos.joc.model.xmleditor.remove.all.RemoveAll;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.resource.IRemoveAllResource;
 import com.sos.schema.JsonValidator;
 

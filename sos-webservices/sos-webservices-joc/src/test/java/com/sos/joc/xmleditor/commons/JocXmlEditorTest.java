@@ -1,12 +1,10 @@
-package com.sos.joc.xmleditor.common;
+package com.sos.joc.xmleditor.commons;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 
 public class JocXmlEditorTest {
 

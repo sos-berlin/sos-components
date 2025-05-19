@@ -1,4 +1,4 @@
-package com.sos.joc.xmleditor.common;
+package com.sos.joc.xmleditor.commons;
 
 import java.io.StringReader;
 import java.util.ArrayList;

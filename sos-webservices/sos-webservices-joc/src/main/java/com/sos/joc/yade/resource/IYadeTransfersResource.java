@@ -9,18 +9,18 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IYadeTransfersResource {
+public interface IYADETransfersResource {
 
     @POST
     @Path("transfers")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postYadeTransfers(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    public JOCDefaultResponse postYADETransfers(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
     
     @POST
     @Path("transfer")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postYadeTransfer(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    public JOCDefaultResponse postYADETransfer(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
 }

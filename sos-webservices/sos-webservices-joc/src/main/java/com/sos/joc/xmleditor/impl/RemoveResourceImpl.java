@@ -3,8 +3,6 @@ package com.sos.joc.xmleditor.impl;
 import java.util.Arrays;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +10,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.event.EventBus;
@@ -23,9 +20,12 @@ import com.sos.joc.model.xmleditor.delete.DeleteConfiguration;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.remove.RemoveConfiguration;
 import com.sos.joc.model.xmleditor.remove.RemoveOtherAnswer;
-import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.IRemoveResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveResource {
@@ -69,10 +69,10 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
     // }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(RemoveConfiguration in) throws Exception {
-        DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()), in
-                .getRelease() == null ? false : in.getRelease().booleanValue());
+        DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), StandardSchemaHandler.getDefaultConfigurationName(in
+                .getObjectType()), in.getRelease() == null ? false : in.getRelease().booleanValue());
 
-        ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
+        StandardSchemaHandler handler = new StandardSchemaHandler(in.getObjectType());
         handler.readCurrent(item, true);
         postEvent(in);
         return handler.getAnswer();

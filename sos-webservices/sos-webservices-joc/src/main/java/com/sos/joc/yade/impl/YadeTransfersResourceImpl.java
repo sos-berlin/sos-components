@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -39,19 +37,21 @@ import com.sos.joc.model.yade.TransferId;
 import com.sos.joc.model.yade.TransferState;
 import com.sos.joc.model.yade.TransferStateText;
 import com.sos.joc.model.yade.Transfers;
-import com.sos.joc.yade.resource.IYadeTransfersResource;
+import com.sos.joc.yade.resource.IYADETransfersResource;
 import com.sos.schema.JsonValidator;
 import com.sos.yade.commons.Yade;
 
+import jakarta.ws.rs.Path;
+
 @Path("yade")
-public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeTransfersResource {
+public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADETransfersResource {
 
     private static final String IMPL_PATH_TRANSFERS = "./yade/transfers";
     private static final String IMPL_PATH_TRANSFER = "./yade/transfer";
     private Map<Long, ProtocolFragment> protocolFragments = new HashMap<>();
 
     @Override
-    public JOCDefaultResponse postYadeTransfer(String accessToken, byte[] inBytes) {
+    public JOCDefaultResponse postYADETransfer(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
             inBytes = initLogging(IMPL_PATH_TRANSFER, inBytes, accessToken);
@@ -95,7 +95,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
     }
 
     @Override
-    public JOCDefaultResponse postYadeTransfers(String accessToken, byte[] inBytes) {
+    public JOCDefaultResponse postYADETransfers(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
             inBytes = initLogging(IMPL_PATH_TRANSFERS, inBytes, accessToken);

@@ -21,22 +21,22 @@ import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.db.yade.DBItemYadeProtocol;
 import com.sos.joc.db.yade.DBItemYadeTransfer;
 import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.yade.history.YadeTransferHistoryTerminated;
+import com.sos.joc.event.bean.yade.history.YADETransferHistoryTerminated;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.result.YadeTransferResult;
 import com.sos.yade.commons.result.YadeTransferResultEntry;
 import com.sos.yade.commons.result.YadeTransferResultProtocol;
 
-public class YadeHandler {
+public class YADEHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(YadeHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(YADEHandler.class);
     private static final String IDENTIFIER = ClusterServices.history.name();
 
     private final String controllerId;
     private final ConcurrentHashMap<String, Long> protocols;
 
-    public YadeHandler(String controllerId) {
+    public YADEHandler(String controllerId) {
         this.controllerId = controllerId;
         this.protocols = new ConcurrentHashMap<String, Long>();
     }
@@ -221,7 +221,7 @@ public class YadeHandler {
         if (transferId == null) {
             return;
         }
-        EventBus.getInstance().post(new YadeTransferHistoryTerminated(controllerId, transferId));
+        EventBus.getInstance().post(new YADETransferHistoryTerminated(controllerId, transferId));
     }
 
 }

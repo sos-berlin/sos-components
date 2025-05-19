@@ -110,7 +110,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatInstruction;
 import com.sos.joc.history.controller.proxy.fatevent.FatOutcome;
 import com.sos.joc.history.controller.proxy.fatevent.FatPosition;
 import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
-import com.sos.joc.history.controller.yade.YadeHandler;
+import com.sos.joc.history.controller.yade.YADEHandler;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.history.helper.CachedAgent;
 import com.sos.joc.history.helper.CachedOrder;
@@ -160,7 +160,7 @@ public class HistoryModel {
     private final SOSHibernateFactory dbFactory;
     private JocHistoryConfiguration historyConfiguration;
     private ControllerConfiguration controllerConfiguration;
-    private YadeHandler yadeHandler;
+    private YADEHandler yadeHandler;
     private HistoryCacheHandler cacheHandler;
     private final LogExtAsyncHandler logExtHandler;
     private String identifier;
@@ -200,7 +200,7 @@ public class HistoryModel {
         controllerConfiguration = controllerConf;
         variableName = "history_" + controllerConfiguration.getCurrent().getId();
         maxTransactions = historyConfiguration.getMaxTransactions();
-        yadeHandler = new YadeHandler(controllerConfiguration.getCurrent().getId());
+        yadeHandler = new YADEHandler(controllerConfiguration.getCurrent().getId());
         cacheHandler = new HistoryCacheHandler(controllerConfiguration.getCurrent().getId(), identifier);
         logExtHandler = new LogExtAsyncHandler(historyConfiguration, variableName + "_logExt");
     }
@@ -1406,7 +1406,7 @@ public class HistoryModel {
         le.onOrderBase(co, eo);
         storeLog2File(le);
     }
-    
+
     private void orderLog(DBLayerHistory dbLayer, AFatEventOrderBase eo, EventType eventType) throws Exception {
         orderLog(dbLayer, eo, eventType, OrderLogEntryLogLevel.DETAIL);
     }

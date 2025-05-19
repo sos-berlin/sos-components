@@ -1,12 +1,12 @@
 package com.sos.joc.event.bean.yade.history;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sos.joc.event.bean.yade.YadeEvent;
+import com.sos.joc.event.bean.yade.YADEEvent;
 
-public class YadeTransferHistoryTerminated extends YadeEvent {
+public class YADETransferHistoryTerminated extends YADEEvent {
 
-    public YadeTransferHistoryTerminated(String controllerId, Long transferId) {
-        super(YadeTransferHistoryTerminated.class.getSimpleName(), controllerId, null);
+    public YADETransferHistoryTerminated(String controllerId, Long transferId) {
+        super(YADETransferHistoryTerminated.class.getSimpleName(), controllerId, null);
         putVariable("transferId", transferId);
     }
 

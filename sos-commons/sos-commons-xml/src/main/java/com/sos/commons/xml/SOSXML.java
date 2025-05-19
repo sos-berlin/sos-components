@@ -21,6 +21,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -246,8 +247,8 @@ public class SOSXML {
 
     public static String nodeToString(Node node, boolean omitXmlDeclaration, int indentAmount) throws Exception {
         removeWhitespaceNodes(node);
-        StringWriter sw = new StringWriter();
         Transformer t = TransformerFactory.newInstance().newTransformer();
+        // t.setOutputProperty(OutputKeys.CDATA_SECTION_ELEMENTS, "text");
         t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclaration ? "yes" : "no");
         if (indentAmount > 0) {
             t.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -255,7 +256,60 @@ public class SOSXML {
         } else {
             t.setOutputProperty(OutputKeys.INDENT, "no");
         }
+
+        StringWriter sw = new StringWriter();
         t.transform(new DOMSource(node), new StreamResult(sw));
+        return sw.toString().trim();
+    }
+
+    /** Transforms XML content using an XSL stylesheet and returns the result as a string.
+     *
+     * <p>
+     * <b>Note on CDATA sections:</b> CDATA is not required for correct XML transformation.<br/>
+     * During transformation, special characters (e.g., &, <, >) are automatically escaped,<br/>
+     * and both escaped content and CDATA are treated identically by XML parsers.
+     *
+     * <p>
+     * <b>When to use CDATA:</b> CDATA is only needed if:
+     * <ul>
+     * <li>Target systems explicitly require CDATA (e.g., legacy APIs or XHTML script/style blocks)</li>
+     * <li>You want to preserve human readability in large text blocks</li>
+     * <li>You are embedding raw markup or code (e.g., HTML, JS) that shouldn't be escaped</li>
+     * </ul>
+     *
+     * <p>
+     * <b>How to enable CDATA in transformation:</b>
+     * <ul>
+     * <li><b>In XSLT:</b> use the <code>&lt;xsl:output&gt;</code> element with <code>cdata-section-elements</code>:
+     * 
+     * <pre>{@code
+     * <xsl:output method="xml" indent="yes" cdata-section-elements="MyElement1 MyElement2"/>
+     * }</pre>
+     * 
+     * </li>
+     * <li><b>In Java:</b> CDATA sections must be declared in the XSLT. Java's Transformer API does not provide a direct method to enforce CDATA.</li>
+     * </ul>
+     *
+     * @param xmlContent the XML content to transform
+     * @param xslContent the XSL stylesheet content to apply
+     * @return the result of the transformation as a string
+     * @throws Exception if transformation fails */
+    public static String transformXMLWithXSL(String xmlContent, String xslContent) throws Exception {
+        return transformXMLWithXSL(xmlContent, xslContent, true, 4);
+    }
+
+    public static String transformXMLWithXSL(String xmlContent, String xslContent, boolean omitXmlDeclaration, int indentAmount) throws Exception {
+        Transformer t = TransformerFactory.newInstance().newTransformer(new StreamSource(new StringReader(xslContent)));
+        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclaration ? "yes" : "no");
+        if (indentAmount > 0) {
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", String.valueOf(indentAmount));
+        } else {
+            t.setOutputProperty(OutputKeys.INDENT, "no");
+        }
+
+        StringWriter sw = new StringWriter();
+        t.transform(new StreamSource(new StringReader(xmlContent)), new StreamResult(sw));
         return sw.toString().trim();
     }
 

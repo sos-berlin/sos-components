@@ -34,9 +34,8 @@ public class ValidateConfiguration {
     @JsonProperty("objectType")
     private ObjectType objectType;
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -75,9 +74,8 @@ public class ValidateConfiguration {
     }
 
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")
@@ -86,9 +84,8 @@ public class ValidateConfiguration {
     }
 
     /**
-     * disallow <script and <svg/on
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("configuration")

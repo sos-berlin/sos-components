@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -21,16 +19,18 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.TransferFilesOverView;
 import com.sos.joc.model.yade.TransferFilesSummary;
 import com.sos.joc.model.yade.TransferFilter;
-import com.sos.joc.yade.resource.IYadeOverviewSummaryResource;
+import com.sos.joc.yade.resource.IYADEOverviewSummaryResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("yade")
-public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements IYadeOverviewSummaryResource {
+public class YADEOverviewSummaryResourceImpl extends JOCResourceImpl implements IYADEOverviewSummaryResource {
 
     private static final String IMPL_PATH = "./yade/overview/summary";
 
     @Override
-    public JOCDefaultResponse postYadeOverviewSummary(String accessToken, byte[] inBytes) {
+    public JOCDefaultResponse postYADEOverviewSummary(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken);

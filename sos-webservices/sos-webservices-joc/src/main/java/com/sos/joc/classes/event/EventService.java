@@ -58,7 +58,7 @@ import com.sos.joc.event.bean.proxy.ProxyEvent;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
 import com.sos.joc.event.bean.reporting.ReportingEvent;
-import com.sos.joc.event.bean.yade.YadeEvent;
+import com.sos.joc.event.bean.yade.YADEEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -287,8 +287,8 @@ public class EventService {
         }
     }
 
-    @Subscribe({ YadeEvent.class })
-    public void createHistoryTaskEvent(YadeEvent evt) {
+    @Subscribe({ YADEEvent.class })
+    public void createHistoryTaskEvent(YADEEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId() / 1000);

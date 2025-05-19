@@ -1,4 +1,4 @@
-package com.sos.joc.xmleditor.common;
+package com.sos.joc.xmleditor.commons;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
@@ -18,11 +18,14 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
 public class Xml2JsonConverterTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Xml2JsonConverterTest.class);
+
+    private static final String YADE_SCHEMA_PATH = "src/main/resources/" + JocXmlEditor.YADE_SCHEMA_RESOURCE_PATH;
 
     @Before
     public void setUp() throws Exception {
@@ -52,12 +55,12 @@ public class Xml2JsonConverterTest {
     public void xml2jsonYade() throws Exception {
         ObjectType type = ObjectType.YADE;
         Path xml = Paths.get("src/test/resources/xmleditor/yade.xml");
-        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
+        Path schema = Paths.get(YADE_SCHEMA_PATH);
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
+            String s = c.convert(type, SOSPath.readFile(schema), SOSPath.readFile(xml));
             LOGGER.info(s);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -69,12 +72,12 @@ public class Xml2JsonConverterTest {
     public void xml2jsonYade220() throws Exception {
         ObjectType type = ObjectType.YADE;
         Path xml = Paths.get("src/test/resources/xmleditor/yade_220.xml");
-        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
+        Path schema = Paths.get(YADE_SCHEMA_PATH);
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
+            String s = c.convert(type, SOSPath.readFile(schema), SOSPath.readFile(xml));
             LOGGER.info("end: len=" + s.length());
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -88,12 +91,12 @@ public class Xml2JsonConverterTest {
         ObjectType type = ObjectType.YADE;
         Path xml = Paths.get("src/test/resources/xmleditor/yade_660.xml");
         Path output = Paths.get("src/test/resources/xmleditor/yade_660.json");
-        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
+        Path schema = Paths.get(YADE_SCHEMA_PATH);
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
+            String s = c.convert(type, SOSPath.readFile(schema), SOSPath.readFile(xml));
             LOGGER.info("end: len=" + s.length());
             Files.write(output, s.getBytes());
         } catch (Exception e) {
@@ -106,12 +109,12 @@ public class Xml2JsonConverterTest {
     public void xml2jsonOthers() throws Exception {
         ObjectType type = ObjectType.OTHER;
         Path xml = Paths.get("src/test/resources/xmleditor/other.xml");
-        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
+        Path schema = Paths.get(YADE_SCHEMA_PATH);
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
+            String s = c.convert(type, SOSPath.readFile(schema), SOSPath.readFile(xml));
             LOGGER.info(s);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);

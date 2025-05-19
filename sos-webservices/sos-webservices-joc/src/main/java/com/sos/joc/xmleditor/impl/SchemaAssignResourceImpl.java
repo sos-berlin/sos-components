@@ -3,19 +3,20 @@ package com.sos.joc.xmleditor.impl;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import jakarta.ws.rs.Path;
-
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfiguration;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfigurationAnswer;
-import com.sos.joc.xmleditor.common.schema.SchemaHandler;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.ISchemaAssignResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISchemaAssignResource {
@@ -43,7 +44,6 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
     }
 
     private void checkRequiredParameters(final SchemaAssignConfiguration in) throws Exception {
-        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getUri() == null) {
             if (in.getFileName() == null || in.getFileContent() == null) {
                 throw new JocMissingRequiredParameterException("uri param is null. missing fileName or fileContent parameters.");
@@ -52,16 +52,23 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
     }
 
     private SchemaAssignConfigurationAnswer getSuccess(final SchemaAssignConfiguration in) throws Exception {
-        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
-            throw new Exception(String.format("[%s]not supported", in.getObjectType().name()));
+        boolean isYADE = JocXmlEditor.isYADE(in.getObjectType());
+        if (!isYADE && !JocXmlEditor.isOther(in.getObjectType())) {
+            throw new Exception("Unsupported type=" + in.getObjectType());
         }
 
-        SchemaHandler h = new SchemaHandler();
-        h.process(in.getObjectType(), in.getUri(), in.getFileName(), in.getFileContent());
+        if (isYADE) {
+            SchemaAssignConfigurationAnswer answer = new SchemaAssignConfigurationAnswer();
+            answer.setSchema(StandardSchemaHandler.getYADESchema());
+            answer.setSchemaIdentifier(StandardSchemaHandler.getYADESchemaIdentifier());
+            return answer;
+        }
+        OtherSchemaHandler h = new OtherSchemaHandler();
+        h.assign(in.getObjectType(), in.getUri(), in.getFileName(), in.getFileContent());
         if (Files.exists(h.getTargetTemp())) {
             boolean equals = h.getTargetTemp().equals(h.getTarget());
             try {
-                String schema = JocXmlEditor.getFileContent(h.getTargetTemp());
+                String schema = SOSPath.readFile(h.getTargetTemp());
                 JocXmlEditor.parseXml(schema);
 
                 if (!equals) {
@@ -70,7 +77,7 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
 
                 SchemaAssignConfigurationAnswer answer = new SchemaAssignConfigurationAnswer();
                 answer.setSchema(schema);
-                answer.setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(h.getSource()));
+                answer.setSchemaIdentifier(OtherSchemaHandler.getHttpOrFileSchemaIdentifier(h.getSource()));
                 return answer;
             } catch (Exception e) {
                 h.onError(!equals);

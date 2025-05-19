@@ -1,12 +1,11 @@
-package com.sos.joc.xmleditor.common;
+package com.sos.joc.xmleditor.commons;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.ConnectException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,7 +39,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.exception.SOSXMLNotMatchSchemaException;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
 public class Xml2JsonConverter {
@@ -58,23 +56,15 @@ public class Xml2JsonConverter {
     private long uuid;
     private boolean generateGlobalDocs = true;
 
-    public String convert(ObjectType type, Path schema, String xml) throws Exception {
-        if (Files.exists(schema) && Files.isReadable(schema)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[schema][use local file]%s", schema));
-            }
-        } else {
-            throw new Exception(String.format("[%s]schema not found", schema.toString()));
-        }
-
-        if (!type.equals(ObjectType.OTHER)) {
+    public String convert(ObjectType type, String schema, String xml) throws Exception {
+        if (JocXmlEditor.isStandardType(type)) {
             rootElementNameXml = JocXmlEditor.getRootElementName(type);
         }
 
         try {
             // init(new InputSource(Files.newInputStream(schema)), new InputSource(new StringReader(xml)));
             // read UTF-8 BOM too
-            init(new InputSource(Files.newInputStream(schema)), new InputSource(new ByteArrayInputStream(xml.getBytes(JocXmlEditor.CHARSET))));
+            init(new InputSource(new StringReader(schema)), new InputSource(new ByteArrayInputStream(xml.getBytes(JocXmlEditor.CHARSET))));
         } catch (ConnectException e) {
             throw new Exception(String.format("[%s][cant't get schema]%s", schema.toString(), e.toString()), e);
         } catch (SOSXMLNotMatchSchemaException e) {
@@ -176,8 +166,8 @@ public class Xml2JsonConverter {
         uuid++;
         long currentUuid = uuid;
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][level=%s][parentId=%s][uuid=%s]expanded=%s", current.getNodeName(), level, parentId, uuid, expanded));
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(String.format("[%s][level=%s][parentId=%s][uuid=%s]expanded=%s", current.getNodeName(), level, parentId, uuid, expanded));
         }
         gen.writeStartObject();
         gen.writeStringField("ref", current.getNodeName());

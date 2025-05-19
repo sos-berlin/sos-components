@@ -5,8 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -17,16 +15,18 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.joc.model.yade.TransferFiles;
 import com.sos.joc.yade.common.TransferFileUtils;
-import com.sos.joc.yade.resource.IYadeFilesResource;
+import com.sos.joc.yade.resource.IYADEFilesResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("yade")
-public class YadeFilesResourceImpl extends JOCResourceImpl implements IYadeFilesResource {
+public class YADEFilesResourceImpl extends JOCResourceImpl implements IYADEFilesResource {
 
     private static final String IMPL_PATH = "./yade/files";
 
     @Override
-    public JOCDefaultResponse postYadeFiles(String accessToken, byte[] inBytes) {
+    public JOCDefaultResponse postYADEFiles(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken);

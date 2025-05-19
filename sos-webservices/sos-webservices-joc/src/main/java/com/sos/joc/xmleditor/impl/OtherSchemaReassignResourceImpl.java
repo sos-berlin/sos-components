@@ -3,23 +3,23 @@ package com.sos.joc.xmleditor.impl;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import jakarta.ws.rs.Path;
-
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.schema.SchemaReassignConfiguration;
 import com.sos.joc.model.xmleditor.schema.SchemaReassignConfigurationAnswer;
-import com.sos.joc.xmleditor.common.Xml2JsonConverter;
-import com.sos.joc.xmleditor.common.schema.SchemaHandler;
-import com.sos.joc.xmleditor.resource.ISchemaReassignResource;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.Xml2JsonConverter;
+import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
+import com.sos.joc.xmleditor.resource.IOtherSchemaReassignResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class SchemaReassignResourceImpl extends ACommonResourceImpl implements ISchemaReassignResource {
+public class OtherSchemaReassignResourceImpl extends ACommonResourceImpl implements IOtherSchemaReassignResource {
 
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
@@ -44,8 +44,6 @@ public class SchemaReassignResourceImpl extends ACommonResourceImpl implements I
     }
 
     private void checkRequiredParameters(final SchemaReassignConfiguration in) throws Exception {
-//        checkRequiredParameter("configuration", in.getConfiguration());
-//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getUri() == null) {
             if (in.getFileName() == null || in.getFileContent() == null) {
                 throw new JocMissingRequiredParameterException("uri param is null. missing fileName or fileContent parameters.");
@@ -54,17 +52,17 @@ public class SchemaReassignResourceImpl extends ACommonResourceImpl implements I
     }
 
     private SchemaReassignConfigurationAnswer getSuccess(final SchemaReassignConfiguration in) throws Exception {
-        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
+        if (JocXmlEditor.isStandardType(in.getObjectType())) {
             throw new Exception(String.format("[%s]not supported", in.getObjectType().name()));
         }
 
-        SchemaHandler h = new SchemaHandler();
-        h.process(in.getObjectType(), in.getUri(), in.getFileName(), in.getFileContent());
+        OtherSchemaHandler h = new OtherSchemaHandler();
+        h.assign(in.getObjectType(), in.getUri(), in.getFileName(), in.getFileContent());
         if (Files.exists(h.getTargetTemp())) {
             boolean equals = h.getTargetTemp().equals(h.getTarget());
             try {
                 JocXmlEditor.parseXml(in.getConfiguration());
-                String schema = JocXmlEditor.getFileContent(h.getTargetTemp());
+                String schema = SOSPath.readFile(h.getTargetTemp());
                 JocXmlEditor.parseXml(schema);
 
                 if (!equals) {
@@ -72,11 +70,11 @@ public class SchemaReassignResourceImpl extends ACommonResourceImpl implements I
                 }
 
                 Xml2JsonConverter converter = new Xml2JsonConverter();
-                String configurationJson = converter.convert(in.getObjectType(), h.getTarget(), in.getConfiguration());
+                String configurationJson = converter.convert(in.getObjectType(), schema, in.getConfiguration());
 
                 SchemaReassignConfigurationAnswer answer = new SchemaReassignConfigurationAnswer();
                 answer.setSchema(schema);
-                answer.setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(h.getSource()));
+                answer.setSchemaIdentifier(OtherSchemaHandler.getHttpOrFileSchemaIdentifier(h.getSource()));
                 answer.setConfigurationJson(configurationJson);
                 answer.setRecreateJson(true);
                 return answer;

@@ -9,12 +9,12 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IYadeOverviewSummaryResource {
+public interface IYADEOverviewSummaryResource {
 
     @POST
     @Path("overview/summary")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postYadeOverviewSummary(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    public JOCDefaultResponse postYADEOverviewSummary(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
 }

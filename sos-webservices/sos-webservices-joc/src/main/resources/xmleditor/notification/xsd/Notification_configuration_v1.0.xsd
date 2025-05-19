@@ -1,0 +1,1823 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+	<!-- root element -->
+	  <xs:element name="Configurations">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path=""/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>The root element of a <em>Notification</em> configuration.</p>
+               <p/>
+               <p>The configuration is applied by the <a target="_blank"
+                     href="https://kb.sos-berlin.com/x/p6jAAw"
+                     shape="rect">JS7 - Monitor Service</a> which inspects the workflow execution history and creates notifications as required.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+                <xs:element ref="Fragments"/>
+				        <xs:element ref="Notifications"/>
+			      </xs:sequence>
+		    </xs:complexType>
+        
+        <!-- KEY/REF NotificationMonitors -->
+        <xs:key name="NSCAFragmentKey">
+			      <xs:selector xpath=".//NSCAFragment"/>
+			      <xs:field xpath="@name"/>
+		    </xs:key>
+        <xs:key name="CommandFragmentKey">
+			      <xs:selector xpath=".//CommandFragment"/>
+			      <xs:field xpath="@name"/>
+		    </xs:key>
+        <xs:key name="MailFragmentKey">
+			      <xs:selector xpath=".//MailFragment"/>
+			      <xs:field xpath="@name"/>
+		    </xs:key>
+        <xs:key name="JMSFragmentKey">
+			      <xs:selector xpath=".//JMSFragment"/>
+			      <xs:field xpath="@name"/>
+		    </xs:key>        
+        <xs:keyref name="NSCAFragmentKeyRef" refer="NSCAFragmentKey">
+			      <xs:selector xpath=".//NSCAFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="CommandFragmentKeyRef" refer="CommandFragmentKey">
+			      <xs:selector xpath=".//CommandFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="MailFragmentKeyRef" refer="MailFragmentKey">
+			      <xs:selector xpath=".//MailFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="JMSFragmentKeyRef" refer="JMSFragmentKey">
+			      <xs:selector xpath=".//JMSFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        
+        <!-- KEY/REF Message -->
+        <xs:key name="MessageKey">
+			      <xs:selector xpath=".//Message"/>
+			      <xs:field xpath="@name"/>
+		    </xs:key>
+		    <xs:keyref name="MessageKeyRef" refer="MessageKey">
+			      <xs:selector xpath=".//MessageRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        
+        <!-- KEY/REF Workflows -->
+        <xs:key name="WorkflowsKey">
+			      <xs:selector xpath=".//Workflows"/>
+			      <xs:field xpath="@name"/>
+		    </xs:key>
+		    <xs:keyref name="WorkflowsKeyRef" refer="WorkflowsKey">
+			      <xs:selector xpath=".//WorkflowsRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        
+        <!-- Unique -->
+        <xs:unique name="UniqueNotificationId">
+            <xs:selector xpath=".//Notification"/> 
+            <xs:field xpath="@notification_id"/> 
+        </xs:unique>
+        
+	  </xs:element>
+    
+    <xs:element name="Fragments">
+        <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Defines re-usable configuration blocks for Messages, Monitors and monitored Objects.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+                <xs:element ref="MessageFragments"/>
+				        <xs:element ref="MonitorFragments"/>
+                <xs:element ref="ObjectFragments"/>
+            </xs:sequence>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="Notifications">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Defines the effective notifications by references to the Fragments elements.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+			      <xs:sequence>
+                <xs:element ref="SystemNotification" minOccurs="0" maxOccurs="1"/>
+			         <xs:element ref="Notification" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+		    </xs:complexType>
+	  </xs:element>
+    
+	  <xs:element name="Notification">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Notifications/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Any number of notifications can be added with each norification being distinguished by a unique name.</p>
+               <p>A notification is assigned a type which can be any one of <em>SUCCESS</em>, <em>WARNING</em> or <em>ERROR</em>.</p>
+               <p>This allows notifications which are used, for example, in the event of job errors and warnings to be specified.</p>
+               <p>This also allows notifications to be specified for successful workflow execution.</p>
+               <p>Note that successful execution includes both the absence of job errors and optionally the presence of job warnings.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+			         <xs:element ref="NotificationMonitors" minOccurs="1" maxOccurs="1"/>
+                <xs:element ref="NotificationObjects" minOccurs="1" maxOccurs="1"/>
+           </xs:sequence>
+            <xs:attribute name="notification_id" type="xs:string" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Notification unique identifier.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+            
+            <xs:attribute name="type" default="ERROR WARNING">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Notification type.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:list>
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="ERROR"/>
+                                <xs:enumeration value="WARNING"/>
+                                <xs:enumeration value="SUCCESS"/>
+                            </xs:restriction>                  
+                        </xs:simpleType>               
+                    </xs:list>
+                </xs:simpleType>
+			      </xs:attribute>
+			            
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="SystemNotification">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Notifications/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>A notification is assigned a type which can be any one of <em>WARNING</em> or <em>ERROR</em>.</p>
+               <p>This allows notifications which are used, for example, in the event of database errors and warnings to be specified.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+			         <xs:element ref="NotificationMonitors" minOccurs="1" maxOccurs="1"/>
+            </xs:sequence>
+            
+            <xs:attribute name="type" default="ERROR WARNING">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Notification type.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:list>
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="ERROR"/>
+                                <xs:enumeration value="WARNING"/>
+                            </xs:restriction>                  
+                        </xs:simpleType>               
+                    </xs:list>
+                </xs:simpleType>
+			      </xs:attribute>
+			            
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="NotificationMonitors">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Notifications/Notification"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Selects one or more of the <em>MonitorFragments</em>.</p>
+               <p>It is possible to select multiple fragments of the same fragment type.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CommandFragmentRef" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="MailFragmentRef" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="JMSFragmentRef" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="NSCAFragmentRef" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="NotificationObjects">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Notifications/Notification/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Selects the workflows which notifications are created for.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+			      <xs:sequence>
+                <xs:element ref="WorkflowsRef" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="MessageFragments">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Fragments/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Defines re-usable configuration blocks for Messages.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+				        <xs:element ref="Message" minOccurs="1" maxOccurs="unbounded"/>
+			      </xs:sequence>
+            <xs:attribute name="time_zone" type="xs:string" default="Etc/UTC">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Defines time zone for all notifications.</p>
+                     <p/>
+                     <p>JS7 Release: <a href="https://change.sos-berlin.com/browse/JOC-1307"
+                           target="_blank"
+                           shape="rect">JOC-1307</a>. Availability starting with 2.4.0.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    
+	  <xs:element name="MonitorFragments">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Fragments/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Defines re-usable configuration blocks for Monitors.</p>
+               <p/>
+               <p>These fragments come in a number of flavors for the following fragment types:
+            <ul>
+                     <li>
+                        <em>CommandFragment</em>
+                     </li>
+                     <li>
+                        <em>MailFragment</em>
+                     </li>
+                     <li>
+                        <em>JMSFragment</em>
+                     </li>
+                     <li>
+                        <em>NSCAFragment</em>
+                     </li>
+                  </ul>
+               </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+				        <xs:element ref="CommandFragment" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="MailFragment" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="JMSFragment" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="NSCAFragment" minOccurs="0" maxOccurs="unbounded"/>
+			      </xs:sequence>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="ObjectFragments">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Fragments/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Defines re-usable configuration blocks for monitored Objects.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+				        <xs:element ref="Workflows" minOccurs="1" maxOccurs="unbounded"/>
+    		   </xs:sequence>
+    	</xs:complexType>
+	  </xs:element>
+    
+	  <xs:element name="Workflows">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Fragments/ObjectFragments/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Any number of workflow configurations can be added and are distinguished by a unique name that is added to this element.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="Workflow" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+	        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This attribute identifies the current fragment.</p>
+                     <p/>
+                     <p>Any number of fragments can be used and are distinguished by Notification based on their name.</p>
+                     <p/>
+                     <p>A fragment is referenced via this attribute value by a <em>Notifications/Notification/NotificationObjects/WorkflowsRef</em>.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+            <xs:attribute name="controller_id" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Notifications are restricted to the Controller instance with the given identification.</p>
+                     <p>By default notifications will be sent for all Controller instances that would log into the same database.</p>
+                     <p/>
+                     <p>Java regular expression can be used.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    
+	  <xs:element name="Workflow">
+		    <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Fragments/ObjectFragments/Workflows/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This element can be used to limit notifications to specific workflows.</p>
+               <p/>
+               <p>The <em>path</em> attribute allows a regular expression to specify a part of the workflow path.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="WorkflowJob" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="path" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Java regular expression can be used.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+			      </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="WorkflowJob">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/ObjectFragments/Workflows/Workflow/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This element can be used to limit notifications to specific jobs in a workflow.</p>
+               <ul>
+                  <li>This includes the option of specifing the job <em>name</em> and/or its <em>label</em>
+                  </li>
+                  <li>It is necessary that the criticality, which can be any one of <em>MINOR</em>, <em>NORMAL</em>, <em>MAJOR</em> or <em>CRITICAL</em>, is specified when using this element.<br/>
+            - <b>Deprecation note</b>: The usage of the <em>ALL</em>  element is deprecated. Use other elements instead.</li>
+                  <li>The <em>return_code_from</em> and <em>return_code_to</em> attributes can be optionally used to further limit notifications to jobs which complete with the given return code. The return code for shell jobs corresponds to the OS exit code.</li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="name" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Java regular expression can be used.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+            <xs:attribute name="label" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Java regular expression can be used.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+			      </xs:attribute>
+			      <xs:attribute name="criticality" default="MINOR NORMAL MAJOR CRITICAL">
+				        <xs:annotation>
+					          <xs:documentation source="WorkflowJob@criticality" xml:lang="en"/>
+				        </xs:annotation>
+                <xs:simpleType>
+					          <xs:list>
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="ALL"/>
+                        <!-- deprecated, compatibility with earlier versions -->
+                                <xs:enumeration value="MINOR"/>
+                                <xs:enumeration value="NORMAL"/>
+                                <xs:enumeration value="MAJOR"/>
+                                <xs:enumeration value="CRITICAL"/>
+                            </xs:restriction>                  
+                        </xs:simpleType>               
+                    </xs:list>
+                </xs:simpleType>
+			      </xs:attribute>
+            <xs:attribute name="return_code_from" type="xs:integer" use="optional">
+				        <xs:annotation>
+				</xs:annotation>
+			      </xs:attribute>
+			      <xs:attribute name="return_code_to" type="xs:integer" use="optional">
+				        <xs:annotation>
+				</xs:annotation>
+			      </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="Message">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MessageFragments/"/>
+                <XmlEditor minWidth="600" minHeight="150" fontSize="11" type="html"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Defines the content which is sent, for example, by mail to a user or which is used to parameterize a command line utility, such as content to be forwarded to a System Monitor.</p>
+               <p/>
+               <ul>
+                  <li>Messages for use with E-Mail represent the mail body, either for use with plain text or with HTML e-mails.</li>
+                  <li>Messages for use with the Command Line represent a string.</li>
+               </ul>
+               <p/>
+               <p>Message elements can include <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/JS7+-+Notifications+-+Configuration#JS7-Notifications-Configuration-MonitorVariables"
+                     shape="rect">Monitor Variables</a> that are placeholders for values, e.g. for the Workflow Path, Order ID etc.</p>
+               <p/>
+               <p>Message fragment can be referenced via attribute <em>name</em> value by 
+            <ul>
+                     <li>
+                        <em>Fragments/MonitorFragments/(Command|Mail|JMS|NSCA)Fragment/MessageRef</em> or </li>
+                     <li>
+                        <em>Notifications/Notification/NotificationMonitors/(Command|Mail|JMS|NSCA)FragmentRef/MessageRef</em>
+                     </li>
+                  </ul>
+               </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:simpleContent>
+				        <xs:extension base="NotEmptyType">
+                    <xs:attribute name="name" type="xs:string" use="required">
+                  <xs:annotation>
+                     <xs:documentation>
+                        <div xmlns="http://www.w3.org/1999/xhtml">
+                           <p>This attribute identifies the current fragment.</p>
+                           <p/>
+                           <p>Any number of fragments can be used and are distinguished by Notification based on their name.</p>
+                        </div>
+                     </xs:documentation>
+                  </xs:annotation>
+                        
+                    </xs:attribute>
+                    <xs:attribute name="time_zone" type="xs:string" use="optional">
+                  <xs:annotation>
+                     <xs:documentation>
+                        <div xmlns="http://www.w3.org/1999/xhtml">
+                           <p>Defines time zone  for any occurrence of the specific message.</p>
+                           <p/>
+                           <p>Overrides <i>Fragments/MessageFragments@time_zone</i> configuration.</p>
+                           <p/>
+                           <p>JS7 Release: <a href="https://change.sos-berlin.com/browse/JOC-1307"
+                                 target="_blank"
+                                 shape="rect">JOC-1307</a>. Availability starting with 2.4.0.</p>
+                        </div>
+                     </xs:documentation>
+                  </xs:annotation>
+                        
+                    </xs:attribute>
+                </xs:extension>
+			      </xs:simpleContent>
+     	</xs:complexType>
+	  </xs:element>
+    
+	  <xs:element name="NSCAFragment">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/"/>
+		       </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/C6nAAw">JS7 - Notifications - Configuration Element NSCAFragment</a>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+		    	     <xs:element ref="MessageRef" minOccurs="1" maxOccurs="1"/>
+        	</xs:sequence>
+            
+            <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This attribute identifies the current fragment.</p>
+                     <p/>
+                     <p>Any number of fragments can be used and are distinguished by Notification based on their name.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+            <xs:attribute name="service_host" type="xs:string" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the name of the host that executes the passive check. 
+The name must match the corresponding setting in the System Monitor.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+			      </xs:attribute>
+			      <xs:attribute name="monitor_host" type="xs:string" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the hostname or ip address of System Monitor host.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+			      </xs:attribute>
+			      <xs:attribute name="monitor_port" type="xs:positiveInteger" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the TCP port that the System Monitor would listen to.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+			      <xs:attribute name="monitor_password" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the password of System Monitor host.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+			      <xs:attribute name="monitor_connection_timeout"
+                       type="xs:integer"
+                       use="optional"
+                       default="5000">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the connection timeout in ms.
+By default 5000ms will be used.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+			      <xs:attribute name="monitor_response_timeout" type="xs:integer" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the response timeout in ms.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+			      <xs:attribute name="monitor_encryption" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies that the communication with the System Monitor is encrypted. 
+By default no encryption is used:
+    * NONE: no encryption
+    * XOR: 
+    * TRIPLE_DES: use of triple des algorhythm for encryption</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+				        <xs:simpleType>
+					          <xs:restriction base="xs:string">
+						            <xs:enumeration value="NONE"/>
+						            <xs:enumeration value="XOR"/>
+						            <xs:enumeration value="TRIPLE_DES"/>
+					          </xs:restriction>
+				        </xs:simpleType>
+			      </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    
+	  <xs:element name="CommandFragment">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/"/>
+	        </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/GanAAw">JS7 - Notifications - Configuration Element CommandFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Command line Interface to be executed for System Monitor notification.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:sequence>
+                <xs:element ref="MessageRef" minOccurs="1" maxOccurs="1"/>
+                <xs:element ref="Command" minOccurs="1" maxOccurs="1"/>
+		 	     </xs:sequence>
+            
+            <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This attribute identifies the current fragment.</p>
+                     <p/>
+                     <p>Any number of fragments can be used and are distinguished by Notification based on their name.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+    	</xs:complexType>
+    </xs:element>
+    
+    <xs:element name="Command">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/CommandFragment/"/>
+                <XmlEditor minWidth="600"/>
+	        </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/GanAAw">JS7 - Notifications - Configuration Element CommandFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Specifies the shell command for Linux/Windows which is used to forward notifications, to, for example, a System Monitor Agent utility.</p>
+               <p/>
+               <p>The message content is available from the ${MESSAGE} Monitor Variable.</p>
+               <p>The example notification view above makes use of a shell command like this:
+            <ul>
+                     <li>
+                        <em>echo "${MESSAGE}" &gt;&gt; /tmp/notification.log</em>
+                     </li>
+                  </ul>
+               </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+    </xs:element>
+        
+    <xs:element name="MailFragment">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/"/>
+	        </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/_ajAAw">JS7 - Notifications - Configuration Element MailFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <ul>
+                  <li>The MailFragment element is used to specify the content, format and recipients of e-mail notifications.</li>
+                  <li>In addition mail server connection settings are used from <a target="_blank"
+                        href="https://kb.sos-berlin.com/x/kYGyAw"
+                        shape="rect">JS7 - Job Resources</a>.</li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+				        <xs:element ref="MessageRef" minOccurs="1" maxOccurs="1"/>
+                <xs:element ref="Subject" minOccurs="1" maxOccurs="1"/>
+                <xs:element ref="From" minOccurs="0" maxOccurs="1"/>
+				        <xs:element ref="To" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="CC" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="BCC" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This attribute identifies the current fragment.</p>
+                     <p/>
+                     <p>Any number of fragments can be used and are distinguished by Notification based on their name.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+            <xs:attribute name="job_resources" type="xs:string" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>A list of <em>JS7 - Job Resources</em> that specify mail server connection settings.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+            <xs:attribute name="content_type" default="text/html">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Content type of the e-mail. Possible values are "text/plain" and "text/html".</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+					          <xs:restriction base="xs:string">
+						            <xs:enumeration value="text/html"/>
+			               <xs:enumeration value="text/plain"/>
+					          </xs:restriction>
+				        </xs:simpleType>
+			      </xs:attribute>
+			      <xs:attribute name="charset" type="xs:string" default="UTF-8">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Charset of the e-mail.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+         	</xs:attribute>
+			      <xs:attribute name="encoding" default="7bit">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Encoding of the e-mail. Possible values are 7bit, Quoted-Printable, Base64.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="1"/>
+                        <xs:enumeration value="7bit"/>
+                        <xs:enumeration value="Quoted-Printable"/>
+                        <xs:enumeration value="Base64"/>
+                    </xs:restriction>
+                </xs:simpleType>
+			      </xs:attribute>
+			      <xs:attribute name="priority" default="Normal">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Priority of the e-mail.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+				        <xs:simpleType>
+					          <xs:restriction base="xs:string">
+						            <xs:enumeration value="Highest"/>
+						            <xs:enumeration value="High"/>
+						            <xs:enumeration value="Normal"/>
+                        <xs:enumeration value="Low"/>
+                        <xs:enumeration value="Lowest"/>
+                   	</xs:restriction>
+				        </xs:simpleType>
+			      </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="From">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/MailFragment/"/>
+		       </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/_ajAAw">JS7 - Notifications - Configuration Element MailFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>E-mail address of the account that sends e-mail.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
+    <xs:element name="To">
+        <xs:annotation>
+         <xs:appinfo>
+                <Parent path="Configurations/Fragments/MonitorFragments/MailFragment/"/>
+                <XmlEditor minWidth="600"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/_ajAAw">JS7 - Notifications - Configuration Element MailFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Specifies the e-mail address of the recipient.</p>
+               <p>Multiple recipients can be separated by comma.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
+    <xs:element name="CC">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/MailFragment/"/>
+                <XmlEditor minWidth="600"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/_ajAAw">JS7 - Notifications - Configuration Element MailFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>The recipient of blind carbon copies.</p>
+               <p>Multiple recipients can be separated by comma.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
+    <xs:element name="BCC">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/MailFragment/"/>
+                <XmlEditor minWidth="600"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/_ajAAw">JS7 - Notifications - Configuration Element MailFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>The recipient of carbon copies.</p>
+               <p>Multiple recipients can be separated by comma.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
+    <xs:element name="Subject">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/MailFragment/"/>
+                <XmlEditor minWidth="600" fontSize="11"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/_ajAAw">JS7 - Notifications - Configuration Element MailFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Specifies the mail subject and can include <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/JS7+-+Notifications+-+Configuration#JS7-Notifications-Configuration-MonitorVariables"
+                     shape="rect">Monitor Variables</a>.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:simpleType>
+			      <xs:restriction base="xs:string">
+				        <xs:minLength value="1"/>
+			      </xs:restriction>
+		    </xs:simpleType>
+	  </xs:element>
+    
+    <xs:element name="JMSFragment">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/8KjAAw">JS7 - Notifications - Configuration Element JMSFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>JMS Interface to be executed for System Monitor notification.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+			 	       <xs:element ref="MessageRef" minOccurs="1" maxOccurs="1"/>
+        	
+                <xs:choice minOccurs="1" maxOccurs="1">
+			            <xs:element ref="ConnectionFactory" maxOccurs="1"/>
+                    <xs:element ref="ConnectionJNDI" maxOccurs="1"/>
+                </xs:choice>
+           </xs:sequence>
+			
+            <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This attribute identifies the current fragment.</p>
+                     <p/>
+                     <p>Any number of fragments can be used and are distinguished by Notification based on their name.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+            <xs:attribute name="client_id">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>The client identifier for this connection.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+            </xs:attribute>
+            <xs:attribute name="destination_name" type="xs:NMTOKEN" use="required"/>
+            <xs:attribute name="destination" default="Queue">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <ul>
+                        <li>
+                           <em>Queue</em> - creates a <em>Queue</em> object which encapsulates a specified provider-specific queue name.</li>
+                        <li>
+                           <em>Topic</em> - creates a <em>Topic</em> object which encapsulates a specified provider-specific topic name.</li>
+                     </ul>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="1"/>
+                        <xs:enumeration value="Queue"/>
+                        <xs:enumeration value="Topic"/>
+                    </xs:restriction>
+                </xs:simpleType>
+         	</xs:attribute>
+			      <xs:attribute name="acknowledge_mode" default="Session.CLIENT_ACKNOWLEDGE">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			                     <ul>
+                           <li>
+                              <em>Session.AUTO_ACKNOWLEDGE</em> - with this acknowledgment mode, the session automatically acknowledges a client's receipt of a message either when the session has successfully returned from a call to receive or when the message listener the session has called to process the message successfully returns.</li>
+                           <li>
+                              <em>Session.CLIENT_ACKNOWLEDGE</em> - with this acknowledgment mode, the client acknowledges a consumed message by calling the message's acknowledge method.</li>
+                           <li>
+                              <em>Session.AUTO_ACKNOWLEDGE</em> - this acknowledgment mode instructs the session to lazily acknowledge the delivery of messages.</li>
+                        </ul>
+		                   </p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="1"/>
+                        <xs:enumeration value="Session.AUTO_ACKNOWLEDGE"/>
+                        <xs:enumeration value="Session.CLIENT_ACKNOWLEDGE"/>
+                        <xs:enumeration value="Session.DUPS_OK_ACKNOWLEDGE"/>
+                    </xs:restriction>
+                </xs:simpleType>
+         	</xs:attribute>
+			      <xs:attribute name="delivery_mode" default="DeliveryMode.PERSISTENT">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>The delivery modes supported by the JMS API are <em>PERSISTENT</em> and <em>NON_PERSISTENT</em>.</p>
+                     <p>        
+                        <ul>
+                           <li>
+                              <em>DeliveryMode.NON_PERSISTENT</em> - this is the lowest-overhead delivery mode because it does not require that the message be logged to stable storage.</li>
+                           <li>
+                              <em>DeliveryMode.PERSISTENT</em> - this delivery mode instructs the JMS provider to log the message to stable storage as part of the client's send operation.</li>
+                        </ul>
+		                   </p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:minLength value="1"/>
+                        <xs:enumeration value="DeliveryMode.NON_PERSISTENT"/>
+                        <xs:enumeration value="DeliveryMode.PERSISTENT"/>
+                    </xs:restriction>
+                </xs:simpleType>
+			      </xs:attribute>
+			      <xs:attribute name="priority" default="4">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>The JMS API defines ten levels of priority value, with 0 as the lowest priority and 9 as the highest.</p>
+                     <p/>
+                     <p>Clients should consider priorities 0-4 as gradations of normal priority and priorities 5-9 as gradations of expedited priority.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+				        <xs:simpleType>
+					          <xs:restriction base="xs:integer">
+						            <xs:enumeration value="0"/>
+						            <xs:enumeration value="1"/>
+						            <xs:enumeration value="2"/>
+                        <xs:enumeration value="3"/>
+                        <xs:enumeration value="4"/>
+                        <xs:enumeration value="5"/>
+                        <xs:enumeration value="6"/>
+                        <xs:enumeration value="7"/>
+                        <xs:enumeration value="8"/>
+                        <xs:enumeration value="9"/>
+                   	</xs:restriction>
+				        </xs:simpleType>
+			      </xs:attribute>
+            <xs:attribute name="time_to_live" type="xs:NMTOKEN" default="0">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			Sets the default length of time in milliseconds from its dispatch time that a produced message should be retained by the message system. 
+        </p>
+                     <p/>
+                     <p>Time to live is set to zero by default.</p>
+                     <p/>
+                     <p>        
+            Possible values:
+            <ul>
+                           <li>
+                              <em>&lt;n&gt;</em> - duration in milliseconds, e.g.: <em>60000</em>
+                           </li>
+                           <li>
+                              <em>&lt;n&gt;s</em> - duration in seconds, e.g.: <em>30s</em>
+                           </li>
+                           <li>
+                              <em>&lt;n&gt;m</em> - duration in minutes, e.g.: <em>30m</em>
+                           </li>
+                           <li>
+                              <em>&lt;n&gt;h</em> - duration in hours, e.g.: <em>24h</em>
+                           </li>
+                           <li>
+                              <em>&lt;n&gt;d</em> - duration in days, e.g.: <em>30d</em>
+                           </li>
+                           <li>
+                              <em>&lt;n&gt;w</em> - duration in weeks, e.g.: <em>4w</em>
+                           </li>
+                        </ul>
+                     </p>
+                     <p/>
+                     <p>Combined values (with blank as separator):
+            <ul>
+                           <li>e.g.: <em>1w 1d 1h</em>
+                           </li>
+                        </ul>
+                     </p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+            </xs:attribute>
+      </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="ConnectionFactory">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/JMSFragment/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/8KjAAw">JS7 - Notifications - Configuration Element JMSFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Using of a JMS ConnectionFactory implementation.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+		    	     <xs:element ref="ConstructorArguments" minOccurs="0" maxOccurs="1"/>
+        	</xs:sequence>
+            <xs:attribute name="java_class" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Java class of the JMS ConnectionFactory.</p>
+                     <p/>
+                     <p>e.g.: <em>org.apache.activemq.ActiveMQConnectionFactory</em>
+                     </p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+            </xs:attribute>
+			      <xs:attribute name="user_name">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>The caller's user name.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+            </xs:attribute>
+            <xs:attribute name="password">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>The caller's password.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="ConstructorArguments">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/JMSFragment/ConnectionFactory/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/8KjAAw">JS7 - Notifications - Configuration Element JMSFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>JMS ConnectionFactory constructor arguments.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+		    	     <xs:element ref="Argument" minOccurs="1" maxOccurs="unbounded"/>
+        	</xs:sequence>
+     	</xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="Argument">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/JMSFragment/ConnectionFactory/ConstructorArguments/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/8KjAAw">JS7 - Notifications - Configuration Element JMSFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>JMS ConnectionFactory constructor argument.</p>
+               <p/>
+               <p>e.g.: 
+            <ul>
+                     <li>java.lang.String</li>
+                     <li>tcp://host:61616</li>
+                  </ul>
+               </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:simpleContent>
+				        <xs:extension base="NotEmptyType">
+					          <xs:attribute name="type" default="java.lang.String">
+						            <xs:annotation>
+							              <xs:documentation xml:lang="en"/>
+						            </xs:annotation>
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:minLength value="1"/>
+                                <xs:enumeration value="boolean"/>
+                                <xs:enumeration value="double"/>
+                                <xs:enumeration value="float"/>
+                                <xs:enumeration value="int"/>
+                                <xs:enumeration value="long"/>
+                                <xs:enumeration value="short"/>
+                                <xs:enumeration value="java.lang.Boolean"/>
+                                <xs:enumeration value="java.lang.Double"/>
+                                <xs:enumeration value="java.lang.Float"/>
+                                <xs:enumeration value="java.lang.Integer"/>
+                                <xs:enumeration value="java.lang.Long"/>
+                                <xs:enumeration value="java.lang.Short"/>
+                                <xs:enumeration value="java.lang.String"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+					          </xs:attribute>
+				        </xs:extension>
+			      </xs:simpleContent>
+		    </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="ConnectionJNDI">
+		    <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Fragments/MonitorFragments/JMSFragment/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/8KjAAw">JS7 - Notifications - Configuration Element JMSFragment</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Using of a JNDI properties file to create a JNDI IntialContextFactory.</p>
+               <p>
+            Sample content of the JDNI properties file for ActiveMQ:
+            <ul>
+                     <li>
+                        <em>java.naming.factory.initial=org.apache.activemq.jndi.ActiveMQInitialContextFactory</em>
+                     </li>
+                     <li>
+                        <em>java.naming.provider.url=tcp://host:61616</em>
+                     </li>
+                  </ul>    
+		             </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:attribute name="file" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Path to the JNDI properties file.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+            </xs:attribute>
+			      <xs:attribute name="lookup_name" default="ConnectionFactory">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Name to lookup JMS connection factory objects.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+            </xs:attribute>
+       </xs:complexType>
+	  </xs:element>
+    
+    <xs:element name="NSCAFragmentRef">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Notifications/Notification/NotificationMonitors/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Selects the <em>NSCAFragment</em> to be used.</p>
+               <p/>
+               <p>Uses the <em>MessageRef</em> child element to overwrite the <em>MessageRef</em> defined with the <em>NSCAFragment</em>.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+			      <xs:sequence>
+		    	     <xs:element ref="MessageRef" minOccurs="0" maxOccurs="1"/>
+        	</xs:sequence>
+            
+            <xs:attribute name="ref" type="xs:NMTOKEN" use="required"/>
+            
+            <xs:attribute name="time_zone" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Defines time zone for the specific notification monitor.</p>
+                     <p/>
+                     <p>Overrides <i>Fragments/MessageFragments@time_zone</i> and <i>Fragments/MessageFragments/Message@time_zone</i> configurations.</p>
+                     <p/>
+                     <p>JS7 Release: <a href="https://change.sos-berlin.com/browse/JOC-1307"
+                           target="_blank"
+                           shape="rect">JOC-1307</a>. Availability starting with 2.4.0.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+            
+            <xs:attribute name="service_name_on_error" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the service status code for error messages.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+			      <xs:attribute name="service_name_on_success" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the service that is configured in the Service Monitor for receiving informational messages on successful job runs.</p>
+                     <p/>
+                     <p>The service name must match the corresponding setting in the System Monitor.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+			      <xs:attribute name="service_status_on_error" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the service that is configured in the Service Monitor for messages of job runs with errors and for job recovery messages.</p>
+                     <p/>
+                     <p>The service name must match the corresponding setting in the System Monitor.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+			      <xs:attribute name="service_status_on_success" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>This setting is used for Nagios or derivative software and specifies the service status code for success messages.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+     	</xs:complexType>
+    </xs:element>
+    
+    <xs:element name="CommandFragmentRef">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Notifications/Notification/NotificationMonitors/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Selects the <em>CommandFragment</em> to be used.</p>
+               <p/>
+               <p>Uses the <em>MessageRef</em> child element to overwrite the <em>MessageRef</em> defined with the <em>CommandFragment</em>.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+			      <xs:sequence>
+		    	     <xs:element ref="MessageRef" minOccurs="0" maxOccurs="1"/>
+        	</xs:sequence>
+            <xs:attribute name="ref" type="xs:NMTOKEN" use="required"/>
+            <xs:attribute name="time_zone" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Defines time zone for the specific notification monitor.</p>
+                     <p/>
+                     <p>Overrides <i>Fragments/MessageFragments@time_zone</i> and <i>Fragments/MessageFragments/Message@time_zone</i> configurations.</p>
+                     <p/>
+                     <p>JS7 Release: <a href="https://change.sos-berlin.com/browse/JOC-1307"
+                           target="_blank"
+                           shape="rect">JOC-1307</a>. Availability starting with 2.4.0.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="MailFragmentRef">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Notifications/Notification/NotificationMonitors/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Selects the <em>MailFragment</em> to be used.</p>
+               <p/>
+               <p>Uses the <em>MessageRef</em> child element to overwrite the <em>MessageRef</em> defined with the <em>MailFragment</em>.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+		    	     <xs:element ref="MessageRef" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="Subject" minOccurs="0" maxOccurs="1"/>
+        	    <xs:element ref="From" minOccurs="0" maxOccurs="1"/>
+				        <xs:element ref="To" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="CC" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="BCC" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+        	<xs:attribute name="ref" type="xs:NMTOKEN" use="required"/>
+            <xs:attribute name="time_zone" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Defines time zone for the specific notification monitor.</p>
+                     <p/>
+                     <p>Overrides <i>Fragments/MessageFragments@time_zone</i> and <i>Fragments/MessageFragments/Message@time_zone</i> configurations.</p>
+                     <p/>
+                     <p>JS7 Release: <a href="https://change.sos-berlin.com/browse/JOC-1307"
+                           target="_blank"
+                           shape="rect">JOC-1307</a>. Availability starting with 2.4.0.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="JMSFragmentRef">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Notifications/Notification/NotificationMonitors/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Selects the <em>JMSFragment</em> to be used.</p>
+               <p/>
+               <p>Uses the <em>MessageRef</em> child element to overwrite the <em>MessageRef</em> defined with the <em>JMSFragment</em>.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+			      <xs:sequence>
+		    	     <xs:element ref="MessageRef" minOccurs="0" maxOccurs="1"/>
+        	</xs:sequence>
+            <xs:attribute name="ref" type="xs:NMTOKEN" use="required"/>
+            <xs:attribute name="time_zone" type="xs:string" use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Defines time zone for the specific notification monitor.</p>
+                     <p/>
+                     <p>Overrides <i>Fragments/MessageFragments@time_zone</i> and <i>Fragments/MessageFragments/Message@time_zone</i> configurations.</p>
+                     <p/>
+                     <p>JS7 Release: <a href="https://change.sos-berlin.com/browse/JOC-1307"
+                           target="_blank"
+                           shape="rect">JOC-1307</a>. Availability starting with 2.4.0.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+     	</xs:complexType>
+    </xs:element>
+    
+    <xs:element name="WorkflowsRef">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/Notifications/Notification/NotificationObjects/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Selects a <em>Workflows</em> element that limits notifications to their respective workflows.</p>
+               <p>Any number of workflow references can be added.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required"/>
+		    </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="MessageRef">
+        <xs:annotation>
+         <xs:appinfo>
+		          <Parent path="Configurations/"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/56jAAw">JS7 - Notifications - Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Specifies the reference to a Message element which provides the content that is to be forwarded with the Command|Mail|JMS|NSCA monitor element.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+        <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required"/>
+		    </xs:complexType>
+    </xs:element>
+    
+    <!-- TYPES -->
+    <xs:simpleType name="NotEmptyType">
+		    <xs:restriction base="xs:string">
+			      <xs:minLength value="1"/>
+		    </xs:restriction>
+	  </xs:simpleType>	
+</xs:schema>

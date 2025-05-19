@@ -6,7 +6,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocException;
@@ -14,7 +13,9 @@ import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.store.StoreConfiguration;
 import com.sos.joc.model.xmleditor.store.StoreConfigurationAnswer;
-import com.sos.joc.xmleditor.common.Utils;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.Utils;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.IStoreResource;
 import com.sos.schema.JsonValidator;
 
@@ -49,19 +50,21 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
             case YADE:
             case OTHER:
                 name = in.getName();
-                item = getObject(dbLayer, in, name);
+                if (in.getId() != null && in.getId() > 0) {
+                    item = dbLayer.getObject(in.getId());
+                }
                 break;
             default:
-                name = JocXmlEditor.getConfigurationName(in.getObjectType());
-                item = getStandardObject(dbLayer, in);
+                name = StandardSchemaHandler.getDefaultConfigurationName(in.getObjectType());
+                item = dbLayer.getObject(in.getObjectType().name(), name);
                 break;
             }
 
             if (item == null) {
-                item = create(session, in, name, getAccount(), 0L); //TODO auditlogId
+                item = create(session, in, name, getAccount(), 0L); // TODO auditlogId
 
             } else {
-                item = update(session, in, item, name, getAccount(), 0L); //TODO auditlogId
+                item = update(session, in, item, name, getAccount(), 0L); // TODO auditlogId
             }
 
             session.commit();
@@ -77,18 +80,6 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         } finally {
             Globals.disconnect(session);
         }
-    }
-
-    private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, StoreConfiguration in, String name) throws Exception {
-        DBItemXmlEditorConfiguration item = null;
-        if (in.getId() != null && in.getId() > 0) {
-            item = dbLayer.getObject(in.getId());
-        }
-        return item;
-    }
-
-    private DBItemXmlEditorConfiguration getStandardObject(XmlEditorDbLayer dbLayer, StoreConfiguration in) throws Exception {
-        return dbLayer.getObject(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in.getName()));
     }
 
     public static DBItemXmlEditorConfiguration create(SOSHibernateSession session, StoreConfiguration in, String name, String account,
@@ -121,13 +112,18 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
     }
 
     private void checkRequiredParameters(final StoreConfiguration in) throws Exception {
-//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-//        checkRequiredParameter("configuration", in.getConfiguration());
-        //checkRequiredParameter("configurationJson", in.getConfigurationJson());
-        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
+        switch (in.getObjectType()) {
+        case NOTIFICATION:
+            break;
+        case YADE:
+            checkRequiredParameter("id", in.getId());
+            checkRequiredParameter("name", in.getName());
+            break;
+        case OTHER:
             checkRequiredParameter("id", in.getId());
             checkRequiredParameter("name", in.getName());
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
+            break;
         }
     }
 

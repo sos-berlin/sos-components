@@ -2,16 +2,16 @@ package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
 
-import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.validate.ErrorMessage;
 import com.sos.joc.model.xmleditor.validate.ValidateConfiguration;
 import com.sos.joc.model.xmleditor.validate.ValidateConfigurationAnswer;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.IValidateResource;
 import com.sos.schema.JsonValidator;
 
@@ -31,19 +31,22 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
-                java.nio.file.Path schema = null;
+                String schema = null;
                 switch (in.getObjectType()) {
-                case YADE:
-                case OTHER:
-                    schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
+                case NOTIFICATION:
+                    schema = StandardSchemaHandler.getNotificationSchema();
                     break;
-                default:
-                    schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
+                case YADE:
+                    schema = StandardSchemaHandler.getYADESchema();
+                    break;
+                case OTHER:
+                    schema = OtherSchemaHandler.getSchema(in.getSchemaIdentifier(), false);
                     break;
                 }
+
                 // check for vulnerabilities and validate
                 try {
-                    SOSXMLXSDValidator.validate(schema, in.getConfiguration());
+                    JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
                 } catch (SOSXMLXSDValidatorException e) {
                     return JOCDefaultResponse.responseStatus200(getError(e));
                 }
@@ -59,11 +62,8 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
     }
 
     private void checkRequiredParameters(final ValidateConfiguration in) throws Exception {
-        // JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
+        if (JocXmlEditor.isOther(in.getObjectType())) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-            // } else {
-            // checkRequiredParameter("configuration", in.getConfiguration());
         }
     }
 

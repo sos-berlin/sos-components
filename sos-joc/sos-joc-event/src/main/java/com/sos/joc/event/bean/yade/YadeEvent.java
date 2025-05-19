@@ -6,18 +6,18 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sos.joc.event.bean.JOCEvent;
-import com.sos.joc.event.bean.yade.history.YadeTransferHistoryTerminated;
+import com.sos.joc.event.bean.yade.history.YADETransferHistoryTerminated;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "TYPE", visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(YadeTransferHistoryTerminated.class) })
+@JsonSubTypes({ @JsonSubTypes.Type(YADETransferHistoryTerminated.class), @JsonSubTypes.Type(YADEConfigurationDeployed.class) })
 
-public abstract class YadeEvent extends JOCEvent {
+public abstract class YADEEvent extends JOCEvent {
 
-    public YadeEvent() {
+    public YADEEvent() {
     }
 
-    public YadeEvent(String key, String controllerId, Map<String, Object> variables) {
+    public YADEEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
 }

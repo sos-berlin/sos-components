@@ -1,17 +1,18 @@
 package com.sos.joc.xmleditor.impl;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfiguration;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfigurationAnswer;
-import com.sos.joc.xmleditor.common.Xml2JsonConverter;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+import com.sos.joc.xmleditor.commons.Xml2JsonConverter;
+import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.IXml2JsonResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2JsonResource {
@@ -31,16 +32,19 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
             }
             JocXmlEditor.parseXml(in.getConfiguration());
 
-            java.nio.file.Path schema = null;
+            String schema = null;
             switch (in.getObjectType()) {
-            case YADE:
-            case OTHER:
-                schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
+            case NOTIFICATION:
+                schema = StandardSchemaHandler.getNotificationSchema();
                 break;
-            default:
-                schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
+            case YADE:
+                schema = StandardSchemaHandler.getYADESchema();
+                break;
+            case OTHER:
+                schema = OtherSchemaHandler.getSchema(in.getSchemaIdentifier(), false);
                 break;
             }
+            
             Xml2JsonConverter converter = new Xml2JsonConverter();
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(converter.convert(in.getObjectType(),
                     schema, in.getConfiguration()))));
@@ -54,9 +58,7 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
     }
 
     private void checkRequiredParameters(final Xml2JsonConfiguration in) throws Exception {
-        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        //checkRequiredParameter("configuration", in.getConfiguration());
-        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
+        if (JocXmlEditor.isOther(in.getObjectType())) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
     }

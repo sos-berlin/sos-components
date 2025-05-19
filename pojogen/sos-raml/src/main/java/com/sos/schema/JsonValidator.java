@@ -119,7 +119,7 @@ public class JsonValidator {
             put("DeleteNotices", "board/deleteNotices-schema.json");
             put("PostNotices", "board/postNotices-schema.json");
             put("PostExpectedNotices", "board/postExpectedNotices-schema.json");
-            
+
             put("com.sos.joc.model.plan.PlansFilter", "plan/plansFilter-schema.json");
             put("com.sos.joc.model.plan.PlansOpenCloseFilter", "plan/plansOpenCloseFilter-schema.json");
             put("com.sos.joc.model.plan.PlansModifyFilter", "plan/plansModifyFilter-schema.json");
@@ -152,12 +152,14 @@ public class JsonValidator {
 
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
             put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");
-            put("com.sos.joc.model.xmleditor.schema.SchemaDownloadConfiguration", "xmleditor/schema/download/schema-download-configuration-schema.json");
+            put("com.sos.joc.model.xmleditor.schema.SchemaDownloadConfiguration",
+                    "xmleditor/schema/download/schema-download-configuration-schema.json");
             put("DeleteAll", "xmleditor/delete/all/delete-all-schema.json");
             put("DeleteConfiguration", "xmleditor/delete/delete-configuration-schema.json");
             put("RemoveAll", "xmleditor/remove/all/remove-all-schema.json");
             put("RemoveConfiguration", "xmleditor/remove/remove-configuration-schema.json");
             put("ReleaseConfiguration", "xmleditor/release/release-configuration-schema.json");
+            put("com.sos.joc.model.xmleditor.deploy.DeployConfiguration", "xmleditor/deploy/deploy-configuration-schema.json");
             put("ReadConfiguration", "xmleditor/read/read-configuration-schema.json");
             put("SchemaReassignConfiguration", "xmleditor/schema/reassign/schema-reassign-configuration-schema.json");
             put("RenameConfiguration", "xmleditor/rename/rename-configuration-schema.json");
@@ -168,7 +170,7 @@ public class JsonValidator {
             put("TreeFilter", "tree/treeFilter-schema.json");
 
             put("com.sos.joc.model.configuration.ConfigurationRead", "configuration/configurationRead-schema.json");
-            
+
             put("com.sos.joc.model.favorite.FavoriteIdentifiers", "favorite/identifiers-schema.json");
             put("com.sos.joc.model.favorite.FavoriteSharedIdentifiers", "favorite/sharedIdentifiers-schema.json");
             put("com.sos.joc.model.favorite.OrderingFavorites", "favorite/orderingFavorite-schema.json");
@@ -218,7 +220,7 @@ public class JsonValidator {
             put("com.sos.joc.model.tag.rename.RequestFilter", "tag/rename/request-filter-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestModifyFilter", "tag/tagging/request-modify-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestTag", "inventory/common/request-tag-schema.json");
-            
+
             put("com.sos.joc.model.descriptor.common.RequestFilter", "descriptor/common/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.common.RequestFolder", "descriptor/common/request-folder-schema.json");
             put("com.sos.joc.model.descriptor.common.ResponseFolder", "descriptor/common/response-folder-schema.json");
@@ -548,9 +550,9 @@ public class JsonValidator {
     public static JsonSchema getSchema(URI schemaUri, boolean failFast, boolean strict) {
         SchemaValidatorsConfig config = new SchemaValidatorsConfig();
         config.setTypeLoose(true);
-        //if (failFast) {
-            config.setFailFast(failFast);
-        //}
+        // if (failFast) {
+        config.setFailFast(failFast);
+        // }
         if (strict) {
             return FACTORY_V4_STRICT.getSchema(schemaUri, config);
         } else {

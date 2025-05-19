@@ -1,12 +1,12 @@
 package com.sos.joc.xmleditor.resource;
 
+import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
+
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
-
-import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
 
 public interface ISchemaDownloadResource {
 
