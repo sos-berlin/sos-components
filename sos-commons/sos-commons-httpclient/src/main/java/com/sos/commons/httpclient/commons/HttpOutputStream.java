@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.http.commons;
+package com.sos.commons.httpclient.commons;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -6,18 +6,19 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
 
+import com.sos.commons.httpclient.BaseHttpClient;
+import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.SOSHTTPUtils;
-import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
+import com.sos.commons.util.http.SOSHttpUtils;
 
-public class HTTPOutputStream extends OutputStream {
+public class HttpOutputStream extends OutputStream {
 
-    private final HTTPClient client;
+    private final BaseHttpClient client;
     private final URI uri;
     private final boolean isWebDAV;
     private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
-    public HTTPOutputStream(HTTPClient client, URI uri, boolean isWebDAV) throws IOException {
+    public HttpOutputStream(BaseHttpClient client, URI uri, boolean isWebDAV) throws IOException {
         this.client = client;
         this.uri = uri;
         this.isWebDAV = isWebDAV;
@@ -47,19 +48,19 @@ public class HTTPOutputStream extends OutputStream {
                     .expectContinue(true);
 
             // Content-Type
-            builder.header(SOSHTTPUtils.HEADER_CONTENT_TYPE, SOSHTTPUtils.HEADER_CONTENT_TYPE_BINARY);
-            HTTPClient.withWebDAVOverwrite(builder, isWebDAV);
+            builder.header(SOSHttpUtils.HEADER_CONTENT_TYPE, SOSHttpUtils.HEADER_CONTENT_TYPE_BINARY);
+            BaseHttpClient.withWebDAVOverwrite(builder, isWebDAV);
 
             if (!client.isChunkedTransfer()) {
                 // Note: Not works - throws an Exception ...
                 // set the HEADER_CONTENT_LENGTH to avoid Chunked transfer
-                builder.header(SOSHTTPUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
+                builder.header(SOSHttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
             }
 
             HttpRequest request = builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
             ExecuteResult<Void> result = client.executeWithoutResponseBody(request);
-            if (!SOSHTTPUtils.isSuccessful(result.response().statusCode())) {
-                throw new IOException(HTTPClient.getResponseStatus(result));
+            if (!SOSHttpUtils.isSuccessful(result.response().statusCode())) {
+                throw new IOException(BaseHttpClient.getResponseStatus(result));
             }
         } catch (Exception e) {
             throw new IOException(e);

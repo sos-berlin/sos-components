@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.commons.proxy.http;
+package com.sos.commons.util.proxy.http;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,13 +15,13 @@ import java.util.Base64;
 import org.apache.commons.io.IOUtils;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
+import com.sos.commons.util.proxy.SOSProxyProvider;
 
 public class HttpProxySocket extends Socket {
 
-    private final ProxyProvider provider;
+    private final SOSProxyProvider provider;
 
-    public HttpProxySocket(final ProxyProvider provider) throws UnknownHostException, IOException {
+    public HttpProxySocket(final SOSProxyProvider provider) throws UnknownHostException, IOException {
         super();
         this.provider = provider;
     }

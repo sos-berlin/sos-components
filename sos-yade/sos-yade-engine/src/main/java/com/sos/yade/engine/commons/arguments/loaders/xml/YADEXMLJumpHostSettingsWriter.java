@@ -293,7 +293,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
 
         sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForHTTP"));
-        sb.append(generateProtocolFragmentPartHTTPHeaders(args.getHTTPHeaders()));
+        sb.append(generateProtocolFragmentPartHTTPHeaders(args.getHttpHeaders()));
 
         sb.append("</").append(fragmentElementName).append(">");
         return sb;
@@ -326,7 +326,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
 
         sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForWebDAV"));
-        sb.append(generateProtocolFragmentPartHTTPHeaders(args.getHTTPHeaders()));
+        sb.append(generateProtocolFragmentPartHTTPHeaders(args.getHttpHeaders()));
 
         sb.append("</").append(fragmentElementName).append(">");
         return sb;

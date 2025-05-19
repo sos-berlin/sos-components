@@ -1,4 +1,4 @@
-package com.sos.commons.util;
+package com.sos.commons.util.ssl;
 
 import java.io.InputStream;
 import java.nio.file.Files;

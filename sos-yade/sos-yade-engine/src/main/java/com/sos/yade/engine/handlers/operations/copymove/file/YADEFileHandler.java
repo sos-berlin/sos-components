@@ -10,7 +10,7 @@ import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.SOSHTTPUtils;
+import com.sos.commons.util.http.SOSHttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
@@ -242,7 +242,7 @@ public class YADEFileHandler {
         if (sourceDelegator.isHTTP()) {
             // e.g. for HTTP(s) transfers with the file names like SET-217?filter=13400
             if (!targetDelegator.isHTTP()) {
-                finalFileName = SOSHTTPUtils.toValidFileSystemName(finalFileName, targetDelegator.isWindows());
+                finalFileName = SOSHttpUtils.toValidFileSystemName(finalFileName, targetDelegator.isWindows());
             }
         }
 

@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.http.SOSHttpUtils;
 import com.sos.joc.Globals;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
@@ -142,7 +142,7 @@ public class OtherSchemaHandler {
     private static URI toURI(String uri) throws Exception {
         URL url;
         try {
-            url = new URL(SOSHTTPUtils.decodeUriPath(uri));
+            url = new URL(SOSHttpUtils.decodeUriPath(uri));
         } catch (Throwable e) {
             return new URI(uri.replaceAll(" ", "%20"));
         }

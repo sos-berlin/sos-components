@@ -1,19 +1,19 @@
-package com.sos.commons.vfs.commons.proxy;
+package com.sos.commons.util.proxy.socket;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import org.apache.commons.net.DefaultSocketFactory;
+import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.http.HttpProxySocketFactory;
 
-import com.sos.commons.vfs.commons.proxy.http.HttpProxySocketFactory;
 
 public class ProxySocketFactory extends DefaultSocketFactory {
 
-    private final ProxyProvider provider;
+    private final SOSProxyProvider provider;
 
-    public ProxySocketFactory(ProxyProvider provider) {
+    public ProxySocketFactory(SOSProxyProvider provider) {
         this.provider = provider;
     }
 

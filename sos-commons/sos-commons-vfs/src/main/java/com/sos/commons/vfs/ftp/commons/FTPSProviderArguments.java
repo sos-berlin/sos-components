@@ -2,9 +2,9 @@ package com.sos.commons.vfs.ftp.commons;
 
 import org.apache.commons.net.ftp.FTPSClient;
 
-import com.sos.commons.util.SOSSSLContextFactory;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.impl.SSLArguments;
+import com.sos.commons.util.ssl.SOSSSLContextFactory;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 

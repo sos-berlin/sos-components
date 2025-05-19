@@ -7,7 +7,6 @@ import java.net.URL;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.vfs.http.commons.HTTPAuthConfig.NTLM;
 
 public class HTTPProviderUtils {
 
@@ -31,12 +30,6 @@ public class HTTPProviderUtils {
             sb.append("/");
             return toBaseURI(sb.toString());
         }
-    }
-
-    // TODO use smbj NTLMAuthenticator ...
-    public static String getNTLMAuthToken(NTLM config) throws Exception {
-
-        return null;
     }
 
     /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>

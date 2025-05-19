@@ -19,11 +19,11 @@ import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.proxy.SOSProxyProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
@@ -34,7 +34,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     private final ISOSLogger logger;
     private final A arguments;
-    private final ProxyProvider proxyProvider;
+    private final SOSProxyProvider proxyProvider;
 
     /** Default providerFileCreator function creates a standard ProviderFile using the builder */
     private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build(this);
@@ -52,7 +52,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         this.arguments = arguments;
         // before proxyProvider
         resolveCredentialStore(additionalCredentialStoreArg);
-        this.proxyProvider = this.arguments == null ? null : ProxyProvider.createInstance(this.arguments.getProxy());
+        this.proxyProvider = this.arguments == null ? null : SOSProxyProvider.createInstance(this.arguments.getProxy());
     }
 
     /** Validates that all required global properties (e.g., client, session) are properly initialized and not null.<br/>
@@ -293,7 +293,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return arguments;
     }
 
-    public ProxyProvider getProxyProvider() {
+    public SOSProxyProvider getProxyProvider() {
         return proxyProvider;
     }
 

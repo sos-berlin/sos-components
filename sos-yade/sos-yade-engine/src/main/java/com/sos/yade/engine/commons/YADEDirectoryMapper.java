@@ -7,9 +7,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.sos.commons.util.SOSHTTPUtils;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.http.SOSHttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -200,7 +200,7 @@ public class YADEDirectoryMapper {
                             logger.debug("    [getSourceDirectoryForMapping][3.1][result]%s", result);
                         }
                         // remove %20(empty) etc
-                        result = SOSHTTPUtils.decodeUriPath(result);
+                        result = SOSHttpUtils.decodeUriPath(result);
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
                         // Temp

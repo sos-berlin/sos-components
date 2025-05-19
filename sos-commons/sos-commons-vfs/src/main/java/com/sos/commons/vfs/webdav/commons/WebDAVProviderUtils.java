@@ -12,12 +12,12 @@ import java.util.Set;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.sos.commons.util.SOSHTTPUtils;
+import com.sos.commons.httpclient.BaseHttpClient;
+import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
 import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.http.SOSHttpUtils;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
-import com.sos.commons.vfs.http.commons.HTTPClient;
-import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 import com.sos.commons.xml.SOSXML;
 
@@ -31,14 +31,14 @@ public class WebDAVProviderUtils {
         return result;
     }
 
-    public static boolean exists(HTTPClient client, URI uri) throws Exception {
+    public static boolean exists(BaseHttpClient client, URI uri) throws Exception {
         ExecuteResult<String> result = client.executeWithResponseBody(createPROPFINDRequest(client, uri, "0"));
         int code = result.response().statusCode();
-        if (!SOSHTTPUtils.isSuccessful(code)) {
-            if (SOSHTTPUtils.isNotFound(code)) {
+        if (!SOSHttpUtils.isSuccessful(code)) {
+            if (SOSHttpUtils.isNotFound(code)) {
                 return false;
             }
-            throw new IOException(HTTPClient.getResponseStatus(result));
+            throw new IOException(BaseHttpClient.getResponseStatus(result));
         }
         return true;
     }
@@ -46,8 +46,8 @@ public class WebDAVProviderUtils {
     public static void createDirectory(WebDAVProvider provider, URI uri) throws Exception {
         HttpRequest.Builder builder = provider.getClient().createRequestBuilder(uri);
         ExecuteResult<Void> result = provider.getClient().executeWithoutResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
-        if (!SOSHTTPUtils.isSuccessful(result.response().statusCode())) {
-            throw new IOException(HTTPClient.getResponseStatus(result));
+        if (!SOSHttpUtils.isSuccessful(result.response().statusCode())) {
+            throw new IOException(BaseHttpClient.getResponseStatus(result));
         }
         if (provider.getLogger().isDebugEnabled()) {
             provider.getLogger().debug("%s[createDirectory][%s]created", provider.getLogPrefix(), uri);
@@ -63,11 +63,11 @@ public class WebDAVProviderUtils {
         String depth = "0";
         ExecuteResult<String> result = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), uri, depth));
         int code = result.response().statusCode();
-        if (!SOSHTTPUtils.isSuccessful(code)) {
-            if (SOSHTTPUtils.isNotFound(code)) {
+        if (!SOSHttpUtils.isSuccessful(code)) {
+            if (SOSHttpUtils.isNotFound(code)) {
                 return null;
             }
-            throw new IOException(HTTPClient.getResponseStatus(result));
+            throw new IOException(BaseHttpClient.getResponseStatus(result));
         }
         List<WebDAVResource> resources = parseWebDAVResources(provider, uri, depth, result);
         return resources.isEmpty() ? null : resources.get(0);
@@ -76,18 +76,18 @@ public class WebDAVProviderUtils {
     private static int list(WebDAVProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
             int counterAdded) throws Exception {
 
-        URI directoryURI = SOSHTTPUtils.ensureDirectoryURI(new URI(provider.normalizePath(directoryPath)));
+        URI directoryURI = SOSHttpUtils.ensureDirectoryURI(new URI(provider.normalizePath(directoryPath)));
 
         // not use Depth infinity - maybe not supported by the server and possible timeouts to get all levels ...
         String depth = "1";
         ExecuteResult<String> executeResult = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), directoryURI,
                 depth));
         int code = executeResult.response().statusCode();
-        if (!SOSHTTPUtils.isSuccessful(code)) {
-            if (SOSHTTPUtils.isNotFound(code)) {
+        if (!SOSHttpUtils.isSuccessful(code)) {
+            if (SOSHttpUtils.isNotFound(code)) {
                 return 0;
             }
-            throw new IOException(HTTPClient.getResponseStatus(executeResult));
+            throw new IOException(BaseHttpClient.getResponseStatus(executeResult));
         }
 
         Set<String> subDirectories = new HashSet<>();
@@ -132,7 +132,7 @@ public class WebDAVProviderUtils {
         return counterAdded;
     }
 
-    private static HttpRequest createPROPFINDRequest(HTTPClient client, URI uri, String depth) {
+    private static HttpRequest createPROPFINDRequest(BaseHttpClient client, URI uri, String depth) {
         HttpRequest.Builder builder = client.createRequestBuilder(uri)
                 // Depth
                 .header("Depth", depth)
@@ -192,10 +192,10 @@ public class WebDAVProviderUtils {
             }
 
             // without encoding
-            URI resourceURI = URI.create(SOSHTTPUtils.normalizePath(uri, resourceHref));
+            URI resourceURI = URI.create(SOSHttpUtils.normalizePath(uri, resourceHref));
             boolean resourceIsDirectory = extractIsDirectory(response);
             if (!responseOfURISelfChecked && !depth.equals("0") && resourceIsDirectory) {
-                if (SOSHTTPUtils.ensureDirectoryURI(uri).equals(SOSHTTPUtils.ensureDirectoryURI(resourceURI))) {
+                if (SOSHttpUtils.ensureDirectoryURI(uri).equals(SOSHttpUtils.ensureDirectoryURI(resourceURI))) {
                     responseOfURISelfChecked = true;
                     continue;
                 }
@@ -238,9 +238,9 @@ public class WebDAVProviderUtils {
     private static long extractLastModified(Element response) {
         NodeList nodes = response.getElementsByTagNameNS("*", "getlastmodified");
         if (nodes.getLength() > 0) {
-            return SOSHTTPUtils.httpDateToMillis(nodes.item(0).getTextContent());
+            return SOSHttpUtils.httpDateToMillis(nodes.item(0).getTextContent());
         }
-        return SOSHTTPUtils.DEFAULT_LAST_MODIFIED;
+        return SOSHttpUtils.DEFAULT_LAST_MODIFIED;
     }
 
 }

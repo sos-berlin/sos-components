@@ -11,7 +11,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
+import com.sos.commons.util.proxy.SOSProxyProvider;
 
 /** Note: each argument value can contain a different Keepass entry path */
 public class ProviderCredentialStoreResolver {
@@ -101,7 +101,7 @@ public class ProviderCredentialStoreResolver {
         entry = keepass2Argument(entry, args, args.getPassword());
 
         // proxy_host(proxy_port),proxy_user,proxy_password
-        ProxyProvider proxyProvider = ProxyProvider.createInstance(proxyArgs);
+        SOSProxyProvider proxyProvider = SOSProxyProvider.createInstance(proxyArgs);
         if (proxyProvider != null) {
             entry = keepass2Argument(entry, args, proxyArgs.getHost(), proxyArgs.getPort(), ":");
             entry = keepass2Argument(entry, args, proxyArgs.getUser());

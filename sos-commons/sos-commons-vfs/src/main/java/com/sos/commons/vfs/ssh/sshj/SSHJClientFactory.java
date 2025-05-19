@@ -16,8 +16,8 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
-import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
+import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.socket.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -41,7 +41,7 @@ public class SSHJClientFactory {
 
     private static final String SSH_MSG_UNIMPLEMENTED = "SSH_MSG_UNIMPLEMENTED";
 
-    protected static SSHClient createAuthenticatedClient(ISOSLogger logger, SSHProviderArguments args, ProxyProvider proxyProvider) throws Exception {
+    protected static SSHClient createAuthenticatedClient(ISOSLogger logger, SSHProviderArguments args, SOSProxyProvider proxyProvider) throws Exception {
         /** 1) Create */
         SSHClient client = create(args, proxyProvider);
         /** 2) Connect */
@@ -59,7 +59,7 @@ public class SSHJClientFactory {
         return client;
     }
 
-    private static SSHClient create(SSHProviderArguments args, ProxyProvider proxyProvider) throws Exception {
+    private static SSHClient create(SSHProviderArguments args, SOSProxyProvider proxyProvider) throws Exception {
         Config config = new DefaultConfig();
         // Keep Alive Provider - see NOTE above about KeepAliveRunner
         if (!args.getServerAliveInterval().isEmpty()) {

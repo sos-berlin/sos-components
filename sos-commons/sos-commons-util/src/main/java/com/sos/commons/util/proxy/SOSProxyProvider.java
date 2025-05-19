@@ -1,4 +1,4 @@
-package com.sos.commons.vfs.commons.proxy;
+package com.sos.commons.util.proxy;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -9,7 +9,7 @@ import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.arguments.impl.ProxyArguments;
 
-public class ProxyProvider {
+public class SOSProxyProvider {
 
     private static final String SYSTEM_PROPERTY_NAME_HTTP_PROXY_HOST = "http.proxyHost";
     private static final String SYSTEM_PROPERTY_NAME_HTTP_PROXY_PORT = "http.proxyPort";
@@ -31,7 +31,7 @@ public class ProxyProvider {
 
     private Charset charset = Charset.defaultCharset();
 
-    public static ProxyProvider createInstance(ProxyArguments args) {
+    public static SOSProxyProvider createInstance(ProxyArguments args) {
         if (args == null || args.getType().isEmpty()) {
             return null;
         }
@@ -39,10 +39,10 @@ public class ProxyProvider {
         if (SOSString.isEmpty(host)) {
             return null;
         }
-        return new ProxyProvider(host, args);
+        return new SOSProxyProvider(host, args);
     }
 
-    private ProxyProvider(String host, ProxyArguments args) {
+    private SOSProxyProvider(String host, ProxyArguments args) {
         this.host = host;
         this.port = getPort(args.getType(), args.getPort());
         this.user = args.getUser().getValue();

@@ -39,6 +39,12 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-httpclient</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<!-- 3rd Party Dependencies -->
 		<!-- Note: HTTP(S) and WEBDAV(S) use java.net.http.HttpClient - without
 		3rd	Party -->

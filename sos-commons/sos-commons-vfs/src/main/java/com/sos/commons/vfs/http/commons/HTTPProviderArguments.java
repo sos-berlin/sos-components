@@ -3,10 +3,11 @@ package com.sos.commons.vfs.http.commons;
 import java.net.URI;
 import java.util.List;
 
-import com.sos.commons.util.SOSHTTPUtils;
+import com.sos.commons.httpclient.commons.auth.HttpClientAuthMethod;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.arguments.impl.SSLArguments;
+import com.sos.commons.util.http.SOSHttpUtils;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
@@ -20,7 +21,7 @@ public class HTTPProviderArguments extends AProviderArguments {
     private SSLArguments ssl;
 
     // JS7 new - auth_method - not in the XML schema - currently only BASIC supported
-    private SOSArgument<HTTPAuthMethod> authMethod = new SOSArgument<>("auth_method", false, HTTPAuthMethod.BASIC);
+    private SOSArgument<HttpClientAuthMethod> authMethod = new SOSArgument<>("auth_method", false, HttpClientAuthMethod.NONE);
     private SOSArgument<List<String>> httpHeaders = new SOSArgument<>("http_headers", false);
 
     // JS7 new - if WebDAVAuthMethod.NTLM
@@ -48,7 +49,7 @@ public class HTTPProviderArguments extends AProviderArguments {
                 throw new ProviderInitializationException(e);
             }
         }
-        return SOSHTTPUtils.getAccessInfo(baseURI.getValue(), getUser().getValue());
+        return SOSHttpUtils.getAccessInfo(baseURI.getValue(), getUser().getValue());
     }
 
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
@@ -73,11 +74,11 @@ public class HTTPProviderArguments extends AProviderArguments {
         ssl = val;
     }
 
-    public SOSArgument<HTTPAuthMethod> getAuthMethod() {
+    public SOSArgument<HttpClientAuthMethod> getAuthMethod() {
         return authMethod;
     }
 
-    public SOSArgument<List<String>> getHTTPHeaders() {
+    public SOSArgument<List<String>> getHttpHeaders() {
         return httpHeaders;
     }
 

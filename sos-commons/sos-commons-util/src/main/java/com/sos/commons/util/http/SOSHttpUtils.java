@@ -1,4 +1,4 @@
-package com.sos.commons.util;
+package com.sos.commons.util.http;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -13,8 +13,12 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Locale;
 
-public class SOSHTTPUtils {
+import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.SOSString;
 
+public class SOSHttpUtils {
+
+    public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_TYPE_BINARY = "application/octet-stream";
     public static final String HEADER_CONTENT_LENGTH = "Content-Length";

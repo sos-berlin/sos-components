@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-import com.sos.commons.util.SOSHTTPUtils;
+import com.sos.commons.httpclient.BaseHttpClient;
+import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
+import com.sos.commons.util.http.SOSHttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -18,8 +20,6 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.HTTPProvider;
-import com.sos.commons.vfs.http.commons.HTTPClient;
-import com.sos.commons.vfs.http.commons.HTTPClient.ExecuteResult;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderUtils;
 import com.sos.commons.vfs.webdav.commons.WebDAVResource;
@@ -79,10 +79,10 @@ public class WebDAVProvider extends HTTPProvider {
             }
 
             Deque<URI> parentsToCreate = new ArrayDeque<>();
-            URI parent = SOSHTTPUtils.getParentURI(uri);
+            URI parent = SOSHttpUtils.getParentURI(uri);
             while (parent != null && !parent.equals(uri) && !WebDAVProviderUtils.directoryExists(this, parent)) {
                 parentsToCreate.push(parent);
-                parent = SOSHTTPUtils.getParentURI(parent);
+                parent = SOSHttpUtils.getParentURI(parent);
             }
             // create parent directories
             while (!parentsToCreate.isEmpty()) {
@@ -109,11 +109,11 @@ public class WebDAVProvider extends HTTPProvider {
             builder.header("Destination", targetURI.toString());
             ExecuteResult<Void> result = getClient().executeWithoutResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
             int code = result.response().statusCode();
-            if (!SOSHTTPUtils.isSuccessful(code)) {
-                if (SOSHTTPUtils.isNotFound(code)) {
+            if (!SOSHttpUtils.isSuccessful(code)) {
+                if (SOSHttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(HTTPClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.getResponseStatus(result));
             }
             return true;
         } catch (Throwable e) {

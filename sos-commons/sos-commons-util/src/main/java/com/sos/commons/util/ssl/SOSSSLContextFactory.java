@@ -1,4 +1,4 @@
-package com.sos.commons.util;
+package com.sos.commons.util.ssl;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -16,9 +16,9 @@ import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.util.SOSJavaKeyStoreReader.SOSJavaKeyStoreResult;
 import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.ssl.SOSJavaKeyStoreReader.SOSJavaKeyStoreResult;
 
 public class SOSSSLContextFactory {
 

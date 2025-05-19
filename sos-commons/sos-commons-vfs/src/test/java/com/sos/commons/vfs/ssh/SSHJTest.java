@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
-import com.sos.commons.vfs.commons.proxy.ProxySocketFactory;
+import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.socket.ProxySocketFactory;
 
 import net.schmizz.sshj.Config;
 import net.schmizz.sshj.DefaultConfig;
@@ -53,7 +53,7 @@ public class SSHJTest {
             client.setConnectTimeout(connectTimeout);// socket.connect
 
             if (useProxy) {
-                client.setSocketFactory(new ProxySocketFactory(ProxyProvider.createInstance(proxyArgs)));
+                client.setSocketFactory(new ProxySocketFactory(SOSProxyProvider.createInstance(proxyArgs)));
             }
 
             client.connect(host);

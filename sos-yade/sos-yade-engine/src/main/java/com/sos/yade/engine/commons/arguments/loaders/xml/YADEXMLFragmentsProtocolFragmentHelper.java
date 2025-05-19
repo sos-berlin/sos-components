@@ -383,13 +383,13 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
     protected static void parseHTTPHeaders(YADEXMLArgumentsLoader argsLoader, HTTPProviderArguments args, Node headers) throws Exception {
         NodeList nl = headers.getChildNodes();
-        args.getHTTPHeaders().setValue(new ArrayList<>());
+        args.getHttpHeaders().setValue(new ArrayList<>());
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "HTTPHeader":
-                    args.getHTTPHeaders().getValue().add(argsLoader.getValue(n));
+                    args.getHttpHeaders().getValue().add(argsLoader.getValue(n));
                     break;
                 }
             }

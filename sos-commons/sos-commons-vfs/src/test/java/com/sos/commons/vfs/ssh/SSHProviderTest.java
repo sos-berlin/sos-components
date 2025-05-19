@@ -16,8 +16,8 @@ import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.proxy.SOSProxyProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
-import com.sos.commons.vfs.commons.proxy.ProxyProvider;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.helper.SSHProviderTestArguments;
 
@@ -200,7 +200,7 @@ public class SSHProviderTest {
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
-            LOGGER.info(ProxyProvider.createInstance(args.getProxy()).toString());
+            LOGGER.info(SOSProxyProvider.createInstance(args.getProxy()).toString());
         } catch (Throwable e) {
             throw e;
         } finally {
