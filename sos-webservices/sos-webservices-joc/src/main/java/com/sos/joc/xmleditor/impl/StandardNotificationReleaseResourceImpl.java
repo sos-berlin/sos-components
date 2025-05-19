@@ -58,8 +58,8 @@ public class StandardNotificationReleaseResourceImpl extends ACommonResourceImpl
 
     public static ReadStandardConfigurationAnswer handleStandardConfiguration(ReleaseConfiguration in, String account, Long auditLogId)
             throws Exception {
-        DBItemXmlEditorConfiguration item = StandardSchemaHandler.createOrUpdateConfigurationIfReleaseOrDeploy(IMPL_PATH, in.getObjectType(), in
-                .getId(), in.getConfiguration(), in.getConfigurationJson(), account, auditLogId);
+        DBItemXmlEditorConfiguration item = StandardSchemaHandler.createOrUpdateConfigurationIfReleaseOrDeploy(IMPL_PATH, in.getObjectType(), null, in
+                .getConfiguration(), in.getConfigurationJson(), account, auditLogId);
         StandardSchemaHandler handler = new StandardSchemaHandler(in.getObjectType());
         handler.readCurrent(item, true);
         return handler.getAnswer();
