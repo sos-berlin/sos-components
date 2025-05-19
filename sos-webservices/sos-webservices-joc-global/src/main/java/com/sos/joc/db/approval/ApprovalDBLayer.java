@@ -188,7 +188,7 @@ public class ApprovalDBLayer extends DBLayer {
         hql.append(", modified=:now where id=:id");
         Query<?> query = getSession().createQuery(hql);
         query.setParameter("id", id);
-        query.setParameter(stateField, state);
+        query.setParameter("state", state);
         if (approver != null) {
             query.setParameter("approver", approver);
         }
