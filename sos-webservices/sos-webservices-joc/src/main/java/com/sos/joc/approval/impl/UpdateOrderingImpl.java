@@ -56,6 +56,9 @@ public class UpdateOrderingImpl extends JOCResourceImpl implements IUpdateOrderi
     }
     
     private void updateOrdering(UpdateOrderingFilter filter, ApprovalDBLayer dbLayer) throws SOSHibernateException {
+        if(filter.getAccountNames().isEmpty()) {
+            return;
+        }
         List<DBItemJocApprover> dbApprovers =  dbLayer.getApprovers();
         Map<String, DBItemJocApprover> mappedByName = dbApprovers.stream()
                 .collect(Collectors.toMap(DBItemJocApprover::getAccountName, Function.identity()));
