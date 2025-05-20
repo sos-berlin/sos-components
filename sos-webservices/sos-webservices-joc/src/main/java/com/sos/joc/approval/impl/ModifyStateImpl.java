@@ -98,10 +98,15 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             ApproverState prevApproverState = item.getApproverStateAsEnum();
             RequestorState requestorState = item.getRequestorStateAsEnum();
             
-            if (requestorState.equals(RequestorState.WITHDRAWN)) {
-                throw new JocBadRequestException("The approval request is already withdrawn by the requestor");
-            } else if (!requestorState.equals(RequestorState.REQUESTED)) {
+            switch (requestorState) {
+            case FAILED:
+            case SUCCESSFUL:
+            case IN_PROGRESS:
                 throw new JocBadRequestException("The approval request has already been used by the requestor");
+            case WITHDRAWN:
+                // throw new JocBadRequestException("The approval request is already withdrawn by the requestor");
+            default: //REQUESTED
+                break;
             }
             
             ApproverState newState = action.equals(Action.APPROVE) ? ApproverState.APPROVED : ApproverState.REJECTED;
@@ -112,7 +117,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                     throw new JocBadRequestException("The approval request is already approved");
                 case REJECTED:
                     throw new JocBadRequestException("The approval request is already rejected");
-                default: //never reached
+                default: //PENDING never reached
                     break;
                 }
             }

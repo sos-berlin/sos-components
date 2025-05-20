@@ -434,6 +434,7 @@ public class EventService {
         if (evt.withNotification()) {
             if (evt.getApprover() != null) {
                 EventApprovalNotification eventA = new EventApprovalNotification();
+                eventA.setEventId(eventSnapshot.getEventId());
                 eventA.setApprover(evt.getApprover());
                 eventA.setNumOfPendingApprovals(evt.numOfPending());
                 eventA.setEventType("ApproverNotification");
@@ -441,6 +442,7 @@ public class EventService {
             }
             if (evt.getRequestor() != null) {
                 EventApprovalNotification eventA = new EventApprovalNotification();
+                eventA.setEventId(eventSnapshot.getEventId());
                 eventA.setRequestor(evt.getRequestor());
                 eventA.setEventType("RequestorNotification");
                 addEventA(eventA);

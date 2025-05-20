@@ -473,10 +473,6 @@ public class JOCResourceImpl {
                 
                 new ApprovalDBLayer(hibernateSession).updateRequestorStatusInclusiveTransaction(aRId, RequestorState.IN_PROGRESS);
 
-//                item.setModified(Date.from(Instant.now()));
-//                item.setRequestorState(RequestorState.IN_PROGRESS.intValue());
-//                hibernateSession.update(item);
-                
                 either = Either.right(item.getParameters() == null ? null : item.getParameters().getBytes(StandardCharsets.UTF_8));
             } catch (Exception e) {
                 either = Either.left(e);
