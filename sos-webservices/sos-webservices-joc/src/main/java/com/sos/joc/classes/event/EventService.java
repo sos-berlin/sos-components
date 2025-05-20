@@ -110,6 +110,7 @@ import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticeEvent;
 import js7.data.order.OrderEvent.OrderOrderAdded;
+import js7.data.order.OrderEvent.OrderPriorityChanged;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
@@ -155,7 +156,7 @@ public class EventService {
             OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, OrderStopped$.class, OrderSleeping.class, OrderOrderAdded.class,  
             VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, 
             NoticeEvent.class, OrderLocksAcquired.class, OrderLocksQueued.class, OrderLocksReleased.class, OrderNoticeEvent.class, 
-            OrderTransferred.class, SubagentItemStateEvent.class, PlanEvent.class);
+            OrderTransferred.class, OrderPriorityChanged.class, SubagentItemStateEvent.class, PlanEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<IEventObject> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
