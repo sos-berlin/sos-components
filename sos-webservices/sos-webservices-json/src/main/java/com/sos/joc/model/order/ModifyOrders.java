@@ -41,8 +41,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "deep",
     "reset",
     "force",
-    "position",
     "fromCurrentBlock",
+    "position",
+    "priority",
     "variables",
     "cycleEndTime",
     "auditLog"
@@ -131,14 +132,12 @@ public class ModifyOrders {
     @JsonPropertyDescription("only relevant for 'suspend'")
     private Boolean reset = false;
     /**
-     * only relevant for 'resume'
+     * only relevant for 'resume'; force execution of non-startable jobs after kill
      * 
      */
     @JsonProperty("force")
-    @JsonPropertyDescription("only relevant for 'resume'")
+    @JsonPropertyDescription("only relevant for 'resume'; force execution of non-startable jobs after kill")
     private Boolean force = false;
-    @JsonProperty("position")
-    private Object position;
     /**
      * only relevant for 'resume'
      * 
@@ -146,6 +145,10 @@ public class ModifyOrders {
     @JsonProperty("fromCurrentBlock")
     @JsonPropertyDescription("only relevant for 'resume'")
     private Boolean fromCurrentBlock = false;
+    @JsonProperty("position")
+    private Object position;
+    @JsonProperty("priority")
+    private Integer priority;
     /**
      * key-value pairs
      * <p>
@@ -389,9 +392,9 @@ public class ModifyOrders {
     public void setReset(Boolean reset) {
         this.reset = reset;
     }
-    
+
     /**
-     * only relevant for 'resume'
+     * only relevant for 'resume'; force execution of non-startable jobs after kill
      * 
      */
     @JsonProperty("force")
@@ -400,7 +403,7 @@ public class ModifyOrders {
     }
 
     /**
-     * only relevant for 'resume'
+     * only relevant for 'resume'; force execution of non-startable jobs after kill
      * 
      */
     @JsonProperty("force")
@@ -408,21 +411,6 @@ public class ModifyOrders {
         this.force = force;
     }
 
-    @JsonProperty("position")
-    public Object getPosition() {
-        if (position != null) {
-            if (position instanceof String && ((String) position).isEmpty()) {
-                return null;
-            }
-        }
-        return position;
-    }
-
-    @JsonProperty("position")
-    public void setPosition(Object position) {
-        this.position = position;
-    }
-    
     /**
      * only relevant for 'resume'
      * 
@@ -439,6 +427,31 @@ public class ModifyOrders {
     @JsonProperty("fromCurrentBlock")
     public void setFromCurrentBlock(Boolean fromCurrentBlock) {
         this.fromCurrentBlock = fromCurrentBlock;
+    }
+
+    @JsonProperty("position")
+    public Object getPosition() {
+        if (position != null) {
+            if (position instanceof String && ((String) position).isEmpty()) {
+                return null;
+            }
+        }
+        return position;
+    }
+
+    @JsonProperty("position")
+    public void setPosition(Object position) {
+        this.position = position;
+    }
+
+    @JsonProperty("priority")
+    public Integer getPriority() {
+        return priority;
+    }
+
+    @JsonProperty("priority")
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 
     /**
@@ -509,12 +522,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("reset", reset).append("force", force).append("position", position).append("fromCurrentBlock", fromCurrentBlock).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("reset", reset).append("force", force).append("fromCurrentBlock", fromCurrentBlock).append("position", position).append("priority", priority).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(deep).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(dateFrom).append(kill).append(states).append(cycleEndTime).append(dateTo).append(reset).append(force).append(fromCurrentBlock).append(orderIds).append(position).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(deep).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(dateFrom).append(kill).append(priority).append(states).append(cycleEndTime).append(dateTo).append(reset).append(force).append(fromCurrentBlock).append(orderIds).append(position).toHashCode();
     }
 
     @Override
@@ -526,7 +539,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(deep, rhs.deep).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(kill, rhs.kill).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(reset, rhs.reset).append(force, rhs.force).append(force, rhs.force).append(fromCurrentBlock, rhs.fromCurrentBlock).append(position, rhs.position).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(deep, rhs.deep).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(kill, rhs.kill).append(priority, rhs.priority).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(reset, rhs.reset).append(force, rhs.force).append(fromCurrentBlock, rhs.fromCurrentBlock).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
     }
 
 }

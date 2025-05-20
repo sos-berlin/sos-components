@@ -1,6 +1,7 @@
 package com.sos.joc.orders.impl;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Collection;
@@ -99,7 +100,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceModifyImpl.class);
 
     private enum Action {
-        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT, CONTINUE
+        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT, CONTINUE, CHANGE
     }
     
     @Override
@@ -192,6 +193,26 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             postOrdersModify(Action.ANSWER_PROMPT, modifyOrders);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse postOrdersChange(String accessToken, byte[] filterBytes) {
+        try {
+            ModifyOrders modifyOrders = initRequest(Action.CHANGE, accessToken, filterBytes);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
+                    .getControllerId(), accessToken).map(p -> p.getOrders().getModify()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            checkRequiredParameter("priority", modifyOrders.getPriority());
+            postOrdersModify(Action.CHANGE, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -885,11 +906,27 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 //                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
 //            return CompletableFuture.supplyAsync(() -> Either.right(null));
             
-            return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(
-                    JControllerCommand::apply).collect(Collectors.toList()))).thenApply(OrdersResourceModifyImpl::castEither);
+            List<JControllerCommand> commandsAP = oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).collect(
+                    Collectors.toList());
+            if (jOrders.size() == 1) {
+                return ControllerApi.of(controllerId).executeCommand(commandsAP.get(0)).thenApply(OrdersResourceModifyImpl::castEither);
+            } else {
+                return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(commandsAP)).thenApply(
+                        OrdersResourceModifyImpl::castEither);
+            }
 
         case CONTINUE:
             return letRun(controllerId, jOrders);
+            
+        case CHANGE:
+            Optional<BigDecimal> prio = Optional.of(new BigDecimal(modifyOrders.getPriority()));
+            List<JControllerCommand> commandsC = oIdsStream.map(oId -> JControllerCommand.changeOrder(oId, prio)).collect(Collectors.toList());
+            if (jOrders.size() == 1) {
+                return ControllerApi.of(controllerId).executeCommand(commandsC.get(0)).thenApply(OrdersResourceModifyImpl::castEither);
+            } else {
+                return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(commandsC)).thenApply(
+                        OrdersResourceModifyImpl::castEither);
+            }
 
         default: // case REMOVE_WHEN_TERMINATED
             return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(oIdsStream.collect(Collectors.toSet()));

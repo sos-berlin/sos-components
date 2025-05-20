@@ -39,4 +39,9 @@ public interface IOrdersResourceModify {
     @Path("continue")
     @Produces({ "application/json" })
     public JOCDefaultResponse postOrdersContinue(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("change")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postOrdersChange(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }
