@@ -97,11 +97,11 @@ public class FTPYADEEngineTest {
 
         if (isFTPS) {
             Path keyStore = Path.of(System.getProperty("java.home")).resolve("lib/security/cacerts");
-            ((FTPSProviderArguments) args).getSSL().getUntrustedSSL().setValue(true);
-            ((FTPSProviderArguments) args).getSSL().getUntrustedSSLVerifyCertificateHostname().setValue(false);
-            ((FTPSProviderArguments) args).getSSL().getTrustedSSL().getKeyStoreFile().setValue(keyStore);
-            ((FTPSProviderArguments) args).getSSL().getTrustedSSL().getKeyStorePassword().setValue("changeit");
-            ((FTPSProviderArguments) args).getSSL().getEnabledProtocols().setValue("TLSv1.2");
+            ((FTPSProviderArguments) args).getSsl().getUntrustedSsl().setValue(true);
+            ((FTPSProviderArguments) args).getSsl().getUntrustedSslVerifyCertificateHostname().setValue(false);
+            ((FTPSProviderArguments) args).getSsl().getTrustedSsl().getKeyStoreFile().setValue(keyStore);
+            ((FTPSProviderArguments) args).getSsl().getTrustedSsl().getKeyStorePassword().setValue("changeit");
+            ((FTPSProviderArguments) args).getSsl().getEnabledProtocols().setValue("TLSv1.2");
         }
 
         return args;

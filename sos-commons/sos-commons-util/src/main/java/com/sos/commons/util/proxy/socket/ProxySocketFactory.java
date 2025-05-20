@@ -5,25 +5,24 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.http.HttpProxySocketFactory;
-
 
 public class ProxySocketFactory extends DefaultSocketFactory {
 
-    private final SOSProxyProvider provider;
+    private final ProxyConfig config;
 
-    public ProxySocketFactory(SOSProxyProvider provider) {
-        this.provider = provider;
+    public ProxySocketFactory(ProxyConfig config) {
+        this.config = config;
     }
 
     @Override
     public Socket createSocket() throws IOException {
-        switch (provider.getProxy().type()) {
+        switch (config.getProxy().type()) {
         case HTTP:
-            return new HttpProxySocketFactory(provider).createSocket();
+            return new HttpProxySocketFactory(config).createSocket();
         case SOCKS:
-            return new DefaultSocketFactory(provider.getProxy()).createSocket();
+            return new DefaultSocketFactory(config.getProxy()).createSocket();
         default:
             break;
         }

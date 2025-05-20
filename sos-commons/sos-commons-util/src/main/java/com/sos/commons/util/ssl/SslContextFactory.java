@@ -16,11 +16,13 @@ import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.util.arguments.impl.SSLArguments;
+import com.sos.commons.util.keystore.KeyStoreReader;
+import com.sos.commons.util.keystore.KeyStoreReader.KeyStoreResult;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.ssl.SOSJavaKeyStoreReader.SOSJavaKeyStoreResult;
 
-public class SOSSSLContextFactory {
+/** Named SslContextFactory (not SSLContextFactory) to follow modern Java naming conventions,<br/>
+ * where acronyms use only the first letter capitalized (e.g., HttpClient, XmlParser). */
+public class SslContextFactory {
 
     /** TLS (Transport Layer Security) is the successor to SSL (Secure Sockets Layer) and is now considered the secure standard.<br/>
      * - SSL is outdated and considered insecure (especially SSLv2 and SSLv3)<br/>
@@ -28,47 +30,47 @@ public class SOSSSLContextFactory {
      */
     public static final String DEFAULT_PROTOCOL = "TLS";
 
-    public static SSLContext create(ISOSLogger logger, SSLArguments args) throws Exception {
+    public static SSLContext create(ISOSLogger logger, SslArguments args) throws Exception {
         if (args == null) {
             throw new SOSMissingDataException("SSLArguments");
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("[SOSSSLContextFactory]%s", args);
+            logger.debug("[SslContextFactory]%s", args);
         }
         // Standard TLS without enforcing a specific protocol
         // This can include TLSv1.0, TLSv1.1, TLSv1.2, TLSv1.3, depending on the supported version in the Java environment.
         SSLContext sslContext = SSLContext.getInstance(DEFAULT_PROTOCOL);
-        if (args.getUntrustedSSL().isTrue()) {
-            if (args.getTrustedSSL().isEnabled()) {
-                logger.info("[SOSSSLContextFactory][%s=true][ignored]%s", args.getUntrustedSSL().getName(), args.getTrustedSSLFullInfo());
+        if (args.getUntrustedSsl().isTrue()) {
+            if (args.getTrustedSsl().isEnabled()) {
+                logger.info("[SslContextFactory][%s=true][ignored]%s", args.getUntrustedSsl().getName(), args.getTrustedSslFullInfo());
             }
-            if (args.getUntrustedSSLVerifyCertificateHostname().isTrue()) {
+            if (args.getUntrustedSslVerifyCertificateHostname().isTrue()) {
                 sslContext.init(null, getAcceptUntrustedCertificateTrustManagers(), new SecureRandom());
             } else {
                 sslContext.init(null, getAcceptUntrustedCertificateAndHostnameTrustManagers(), new SecureRandom());
             }
         } else {
-            if (!args.getUntrustedSSLVerifyCertificateHostname().isTrue()) {
-                String name = args.getUntrustedSSLVerifyCertificateHostname().getName();
-                Boolean val = args.getUntrustedSSLVerifyCertificateHostname().getValue();
+            if (!args.getUntrustedSslVerifyCertificateHostname().isTrue()) {
+                String name = args.getUntrustedSslVerifyCertificateHostname().getName();
+                Boolean val = args.getUntrustedSslVerifyCertificateHostname().getValue();
                 // e.g. YADE uses DisableCertificateHostnameVerification
-                if (args.getUntrustedSSLVerifyCertificateHostnameOppositeName() != null) {
-                    name = args.getUntrustedSSLVerifyCertificateHostnameOppositeName();
+                if (args.getUntrustedSslVerifyCertificateHostnameOppositeName() != null) {
+                    name = args.getUntrustedSslVerifyCertificateHostnameOppositeName();
                     val = !val;
                 }
-                logger.info("[SOSSSLContextFactory][ignored]%s=%s", name, val);
-                args.getUntrustedSSLVerifyCertificateHostname().setValue(true);
+                logger.info("[SslContextFactory][ignored]%s=%s", name, val);
+                args.getUntrustedSslVerifyCertificateHostname().setValue(true);
             }
 
-            SOSJavaKeyStoreResult result = SOSJavaKeyStoreReader.read(logger, args.getTrustedSSL());
+            KeyStoreResult result = KeyStoreReader.read(logger, args.getTrustedSsl());
             if (result == null) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[SOSSSLContextFactory]use defaultJVMTrustManagers");
+                    logger.debug("[SslContextFactory]use defaultJVMTrustManagers");
                 }
                 sslContext.init(null, getDefaultJVMTrustManagers(), new SecureRandom());
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[SOSSSLContextFactory][SOSJavaKeyStoreResult]%s", result);
+                    logger.debug("[SslContextFactory][KeyStoreResult]%s", result);
                 }
                 try {
                     sslContext.init(getKeyManagers(result.getKeyStore(), result.getKeyStorePassword()), getTrustManagers(result.getTrustStore()),
@@ -83,7 +85,7 @@ public class SOSSSLContextFactory {
         if (enabledProtocols.length > 0) {
             // Set explicitly supported protocols: e.g. "TLSv1.2", "TLSv1.3"
             if (logger.isDebugEnabled()) {
-                logger.debug("[SOSSSLContextFactory][setEnabledProtocols]%s", String.join(",", enabledProtocols));
+                logger.debug("[SslContextFactory][setEnabledProtocols]%s", String.join(",", enabledProtocols));
             }
             sslContext.createSSLEngine().setEnabledProtocols(enabledProtocols);
         }
@@ -91,7 +93,7 @@ public class SOSSSLContextFactory {
     }
 
     /** Removes "TLS","SSL", accepts only e.g. "TLSv1.1", "TLSv1.2", "TLSv1.3" ... */
-    public static String[] getFilteredEnabledProtocols(SSLArguments args) {
+    public static String[] getFilteredEnabledProtocols(SslArguments args) {
         if (args == null || args.getEnabledProtocols().isEmpty()) {
             return new String[0];
         }

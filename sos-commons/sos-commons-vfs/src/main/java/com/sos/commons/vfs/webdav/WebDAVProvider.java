@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
-import com.sos.commons.util.http.SOSHttpUtils;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -79,10 +79,10 @@ public class WebDAVProvider extends HTTPProvider {
             }
 
             Deque<URI> parentsToCreate = new ArrayDeque<>();
-            URI parent = SOSHttpUtils.getParentURI(uri);
+            URI parent = HttpUtils.getParentURI(uri);
             while (parent != null && !parent.equals(uri) && !WebDAVProviderUtils.directoryExists(this, parent)) {
                 parentsToCreate.push(parent);
-                parent = SOSHttpUtils.getParentURI(parent);
+                parent = HttpUtils.getParentURI(parent);
             }
             // create parent directories
             while (!parentsToCreate.isEmpty()) {
@@ -109,8 +109,8 @@ public class WebDAVProvider extends HTTPProvider {
             builder.header("Destination", targetURI.toString());
             ExecuteResult<Void> result = getClient().executeWithoutResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
             int code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
-                if (SOSHttpUtils.isNotFound(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
                 throw new IOException(BaseHttpClient.getResponseStatus(result));

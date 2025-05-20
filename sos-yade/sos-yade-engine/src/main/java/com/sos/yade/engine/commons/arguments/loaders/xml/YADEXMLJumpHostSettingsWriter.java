@@ -4,8 +4,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.util.arguments.impl.SSLArguments;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
+import com.sos.commons.util.ssl.SslArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
@@ -242,16 +242,16 @@ public class YADEXMLJumpHostSettingsWriter {
         }
         if (isFTPS) {
             FTPSProviderArguments ftps = (FTPSProviderArguments) args;
-            SSLArguments ssl = ftps.getSSL();
+            SslArguments ssl = ftps.getSsl();
             // YADE 1 - compatibility
             sb.append("<FTPSClientSecurity>");
             sb.append("<SecurityMode>").append(cdata(ftps.getSecurityModeValue())).append("</SecurityMode>");
-            if (ftps.getSSL().getTrustedSSL().isTrustStoreEnabled()) {
+            if (ftps.getSsl().getTrustedSsl().isTrustStoreEnabled()) {
                 sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             sb.append("<FTPSClientSecurity>");
             // YADE JS7
-            sb.append(generateProtocolFragmentPartSSL(ssl));
+            sb.append(generateProtocolFragmentPartSsl(ssl));
         } else {
             sb.append("<PassiveMode>").append(args.getPassiveMode().getValue()).append("</PassiveMode>");
             if (args.getTransferMode().getValue() != null) {
@@ -277,19 +277,19 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append(CS_FRAMENT_REF);
         }
         if (isHTTPS) {
-            SSLArguments ssl = ((HTTPSProviderArguments) args).getSSL();
+            SslArguments ssl = ((HTTPSProviderArguments) args).getSsl();
             // YADE 1 - compatibility
-            if (ssl.getUntrustedSSL().isTrue()) {
+            if (ssl.getUntrustedSsl().isTrue()) {
                 sb.append("<AcceptUntrustedCertificate>true</AcceptUntrustedCertificate>");
                 sb.append("<DisableCertificateHostnameVerification>");
-                sb.append(getOppositeValue(ssl.getUntrustedSSLVerifyCertificateHostname()));
+                sb.append(getOppositeValue(ssl.getUntrustedSslVerifyCertificateHostname()));
                 sb.append("</DisableCertificateHostnameVerification>");
             }
-            if (ssl.getTrustedSSL().isTrustStoreEnabled()) {
+            if (ssl.getTrustedSsl().isTrustStoreEnabled()) {
                 sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             // YADE JS7
-            sb.append(generateProtocolFragmentPartSSL(ssl));
+            sb.append(generateProtocolFragmentPartSsl(ssl));
         }
 
         sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForHTTP"));
@@ -310,19 +310,19 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append(CS_FRAMENT_REF);
         }
         if (isWEBDAVS) {
-            SSLArguments ssl = ((HTTPSProviderArguments) args).getSSL();
+            SslArguments ssl = ((HTTPSProviderArguments) args).getSsl();
             // YADE 1 - compatibility
-            if (ssl.getUntrustedSSL().isTrue()) {
+            if (ssl.getUntrustedSsl().isTrue()) {
                 sb.append("<AcceptUntrustedCertificate>true</AcceptUntrustedCertificate>");
                 sb.append("<DisableCertificateHostnameVerification>");
-                sb.append(getOppositeValue(ssl.getUntrustedSSLVerifyCertificateHostname()));
+                sb.append(getOppositeValue(ssl.getUntrustedSslVerifyCertificateHostname()));
                 sb.append("</DisableCertificateHostnameVerification>");
             }
-            if (ssl.getTrustedSSL().isTrustStoreEnabled()) {
+            if (ssl.getTrustedSsl().isTrustStoreEnabled()) {
                 sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             // YADE JS7
-            sb.append(generateProtocolFragmentPartSSL(ssl));
+            sb.append(generateProtocolFragmentPartSsl(ssl));
         }
 
         sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForWebDAV"));
@@ -436,7 +436,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentPartProxy(ProxyArguments args, String elementName) {
+    private static StringBuilder generateProtocolFragmentPartProxy(ProxyConfigArguments args, String elementName) {
         StringBuilder sb = new StringBuilder();
         if (args == null) {
             return sb;
@@ -459,61 +459,61 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentPartYADE1KeyStore(SSLArguments args) {
+    private static StringBuilder generateProtocolFragmentPartYADE1KeyStore(SslArguments args) {
         StringBuilder sb = new StringBuilder();
         sb.append("<KeyStoreType>");
-        sb.append(cdata(args.getTrustedSSL().getTrustStoreType().getValue().name()));
+        sb.append(cdata(args.getTrustedSsl().getTrustStoreType().getValue().name()));
         sb.append("</KeyStoreType>");
         sb.append("<KeyStoreFile>");
-        sb.append(cdata(args.getTrustedSSL().getTrustStoreFile().getValue().toString()));
+        sb.append(cdata(args.getTrustedSsl().getTrustStoreFile().getValue().toString()));
         sb.append("</KeyStoreFile>");
-        if (!args.getTrustedSSL().getTrustStorePassword().isEmpty()) {
+        if (!args.getTrustedSsl().getTrustStorePassword().isEmpty()) {
             sb.append("<KeyStorePassword >");
-            sb.append(cdata(args.getTrustedSSL().getTrustStorePassword().getValue()));
+            sb.append(cdata(args.getTrustedSsl().getTrustStorePassword().getValue()));
             sb.append("</KeyStorePassword>");
         }
         return sb;
     }
 
     // YADE JS7
-    private static StringBuilder generateProtocolFragmentPartSSL(SSLArguments args) {
+    private static StringBuilder generateProtocolFragmentPartSsl(SslArguments args) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SSL>");
 
-        if (args.getUntrustedSSL().isTrue()) {
+        if (args.getUntrustedSsl().isTrue()) {
             sb.append("<UntrustedSSL>");
             sb.append("<DisableCertificateHostnameVerification>");
-            sb.append(getOppositeValue(args.getUntrustedSSLVerifyCertificateHostname()));
+            sb.append(getOppositeValue(args.getUntrustedSslVerifyCertificateHostname()));
             sb.append("</DisableCertificateHostnameVerification>");
             sb.append("</UntrustedSSL>");
         } else {
             sb.append("<TrustedSSL>");
-            if (args.getTrustedSSL().isTrustStoreEnabled()) {
+            if (args.getTrustedSsl().isTrustStoreEnabled()) {
                 sb.append("<TrustStore>");
                 sb.append("<TrustStoreType>");
-                sb.append(cdata(args.getTrustedSSL().getTrustStoreType().getValue().name()));
+                sb.append(cdata(args.getTrustedSsl().getTrustStoreType().getValue().name()));
                 sb.append("</TrustStoreType>");
                 sb.append("<TrustStoreFile>");
-                sb.append(cdata(args.getTrustedSSL().getTrustStoreFile().getValue().toString()));
+                sb.append(cdata(args.getTrustedSsl().getTrustStoreFile().getValue().toString()));
                 sb.append("</TrustStoreFile>");
-                if (!args.getTrustedSSL().getTrustStorePassword().isEmpty()) {
+                if (!args.getTrustedSsl().getTrustStorePassword().isEmpty()) {
                     sb.append("<TrustStorePassword >");
-                    sb.append(cdata(args.getTrustedSSL().getTrustStorePassword().getValue()));
+                    sb.append(cdata(args.getTrustedSsl().getTrustStorePassword().getValue()));
                     sb.append("</TrustStorePassword>");
                 }
                 sb.append("</TrustStore>");
             }
-            if (args.getTrustedSSL().isKeyStoreEnabled()) {
+            if (args.getTrustedSsl().isKeyStoreEnabled()) {
                 sb.append("<KeyStore>");
                 sb.append("<KeyStoreType>");
-                sb.append(cdata(args.getTrustedSSL().getTrustStoreType().getValue().name()));
+                sb.append(cdata(args.getTrustedSsl().getTrustStoreType().getValue().name()));
                 sb.append("</KeyStoreType>");
                 sb.append("<KeyStoreFile>");
-                sb.append(cdata(args.getTrustedSSL().getTrustStoreFile().getValue().toString()));
+                sb.append(cdata(args.getTrustedSsl().getTrustStoreFile().getValue().toString()));
                 sb.append("</KeyStoreFile>");
-                if (!args.getTrustedSSL().getTrustStorePassword().isEmpty()) {
+                if (!args.getTrustedSsl().getTrustStorePassword().isEmpty()) {
                     sb.append("<KeyStorePassword >");
-                    sb.append(cdata(args.getTrustedSSL().getTrustStorePassword().getValue()));
+                    sb.append(cdata(args.getTrustedSsl().getTrustStorePassword().getValue()));
                     sb.append("</KeyStorePassword>");
                 }
                 sb.append("</KeyStore>");

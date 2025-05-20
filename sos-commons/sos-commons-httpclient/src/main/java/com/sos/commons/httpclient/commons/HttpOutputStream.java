@@ -9,7 +9,7 @@ import java.net.http.HttpRequest;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.http.SOSHttpUtils;
+import com.sos.commons.util.http.HttpUtils;
 
 public class HttpOutputStream extends OutputStream {
 
@@ -48,18 +48,18 @@ public class HttpOutputStream extends OutputStream {
                     .expectContinue(true);
 
             // Content-Type
-            builder.header(SOSHttpUtils.HEADER_CONTENT_TYPE, SOSHttpUtils.HEADER_CONTENT_TYPE_BINARY);
+            builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
             BaseHttpClient.withWebDAVOverwrite(builder, isWebDAV);
 
             if (!client.isChunkedTransfer()) {
                 // Note: Not works - throws an Exception ...
                 // set the HEADER_CONTENT_LENGTH to avoid Chunked transfer
-                builder.header(SOSHttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
+                builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
             }
 
             HttpRequest request = builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
             ExecuteResult<Void> result = client.executeWithoutResponseBody(request);
-            if (!SOSHttpUtils.isSuccessful(result.response().statusCode())) {
+            if (!HttpUtils.isSuccessful(result.response().statusCode())) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
             }
         } catch (Exception e) {

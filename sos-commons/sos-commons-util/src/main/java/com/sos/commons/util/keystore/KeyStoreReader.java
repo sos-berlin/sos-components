@@ -1,4 +1,4 @@
-package com.sos.commons.util.ssl;
+package com.sos.commons.util.keystore;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -6,11 +6,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 
-import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreType;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
-public class SOSJavaKeyStoreReader {
+public class KeyStoreReader {
 
     public enum Type {
         KEYSTORE, TRUSTSTORE, KEY_AND_TRUSTSTORE
@@ -28,11 +26,11 @@ public class SOSJavaKeyStoreReader {
     /** KeyStore.getInstance: JKS/PKC12... */
     private String storeType;
 
-    private SOSJavaKeyStoreReader() {
+    private KeyStoreReader() {
         this(null, null, null, null);
     }
 
-    private SOSJavaKeyStoreReader(Type type, Path path, String password, String storeType) {
+    private KeyStoreReader(Type type, Path path, String password, String storeType) {
         this.type = type;
         this.path = path;
         this.password = password;
@@ -47,11 +45,11 @@ public class SOSJavaKeyStoreReader {
         return load(path, password, storeType);
     }
 
-    public static SOSJavaKeyStoreResult read(ISOSLogger logger, JavaKeyStoreArguments args) throws Exception {
+    public static KeyStoreResult read(ISOSLogger logger, KeyStoreArguments args) throws Exception {
         if (args == null || !args.isEnabled()) {
             return null;
         }
-        SOSJavaKeyStoreResult result = new SOSJavaKeyStoreReader().new SOSJavaKeyStoreResult();
+        KeyStoreResult result = new KeyStoreReader().new KeyStoreResult();
         if (!args.getKeyStoreFile().isEmpty()) {
             result.setKeyStoreResult(read(Type.KEYSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args
                     .getKeyStoreType().getValue().name()));
@@ -63,7 +61,7 @@ public class SOSJavaKeyStoreReader {
         return result;
     }
 
-    public static KeyStore load(Path path, String password, JavaKeyStoreType storeType) throws Exception {
+    public static KeyStore load(Path path, String password, KeyStoreType storeType) throws Exception {
         return load(path, password, getType(storeType));
     }
 
@@ -80,7 +78,7 @@ public class SOSJavaKeyStoreReader {
             ks.load(is, pass);
             return ks;
         } catch (Throwable e) {
-            throw new Exception(String.format("[%s.load][%s][%s]%s", SOSJavaKeyStoreReader.class.getSimpleName(), storeType, path, e), e);
+            throw new Exception(String.format("[%s.load][%s][%s]%s", KeyStoreReader.class.getSimpleName(), storeType, path, e), e);
         }
     }
 
@@ -97,13 +95,13 @@ public class SOSJavaKeyStoreReader {
         return sb.toString();
     }
 
-    private static SOSJavaKeyStore read(Type type, Path path, String password, String storeType) throws Exception {
-        SOSJavaKeyStoreReader reader = new SOSJavaKeyStoreReader(type, path, password, storeType);
+    private static KeyStoreObject read(Type type, Path path, String password, String storeType) throws Exception {
+        KeyStoreReader reader = new KeyStoreReader(type, path, password, storeType);
         reader.resolvePathAndPassword();
 
-        SOSJavaKeyStore result = new SOSJavaKeyStoreReader().new SOSJavaKeyStore();
+        KeyStoreObject result = new KeyStoreReader().new KeyStoreObject();
         result.type = reader.storeType;
-        result.keyStore = SOSJavaKeyStoreReader.load(reader.path, reader.password, reader.storeType);
+        result.keyStore = KeyStoreReader.load(reader.path, reader.password, reader.storeType);
         result.path = reader.path;
         result.password = reader.getPassword();
         return result;
@@ -139,7 +137,7 @@ public class SOSJavaKeyStoreReader {
         }
     }
 
-    private static String getType(JavaKeyStoreType storeType) {
+    private static String getType(KeyStoreType storeType) {
         return getType(storeType == null ? null : storeType.name());
     }
 
@@ -162,7 +160,7 @@ public class SOSJavaKeyStoreReader {
         }
     }
 
-    public class SOSJavaKeyStoreResult {
+    public class KeyStoreResult {
 
         private String keyStoreType;
         private KeyStore keyStore;
@@ -229,14 +227,14 @@ public class SOSJavaKeyStoreReader {
             return sb.toString();
         }
 
-        private void setKeyStoreResult(SOSJavaKeyStore ks) {
+        private void setKeyStoreResult(KeyStoreObject ks) {
             keyStoreType = ks.type;
             keyStorePath = ks.path;
             keyStorePassword = ks.password;
             keyStore = ks.keyStore;
         }
 
-        private void setTrustStoreResult(SOSJavaKeyStore ks) {
+        private void setTrustStoreResult(KeyStoreObject ks) {
             trustStoreType = ks.type;
             trustStorePath = ks.path;
             trustStorePassword = ks.password;
@@ -244,7 +242,7 @@ public class SOSJavaKeyStoreReader {
         }
     }
 
-    private class SOSJavaKeyStore {
+    private class KeyStoreObject {
 
         private String type;
         private KeyStore keyStore;

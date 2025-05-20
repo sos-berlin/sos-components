@@ -5,8 +5,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.ProxyConfig;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.util.proxy.socket.ProxySocketFactory;
 
 import net.schmizz.sshj.Config;
@@ -35,7 +35,7 @@ public class SSHJTest {
         String user = "user";
         String authKey = "C://id_rsa.ppk";
 
-        ProxyArguments proxyArgs = new ProxyArguments();
+        ProxyConfigArguments proxyArgs = new ProxyConfigArguments();
         proxyArgs.getType().setValue(java.net.Proxy.Type.HTTP);
         proxyArgs.getHost().setValue("proxy_host");
         proxyArgs.getPort().setValue(3128);
@@ -53,7 +53,7 @@ public class SSHJTest {
             client.setConnectTimeout(connectTimeout);// socket.connect
 
             if (useProxy) {
-                client.setSocketFactory(new ProxySocketFactory(SOSProxyProvider.createInstance(proxyArgs)));
+                client.setSocketFactory(new ProxySocketFactory(ProxyConfig.createInstance(proxyArgs)));
             }
 
             client.connect(host);

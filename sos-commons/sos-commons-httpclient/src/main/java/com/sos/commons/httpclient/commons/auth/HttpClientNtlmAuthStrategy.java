@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.http.SOSHttpUtils;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
 /** TODO - not implemented yet - NTLM Auth with Java requires external lib like SMBJ or JCIFS */
@@ -74,8 +74,8 @@ public class HttpClientNtlmAuthStrategy implements IHttpClientAuthStrategy {
         if (authHeaders == null) {
             authHeaders = new LinkedHashMap<>();
         }
-        if (!authHeaders.containsKey(SOSHttpUtils.HEADER_AUTHORIZATION)) {
-            authHeaders.put(SOSHttpUtils.HEADER_AUTHORIZATION, "NTLM " + token);
+        if (!authHeaders.containsKey(HttpUtils.HEADER_AUTHORIZATION)) {
+            authHeaders.put(HttpUtils.HEADER_AUTHORIZATION, "NTLM " + token);
         }
     }
 

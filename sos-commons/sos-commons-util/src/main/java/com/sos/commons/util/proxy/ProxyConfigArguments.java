@@ -1,10 +1,10 @@
-package com.sos.commons.util.arguments.impl;
+package com.sos.commons.util.proxy;
 
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 
-public class ProxyArguments extends ASOSArguments {
+public class ProxyConfigArguments extends ASOSArguments {
 
     public static final String CLASS_KEY = "PROXY";
 

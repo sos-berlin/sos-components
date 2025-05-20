@@ -23,8 +23,8 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.keystore.KeyStoreArguments;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument.Type;
 import com.sos.js7.job.JobArguments.LogLevel;
@@ -631,10 +631,10 @@ public class OrderProcessStep<A extends JobArguments> {
             return getIncludedArguments(new CredentialStoreArguments().getClass());
         case SSHProviderArguments.CLASS_KEY:
             return getIncludedArguments(SSHProviderArguments.class);
-        case JavaKeyStoreArguments.CLASS_KEY:
-            return getIncludedArguments(JavaKeyStoreArguments.class);
-        case ProxyArguments.CLASS_KEY:
-            return getIncludedArguments(ProxyArguments.class);
+        case KeyStoreArguments.CLASS_KEY:
+            return getIncludedArguments(KeyStoreArguments.class);
+        case ProxyConfigArguments.CLASS_KEY:
+            return getIncludedArguments(ProxyConfigArguments.class);
         default:
             return null;
         }

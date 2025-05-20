@@ -1,4 +1,4 @@
-package com.sos.commons.util.arguments.impl;
+package com.sos.commons.util.keystore;
 
 import java.nio.file.Path;
 
@@ -6,17 +6,17 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 
-public class JavaKeyStoreArguments extends ASOSArguments {
+public class KeyStoreArguments extends ASOSArguments {
 
-    public static final String CLASS_KEY = "JAVA_KEY_STORE";
+    public static final String CLASS_KEY = "KEY_STORE";
 
     // Java Keystore
-    private SOSArgument<JavaKeyStoreType> keyStoreType = new SOSArgument<>("keystore_type", false, JavaKeyStoreType.JKS);
+    private SOSArgument<KeyStoreType> keyStoreType = new SOSArgument<>("keystore_type", false, KeyStoreType.JKS);
     private SOSArgument<Path> keyStoreFile = new SOSArgument<>("keystore_file", false);
     private SOSArgument<String> keyStorePassword = new SOSArgument<>("keystore_password", false, DisplayMode.MASKED);
 
     // Java Truststore
-    private SOSArgument<JavaKeyStoreType> trustStoreType = new SOSArgument<>("truststore_type", false, JavaKeyStoreType.JKS);
+    private SOSArgument<KeyStoreType> trustStoreType = new SOSArgument<>("truststore_type", false, KeyStoreType.JKS);
     private SOSArgument<Path> trustStoreFile = new SOSArgument<>("truststore_file", false);
     private SOSArgument<String> trustStorePassword = new SOSArgument<>("truststore_password", false, DisplayMode.MASKED);
 
@@ -32,7 +32,7 @@ public class JavaKeyStoreArguments extends ASOSArguments {
         return !keyStoreFile.isEmpty();
     }
 
-    public SOSArgument<JavaKeyStoreType> getKeyStoreType() {
+    public SOSArgument<KeyStoreType> getKeyStoreType() {
         return keyStoreType;
     }
 
@@ -44,7 +44,7 @@ public class JavaKeyStoreArguments extends ASOSArguments {
         return keyStorePassword;
     }
 
-    public SOSArgument<JavaKeyStoreType> getTrustStoreType() {
+    public SOSArgument<KeyStoreType> getTrustStoreType() {
         return trustStoreType;
     }
 

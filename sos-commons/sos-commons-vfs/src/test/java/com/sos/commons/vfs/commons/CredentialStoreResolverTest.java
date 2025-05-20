@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
 public class CredentialStoreResolverTest {
@@ -22,7 +22,7 @@ public class CredentialStoreResolverTest {
         csArgs.getFile().setValue("src/test/resources/test_kdbx.kdbx");
         csArgs.getPassword().setValue("test");
 
-        ProxyArguments proxyArgs = new ProxyArguments();
+        ProxyConfigArguments proxyArgs = new ProxyConfigArguments();
         proxyArgs.getType().setValue(java.net.Proxy.Type.HTTP);
         proxyArgs.getHost().setValue("cs://server/Proxy/Socks/proxy.sos@url");
         proxyArgs.getUser().setValue("cs://server/Proxy/HTTP/proxy.sos@user");

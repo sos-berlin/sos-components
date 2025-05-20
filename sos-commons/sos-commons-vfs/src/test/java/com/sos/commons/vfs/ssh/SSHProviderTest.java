@@ -12,11 +12,11 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
-import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.ProxyConfig;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.helper.SSHProviderTestArguments;
@@ -200,7 +200,7 @@ public class SSHProviderTest {
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
-            LOGGER.info(SOSProxyProvider.createInstance(args.getProxy()).toString());
+            LOGGER.info(ProxyConfig.createInstance(args.getProxy()).toString());
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -375,8 +375,8 @@ public class SSHProviderTest {
         });
     }
 
-    private ProxyArguments getProxyArguments() {
-        ProxyArguments args = new ProxyArguments();
+    private ProxyConfigArguments getProxyArguments() {
+        ProxyConfigArguments args = new ProxyConfigArguments();
         args.getType().setValue(java.net.Proxy.Type.SOCKS);
         args.getHost().setValue("proxy_host");
         args.getPort().setValue(1080);

@@ -23,7 +23,7 @@ import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.http.SOSHttpUtils;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
@@ -74,7 +74,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return SOSHttpUtils.normalizePath(getArguments().getBaseURI(), path);
+        return HttpUtils.normalizePath(getArguments().getBaseURI(), path);
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -92,14 +92,14 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
             builder = builder.withHeaders(getArguments().getHttpHeaders().getValue());
             builder = builder.withAuth(getAuthConfig());
-            builder = builder.withProxyProvider(getProxyProvider());
+            builder = builder.withProxyConfig(getProxyConfig());
             if (isSecureConnectionEnabled()) {
-                builder = builder.withSSL(getArguments().getSSL());
-                logIfHostnameVerificationDisabled(getArguments().getSSL());
+                builder = builder.withSSL(getArguments().getSsl());
+                logIfHostnameVerificationDisabled(getArguments().getSsl());
             }
             client = builder.build();
             connect(getArguments().getBaseURI());
-            
+
             getLogger().info(getConnectedMsg());
         } catch (Throwable e) {
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
@@ -143,8 +143,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             ExecuteResult<Void> result = client.executeHEADOrGET(uri);
             int code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
-                if (SOSHttpUtils.isNotFound(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -176,8 +176,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             ExecuteResult<Void> result = client.executeDELETE(uri);
             int code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
-                if (SOSHttpUtils.isNotFound(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -230,7 +230,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             if (!client.isChunkedTransfer()) {
                 result = client.executeHEADOrGET(sourceURI);
                 code = result.response().statusCode();
-                if (!SOSHttpUtils.isSuccessful(code)) {
+                if (!HttpUtils.isSuccessful(code)) {
                     return false;
                 }
                 sourceSize = client.getFileSize(result.response());
@@ -239,8 +239,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             result = client.executePUT(targetURI, is, sourceSize, false);
             code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
-                if (SOSHttpUtils.isNotFound(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -267,8 +267,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             ExecuteResult<Void> result = client.executeGET(uri);
             int code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
-                if (SOSHttpUtils.isNotFound(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isNotFound(code)) {
                     return null;
                 }
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -359,13 +359,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             uri = new URI(normalizePath(path));
             ExecuteResult<Void> result = client.executePUT(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
             }
             // PUT not returns file size
             result = client.executeHEADOrGET(uri);
             code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
             }
             return client.getFileSize(result.response());
@@ -390,7 +390,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             ExecuteResult<Void> result = client.executePUT(uri, content, isWebDAV);
             int code = result.response().statusCode();
-            if (!SOSHttpUtils.isSuccessful(code)) {
+            if (!HttpUtils.isSuccessful(code)) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
             }
         } catch (Throwable e) {
@@ -416,10 +416,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
         ExecuteResult<Void> result = client.executeHEADOrGET(uri);
         int code = result.response().statusCode();
-        if (SOSHttpUtils.isServerError(code)) {
+        if (HttpUtils.isServerError(code)) {
             throw new Exception(BaseHttpClient.getResponseStatus(result));
         }
-        if (SOSHttpUtils.isNotFound(code)) {
+        if (HttpUtils.isNotFound(code)) {
             notFoundMsg = BaseHttpClient.getResponseStatus(result);
         }
 
@@ -429,7 +429,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             if (SOSString.isEmpty(uri.getPath())) {
                 throw new Exception(notFoundMsg);
             }
-            URI parentURI = SOSHttpUtils.getParentURI(uri);
+            URI parentURI = HttpUtils.getParentURI(uri);
             if (parentURI == null || parentURI.equals(uri)) {
                 throw new Exception(notFoundMsg);
             }

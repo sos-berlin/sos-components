@@ -3,14 +3,14 @@ package com.sos.commons.vfs.ftp.commons;
 import org.apache.commons.net.ftp.FTPSClient;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.impl.SSLArguments;
-import com.sos.commons.util.ssl.SOSSSLContextFactory;
+import com.sos.commons.util.ssl.SslArguments;
+import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public class FTPSProviderArguments extends FTPProviderArguments {
 
-    private SSLArguments ssl;
+    private SslArguments ssl;
 
     private SOSArgument<FTPSSecurityMode> securityMode = new SOSArgument<>("security_mode", false, FTPSSecurityMode.EXPLICIT);
 
@@ -19,15 +19,15 @@ public class FTPSProviderArguments extends FTPProviderArguments {
         getProtocol().setValue(Protocol.FTPS);
     }
 
-    public SSLArguments getSSL() {
+    public SslArguments getSsl() {
         if (ssl == null) {
-            ssl = new SSLArguments();
+            ssl = new SslArguments();
             ssl.applyDefaultIfNullQuietly();
         }
         return ssl;
     }
 
-    public void setSSL(SSLArguments val) {
+    public void setSSL(SslArguments val) {
         ssl = val;
     }
 
@@ -43,8 +43,8 @@ public class FTPSProviderArguments extends FTPProviderArguments {
     @Override
     public String getAccessInfo() throws ProviderInitializationException {
         StringBuilder ftpsInfo = new StringBuilder();
-        ftpsInfo.append(SOSSSLContextFactory.DEFAULT_PROTOCOL);
-        String[] sslEnabledPrtocols = SOSSSLContextFactory.getFilteredEnabledProtocols(getSSL());
+        ftpsInfo.append(SslContextFactory.DEFAULT_PROTOCOL);
+        String[] sslEnabledPrtocols = SslContextFactory.getFilteredEnabledProtocols(getSsl());
         if (sslEnabledPrtocols.length > 0) {
             ftpsInfo.append("(").append(String.join(", ", sslEnabledPrtocols)).append(")");
         }
@@ -55,7 +55,7 @@ public class FTPSProviderArguments extends FTPProviderArguments {
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
     @Override
     public String getAdvancedAccessInfo() {
-        return getSSL().getTrustStoreInfo();
+        return getSsl().getTrustStoreInfo();
     }
 
     public boolean isSecurityModeImplicit() {

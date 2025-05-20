@@ -70,9 +70,9 @@ public class YADEProviderDelegatorFactory {
                 break;
             case FTPS:
                 FTPSProviderArguments fa = (FTPSProviderArguments) providerArgs;
-                if (fa.getSSL() != null) {
-                    fa.getSSL().setUntrustedSSLVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
-                    fa.getSSL().setUntrustedSSLNameAlias(UNTRUSTER_SSL);
+                if (fa.getSsl() != null) {
+                    fa.getSsl().setUntrustedSslVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
+                    fa.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
                 }
                 p = new FTPProvider(logger, fa);
                 args.getParallelism().setValue(1);
@@ -83,9 +83,9 @@ public class YADEProviderDelegatorFactory {
             case HTTP:
             case HTTPS:
                 HTTPProviderArguments ha = (HTTPProviderArguments) providerArgs;
-                if (ha.getSSL() != null) {
-                    ha.getSSL().setUntrustedSSLVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
-                    ha.getSSL().setUntrustedSSLNameAlias(UNTRUSTER_SSL);
+                if (ha.getSsl() != null) {
+                    ha.getSsl().setUntrustedSslVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
+                    ha.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
                 }
                 p = new HTTPProvider(logger, ha);
                 if (isTarget) {
@@ -102,9 +102,9 @@ public class YADEProviderDelegatorFactory {
             case WEBDAV:
             case WEBDAVS:
                 WebDAVProviderArguments wa = (WebDAVProviderArguments) providerArgs;
-                if (wa.getSSL() != null) {
-                    wa.getSSL().setUntrustedSSLVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
-                    wa.getSSL().setUntrustedSSLNameAlias(UNTRUSTER_SSL);
+                if (wa.getSsl() != null) {
+                    wa.getSsl().setUntrustedSslVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
+                    wa.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
                 }
                 p = new WebDAVProvider(logger, wa);
                 if (isTarget) {

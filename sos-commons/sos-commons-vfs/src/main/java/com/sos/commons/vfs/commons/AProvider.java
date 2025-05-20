@@ -14,12 +14,12 @@ import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.impl.SSLArguments;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.ProxyConfig;
+import com.sos.commons.util.ssl.SslArguments;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
@@ -34,7 +34,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     private final ISOSLogger logger;
     private final A arguments;
-    private final SOSProxyProvider proxyProvider;
+    private final ProxyConfig proxyConfig;
 
     /** Default providerFileCreator function creates a standard ProviderFile using the builder */
     private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build(this);
@@ -52,7 +52,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         this.arguments = arguments;
         // before proxyProvider
         resolveCredentialStore(additionalCredentialStoreArg);
-        this.proxyProvider = this.arguments == null ? null : SOSProxyProvider.createInstance(this.arguments.getProxy());
+        this.proxyConfig = this.arguments == null ? null : ProxyConfig.createInstance(this.arguments.getProxy());
     }
 
     /** Validates that all required global properties (e.g., client, session) are properly initialized and not null.<br/>
@@ -293,8 +293,8 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return arguments;
     }
 
-    public SOSProxyProvider getProxyProvider() {
-        return proxyProvider;
+    public ProxyConfig getProxyConfig() {
+        return proxyConfig;
     }
 
     public String getConnectMsg() {
@@ -319,10 +319,10 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     }
 
     public void setAccessInfo(String val) {
-        if (proxyProvider == null) {
+        if (proxyConfig == null) {
             accessInfo = val;
         } else {
-            accessInfo = "[proxy " + proxyProvider.getAccessInfo() + "]" + val;
+            accessInfo = "[proxy " + proxyConfig.getAccessInfo() + "]" + val;
         }
     }
 
@@ -349,13 +349,13 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return milliseconds > 0;
     }
 
-    public void logIfHostnameVerificationDisabled(SSLArguments args) {
-        if (!args.getUntrustedSSLVerifyCertificateHostname().isTrue()) {
-            String name = args.getUntrustedSSLVerifyCertificateHostname().getName();
-            Boolean val = args.getUntrustedSSLVerifyCertificateHostname().getValue();
+    public void logIfHostnameVerificationDisabled(SslArguments args) {
+        if (!args.getUntrustedSslVerifyCertificateHostname().isTrue()) {
+            String name = args.getUntrustedSslVerifyCertificateHostname().getName();
+            Boolean val = args.getUntrustedSslVerifyCertificateHostname().getValue();
             // e.g. YADE uses DisableCertificateHostnameVerification
-            if (args.getUntrustedSSLVerifyCertificateHostnameOppositeName() != null) {
-                name = args.getUntrustedSSLVerifyCertificateHostnameOppositeName();
+            if (args.getUntrustedSslVerifyCertificateHostnameOppositeName() != null) {
+                name = args.getUntrustedSslVerifyCertificateHostnameOppositeName();
                 val = !val;
             }
             logger.info("*********************** Security warning *********************************************************************");

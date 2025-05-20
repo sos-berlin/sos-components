@@ -13,6 +13,6 @@ public class WebDAVSProviderArguments extends WebDAVProviderArguments {
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
     @Override
     public String getAdvancedAccessInfo() {
-        return getSSL().getTrustStoreInfo();
+        return getSsl().getTrustStoreInfo();
     }
 }

@@ -15,7 +15,7 @@ import org.w3c.dom.NodeList;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
 import com.sos.commons.util.SOSPathUtils;
-import com.sos.commons.util.http.SOSHttpUtils;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
@@ -34,8 +34,8 @@ public class WebDAVProviderUtils {
     public static boolean exists(BaseHttpClient client, URI uri) throws Exception {
         ExecuteResult<String> result = client.executeWithResponseBody(createPROPFINDRequest(client, uri, "0"));
         int code = result.response().statusCode();
-        if (!SOSHttpUtils.isSuccessful(code)) {
-            if (SOSHttpUtils.isNotFound(code)) {
+        if (!HttpUtils.isSuccessful(code)) {
+            if (HttpUtils.isNotFound(code)) {
                 return false;
             }
             throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -46,7 +46,7 @@ public class WebDAVProviderUtils {
     public static void createDirectory(WebDAVProvider provider, URI uri) throws Exception {
         HttpRequest.Builder builder = provider.getClient().createRequestBuilder(uri);
         ExecuteResult<Void> result = provider.getClient().executeWithoutResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
-        if (!SOSHttpUtils.isSuccessful(result.response().statusCode())) {
+        if (!HttpUtils.isSuccessful(result.response().statusCode())) {
             throw new IOException(BaseHttpClient.getResponseStatus(result));
         }
         if (provider.getLogger().isDebugEnabled()) {
@@ -63,8 +63,8 @@ public class WebDAVProviderUtils {
         String depth = "0";
         ExecuteResult<String> result = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), uri, depth));
         int code = result.response().statusCode();
-        if (!SOSHttpUtils.isSuccessful(code)) {
-            if (SOSHttpUtils.isNotFound(code)) {
+        if (!HttpUtils.isSuccessful(code)) {
+            if (HttpUtils.isNotFound(code)) {
                 return null;
             }
             throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -76,15 +76,15 @@ public class WebDAVProviderUtils {
     private static int list(WebDAVProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
             int counterAdded) throws Exception {
 
-        URI directoryURI = SOSHttpUtils.ensureDirectoryURI(new URI(provider.normalizePath(directoryPath)));
+        URI directoryURI = HttpUtils.ensureDirectoryURI(new URI(provider.normalizePath(directoryPath)));
 
         // not use Depth infinity - maybe not supported by the server and possible timeouts to get all levels ...
         String depth = "1";
         ExecuteResult<String> executeResult = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), directoryURI,
                 depth));
         int code = executeResult.response().statusCode();
-        if (!SOSHttpUtils.isSuccessful(code)) {
-            if (SOSHttpUtils.isNotFound(code)) {
+        if (!HttpUtils.isSuccessful(code)) {
+            if (HttpUtils.isNotFound(code)) {
                 return 0;
             }
             throw new IOException(BaseHttpClient.getResponseStatus(executeResult));
@@ -192,10 +192,10 @@ public class WebDAVProviderUtils {
             }
 
             // without encoding
-            URI resourceURI = URI.create(SOSHttpUtils.normalizePath(uri, resourceHref));
+            URI resourceURI = URI.create(HttpUtils.normalizePath(uri, resourceHref));
             boolean resourceIsDirectory = extractIsDirectory(response);
             if (!responseOfURISelfChecked && !depth.equals("0") && resourceIsDirectory) {
-                if (SOSHttpUtils.ensureDirectoryURI(uri).equals(SOSHttpUtils.ensureDirectoryURI(resourceURI))) {
+                if (HttpUtils.ensureDirectoryURI(uri).equals(HttpUtils.ensureDirectoryURI(resourceURI))) {
                     responseOfURISelfChecked = true;
                     continue;
                 }
@@ -238,9 +238,9 @@ public class WebDAVProviderUtils {
     private static long extractLastModified(Element response) {
         NodeList nodes = response.getElementsByTagNameNS("*", "getlastmodified");
         if (nodes.getLength() > 0) {
-            return SOSHttpUtils.httpDateToMillis(nodes.item(0).getTextContent());
+            return HttpUtils.httpDateToMillis(nodes.item(0).getTextContent());
         }
-        return SOSHttpUtils.DEFAULT_LAST_MODIFIED;
+        return HttpUtils.DEFAULT_LAST_MODIFIED;
     }
 
 }

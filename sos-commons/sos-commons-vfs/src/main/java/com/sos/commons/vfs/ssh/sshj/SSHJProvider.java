@@ -70,7 +70,7 @@ public class SSHJProvider extends SSHProvider {
         try {
             getLogger().info(getConnectMsg());
 
-            sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyProvider());
+            sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyConfig());
             setServerVersion(sshClient.getTransport().getServerVersion());
             getServerInfo();
 

@@ -8,9 +8,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreType;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.util.arguments.impl.SSLArguments;
+import com.sos.commons.util.keystore.KeyStoreType;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
+import com.sos.commons.util.ssl.SslArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments.TransferMode;
@@ -94,7 +94,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     parseYADE1FTPSClientSecurity(argsLoader, args, n);
                     break;
                 case "FTPSProtocol":
-                    args.getSSL().getEnabledProtocols().setValue(argsLoader.getValue(n));
+                    args.getSsl().getEnabledProtocols().setValue(argsLoader.getValue(n));
                     break;
                 case "ConnectTimeout":
                     argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
@@ -126,7 +126,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     }
                     break;
                 case "SSL":// YADE JS7 - YADE-626
-                    parseSSL(argsLoader, args.getSSL(), n);
+                    parseSSL(argsLoader, args.getSsl(), n);
                     break;
                 }
             }
@@ -182,13 +182,13 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 // YADE 1 - compatibility
                 case "AcceptUntrustedCertificate":
-                    argsLoader.setBooleanArgumentValue(args.getSSL().getUntrustedSSL(), n);
+                    argsLoader.setBooleanArgumentValue(args.getSsl().getUntrustedSsl(), n);
                     break;
                 case "DisableCertificateHostnameVerification":
-                    argsLoader.setOppositeBooleanArgumentValue(args.getSSL().getUntrustedSSLVerifyCertificateHostname(), n);
+                    argsLoader.setOppositeBooleanArgumentValue(args.getSsl().getUntrustedSslVerifyCertificateHostname(), n);
                     break;
                 case "KeyStore":
-                    parseYADE1KeyStore(argsLoader, args.getSSL(), n);
+                    parseYADE1KeyStore(argsLoader, args.getSsl(), n);
                     break;
 
                 // YADE JS7
@@ -211,7 +211,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     parseHTTPHeaders(argsLoader, args, n);
                     break;
                 case "SSL": // JS7 - YADE-626
-                    parseSSL(argsLoader, args.getSSL(), n);
+                    parseSSL(argsLoader, args.getSsl(), n);
                     break;
                 }
             }
@@ -344,13 +344,13 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 // YADE 1 - compatibility
                 case "AcceptUntrustedCertificate":
-                    argsLoader.setBooleanArgumentValue(args.getSSL().getUntrustedSSL(), n);
+                    argsLoader.setBooleanArgumentValue(args.getSsl().getUntrustedSsl(), n);
                     break;
                 case "DisableCertificateHostnameVerification":
-                    argsLoader.setOppositeBooleanArgumentValue(args.getSSL().getUntrustedSSLVerifyCertificateHostname(), n);
+                    argsLoader.setOppositeBooleanArgumentValue(args.getSsl().getUntrustedSslVerifyCertificateHostname(), n);
                     break;
                 case "KeyStore":
-                    parseYADE1KeyStore(argsLoader, args.getSSL(), n);
+                    parseYADE1KeyStore(argsLoader, args.getSsl(), n);
                     break;
 
                 // YADE JS7
@@ -373,7 +373,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     parseHTTPHeaders(argsLoader, args, n);
                     break;
                 case "SSL": // JS7 - YADE-626
-                    parseSSL(argsLoader, args.getSSL(), n);
+                    parseSSL(argsLoader, args.getSsl(), n);
                     break;
                 }
             }
@@ -445,7 +445,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         NodeList nl = proxy.getChildNodes();
         int len = nl.getLength();
         if (len > 0) {
-            ProxyArguments proxyArgs = new ProxyArguments();
+            ProxyConfigArguments proxyArgs = new ProxyConfigArguments();
             proxyArgs.applyDefaultIfNullQuietly();
             for (int i = 0; i < len; i++) {
                 Node n = nl.item(i);
@@ -549,7 +549,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // JS7 - YADE-626
-    private static void parseSSL(YADEXMLArgumentsLoader argsLoader, SSLArguments args, Node ssl) throws Exception {
+    private static void parseSSL(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node ssl) throws Exception {
         if (args == null) {
             return;
         }
@@ -573,7 +573,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // JS7 - YADE-626
-    private static void parseTrustedSSL(YADEXMLArgumentsLoader argsLoader, SSLArguments args, Node trustedSSL) throws Exception {
+    private static void parseTrustedSSL(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node trustedSSL) throws Exception {
         NodeList nl = trustedSSL.getChildNodes();
 
         for (int i = 0; i < nl.getLength(); i++) {
@@ -592,54 +592,54 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // JS7 - YADE-626
-    private static void parseTrustedSSLTrustStore(YADEXMLArgumentsLoader argsLoader, SSLArguments args, Node trustStore) {
+    private static void parseTrustedSSLTrustStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node trustStore) {
         NodeList nl = trustStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "TrustStoreType":
-                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsLoader.getValue(n));
+                    KeyStoreType keyStoreType = KeyStoreType.fromString(argsLoader.getValue(n));
                     if (keyStoreType != null) {
-                        args.getTrustedSSL().getTrustStoreType().setValue(keyStoreType);
+                        args.getTrustedSsl().getTrustStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "TrustStoreFile":
-                    args.getTrustedSSL().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
+                    args.getTrustedSsl().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
                     break;
                 case "TrusStorePassword":
-                    argsLoader.setStringArgumentValue(args.getTrustedSSL().getTrustStorePassword(), n);
+                    argsLoader.setStringArgumentValue(args.getTrustedSsl().getTrustStorePassword(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseTrustedSSLKeyStore(YADEXMLArgumentsLoader argsLoader, SSLArguments args, Node keyStore) {
+    private static void parseTrustedSSLKeyStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
         NodeList nl = keyStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "KeyStoreType":
-                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsLoader.getValue(n));
+                    KeyStoreType keyStoreType = KeyStoreType.fromString(argsLoader.getValue(n));
                     if (keyStoreType != null) {
-                        args.getTrustedSSL().getKeyStoreType().setValue(keyStoreType);
+                        args.getTrustedSsl().getKeyStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "KeyStoreFile":
-                    args.getTrustedSSL().getKeyStoreFile().setValue(Path.of(argsLoader.getValue(n)));
+                    args.getTrustedSsl().getKeyStoreFile().setValue(Path.of(argsLoader.getValue(n)));
                     break;
                 case "KeyStorePassword":
-                    argsLoader.setStringArgumentValue(args.getTrustedSSL().getKeyStorePassword(), n);
+                    argsLoader.setStringArgumentValue(args.getTrustedSsl().getKeyStorePassword(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseUntrustedSSL(YADEXMLArgumentsLoader argsLoader, SSLArguments args, Node untrustedSSL) throws Exception {
-        args.getUntrustedSSL().setValue(true);
+    private static void parseUntrustedSSL(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node untrustedSSL) throws Exception {
+        args.getUntrustedSsl().setValue(true);
 
         NodeList nl = untrustedSSL.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -647,14 +647,14 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "DisableCertificateHostnameVerification":
-                    argsLoader.setOppositeBooleanArgumentValue(args.getUntrustedSSLVerifyCertificateHostname(), n);
+                    argsLoader.setOppositeBooleanArgumentValue(args.getUntrustedSslVerifyCertificateHostname(), n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseProxy(YADEXMLArgumentsLoader argsLoader, ProxyArguments args, Node proxy) throws Exception {
+    private static void parseProxy(YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node proxy) throws Exception {
         NodeList nl = proxy.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -671,7 +671,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseProxyBasicConnection(YADEXMLArgumentsLoader argsLoader, ProxyArguments args, Node basicConnection) throws Exception {
+    private static void parseProxyBasicConnection(YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node basicConnection)
+            throws Exception {
         NodeList nl = basicConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -688,7 +689,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseProxyBasicAuthentication(YADEXMLArgumentsLoader argsLoader, ProxyArguments args, Node basicAuthentication)
+    private static void parseProxyBasicAuthentication(YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node basicAuthentication)
             throws Exception {
         NodeList nl = basicAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -784,16 +785,16 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     }
                     break;
                 case "KeyStoreType":
-                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsLoader.getValue(n));
+                    KeyStoreType keyStoreType = KeyStoreType.fromString(argsLoader.getValue(n));
                     if (keyStoreType != null) {
-                        args.getSSL().getTrustedSSL().getTrustStoreType().setValue(keyStoreType);
+                        args.getSsl().getTrustedSsl().getTrustStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "KeyStoreFile":
-                    args.getSSL().getTrustedSSL().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
+                    args.getSsl().getTrustedSsl().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
                     break;
                 case "KeyStorePassword":
-                    argsLoader.setStringArgumentValue(args.getSSL().getTrustedSSL().getTrustStorePassword(), n);
+                    argsLoader.setStringArgumentValue(args.getSsl().getTrustedSsl().getTrustStorePassword(), n);
                     break;
                 }
             }
@@ -963,23 +964,23 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // YADE 1 - compatibility
-    private static void parseYADE1KeyStore(YADEXMLArgumentsLoader argsLoader, SSLArguments args, Node keyStore) {
+    private static void parseYADE1KeyStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
         NodeList nl = keyStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "KeyStoreType":
-                    JavaKeyStoreType keyStoreType = JavaKeyStoreType.fromString(argsLoader.getValue(n));
+                    KeyStoreType keyStoreType = KeyStoreType.fromString(argsLoader.getValue(n));
                     if (keyStoreType != null) {
-                        args.getTrustedSSL().getTrustStoreType().setValue(keyStoreType);
+                        args.getTrustedSsl().getTrustStoreType().setValue(keyStoreType);
                     }
                     break;
                 case "KeyStoreFile":
-                    args.getTrustedSSL().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
+                    args.getTrustedSsl().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
                     break;
                 case "KeyStorePassword":
-                    argsLoader.setStringArgumentValue(args.getTrustedSSL().getTrustStorePassword(), n);
+                    argsLoader.setStringArgumentValue(args.getTrustedSsl().getTrustStorePassword(), n);
                     break;
                 }
             }

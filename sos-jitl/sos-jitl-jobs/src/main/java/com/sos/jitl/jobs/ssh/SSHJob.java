@@ -24,9 +24,9 @@ import java.util.stream.Stream;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
@@ -46,7 +46,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
         if (providerArgs != null) {
             providerArgs.setCredentialStore(step.getIncludedArguments(CredentialStoreArguments.class));
-            providerArgs.setProxy(step.getIncludedArguments(ProxyArguments.class));
+            providerArgs.setProxy(step.getIncludedArguments(ProxyConfigArguments.class));
         }
         SSHProvider provider = SSHProvider.createInstance(step.getLogger(), providerArgs);
         step.addCancelableResource(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER, provider);

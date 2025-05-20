@@ -33,7 +33,7 @@ import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.proxy.socket.ProxySocketFactory;
-import com.sos.commons.util.ssl.SOSSSLContextFactory;
+import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
@@ -571,21 +571,21 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
     private FTPClient createFTPClient() throws Exception {
         FTPClient client = null;
-        if (getProxyProvider() == null) {
+        if (getProxyConfig() == null) {
             client = new FTPClient();
         } else {
             // SOCKS PROXY
-            if (java.net.Proxy.Type.SOCKS.equals(getProxyProvider().getProxy().type())) {
+            if (java.net.Proxy.Type.SOCKS.equals(getProxyConfig().getProxy().type())) {
                 client = new FTPClient();
-                client.setSocketFactory(new ProxySocketFactory(getProxyProvider()));
+                client.setSocketFactory(new ProxySocketFactory(getProxyConfig()));
             }
             // HTTP PROXY
             else {
-                if (getProxyProvider().getUser().isEmpty()) {
-                    client = new FTPHTTPClient(getProxyProvider().getHost(), getProxyProvider().getPort());
+                if (getProxyConfig().getUser().isEmpty()) {
+                    client = new FTPHTTPClient(getProxyConfig().getHost(), getProxyConfig().getPort());
                 } else {
-                    client = new FTPHTTPClient(getProxyProvider().getHost(), getProxyProvider().getPort(), getProxyProvider().getUser(),
-                            getProxyProvider().getPassword());
+                    client = new FTPHTTPClient(getProxyConfig().getHost(), getProxyConfig().getPort(), getProxyConfig().getUser(), getProxyConfig()
+                            .getPassword());
                 }
             }
         }
@@ -600,23 +600,23 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         // System.setProperty("jdk.tls.client.enableSessionTicketExtension", "false");
         FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
         FTPSClient client = null;
-        if (args.getSSL().getTrustedSSL().isEnabled()) {
+        if (args.getSsl().getTrustedSsl().isEnabled()) {
             // tmp
             // args.getSSL().getProtocols().setValue(List.of("TLSv1.2"));
             // if (!args.getSSL().getJavaKeyStore().isEnabled()) {
             // args.getSSL().getAcceptUntrustedCertificate().setValue(true);
             // }
-            client = new FTPSClient(args.isSecurityModeImplicit(), SOSSSLContextFactory.create(getLogger(), args.getSSL()));
+            client = new FTPSClient(args.isSecurityModeImplicit(), SslContextFactory.create(getLogger(), args.getSsl()));
         } else {
             client = new FTPSClient(args.isSecurityModeImplicit());
-            if (!args.getSSL().getUntrustedSSLVerifyCertificateHostname().isTrue()) {
+            if (!args.getSsl().getUntrustedSslVerifyCertificateHostname().isTrue()) {
                 client.setHostnameVerifier(null);
-                logIfHostnameVerificationDisabled(args.getSSL());
+                logIfHostnameVerificationDisabled(args.getSsl());
             }
         }
 
-        if (getProxyProvider() != null) {
-            client.setProxy(getProxyProvider().getProxy());
+        if (getProxyConfig() != null) {
+            client.setProxy(getProxyConfig().getProxy());
         }
         return client;
     }

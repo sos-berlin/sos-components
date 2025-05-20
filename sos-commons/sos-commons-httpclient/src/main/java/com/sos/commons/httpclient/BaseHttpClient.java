@@ -24,12 +24,12 @@ import com.sos.commons.httpclient.commons.auth.HttpClientBasicAuthStrategy;
 import com.sos.commons.httpclient.commons.auth.IHttpClientAuthStrategy;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.arguments.impl.SSLArguments;
-import com.sos.commons.util.http.SOSHttpUtils;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
-import com.sos.commons.util.proxy.SOSProxyProvider;
-import com.sos.commons.util.ssl.SOSSSLContextFactory;
+import com.sos.commons.util.proxy.ProxyConfig;
+import com.sos.commons.util.ssl.SslArguments;
+import com.sos.commons.util.ssl.SslContextFactory;
 
 public class BaseHttpClient implements AutoCloseable {
 
@@ -87,7 +87,7 @@ public class BaseHttpClient implements AutoCloseable {
         }
         ExecuteResult<Void> result = executeWithoutResponseBody(request);
         if (isHEAD) {
-            if (SOSHttpUtils.isMethodNotAllowed(result.response.statusCode())) {
+            if (HttpUtils.isMethodNotAllowed(result.response.statusCode())) {
                 isHEADMethodAllowed = false;
                 result = executeWithoutResponseBody(createGETRequest(uri));
             } else {
@@ -113,11 +113,11 @@ public class BaseHttpClient implements AutoCloseable {
         byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
 
         HttpRequest.Builder builder = createRequestBuilder(uri);
-        builder.header(SOSHttpUtils.HEADER_CONTENT_TYPE, SOSHttpUtils.HEADER_CONTENT_TYPE_BINARY);
+        builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
         withWebDAVOverwrite(builder, isWebDAV);
         if (!chunkedTransfer) {
             // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
-            builder.header(SOSHttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
+            builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
         }
         return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build());
     }
@@ -128,18 +128,18 @@ public class BaseHttpClient implements AutoCloseable {
 
     public ExecuteResult<Void> executePUT(URI uri, InputStream is, long size, boolean isWebDAV) throws Exception {
         HttpRequest.Builder builder = createRequestBuilder(uri);
-        builder.header(SOSHttpUtils.HEADER_CONTENT_TYPE, SOSHttpUtils.HEADER_CONTENT_TYPE_BINARY);
+        builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
         withWebDAVOverwrite(builder, isWebDAV);
         if (!chunkedTransfer) {
             // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
-            builder.header(SOSHttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
+            builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
         }
         return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build());
     }
 
     public static void withWebDAVOverwrite(HttpRequest.Builder builder, boolean withWebDAVOverwrite) {
         if (withWebDAVOverwrite) {
-            builder.header(SOSHttpUtils.HEADER_WEBDAV_OVERWRITE, SOSHttpUtils.HEADER_WEBDAV_OVERWRITE_VALUE);
+            builder.header(HttpUtils.HEADER_WEBDAV_OVERWRITE, HttpUtils.HEADER_WEBDAV_OVERWRITE_VALUE);
         }
     }
 
@@ -147,9 +147,9 @@ public class BaseHttpClient implements AutoCloseable {
         HttpRequest request = createGETRequest(uri);
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         int code = response.statusCode();
-        if (!SOSHttpUtils.isSuccessful(code)) {
+        if (!HttpUtils.isSuccessful(code)) {
             ExecuteResult<?> result = new ExecuteResult<>(request, response);
-            if (SOSHttpUtils.isNotFound(code)) {
+            if (HttpUtils.isNotFound(code)) {
                 throw new SOSNoSuchFileException(uri.toString(), new Exception(BaseHttpClient.getResponseStatus(result)));
             }
             throw new Exception(BaseHttpClient.getResponseStatus(result));
@@ -158,7 +158,7 @@ public class BaseHttpClient implements AutoCloseable {
     }
 
     public long getFileSize(HttpResponse<?> response) throws Exception {
-        long size = response.headers().firstValueAsLong(SOSHttpUtils.HEADER_CONTENT_LENGTH).orElse(-1);
+        long size = response.headers().firstValueAsLong(HttpUtils.HEADER_CONTENT_LENGTH).orElse(-1);
         if (size < 0) {// e.g. Transfer-Encoding: chunked
             size = getFileSizeIfChunkedTransferEncoding(response.uri());
         }
@@ -167,13 +167,13 @@ public class BaseHttpClient implements AutoCloseable {
 
     public static long getLastModifiedInMillis(HttpResponse<?> response) {
         if (response == null) {
-            return SOSHttpUtils.DEFAULT_LAST_MODIFIED;
+            return HttpUtils.DEFAULT_LAST_MODIFIED;
         }
-        Optional<String> header = response.headers().firstValue(SOSHttpUtils.HEADER_LAST_MODIFIED);
+        Optional<String> header = response.headers().firstValue(HttpUtils.HEADER_LAST_MODIFIED);
         if (!header.isPresent()) {
-            return SOSHttpUtils.DEFAULT_LAST_MODIFIED;
+            return HttpUtils.DEFAULT_LAST_MODIFIED;
         }
-        return SOSHttpUtils.httpDateToMillis(header.get());
+        return HttpUtils.httpDateToMillis(header.get());
     }
 
     public static String getResponseStatus(ExecuteResult<?> result) {
@@ -181,7 +181,7 @@ public class BaseHttpClient implements AutoCloseable {
         sb.append("[").append(result.request().method()).append("]");
         sb.append("[").append(result.request().uri()).append("]");
         sb.append("[").append(result.response().statusCode()).append("]");
-        sb.append(SOSHttpUtils.getReasonPhrase(result.response().statusCode()));
+        sb.append(HttpUtils.getReasonPhrase(result.response().statusCode()));
         return sb.toString();
     }
 
@@ -244,8 +244,8 @@ public class BaseHttpClient implements AutoCloseable {
         private final HttpClient.Builder httpClientBuilder;
 
         private ISOSLogger logger = new SLF4JLogger();
-        private SOSProxyProvider proxyProvider;
-        private SSLArguments ssl;
+        private ProxyConfig proxyConfig;
+        private SslArguments ssl;
         private IHttpClientAuthStrategy auth = null;
         private Map<String, String> headers;
         private Duration connectTimeout;
@@ -270,12 +270,12 @@ public class BaseHttpClient implements AutoCloseable {
             return this;
         }
 
-        public Builder withProxyProvider(SOSProxyProvider proxyProvider) {
-            this.proxyProvider = proxyProvider;
+        public Builder withProxyConfig(ProxyConfig proxyConfig) {
+            this.proxyConfig = proxyConfig;
             return this;
         }
 
-        public Builder withSSL(SSLArguments ssl) {
+        public Builder withSSL(SslArguments ssl) {
             this.ssl = ssl;
             return this;
         }
@@ -324,20 +324,20 @@ public class BaseHttpClient implements AutoCloseable {
                 }
             }
 
-            if (proxyProvider != null) {
-                httpClientBuilder.proxy(java.net.ProxySelector.of(new InetSocketAddress(proxyProvider.getHost(), proxyProvider.getPort())));
-                if (proxyProvider.hasUserAndPassword()) {
+            if (proxyConfig != null) {
+                httpClientBuilder.proxy(java.net.ProxySelector.of(new InetSocketAddress(proxyConfig.getHost(), proxyConfig.getPort())));
+                if (proxyConfig.hasUserAndPassword()) {
                     httpClientBuilder.authenticator(new Authenticator() {
 
                         @Override
                         protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(proxyProvider.getUser(), proxyProvider.getPassword().toCharArray());
+                            return new PasswordAuthentication(proxyConfig.getUser(), proxyConfig.getPassword().toCharArray());
                         }
                     });
                 }
             }
             if (ssl != null) {
-                SSLContext sslContext = SOSSSLContextFactory.create(logger, ssl);
+                SSLContext sslContext = SslContextFactory.create(logger, ssl);
                 // SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
                 // sslParameters.setEndpointIdentificationAlgorithm(""); // disable hostname verification
                 httpClientBuilder.sslContext(sslContext);

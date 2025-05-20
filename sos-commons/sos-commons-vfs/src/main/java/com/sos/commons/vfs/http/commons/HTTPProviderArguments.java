@@ -6,8 +6,8 @@ import java.util.List;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthMethod;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
-import com.sos.commons.util.arguments.impl.SSLArguments;
-import com.sos.commons.util.http.SOSHttpUtils;
+import com.sos.commons.util.http.HttpUtils;
+import com.sos.commons.util.ssl.SslArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
@@ -18,7 +18,7 @@ public class HTTPProviderArguments extends AProviderArguments {
 
     // declared here and not in HTTSPProviderArguments, because WebDAV extends HTTPProviderArguments and uses the same implementation logic
     // otherwise, the WebDAVSPProviderArguments should extend HTTSPProviderArguments and not the WebDAVPProviderArguments ...
-    private SSLArguments ssl;
+    private SslArguments ssl;
 
     // JS7 new - auth_method - not in the XML schema - currently only BASIC supported
     private SOSArgument<HttpClientAuthMethod> authMethod = new SOSArgument<>("auth_method", false, HttpClientAuthMethod.NONE);
@@ -49,7 +49,7 @@ public class HTTPProviderArguments extends AProviderArguments {
                 throw new ProviderInitializationException(e);
             }
         }
-        return SOSHttpUtils.getAccessInfo(baseURI.getValue(), getUser().getValue());
+        return HttpUtils.getAccessInfo(baseURI.getValue(), getUser().getValue());
     }
 
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
@@ -58,20 +58,20 @@ public class HTTPProviderArguments extends AProviderArguments {
         return null;
     }
 
-    public SSLArguments getSSL() {
+    public SslArguments getSsl() {
         if (ssl == null) {
-            ssl = new SSLArguments();
+            ssl = new SslArguments();
             ssl.applyDefaultIfNullQuietly();
         }
         return ssl;
     }
 
-    public int getConnectTimeoutAsSeconds() {
-        return (int) SOSArgumentHelper.asSeconds(getConnectTimeout(), DEFAULT_CONNECT_TIMEOUT_IN_SECONDS);
+    public void setSsl(SslArguments val) {
+        ssl = val;
     }
 
-    public void setSSL(SSLArguments val) {
-        ssl = val;
+    public int getConnectTimeoutAsSeconds() {
+        return (int) SOSArgumentHelper.asSeconds(getConnectTimeout(), DEFAULT_CONNECT_TIMEOUT_IN_SECONDS);
     }
 
     public SOSArgument<HttpClientAuthMethod> getAuthMethod() {

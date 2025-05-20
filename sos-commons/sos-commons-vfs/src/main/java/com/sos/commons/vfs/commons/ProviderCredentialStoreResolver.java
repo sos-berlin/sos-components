@@ -10,8 +10,8 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
-import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.ProxyConfig;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 
 /** Note: each argument value can contain a different Keepass entry path */
 public class ProviderCredentialStoreResolver {
@@ -27,7 +27,7 @@ public class ProviderCredentialStoreResolver {
      *            e.g. passphrase, domain
      * @return
      * @throws Exception */
-    public static boolean resolve(AProviderArguments args, ProxyArguments proxyArgs, SOSArgument<?>... additional2resolve) throws Exception {
+    public static boolean resolve(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve) throws Exception {
         if (args == null || args.getCredentialStore() == null) {
             return false;
         }
@@ -93,7 +93,7 @@ public class ProviderCredentialStoreResolver {
     }
 
     /** Note: each argument value can contain a different Keepass entry path */
-    private static Entry<?, ?, ?, ?> keepass2Arguments(AProviderArguments args, ProxyArguments proxyArgs, SOSArgument<?>... additional2resolve)
+    private static Entry<?, ?, ?, ?> keepass2Arguments(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
             throws Exception {
         // host(port),user,password
         Entry<?, ?, ?, ?> entry = keepass2Argument(null, args, args.getHost(), args.getPort(), ":");
@@ -101,8 +101,8 @@ public class ProviderCredentialStoreResolver {
         entry = keepass2Argument(entry, args, args.getPassword());
 
         // proxy_host(proxy_port),proxy_user,proxy_password
-        SOSProxyProvider proxyProvider = SOSProxyProvider.createInstance(proxyArgs);
-        if (proxyProvider != null) {
+        ProxyConfig proxyConfig = ProxyConfig.createInstance(proxyArgs);
+        if (proxyConfig != null) {
             entry = keepass2Argument(entry, args, proxyArgs.getHost(), proxyArgs.getPort(), ":");
             entry = keepass2Argument(entry, args, proxyArgs.getUser());
             entry = keepass2Argument(entry, args, proxyArgs.getPassword());

@@ -7,9 +7,9 @@ import java.util.List;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
-import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
 public abstract class AProviderArguments extends ASOSArguments {
@@ -41,7 +41,7 @@ public abstract class AProviderArguments extends ASOSArguments {
     public abstract String getAdvancedAccessInfo();
 
     private CredentialStoreArguments credentialStore;
-    private ProxyArguments proxy;
+    private ProxyConfigArguments proxy;
 
     // Basic
     private SOSArgument<Protocol> protocol = new SOSArgument<>("protocol", true);
@@ -68,11 +68,11 @@ public abstract class AProviderArguments extends ASOSArguments {
         return credentialStore;
     }
 
-    public ProxyArguments getProxy() {
+    public ProxyConfigArguments getProxy() {
         return proxy;
     }
 
-    public void setProxy(ProxyArguments val) {
+    public void setProxy(ProxyConfigArguments val) {
         proxy = val;
     }
 

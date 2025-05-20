@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
@@ -99,8 +99,8 @@ public class Base {
         return new YADEUnitTestArgumentsLoader(args, clientArgs, sourceArgs, targetArgs, null);
     }
 
-    public static ProxyArguments createHTTPProxyArguments() throws Exception {
-        ProxyArguments args = new ProxyArguments();
+    public static ProxyConfigArguments createHTTPProxyArguments() throws Exception {
+        ProxyConfigArguments args = new ProxyConfigArguments();
         args.getType().setValue(java.net.Proxy.Type.HTTP);
         args.getHost().setValue("homer.sos");
         args.getPort().setValue(3128);

@@ -16,7 +16,7 @@ import java.util.Locale;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 
-public class SOSHttpUtils {
+public class HttpUtils {
 
     public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSReflection;
-import com.sos.commons.util.arguments.impl.SSLArguments;
 
 public abstract class ASOSArguments {
 

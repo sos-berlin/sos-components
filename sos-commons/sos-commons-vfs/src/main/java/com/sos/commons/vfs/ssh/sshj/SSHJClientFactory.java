@@ -16,7 +16,7 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.proxy.SOSProxyProvider;
+import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.socket.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
@@ -41,9 +41,9 @@ public class SSHJClientFactory {
 
     private static final String SSH_MSG_UNIMPLEMENTED = "SSH_MSG_UNIMPLEMENTED";
 
-    protected static SSHClient createAuthenticatedClient(ISOSLogger logger, SSHProviderArguments args, SOSProxyProvider proxyProvider) throws Exception {
+    protected static SSHClient createAuthenticatedClient(ISOSLogger logger, SSHProviderArguments args, ProxyConfig proxyConfig) throws Exception {
         /** 1) Create */
-        SSHClient client = create(args, proxyProvider);
+        SSHClient client = create(args, proxyConfig);
         /** 2) Connect */
         client.connect(args.getHost().getValue(), args.getPort().getValue());
         /** 3) Authenticate */
@@ -59,7 +59,7 @@ public class SSHJClientFactory {
         return client;
     }
 
-    private static SSHClient create(SSHProviderArguments args, SOSProxyProvider proxyProvider) throws Exception {
+    private static SSHClient create(SSHProviderArguments args, ProxyConfig proxyConfig) throws Exception {
         Config config = new DefaultConfig();
         // Keep Alive Provider - see NOTE above about KeepAliveRunner
         if (!args.getServerAliveInterval().isEmpty()) {
@@ -75,8 +75,8 @@ public class SSHJClientFactory {
         client.setTimeout(args.getSocketTimeoutAsMillis());
         client.setConnectTimeout(args.getConnectTimeoutAsMillis());
         // PROXY
-        if (proxyProvider != null) {
-            client.setSocketFactory(new ProxySocketFactory(proxyProvider));
+        if (proxyConfig != null) {
+            client.setSocketFactory(new ProxySocketFactory(proxyConfig));
         }
         return client;
     }

@@ -7,9 +7,8 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
 
-public class SOSProxyProvider {
+public class ProxyConfig {
 
     private static final String SYSTEM_PROPERTY_NAME_HTTP_PROXY_HOST = "http.proxyHost";
     private static final String SYSTEM_PROPERTY_NAME_HTTP_PROXY_PORT = "http.proxyPort";
@@ -31,7 +30,7 @@ public class SOSProxyProvider {
 
     private Charset charset = Charset.defaultCharset();
 
-    public static SOSProxyProvider createInstance(ProxyArguments args) {
+    public static ProxyConfig createInstance(ProxyConfigArguments args) {
         if (args == null || args.getType().isEmpty()) {
             return null;
         }
@@ -39,10 +38,10 @@ public class SOSProxyProvider {
         if (SOSString.isEmpty(host)) {
             return null;
         }
-        return new SOSProxyProvider(host, args);
+        return new ProxyConfig(host, args);
     }
 
-    private SOSProxyProvider(String host, ProxyArguments args) {
+    private ProxyConfig(String host, ProxyConfigArguments args) {
         this.host = host;
         this.port = getPort(args.getType(), args.getPort());
         this.user = args.getUser().getValue();
