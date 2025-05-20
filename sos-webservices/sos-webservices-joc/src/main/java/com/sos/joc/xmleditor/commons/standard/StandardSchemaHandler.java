@@ -6,6 +6,7 @@ import java.util.Date;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.exception.SOSXMLNotMatchSchemaException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -236,8 +237,7 @@ public class StandardSchemaHandler {
         if (!isYADE) {
             return xml;
         }
-        // TODO activate SOSXML.transformXMLWithXSL
-        return xml;// SOSXML.transformXMLWithXSL(xml, getYADEXSLAllVersionsToCurrent());
+        return SOSXML.transformXMLWithXSL(xml, getYADEXSLAllVersionsToCurrent(), true, 0);
     }
 
     public static String getYADEXMLForDeployment(String xml) throws Exception {

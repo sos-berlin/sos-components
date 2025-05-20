@@ -7,7 +7,7 @@ import org.w3c.dom.Document;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.commons.xml.SOSXMLXSDValidator;
+import com.sos.commons.xml.SOSXmlXsdValidator;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
@@ -18,7 +18,7 @@ public class JocXmlEditor {
     public static final String NOTIFICATION_SCHEMA_RESOURCE_PATH = "xmleditor/notification/xsd/" + NOTIFICATION_SCHEMA_FILENAME;
 
     // TODO set YADE_SCHEMA_FILENAME and activate StandardSchemaHandler XSL transformation
-    public static final String YADE_SCHEMA_FILENAME = "YADE_configuration_v1.12.xsd"; // "YADE_configuration_v2.0.0.xsd";
+    public static final String YADE_SCHEMA_FILENAME = "YADE_configuration_v2.0.0.xsd";
     public static final String YADE_SCHEMA_URI = "https://www.sos-berlin.com/schema/yade/" + YADE_SCHEMA_FILENAME;
     public static final String YADE_SCHEMA_RESOURCE_PATH = "xmleditor/yade/xsd/" + YADE_SCHEMA_FILENAME;
     public static final String YADE_XSL_ALL_VERSIONS_TO_CURRENT_VERSION_RESOURCE_PATH =
@@ -41,7 +41,7 @@ public class JocXmlEditor {
     public static final String ERROR_CODE_MISSING_ARGUMENT = "XMLEDITOR-403";
 
     public static Document validate(ObjectType type, String schema, String xml) throws Exception {
-        return SOSXMLXSDValidator.validate(schema, xml, ObjectType.YADE.equals(type) ? true : false);
+        return SOSXmlXsdValidator.validate(schema, xml, ObjectType.YADE.equals(type) ? true : false);
     }
 
     public static boolean isYADE(ObjectType type) {

@@ -23,7 +23,7 @@ import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
 import com.sos.commons.httpclient.commons.auth.HttpClientBasicAuthStrategy;
 import com.sos.commons.httpclient.commons.auth.IHttpClientAuthStrategy;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
@@ -291,13 +291,32 @@ public class BaseHttpClient implements AutoCloseable {
         }
 
         public Builder withHeaders(List<String> headers) {
-            setHeaders(headers);
+            if (headers == null) {
+                this.headers = null;
+            } else {
+                setHeaders(headers);
+            }
             return this;
         }
 
         public Builder withHeaders(Map<String, String> headers) {
-            this.headers = headers;
+            if (headers == null) {
+                this.headers = headers;
+            } else {
+                if (this.headers == null) {
+                    this.headers = headers;
+                } else {
+                    this.headers.putAll(headers);
+                }
+            }
             return this;
+        }
+
+        public Builder withHeader(String name, String value) {
+            if (SOSString.isEmpty(name)) {
+                return this;
+            }
+            return withHeaders(Map.of(name, value == null ? "" : value));
         }
 
         public Builder withConnectTimeout(Duration connectTimeout) {
@@ -343,18 +362,17 @@ public class BaseHttpClient implements AutoCloseable {
                 httpClientBuilder.sslContext(sslContext);
                 // builder.sslParameters(sslParameters);
             }
-
+          
             BaseHttpClient client = new BaseHttpClient(logger, httpClientBuilder.build());
             client.setHeaders(headers);
             return client;
         }
 
         private void setHeaders(List<String> defaultHeaders) {
-            if (SOSCollection.isEmpty(defaultHeaders)) {
-                return;
-            }
             final boolean isDebugEnabled = logger.isDebugEnabled();
-            headers = new LinkedHashMap<>();
+            if (headers == null) {
+                headers = new LinkedHashMap<>();
+            }
             defaultHeaders.stream()
                     // https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
                     // No whitespace is allowed between the header field-name and colon.

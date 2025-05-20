@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.SOSXmlHashComparator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -100,8 +101,21 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
 
     public static DBItemXmlEditorConfiguration update(SOSHibernateSession session, StoreConfiguration in, DBItemXmlEditorConfiguration item,
             String name, String account, Long auditLogId) throws Exception {
+        String currentConfiguration = SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration();
+        if (currentConfiguration != null) {
+            if (item.getConfigurationDraft() != null) {
+                if (SOSXmlHashComparator.equals(currentConfiguration, item.getConfigurationDraft())) {
+                    return item;
+                }
+            } else if (item.getConfigurationReleased() != null) {
+                if (SOSXmlHashComparator.equals(currentConfiguration, item.getConfigurationReleased())) {
+                    return item;
+                }
+            }
+        }
+
         item.setName(name.trim());
-        item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());
+        item.setConfigurationDraft(currentConfiguration);
         item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(auditLogId);
@@ -132,7 +146,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         answer.setId(item.getId());
         answer.setName(item.getName());
         answer.setModified(item.getModified());
-        if (type.equals(ObjectType.NOTIFICATION)) {
+        if (JocXmlEditor.isStandardType(type)) {
             answer.setReleased(false);
             if (item.getReleased() == null) {
                 answer.setHasReleases(true);

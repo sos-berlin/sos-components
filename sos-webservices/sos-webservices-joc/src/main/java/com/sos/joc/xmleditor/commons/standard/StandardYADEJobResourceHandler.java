@@ -39,8 +39,8 @@ public class StandardYADEJobResourceHandler {
     // XML already validated - so not empty etc
     public static void storeAndDeploy(final StandardYADEDeployResourceImpl impl, final String accessToken, final DeployConfiguration in, Document doc)
             throws Exception {
-        DBItemInventoryConfiguration item = store(accessToken, in, doc);
-        deploy(impl, accessToken, in, item);
+        DBItemInventoryConfiguration inventoryJobResourceItem = store(accessToken, in, doc);
+        deploy(impl, accessToken, in, inventoryJobResourceItem);
     }
 
     private static DBItemInventoryConfiguration store(final String accessToken, final DeployConfiguration in, Document doc) throws Exception {
@@ -72,11 +72,11 @@ public class StandardYADEJobResourceHandler {
     }
 
     private static void deploy(final StandardYADEDeployResourceImpl impl, final String accessToken, final DeployConfiguration in,
-            DBItemInventoryConfiguration item) throws Exception {
+            DBItemInventoryConfiguration inventoryJobResourceItem) throws Exception {
 
         Configuration configuration = new Configuration();
         configuration.setObjectType(ConfigurationType.JOBRESOURCE);
-        configuration.setPath(item.getPath());
+        configuration.setPath(inventoryJobResourceItem.getPath());
 
         Config config = new Config();
         config.setConfiguration(configuration);
