@@ -22,8 +22,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "eventId",
     "eventType",
     "approver",
+    "numOfPendingApprovals",
     "requestor",
-    "numOfPendingApprovals"
+    "approverState"
 })
 public class EventApprovalNotification implements IEventObject
 {
@@ -53,6 +54,14 @@ public class EventApprovalNotification implements IEventObject
     @JsonProperty("approver")
     private String approver;
     /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfPendingApprovals")
+    private Long numOfPendingApprovals;
+    /**
      * string without < and >
      * <p>
      * 
@@ -61,13 +70,13 @@ public class EventApprovalNotification implements IEventObject
     @JsonProperty("requestor")
     private String requestor;
     /**
-     * non negative long
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("numOfPendingApprovals")
-    private Long numOfPendingApprovals;
+    @JsonProperty("approverState")
+    private String approverState;
 
     /**
      * non negative long
@@ -134,6 +143,28 @@ public class EventApprovalNotification implements IEventObject
     }
 
     /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfPendingApprovals")
+    public Long getNumOfPendingApprovals() {
+        return numOfPendingApprovals;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfPendingApprovals")
+    public void setNumOfPendingApprovals(Long numOfPendingApprovals) {
+        this.numOfPendingApprovals = numOfPendingApprovals;
+    }
+
+    /**
      * string without < and >
      * <p>
      * 
@@ -156,35 +187,35 @@ public class EventApprovalNotification implements IEventObject
     }
 
     /**
-     * non negative long
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("numOfPendingApprovals")
-    public Long getNumOfPendingApprovals() {
-        return numOfPendingApprovals;
+    @JsonProperty("approverState")
+    public String getApproverState() {
+        return approverState;
     }
 
     /**
-     * non negative long
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("numOfPendingApprovals")
-    public void setNumOfPendingApprovals(Long numOfPendingApprovals) {
-        this.numOfPendingApprovals = numOfPendingApprovals;
+    @JsonProperty("approverState")
+    public void setApproverState(String approverState) {
+        this.approverState = approverState;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("eventType", eventType).append("approver", approver).append("requestor", requestor).append("numOfPendingApprovals", numOfPendingApprovals).toString();
+        return new ToStringBuilder(this).append("eventId", eventId).append("eventType", eventType).append("approver", approver).append("numOfPendingApprovals", numOfPendingApprovals).append("requestor", requestor).append("approverState", approverState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(approver).append(eventId).append(eventType).append(requestor).append(numOfPendingApprovals).toHashCode();
+        return new HashCodeBuilder().append(approver).append(approverState).append(eventId).append(eventType).append(numOfPendingApprovals).append(requestor).toHashCode();
     }
 
     @Override
@@ -196,7 +227,7 @@ public class EventApprovalNotification implements IEventObject
             return false;
         }
         EventApprovalNotification rhs = ((EventApprovalNotification) other);
-        return new EqualsBuilder().append(approver, rhs.approver).append(eventId, rhs.eventId).append(eventType, rhs.eventType).append(requestor, rhs.requestor).append(numOfPendingApprovals, rhs.numOfPendingApprovals).isEquals();
+        return new EqualsBuilder().append(approver, rhs.approver).append(approverState, rhs.approverState).append(eventId, rhs.eventId).append(eventType, rhs.eventType).append(numOfPendingApprovals, rhs.numOfPendingApprovals).append(requestor, rhs.requestor).isEquals();
     }
 
 }

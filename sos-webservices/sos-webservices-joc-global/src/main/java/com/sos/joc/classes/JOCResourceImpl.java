@@ -439,6 +439,7 @@ public class JOCResourceImpl {
             SOSHibernateSession hibernateSession = null;
             try {
                 hibernateSession = Globals.createSosHibernateStatelessConnection(request);
+                hibernateSession.setAutoCommit(false);
                 Long aRId = Long.valueOf(approvalRequestId.trim());
                 DBItemJocApprovalRequest item = hibernateSession.get(DBItemJocApprovalRequest.class, aRId);
                 if (item == null) {

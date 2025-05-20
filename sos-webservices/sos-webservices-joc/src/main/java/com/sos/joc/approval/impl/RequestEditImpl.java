@@ -66,10 +66,9 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
                 session.update(item);
                 
                 if (approverIsChanged) {
-                    EventBus.getInstance().post(new ApprovalUpdatedEvent(null, item.getApprover(), true, dbLayer.getNumOfPendingApprovals(item
-                            .getApprover())));
+                    EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getApprover(), dbLayer.getNumOfPendingApprovals(item.getApprover())));
                 } else {
-                    EventBus.getInstance().post(new ApprovalUpdatedEvent(null, null, false, 0L));
+                    EventBus.getInstance().post(new ApprovalUpdatedEvent());
                 }
             }
             

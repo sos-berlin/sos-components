@@ -444,6 +444,7 @@ public class EventService {
                 EventApprovalNotification eventA = new EventApprovalNotification();
                 eventA.setEventId(eventSnapshot.getEventId());
                 eventA.setRequestor(evt.getRequestor());
+                eventA.setApproverState(evt.getApproverAction());
                 eventA.setEventType("RequestorNotification");
                 addEventA(eventA);
             }

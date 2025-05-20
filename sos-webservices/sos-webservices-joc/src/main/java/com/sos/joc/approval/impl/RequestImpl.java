@@ -64,8 +64,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             session.save(item);
             
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
-            EventBus.getInstance().post(new ApprovalUpdatedEvent(null, item.getApprover(), true, dbLayer.getNumOfPendingApprovals(item
-                    .getApprover())));
+            EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getApprover(), dbLayer.getNumOfPendingApprovals(item.getApprover())));
 
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {

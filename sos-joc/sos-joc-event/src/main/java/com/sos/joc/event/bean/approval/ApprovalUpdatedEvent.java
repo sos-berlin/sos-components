@@ -5,23 +5,32 @@ import com.sos.joc.event.bean.JOCEvent;
 
 public class ApprovalUpdatedEvent extends JOCEvent {
     
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
     public ApprovalUpdatedEvent() {
+        super("ApprovalUpdated", null, null);
+        putVariables(null, null, false, 0L, null);
     }
 
-    /**
-     * @param requestor
-     * @param approver
-     */
-    public ApprovalUpdatedEvent(String requestor, String approver, boolean withNotification, Long numOfPending) {
+    public ApprovalUpdatedEvent(String requestor, String approverAction) {
         super("ApprovalUpdated", null, null);
+        putVariables(requestor, null, true, 0L, approverAction);
+    }
+
+    public ApprovalUpdatedEvent(String approver, Long numOfPending) {
+        super("ApprovalUpdated", null, null);
+        putVariables(null, approver, true, numOfPending, null);
+    }
+
+    public ApprovalUpdatedEvent(String requestor, String approver, Long numOfPending, String approverAction) {
+        super("ApprovalUpdated", null, null);
+        putVariables(requestor, approver, true, numOfPending, approverAction);
+    }
+
+    private void putVariables(String requestor, String approver, boolean withNotification, Long numOfPending, String approverAction) {
         putVariable("requestor", requestor);
         putVariable("approver", approver);
         putVariable("withNotification", withNotification);
         putVariable("numOfPending", numOfPending);
+        putVariable("approverAction", numOfPending);
     }
     
     @JsonIgnore
@@ -42,5 +51,10 @@ public class ApprovalUpdatedEvent extends JOCEvent {
     @JsonIgnore
     public Long numOfPending() {
         return (Long) getVariables().get("numOfPending");
+    }
+    
+    @JsonIgnore
+    public String getApproverAction() {
+        return (String) getVariables().get("approverAction");
     }
 }

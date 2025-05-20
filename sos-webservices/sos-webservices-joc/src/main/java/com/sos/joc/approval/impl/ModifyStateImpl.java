@@ -51,6 +51,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             
             FourEyesRequestId in = Globals.objectMapper.readValue(filterBytes, FourEyesRequestId.class);
             session = Globals.createSosHibernateStatelessConnection(API_CALL + Action.WITHDRAW.name().toLowerCase());
+            session.setAutoCommit(false);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
 
             DBItemJocApprovalRequest item = dbLayer.getApprovalRequest(in.getId());
@@ -63,9 +64,9 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             
             if (item.getApproverState().equals(ApproverState.PENDING.intValue())) {
                 long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(item.getApprover());
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(null, item.getApprover(), true, numOfPendingApprovals));
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getApprover(), numOfPendingApprovals));
             } else {
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(null, null, false, 0L));
+                EventBus.getInstance().post(new ApprovalUpdatedEvent());
             }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -92,6 +93,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             
             FourEyesRequestId in = Globals.objectMapper.readValue(filterBytes, FourEyesRequestId.class);
             session = Globals.createSosHibernateStatelessConnection(API_CALL + action.name().toLowerCase());
+            session.setAutoCommit(false);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             
             DBItemJocApprovalRequest item = dbLayer.getApprovalRequest(in.getId());
@@ -125,13 +127,14 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             if (item.getApprover().equals(curAccountName)) {
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState);
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), null, true, 0L));
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), newState.value()));
             } else {
                 // with take over
                 String prevApprover = item.getApprover();
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState, curAccountName);
                 Long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(prevApprover);
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), prevApprover, true, numOfPendingApprovals));
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), prevApprover, numOfPendingApprovals, newState
+                        .value()));
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
