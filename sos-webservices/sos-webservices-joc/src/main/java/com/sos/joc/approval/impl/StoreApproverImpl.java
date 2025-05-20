@@ -12,6 +12,7 @@ import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.approval.StoreApproverFilter;
+import com.sos.joc.model.security.foureyes.Approver;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -26,26 +27,26 @@ public class StoreApproverImpl extends JOCResourceImpl implements IStoreApprover
         SOSHibernateSession session = null;
         try {
             filterBytes = initLogging(API_CALL, filterBytes, xAccessToken);
-            JsonValidator.validateFailFast(filterBytes, StoreApproverFilter.class);
-            StoreApproverFilter filter = Globals.objectMapper.readValue(filterBytes, StoreApproverFilter.class);
+            JsonValidator.validateFailFast(filterBytes, Approver.class);
+            Approver filter = Globals.objectMapper.readValue(filterBytes, Approver.class);
             JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);
             if (response != null) {
                 return response;
             }
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
-            DBItemJocApprover dbApprover = dbLayer.getApprover(filter.getApprover().getAccountName());
+            DBItemJocApprover dbApprover = dbLayer.getApprover(filter.getAccountName());
             if(dbApprover != null) {
-                dbApprover.setFirstName(filter.getApprover().getFirstName());
-                dbApprover.setLastName(filter.getApprover().getLastName());
-                dbApprover.setEmail(filter.getApprover().getEmail());
+                dbApprover.setFirstName(filter.getFirstName());
+                dbApprover.setLastName(filter.getLastName());
+                dbApprover.setEmail(filter.getEmail());
                 session.update(dbApprover);
             } else {
                 dbApprover = new DBItemJocApprover();
-                dbApprover.setAccountName(filter.getApprover().getAccountName());
-                dbApprover.setFirstName(filter.getApprover().getFirstName());
-                dbApprover.setLastName(filter.getApprover().getLastName());
-                dbApprover.setEmail(filter.getApprover().getEmail());
+                dbApprover.setAccountName(filter.getAccountName());
+                dbApprover.setFirstName(filter.getFirstName());
+                dbApprover.setLastName(filter.getLastName());
+                dbApprover.setEmail(filter.getEmail());
                 dbApprover.setOrdering(dbLayer.getMaxOrdering() + 1);
                 session.save(dbApprover);
             }

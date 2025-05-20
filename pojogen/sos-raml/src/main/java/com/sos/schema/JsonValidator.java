@@ -413,8 +413,8 @@ public class JsonValidator {
             put("com.sos.joc.model.reporting.DeleteReports", "reporting/delete-request-schema.json");
 
             // approvals
-            put("StoreApproverFilter", "approval/approver-delete-filter-schema.json");
-            put("DeleteApproverFilter", "approval/approver-store-filter-schema.json");
+            put("Approver", "security/fourEyes/approver-schema.json");
+            put("DeleteApproverFilter", "approval/approver-delete-filter-schema.json");
             put("UpdateOrderingFilter", "approval/update-ordering-filter-schema.json");
             put("FourEyesRequest", "security/fourEyes/four-eyes-request-schema.json");
             put("FourEyesRequestId", "security/fourEyes/four-eyes-request-id-schema.json");
