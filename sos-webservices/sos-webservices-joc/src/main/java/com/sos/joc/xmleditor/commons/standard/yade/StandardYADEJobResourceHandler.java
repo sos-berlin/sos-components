@@ -92,15 +92,23 @@ public class StandardYADEJobResourceHandler {
             final String xml) throws Exception {
 
         // 1) Prepare JOC API call inventory/store - create filter
-        JobResource jr = new JobResource();
-        jr.setTitle(yadeJobResource.getInventoryItem().getTitle());
-        Environment args = new Environment();
-        args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(doc, xml)
-                + "', '*.xml' )");
-        jr.setArguments(args);
-        args = new Environment();
-        args.setAdditionalProperty(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
-        jr.setEnv(args);
+        JobResource jr = Globals.objectMapper.readValue(yadeJobResource.getInventoryItem().getContent(), JobResource.class);
+        if (jr == null) {
+            jr = new JobResource();
+            jr.setTitle(yadeJobResource.getInventoryItem().getTitle());
+            Environment args = new Environment();
+            args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(doc, xml)
+                    + "', '*.xml' )");
+            jr.setArguments(args);
+            args = new Environment();
+            args.setAdditionalProperty(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
+            jr.setEnv(args);
+        } else {
+            // change only a variable not the entire jobresource
+            jr.getArguments().getAdditionalProperties().put(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler
+                    .getYADEXMLForDeployment(doc, xml) + "', '*.xml' )");
+            jr.getEnv().getAdditionalProperties().put(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
+        }
 
         ConfigurationObject co = new ConfigurationObject();
         co.setObjectType(ConfigurationType.JOBRESOURCE);

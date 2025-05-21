@@ -14,7 +14,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.apply.ApplyConfiguration;
 import com.sos.joc.model.xmleditor.apply.ApplyConfigurationAnswer;
-import com.sos.joc.model.xmleditor.common.ObjectType;
+import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.commons.Xml2JsonConverter;
 import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
@@ -44,6 +44,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                 switch (in.getObjectType()) {
                 case YADE:
                     schema = StandardSchemaHandler.getYADESchema();
+                    in.setConfiguration(StandardSchemaHandler.getXML(in.getConfiguration(), true));
                     break;
                 case NOTIFICATION:
                     schema = StandardSchemaHandler.getNotificationSchema();
@@ -80,15 +81,20 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                     item = dbLayer.getObject(in.getObjectType().name(), name);
                     break;
                 }
+                boolean isChanged = true;
                 if (item == null) {
                     item = create(session, in, name);
 
                 } else {
-                    item = update(session, in, item, name);
+                    String currentConfiguration = SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration();
+                    isChanged = JocXmlEditor.isChanged(item, currentConfiguration);
+                    if (isChanged) {
+                        item = update(session, in, item, name);
+                    }
                 }
-
                 session.commit();
-                response = JOCDefaultResponse.responseStatus200(getSuccess(in, item, json));
+
+                response = JOCDefaultResponse.responseStatus200(getSuccess(in, item, json, isChanged));
             }
             return response;
         } catch (JocException e) {
@@ -118,31 +124,49 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         return null;
     }
 
-    private ApplyConfigurationAnswer getSuccess(ApplyConfiguration in, DBItemXmlEditorConfiguration item, String json) throws Exception {
+    private ApplyConfigurationAnswer getSuccess(ApplyConfiguration in, DBItemXmlEditorConfiguration item, String json, boolean isChanged)
+            throws Exception {
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
         answer.setId(item.getId());
         answer.setName(item.getName());
-        String schemaIdentifier;
-        if (JocXmlEditor.isOther(in.getObjectType())) {
-            schemaIdentifier = OtherSchemaHandler.getHttpOrFileSchemaIdentifier(item.getSchemaLocation());
-        } else {
-            schemaIdentifier = StandardSchemaHandler.getSchemaIdentifier(in.getObjectType());
-        }
-        answer.setSchemaIdentifier(schemaIdentifier);
-        answer.setConfiguration(item.getConfigurationDraft());
-        answer.setConfigurationJson(json);
-        answer.setRecreateJson(true);
         answer.setModified(item.getModified());
-        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
-            answer.setReleased(false);
-            if (item.getReleased() == null) {
-                answer.setHasReleases(true);
-                answer.setState(ItemStateEnum.RELEASE_NOT_EXIST);
+
+        if (JocXmlEditor.isStandardType(in.getObjectType())) {
+            answer.setSchemaIdentifier(StandardSchemaHandler.getSchemaIdentifier(in.getObjectType()));
+            if (isChanged) {
+                answer.setReleased(false);
+                if (item.getReleased() == null) {
+                    answer.setHasReleases(false);
+                    answer.setState(ItemStateEnum.RELEASE_NOT_EXIST);
+                } else {
+                    answer.setHasReleases(true);
+                    answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                }
             } else {
-                answer.setHasReleases(false);
-                answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                StandardSchemaHandler handler = new StandardSchemaHandler(in.getObjectType());
+                handler.readCurrent(item, false);
+                ReadStandardConfigurationAnswer readAnswer = handler.getAnswer();
+
+                answer.setReleased(readAnswer.getReleased());
+                answer.setHasReleases(readAnswer.getHasReleases());
+                answer.setState(readAnswer.getState());
+
+                answer.setModified(readAnswer.getConfigurationDate());
+
+                answer.setConfiguration(readAnswer.getConfiguration());
+                answer.setConfigurationJson(readAnswer.getConfigurationJson());
+                answer.setRecreateJson(false);
             }
+        } else {
+            answer.setSchemaIdentifier(OtherSchemaHandler.getHttpOrFileSchemaIdentifier(item.getSchemaLocation()));
         }
+
+        if (isChanged) {
+            answer.setConfiguration(item.getConfigurationDraft());
+            answer.setConfigurationJson(json);
+            answer.setRecreateJson(true);
+        }
+
         return answer;
     }
 

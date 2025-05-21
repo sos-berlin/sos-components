@@ -1,7 +1,6 @@
 package com.sos.commons.xml.transform;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -24,6 +23,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Node;
 
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.xml.SOSXML;
 
 public class SOSXmlTransformer {
@@ -104,10 +104,7 @@ public class SOSXmlTransformer {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 } finally {
-                    try {
-                        pipeOut.close();
-                    } catch (IOException ignored) {
-                    }
+                    SOSClassUtil.closeQuietly(pipeOut);
                 }
             });
             transformThread.start();

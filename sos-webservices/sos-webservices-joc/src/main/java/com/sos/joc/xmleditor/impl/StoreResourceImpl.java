@@ -4,7 +4,6 @@ import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.SOSXmlHashComparator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -13,6 +12,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.common.ObjectType;
+import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.store.StoreConfiguration;
 import com.sos.joc.model.xmleditor.store.StoreConfigurationAnswer;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
@@ -48,8 +48,15 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
 
             DBItemXmlEditorConfiguration item = null;
             String name = null;
+            boolean isChanged = true;
             switch (in.getObjectType()) {
             case YADE:
+                in.setConfiguration(StandardSchemaHandler.getXML(in.getConfiguration(), true));
+                name = in.getName();
+                if (in.getId() != null && in.getId() > 0) {
+                    item = dbLayer.getObject(in.getId());
+                }
+                break;
             case OTHER:
                 name = in.getName();
                 if (in.getId() != null && in.getId() > 0) {
@@ -66,11 +73,15 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
                 item = create(session, in, name, getAccount(), 0L); // TODO auditlogId
 
             } else {
-                item = update(session, in, item, name, getAccount(), 0L); // TODO auditlogId
+                String currentConfiguration = SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration();
+                isChanged = JocXmlEditor.isChanged(item, currentConfiguration);
+                if (isChanged) {
+                    item = update(session, in, item, name, getAccount(), 0L); // TODO auditlogId
+                }
             }
-
             session.commit();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in.getObjectType(), item)));
+
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in.getObjectType(), item, isChanged)));
 
         } catch (JocException e) {
             Globals.rollback(session);
@@ -103,18 +114,6 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
     public static DBItemXmlEditorConfiguration update(SOSHibernateSession session, StoreConfiguration in, DBItemXmlEditorConfiguration item,
             String name, String account, Long auditLogId) throws Exception {
         String currentConfiguration = SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration();
-        if (currentConfiguration != null) {
-            if (item.getConfigurationDraft() != null) {
-                if (SOSXmlHashComparator.equals(currentConfiguration, item.getConfigurationDraft())) {
-                    return item;
-                }
-            } else if (item.getConfigurationReleased() != null) {
-                if (SOSXmlHashComparator.equals(currentConfiguration, item.getConfigurationReleased())) {
-                    return item;
-                }
-            }
-        }
-
         item.setName(name.trim());
         item.setConfigurationDraft(currentConfiguration);
         item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
@@ -142,19 +141,32 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         }
     }
 
-    public static StoreConfigurationAnswer getSuccess(ObjectType type, DBItemXmlEditorConfiguration item) {
+    public static StoreConfigurationAnswer getSuccess(ObjectType type, DBItemXmlEditorConfiguration item, boolean isChanged) throws Exception {
         StoreConfigurationAnswer answer = new StoreConfigurationAnswer();
         answer.setId(item.getId());
         answer.setName(item.getName());
         answer.setModified(item.getModified());
+
         if (JocXmlEditor.isStandardType(type)) {
-            answer.setReleased(false);
-            if (item.getReleased() == null) {
-                answer.setHasReleases(true);
-                answer.setState(ItemStateEnum.RELEASE_NOT_EXIST);
+            if (isChanged) {
+                answer.setReleased(false);
+                if (item.getReleased() == null) {
+                    answer.setHasReleases(false);
+                    answer.setState(ItemStateEnum.RELEASE_NOT_EXIST);
+                } else {
+                    answer.setHasReleases(true);
+                    answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                }
             } else {
-                answer.setHasReleases(false);
-                answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                StandardSchemaHandler handler = new StandardSchemaHandler(type);
+                handler.readCurrent(item, false);
+                ReadStandardConfigurationAnswer readAnswer = handler.getAnswer();
+
+                answer.setReleased(readAnswer.getReleased());
+                answer.setHasReleases(readAnswer.getHasReleases());
+                answer.setState(readAnswer.getState());
+
+                answer.setModified(readAnswer.getConfigurationDate());
             }
         }
         return answer;

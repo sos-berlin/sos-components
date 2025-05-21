@@ -21,7 +21,7 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(filterBytes, Xml2JsonConfiguration.class);
             Xml2JsonConfiguration in = Globals.objectMapper.readValue(filterBytes, Xml2JsonConfiguration.class);
 
@@ -40,12 +40,13 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
                 break;
             case YADE:
                 schema = StandardSchemaHandler.getYADESchema();
+                in.setConfiguration(StandardSchemaHandler.getXML(in.getConfiguration(), true));
                 break;
             case OTHER:
                 schema = OtherSchemaHandler.getSchema(in.getSchemaIdentifier(), false);
                 break;
             }
-            
+
             Xml2JsonConverter converter = new Xml2JsonConverter();
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(converter.convert(in.getObjectType(),
                     schema, in.getConfiguration()))));

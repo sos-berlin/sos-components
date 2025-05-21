@@ -7,7 +7,9 @@ import org.w3c.dom.Document;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.commons.xml.SOSXmlHashComparator;
 import com.sos.commons.xml.SOSXmlXsdValidator;
+import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
@@ -97,6 +99,19 @@ public class JocXmlEditor {
             return schemaIdentifier;
         }
         return null;
+    }
+
+    public static boolean isChanged(DBItemXmlEditorConfiguration item, String currentConfiguration) throws Exception {
+        if (currentConfiguration == null) {
+            return true;
+        }
+
+        if (item.getConfigurationDraft() != null) {
+            return !SOSXmlHashComparator.equals(currentConfiguration, item.getConfigurationDraft());
+        } else if (item.getConfigurationReleased() != null) {
+            return !SOSXmlHashComparator.equals(currentConfiguration, item.getConfigurationReleased());
+        }
+        return true;
     }
 
     public static boolean checkRequiredParameter(final String paramKey, final ObjectType paramVal) throws JocMissingRequiredParameterException {
