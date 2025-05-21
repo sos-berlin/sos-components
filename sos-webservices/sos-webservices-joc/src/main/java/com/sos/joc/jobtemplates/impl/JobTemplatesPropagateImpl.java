@@ -28,6 +28,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobtemplates.resource.IJobTemplatesPropagate;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.jobtemplate.JobTemplatesFilter;
@@ -65,7 +66,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
     public JOCDefaultResponse propagateJobTemplates(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, JobTemplatesPropagateFilter.class);
             JobTemplatesPropagateFilter jobTemplatesFilter = Globals.objectMapper.readValue(filterBytes, JobTemplatesPropagateFilter.class);
 

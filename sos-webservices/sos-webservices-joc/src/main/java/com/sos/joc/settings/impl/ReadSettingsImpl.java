@@ -23,6 +23,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSec
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.Configuration200;
 import com.sos.joc.model.configuration.ConfigurationType;
@@ -38,7 +39,7 @@ public class ReadSettingsImpl extends JOCResourceImpl implements IReadSettings {
     public JOCDefaultResponse postReadSettings(String xAccessToken) {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken);
+            initLogging(API_CALL, null, xAccessToken, CategoryType.SETTINGS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

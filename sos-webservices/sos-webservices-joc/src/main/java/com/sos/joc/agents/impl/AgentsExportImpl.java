@@ -27,6 +27,7 @@ import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.publish.util.ExportUtils;
 import com.sos.schema.JsonValidator;
@@ -41,7 +42,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         SOSHibernateSession hibernateSession = null;
         StreamingOutput stream = null;
         try {
-            agentsExportFilter = initLogging(API_CALL, agentsExportFilter, xAccessToken);
+            agentsExportFilter = initLogging(API_CALL, agentsExportFilter, xAccessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(agentsExportFilter, AgentExportFilter.class);
             AgentExportFilter filter = Globals.objectMapper.readValue(agentsExportFilter, AgentExportFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

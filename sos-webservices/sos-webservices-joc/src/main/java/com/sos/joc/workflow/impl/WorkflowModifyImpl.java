@@ -79,7 +79,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
 
     private void postWorkflowModify(Action action, ModifyWorkflow workflowFilter) throws Exception {
         String controllerId = workflowFilter.getControllerId();
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(workflowFilter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(workflowFilter.getAuditLog(), controllerId);
         JControllerProxy proxy = Proxy.of(controllerId);
         JControllerState currentState = proxy.currentState();
 
@@ -106,7 +106,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     }
     
     private ModifyWorkflow initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.CONTROLLER);
         JsonValidator.validate(filterBytes, ModifyWorkflow.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflow.class);
     }

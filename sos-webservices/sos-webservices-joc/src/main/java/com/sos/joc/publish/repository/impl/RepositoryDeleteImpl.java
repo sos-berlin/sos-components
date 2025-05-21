@@ -48,7 +48,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository started ***" + started);
-            deleteFromFilter = initLogging(API_CALL, deleteFromFilter, xAccessToken);
+            deleteFromFilter = initLogging(API_CALL, deleteFromFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(deleteFromFilter, DeleteFromFilter.class);
             DeleteFromFilter filter = Globals.objectMapper.readValue(deleteFromFilter, DeleteFromFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
@@ -64,7 +64,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(hibernateSession);
 
-            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog());
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
             

@@ -254,23 +254,23 @@ public class JOCResourceImpl {
         return jocAuditLog;
     }
 
-    public DBItemJocAuditLog storeAuditLog(AuditParams audit, CategoryType category) {
+    public DBItemJocAuditLog storeAuditLog(AuditParams audit) {
         checkRequiredComment(audit);
-        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, category.intValue());
+        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit);
         jocAuditLog.logAuditMessage(audit, logDbItem.getId());
         return logDbItem;
     }
 
-    public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category) {
+    public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId) {
         checkRequiredComment(audit);
-        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue());
+        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, controllerId);
         jocAuditLog.logAuditMessage(audit, logDbItem.getId());
         return logDbItem;
     }
 
-    public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category, SOSHibernateSession connection) {
+    public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, SOSHibernateSession connection) {
         checkRequiredComment(audit);
-        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue(), connection);
+        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, controllerId, connection);
         jocAuditLog.logAuditMessage(audit, logDbItem.getId());
         return logDbItem;
     }
@@ -333,7 +333,7 @@ public class JOCResourceImpl {
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setMessage(message);
-            entity.setCategory(CategoryType.UNKNOWN); // TODO
+            entity.setCategory(jocAuditLog.getCategory());
             session = Globals.createSosHibernateStatelessConnection("getApprovers");
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             entity.setApprovers(dbLayer.getApprovers().stream().map(DBItemJocApprover::mapToApproverWithoutEmail).toList());
@@ -364,18 +364,18 @@ public class JOCResourceImpl {
         return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
     
-    public byte[] initLogging(String request, byte[] maskedBody, byte[] originBody, String accessToken) throws Exception {
+    public byte[] initLogging(String request, byte[] maskedBody, byte[] originBody, String accessToken, CategoryType category) throws Exception {
         origBody = originBody;
-        return initLogging(request, maskedBody, accessToken);
+        return initLogging(request, maskedBody, accessToken, category);
     }
-
-    public byte[] initLogging(String request, byte[] body, String accessToken) throws Exception {
+    
+    public byte[] initLogging(String request, byte[] body, String accessToken, CategoryType category) throws Exception {
         headerAccessToken = accessToken;
 //        this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
-        body = initLogging(request, body);
+        body = initLogging(request, body, category);
 
         if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             throw new SessionNotExistException("Session is broken and no longer valid. New login is neccessary");
@@ -390,7 +390,7 @@ public class JOCResourceImpl {
         return body;
     }
 
-    public byte[] initLogging(String request, byte[] body) throws Exception {
+    public byte[] initLogging(String request, byte[] body, CategoryType category) throws Exception {
         String user;
         try {
             user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
@@ -415,7 +415,7 @@ public class JOCResourceImpl {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
         }
-        jocAuditLog = new JocAuditLog(user, request, bodyStr);
+        jocAuditLog = new JocAuditLog(user, request, bodyStr, category);
         
         if (bodyStr.length() > 4096) {
             bodyStr = bodyStr.substring(0, 4093) + "...";
@@ -466,10 +466,6 @@ public class JOCResourceImpl {
                     throw new JocAccessDeniedException("Approval request: request has already been withdrawn");
                 case IN_PROGRESS:
                     throw new JocAccessDeniedException("Approval request: approved request is already in progress");
-                case SUCCESSFUL:
-                    throw new JocAccessDeniedException("Approval request: approved request is already successfully completed");
-                case FAILED:
-                    throw new JocAccessDeniedException("Approval request: approved request is already unsuccessfully completed");
                 }
                 
                 new ApprovalDBLayer(hibernateSession).updateRequestorStatusInclusiveTransaction(aRId, RequestorState.IN_PROGRESS);

@@ -14,6 +14,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.FourEyesRequest;
 import com.sos.joc.model.security.foureyes.RequestorState;
@@ -30,7 +31,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
     public JOCDefaultResponse postRequest(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(filterBytes, FourEyesRequest.class);
             FourEyesRequest in = Globals.objectMapper.readValue(filterBytes, FourEyesRequest.class);
             JOCDefaultResponse response = initPermissions(null, true);

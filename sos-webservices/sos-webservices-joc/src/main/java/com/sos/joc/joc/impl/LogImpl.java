@@ -24,6 +24,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.ILogResource;
 import com.sos.joc.model.JOClog;
 import com.sos.joc.model.JOClogs;
+import com.sos.joc.model.audit.CategoryType;
 
 import io.vavr.control.Either;
 
@@ -37,7 +38,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     @Override
     public JOCDefaultResponse postLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JOClog jocLog = Globals.objectMapper.readValue(filterBytes, JOClog.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
@@ -54,7 +55,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     @Override
     public JOCDefaultResponse postLogs(String accessToken) {
         try {
-            initLogging(API_CALL + "s", null, accessToken);
+            initLogging(API_CALL + "s", null, accessToken, CategoryType.OTHERS);
 
             Path logDir = Paths.get(logDirectory);
             if (!Files.exists(logDir)) {
@@ -87,9 +88,9 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             }
             if (filename != null) {
                 String s = "{\"filename\":\"" + filename + "\"}";
-                initLogging(API_CALL, s.getBytes(), accessToken);
+                initLogging(API_CALL, s.getBytes(), accessToken, CategoryType.CONTROLLER);
             } else {
-                initLogging(API_CALL, null, accessToken);
+                initLogging(API_CALL, null, accessToken, CategoryType.CONTROLLER);
             }
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {

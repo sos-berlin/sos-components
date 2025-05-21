@@ -5,6 +5,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IReadDescriptor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.AReadConfiguration;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.descriptor.common.RequestFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
@@ -19,7 +20,7 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
     public JOCDefaultResponse read(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            body = initLogging(IMPL_PATH_READ, body, accessToken);
+            body = initLogging(IMPL_PATH_READ, body, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.read.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.read.RequestFilter.class);
@@ -41,7 +42,7 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
     public JOCDefaultResponse readTrash(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            body = initLogging(IMPL_PATH_TRASH_READ, body, accessToken);
+            body = initLogging(IMPL_PATH_TRASH_READ, body, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.read.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.read.RequestFilter.class);

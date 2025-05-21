@@ -38,6 +38,7 @@ import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
@@ -57,7 +58,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(inBytes, OrdersFilter.class);
             OrdersFilter in = Globals.objectMapper.readValue(inBytes, OrdersFilter.class);
 

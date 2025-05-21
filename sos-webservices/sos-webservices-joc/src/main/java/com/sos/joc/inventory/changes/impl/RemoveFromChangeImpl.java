@@ -10,6 +10,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.changes.common.ARemoveFromChange;
 import com.sos.joc.inventory.changes.resource.IRemoveFromChange;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.changes.RemoveFromChangeRequest;
 import com.sos.schema.JsonValidator;
 
@@ -26,7 +27,7 @@ public class RemoveFromChangeImpl extends ARemoveFromChange implements IRemoveFr
     public JOCDefaultResponse postRemoveFromChange(String xAccessToken, byte[] filter) {
         SOSHibernateSession session = null;
         try {
-            filter = initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, RemoveFromChangeRequest.class);
             RemoveFromChangeRequest removeFilter = Globals.objectMapper.readValue(filter, RemoveFromChangeRequest.class);
 

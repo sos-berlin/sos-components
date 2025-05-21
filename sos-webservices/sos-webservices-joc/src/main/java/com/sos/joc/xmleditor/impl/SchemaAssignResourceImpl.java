@@ -8,6 +8,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfiguration;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfigurationAnswer;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
@@ -24,7 +25,7 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, SchemaAssignConfiguration.class);
             SchemaAssignConfiguration in = Globals.objectMapper.readValue(filterBytes, SchemaAssignConfiguration.class);
 

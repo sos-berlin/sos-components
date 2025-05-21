@@ -58,7 +58,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse reset(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RESET, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RESET, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
@@ -69,7 +69,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 return jocDefaultResponse;
             }
 
-            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
+            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId());
             JControllerCommand resetAgentCommand = JControllerCommand.apply(getResetCommand(agentCommand.getAgentId(), agentCommand
                     .getForce() == Boolean.TRUE));
             LOGGER.debug("Reset Agent: " + resetAgentCommand.toJson());
@@ -97,7 +97,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse remove(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_REMOVE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REMOVE, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
@@ -108,7 +108,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
+            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId());
             
             String agentId = agentCommand.getAgentId();
             JControllerProxy proxy = Proxy.of(controllerId);
@@ -148,7 +148,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse switchover(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
@@ -158,7 +158,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
+            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId());
             
             String agentId = agentCommand.getAgentId();
             JAgentRefState agentState = Proxy.of(controllerId).currentState().pathToAgentRefState().get(AgentPath.of(agentId));
@@ -188,7 +188,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     @Override
     public JOCDefaultResponse confirmNodeLoss(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_CONFIRMNODELOSS, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_CONFIRMNODELOSS, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
@@ -202,7 +202,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             //checkRequiredParameter("lostNodeId", agentCommand.getLostDirector());
             //String lossNodeIdFromRequest = AgentCommand.LostDirector.PRIMARY_DIRECTOR.equals(agentCommand.getLostDirector()) ? "Primary" : "Backup";
             
-            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
+            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId());
             
             String agentId = agentCommand.getAgentId();
             JControllerProxy proxy = Proxy.of(controllerId);

@@ -34,7 +34,7 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
     public JOCDefaultResponse postDocumentationEdit(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.DOCUMENTATIONS);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));
@@ -42,7 +42,7 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
                 return jocDefaultResponse;
             }
             
-            DBItemJocAuditLog dbAudit = storeAuditLog(documentationFilter.getAuditLog(), CategoryType.DOCUMENTATIONS);
+            DBItemJocAuditLog dbAudit = storeAuditLog(documentationFilter.getAuditLog());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             String path = documentationFilter.getDocumentation();
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);

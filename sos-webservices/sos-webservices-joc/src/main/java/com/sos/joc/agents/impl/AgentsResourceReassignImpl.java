@@ -47,7 +47,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
     public JOCDefaultResponse reAssign(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter body = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
@@ -58,7 +58,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(body.getAuditLog(), controllerId);
             
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);

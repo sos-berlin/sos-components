@@ -12,6 +12,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidatePredicateResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.Validate;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -20,7 +21,7 @@ public class ValidatePredicateResourceImpl extends JOCResourceImpl implements IV
     @Override
     public JOCDefaultResponse parse(final String accessToken, byte[] body) {
         try {
-            body = initLogging(IMPL_PATH, body, accessToken);
+            body = initLogging(IMPL_PATH, body, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response != null) {
                 return response;

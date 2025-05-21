@@ -23,6 +23,7 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.joc.model.workflow.WorkflowsFilter;
@@ -44,7 +45,7 @@ public class WorkflowsSnapshotImpl extends JOCResourceImpl implements IWorkflows
     public JOCDefaultResponse snapshot(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq in = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = in.getControllerId();

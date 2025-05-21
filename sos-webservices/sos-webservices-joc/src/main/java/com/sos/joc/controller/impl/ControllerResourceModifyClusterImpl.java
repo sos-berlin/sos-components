@@ -39,7 +39,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     @Override
     public JOCDefaultResponse postClusterNodeSwitchOver(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
@@ -49,7 +49,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(urlParameter.getAuditLog(), controllerId);
 
             // ask for cluster
             List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
@@ -79,7 +79,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     @Override
     public JOCDefaultResponse postClusterAppointNodes(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             if (!StateImpl.isActive(API_CALL_APPOINT_NODES, null)) {
                 throw new JocServiceException("Appointing the Controller cluster nodes is possible only in the active JOC node.");
@@ -94,7 +94,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                 return jocDefaultResponse;
             }
 
-            storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(urlParameter.getAuditLog(), controllerId);
 
             ClusterWatch.getInstance().appointNodes(controllerId, null, Proxy.of(controllerId), null, accessToken, getJocError());
 
@@ -111,7 +111,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     public JOCDefaultResponse postConfirmClusterNodeLoss(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_CONFIRM_LOSS_NODES, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_CONFIRM_LOSS_NODES, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             if (!StateImpl.isActive(API_CALL_CONFIRM_LOSS_NODES, null)) {
                 throw new JocServiceException("Confirming the Controller cluster loss node is possible only in the active JOC node.");
@@ -126,7 +126,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                 return jocDefaultResponse;
             }
 
-            storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(body.getAuditLog(), controllerId);
             ClusterWatch.getInstance().confirmNodeLoss(controllerId, getAccount(), accessToken, getJocError());
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

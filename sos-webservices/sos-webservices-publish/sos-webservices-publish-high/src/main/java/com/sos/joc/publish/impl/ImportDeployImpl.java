@@ -103,7 +103,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, importDeployFilter, xAccessToken);
+            initLogging(API_CALL, importDeployFilter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validateFailFast(importDeployFilter, ImportDeployFilter.class);
             ImportDeployFilter filter = Globals.objectMapper.readValue(importDeployFilter, ImportDeployFilter.class);
             // copy&paste Permission, has to be changed to the correct permission for upload
@@ -118,7 +118,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
             
-            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
+            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog());
             Long auditLogId = dbAuditItem != null ? dbAuditItem.getId() : 0L;
             
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();

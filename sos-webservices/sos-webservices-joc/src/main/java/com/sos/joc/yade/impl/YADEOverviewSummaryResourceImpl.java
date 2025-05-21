@@ -15,6 +15,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.yade.JocDBLayerYade;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.TransferFilesOverView;
 import com.sos.joc.model.yade.TransferFilesSummary;
@@ -33,7 +34,7 @@ public class YADEOverviewSummaryResourceImpl extends JOCResourceImpl implements 
     public JOCDefaultResponse postYADEOverviewSummary(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 

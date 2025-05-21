@@ -23,6 +23,7 @@ import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.items.CSVItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.TaskIdOfOrder;
 import com.sos.joc.reporting.resource.IOrderStepsResource;
@@ -124,7 +125,7 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
     private JOCDefaultResponse orderSteps(String accessToken, String acceptEncoding, byte[] filterBytes, String action) {
 
         try {
-            filterBytes = initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken, CategoryType.CONTROLLER);
 //            JsonValidator.validateFailFast(filterBytes, OrderSteps.class);
 //            OrderSteps in = Globals.objectMapper.readValue(filterBytes, OrderSteps.class);
 //

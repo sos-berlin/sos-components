@@ -24,6 +24,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryOrderLogArrived;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderRunningLogFilter;
 import com.sos.joc.model.order.RunningOrderLogEvents;
@@ -46,7 +47,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
@@ -83,7 +84,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse downloadOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_DOWNLOAD, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DOWNLOAD, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
@@ -106,7 +107,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postRollingOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderRunningLogFilter.class);
             RunningOrderLogEvents orderLog = Globals.objectMapper.readValue(filterBytes, RunningOrderLogEvents.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderLog.getControllerId(), getBasicControllerPermissions(orderLog

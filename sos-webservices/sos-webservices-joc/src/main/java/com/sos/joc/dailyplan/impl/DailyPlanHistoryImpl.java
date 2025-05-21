@@ -28,6 +28,7 @@ import com.sos.joc.db.dailyplan.DailyPlanHistoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.history.MainRequest;
 import com.sos.joc.model.dailyplan.history.MainResponse;
@@ -55,7 +56,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     public JOCDefaultResponse postDates(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH_MAIN, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_MAIN, inBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(inBytes, MainRequest.class);
             MainRequest in = Globals.objectMapper.readValue(inBytes, MainRequest.class);
 
@@ -167,7 +168,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     public JOCDefaultResponse postSubmissions(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
@@ -225,7 +226,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     public JOCDefaultResponse postSubmissionsOrders(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_SUBMISSIONS, inBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(inBytes, SubmissionsOrdersRequest.class);
             SubmissionsOrdersRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsOrdersRequest.class);
 

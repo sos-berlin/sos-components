@@ -43,7 +43,7 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** commit started ***" + started);
-            commitFilter = initLogging(API_CALL, commitFilter, xAccessToken);
+            commitFilter = initLogging(API_CALL, commitFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(commitFilter, CommitFilter.class);
             CommitFilter filter = Globals.objectMapper.readValue(commitFilter, CommitFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
@@ -57,7 +57,7 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog());
             String account = null;
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {

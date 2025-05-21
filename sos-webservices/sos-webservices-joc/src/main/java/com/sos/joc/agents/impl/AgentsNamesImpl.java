@@ -29,6 +29,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentNames;
 import com.sos.joc.model.agent.SelectionIdsPerAgentName;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.schema.JsonValidator;
 
@@ -44,7 +45,7 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
     public JOCDefaultResponse postNames(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId agentParameter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             String controllerId = agentParameter.getControllerId();

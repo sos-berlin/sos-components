@@ -59,7 +59,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, null, xAccessToken);
+            initLogging(API_CALL, null, xAccessToken, CategoryType.DOCUMENTATIONS);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getDocumentations().getManage(), false);
             if (jocDefaultResponse != null) {
@@ -81,7 +81,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             }
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.DOCUMENTATIONS, connection);
+            DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, connection);
             String filename = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
             
             postImportDocumentations(folder, filename, body, new DocumentationDBLayer(connection), dbAudit);

@@ -11,6 +11,7 @@ import com.sos.joc.db.encipherment.DBItemEncCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IDeleteCertificate;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.DeleteCertificateRequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -23,7 +24,7 @@ public class DeleteCertificateImpl extends JOCResourceImpl implements IDeleteCer
     public JOCDefaultResponse postDeleteCertificate(String xAccessToken, byte[] deleteCertificateFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            deleteCertificateFilter = initLogging(API_CALL, deleteCertificateFilter, xAccessToken);
+            deleteCertificateFilter = initLogging(API_CALL, deleteCertificateFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(deleteCertificateFilter, DeleteCertificateRequestFilter.class);
             DeleteCertificateRequestFilter filter = Globals.objectMapper.readValue(deleteCertificateFilter, DeleteCertificateRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

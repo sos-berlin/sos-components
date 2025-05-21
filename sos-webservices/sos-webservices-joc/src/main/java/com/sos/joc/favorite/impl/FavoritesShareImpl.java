@@ -10,6 +10,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesShare;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.FavoriteIdentifiers;
 import com.sos.schema.JsonValidator;
 
@@ -35,7 +36,7 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
 
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, FavoriteIdentifiers.class);
             FavoriteIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteIdentifiers.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);

@@ -29,6 +29,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IUpdateJobFromTemplates;
 import com.sos.joc.jobtemplates.impl.JobTemplatesResourceImpl;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.jobtemplate.propagate.JobPropagateFilter;
 import com.sos.joc.model.jobtemplate.propagate.JobReport;
@@ -42,7 +43,7 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
     @Override
     public JOCDefaultResponse update(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, JobPropagateFilter.class);
             JobPropagateFilter in = Globals.objectMapper.readValue(inBytes, JobPropagateFilter.class);
 

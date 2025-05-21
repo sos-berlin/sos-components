@@ -70,7 +70,7 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken); 
+            initLogging(API_CALL, null, xAccessToken, CategoryType.CONTROLLER); 
             JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), AgentImportFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getControllers()
                     .getManage(), false); //4-eyes principle cannot support uploads
@@ -84,7 +84,7 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
             }
             
             
-            storeAuditLog(filter.getAuditLog(), CategoryType.CONTROLLER);
+            storeAuditLog(filter.getAuditLog());
             stream = body.getEntityAs(InputStream.class);
             
             Set<Agent> agents = new HashSet<Agent>();

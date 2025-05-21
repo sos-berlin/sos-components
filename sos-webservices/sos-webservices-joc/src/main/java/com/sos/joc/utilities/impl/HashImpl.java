@@ -7,6 +7,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.utilities.resource.IHashResource;
 
 @jakarta.ws.rs.Path(WebservicePaths.UTILITIES)
@@ -15,7 +16,7 @@ public class HashImpl extends JOCResourceImpl implements IHashResource {
     @Override
     public JOCDefaultResponse postHash(String accessToken, byte[] body) {
         try {
-            body = initLogging(IMPL_PATH, body, accessToken);
+            body = initLogging(IMPL_PATH, body, accessToken, CategoryType.OTHERS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getSettings()
                     .getView());
             if (jocDefaultResponse != null) {

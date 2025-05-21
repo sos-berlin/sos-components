@@ -19,6 +19,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.impl.SearchResourceImpl;
 import com.sos.joc.inventory.resource.ISearchResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseSearch;
 import com.sos.joc.model.inventory.search.ResponseSearchItem;
@@ -46,7 +47,7 @@ public class WorkflowsSearchImpl extends JOCResourceImpl implements ISearchResou
     @Override
     public JOCDefaultResponse postSearch(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, WorkflowSearchFilter.class);
             DeployedWorkflowSearchFilter in = Globals.objectMapper.readValue(filterBytes, DeployedWorkflowSearchFilter.class);
             in.setReturnType(RequestSearchReturnType.WORKFLOW);

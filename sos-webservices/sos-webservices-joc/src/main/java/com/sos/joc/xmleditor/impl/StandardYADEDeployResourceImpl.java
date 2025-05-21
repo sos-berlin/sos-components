@@ -11,6 +11,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.yade.YADEConfigurationDeployed;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.deploy.DeployConfiguration;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.publish.impl.ADeploy;
@@ -28,7 +29,7 @@ public class StandardYADEDeployResourceImpl extends ADeploy implements IStandard
     @Override
     public JOCDefaultResponse deploy(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validateFailFast(filterBytes, DeployConfiguration.class);
             DeployConfiguration in = Globals.objectMapper.readValue(filterBytes, DeployConfiguration.class);
 

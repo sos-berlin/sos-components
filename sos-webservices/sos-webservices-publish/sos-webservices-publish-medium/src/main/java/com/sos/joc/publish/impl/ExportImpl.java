@@ -56,7 +56,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
 	public JOCDefaultResponse postExportConfiguration(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            exportFilter = initLogging(API_CALL, exportFilter, xAccessToken);
+            exportFilter = initLogging(API_CALL, exportFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(exportFilter, ExportFilter.class);
             ExportFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFilter.class);
             ExportForSigning forSigning = filter.getForSigning();
@@ -71,7 +71,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 return jocDefaultResponse;
             }
             
-            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog());
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);

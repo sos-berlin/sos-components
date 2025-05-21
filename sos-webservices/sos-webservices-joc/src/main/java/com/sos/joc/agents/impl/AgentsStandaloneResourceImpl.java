@@ -27,6 +27,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.Agents;
 import com.sos.joc.model.agent.ReadAgents;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -46,7 +47,7 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ReadAgents.class);
             ReadAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ReadAgents.class);
             

@@ -23,6 +23,7 @@ import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.inventory.resource.IReleasableResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.release.ReleasableFilter;
 import com.sos.joc.model.inventory.release.ResponseReleasable;
@@ -37,7 +38,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
     public JOCDefaultResponse releasable(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, ReleasableFilter.class, true);
             ReleasableFilter in = Globals.objectMapper.readValue(inBytes, ReleasableFilter.class);
 

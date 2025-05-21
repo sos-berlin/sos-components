@@ -53,14 +53,14 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** revoke started ***" + started);
-            filter = initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validate(filter, RevokeFilter.class);
             RevokeFilter revokeFilter = Globals.objectMapper.readValue(filter, RevokeFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(revokeFilter.getAuditLog(), CategoryType.DEPLOYMENT);
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(revokeFilter.getAuditLog());
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
             		.filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());

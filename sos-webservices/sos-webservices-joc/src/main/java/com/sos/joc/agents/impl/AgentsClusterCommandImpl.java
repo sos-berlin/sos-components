@@ -41,7 +41,7 @@ public class AgentsClusterCommandImpl extends JOCResourceImpl implements IAgents
     public JOCDefaultResponse postRevoke(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             AgentHelper.throwJocMissingLicenseException();
             
@@ -55,7 +55,7 @@ public class AgentsClusterCommandImpl extends JOCResourceImpl implements IAgents
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentParameter.getAuditLog(), controllerId);
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);

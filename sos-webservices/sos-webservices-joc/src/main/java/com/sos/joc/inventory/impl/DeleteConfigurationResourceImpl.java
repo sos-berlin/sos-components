@@ -6,6 +6,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ADeleteConfiguration;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.delete.RequestFilters;
 import com.sos.joc.model.inventory.delete.RequestFolder;
 import com.sos.schema.JsonValidator;
@@ -19,7 +20,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
     public JOCDefaultResponse remove(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH_DELETE, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_DELETE, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
@@ -40,7 +41,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
     public JOCDefaultResponse removeFolder(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH_FOLDER_DELETE, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_FOLDER_DELETE, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
@@ -61,7 +62,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
     public JOCDefaultResponse delete(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH_TRASH_DELETE, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_TRASH_DELETE, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
@@ -82,7 +83,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
     public JOCDefaultResponse deleteFolder(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH_TRASH_DELETE, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_TRASH_DELETE, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 

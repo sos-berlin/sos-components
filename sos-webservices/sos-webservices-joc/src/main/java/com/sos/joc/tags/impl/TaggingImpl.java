@@ -58,7 +58,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(in.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TAGGING);
             session.setAutoCommit(false);
@@ -161,7 +161,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
     public JOCDefaultResponse postFolderTagging(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(IMPL_FOLDER_TAGGING, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_FOLDER_TAGGING, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, RequestModifyFilter.class);
             RequestModifyFilter in =  Globals.objectMapper.readValue(filterBytes, RequestModifyFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
@@ -169,7 +169,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(in.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_FOLDER_TAGGING);
             session.setAutoCommit(false);
@@ -284,7 +284,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
     }
     
     private RequestFilter initRequest(String apiCall, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(apiCall, filterBytes, accessToken);
+        filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.INVENTORY);
         JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
         return Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
     }

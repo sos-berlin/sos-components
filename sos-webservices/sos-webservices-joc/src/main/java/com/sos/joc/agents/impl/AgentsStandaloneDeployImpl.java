@@ -49,7 +49,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
     public JOCDefaultResponse postDeploy(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
             Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
@@ -62,7 +62,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             String controllerId = agentDeployParameter.getControllerId();
             List<String> agentIds = agentDeployParameter.getAgentIds();
 
-            storeAuditLog(agentDeployParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentDeployParameter.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);

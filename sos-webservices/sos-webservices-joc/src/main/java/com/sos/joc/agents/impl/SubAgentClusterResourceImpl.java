@@ -31,6 +31,7 @@ import com.sos.joc.model.agent.ReadSubagentClusters;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.SubagentClusters;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -45,7 +46,7 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             //AgentHelper.throwJocMissingLicenseException();
             

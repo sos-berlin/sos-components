@@ -22,6 +22,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.yade.FileFilter;
 import com.sos.joc.model.yade.xmleditor.Profiles;
@@ -39,7 +40,7 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
     @Override
     public JOCDefaultResponse getProfiles(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validate(inBytes, FileFilter.class);
             Profiles in = Globals.objectMapper.readValue(inBytes, Profiles.class);
 

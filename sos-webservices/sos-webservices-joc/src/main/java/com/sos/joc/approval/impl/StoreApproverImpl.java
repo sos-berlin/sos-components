@@ -12,6 +12,7 @@ import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.approval.StoreApproverFilter;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.Approver;
 import com.sos.schema.JsonValidator;
 
@@ -26,7 +27,7 @@ public class StoreApproverImpl extends JOCResourceImpl implements IStoreApprover
     public JOCDefaultResponse postStore(String xAccessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(filterBytes, Approver.class);
             Approver filter = Globals.objectMapper.readValue(filterBytes, Approver.class);
             JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);

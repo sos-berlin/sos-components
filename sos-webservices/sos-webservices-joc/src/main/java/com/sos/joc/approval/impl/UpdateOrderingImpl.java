@@ -19,6 +19,7 @@ import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.approval.UpdateOrderingFilter;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -32,7 +33,7 @@ public class UpdateOrderingImpl extends JOCResourceImpl implements IUpdateOrderi
     public JOCDefaultResponse postOrdering(String xAccessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(filterBytes, UpdateOrderingFilter.class);
             UpdateOrderingFilter filter = Globals.objectMapper.readValue(filterBytes, UpdateOrderingFilter.class);
             JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);

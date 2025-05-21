@@ -60,7 +60,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
     private JOCDefaultResponse inventoryStoreOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
             Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
@@ -92,7 +92,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 SOSCheckJavaVariableName.test("Agent ID", agentId);
             }
 
-            storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentStoreParameter.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(action);
             connection.setAutoCommit(false);
@@ -137,7 +137,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
     private JOCDefaultResponse clusterInventoryStoreOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken, CategoryType.CONTROLLER);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -179,7 +179,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
                 SOSCheckJavaVariableName.test("Subagent ID", subagentId);
             }
 
-            storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentStoreParameter.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(action);
             connection.setAutoCommit(false);

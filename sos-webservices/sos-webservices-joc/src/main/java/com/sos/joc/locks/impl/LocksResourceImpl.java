@@ -30,6 +30,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.lock.common.LockEntryHelper;
 import com.sos.joc.locks.resource.ILocksResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.lock.Locks;
 import com.sos.joc.model.lock.LocksFilter;
@@ -46,7 +47,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
     @Override
     public JOCDefaultResponse postLocks(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, LocksFilter.class);
             LocksFilter filter = Globals.objectMapper.readValue(filterBytes, LocksFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(), accessToken)

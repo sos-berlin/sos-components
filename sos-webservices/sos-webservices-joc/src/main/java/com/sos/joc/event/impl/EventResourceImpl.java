@@ -27,6 +27,7 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.event.Controller;
 import com.sos.joc.model.event.Event;
@@ -46,7 +47,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         Event entity = new Event();
         ISOSSession session = null;
         try {
-            inBytes = initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(inBytes, Controller.class);
             Controller in = Globals.objectMapper.readValue(inBytes, Controller.class);
             String controllerId = in.getControllerId();

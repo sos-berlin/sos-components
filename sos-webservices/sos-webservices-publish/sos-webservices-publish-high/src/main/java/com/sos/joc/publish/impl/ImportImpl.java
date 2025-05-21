@@ -98,7 +98,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken); 
+            initLogging(API_CALL, null, xAccessToken, CategoryType.INVENTORY); 
             JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter), ImportFilter.class);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
@@ -117,7 +117,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 SOSCheckJavaVariableName.testFolder("target folder", filter.getTargetFolder());
             }
             
-            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog());
             Long auditLogId = dbAuditItem.getId();
             
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();

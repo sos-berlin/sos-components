@@ -65,7 +65,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken);
+            initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportKeyFilter.class);
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
             filter.setAuditLog(auditLog);
@@ -76,7 +76,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            storeAuditLog(filter.getAuditLog());
             
             stream = body.getEntityAs(InputStream.class);
 

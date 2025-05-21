@@ -10,6 +10,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.reporting.LoadData;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.reporting.LoadFilter;
 import com.sos.joc.reporting.resource.ILoadDataResource;
 import com.sos.schema.JsonValidator;
@@ -28,7 +29,7 @@ public class LoadDataImpl extends JOCResourceImpl implements ILoadDataResource {
     @Override
     public JOCDefaultResponse create(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, LoadFilter.class);
             LoadFilter in = Globals.objectMapper.readValue(filterBytes, LoadFilter.class);
             

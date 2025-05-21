@@ -18,6 +18,7 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderVariablesFilter;
 import com.sos.joc.order.resource.IOrderVariablesResource;
 import com.sos.schema.JsonValidator;
@@ -40,7 +41,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
     public JOCDefaultResponse postVariables(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validate(filterBytes, OrderVariablesFilter.class);
             OrderVariablesFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderVariablesFilter.class);
             String controllerId = orderFilter.getControllerId();

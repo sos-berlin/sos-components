@@ -13,6 +13,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.DeleteConfiguration;
 import com.sos.joc.model.xmleditor.delete.DeleteOtherDraftAnswer;
@@ -32,7 +33,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
             DeleteConfiguration in = Globals.objectMapper.readValue(filterBytes, DeleteConfiguration.class);
 

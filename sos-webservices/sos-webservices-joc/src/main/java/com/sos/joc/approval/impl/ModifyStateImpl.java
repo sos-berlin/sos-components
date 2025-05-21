@@ -15,6 +15,7 @@ import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.FourEyesRequestId;
 import com.sos.joc.model.security.foureyes.RequestorState;
@@ -101,8 +102,6 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             RequestorState requestorState = item.getRequestorStateAsEnum();
             
             switch (requestorState) {
-            case FAILED:
-            case SUCCESSFUL:
             case IN_PROGRESS:
                 throw new JocBadRequestException("The approval request has already been used by the requestor");
             case WITHDRAWN:
@@ -149,7 +148,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
     }
     
     private JOCDefaultResponse init(Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.MONITORING);
         JsonValidator.validateFailFast(filterBytes, FourEyesRequestId.class);
         return initPermissions(null, true);
     }

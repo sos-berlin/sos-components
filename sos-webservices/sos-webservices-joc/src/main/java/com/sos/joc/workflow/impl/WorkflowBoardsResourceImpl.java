@@ -31,6 +31,7 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.model.workflow.WorkflowsFilter;
@@ -51,7 +52,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
     public JOCDefaultResponse postWorkflowDependencies(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
             String controllerId = workflowFilter.getControllerId();

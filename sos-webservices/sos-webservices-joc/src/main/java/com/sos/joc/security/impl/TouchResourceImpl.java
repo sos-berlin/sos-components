@@ -12,6 +12,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.security.resource.ITouchResource;
 
 @Path("touch")
@@ -27,7 +28,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
 
     public JOCDefaultResponse postTouch(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken);
+            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
             if (!jobschedulerUser.isAuthenticated()) {
                 return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, API_CALL));
             }
@@ -51,7 +52,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
     @Override
     public JOCDefaultResponse postTouchLog4j(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken);
+            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
             } else {

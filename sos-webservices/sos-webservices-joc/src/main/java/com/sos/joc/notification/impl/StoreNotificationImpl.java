@@ -29,7 +29,7 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
     public JOCDefaultResponse postStoreNotification(String xAccessToken, byte[] storeNotificationFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            storeNotificationFilter = initLogging(API_CALL, storeNotificationFilter, xAccessToken);
+            storeNotificationFilter = initLogging(API_CALL, storeNotificationFilter, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validate(storeNotificationFilter, StoreNotificationFilter.class);
             StoreConfiguration in = Globals.objectMapper.readValue(storeNotificationFilter, StoreConfiguration.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getNotification().getManage()));
@@ -37,7 +37,7 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
                 return jocDefaultResponse;
             }
 
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(in.getAuditLog());
             ObjectType notificationType = ObjectType.NOTIFICATION;
             in.setObjectType(notificationType);
 

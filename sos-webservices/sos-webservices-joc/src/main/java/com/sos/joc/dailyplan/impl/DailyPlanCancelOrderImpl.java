@@ -66,7 +66,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     @Override
     public JOCDefaultResponse postCancelOrder(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             // validation without required dailyPlanDateFrom
             JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
@@ -120,7 +120,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
         Map<String, CompletableFuture<Either<Problem, Void>>> futures = new HashMap<>();
 
-        Long auditLogId = withAudit ? storeAuditLog(auditLog, CategoryType.DAILYPLAN).getId() : 0L;
+        Long auditLogId = withAudit ? storeAuditLog(auditLog).getId() : 0L;
 
         if (folderPermissions == null) {
             folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();

@@ -6,6 +6,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.changes.common.AShowChange;
 import com.sos.joc.inventory.changes.resource.IChangesShow;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.changes.ShowChangesFilter;
 import com.sos.schema.JsonValidator;
 
@@ -21,7 +22,7 @@ public class ChangesShowImpl extends AShowChange implements IChangesShow {
     public JOCDefaultResponse postShowChanges(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, ShowChangesFilter.class);
             ShowChangesFilter showFilter = Globals.objectMapper.readValue(filter, ShowChangesFilter.class);
             

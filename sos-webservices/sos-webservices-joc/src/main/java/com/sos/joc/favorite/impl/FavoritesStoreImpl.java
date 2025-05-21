@@ -18,6 +18,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.favorite.resource.IFavoritesStore;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.FavoriteType;
 import com.sos.joc.model.favorite.RenameFavorite;
 import com.sos.joc.model.favorite.RenameFavorites;
@@ -36,7 +37,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
 
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_STORE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_STORE, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, StoreFavorites.class);
             StoreFavorites favorites = Globals.objectMapper.readValue(filterBytes, StoreFavorites.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
@@ -80,7 +81,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
 
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_RENAME, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RENAME, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filterBytes, RenameFavorites.class);
             RenameFavorites favorites = Globals.objectMapper.readValue(filterBytes, RenameFavorites.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);

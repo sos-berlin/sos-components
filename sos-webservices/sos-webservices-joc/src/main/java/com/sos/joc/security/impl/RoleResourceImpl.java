@@ -44,7 +44,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_ROLE_READ, body, accessToken);
+            body = initLogging(API_CALL_ROLE_READ, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, RoleFilter.class);
             RoleFilter roleFilter = Globals.objectMapper.readValue(body, RoleFilter.class);
 
@@ -92,7 +92,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_ROLE_STORE, body, accessToken);
+            body = initLogging(API_CALL_ROLE_STORE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, Role.class);
             RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
 
@@ -133,7 +133,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 }
             }
 
-            storeAuditLog(roleStore.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(roleStore.getAuditLog());
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -154,7 +154,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_ROLE_RENAME, body, accessToken);
+            body = initLogging(API_CALL_ROLE_RENAME, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, RoleRename.class);
             RoleRename roleRename = Globals.objectMapper.readValue(body, RoleRename.class);
 
@@ -186,7 +186,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 throw new JocObjectNotExistException("Couldn't find the role <" + roleRename.getRoleOldName() + ">");
             }
 
-            storeAuditLog(roleRename.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(roleRename.getAuditLog());
 
             Globals.commit(sosHibernateSession);
 
@@ -211,7 +211,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_ROLE_DELETE, body, accessToken);
+            body = initLogging(API_CALL_ROLE_DELETE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, RolesFilter.class);
             RolesFilter rolesFilter = Globals.objectMapper.readValue(body, RolesFilter.class);
 
@@ -240,7 +240,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
 
             Globals.commit(sosHibernateSession);
 
-            storeAuditLog(rolesFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(rolesFilter.getAuditLog());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -260,7 +260,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_ROLES, body, accessToken);
+            body = initLogging(API_CALL_ROLES, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, RoleListFilter.class);
             RoleListFilter roleListFilter = Globals.objectMapper.readValue(body, RoleListFilter.class);
 
@@ -308,7 +308,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_ROLE_STORE, body, accessToken);
+            body = initLogging(API_CALL_ROLE_STORE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, RolesFilter.class);
             RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
 
@@ -340,7 +340,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
                 }
             }
 
-            storeAuditLog(roles.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(roles.getAuditLog());
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

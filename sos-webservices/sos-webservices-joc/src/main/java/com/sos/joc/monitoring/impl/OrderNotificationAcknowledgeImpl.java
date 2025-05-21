@@ -30,11 +30,9 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(inBytes, OrderNotificationAcknowledgeFilter.class);
             OrderNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationAcknowledgeFilter.class);
-
-            storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
 
 //            // 1) notification view changes permitted
 //            if (!getJocPermissions_(accessToken).getNotification().getManage()) {
@@ -52,6 +50,8 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
             if (response != null) {
                 return response;
             }
+            
+            storeAuditLog(in.getAuditLog());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);

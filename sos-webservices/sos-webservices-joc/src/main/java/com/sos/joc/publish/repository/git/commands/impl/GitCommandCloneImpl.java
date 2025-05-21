@@ -43,7 +43,7 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** clone started ***" + started);
-            cloneFilter = initLogging(API_CALL, cloneFilter, xAccessToken);
+            cloneFilter = initLogging(API_CALL, cloneFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(cloneFilter, CloneFilter.class);
             CloneFilter filter = Globals.objectMapper.readValue(cloneFilter, CloneFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
@@ -57,7 +57,7 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog());
             String account = null;
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {

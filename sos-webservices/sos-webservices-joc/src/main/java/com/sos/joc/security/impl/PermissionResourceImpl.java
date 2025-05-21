@@ -44,7 +44,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_PERMISSION_READ, body, accessToken);
+            body = initLogging(API_CALL_PERMISSION_READ, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, PermissionFilter.class);
             PermissionFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionFilter.class);
 
@@ -104,7 +104,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         Permissions permissions = null;
         try {
 
-            body = initLogging(API_CALL_PERMISSIONS_STORE, body, accessToken);
+            body = initLogging(API_CALL_PERMISSIONS_STORE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, Permissions.class);
             permissions = Globals.objectMapper.readValue(body, Permissions.class);
             
@@ -165,7 +165,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         } finally {
             Globals.disconnect(sosHibernateSession);
             if (permissions != null) {
-                storeAuditLog(permissions.getAuditLog(), CategoryType.IDENTITY);
+                storeAuditLog(permissions.getAuditLog());
             }
         }
     }
@@ -175,7 +175,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_PERMISSION_RENAME, body, accessToken);
+            body = initLogging(API_CALL_PERMISSION_RENAME, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, PermissionRename.class);
             PermissionRename permissionRename = Globals.objectMapper.readValue(body, PermissionRename.class);
 
@@ -201,7 +201,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
                 throw new JocObjectNotExistException("Couldn't find the permission <" + permissionRename.getOldPermissionPath() + ">");
             }
 
-            storeAuditLog(permissionRename.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(permissionRename.getAuditLog());
 
             Globals.commit(sosHibernateSession);
 
@@ -226,7 +226,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_PERMISSIONS_DELETE, body, accessToken);
+            body = initLogging(API_CALL_PERMISSIONS_DELETE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, PermissionsFilter.class);
             PermissionsFilter permissionsFilter = Globals.objectMapper.readValue(body, PermissionsFilter.class);
 
@@ -259,7 +259,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             }
             Globals.commit(sosHibernateSession);
 
-            storeAuditLog(permissionsFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(permissionsFilter.getAuditLog());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -277,7 +277,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_PERMISSIONS, body, accessToken);
+            body = initLogging(API_CALL_PERMISSIONS, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, PermissionListFilter.class);
             PermissionListFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionListFilter.class);
 

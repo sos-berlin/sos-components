@@ -20,6 +20,7 @@ import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderHistoryItemChildItem;
 import com.sos.joc.model.order.OrderHistoryItemChildren;
@@ -36,7 +37,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
     public JOCDefaultResponse postOrderHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validate(inBytes, OrderHistoryFilter.class);
             OrderHistoryFilter in = Globals.objectMapper.readValue(inBytes, OrderHistoryFilter.class);
             String controllerId = in.getControllerId();

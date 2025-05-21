@@ -274,7 +274,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
 
     protected JOCDefaultResponse postTagsOrGroups(ResponseObject responseObject, String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
         try {
-            initLogging(apiCall, null, accessToken);
+            initLogging(apiCall, null, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -298,7 +298,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     protected JOCDefaultResponse postUsedBy(String apiCall, String accessToken, byte[] filterBytes, ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             JsonValidator.validateFailFast(filterBytes, RequestFolder.class);
             RequestFolder in =  Globals.objectMapper.readValue(filterBytes, RequestFolder.class);
@@ -333,7 +333,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 return jocDefaultResponse;
             }
 
-            storeAuditLog(modifyTags.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(modifyTags.getAuditLog());
             Stream<JOCEvent> events = postTagsModify(responseObject, apiCall, action, modifyTags, dbLayer);
             events.forEach(evt -> EventBus.getInstance().post(evt));
 
@@ -350,7 +350,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
             RequestFilter modifyTag = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
             
@@ -359,7 +359,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(modifyTag.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(modifyTag.getAuditLog());
             
             GroupedTag groupedName = new GroupedTag(modifyTag.getName());
             GroupedTag groupedNewName = new GroupedTag(modifyTag.getNewName());
@@ -494,7 +494,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     }
 
     private RequestFilters initModifyRequest(String apiCall, Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(apiCall + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(apiCall + "/" + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.INVENTORY);
         JsonValidator.validateFailFast(filterBytes, RequestFilters.class);
         return Globals.objectMapper.readValue(filterBytes, RequestFilters.class);
     }

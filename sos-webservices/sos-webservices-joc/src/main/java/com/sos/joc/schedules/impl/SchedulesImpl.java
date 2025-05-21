@@ -21,6 +21,7 @@ import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.schedules.resource.ISchedulesResource;
 import com.sos.schema.JsonValidator;
@@ -37,7 +38,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
     @Override
     public JOCDefaultResponse postSchedules(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(filterBytes, ScheduleSelector.class);
             ScheduleSelector in = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
 

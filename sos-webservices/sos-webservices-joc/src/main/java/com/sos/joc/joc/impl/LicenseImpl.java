@@ -7,6 +7,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.ILicense;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.Js7LicenseInfo;
 import com.sos.joc.model.joc.LicenseType;
 
@@ -18,7 +19,7 @@ public class LicenseImpl extends JOCResourceImpl implements ILicense {
     @Override
     public JOCDefaultResponse postLicense(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken);
+            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

@@ -27,6 +27,7 @@ import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportRunState;
 import com.sos.joc.model.reporting.ReportRunStateText;
@@ -60,7 +61,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, RunHistoryFilter.class);
             RunHistoryFilter in = Globals.objectMapper.readValue(filterBytes, RunHistoryFilter.class);
 

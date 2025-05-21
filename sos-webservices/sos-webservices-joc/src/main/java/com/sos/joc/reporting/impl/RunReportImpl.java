@@ -35,7 +35,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
     public JOCDefaultResponse runReports(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, RunReports.class);
             RunReports in = Globals.objectMapper.readValue(filterBytes, RunReports.class);
             
@@ -47,7 +47,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             
-            storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
+            storeAuditLog(in.getAuditLog());
             
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
             List<String> reportNames = in.getReportPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList());
@@ -84,7 +84,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
                 return runReports(accessToken, filterBytes);
             }
             
-            filterBytes = initLogging(IMPL_SINGLE_RUN_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_SINGLE_RUN_PATH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, Report.class);
             
             

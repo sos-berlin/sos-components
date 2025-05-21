@@ -11,6 +11,7 @@ import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationShowResource;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 
 @Path("documentation")
 public class DocumentationShowResourceImpl extends JOCResourceImpl implements IDocumentationShowResource {
@@ -31,7 +32,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
     private JOCDefaultResponse show(String accessToken, String path) {
         try {
             String request = String.format("%s/%s", API_CALL_SHOW, path.replaceFirst("^/", ""));
-            initLogging(request, null, accessToken);
+            initLogging(request, null, accessToken, CategoryType.DOCUMENTATIONS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

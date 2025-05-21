@@ -53,7 +53,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
     public JOCDefaultResponse postRevoke(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_REVOKE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REVOKE, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
             
@@ -66,7 +66,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             String controllerId = agentDeployParameter.getControllerId();
             List<String> agentIds = agentDeployParameter.getAgentIds();
 
-            storeAuditLog(agentDeployParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentDeployParameter.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
@@ -156,7 +156,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
         SOSHibernateSession connection = null;
         try {
             final String apiCall = disabled ? API_CALL_DISABLE : API_CALL_ENABLE;
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             
             DeployAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
@@ -168,7 +168,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             }
             
             String controllerId = agentParameter.getControllerId();
-            storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentParameter.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);

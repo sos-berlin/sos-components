@@ -11,6 +11,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IAboutResource;
 import com.sos.joc.model.Version;
+import com.sos.joc.model.audit.CategoryType;
 
 @jakarta.ws.rs.Path("")
 public class AboutImpl extends JOCResourceImpl implements IAboutResource {
@@ -41,7 +42,7 @@ public class AboutImpl extends JOCResourceImpl implements IAboutResource {
             mediaType = MediaType.APPLICATION_JSON;
         }
         try {
-            initLogging(apiCall, null);
+            initLogging(apiCall, null, CategoryType.OTHERS);
             return JOCDefaultResponse.responseStatus200(readVersion(mediaType), mediaType);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

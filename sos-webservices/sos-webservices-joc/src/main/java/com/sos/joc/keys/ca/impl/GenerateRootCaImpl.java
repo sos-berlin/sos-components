@@ -33,7 +33,7 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
     public JOCDefaultResponse postGenerateRootCa(String xAccessToken, byte[] generateCAFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            generateCAFilter = initLogging(API_CALL, generateCAFilter, xAccessToken);
+            generateCAFilter = initLogging(API_CALL, generateCAFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(generateCAFilter, GenerateCaFilter.class);
             GenerateCaFilter filter = Globals.objectMapper.readValue(generateCAFilter, GenerateCaFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
@@ -41,7 +41,7 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            storeAuditLog(filter.getAuditLog());
             
             KeyPair keyPair = KeyUtil.createECDSAKeyPair();
             String subjectDN = filter.getDn();

@@ -43,7 +43,7 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** store to repository started ***" + started);
-            copyToFilter = initLogging(API_CALL, copyToFilter, xAccessToken);
+            copyToFilter = initLogging(API_CALL, copyToFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(copyToFilter, CopyToFilter.class);
             CopyToFilter filter = Globals.objectMapper.readValue(copyToFilter, CopyToFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
@@ -57,7 +57,7 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog());
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories");
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();

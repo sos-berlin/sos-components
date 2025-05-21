@@ -12,7 +12,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.inventory.impl.StoreConfigurationResourceImpl;
-import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.Err420;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -78,7 +77,7 @@ public class StandardYADEJobResourceHandler {
         try {
             session = Globals.createSosHibernateStatelessConnection("deploy");
             session.beginTransaction();
-            DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
+            DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog());
             impl.deploy(accessToken, filter, session, dbAuditlog, impl.getAccount(), Globals.getJocSecurityLevel(), ADeploy.API_CALL);
             session.commit();
         } catch (Exception e) {

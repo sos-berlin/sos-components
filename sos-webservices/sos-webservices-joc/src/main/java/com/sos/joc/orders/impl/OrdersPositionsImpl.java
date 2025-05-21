@@ -11,6 +11,7 @@ import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.orders.resource.IOrdersPositions;
@@ -25,7 +26,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
     @Override
     public JOCDefaultResponse resumeOrderPositions(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RESUME, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RESUME, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validate(filterBytes, ModifyOrders.class);
             ModifyOrders ordersFilter = Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
             String controllerId = ordersFilter.getControllerId();
@@ -55,7 +56,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
     @Override
     public JOCDefaultResponse addOrderPositions(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_ADD, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_ADD, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validate(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
             String controllerId = workflowFilter.getControllerId();

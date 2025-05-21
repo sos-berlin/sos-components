@@ -14,6 +14,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.RelativeDatesConverter;
 import com.sos.joc.utilities.resource.IRelativeDateConverterResource;
 import com.sos.schema.JsonValidator;
@@ -27,7 +28,7 @@ public class RelativeDatesConverterImpl extends JOCResourceImpl implements IRela
     public JOCDefaultResponse postConvertRelativeDates(String accessToken, byte[] filterBytes) {
         LOGGER.debug("convert relative dates");
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, RelativeDatesConverter.class);
             RelativeDatesConverter in = Globals.objectMapper.readValue(filterBytes, RelativeDatesConverter.class);
 

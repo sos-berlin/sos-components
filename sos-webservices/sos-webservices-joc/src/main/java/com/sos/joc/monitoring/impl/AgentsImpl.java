@@ -28,6 +28,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.AgentItem;
 import com.sos.joc.model.monitoring.AgentItemEntryItem;
 import com.sos.joc.model.monitoring.AgentItemEntryItemSource;
@@ -50,7 +51,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(inBytes, AgentsFilter.class);
             AgentsFilter in = Globals.objectMapper.readValue(inBytes, AgentsFilter.class);
 

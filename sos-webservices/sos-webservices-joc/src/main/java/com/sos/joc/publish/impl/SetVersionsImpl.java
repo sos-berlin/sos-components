@@ -34,14 +34,14 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
     public JOCDefaultResponse postSetVersion(String xAccessToken, byte[] setVersionsFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            setVersionsFilter = initLogging(API_CALL, setVersionsFilter, xAccessToken);
+            setVersionsFilter = initLogging(API_CALL, setVersionsFilter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validateFailFast(setVersionsFilter, SetVersionsFilter.class);
             SetVersionsFilter filter = Globals.objectMapper.readValue(setVersionsFilter, SetVersionsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
+            storeAuditLog(filter.getAuditLog());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             updateVersions(filter, dbLayer);

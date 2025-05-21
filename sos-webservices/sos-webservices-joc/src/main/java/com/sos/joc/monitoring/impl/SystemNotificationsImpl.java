@@ -18,6 +18,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.SystemNotificationDBItemEntity;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
 import com.sos.joc.model.monitoring.notification.system.SystemNotificationsAnswer;
 import com.sos.joc.model.monitoring.notification.system.SystemNotificationsFilter;
@@ -36,7 +37,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(inBytes, SystemNotificationsFilter.class);
             SystemNotificationsFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationsFilter.class);
 

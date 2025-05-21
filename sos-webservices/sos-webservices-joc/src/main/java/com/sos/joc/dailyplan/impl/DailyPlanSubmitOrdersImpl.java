@@ -64,7 +64,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
     public JOCDefaultResponse postSubmitOrders(String accessToken, byte[] filterBytes) {
         LOGGER.debug("Submit orders to JS7 controller");
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             // validation without required dailyPlanDateFrom 
             JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
@@ -102,7 +102,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
             JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, IOException,
             ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
-        DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
+        DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog());
         setSettings(IMPL_PATH);
         
         DailyPlanSettings settings = new DailyPlanSettings();

@@ -24,6 +24,7 @@ import com.sos.joc.db.inventory.IDBItemTag;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestTag;
@@ -39,7 +40,7 @@ public abstract class AReadTag extends JOCResourceImpl {
     public JOCDefaultResponse readTag(final String action, boolean forTrash, ATagDBLayer<? extends IDBItemTag> dbLayer, final String accessToken,
             byte[] inBytes) {
         try {
-            inBytes = initLogging(action, inBytes, accessToken);
+            inBytes = initLogging(action, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, RequestTag.class);
             RequestTag in = Globals.objectMapper.readValue(inBytes, RequestTag.class);
 

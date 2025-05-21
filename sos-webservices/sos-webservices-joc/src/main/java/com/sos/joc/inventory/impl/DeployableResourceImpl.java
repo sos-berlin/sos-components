@@ -30,6 +30,7 @@ import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.inventory.resource.IDeployableResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import com.sos.joc.model.inventory.deploy.DeployableFilter;
@@ -46,7 +47,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
     public JOCDefaultResponse deployable(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, DeployableFilter.class, true);
             DeployableFilter in = Globals.objectMapper.readValue(inBytes, DeployableFilter.class);
 

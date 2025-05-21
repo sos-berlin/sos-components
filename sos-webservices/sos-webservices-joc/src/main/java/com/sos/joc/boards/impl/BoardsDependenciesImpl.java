@@ -28,6 +28,7 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.BoardsDeps;
 import com.sos.joc.model.board.BoardsPathFilter;
 import com.sos.joc.model.board.DepsPerBoard;
@@ -44,7 +45,7 @@ public class BoardsDependenciesImpl extends JOCResourceImpl implements IBoardsDe
     @Override
     public JOCDefaultResponse postBoardsDeps(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, BoardsPathFilter.class);
             BoardsPathFilter filter = Globals.objectMapper.readValue(filterBytes, BoardsPathFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),

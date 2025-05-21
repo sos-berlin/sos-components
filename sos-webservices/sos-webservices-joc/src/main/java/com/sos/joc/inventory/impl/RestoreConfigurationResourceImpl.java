@@ -6,6 +6,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ARestoreConfiguration;
 import com.sos.joc.inventory.resource.IRestoreConfigurationResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.restore.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -17,7 +18,7 @@ public class RestoreConfigurationResourceImpl extends ARestoreConfiguration impl
     @Override
     public JOCDefaultResponse restore(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 

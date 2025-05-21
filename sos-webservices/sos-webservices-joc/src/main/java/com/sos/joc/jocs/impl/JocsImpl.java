@@ -22,6 +22,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jocs.resource.IJocsResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ComponentStateText;
 import com.sos.joc.model.controller.ConnectionStateText;
@@ -41,7 +42,7 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
     @Override
     public JOCDefaultResponse postJocs(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, CockpitFilter.class);
             CockpitFilter in = Globals.objectMapper.readValue(filterBytes, CockpitFilter.class);
 

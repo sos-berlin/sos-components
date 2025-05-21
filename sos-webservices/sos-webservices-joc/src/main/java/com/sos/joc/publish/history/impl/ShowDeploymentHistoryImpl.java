@@ -18,6 +18,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DepHistory;
@@ -41,7 +42,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
     public JOCDefaultResponse postShowDeploymentHistory(String xAccessToken, byte[] showDepHistoryFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            showDepHistoryFilter = initLogging(API_CALL, showDepHistoryFilter, xAccessToken);
+            showDepHistoryFilter = initLogging(API_CALL, showDepHistoryFilter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validate(showDepHistoryFilter, ShowDepHistoryFilter.class);
             ShowDepHistoryFilter filter = Globals.objectMapper.readValue(showDepHistoryFilter, ShowDepHistoryFilter.class);
             

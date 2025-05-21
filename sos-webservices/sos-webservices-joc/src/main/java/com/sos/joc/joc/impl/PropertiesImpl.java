@@ -17,6 +17,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IPropertiesResource;
 import com.sos.joc.model.Properties;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.LicenseType;
 
 @Path("joc")
@@ -28,7 +29,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
     public JOCDefaultResponse postProperties(String accessToken) {
 
         try {
-            initLogging(API_CALL, null, accessToken);
+            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

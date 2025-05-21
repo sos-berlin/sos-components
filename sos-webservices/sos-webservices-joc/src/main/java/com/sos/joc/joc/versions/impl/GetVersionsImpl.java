@@ -22,6 +22,7 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.versions.resource.IGetVersionsResource;
 import com.sos.joc.joc.versions.util.CheckVersion;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.AgentVersion;
 import com.sos.joc.model.joc.ControllerVersion;
 import com.sos.joc.model.joc.VersionResponse;
@@ -47,7 +48,7 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
     @Override
     public JOCDefaultResponse postGetVersion(String xAccessToken) {
         try {
-            initLogging(API_CALL_VERSION, null, xAccessToken);
+            initLogging(API_CALL_VERSION, null, xAccessToken, CategoryType.OTHERS);
             return JOCDefaultResponse.responseStatus200(Globals.curVersion);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -61,7 +62,7 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
     public JOCDefaultResponse postGetVersions(String xAccessToken, byte[] versionsFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            versionsFilter = initLogging(API_CALL_VERSIONS, versionsFilter, xAccessToken);
+            versionsFilter = initLogging(API_CALL_VERSIONS, versionsFilter, xAccessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(versionsFilter, VersionsFilter.class);
             VersionsFilter filter = Globals.objectMapper.readValue(versionsFilter, VersionsFilter.class);
             Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()

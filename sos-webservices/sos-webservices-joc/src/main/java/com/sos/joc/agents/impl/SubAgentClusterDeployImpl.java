@@ -58,7 +58,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
     public JOCDefaultResponse postDeploy(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             AgentHelper.throwJocMissingLicenseException();
             
@@ -72,7 +72,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentParameter.getAuditLog(), controllerId);
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventorySubagentClustersDBLayer dbLayer = new InventorySubagentClustersDBLayer(connection);

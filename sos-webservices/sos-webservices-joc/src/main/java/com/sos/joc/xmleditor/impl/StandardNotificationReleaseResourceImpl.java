@@ -8,6 +8,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.monitoring.NotificationConfigurationReleased;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.release.ReleaseConfiguration;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
@@ -23,7 +24,7 @@ public class StandardNotificationReleaseResourceImpl extends ACommonResourceImpl
     @Override
     public JOCDefaultResponse release(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, ReleaseConfiguration.class);
             ReleaseConfiguration in = Globals.objectMapper.readValue(filterBytes, ReleaseConfiguration.class);
 

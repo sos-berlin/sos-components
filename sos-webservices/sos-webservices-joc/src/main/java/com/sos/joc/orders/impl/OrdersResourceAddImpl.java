@@ -89,7 +89,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validate(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
             String controllerId = addOrders.getControllerId();
@@ -108,7 +108,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
             }
             
-            DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId);
             
             Set<String> workflows = addOrders.getOrders().stream().map(AddOrder::getWorkflowPath).map(JocInventory::pathToName).collect(Collectors.toSet());
             

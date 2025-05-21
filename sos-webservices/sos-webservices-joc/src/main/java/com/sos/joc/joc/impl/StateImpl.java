@@ -11,6 +11,7 @@ import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IStateResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Ok;
 
 @jakarta.ws.rs.Path("joc")
@@ -21,7 +22,7 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
     @Override
     public JOCDefaultResponse postIsActive(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken);
+            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

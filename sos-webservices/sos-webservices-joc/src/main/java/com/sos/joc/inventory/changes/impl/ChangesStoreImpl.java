@@ -6,6 +6,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.changes.common.AStoreChange;
 import com.sos.joc.inventory.changes.resource.IChangesStore;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.changes.StoreChangeRequest;
 import com.sos.schema.JsonValidator;
 
@@ -21,7 +22,7 @@ public class ChangesStoreImpl extends AStoreChange implements IChangesStore {
     public JOCDefaultResponse postChangesStore(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, StoreChangeRequest.class);
             StoreChangeRequest storeFilter = Globals.objectMapper.readValue(filter, StoreChangeRequest.class);
             

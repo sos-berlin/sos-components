@@ -25,6 +25,7 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.JobScheduler200;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
@@ -53,7 +54,7 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             if (onlyDb) {
                 apiCall += "/p";
             }
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = jobSchedulerBody.getControllerId();

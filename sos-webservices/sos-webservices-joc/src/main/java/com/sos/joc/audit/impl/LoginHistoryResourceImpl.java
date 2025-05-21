@@ -17,6 +17,7 @@ import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamHistoryFilter;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.history.LoginHistory;
 import com.sos.joc.model.security.history.LoginHistoryDetailItem;
 import com.sos.joc.model.security.history.LoginHistoryDetails;
@@ -34,7 +35,7 @@ public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginH
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL, body, accessToken);
+            body = initLogging(API_CALL, body, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(body, LoginHistoryFilter.class);
             LoginHistoryFilter loginHistoryFilter = Globals.objectMapper.readValue(body, LoginHistoryFilter.class);
 

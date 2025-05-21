@@ -47,6 +47,7 @@ import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.exceptions.JocWaitForSecondFactorException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
@@ -272,7 +273,7 @@ public class SOSServicePermissionIam {
             account = currentAccount.getAccountname();
 
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-            JocAuditLog jocAuditLog = new JocAuditLog(account, "./logout");
+            JocAuditLog jocAuditLog = new JocAuditLog(account, "./logout", CategoryType.IDENTITY);
             AuditParams audit = new AuditParams();
             audit.setComment(comment);
             jocAuditLog.logAuditMessage(audit);
@@ -1021,7 +1022,7 @@ public class SOSServicePermissionIam {
             }
 
             LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
-            JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
+            JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login", CategoryType.IDENTITY);
             AuditParams audit = new AuditParams();
 
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {

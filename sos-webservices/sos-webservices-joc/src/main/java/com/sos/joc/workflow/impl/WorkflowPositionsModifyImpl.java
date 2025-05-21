@@ -105,7 +105,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
         SOSHibernateSession connection = null;
         try {
             String controllerId = modifyWorkflow.getControllerId();
-            DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflow.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflow.getAuditLog(), controllerId);
             JControllerState currentState = Proxy.of(controllerId).currentState();
 
             String versionId = modifyWorkflow.getWorkflowId().getVersionId();
@@ -207,7 +207,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
     }
 
     private ModifyWorkflowPositions initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.CONTROLLER);
         JsonValidator.validate(filterBytes, ModifyWorkflowPositions.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflowPositions.class);
     }

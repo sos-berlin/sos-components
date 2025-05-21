@@ -41,6 +41,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IRevalidateResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.validate.Report;
@@ -65,7 +66,7 @@ public class RevalidateResourceImpl extends JOCResourceImpl implements IRevalida
     @Override
     public JOCDefaultResponse revalidate(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 

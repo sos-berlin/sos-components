@@ -15,6 +15,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesTakeOver;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.FavoriteSharedIdentifier;
 import com.sos.joc.model.favorite.FavoriteSharedIdentifiers;
 import com.sos.joc.model.favorite.FavoriteType;
@@ -30,7 +31,7 @@ public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavorites
 
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, FavoriteSharedIdentifiers.class);
             FavoriteSharedIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteSharedIdentifiers.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);

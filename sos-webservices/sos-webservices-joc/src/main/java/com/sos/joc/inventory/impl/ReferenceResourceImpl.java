@@ -20,6 +20,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReferenceResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.references.RequestFilter;
 import com.sos.joc.model.inventory.references.ResponseItems;
@@ -38,7 +39,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
     public JOCDefaultResponse post(final String accessToken, String objectType, byte[] inBytes) {
         try {
             String apiCall = String.format("./%s/%s/%s", JocInventory.APPLICATION_PATH, objectType, "references"); 
-            inBytes = initLogging(apiCall, inBytes, accessToken);
+            inBytes = initLogging(apiCall, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());

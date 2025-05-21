@@ -36,6 +36,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderIdToOrder;
 import com.sos.joc.model.order.OrderStateText;
@@ -74,7 +75,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
     public JOCDefaultResponse postWorkflowBoards(String accessToken, String acceptEncoding, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             String controllerId = filter.getControllerId();

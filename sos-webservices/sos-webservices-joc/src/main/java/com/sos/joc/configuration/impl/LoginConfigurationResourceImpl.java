@@ -16,6 +16,7 @@ import com.sos.joc.classes.common.FilenameSanitizer;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.configuration.resource.ILoginConfigurationResource;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Login;
 import com.sos.joc.model.configuration.LoginLogo;
 import com.sos.joc.model.configuration.LoginLogoPosition;
@@ -35,7 +36,7 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
     @Override
     public JOCDefaultResponse getLoginConfiguration() {
         try {
-            initLogging(API_CALL, null);
+            initLogging(API_CALL, null, CategoryType.SETTINGS);
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
             }

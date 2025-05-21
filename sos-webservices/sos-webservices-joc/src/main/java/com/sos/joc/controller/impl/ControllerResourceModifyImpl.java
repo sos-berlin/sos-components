@@ -33,7 +33,7 @@ import jakarta.ws.rs.Path;
 @Path("controller")
 public class ControllerResourceModifyImpl extends JOCResourceImpl implements IControllerResourceModify {
 
-    private static String API_CALL = "./controller/";
+    private static final String API_CALL = "./controller/";
     private static final String isUrlPattern = "^https?://[^\\s]+$";
     private static final Predicate<String> isUrl = Pattern.compile(isUrlPattern).asPredicate();
 
@@ -106,7 +106,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
     }
 
     private UrlParameter getUrlParameter(byte[] filterBytes, String accessToken, String request) throws Exception {
-        filterBytes = initLogging(API_CALL + request, filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + request, filterBytes, accessToken, CategoryType.CONTROLLER);
         JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
         return Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
     }
@@ -127,7 +127,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         } else {
             urlParameter.setUrl(controllerInstances.get(0).getUri());
         }
-        storeAuditLog(urlParameter.getAuditLog(), urlParameter.getControllerId(), CategoryType.CONTROLLER);
+        storeAuditLog(urlParameter.getAuditLog(), urlParameter.getControllerId());
         
         JOCJsonCommand jocJsonCommand = new JOCJsonCommand(urlParameter.getUrl(), accessToken);
         jocJsonCommand.setUriBuilderForCommands();

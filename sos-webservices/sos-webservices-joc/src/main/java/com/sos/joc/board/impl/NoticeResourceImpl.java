@@ -58,7 +58,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
 
     private JOCDefaultResponse modifyNotice(String accessToken, byte[] filterBytes, Action action) throws Exception {
 
-        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.CONTROLLER);
         JsonValidator.validateFailFast(filterBytes, ModifyNotice.class);
         ModifyNotice filter = Globals.objectMapper.readValue(filterBytes, ModifyNotice.class);
         String controllerId = filter.getControllerId();
@@ -69,7 +69,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
             return response;
         }
 
-        storeAuditLog(filter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+        storeAuditLog(filter.getAuditLog(), controllerId);
 
         JControllerApi controllerApi = ControllerApi.of(controllerId);
         //BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));

@@ -49,7 +49,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_SERVICES_READ, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_READ, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -113,7 +113,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_SERVICES_STORE, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_STORE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityService identityService = Globals.objectMapper.readValue(body, IdentityService.class);
 
@@ -178,7 +178,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             
             Globals.commit(sosHibernateSession);
 
-            storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityService.getAuditLog());
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {
@@ -199,7 +199,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_SERVICES_STORE, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_STORE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, IdentityServiceRename.class);
             IdentityServiceRename identityServiceRename = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
 
@@ -232,7 +232,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             jocConfigurationFilter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
             jocConfigurationDBLayer.rename(jocConfigurationFilter, identityServiceRename.getIdentityServiceNewName());
 
-            storeAuditLog(identityServiceRename.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityServiceRename.getAuditLog());
 
             Globals.commit(sosHibernateSession);
 
@@ -254,7 +254,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
     public JOCDefaultResponse postIdentityServiceDelete(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            body = initLogging(API_CALL_SERVICES_DELETE, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_DELETE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -277,7 +277,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 throw new JocObjectNotExistException("Couldn't find the Identity Service<" + identityServiceFilter.getIdentityServiceName() + ">");
             }
 
-            storeAuditLog(identityServiceFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityServiceFilter.getAuditLog());
 
             filter.setIdentityServiceName(null);
             if (iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0).size() == 0) {
@@ -306,7 +306,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_SERVICES, body, accessToken);
+            body = initLogging(API_CALL_SERVICES, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -380,7 +380,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_SERVICES_REORDER, body, accessToken);
+            body = initLogging(API_CALL_SERVICES_REORDER, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, IdentityServicesFilter.class);
             IdentityServicesFilter identityServices = Globals.objectMapper.readValue(body, IdentityServicesFilter.class);
 
@@ -408,7 +408,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 }
             }
 
-            storeAuditLog(identityServices.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(identityServices.getAuditLog());
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

@@ -9,6 +9,7 @@ import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.rename.RenameConfiguration;
 import com.sos.joc.model.xmleditor.rename.RenameConfigurationAnswer;
@@ -25,7 +26,7 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, RenameConfiguration.class);
             RenameConfiguration in = Globals.objectMapper.readValue(filterBytes, RenameConfiguration.class);
 

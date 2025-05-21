@@ -30,17 +30,17 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(inBytes, SystemNotificationAcknowledgeFilter.class);
             SystemNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationAcknowledgeFilter.class);
-
-            storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
 
             // 1) notification view changes permitted
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getNotification().getManage()));
             if (response != null) {
                 return response;
             }
+
+            storeAuditLog(in.getAuditLog());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);

@@ -26,6 +26,7 @@ import com.sos.joc.model.agent.AgentTaskOrder;
 import com.sos.joc.model.agent.AgentTasks;
 import com.sos.joc.model.agent.AgentsTasks;
 import com.sos.joc.model.agent.ReadAgentsV;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.Order;
@@ -46,7 +47,7 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
     public JOCDefaultResponse getTasks(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ReadAgentsV.class);
             ReadAgentsV agentsParam = Globals.objectMapper.readValue(filterBytes, ReadAgentsV.class);
             String controllerId = agentsParam.getControllerId();

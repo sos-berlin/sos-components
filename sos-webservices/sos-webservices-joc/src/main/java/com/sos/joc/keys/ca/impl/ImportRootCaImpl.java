@@ -57,14 +57,14 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken);
+            initLogging(API_CALL, null, xAccessToken, CategoryType.CERTIFICATES);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
                     .getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(auditLog, CategoryType.CERTIFICATES);
+            storeAuditLog(auditLog);
             
             stream = body.getEntityAs(InputStream.class);
             JocKeyPair keyPair = new JocKeyPair();

@@ -70,7 +70,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     public JOCDefaultResponse registerController(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_REGISTER, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REGISTER, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             if (!StateImpl.isActive(API_CALL_REGISTER, null)) {
                 throw new JocServiceException("Registering the Controllers is possible only in the active JOC node.");
@@ -145,7 +145,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(body.getAuditLog(), controllerId);
 
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             List<DBItemInventoryJSInstance> instances = new ArrayList<>();
@@ -281,7 +281,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     public JOCDefaultResponse unregisterController(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             if (!StateImpl.isActive(API_CALL_DELETE, null)) {
                 throw new JocServiceException("Deregistering the Controllers is possible only in the active JOC node.");
@@ -297,7 +297,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
 
             String controllerId = controllerObj.getControllerId();
-            storeAuditLog(controllerObj.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(controllerObj.getAuditLog(), controllerId);
             
             for (ProxyUser user : ProxyUser.values()) {
                 Proxy.close(controllerId, user);
@@ -346,7 +346,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     @Override
     public JOCDefaultResponse testControllerConnection(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_TEST, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_TEST, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, TestConnect.class);
             TestConnect jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, TestConnect.class);
             

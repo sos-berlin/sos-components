@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesDelete;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.FavoriteIdentifiers;
 import com.sos.schema.JsonValidator;
 
@@ -25,7 +26,7 @@ public class FavoritesDeleteImpl extends JOCResourceImpl implements IFavoritesDe
 
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, FavoriteIdentifiers.class);
             FavoriteIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteIdentifiers.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);

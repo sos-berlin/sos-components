@@ -24,6 +24,7 @@ import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.ISearchResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
@@ -38,7 +39,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
     @Override
     public JOCDefaultResponse postSearch(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, RequestSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestSearchFilter.class);
 

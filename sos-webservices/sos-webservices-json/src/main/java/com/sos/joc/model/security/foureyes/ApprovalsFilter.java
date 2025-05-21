@@ -23,42 +23,25 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "requestors",
     "approvers",
     "requestorStates",
-    "approverStates"
+    "approverStates",
+    "limit"
 })
 public class ApprovalsFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestors")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> requestors = new LinkedHashSet<String>();
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("approvers")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> approvers = new LinkedHashSet<String>();
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestorStates")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<RequestorState> requestorStates = new LinkedHashSet<RequestorState>();
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("approverStates")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ApproverState> approverStates = new LinkedHashSet<ApproverState>();
+    @JsonProperty("limit")
+    private Integer limit = 10000;
 
     /**
      * No args constructor for use in serialization
@@ -72,104 +55,76 @@ public class ApprovalsFilter {
      * @param requestorStates
      * @param requestors
      * @param approverStates
+     * @param limit
      * @param approvers
      */
-    public ApprovalsFilter(Set<String> requestors, Set<String> approvers, Set<RequestorState> requestorStates, Set<ApproverState> approverStates) {
+    public ApprovalsFilter(Set<String> requestors, Set<String> approvers, Set<RequestorState> requestorStates, Set<ApproverState> approverStates, Integer limit) {
         super();
         this.requestors = requestors;
         this.approvers = approvers;
         this.requestorStates = requestorStates;
         this.approverStates = approverStates;
+        this.limit = limit;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestors")
     public Set<String> getRequestors() {
         return requestors;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestors")
     public void setRequestors(Set<String> requestors) {
         this.requestors = requestors;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("approvers")
     public Set<String> getApprovers() {
         return approvers;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("approvers")
     public void setApprovers(Set<String> approvers) {
         this.approvers = approvers;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestorStates")
     public Set<RequestorState> getRequestorStates() {
         return requestorStates;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("requestorStates")
     public void setRequestorStates(Set<RequestorState> requestorStates) {
         this.requestorStates = requestorStates;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("approverStates")
     public Set<ApproverState> getApproverStates() {
         return approverStates;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("approverStates")
     public void setApproverStates(Set<ApproverState> approverStates) {
         this.approverStates = approverStates;
     }
 
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("requestors", requestors).append("approvers", approvers).append("requestorStates", requestorStates).append("approverStates", approverStates).toString();
+        return new ToStringBuilder(this).append("requestors", requestors).append("approvers", approvers).append("requestorStates", requestorStates).append("approverStates", approverStates).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(approverStates).append(approvers).append(requestorStates).append(requestors).toHashCode();
+        return new HashCodeBuilder().append(approverStates).append(limit).append(approvers).append(requestorStates).append(requestors).toHashCode();
     }
 
     @Override
@@ -181,7 +136,7 @@ public class ApprovalsFilter {
             return false;
         }
         ApprovalsFilter rhs = ((ApprovalsFilter) other);
-        return new EqualsBuilder().append(approverStates, rhs.approverStates).append(approvers, rhs.approvers).append(requestorStates, rhs.requestorStates).append(requestors, rhs.requestors).isEquals();
+        return new EqualsBuilder().append(approverStates, rhs.approverStates).append(limit, rhs.limit).append(approvers, rhs.approvers).append(requestorStates, rhs.requestorStates).append(requestors, rhs.requestors).isEquals();
     }
 
 }

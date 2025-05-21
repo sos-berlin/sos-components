@@ -14,6 +14,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.controller.resource.IControllerResourceSwitch;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.schema.JsonValidator;
 
@@ -27,7 +28,7 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
     public JOCDefaultResponse postJobschedulerSwitch(String accessToken, byte[] filterBytes) {
 
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();

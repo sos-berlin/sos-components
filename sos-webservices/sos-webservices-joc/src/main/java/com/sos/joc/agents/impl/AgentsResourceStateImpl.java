@@ -53,6 +53,7 @@ import com.sos.joc.model.agent.AgentsVFlat;
 import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.agent.SubagentV;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
 import com.sos.schema.JsonValidator;
@@ -139,7 +140,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     public JOCDefaultResponse getState(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ReadAgentsV.class);
             ReadAgentsV agentsParam = Globals.objectMapper.readValue(filterBytes, ReadAgentsV.class);
             String controllerId = agentsParam.getControllerId();

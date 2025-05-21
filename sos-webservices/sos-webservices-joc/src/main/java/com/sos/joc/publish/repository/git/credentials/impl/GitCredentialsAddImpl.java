@@ -64,7 +64,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
                }
             }
             byte[] filterForLog = Globals.objectMapper.writeValueAsBytes(filterForLogging);
-            initLogging(API_CALL, filterForLog, addCredentialsFilter, xAccessToken);
+            initLogging(API_CALL, filterForLog, addCredentialsFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(addCredentialsFilter, AddCredentialsFilter.class);
             AddCredentialsFilter filter = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
@@ -72,7 +72,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
                 return jocDefaultResponse;
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog());
             String account = null;
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {

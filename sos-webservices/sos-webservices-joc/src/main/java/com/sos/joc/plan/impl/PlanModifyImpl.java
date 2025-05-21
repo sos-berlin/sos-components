@@ -14,6 +14,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.plan.PlansModifyFilter;
 import com.sos.joc.plan.resource.IPlanModify;
 import com.sos.schema.JsonValidator;
@@ -56,7 +57,7 @@ public class PlanModifyImpl extends JOCResourceImpl implements IPlanModify {
     
     private JOCDefaultResponse modifyPlan(Action action, String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, PlansModifyFilter.class);
             PlansModifyFilter filter = Globals.objectMapper.readValue(filterBytes, PlansModifyFilter.class);
             String controllerId = filter.getControllerId();

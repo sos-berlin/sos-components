@@ -31,6 +31,7 @@ import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.ClusterAgents;
 import com.sos.joc.model.agent.ReadAgents;
 import com.sos.joc.model.agent.SubAgent;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -46,7 +47,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
     public JOCDefaultResponse postCluster(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             JsonValidator.validateFailFast(filterBytes, ReadAgents.class);
             ReadAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ReadAgents.class);

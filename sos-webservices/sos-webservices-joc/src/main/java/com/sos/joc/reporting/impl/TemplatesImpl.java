@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.reporting.Template;
 import com.sos.joc.model.reporting.Templates;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
@@ -26,7 +27,7 @@ public class TemplatesImpl extends JOCResourceImpl implements ITemplatesResource
     @Override
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             JocPermissions permission = getBasicJocPermissions(accessToken);
             JOCDefaultResponse response = initPermissions(null, permission.getReports().getView() || permission.getInventory().getView());

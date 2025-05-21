@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.db.yade.JocDBLayerYade;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.joc.model.yade.TransferFiles;
 import com.sos.joc.yade.common.TransferFileUtils;
@@ -29,7 +30,7 @@ public class YADEFilesResourceImpl extends JOCResourceImpl implements IYADEFiles
     public JOCDefaultResponse postYADEFiles(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(inBytes, FilesFilter.class);
             FilesFilter in = Globals.objectMapper.readValue(inBytes, FilesFilter.class);
 

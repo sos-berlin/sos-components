@@ -51,7 +51,7 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
     public JOCDefaultResponse assignTags(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL_STORE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_STORE, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, GroupTagsFilter.class);
             GroupTagsFilter modifyTags = Globals.objectMapper.readValue(filterBytes, GroupTagsFilter.class);
             
@@ -60,7 +60,7 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(modifyTags.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(modifyTags.getAuditLog());
             if (modifyTags.getTags() == null) {
                 modifyTags.setTags(Collections.emptySet()); 
             }

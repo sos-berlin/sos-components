@@ -118,7 +118,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     @Override
     public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validate(filterBytes, DailyPlanModifyOrder.class);
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
@@ -152,8 +152,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             orderIds.putIfAbsent(Boolean.FALSE, Collections.emptySet());
             orderIds.putIfAbsent(Boolean.TRUE, Collections.emptySet());
 
-            CategoryType category = orderIds.get(Boolean.FALSE).isEmpty() ? CategoryType.CONTROLLER : CategoryType.DAILYPLAN;
-            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId(), category);
+            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
 
             List<DBItemDailyPlanOrder> dailyPlanOrderItems = null;
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {

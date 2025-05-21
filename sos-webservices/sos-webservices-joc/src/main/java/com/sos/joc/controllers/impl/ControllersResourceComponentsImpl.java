@@ -32,6 +32,7 @@ import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ClusterNodeStateText;
 import com.sos.joc.model.controller.ClusterState;
@@ -59,7 +60,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         SOSHibernateSession connection = null;
 
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controllerIdObj.getControllerId();

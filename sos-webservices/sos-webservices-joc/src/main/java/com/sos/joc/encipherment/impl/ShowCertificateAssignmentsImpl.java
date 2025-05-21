@@ -13,6 +13,7 @@ import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IShowCertificateAssgnments;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.AgentAssignments;
 import com.sos.joc.model.encipherment.ShowAgentAssignmentsRequestFilter;
 import com.sos.joc.model.encipherment.ShowAgentAssignmentsResponse;
@@ -27,7 +28,7 @@ public class ShowCertificateAssignmentsImpl extends JOCResourceImpl implements I
     public JOCDefaultResponse postShowCertificateAssignment(String xAccessToken, byte[] showAssignmentFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            showAssignmentFilter = initLogging(API_CALL, showAssignmentFilter, xAccessToken);
+            showAssignmentFilter = initLogging(API_CALL, showAssignmentFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validate(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
             ShowAgentAssignmentsRequestFilter filter = Globals.objectMapper.readValue(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()

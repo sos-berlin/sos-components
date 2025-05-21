@@ -17,6 +17,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadAddOrderPositions;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.read.RequestWorkflowFilter;
 import com.sos.joc.model.order.OrdersPositions;
@@ -30,7 +31,7 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
     @Override
     public JOCDefaultResponse read(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, RequestWorkflowFilter.class);
             RequestWorkflowFilter in = Globals.objectMapper.readValue(inBytes, RequestWorkflowFilter.class);
 

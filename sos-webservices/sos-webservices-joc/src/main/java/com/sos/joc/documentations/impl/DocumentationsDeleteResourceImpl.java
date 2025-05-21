@@ -37,7 +37,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.DOCUMENTATIONS);
             JsonValidator.validate(filterBytes, DocumentationsDeleteFilter.class);
             DocumentationsDeleteFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsDeleteFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));
@@ -45,7 +45,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
                 return jocDefaultResponse;
             }
 
-            DBItemJocAuditLog dbAuditItem = storeAuditLog(documentationsFilter.getAuditLog(), CategoryType.DOCUMENTATIONS);
+            DBItemJocAuditLog dbAuditItem = storeAuditLog(documentationsFilter.getAuditLog());
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);

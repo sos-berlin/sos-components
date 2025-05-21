@@ -49,12 +49,12 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     @Override
     public JOCDefaultResponse runService(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RUN, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RUN, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterServiceRun.class);
             ClusterServiceRun in = Globals.objectMapper.readValue(filterBytes, ClusterServiceRun.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
             if (response == null) {
-                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
+                storeAuditLog(in.getAuditLog());
                 response = processAnswer(in.getType(), JocClusterService.getInstance().runServiceNow(in, StartupMode.run_now));
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -70,12 +70,12 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     @Override
     public JOCDefaultResponse restart(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RESTART, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RESTART, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterRestart.class);
             ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
             if (response == null) {
-                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
+                storeAuditLog(in.getAuditLog());
                 if (in.getType().equals(ClusterServices.cluster)) { // all services
                     response = processAnswer(in.getType(), JocClusterService.getInstance().restart(StartupMode.manual_restart));
                     // proxy restart in addition
@@ -97,12 +97,12 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     @Override
     public JOCDefaultResponse switchMember(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_SWITCH, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_SWITCH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
             if (response == null) {
-                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
+                storeAuditLog(in.getAuditLog());
                 response = processAnswer(ClusterServices.cluster, JocClusterService.getInstance().switchMember(StartupMode.manual_switchover, in
                         .getMemberId()));
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -120,12 +120,12 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     public JOCDefaultResponse deleteMember(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
             if (response == null) {
-                storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
+                storeAuditLog(in.getAuditLog());
                 session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
 
                 JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(session);

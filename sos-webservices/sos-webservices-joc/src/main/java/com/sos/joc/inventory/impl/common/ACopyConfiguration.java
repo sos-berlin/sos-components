@@ -414,8 +414,8 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                     }
                 }
                 
-                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(oldPath,
-                        config.getType())));
+                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(
+                        new AuditLogDetail(oldPath, config.getType())));
                 DBItemInventoryConfiguration newDbItem = createItem(config, p);
                 //createAuditLog(newDbItem, in.getAuditLog());
                 newDbItem.setAuditLogId(dbAuditLog.getId());

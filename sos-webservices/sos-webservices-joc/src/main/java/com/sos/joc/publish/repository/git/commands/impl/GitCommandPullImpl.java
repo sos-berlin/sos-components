@@ -43,7 +43,7 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** pull started ***" + started);
-            commonFilter = initLogging(API_CALL, commonFilter, xAccessToken);
+            commonFilter = initLogging(API_CALL, commonFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(commonFilter, CommonFilter.class);
             CommonFilter filter = Globals.objectMapper.readValue(commonFilter, CommonFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
@@ -57,7 +57,7 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog());
             String account = null;
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {

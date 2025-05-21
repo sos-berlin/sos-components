@@ -15,6 +15,7 @@ import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.monitoring.NotificationConfigurationRemoved;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.DeleteConfiguration;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
@@ -35,7 +36,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
             RemoveConfiguration in = Globals.objectMapper.readValue(filterBytes, RemoveConfiguration.class);
 

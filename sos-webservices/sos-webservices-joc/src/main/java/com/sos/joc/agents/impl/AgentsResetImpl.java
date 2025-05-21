@@ -36,7 +36,7 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
     @Override
     public JOCDefaultResponse reset(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             ResetAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ResetAgents.class);
             
@@ -49,7 +49,7 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
             }
 
             JControllerApi api = ControllerApi.of(controllerId);
-            storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(agentParameter.getAuditLog(), controllerId);
             // TODO Batch command 
 //            getResetCommands(agentParameter.getAgentIds(), agentParameter.getForce() == Boolean.TRUE).forEach(c -> {
 //                LOGGER.debug("Reset Agent: " + c.toJson());

@@ -25,6 +25,7 @@ import com.sos.joc.db.yade.JocYadeFilter;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
@@ -54,7 +55,7 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
     public JOCDefaultResponse postYADETransfer(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH_TRANSFER, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_TRANSFER, inBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(inBytes, TransferId.class);
             TransferId in = Globals.objectMapper.readValue(inBytes, TransferId.class);
 
@@ -98,7 +99,7 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
     public JOCDefaultResponse postYADETransfers(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH_TRANSFERS, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_TRANSFERS, inBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 

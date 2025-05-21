@@ -242,9 +242,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
-        CategoryType category = CategoryType.CONTROLLER;
         String controllerId = modifyOrders.getControllerId();
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, category);
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId);
         ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
         Set<String> orders = modifyOrders.getOrderIds();
@@ -339,7 +338,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public void postResumeOrders(ModifyOrders modifyOrders, boolean hasOnlyResumeFailedPermission) throws Exception {
 
         String controllerId = modifyOrders.getControllerId();
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId);
 
         JControllerState currentState = Proxy.of(controllerId).currentState();
         Instant surveyInstant = currentState.instant();
@@ -1008,7 +1007,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private ModifyOrders initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.CONTROLLER);
         JsonValidator.validate(filterBytes, ModifyOrders.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
     }

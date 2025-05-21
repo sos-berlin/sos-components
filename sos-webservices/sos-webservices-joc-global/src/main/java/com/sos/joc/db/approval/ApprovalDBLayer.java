@@ -89,6 +89,9 @@ public class ApprovalDBLayer extends DBLayer {
             
             Query<DBItemJocApprovalRequest> query = getSession().createQuery(hql);
             if (filter != null) {
+                if (filter.getLimit() > 0) {
+                    query.setMaxResults(filter.getLimit());
+                }
                 if (filter.getApprovers() != null && !filter.getApprovers().isEmpty()) {
                     if (filter.getApprovers().size() == 1) {
                         query.setParameter("approver", filter.getApprovers().iterator().next());

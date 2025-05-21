@@ -65,7 +65,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_IDENTITY_PROVIDERS, null);
+            initLogging(API_CALL_IDENTITY_PROVIDERS, null, CategoryType.IDENTITY);
 
             IdentityProviders identityProviders = new IdentityProviders();
 
@@ -214,7 +214,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_IDENTITY_CLIENTS, body);
+            body = initLogging(API_CALL_IDENTITY_CLIENTS, body, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
@@ -289,7 +289,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         InputStream stream = null;
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_IMPORT_ICON, null, xAccessToken);
+            initLogging(API_CALL_IMPORT_ICON, null, xAccessToken, CategoryType.IDENTITY);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(xAccessToken);
             if (jocDefaultResponse != null) {
@@ -326,7 +326,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             Optional<String> supportedSubType = SOSAuthHelper.SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
 
             if (supportedSubType.isPresent()) {
-                DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.IDENTITY, sosHibernateSession);
+                DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, sosHibernateSession);
                 DocumentationsImportResourceImpl.postImportDocumentations(DocumentationDBLayer.SOS_IMAGES_FOLDER, identityServiceName, file,
                         new DocumentationDBLayer(sosHibernateSession), dbAudit);
             } else {
@@ -358,7 +358,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 identityServiceName = "";
             }
             String request = String.format("%s/%s", API_CALL_GET_ICON, identityServiceName);
-            initLogging(request, null);
+            initLogging(request, null, CategoryType.IDENTITY);
 
             checkRequiredParameter("identityServiceName", identityServiceName);
             return DocumentationResourceImpl.postDocumentation(DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + identityServiceName);

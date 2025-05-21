@@ -6,6 +6,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.AStoreConfiguration;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
@@ -18,7 +19,7 @@ public class StoreConfigurationResourceImpl extends AStoreConfiguration implemen
     @Override
     public JOCDefaultResponse store(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, ConfigurationObject.class, true);
             ConfigurationObject in = Globals.objectMapper.readValue(inBytes, ConfigurationObject.class);
 

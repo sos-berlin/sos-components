@@ -50,7 +50,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** update from repository started ***" + started);
-            updateFromFilter = initLogging(API_CALL, updateFromFilter, xAccessToken);
+            updateFromFilter = initLogging(API_CALL, updateFromFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(updateFromFilter, UpdateFromFilter.class);
             UpdateFromFilter filter = Globals.objectMapper.readValue(updateFromFilter, UpdateFromFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
@@ -63,7 +63,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                 throw new JocConcurrentAccessException(GitCommandUtils.CONCURRENT_ACCESS_MESSAGE);
             }
             
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(filter.getAuditLog());
 
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories");
             

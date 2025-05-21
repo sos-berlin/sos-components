@@ -17,6 +17,7 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.controller.resource.IControllerResourceIds;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.ControllerIds;
 
 @Path("controller")
@@ -29,7 +30,7 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
         SOSHibernateSession connection = null;
 
         try {
-            initLogging(API_CALL, null, accessToken);
+            initLogging(API_CALL, null, accessToken, CategoryType.CONTROLLER);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

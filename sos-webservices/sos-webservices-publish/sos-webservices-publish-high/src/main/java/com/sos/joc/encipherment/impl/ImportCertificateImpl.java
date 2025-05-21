@@ -52,7 +52,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         SOSHibernateSession hibernateSession = null;
         InputStream stream = null;
         try {
-            initLogging(API_CALL, filter.toString().getBytes(), xAccessToken);
+            initLogging(API_CALL, filter.toString().getBytes(), xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ImportCertificateRequestFilter.class);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
@@ -61,7 +61,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
                 return jocDefaultResponse;
             }
             
-            DBItemJocAuditLog auditLog = storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            DBItemJocAuditLog auditLog = storeAuditLog(filter.getAuditLog());
             
             stream = body.getEntityAs(InputStream.class);
             String certificateFromFile = PublishUtils.readFileContent(stream);

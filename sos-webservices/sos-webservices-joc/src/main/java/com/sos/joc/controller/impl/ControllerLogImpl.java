@@ -17,6 +17,7 @@ import com.sos.joc.controller.resource.IControllerLogResource;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
@@ -32,7 +33,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
     @Override
     public JOCDefaultResponse getDebugLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(LOG_API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(LOG_API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 

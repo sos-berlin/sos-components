@@ -18,6 +18,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IValidateNameResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -27,7 +28,7 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
     @Override
     public JOCDefaultResponse check(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             

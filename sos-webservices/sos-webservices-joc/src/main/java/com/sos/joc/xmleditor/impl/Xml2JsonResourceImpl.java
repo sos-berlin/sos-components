@@ -3,6 +3,7 @@ package com.sos.joc.xmleditor.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfiguration;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfigurationAnswer;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
@@ -20,7 +21,7 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, Xml2JsonConfiguration.class);
             Xml2JsonConfiguration in = Globals.objectMapper.readValue(filterBytes, Xml2JsonConfiguration.class);
 

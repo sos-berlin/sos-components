@@ -10,6 +10,7 @@ import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidateResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.Validate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
@@ -24,7 +25,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     public JOCDefaultResponse validate(final String accessToken, String objectType, byte[] inBytes) {
         try {
             String apiCall = String.format("./%s/%s/validate", JocInventory.APPLICATION_PATH, objectType);
-            inBytes = initLogging(apiCall, inBytes, accessToken);
+            inBytes = initLogging(apiCall, inBytes, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response != null) {
                 return response;

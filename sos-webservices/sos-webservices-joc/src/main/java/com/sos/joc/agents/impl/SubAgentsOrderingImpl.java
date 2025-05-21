@@ -13,6 +13,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.OrderingSubagents;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 @Path("agents")
@@ -24,7 +25,7 @@ public class SubAgentsOrderingImpl extends JOCResourceImpl implements ISubAgents
     public JOCDefaultResponse ordering(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
 
             // AgentHelper.throwJocMissingLicenseException();
 

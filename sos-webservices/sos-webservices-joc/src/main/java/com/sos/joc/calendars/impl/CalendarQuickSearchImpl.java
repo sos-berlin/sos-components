@@ -8,6 +8,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IQuickSearchResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.search.RequestQuickSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseQuickSearch;
@@ -23,7 +24,7 @@ public class CalendarQuickSearchImpl extends JOCResourceImpl implements IQuickSe
     @Override
     public JOCDefaultResponse postSearch(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
             RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
 

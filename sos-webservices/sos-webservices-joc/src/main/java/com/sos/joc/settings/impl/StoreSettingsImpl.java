@@ -45,7 +45,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
     public JOCDefaultResponse postStoreSettings(String accessToken, byte[] storeSettingsFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            storeSettingsFilter = initLogging(API_CALL, storeSettingsFilter, accessToken);
+            storeSettingsFilter = initLogging(API_CALL, storeSettingsFilter, accessToken, CategoryType.SETTINGS);
             JsonValidator.validate(storeSettingsFilter, StoreSettingsFilter.class);
             StoreSettingsFilter filter = Globals.objectMapper.readValue(storeSettingsFilter, StoreSettingsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
@@ -54,7 +54,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             }
             boolean settingsPermission = getBasicJocPermissions(accessToken).getAdministration().getSettings().getManage();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            storeAuditLog(filter.getAuditLog(), CategoryType.SETTINGS);
+            storeAuditLog(filter.getAuditLog());
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(hibernateSession);
             DBItemJocConfiguration cfg = new DBItemJocConfiguration();
             cfg.setAccount(ConfigurationGlobals.ACCOUNT);

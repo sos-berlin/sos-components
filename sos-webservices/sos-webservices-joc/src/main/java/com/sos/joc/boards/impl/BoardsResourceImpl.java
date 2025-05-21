@@ -33,6 +33,7 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.Boards;
 import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
@@ -59,7 +60,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
     @Override
     public JOCDefaultResponse postBoards(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, BoardsFilter.class);
             BoardsFilter filter = Globals.objectMapper.readValue(filterBytes, BoardsFilter.class);
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),

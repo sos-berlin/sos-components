@@ -42,7 +42,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
     private JOCDefaultResponse storeOrAdd(String action, String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken, CategoryType.CONTROLLER);
             
             AgentHelper.throwJocMissingLicenseException();
             
@@ -55,7 +55,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                 return jocDefaultResponse;
             }
 
-            storeAuditLog(agentStoreParameter.getAuditLog(), CategoryType.CONTROLLER);
+            storeAuditLog(agentStoreParameter.getAuditLog());
 
             connection = Globals.createSosHibernateStatelessConnection(action);
             connection.setAutoCommit(false);

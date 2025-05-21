@@ -25,6 +25,7 @@ import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.publish.repository.ReadFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
@@ -47,7 +48,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** read from repository started ***" + started);
-            readFromFilter = initLogging(API_CALL, readFromFilter, xAccessToken);
+            readFromFilter = initLogging(API_CALL, readFromFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(readFromFilter, ReadFromFilter.class);
             ReadFromFilter filter = Globals.objectMapper.readValue(readFromFilter, ReadFromFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));

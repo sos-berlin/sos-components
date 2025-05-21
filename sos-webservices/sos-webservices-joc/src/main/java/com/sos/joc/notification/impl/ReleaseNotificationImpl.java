@@ -31,7 +31,7 @@ public class ReleaseNotificationImpl extends JOCResourceImpl implements IRelease
     @Override
     public JOCDefaultResponse postReleaseNotification(String xAccessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(API_CALL, inBytes, xAccessToken);
+            inBytes = initLogging(API_CALL, inBytes, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(inBytes, ReleaseNotificationFilter.class);
             ReleaseConfiguration in = Globals.objectMapper.readValue(inBytes, ReleaseConfiguration.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getNotification().getManage()));
@@ -39,7 +39,7 @@ public class ReleaseNotificationImpl extends JOCResourceImpl implements IRelease
                 return jocDefaultResponse;
             }
 
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(in.getAuditLog());
             in.setObjectType(ObjectType.NOTIFICATION);
 
             // step 0 - use existing configuration if it is not set in the request

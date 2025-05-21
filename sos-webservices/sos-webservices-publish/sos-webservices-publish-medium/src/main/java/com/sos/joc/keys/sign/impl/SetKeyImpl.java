@@ -32,7 +32,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
     public JOCDefaultResponse postSetKey(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, SetKeyFilter.class);
             SetKeyFilter setKeyFilter = Globals.objectMapper.readValue(filter, SetKeyFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
@@ -41,7 +41,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(setKeyFilter.getAuditLog(), CategoryType.CERTIFICATES);
+            storeAuditLog(setKeyFilter.getAuditLog());
             
             JocKeyPair keyPair = setKeyFilter.getKeys();
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();

@@ -29,6 +29,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IUpdateWorkflowsFromTemplates;
 import com.sos.joc.jobtemplates.impl.JobTemplatesResourceImpl;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolder;
@@ -46,7 +47,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
     @Override
     public JOCDefaultResponse update(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, WorkflowPropagateFilter.class);
             WorkflowPropagateFilter in = Globals.objectMapper.readValue(inBytes, WorkflowPropagateFilter.class);
 

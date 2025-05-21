@@ -12,6 +12,7 @@ import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.approval.DeleteApproverFilter;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -25,7 +26,7 @@ public class DeleteApproverImpl extends JOCResourceImpl implements IDeleteApprov
     public JOCDefaultResponse postDelete(String xAccessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(filterBytes, DeleteApproverFilter.class);
             DeleteApproverFilter filter = Globals.objectMapper.readValue(filterBytes, DeleteApproverFilter.class);
             JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);

@@ -43,7 +43,7 @@ public class GitCommandCheckoutImpl extends JOCResourceImpl implements IGitComma
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** checkout started ***" + started);
-            checkoutFilter = initLogging(API_CALL, checkoutFilter, xAccessToken);
+            checkoutFilter = initLogging(API_CALL, checkoutFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(checkoutFilter, CheckoutFilter.class);
             CheckoutFilter filter = Globals.objectMapper.readValue(checkoutFilter, CheckoutFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
@@ -58,7 +58,7 @@ public class GitCommandCheckoutImpl extends JOCResourceImpl implements IGitComma
             
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog());
             String account = null;
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {

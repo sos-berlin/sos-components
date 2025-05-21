@@ -90,7 +90,6 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.IsReferencedBy;
@@ -637,7 +636,7 @@ public class JocInventory {
             }
         }
         if (auditLog != null) {
-            DBItemJocAuditLog auditItem = auditLog.storeAuditLogEntry(auditParams, CategoryType.INVENTORY.intValue());
+            DBItemJocAuditLog auditItem = auditLog.storeAuditLogEntry(auditParams);
             auditLog.logAuditMessage(auditParams, auditItem.getId());
             if (details != null) {
                 JocAuditLog.storeAuditLogDetails(details, auditItem.getId(), auditItem.getCreated());

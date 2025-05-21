@@ -24,6 +24,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.NotificationDBItemEntity;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
 import com.sos.joc.model.monitoring.notification.order.OrderNotificationsAnswer;
@@ -43,7 +44,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(inBytes, OrderNotificationsFilter.class);
             OrderNotificationsFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationsFilter.class);
 

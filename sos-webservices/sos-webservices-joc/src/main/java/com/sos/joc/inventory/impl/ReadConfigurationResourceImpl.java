@@ -6,6 +6,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.AReadConfiguration;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.read.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -18,7 +19,7 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
     public JOCDefaultResponse read(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
@@ -40,7 +41,7 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
     public JOCDefaultResponse readTrash(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 

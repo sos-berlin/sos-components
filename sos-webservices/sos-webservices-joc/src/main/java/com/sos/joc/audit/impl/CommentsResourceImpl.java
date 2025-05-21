@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.Comments;
 
 @Path("audit_log")
@@ -27,7 +28,7 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
     public JOCDefaultResponse postComments(String accessToken) throws Exception {
         
         try {
-            initLogging(API_CALL, null, accessToken);
+            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
             
             ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
             Comments entity = new Comments();

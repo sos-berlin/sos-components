@@ -61,7 +61,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     public JOCDefaultResponse delete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_REMOVE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REMOVE, filterBytes, accessToken, CategoryType.CONTROLLER);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -74,7 +74,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             String controllerId = subAgentCommand.getControllerId();
 
-            storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(subAgentCommand.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REMOVE);
             connection.setAutoCommit(false);
@@ -150,7 +150,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     public JOCDefaultResponse revoke(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL_REVOKE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_REVOKE, filterBytes, accessToken, CategoryType.CONTROLLER);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -163,7 +163,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             String controllerId = subAgentCommand.getControllerId();
 
-            storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(subAgentCommand.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
             connection.setAutoCommit(false);
@@ -231,7 +231,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
     @Override
     public JOCDefaultResponse reset(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RESET, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RESET, filterBytes, accessToken, CategoryType.CONTROLLER);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -244,7 +244,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             SubAgentCommand subAgentCommand = Globals.objectMapper.readValue(filterBytes, SubAgentCommand.class);
 
             String controllerId = subAgentCommand.getControllerId();
-            storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(subAgentCommand.getAuditLog(), controllerId);
             
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentstate = proxy.currentState();
@@ -290,7 +290,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
         SOSHibernateSession connection = null;
         try {
             final String apiCall = disabled ? API_CALL_DISABLE : API_CALL_ENABLE;
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
 
             AgentHelper.throwJocMissingLicenseException();
 
@@ -303,7 +303,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             String controllerId = subAgentCommand.getControllerId();
 
-            storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            storeAuditLog(subAgentCommand.getAuditLog(), controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);

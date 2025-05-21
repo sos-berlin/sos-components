@@ -19,6 +19,7 @@ import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApprovalRequest;
 import com.sos.joc.model.security.foureyes.ApprovalRequests;
 import com.sos.joc.model.security.foureyes.ApprovalsFilter;
@@ -37,7 +38,7 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
     public JOCDefaultResponse postRequests(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(filterBytes, ApprovalsFilter.class);
             ApprovalsFilter in = Globals.objectMapper.readValue(filterBytes, ApprovalsFilter.class);
             JOCDefaultResponse response = initPermissions(null, true);

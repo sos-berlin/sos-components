@@ -22,6 +22,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditLogDetailFilter;
 import com.sos.joc.model.audit.AuditLogDetailItem;
 import com.sos.joc.model.audit.AuditLogDetails;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 @Path("audit_log")
@@ -39,7 +40,7 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
     public JOCDefaultResponse postAuditLogDetails(String accessToken, byte[] bytes) {
         SOSHibernateSession connection = null;
         try {
-            bytes = initLogging(API_CALL, bytes, accessToken);
+            bytes = initLogging(API_CALL, bytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(bytes, AuditLogDetailFilter.class);
             AuditLogDetailFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogDetailFilter.class);
 

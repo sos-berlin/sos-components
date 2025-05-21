@@ -23,14 +23,14 @@ public class DeleteNotificationImpl extends JOCResourceImpl implements IDeleteNo
     @Override
     public JOCDefaultResponse postDeleteNotification(String xAccessToken, byte[] deleteNotificationFilter) {
         try {
-            deleteNotificationFilter = initLogging(API_CALL, deleteNotificationFilter, xAccessToken);
+            deleteNotificationFilter = initLogging(API_CALL, deleteNotificationFilter, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(deleteNotificationFilter, DeleteNotificationFilter.class);
             DeleteConfiguration in = Globals.objectMapper.readValue(deleteNotificationFilter, DeleteConfiguration.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getNotification().getManage()));
             if (response != null) {
                 return response;
             }
-            DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
+            DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog());
             in.setObjectType(ObjectType.NOTIFICATION);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(DeleteResourceImpl.handleStandardConfiguration(in,
                     getAccount(), auditLog.getId())));

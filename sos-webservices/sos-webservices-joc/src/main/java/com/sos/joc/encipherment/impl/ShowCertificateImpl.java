@@ -14,6 +14,7 @@ import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IShowCertificate;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.EncCertificate;
 import com.sos.joc.model.encipherment.ShowCertificateRequestFilter;
 import com.sos.joc.model.encipherment.ShowCertificateResponse;
@@ -28,7 +29,7 @@ public class ShowCertificateImpl extends JOCResourceImpl implements IShowCertifi
     public JOCDefaultResponse postShowCertificate(String xAccessToken, byte[] showCertificateFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            showCertificateFilter = initLogging(API_CALL, showCertificateFilter, xAccessToken);
+            showCertificateFilter = initLogging(API_CALL, showCertificateFilter, xAccessToken, CategoryType.CERTIFICATES);
             ShowCertificateRequestFilter filter = null;
             if (showCertificateFilter != null && showCertificateFilter.length > 0) {
                 JsonValidator.validateFailFast(showCertificateFilter, ShowCertificateRequestFilter.class);

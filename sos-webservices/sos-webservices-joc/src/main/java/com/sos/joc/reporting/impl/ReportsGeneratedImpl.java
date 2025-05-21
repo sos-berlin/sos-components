@@ -21,6 +21,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.db.reporting.items.ReportDbItem;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportHistoryFilter;
 import com.sos.joc.model.reporting.ReportItem;
@@ -45,7 +46,7 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ReportHistoryFilter.class);
             ReportHistoryFilter in = Globals.objectMapper.readValue(filterBytes, ReportHistoryFilter.class);
             

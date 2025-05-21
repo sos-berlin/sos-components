@@ -14,6 +14,7 @@ import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrderVariablesResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.OrderVariables;
@@ -25,7 +26,7 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
     public JOCDefaultResponse postOrderVariables(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter in = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
 

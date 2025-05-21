@@ -31,6 +31,7 @@ import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.auth.resource.ICreateClientServerCert;
 import com.sos.joc.keys.auth.token.OnetimeTokens;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.auth.token.OnetimeToken;
 import com.sos.joc.model.publish.CreateCSRFilter;
 import com.sos.joc.model.publish.RolloutResponse;
@@ -50,7 +51,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
     public JOCDefaultResponse postCreateClientServerCert(String token, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL, filter);
+            filter = initLogging(API_CALL, filter, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, CreateCSRFilter.class);
             CreateCSRFilter createCsrFilter = Globals.objectMapper.readValue(filter, CreateCSRFilter.class);
             ClientServerCertificateUtil.cleanupInvalidatedTokens();

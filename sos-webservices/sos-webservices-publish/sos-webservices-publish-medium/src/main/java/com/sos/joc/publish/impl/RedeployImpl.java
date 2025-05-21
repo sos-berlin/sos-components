@@ -62,7 +62,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
     public JOCDefaultResponse deploy(String xAccessToken, byte[] filter, String action) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(action, filter, xAccessToken);
+            filter = initLogging(action, filter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validateFailFast(filter, RedeployFilter.class);
             RedeployFilter redeployFilter = Globals.objectMapper.readValue(filter, RedeployFilter.class);
 
@@ -70,7 +70,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(redeployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(redeployFilter.getAuditLog());
 
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(action);

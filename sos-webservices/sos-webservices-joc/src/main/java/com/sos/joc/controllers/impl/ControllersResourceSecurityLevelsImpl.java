@@ -15,6 +15,7 @@ import com.sos.joc.controllers.resource.IControllersResourceSecurityLevels;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
@@ -31,7 +32,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
         SOSHibernateSession connection = null;
 
         try {
-            initLogging(API_CALL_LEVELS, null, accessToken);
+            initLogging(API_CALL_LEVELS, null, accessToken, CategoryType.CONTROLLER);
             com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers controllerPermissions = getBasicJocPermissions(accessToken)
                     .getAdministration().getControllers();
             // TODO admin permissions to take over security level
@@ -69,7 +70,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
         SOSHibernateSession connection = null;
 
         try {
-            filterBytes = initLogging(API_CALL_TAKEOVER, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_TAKEOVER, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             

@@ -12,6 +12,7 @@ import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IRemoveCertificateAssignment;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.AgentAssignmentRequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -24,7 +25,7 @@ public class RemoveCertificateAssignmentImpl extends JOCResourceImpl implements 
     public JOCDefaultResponse postRemoveCertificateAssgnment(String xAccessToken, byte[] agentAssignmentFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            agentAssignmentFilter = initLogging(API_CALL, agentAssignmentFilter, xAccessToken);
+            agentAssignmentFilter = initLogging(API_CALL, agentAssignmentFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
             AgentAssignmentRequestFilter filter = Globals.objectMapper.readValue(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

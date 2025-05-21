@@ -32,6 +32,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReleasablesResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.release.ReleasablesFilter;
@@ -47,7 +48,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     public JOCDefaultResponse releasables(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH_OLD, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_OLD, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, ReleasablesFilter.class, true);
             ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 
@@ -72,7 +73,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     public JOCDefaultResponse releasablesTree(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, ReleasablesFilter.class, true);
             ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 

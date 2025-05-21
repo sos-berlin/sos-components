@@ -21,6 +21,7 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsRequest;
@@ -39,7 +40,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         try {
             // TODO redefine raml and remove filter class
 
-            inBytes = initLogging(IMPL_PATH_MAIN, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_MAIN, inBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
@@ -84,7 +85,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         SOSHibernateSession session = null;
         try {
             // TODO redefine raml and remove filter class
-            inBytes = initLogging(IMPL_PATH_DELETE, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_DELETE, inBytes, accessToken, CategoryType.DAILYPLAN);
             // use validate instead of validateFailFast when anyOf/oneOf is defined
             JsonValidator.validate(inBytes, SubmissionsDeleteRequest.class);
             SubmissionsDeleteRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsDeleteRequest.class);

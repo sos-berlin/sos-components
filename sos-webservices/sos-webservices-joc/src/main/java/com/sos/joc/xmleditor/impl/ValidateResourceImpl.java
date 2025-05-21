@@ -6,6 +6,7 @@ import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.validate.ErrorMessage;
 import com.sos.joc.model.xmleditor.validate.ValidateConfiguration;
 import com.sos.joc.model.xmleditor.validate.ValidateConfigurationAnswer;
@@ -23,7 +24,7 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, ValidateConfiguration.class);
             ValidateConfiguration in = Globals.objectMapper.readValue(filterBytes, ValidateConfiguration.class);
 

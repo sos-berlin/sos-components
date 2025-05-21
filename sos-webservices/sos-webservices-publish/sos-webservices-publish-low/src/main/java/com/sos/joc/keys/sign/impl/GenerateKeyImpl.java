@@ -34,7 +34,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
     public JOCDefaultResponse postGenerateKey(String xAccessToken, byte[] generateKeyFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            generateKeyFilter = initLogging(API_CALL, generateKeyFilter, xAccessToken);
+            generateKeyFilter = initLogging(API_CALL, generateKeyFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(generateKeyFilter, GenerateKeyFilter.class);
             GenerateKeyFilter filter = Globals.objectMapper.readValue(generateKeyFilter, GenerateKeyFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
@@ -43,7 +43,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            storeAuditLog(filter.getAuditLog());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
             

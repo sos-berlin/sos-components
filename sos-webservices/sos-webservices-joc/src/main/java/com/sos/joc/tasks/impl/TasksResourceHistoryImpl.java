@@ -38,6 +38,7 @@ import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.job.JobsFilter;
@@ -58,7 +59,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
     public JOCDefaultResponse postTasksHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(inBytes, JobsFilter.class);
             JobsFilter in = Globals.objectMapper.readValue(inBytes, JobsFilter.class);
 

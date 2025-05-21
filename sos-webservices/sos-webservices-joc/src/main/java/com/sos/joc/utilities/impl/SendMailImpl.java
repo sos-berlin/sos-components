@@ -16,6 +16,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.utilities.SendMail;
 import com.sos.joc.utilities.resource.ISendMailResource;
@@ -35,7 +36,7 @@ public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResou
 
         SOSHibernateSession sosHibernateSession = null;
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, SendMail.class);
             SendMail sendMail = Globals.objectMapper.readValue(filterBytes, SendMail.class);
 

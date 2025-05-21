@@ -25,6 +25,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IReleasablesRecall;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFolder;
@@ -44,7 +45,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
     public JOCDefaultResponse postRecall(String accessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL, filter, accessToken);
+            filter = initLogging(API_CALL, filter, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, ReleasableRecallFilter.class, true);
             ReleasableRecallFilter recallFilter = Globals.objectMapper.readValue(filter, ReleasableRecallFilter.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
@@ -91,7 +92,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
     public JOCDefaultResponse postRecallByFolder(String accessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL_FOLDER, filter, accessToken);
+            filter = initLogging(API_CALL_FOLDER, filter, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, RequestFolder.class, true);
             RequestFolder recallFilter = Globals.objectMapper.readValue(filter, RequestFolder.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);

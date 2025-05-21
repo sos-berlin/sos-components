@@ -11,6 +11,7 @@ import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.resource.IDailyPlanCalendarResource;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanCalendarImpl extends JOCOrderResourceImpl implements IDailyPlanCalendarResource {
@@ -19,7 +20,7 @@ public class DailyPlanCalendarImpl extends JOCOrderResourceImpl implements IDail
     public JOCDefaultResponse deploy(String accessToken) {
 
         try {
-            initLogging(IMPL_PATH, null, accessToken);
+            initLogging(IMPL_PATH, null, accessToken, CategoryType.DAILYPLAN);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getAdministration().getSettings()
                     .getManage()));
             if (response != null) {

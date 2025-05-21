@@ -21,6 +21,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.jobtemplate.resource.IJobTemplateResource;
 import com.sos.joc.jobtemplates.impl.AssignedWorkflowsImpl;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.jobtemplate.JobTemplateFilter;
 import com.sos.joc.model.jobtemplate.JobTemplateState;
@@ -38,7 +39,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
     public JOCDefaultResponse postJobTemplate(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, JobTemplateFilter.class);
             JobTemplateFilter jobTemplateFilter = Globals.objectMapper.readValue(filterBytes, JobTemplateFilter.class);
 
@@ -89,7 +90,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
     public JOCDefaultResponse postJobTemplateState(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL_STATE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_STATE, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, JobTemplateStateFilter.class);
             JobTemplateStateFilter jobTemplateFilter = Globals.objectMapper.readValue(filterBytes, JobTemplateStateFilter.class);
 

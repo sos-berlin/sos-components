@@ -63,7 +63,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
                 return jocDefaultResponse;
             }
 
-            storeAuditLog(modifyTags.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(modifyTags.getAuditLog());
             Stream<JOCEvent> events = postTagsModify(action, modifyTags);
             events.forEach(evt -> EventBus.getInstance().post(evt));
 
@@ -77,7 +77,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
     }
 
     private RequestFilters initModifyRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+        filterBytes = initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.INVENTORY);
         JsonValidator.validateFailFast(filterBytes, RequestFilters.class);
         return Globals.objectMapper.readValue(filterBytes, RequestFilters.class);
     }

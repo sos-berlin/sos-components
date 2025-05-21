@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.Approvers;
 
 import jakarta.ws.rs.Path;
@@ -25,7 +26,7 @@ public class ShowApproversImpl extends JOCResourceImpl implements IShowApprovers
     public JOCDefaultResponse postShow(String xAccessToken) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, null, xAccessToken);
+            initLogging(API_CALL, null, xAccessToken, CategoryType.MONITORING);
             JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getAccounts().getView());
             if (response != null) {
                 return response;

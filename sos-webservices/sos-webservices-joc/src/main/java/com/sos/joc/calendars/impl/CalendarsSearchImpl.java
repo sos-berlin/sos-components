@@ -12,6 +12,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.impl.SearchResourceImpl;
 import com.sos.joc.inventory.resource.ISearchResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.search.RequestBaseSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
@@ -26,7 +27,7 @@ public class CalendarsSearchImpl extends JOCResourceImpl implements ISearchResou
     @Override
     public JOCDefaultResponse postSearch(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, RequestBaseSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(filterBytes, RequestSearchFilter.class);
             in.setReturnType(RequestSearchReturnType.CALENDAR);

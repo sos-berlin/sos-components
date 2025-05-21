@@ -76,7 +76,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     @Override
     public JOCDefaultResponse postOrdersGenerate(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
@@ -117,7 +117,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             return false;
         }
 
-        Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId() : 0L;
+        Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog()).getId() : 0L;
 
         if (folderPermissions == null) {
             folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();

@@ -25,6 +25,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.ControllerItem;
 import com.sos.joc.model.monitoring.ControllerItemEntryItem;
 import com.sos.joc.model.monitoring.ControllersAnswer;
@@ -39,7 +40,7 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(inBytes, ControllersFilter.class);
             ControllersFilter in = Globals.objectMapper.readValue(inBytes, ControllersFilter.class);
 

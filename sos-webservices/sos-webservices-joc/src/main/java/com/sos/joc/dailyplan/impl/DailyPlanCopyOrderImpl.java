@@ -102,7 +102,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
     @Override
     public JOCDefaultResponse postCopyOrder(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validate(filterBytes, DailyPlanModifyOrder.class);
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
@@ -121,9 +121,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
 
             // TODO mabe exception if adhoc-order in the request: !orderIds.get(Boolean.TRUE).isEmpty()
 
-            // CategoryType category = orderIds.get(Boolean.FALSE).isEmpty() ? CategoryType.CONTROLLER : CategoryType.DAILYPLAN;
-            // DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId(), category);
-            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId(), CategoryType.DAILYPLAN);
+            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
 
             List<DBItemDailyPlanOrder> dailyPlanOrderItems = null;
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {

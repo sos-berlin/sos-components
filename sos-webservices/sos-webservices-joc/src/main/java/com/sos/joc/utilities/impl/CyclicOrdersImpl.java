@@ -14,6 +14,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderIds;
 import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.utilities.resource.ICyclicOrdersResource;
@@ -28,7 +29,7 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
     public JOCDefaultResponse postCyclicOrders(String accessToken, byte[] filterBytes) {
         LOGGER.debug("reading list of cyclic orders");
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV in = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
             String controllerId = in.getControllerId();

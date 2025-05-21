@@ -33,6 +33,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.common.RequestFilters;
@@ -50,7 +51,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     public JOCDefaultResponse delete(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
@@ -70,7 +71,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     public JOCDefaultResponse deleteFolder(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
-            inBytes = initLogging(IMPL_PATH_FOLDER, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_FOLDER, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));

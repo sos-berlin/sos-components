@@ -27,7 +27,7 @@ public class DeleteKeyImpl extends JOCResourceImpl implements IDeleteKey {
     public JOCDefaultResponse postDeleteKey(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, DeleteKeyFilter.class);
             DeleteKeyFilter deleteKeyFilter = Globals.objectMapper.readValue(filter, DeleteKeyFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()
@@ -36,7 +36,7 @@ public class DeleteKeyImpl extends JOCResourceImpl implements IDeleteKey {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(deleteKeyFilter.getAuditLog(), CategoryType.CERTIFICATES);
+            storeAuditLog(deleteKeyFilter.getAuditLog());
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);

@@ -36,6 +36,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeployablesResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.deploy.DeployablesFilter;
@@ -54,7 +55,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     public JOCDefaultResponse deployables(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH_OLD, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH_OLD, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, DeployablesFilter.class, true);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
@@ -79,7 +80,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     public JOCDefaultResponse deployablesTree(final String accessToken, byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, DeployablesFilter.class, true);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 

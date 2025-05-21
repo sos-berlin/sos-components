@@ -30,19 +30,22 @@ public class JocAuditLog {
     private String request;
     private String params;
     private boolean isLogged = false;
+    private CategoryType category;
     public static final String EMPTY_STRING = "-";
     private static final List<Integer> typesOfWorkflowEvent = Arrays.asList(ObjectType.ORDER.intValue(), ObjectType.WORKFLOW.intValue());
     
-    public JocAuditLog(String user, String request) {
+    public JocAuditLog(String user, String request, CategoryType category) {
         this.user = setProperty(user);
         this.request = setProperty(request);
         this.params = EMPTY_STRING;
+        this.category = category;
     }
     
-    public JocAuditLog(String user, String request, String params) {
+    public JocAuditLog(String user, String request, String params, CategoryType category) {
         this.user = setProperty(user);
         this.request = setProperty(request);
         this.params = setProperty(params);
+        this.category = category;
     }
 
     private String setProperty(String prop) {
@@ -71,6 +74,10 @@ public class JocAuditLog {
     
     public String getParams() {
         return params;
+    }
+    
+    public CategoryType getCategory() {
+        return category;
     }
     
     public void logAuditMessage(AuditParams audit) {
@@ -113,14 +120,14 @@ public class JocAuditLog {
         }
     }
     
-    public synchronized DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, String controllerId, Integer type, SOSHibernateSession connection) {
+    public synchronized DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, String controllerId, SOSHibernateSession connection) {
         controllerId = setProperty(controllerId);
         DBItemJocAuditLog auditLogToDb = new DBItemJocAuditLog();
         auditLogToDb.setControllerId(controllerId);
         auditLogToDb.setAccount(user);
         auditLogToDb.setRequest(request);
         auditLogToDb.setParameters(truncateParams());
-        auditLogToDb.setCategory(type != null ? type : 0);
+        auditLogToDb.setCategory(category.intValue());
         if (audit != null) {
             auditLogToDb.setComment(audit.getComment());
             auditLogToDb.setTicketLink(audit.getTicketLink());
@@ -146,16 +153,16 @@ public class JocAuditLog {
             }
         }
         auditLogToDb.setId(0L);
-        sendAuditLogEvent(controllerId, type);
+        sendAuditLogEvent(controllerId);
         return auditLogToDb;
     }
     
-    public DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, String controllerId, Integer type) {
-        return storeAuditLogEntry(audit, controllerId, type, null);
+    public DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, String controllerId) {
+        return storeAuditLogEntry(audit, controllerId, null);
     }
     
-    public DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, Integer type) {
-        return storeAuditLogEntry(audit, null, type, null);
+    public DBItemJocAuditLog storeAuditLogEntry(AuditParams audit) {
+        return storeAuditLogEntry(audit, null, null);
     }
     
     public static void updateAuditLogEntry(DBItemJocAuditLog dbItem) {
@@ -318,9 +325,9 @@ public class JocAuditLog {
         }
     }
     
-    private static void sendAuditLogEvent(String controllerId, Integer type) {
-        if (!CategoryType.INVENTORY.intValue().equals(type) && !CategoryType.DOCUMENTATIONS.intValue().equals(type) && !CategoryType.UNKNOWN
-                .intValue().equals(type)) {
+    private void sendAuditLogEvent(String controllerId) {
+        if (!CategoryType.INVENTORY.equals(category) && !CategoryType.DOCUMENTATIONS.equals(category) && !CategoryType.UNKNOWN.equals(category)
+                && !CategoryType.OTHERS.equals(category)) {
             EventBus.getInstance().post(new AuditlogChangedEvent(controllerId));
         }
     }

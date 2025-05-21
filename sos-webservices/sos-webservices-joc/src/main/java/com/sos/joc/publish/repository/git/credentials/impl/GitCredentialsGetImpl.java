@@ -16,6 +16,7 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.publish.git.GitCredentialsList;
@@ -33,7 +34,7 @@ public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCreden
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** get credentials started ***" + started);
-            initLogging(API_CALL, null, xAccessToken);
+            initLogging(API_CALL, null, xAccessToken, CategoryType.IDENTITY);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

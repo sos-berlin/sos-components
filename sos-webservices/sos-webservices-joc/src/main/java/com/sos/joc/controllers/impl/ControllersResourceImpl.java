@@ -29,6 +29,7 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
@@ -59,7 +60,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             if (onlyDb) {
                 apiCall += "/p";
             }
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             

@@ -24,6 +24,7 @@ import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.documentation.DocumentationFolderEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
@@ -42,9 +43,9 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
             }
             String request = String.format("%s/%s", API_CALL, path);
             if (referer != null && referer.contains("/joc/api/documentation/")) {
-                initLogging(request, null);
+                initLogging(request, null, CategoryType.DOCUMENTATIONS);
             } else {
-                initLogging(request, null, accessToken);
+                initLogging(request, null, accessToken, CategoryType.DOCUMENTATIONS);
                 JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getDocumentations().getView());
                 if (jocDefaultResponse != null) {
                     return jocDefaultResponse;

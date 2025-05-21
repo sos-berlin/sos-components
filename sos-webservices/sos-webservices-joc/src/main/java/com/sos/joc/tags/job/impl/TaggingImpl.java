@@ -58,7 +58,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(in.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TAGGING);
             session.setAutoCommit(false);
@@ -251,7 +251,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
     }
     
     private <T> T initRequest(String apiCall, Class<T> clazz, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(apiCall, filterBytes, accessToken);
+        filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.INVENTORY);
         JsonValidator.validateFailFast(filterBytes, clazz);
         return Globals.objectMapper.readValue(filterBytes, clazz);
     }

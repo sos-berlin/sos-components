@@ -50,6 +50,7 @@ import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.wizard.Job;
 import com.sos.joc.model.wizard.JobWizardFilter;
 import com.sos.joc.model.wizard.Jobs;
@@ -70,7 +71,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
     public JOCDefaultResponse postJobs(final String accessToken) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_JOBS, null, accessToken);
+            initLogging(API_CALL_JOBS, null, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -130,7 +131,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
     public JOCDefaultResponse postJob(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            filterBytes = initLogging(API_CALL_JOB, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_JOB, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, JobWizardFilter.class);
             JobWizardFilter body = Globals.objectMapper.readValue(filterBytes, JobWizardFilter.class);
 

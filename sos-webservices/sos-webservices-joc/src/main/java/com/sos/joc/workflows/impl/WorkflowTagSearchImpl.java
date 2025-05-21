@@ -7,6 +7,7 @@ import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.ITagSearchResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.DeployedObjectQuickSearchFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.ResponseQuickSearch;
@@ -22,7 +23,7 @@ public class WorkflowTagSearchImpl extends JOCResourceImpl implements ITagSearch
     @Override
     public JOCDefaultResponse postTagSearch(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(API_CALL, inBytes, accessToken);
+            inBytes = initLogging(API_CALL, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, DeployedObjectQuickSearchFilter.class);
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 

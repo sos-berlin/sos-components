@@ -6,6 +6,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.changes.common.ADeleteChange;
 import com.sos.joc.inventory.changes.resource.IChangesDelete;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.changes.DeleteChangesRequest;
 import com.sos.schema.JsonValidator;
 
@@ -21,7 +22,7 @@ public class ChangesDeleteImpl extends ADeleteChange implements IChangesDelete {
     public JOCDefaultResponse postChangesDelete(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL, filter, xAccessToken);
+            filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, DeleteChangesRequest.class);
             DeleteChangesRequest deletefilter = Globals.objectMapper.readValue(filter, DeleteChangesRequest.class);
             

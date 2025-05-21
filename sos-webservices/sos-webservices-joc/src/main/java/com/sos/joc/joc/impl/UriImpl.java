@@ -17,6 +17,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IUriResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.CockpitURI;
 import com.sos.schema.JsonValidator;
 
@@ -34,7 +35,7 @@ public class UriImpl extends JOCResourceImpl implements IUriResource {
     public JOCDefaultResponse setUri(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validate(filterBytes, CockpitURI.class);
             CockpitURI in = Globals.objectMapper.readValue(filterBytes, CockpitURI.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getSettings()

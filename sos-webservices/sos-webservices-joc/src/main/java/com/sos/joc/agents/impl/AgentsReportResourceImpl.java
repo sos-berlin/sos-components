@@ -30,6 +30,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentReport;
 import com.sos.joc.model.agent.AgentReportFilter;
 import com.sos.joc.model.agent.AgentReports;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -44,7 +45,7 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, AgentReportFilter.class);
             AgentReportFilter agentParameter = Globals.objectMapper.readValue(filterBytes, AgentReportFilter.class);
             

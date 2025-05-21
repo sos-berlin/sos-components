@@ -28,6 +28,7 @@ import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamHistoryFilter;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.Profile;
 import com.sos.joc.model.configuration.Profiles;
@@ -48,7 +49,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
     public JOCDefaultResponse postProfilesDelete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, ProfilesFilter.class);
             ProfilesFilter profilesFilter = Globals.objectMapper.readValue(filterBytes, ProfilesFilter.class);
 
@@ -94,7 +95,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_PROFILES, body, accessToken);
+            body = initLogging(API_CALL_PROFILES, body, accessToken, CategoryType.SETTINGS);
 
             JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
             if (jocDefaultResponse != null) {

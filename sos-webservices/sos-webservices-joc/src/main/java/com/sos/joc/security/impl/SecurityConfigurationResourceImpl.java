@@ -37,7 +37,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
     public JOCDefaultResponse postAuthRead(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            body = initLogging(API_CALL_READ, body, accessToken);
+            body = initLogging(API_CALL_READ, body, accessToken, CategoryType.IDENTITY);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
                     .getView());
             if (jocDefaultResponse != null) {
@@ -103,7 +103,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 securityConfigurationAccount.setRepeatedPassword("********");
             }
 
-            initLogging(API_CALL_WRITE, Globals.objectMapper.writeValueAsBytes(securityConfigurationMasked), accessToken);
+            initLogging(API_CALL_WRITE, Globals.objectMapper.writeValueAsBytes(securityConfigurationMasked), accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, SecurityConfiguration.class);
             SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
             String identityServiceName = securityConfiguration.getIdentityServiceName();
@@ -138,7 +138,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
                 sosSecurityDBConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
 
-                storeAuditLog(securityConfiguration.getAuditLog(), CategoryType.IDENTITY);
+                storeAuditLog(securityConfiguration.getAuditLog());
 
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 

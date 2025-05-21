@@ -14,6 +14,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAll;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAllAnswer;
@@ -32,7 +33,7 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             RemoveAll in = Globals.objectMapper.readValue(filterBytes, RemoveAll.class);
 

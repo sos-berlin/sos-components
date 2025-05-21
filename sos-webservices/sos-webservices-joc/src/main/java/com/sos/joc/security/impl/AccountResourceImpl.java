@@ -81,7 +81,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_ACCOUNT_READ, body, accessToken);
+            body = initLogging(API_CALL_ACCOUNT_READ, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
 
@@ -141,7 +141,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             Account accountMasked = Globals.objectMapper.readValue(body, Account.class);
 
             accountMasked.setPassword("********");
-            initLogging(API_CALL_ACCOUNT_STORE, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken);
+            initLogging(API_CALL_ACCOUNT_STORE, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, Account.class);
             Account account = Globals.objectMapper.readValue(body, Account.class);
 
@@ -261,7 +261,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 }
             }
 
-            storeAuditLog(account.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(account.getAuditLog());
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -282,7 +282,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_ACCOUNT_RENAME, body, accessToken);
+            body = initLogging(API_CALL_ACCOUNT_RENAME, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, AccountRename.class);
             AccountRename accountRename = Globals.objectMapper.readValue(body, AccountRename.class);
 
@@ -315,7 +315,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 throw new JocObjectNotExistException("Couldn't find the account <" + accountRename.getAccountOldName() + ">");
             }
 
-            storeAuditLog(accountRename.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(accountRename.getAuditLog());
 
             Globals.commit(sosHibernateSession);
 
@@ -340,7 +340,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            body = initLogging(API_CALL_ACCOUNTS_DELETE, body, accessToken);
+            body = initLogging(API_CALL_ACCOUNTS_DELETE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, AccountsFilter.class);
             AccountsFilter accountsFilter = Globals.objectMapper.readValue(body, AccountsFilter.class);
 
@@ -378,7 +378,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
             Globals.commit(sosHibernateSession);
 
-            storeAuditLog(accountsFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(accountsFilter.getAuditLog());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -396,7 +396,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_ACCOUNTS, body, accessToken);
+            body = initLogging(API_CALL_ACCOUNTS, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, AccountListFilter.class);
             AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
 
@@ -465,7 +465,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_ACCOUNT_PERMISSIONS, body, accessToken);
+            body = initLogging(API_CALL_ACCOUNT_PERMISSIONS, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
 
@@ -618,7 +618,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             accountMasked.setPassword("********");
             accountMasked.setRepeatedPassword("********");
 
-            initLogging(API_CALL_CHANGE_PASSWORD, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken);
+            initLogging(API_CALL_CHANGE_PASSWORD, Globals.objectMapper.writeValueAsBytes(accountMasked), accessToken, CategoryType.IDENTITY);
 
             JsonValidator.validate(body, Account.class);
             account = Globals.objectMapper.readValue(body, AccountChangePassword.class);
@@ -639,7 +639,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             changePassword(sosHibernateSession, true, account, dbItemIamIdentityService);
             Globals.commit(sosHibernateSession);
 
-            storeAuditLog(account.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(account.getAuditLog());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
@@ -661,7 +661,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         AccountNamesFilter accountsFilter = null;
         try {
 
-            body = initLogging(apiCall, body, accessToken);
+            body = initLogging(apiCall, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, AccountsFilter.class);
             accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
 
@@ -707,7 +707,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                     }
                 }
             }
-            storeAuditLog(accountsFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(accountsFilter.getAuditLog());
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -747,7 +747,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         AccountNamesFilter accountsFilter = null;
         try {
 
-            body = initLogging(API_CALL_RESET_PASSWORD, body, accessToken);
+            body = initLogging(API_CALL_RESET_PASSWORD, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, AccountsFilter.class);
             accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
 
@@ -773,7 +773,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             Globals.commit(sosHibernateSession);
 
-            storeAuditLog(accountsFilter.getAuditLog(), CategoryType.IDENTITY);
+            storeAuditLog(accountsFilter.getAuditLog());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 

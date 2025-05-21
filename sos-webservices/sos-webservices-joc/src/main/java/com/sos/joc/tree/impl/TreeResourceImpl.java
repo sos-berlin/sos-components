@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.tree.TreePermanent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
@@ -30,7 +31,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
     @Override
     public JOCDefaultResponse postTree(String accessToken, byte[] treeBodyBytes) {
         try {
-            treeBodyBytes = initLogging(API_CALL, treeBodyBytes, accessToken);
+            treeBodyBytes = initLogging(API_CALL, treeBodyBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 

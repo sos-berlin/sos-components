@@ -17,6 +17,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.Obstacle;
 import com.sos.joc.model.order.ObstacleType;
 import com.sos.joc.model.order.Obstacles;
@@ -39,7 +40,7 @@ public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrd
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
             String controllerId = ordersFilter.getControllerId();

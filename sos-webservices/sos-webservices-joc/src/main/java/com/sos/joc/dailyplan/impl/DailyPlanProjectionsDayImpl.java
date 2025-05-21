@@ -25,6 +25,7 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.projections.ProjectionsDayRequest;
 import com.sos.joc.model.dailyplan.projections.ProjectionsDayResponse;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
@@ -49,7 +50,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(filterBytes, ProjectionsDayRequest.class);
             ProjectionsDayRequest in = Globals.objectMapper.readValue(filterBytes, ProjectionsDayRequest.class);
 

@@ -41,6 +41,7 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.projections.ProjectionsCalendarResponse;
 import com.sos.joc.model.dailyplan.projections.ProjectionsRequest;
@@ -77,7 +78,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(action, filterBytes, accessToken);
+            filterBytes = initLogging(action, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validateFailFast(filterBytes, ProjectionsRequest.class);
             ProjectionsRequest in = Globals.objectMapper.readValue(filterBytes, ProjectionsRequest.class);
 
@@ -351,7 +352,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
     @Override
     public JOCDefaultResponse recreate(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken);
+            filterBytes = initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken, CategoryType.DAILYPLAN);
 
             // TODO run async
             CompletableFuture.runAsync(() -> {

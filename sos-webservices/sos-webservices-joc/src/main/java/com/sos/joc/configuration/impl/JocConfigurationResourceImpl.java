@@ -144,7 +144,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
                 account = ConfigurationGlobals.ACCOUNT;
-                storeAuditLog(configuration.getAuditLog(), CategoryType.IDENTITY);
+                storeAuditLog(configuration.getAuditLog());
 
             case CUSTOMIZATION:
                 if (isNew && !configuration.getConfigurationType().equals(ConfigurationType.IAM)) {
@@ -237,7 +237,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration
                     .getConfigurationType() != ConfigurationType.CUSTOMIZATION && configuration.getConfigurationType() != ConfigurationType.PROFILE) {
-                storeAuditLog(configuration.getAuditLog(), CategoryType.SETTINGS);
+                storeAuditLog(configuration.getAuditLog());
             }
 
             ConfigurationOk ok = new ConfigurationOk();
@@ -561,13 +561,13 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
     }
 
     private ConfigurationRead getConfigurationRead(String action, String accessToken, byte[] body) throws Exception {
-        body = initLogging(action, body, accessToken);
+        body = initLogging(action, body, accessToken, CategoryType.SETTINGS);
         JsonValidator.validateFailFast(body, ConfigurationRead.class);
         return Globals.objectMapper.readValue(body, ConfigurationRead.class);
     }
     
     private Configuration getConfiguration(String action, String accessToken, byte[] body) throws Exception {
-        body = initLogging(action, body, accessToken);
+        body = initLogging(action, body, accessToken, CategoryType.SETTINGS);
         JsonValidator.validateFailFast(body, Configuration.class);
         return Globals.objectMapper.readValue(body, Configuration.class);
     }

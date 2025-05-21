@@ -14,6 +14,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.FourEyesRequestEdit;
 import com.sos.schema.JsonValidator;
 
@@ -28,7 +29,7 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
     public JOCDefaultResponse postEdit(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(filterBytes, FourEyesRequestEdit.class);
             FourEyesRequestEdit in = Globals.objectMapper.readValue(filterBytes, FourEyesRequestEdit.class);
             JOCDefaultResponse response = initPermissions(null, true);

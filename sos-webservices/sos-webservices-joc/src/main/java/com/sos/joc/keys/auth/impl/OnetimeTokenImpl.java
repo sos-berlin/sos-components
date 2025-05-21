@@ -36,7 +36,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
     public JOCDefaultResponse postCreateToken(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            filter = initLogging(API_CALL_CREATE, filter, xAccessToken);
+            filter = initLogging(API_CALL_CREATE, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validate(filter, CreateOnetimeTokenFilter.class);
             CreateOnetimeTokenFilter createOnetimeTokenFilter = Globals.objectMapper.readValue(filter, CreateOnetimeTokenFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
@@ -44,7 +44,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(createOnetimeTokenFilter.getAuditLog(), CategoryType.CERTIFICATES);
+            storeAuditLog(createOnetimeTokenFilter.getAuditLog());
             String controllerId = createOnetimeTokenFilter.getControllerId();
             List<String> agentIds = createOnetimeTokenFilter.getAgentIds();
             Date validUntil = JobSchedulerDate.getDateFrom(createOnetimeTokenFilter.getValidUntil(), createOnetimeTokenFilter.getTimezone());
@@ -111,7 +111,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
     @Override
     public JOCDefaultResponse postShowToken(String xAccessToken, byte[] filter) {
         try {
-            filter = initLogging(API_CALL_SHOW, filter, xAccessToken);
+            filter = initLogging(API_CALL_SHOW, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, ShowOnetimeTokenFilter.class);
             ShowOnetimeTokenFilter showOnetimeTokenFilter = Globals.objectMapper.readValue(filter, ShowOnetimeTokenFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()

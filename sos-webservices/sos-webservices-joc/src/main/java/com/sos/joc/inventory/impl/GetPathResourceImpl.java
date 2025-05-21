@@ -14,6 +14,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IGetPathResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
@@ -33,7 +34,7 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
     public JOCDefaultResponse postGetPath(String accessToken, byte[] body) {
         SOSHibernateSession hibernateSession = null;
         try {
-            body = initLogging(JocInventory.getResourceImplPath("path"), body, accessToken);
+            body = initLogging(JocInventory.getResourceImplPath("path"), body, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(body, PathFilter.class);
             PathFilter filter = Globals.objectMapper.readValue(body, PathFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getInventory().getView());

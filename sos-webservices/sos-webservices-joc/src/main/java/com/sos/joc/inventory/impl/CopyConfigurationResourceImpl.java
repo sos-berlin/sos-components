@@ -6,6 +6,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ACopyConfiguration;
 import com.sos.joc.inventory.resource.ICopyConfigurationResource;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.copy.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -17,7 +18,7 @@ public class CopyConfigurationResourceImpl extends ACopyConfiguration implements
     @Override
     public JOCDefaultResponse copy(final String accessToken, byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken);
+            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 

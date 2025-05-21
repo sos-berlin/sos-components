@@ -13,6 +13,7 @@ import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.InventoryTagGroupDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.tag.group.GroupTags;
 import com.sos.joc.model.tag.group.RequestFilter;
 import com.sos.joc.tags.group.resource.IGroup;
@@ -29,7 +30,7 @@ public class GroupImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> implemen
     public JOCDefaultResponse readGroups(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());

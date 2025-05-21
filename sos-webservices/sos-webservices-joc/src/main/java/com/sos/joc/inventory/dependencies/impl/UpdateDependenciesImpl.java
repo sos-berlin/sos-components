@@ -14,6 +14,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.dependencies.resource.IUpdateDependencies;
+import com.sos.joc.model.audit.CategoryType;
 
 import jakarta.ws.rs.Path;
 
@@ -28,7 +29,7 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
         SOSHibernateSession session = null;
         boolean permitted = false;
         try {
-            initLogging(API_CALL, "".getBytes(), xAccessToken);
+            initLogging(API_CALL, "".getBytes(), xAccessToken, CategoryType.INVENTORY);
             permitted = DependencySemaphore.tryAcquire();
             if (!permitted) {
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

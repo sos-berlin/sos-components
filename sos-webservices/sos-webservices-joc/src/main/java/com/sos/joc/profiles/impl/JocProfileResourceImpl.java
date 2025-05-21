@@ -14,6 +14,7 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.profile.Profile;
 import com.sos.joc.model.profile.ProfileFilter;
@@ -31,7 +32,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_PROFILE_STORE, body, accessToken);
+            body = initLogging(API_CALL_PROFILE_STORE, body, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(body, Profile.class);
             Profile profile = Globals.objectMapper.readValue(body, Profile.class);
 
@@ -91,7 +92,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            body = initLogging(API_CALL_PROFILE, body, accessToken);
+            body = initLogging(API_CALL_PROFILE, body, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(body, ProfileFilter.class);
             ProfileFilter profileFilter = Globals.objectMapper.readValue(body, ProfileFilter.class);
 

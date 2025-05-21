@@ -23,6 +23,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryOrderTaskLogArrived;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.job.RunningTaskLog;
 import com.sos.joc.model.job.RunningTaskLogFilter;
 import com.sos.joc.model.job.TaskFilter;
@@ -52,7 +53,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     @Override
     public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogFilter.class);
             RunningTaskLog taskLog = Globals.objectMapper.readValue(filterBytes, RunningTaskLog.class);
 
@@ -165,7 +166,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     public JOCDefaultResponse execute(String apiCall, String accessToken, byte[] filterBytes) {
 
         try {
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, TaskFilter.class);
             TaskFilter taskFilter = Globals.objectMapper.readValue(filterBytes, TaskFilter.class);
 

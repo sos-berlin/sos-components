@@ -29,6 +29,7 @@ import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
 import com.sos.joc.inventory.dependencies.wrapper.DependencyItem;
 import com.sos.joc.inventory.dependencies.wrapper.DependencyItems;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
@@ -56,7 +57,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     public JOCDefaultResponse postGetDependencies(String xAccessToken, byte[] dependencyFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
-            dependencyFilter = initLogging(API_CALL, dependencyFilter, xAccessToken);
+            dependencyFilter = initLogging(API_CALL, dependencyFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(dependencyFilter, GetDependenciesRequest.class);
             GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);

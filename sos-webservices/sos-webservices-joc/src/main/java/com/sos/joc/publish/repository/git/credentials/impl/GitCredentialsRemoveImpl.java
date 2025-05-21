@@ -37,7 +37,7 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** remove credentials started ***" + started);
-            removeCredentialsFilter = initLogging(API_CALL, removeCredentialsFilter, xAccessToken);
+            removeCredentialsFilter = initLogging(API_CALL, removeCredentialsFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(removeCredentialsFilter, RemoveCredentialsFilter.class);
             RemoveCredentialsFilter filter = Globals.objectMapper.readValue(removeCredentialsFilter, RemoveCredentialsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
@@ -45,7 +45,7 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
                 return jocDefaultResponse;
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            storeAuditLog(filter.getAuditLog());
             String account = null;
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {

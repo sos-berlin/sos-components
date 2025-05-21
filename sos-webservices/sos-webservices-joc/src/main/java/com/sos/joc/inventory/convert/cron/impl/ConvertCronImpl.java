@@ -98,7 +98,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken); 
+            initLogging(API_CALL, null, xAccessToken, CategoryType.INVENTORY); 
             JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ConvertCronFilter.class);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
@@ -106,7 +106,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
                 return jocDefaultResponse;
             }
             
-            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog());
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             stream = body.getEntityAs(InputStream.class);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));

@@ -36,6 +36,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.DocumentationsFilter;
@@ -52,7 +53,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession sosHibernateSession = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.DOCUMENTATIONS);
             JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));
@@ -103,9 +104,9 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     public JOCDefaultResponse getExportDocumentations(String accessToken, String filename) {
         try {
             if (filename == null) {
-                initLogging(API_CALL, null, accessToken); 
+                initLogging(API_CALL, null, accessToken, CategoryType.DOCUMENTATIONS); 
             } else {
-                initLogging(String.format("%s?filename=%s", API_CALL, filename), null, accessToken);
+                initLogging(String.format("%s?filename=%s", API_CALL, filename), null, accessToken, CategoryType.DOCUMENTATIONS);
             }
             checkRequiredParameter("filename", filename);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));
@@ -168,7 +169,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         SOSHibernateSession sosHibernateSession = null;
         ZipOutputStream zipOut = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.DOCUMENTATIONS);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getDocumentations().getManage()));

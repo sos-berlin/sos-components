@@ -14,6 +14,7 @@ import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IShowKey;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -29,7 +30,7 @@ public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
     public JOCDefaultResponse postShowKey(String xAccessToken) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken);
+            initLogging(API_CALL, null, xAccessToken, CategoryType.CERTIFICATES);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
                     .getView());
             if (jocDefaultResponse != null) {

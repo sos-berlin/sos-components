@@ -54,7 +54,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
 	public JOCDefaultResponse postExportFolder(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            exportFilter = initLogging(API_CALL, exportFilter, xAccessToken);
+            exportFilter = initLogging(API_CALL, exportFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(exportFilter, ExportFolderFilter.class);
             ExportFolderFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFolderFilter.class);
             
@@ -68,7 +68,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                 return jocDefaultResponse;
             }
             
-            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog());
             String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);

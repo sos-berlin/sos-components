@@ -13,6 +13,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.OrderingAgents;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 @Path("agents")
@@ -35,7 +36,7 @@ public class AgentsOrderingImpl extends JOCResourceImpl implements IAgentsOrderi
         SOSHibernateSession connection = null;
         try {
             String apiCall = forStandaloneAgents ? API_CALL_STANDALONE : API_CALL_CLUSTER;
-            filterBytes = initLogging(apiCall, filterBytes, accessToken);
+            filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
 
             // AgentHelper.throwJocMissingLicenseException();
 
