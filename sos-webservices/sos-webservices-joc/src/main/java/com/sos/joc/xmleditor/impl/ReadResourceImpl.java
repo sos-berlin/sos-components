@@ -5,6 +5,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
@@ -24,6 +28,7 @@ import com.sos.joc.xmleditor.commons.Utils;
 import com.sos.joc.xmleditor.commons.Xml2JsonConverter;
 import com.sos.joc.xmleditor.commons.other.OtherSchemaHandler;
 import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
+import com.sos.joc.xmleditor.commons.standard.yade.StandardYADEJobResource;
 import com.sos.joc.xmleditor.resource.IReadResource;
 import com.sos.schema.JsonValidator;
 
@@ -31,6 +36,8 @@ import jakarta.ws.rs.Path;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ReadResourceImpl extends ACommonResourceImpl implements IReadResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReadResourceImpl.class);
 
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
@@ -73,6 +80,25 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
     }
 
+    public static DBItemXmlEditorConfiguration getItem(String objectType, String name) throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
+
+            session.beginTransaction();
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
+            session.commit();
+
+            return item;
+        } catch (Throwable e) {
+            Globals.rollback(session);
+            throw e;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
     public static ReadStandardConfigurationAnswer getNotificationConfiguration(ReadConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = getItem(in.getObjectType().name(), StandardSchemaHandler.getDefaultConfigurationName(in.getObjectType()));
 
@@ -86,15 +112,27 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         return answer;
     }
 
-    private static boolean isReadAllMultipleConfigurations(ReadConfiguration in) {
-        return in.getId() == null || in.getId() <= 0;
-    }
-
     public static ReadStandardConfigurationAnswer getSingleYADEConfiguration(ReadConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = getItem(in.getId());
         if (item == null) {
             throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s]no configuration found", in
                     .getObjectType().name(), in.getId())));
+        }
+
+        // workaround YADE-626 to sets already deployed
+        if (item.getConfigurationReleased() == null && item.getConfigurationDraft() != null) {
+            try {
+                String xml = StandardSchemaHandler.getXML(item.getConfigurationDraft(), true);
+                Document doc = JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), xml);
+                StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
+                if (yadeJobResource != null) {// JobResource element not defined
+                    yadeJobResource.tryUpdateReleasedConfigurationIfJobResourceDeployed(item);
+                }
+            } catch (Exception e) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.warn("[getSingleYADEConfiguration]" + e, e);
+                }
+            }
         }
 
         StandardSchemaHandler handler = new StandardSchemaHandler(ObjectType.YADE);
@@ -138,6 +176,10 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         answer.getConfiguration().setModified(item.getModified());
 
         return answer;
+    }
+
+    private static boolean isReadAllMultipleConfigurations(ReadConfiguration in) {
+        return in.getId() == null || in.getId() <= 0;
     }
 
     private static ReadOtherConfigurationAnswer getMultipleConfigurations(ReadConfiguration in) throws Exception {
@@ -210,25 +252,6 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
 
             session.beginTransaction();
             DBItemXmlEditorConfiguration item = dbLayer.getObject(id);
-            session.commit();
-
-            return item;
-        } catch (Throwable e) {
-            Globals.rollback(session);
-            throw e;
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
-
-    public static DBItemXmlEditorConfiguration getItem(String objectType, String name) throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
-
-            session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             session.commit();
 
             return item;

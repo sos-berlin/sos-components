@@ -19,6 +19,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
+import com.sos.commons.xml.transform.SOSXmlTransformer;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
@@ -223,7 +224,7 @@ public class XMLJobParser extends AFileParser {
     private void exportXML(Path outputFile, Document doc) throws Exception {
         SOSPath.deleteIfExists(outputFile);
         SOSPath.append(outputFile, SOSXML.DEFAULT_XML_DECLARATION, System.lineSeparator());
-        SOSPath.append(outputFile, SOSXML.nodeToString(doc));
+        SOSPath.append(outputFile, SOSXmlTransformer.nodeToString(doc));
     }
 
     private Properties toProperties(SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {

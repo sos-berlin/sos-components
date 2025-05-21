@@ -600,7 +600,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         // System.setProperty("jdk.tls.client.enableSessionTicketExtension", "false");
         FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
         FTPSClient client = null;
-        if (args.getSsl().getTrustedSsl().isEnabled()) {
+        if (args.getSsl().getTrustedSsl().isCustomStoresEnabled()) {
             // tmp
             // args.getSSL().getProtocols().setValue(List.of("TLSv1.2"));
             // if (!args.getSSL().getJavaKeyStore().isEnabled()) {

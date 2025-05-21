@@ -73,7 +73,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             YADEXMLGeneralHelper.parse(this, xpath.selectNode(root, "General"));
             YADEXMLProfileHelper.parse(this, profile);
             if (logger.isDebugEnabled()) {
-                logger.debug("[%s][set][duration]%s", YADEEngineSettingsLoadException.class.getSimpleName(), SOSDate.getDuration(getArgs().getStart()
+                logger.debug("[%s][load][duration]%s", YADEXMLArgumentsLoader.class.getSimpleName(), SOSDate.getDuration(getArgs().getStart()
                         .getValue(), Instant.now()));
             }
         } catch (YADEEngineSettingsLoadException e) {

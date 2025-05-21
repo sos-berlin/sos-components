@@ -246,7 +246,7 @@ public class YADEXMLJumpHostSettingsWriter {
             // YADE 1 - compatibility
             sb.append("<FTPSClientSecurity>");
             sb.append("<SecurityMode>").append(cdata(ftps.getSecurityModeValue())).append("</SecurityMode>");
-            if (ftps.getSsl().getTrustedSsl().isTrustStoreEnabled()) {
+            if (ftps.getSsl().getTrustedSsl().isCustomTrustStoreEnabled()) {
                 sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             sb.append("<FTPSClientSecurity>");
@@ -285,7 +285,7 @@ public class YADEXMLJumpHostSettingsWriter {
                 sb.append(getOppositeValue(ssl.getUntrustedSslVerifyCertificateHostname()));
                 sb.append("</DisableCertificateHostnameVerification>");
             }
-            if (ssl.getTrustedSsl().isTrustStoreEnabled()) {
+            if (ssl.getTrustedSsl().isCustomTrustStoreEnabled()) {
                 sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             // YADE JS7
@@ -318,7 +318,7 @@ public class YADEXMLJumpHostSettingsWriter {
                 sb.append(getOppositeValue(ssl.getUntrustedSslVerifyCertificateHostname()));
                 sb.append("</DisableCertificateHostnameVerification>");
             }
-            if (ssl.getTrustedSsl().isTrustStoreEnabled()) {
+            if (ssl.getTrustedSsl().isCustomTrustStoreEnabled()) {
                 sb.append(generateProtocolFragmentPartYADE1KeyStore(ssl));
             }
             // YADE JS7
@@ -488,7 +488,7 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("</UntrustedSSL>");
         } else {
             sb.append("<TrustedSSL>");
-            if (args.getTrustedSsl().isTrustStoreEnabled()) {
+            if (args.getTrustedSsl().isCustomTrustStoreEnabled()) {
                 sb.append("<TrustStore>");
                 sb.append("<TrustStoreType>");
                 sb.append(cdata(args.getTrustedSsl().getTrustStoreType().getValue().name()));
@@ -503,7 +503,7 @@ public class YADEXMLJumpHostSettingsWriter {
                 }
                 sb.append("</TrustStore>");
             }
-            if (args.getTrustedSsl().isKeyStoreEnabled()) {
+            if (args.getTrustedSsl().isCustomKeyStoreEnabled()) {
                 sb.append("<KeyStore>");
                 sb.append("<KeyStoreType>");
                 sb.append(cdata(args.getTrustedSsl().getTrustStoreType().getValue().name()));

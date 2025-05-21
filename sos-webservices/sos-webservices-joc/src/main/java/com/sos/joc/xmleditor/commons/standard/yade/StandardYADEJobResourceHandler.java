@@ -1,22 +1,15 @@
-package com.sos.joc.xmleditor.commons.standard;
-
-import java.util.List;
+package com.sos.joc.xmleditor.commons.standard.yade;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.SOSXML;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.inventory.impl.StoreConfigurationResourceImpl;
 import com.sos.joc.model.audit.CategoryType;
@@ -30,6 +23,7 @@ import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.xmleditor.deploy.DeployConfiguration;
 import com.sos.joc.publish.impl.ADeploy;
+import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.impl.StandardYADEDeployResourceImpl;
 
 public class StandardYADEJobResourceHandler {
@@ -39,44 +33,34 @@ public class StandardYADEJobResourceHandler {
     // XML already validated - so not empty etc
     public static void storeAndDeploy(final StandardYADEDeployResourceImpl impl, final String accessToken, final DeployConfiguration in, Document doc)
             throws Exception {
-        DBItemInventoryConfiguration inventoryJobResourceItem = store(accessToken, in, doc);
-        deploy(impl, accessToken, in, inventoryJobResourceItem);
+        StandardYADEJobResource yadeJobResource = store(accessToken, in, doc);
+        deploy(impl, accessToken, in, yadeJobResource);
     }
 
-    private static DBItemInventoryConfiguration store(final String accessToken, final DeployConfiguration in, Document doc) throws Exception {
-        // 1) XML - find JobResource Node (schema - JobResource - optional)
-        Node jobResourceNode = SOSXML.getChildNode(doc.getDocumentElement(), "JobResource");
-        if (jobResourceNode == null) {
+    private static StandardYADEJobResource store(final String accessToken, final DeployConfiguration in, Document doc) throws Exception {
+        StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
+        if (yadeJobResource == null) {
             throw new SOSMissingDataException("[Configurations/JobResource]No JobResource configured for deployment");
         }
-
-        // 1.1) XML - evaluate JobResource attributes (schema - JobResource - all attributes are required)
-        String name = SOSXML.getAttributeValue(jobResourceNode, "name");
-        String variable = SOSString.trimStart(SOSXML.getAttributeValue(jobResourceNode, "variable"), "$");
-        String environmentVariable = SOSXML.getAttributeValue(jobResourceNode, "environment_variable");
-
-        // 2) Database - find JobResource in the Inventory table
-        // TODO check if it should be created if not exists ...
-        DBItemInventoryConfiguration item = getYADEJobResourceFromInventory(name);
-        if (item == null) {
-            throw new SOSMissingDataException("[JobResource=" + name + "]JobResource not found in the Inventory");
+        if (yadeJobResource.getInventoryItem() == null) {
+            throw new SOSMissingDataException("[JobResource=" + yadeJobResource.getName() + "]JobResource not found in the Inventory");
         }
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[store]JobResource=" + name + ", variable=" + variable + ", environmentVariable=" + environmentVariable);
+            LOGGER.debug("[store]YADEJobResource=" + yadeJobResource);
         }
 
         // 3) call JOC API inventory/store
-        callJOCAPIInventoryStore(accessToken, item.getId(), variable, environmentVariable, in.getConfiguration());
-        return item;
+        callJOCAPIInventoryStore(accessToken, yadeJobResource, doc, in.getConfiguration());
+        return yadeJobResource;
     }
 
     private static void deploy(final StandardYADEDeployResourceImpl impl, final String accessToken, final DeployConfiguration in,
-            DBItemInventoryConfiguration inventoryJobResourceItem) throws Exception {
+            StandardYADEJobResource yadeJobResource) throws Exception {
 
         Configuration configuration = new Configuration();
         configuration.setObjectType(ConfigurationType.JOBRESOURCE);
-        configuration.setPath(inventoryJobResourceItem.getPath());
+        configuration.setPath(yadeJobResource.getInventoryItem().getPath());
 
         Config config = new Config();
         config.setConfiguration(configuration);
@@ -105,21 +89,23 @@ public class StandardYADEJobResourceHandler {
         }
     }
 
-    private static void callJOCAPIInventoryStore(final String accessToken, final Long inventoryId, final String variable,
-            final String environmentVariable, final String xml) throws Exception {
+    private static void callJOCAPIInventoryStore(final String accessToken, final StandardYADEJobResource yadeJobResource, final Document doc,
+            final String xml) throws Exception {
 
         // 1) Prepare JOC API call inventory/store - create filter
         JobResource jr = new JobResource();
+        jr.setTitle(yadeJobResource.getInventoryItem().getTitle());
         Environment args = new Environment();
-        args.setAdditionalProperty(variable, "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(xml) + "', '*.xml' )");
+        args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(doc, xml)
+                + "', '*.xml' )");
         jr.setArguments(args);
         args = new Environment();
-        args.setAdditionalProperty(environmentVariable, "$" + variable);
+        args.setAdditionalProperty(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
         jr.setEnv(args);
 
         ConfigurationObject co = new ConfigurationObject();
         co.setObjectType(ConfigurationType.JOBRESOURCE);
-        co.setId(inventoryId);
+        co.setId(yadeJobResource.getInventoryItem().getId());
         co.setValid(true);
         co.setConfiguration(jr);
 
@@ -154,28 +140,6 @@ public class StandardYADEJobResourceHandler {
                 msg.append(response.getEntity());
             }
             throw new Exception("[" + StoreConfigurationResourceImpl.IMPL_PATH + "]" + msg);
-        }
-    }
-
-    private static DBItemInventoryConfiguration getYADEJobResourceFromInventory(String jobResourceName) throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("getYADEJobResourceFromInventory-" + jobResourceName);
-            InventoryDBLayer inv = new InventoryDBLayer(session);
-
-            session.beginTransaction();
-            List<DBItemInventoryConfiguration> items = inv.getConfigurationByName(jobResourceName, ConfigurationType.JOBRESOURCE.intValue());
-            Globals.commit(session);
-
-            if (items.size() == 0) {
-                return null;
-            }
-            return items.get(0);
-        } catch (Throwable e) {
-            Globals.rollback(session);
-            throw e;
-        } finally {
-            Globals.disconnect(session);
         }
     }
 

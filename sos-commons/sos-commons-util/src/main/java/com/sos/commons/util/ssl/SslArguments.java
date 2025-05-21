@@ -1,5 +1,8 @@
 package com.sos.commons.util.ssl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.keystore.KeyStoreArguments;
@@ -33,33 +36,23 @@ public class SslArguments extends ASOSArguments {
         return trustedSsl;
     }
 
-    public String getTrustStoreInfo() {
-        if (trustedSsl == null || trustedSsl.getTrustStoreFile().isEmpty()) {
+    public String getTrustedSslInfo() {
+        if (trustedSsl == null) {
             return null;
         }
-        return ARG_NAME_TRUSTSTORE_DISPLAY_NAME + "=" + trustedSsl.getTrustStoreType().getValue();
-    }
+        if (!trustedSsl.isCustomStoresEnabled()) {
+            return "Default " + ARG_NAME_TRUSTSTORE_DISPLAY_NAME;
+        }
 
-    public String getTrustedSslFullInfo() {
-        if (trustedSsl == null || !trustedSsl.isEnabled()) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
+        List<String> l = new ArrayList<>();
         if (!trustedSsl.getKeyStoreFile().isEmpty()) {
-            sb.append("[");
-            sb.append(ARG_NAME_KEYSTORE_DISPLAY_NAME);
-            sb.append(" ").append(trustedSsl.getKeyStoreType().getValue());
-            sb.append(" ").append(trustedSsl.getKeyStoreFile().getValue());
-            sb.append("]");
+            l.add(ARG_NAME_KEYSTORE_DISPLAY_NAME + " " + trustedSsl.getKeyStoreType().getValue() + " " + trustedSsl.getKeyStoreFile().getValue());
         }
         if (!trustedSsl.getTrustStoreFile().isEmpty()) {
-            sb.append("[");
-            sb.append(ARG_NAME_TRUSTSTORE_DISPLAY_NAME);
-            sb.append(" ").append(trustedSsl.getTrustStoreFile().getValue());
-            sb.append(" ").append(trustedSsl.getTrustStoreFile().getValue());
-            sb.append("]");
+            l.add(ARG_NAME_TRUSTSTORE_DISPLAY_NAME + " " + trustedSsl.getTrustStoreType().getValue() + " " + trustedSsl.getTrustStoreFile()
+                    .getValue());
         }
-        return sb.toString();
+        return String.join(", ", l);
     }
 
     public void setTrustedSsl(KeyStoreArguments val) {

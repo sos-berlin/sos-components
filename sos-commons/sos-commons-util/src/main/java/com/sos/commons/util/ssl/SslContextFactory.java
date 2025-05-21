@@ -41,8 +41,8 @@ public class SslContextFactory {
         // This can include TLSv1.0, TLSv1.1, TLSv1.2, TLSv1.3, depending on the supported version in the Java environment.
         SSLContext sslContext = SSLContext.getInstance(DEFAULT_PROTOCOL);
         if (args.getUntrustedSsl().isTrue()) {
-            if (args.getTrustedSsl().isEnabled()) {
-                logger.info("[SslContextFactory][%s=true][ignored]%s", args.getUntrustedSsl().getName(), args.getTrustedSslFullInfo());
+            if (args.getTrustedSsl().isCustomStoresEnabled()) {
+                logger.info("[SslContextFactory][%s=true][ignored]%s", args.getUntrustedSsl().getName(), args.getTrustedSslInfo());
             }
             if (args.getUntrustedSslVerifyCertificateHostname().isTrue()) {
                 sslContext.init(null, getAcceptUntrustedCertificateTrustManagers(), new SecureRandom());

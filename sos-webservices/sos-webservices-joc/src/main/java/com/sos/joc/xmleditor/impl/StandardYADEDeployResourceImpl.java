@@ -16,7 +16,7 @@ import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer
 import com.sos.joc.publish.impl.ADeploy;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
-import com.sos.joc.xmleditor.commons.standard.StandardYADEJobResourceHandler;
+import com.sos.joc.xmleditor.commons.standard.yade.StandardYADEJobResourceHandler;
 import com.sos.joc.xmleditor.resource.IStandardYADEDeployResource;
 import com.sos.schema.JsonValidator;
 

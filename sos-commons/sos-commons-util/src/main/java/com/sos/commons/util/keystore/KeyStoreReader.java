@@ -46,7 +46,7 @@ public class KeyStoreReader {
     }
 
     public static KeyStoreResult read(ISOSLogger logger, KeyStoreArguments args) throws Exception {
-        if (args == null || !args.isEnabled()) {
+        if (args == null || !args.isCustomStoresEnabled()) {
             return null;
         }
         KeyStoreResult result = new KeyStoreReader().new KeyStoreResult();

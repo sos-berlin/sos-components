@@ -3,11 +3,13 @@ package com.sos.joc.xmleditor.commons.standard;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.w3c.dom.Document;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.exception.SOSXMLNotMatchSchemaException;
+import com.sos.commons.xml.transform.SOSXmlTransformer;
 import com.sos.joc.Globals;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
@@ -194,6 +196,11 @@ public class StandardSchemaHandler {
         }
     }
 
+    public static String getYADEXMLForDeployment(Document doc, String xml) throws Exception {
+        // TODO activate
+        return SOSXmlTransformer.nodeToString(doc, true, 4);  // xml;// SOSXML.transformXMLWithXSL(xml, cccc());
+    }
+
     private static DBItemXmlEditorConfiguration createReleasedNotificationConfiguration(String name, String configuration, String configurationJson,
             String account, Long auditLogId) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
@@ -224,7 +231,7 @@ public class StandardSchemaHandler {
         item.setReleased(item.getModified());
         return item;
     }
-
+    
     public ReadStandardConfigurationAnswer getAnswer() {
         return answer;
     }
@@ -233,16 +240,11 @@ public class StandardSchemaHandler {
         return JocXmlEditor.NOTIFICATION_SCHEMA_FILENAME;
     }
 
-    private String getXML(String xml, boolean isYADE) throws Exception {
+    public static String getXML(String xml, boolean isYADE) throws Exception {
         if (!isYADE) {
             return xml;
         }
-        return SOSXML.transformXMLWithXSL(xml, getYADEXSLAllVersionsToCurrent(), true, 0);
-    }
-
-    public static String getYADEXMLForDeployment(String xml) throws Exception {
-        // TODO activate
-        return xml;// SOSXML.transformXMLWithXSL(xml, cccc());
+        return SOSXmlTransformer.transformXmlWithXslEncloseTextInCdata(xml, getYADEXSLAllVersionsToCurrent(), true, 0);
     }
 
     private static String getYADEXSLAllVersionsToCurrent() throws Exception {

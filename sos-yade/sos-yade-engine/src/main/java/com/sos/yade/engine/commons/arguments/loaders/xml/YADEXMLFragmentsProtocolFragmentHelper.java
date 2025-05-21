@@ -607,7 +607,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "TrustStoreFile":
                     args.getTrustedSsl().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
                     break;
-                case "TrusStorePassword":
+                case "TrustStorePassword":
                     argsLoader.setStringArgumentValue(args.getTrustedSsl().getTrustStorePassword(), n);
                     break;
                 }
@@ -615,6 +615,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
+    // sets KeyStore arguments
     private static void parseTrustedSSLKeyStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
         NodeList nl = keyStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -632,6 +633,30 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "KeyStorePassword":
                     argsLoader.setStringArgumentValue(args.getTrustedSsl().getKeyStorePassword(), n);
+                    break;
+                }
+            }
+        }
+    }
+
+    // YADE 1 - compatibility - !!! sets TrustStore arguments
+    private static void parseYADE1KeyStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
+        NodeList nl = keyStore.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "KeyStoreType":
+                    KeyStoreType keyStoreType = KeyStoreType.fromString(argsLoader.getValue(n));
+                    if (keyStoreType != null) {
+                        args.getTrustedSsl().getTrustStoreType().setValue(keyStoreType);
+                    }
+                    break;
+                case "KeyStoreFile":
+                    args.getTrustedSsl().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
+                    break;
+                case "KeyStorePassword":
+                    argsLoader.setStringArgumentValue(args.getTrustedSsl().getTrustStorePassword(), n);
                     break;
                 }
             }
@@ -963,27 +988,4 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         args.getAuthMethod().setValue(SMBAuthMethod.SPNEGO);
     }
 
-    // YADE 1 - compatibility
-    private static void parseYADE1KeyStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
-        NodeList nl = keyStore.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                switch (n.getNodeName()) {
-                case "KeyStoreType":
-                    KeyStoreType keyStoreType = KeyStoreType.fromString(argsLoader.getValue(n));
-                    if (keyStoreType != null) {
-                        args.getTrustedSsl().getTrustStoreType().setValue(keyStoreType);
-                    }
-                    break;
-                case "KeyStoreFile":
-                    args.getTrustedSsl().getTrustStoreFile().setValue(Path.of(argsLoader.getValue(n)));
-                    break;
-                case "KeyStorePassword":
-                    argsLoader.setStringArgumentValue(args.getTrustedSsl().getTrustStorePassword(), n);
-                    break;
-                }
-            }
-        }
-    }
 }

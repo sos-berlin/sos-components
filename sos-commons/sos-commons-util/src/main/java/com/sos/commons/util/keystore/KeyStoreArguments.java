@@ -20,15 +20,15 @@ public class KeyStoreArguments extends ASOSArguments {
     private SOSArgument<Path> trustStoreFile = new SOSArgument<>("truststore_file", false);
     private SOSArgument<String> trustStorePassword = new SOSArgument<>("truststore_password", false, DisplayMode.MASKED);
 
-    public boolean isEnabled() {
-        return isTrustStoreEnabled() || isKeyStoreEnabled();
+    public boolean isCustomStoresEnabled() {
+        return isCustomTrustStoreEnabled() || isCustomKeyStoreEnabled();
     }
 
-    public boolean isTrustStoreEnabled() {
+    public boolean isCustomTrustStoreEnabled() {
         return !trustStoreFile.isEmpty();
     }
 
-    public boolean isKeyStoreEnabled() {
+    public boolean isCustomKeyStoreEnabled() {
         return !keyStoreFile.isEmpty();
     }
 

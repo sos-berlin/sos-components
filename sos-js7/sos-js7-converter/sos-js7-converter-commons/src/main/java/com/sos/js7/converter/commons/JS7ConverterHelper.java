@@ -33,6 +33,7 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.commons.xml.transform.SOSXmlTransformer;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.calendar.Frequencies;
@@ -356,7 +357,7 @@ public class JS7ConverterHelper {
 
     public static String nodeToString(Node node) {
         try {
-            return SOSXML.nodeToString(node, true, 0);
+            return SOSXmlTransformer.nodeToString(node, true, 0);
         } catch (Exception e) {
             return node + "";
         }

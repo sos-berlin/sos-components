@@ -55,7 +55,7 @@ public class FTPSProviderArguments extends FTPProviderArguments {
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
     @Override
     public String getAdvancedAccessInfo() {
-        return getSsl().getTrustStoreInfo();
+        return getSsl().getTrustedSslInfo();
     }
 
     public boolean isSecurityModeImplicit() {

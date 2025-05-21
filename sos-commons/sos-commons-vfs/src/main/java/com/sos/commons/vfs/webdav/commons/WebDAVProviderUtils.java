@@ -20,6 +20,7 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 import com.sos.commons.xml.SOSXML;
+import com.sos.commons.xml.transform.SOSXmlTransformer;
 
 public class WebDAVProviderUtils {
 
@@ -183,7 +184,7 @@ public class WebDAVProviderUtils {
         for (int i = 0; i < responseNodes.getLength(); i++) {
             Element response = (Element) responseNodes.item(i);
             if (isDebugEnabled) {
-                provider.getLogger().debug("%s[parseWebDAVResources][%s]%s", provider.getLogPrefix(), i, SOSXML.nodeToString(response));
+                provider.getLogger().debug("%s[parseWebDAVResources][%s]%s", provider.getLogPrefix(), i, SOSXmlTransformer.nodeToString(response));
             }
             String resourceHref = extractHref(response);
             if (resourceHref == null) {

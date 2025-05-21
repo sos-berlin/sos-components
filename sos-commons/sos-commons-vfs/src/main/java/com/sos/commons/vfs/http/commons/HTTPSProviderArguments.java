@@ -14,6 +14,6 @@ public class HTTPSProviderArguments extends HTTPProviderArguments {
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
     @Override
     public String getAdvancedAccessInfo() {
-        return getSsl().getTrustStoreInfo();
+        return getSsl().getTrustedSslInfo();
     }
 }

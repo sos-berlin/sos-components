@@ -17,7 +17,7 @@ import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.xml.SOSXML;
+import com.sos.commons.xml.transform.SOSXmlTransformer;
 
 public class Export2XML {
 
@@ -95,7 +95,7 @@ public class Export2XML {
         if (o != null) {
             try {
                 // use dom for CDATA because e.g. nested CDATA
-                return SOSXML.nodeToString(dom.createCDATASection(SOSHibernateSQLExecutor.sqlValueToString(o)));
+                return SOSXmlTransformer.nodeToString(dom.createCDATASection(SOSHibernateSQLExecutor.sqlValueToString(o)));
             } catch (Throwable e) {
                 return new StringBuilder("<![CDATA[").append(o.toString()).append("]]>").toString();
             }
