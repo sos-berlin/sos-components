@@ -15,7 +15,9 @@ import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.FourEyesRequestEdit;
+import com.sos.joc.model.security.foureyes.RequestorState;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -44,6 +46,15 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             if (!item.getRequestor().equals(curAccountName)) {
                 throw new JocBadRequestException("The current user is not the requestor of the approval request with id " + in.getId());
+            }
+            
+            if (!ApproverState.PENDING.equals(item.getApproverStateAsEnum())) {
+                throw new JocBadRequestException("The approval request is already " + item.getApproverStateAsEnum().value().toLowerCase());
+            }
+            
+            if (!RequestorState.REQUESTED.equals(item.getRequestorStateAsEnum())) {
+                throw new JocBadRequestException("The approval request is already " + item.getRequestorStateAsEnum().value().toLowerCase().replace(
+                        '_', ' '));
             }
             
             boolean updateDB = false;

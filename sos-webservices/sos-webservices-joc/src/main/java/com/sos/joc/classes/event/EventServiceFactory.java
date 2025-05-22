@@ -340,6 +340,7 @@ public class EventServiceFactory {
         es.setRequestor(e.getRequestor());
         es.setNumOfPendingApprovals(e.getNumOfPendingApprovals());
         es.setEventType(e.getEventType());
+        es.setApproverState(e.getApproverState());
         return es;
     }
     

@@ -61,6 +61,11 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                 throw new JocBadRequestException("The current user is not the requestor of the approval request with id " + in.getId());
             }
             
+            if (!RequestorState.REQUESTED.equals(item.getRequestorStateAsEnum())) {
+                throw new JocBadRequestException("The approval request is already " + item.getRequestorStateAsEnum().value().toLowerCase().replace(
+                        '_', ' '));
+            }
+            
             dbLayer.updateRequestorStatusInclusiveTransaction(item.getId(), RequestorState.WITHDRAWN);
             
             if (item.getApproverState().equals(ApproverState.PENDING.intValue())) {
