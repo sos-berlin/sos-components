@@ -30,7 +30,7 @@ public class ApprovalUpdatedEvent extends JOCEvent {
         putVariable("approver", approver);
         putVariable("withNotification", withNotification);
         putVariable("numOfPending", numOfPending);
-        putVariable("approverAction", numOfPending);
+        putVariable("approverAction", approverAction);
     }
     
     @JsonIgnore
