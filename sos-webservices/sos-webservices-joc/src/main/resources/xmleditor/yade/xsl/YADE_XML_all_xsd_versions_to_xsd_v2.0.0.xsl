@@ -138,25 +138,25 @@
                         <!-- Transfer AcceptUntrustedCertificate for v1 if it exists, otherwise use TrustedSSL -->
                         <xsl:choose>
                             <!-- If AcceptUntrustedCertificate exists in v1 (HTTPSFragment) -->
-                            <xsl:when test="AcceptUntrustedCertificate">
+                            <xsl:when test="lower-case(normalize-space(AcceptUntrustedCertificate)) = 'true'">
                                 <UntrustedSSL>
                                     <xsl:copy-of select="DisableCertificateHostnameVerification"/>
                                 </UntrustedSSL>
                             </xsl:when>        
                             <xsl:otherwise>
+                                <TrustedSSL>
                                 <xsl:if test="KeyStore/KeyStoreFile">
-                                    <TrustedSSL>
-                                        <TrustStore>
-                                            <xsl:if test="KeyStore/KeyStoreType">
-                                                <TrustStoreType><xsl:value-of select="KeyStore/KeyStoreType"/></TrustStoreType>
-                                            </xsl:if>
-                                            <TrustStoreFile><xsl:value-of select="KeyStore/KeyStoreFile"/></TrustStoreFile>
-                                            <xsl:if test="KeyStore/KeyStorePassword">
-                                                <TrustStorePassword><xsl:value-of select="KeyStore/KeyStorePassword"/></TrustStorePassword>
-                                            </xsl:if>
-                                        </TrustStore>
-                                    </TrustedSSL>
+                                    <TrustStore>
+                                        <xsl:if test="KeyStore/KeyStoreType">
+                                            <TrustStoreType><xsl:value-of select="KeyStore/KeyStoreType"/></TrustStoreType>
+                                        </xsl:if>
+                                        <TrustStoreFile><xsl:value-of select="KeyStore/KeyStoreFile"/></TrustStoreFile>
+                                        <xsl:if test="KeyStore/KeyStorePassword">
+                                            <TrustStorePassword><xsl:value-of select="KeyStore/KeyStorePassword"/></TrustStorePassword>
+                                        </xsl:if>
+                                    </TrustStore>
                                 </xsl:if>
+                                </TrustedSSL>
                             </xsl:otherwise>
                         </xsl:choose>    
                     </SSL> 
@@ -281,6 +281,7 @@
             </xsl:if>
         
             <xsl:copy-of select="HTTPHeaders"/>
+            <!-- Different handling than with HTTPSFragment, since no WebDAVS fragment is present -->
             <xsl:choose>
                 <xsl:when test="SSL"><!-- v2 -->                    
                     <xsl:copy-of select="SSL"/>
@@ -288,7 +289,7 @@
                 <xsl:otherwise><!-- v1 -->  
                     <xsl:choose>                
                         <!-- If AcceptUntrustedCertificate exists in v1 (WebDAVFragment) -->
-                        <xsl:when test="AcceptUntrustedCertificate">
+                        <xsl:when test="lower-case(normalize-space(AcceptUntrustedCertificate)) = 'true'">
                             <SSL>
                                 <UntrustedSSL><xsl:copy-of select="DisableCertificateHostnameVerification"/></UntrustedSSL>
                             </SSL>
@@ -449,6 +450,6 @@
     <!-- TODO MailServer ??? -->    
     
     <!-- Remove deprecated elements from v1 that are no longer part of v2 -->
-    <xsl:template match="FTPSClientSecurity | FTPSProtocol | AcceptUntrustedCertificate | ServerAliveInterval | ServerAliveCountMax | SOCKS4Proxy | SOCKS5Proxy | JumpDirectory | JumpCommand | JumpCommandBeforeFile | JumpCommandAfterFileOnSuccess | JumpCommandBeforeOperation | JumpCommandAfterOperationOnSuccess | JumpCommandAfterOperationOnError | JumpCommandAfterOperationFinal | JumpCommandDelimiter"/>
+    <xsl:template match="FTPSClientSecurity | FTPSProtocol | AcceptUntrustedCertificate | ServerAliveInterval | ServerAliveCountMax | SOCKS4Proxy | SOCKS5Proxy | JumpDirectory | JumpCommand | JumpCommandBeforeFile | JumpCommandAfterFileOnSuccess | JumpCommandBeforeOperation | JumpCommandAfterOperationOnSuccess | JumpCommandAfterOperationOnError | JumpCommandAfterOperationFinal | JumpCommandDelimiter | Logging"/>
 
 </xsl:stylesheet>
