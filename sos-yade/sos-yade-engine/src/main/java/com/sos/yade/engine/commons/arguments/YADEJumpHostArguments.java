@@ -17,7 +17,7 @@ public class YADEJumpHostArguments extends ASOSArguments {
     private SSHProviderArguments provider;
     private YADEProviderCommandArguments commands;
 
-    private SOSArgument<String> directory = new SOSArgument<>("Directory", false, "/tmp");
+    private SOSArgument<String> tempDirectoryParent = new SOSArgument<>("TempDirectoryParent", false, "/tmp");
     private SOSArgument<JumpPlatform> platform = new SOSArgument<>("Platform", false);
 
     private SOSArgument<String> yadeClientCommand = new SOSArgument<>("JumpCommand", false);
@@ -41,8 +41,8 @@ public class YADEJumpHostArguments extends ASOSArguments {
         return commands;
     }
 
-    public SOSArgument<String> getDirectory() {
-        return directory;
+    public SOSArgument<String> getTempDirectoryParent() {
+        return tempDirectoryParent;
     }
 
     public SOSArgument<JumpPlatform> getPlatform() {

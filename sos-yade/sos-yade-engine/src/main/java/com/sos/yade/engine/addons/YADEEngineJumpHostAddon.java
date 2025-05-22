@@ -525,8 +525,8 @@ public class YADEEngineJumpHostAddon {
          *          because the paths are created based on the current system and not on the JumpHost system on which the JumpHost client is installed */
         private String getJumpHostLocalTemporaryDirectory() {
             String jumpParentDirectory;
-            if (argsLoader.getJumpHostArgs().getDirectory().isDirty()) {
-                String configuredParentDirectory = SOSPathUtils.toUnixStyle(argsLoader.getJumpHostArgs().getDirectory().getValue());
+            if (argsLoader.getJumpHostArgs().getTempDirectoryParent().isDirty()) {
+                String configuredParentDirectory = SOSPathUtils.toUnixStyle(argsLoader.getJumpHostArgs().getTempDirectoryParent().getValue());
                 if (SOSString.isEmpty(configuredParentDirectory)) {// ... can't be empty due to default value ...
                     jumpParentDirectory = SOSPathUtils.toUnixStyle(SOSPathUtils.getParentPath(argsLoader.getJumpHostArgs().getYADEClientCommand()
                             .getValue()));
@@ -538,7 +538,7 @@ public class YADEEngineJumpHostAddon {
                     }
                 }
             } else { // default: /tmp
-                jumpParentDirectory = SOSPathUtils.toUnixStyle(argsLoader.getJumpHostArgs().getDirectory().getValue());
+                jumpParentDirectory = SOSPathUtils.toUnixStyle(argsLoader.getJumpHostArgs().getTempDirectoryParent().getValue());
             }
             jumpParentDirectory = SOSPathUtils.getDirectoryWithTrailingSeparator(jumpParentDirectory, SOSPathUtils.PATH_SEPARATOR_UNIX);
             return jumpParentDirectory + JUMP_HOST_TMP_DIRECTORY_PREFIX + UUID.randomUUID().toString();

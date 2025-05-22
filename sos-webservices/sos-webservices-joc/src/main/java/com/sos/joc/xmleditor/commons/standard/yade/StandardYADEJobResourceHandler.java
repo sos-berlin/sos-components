@@ -100,13 +100,23 @@ public class StandardYADEJobResourceHandler {
             args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(doc, xml)
                     + "', '*.xml' )");
             jr.setArguments(args);
-            args = new Environment();
-            args.setAdditionalProperty(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
-            jr.setEnv(args);
+
+            Environment env = new Environment();
+            env.setAdditionalProperty(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
+            jr.setEnv(env);
         } else {
             // change only a variable not the entire jobresource
+            Environment args = jr.getArguments();
+            if (args == null || args.getAdditionalProperties() == null) {
+                jr.setArguments(new Environment());
+            }
             jr.getArguments().getAdditionalProperties().put(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler
                     .getYADEXMLForDeployment(doc, xml) + "', '*.xml' )");
+
+            Environment env = jr.getEnv();
+            if (env == null || env.getAdditionalProperties() == null) {
+                jr.setEnv(new Environment());
+            }
             jr.getEnv().getAdditionalProperties().put(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
         }
 

@@ -1517,16 +1517,11 @@
 		        
                 <xs:element ref="BasicConnection"/>
 				        <xs:element ref="SSHAuthentication"/>
-                <xs:element ref="ProxyForSFTP" minOccurs="0"/>
-				
-                <xs:element ref="SocketTimeout" minOccurs="0"/>
-                <xs:element name="KeepAlive" type="SFTPKeepAliveType" minOccurs="0"/>
-                <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
-				        <xs:element ref="ConfigurationFiles" minOccurs="0"/>	
-				                
-                <xs:element name="Directory" minOccurs="0" default="/tmp">
+                
+                <xs:element ref="YADEClientCommand"/>
+                <xs:element name="TempDirectoryParent" minOccurs="0" default="/tmp">
                     <xs:annotation>
-                  <xs:appinfo source="Fragments/ProtocolFragments/JUMP/Directory"/>
+                  <xs:appinfo source="Fragments/ProtocolFragments/JUMP/TempDirectoryParent"/>
                   <xs:documentation>
                      <div xmlns="http://www.w3.org/1999/xhtml">
                         <strong>References</strong>
@@ -1536,12 +1531,9 @@
                            </li>
                         </ul>
                         <strong>Notes</strong>
-                        <p>
-			This directory on the jump host is used to store files intermediately during file transfer between source and target host.
-			</p>
-                        <p>
-			The files in this directory are removed at the end of the transfer operation.
-			</p>
+                        <p>Parent directory on the jump host used to create exactly one temporary subdirectory per file transfer operation (e.g.<em>yade-dmz-&lt;uuid&gt;</em>).</p>
+                        <p>This subdirectory is deleted in all cases — whether the transfer succeeds or fails.</p>
+                        <p>The parent directory itself remains.</p>
                      </div>
                   </xs:documentation>
                </xs:annotation>
@@ -1552,8 +1544,13 @@
                     </xs:simpleType>	            
                 </xs:element>
                 
-				        <xs:element ref="YADEClientCommand"/>				
-                
+                <xs:element ref="ProxyForSFTP" minOccurs="0"/>
+				
+                <xs:element ref="SocketTimeout" minOccurs="0"/>
+                <xs:element name="KeepAlive" type="SFTPKeepAliveType" minOccurs="0"/>
+                <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
+				        <xs:element ref="ConfigurationFiles" minOccurs="0"/>	
+				
                 <xs:element ref="SFTPPreProcessing" minOccurs="0"/>
 				        <xs:element ref="SFTPPostProcessing" minOccurs="0"/>
                 <xs:element ref="ProcessingCommandDelimiter" minOccurs="0"/>

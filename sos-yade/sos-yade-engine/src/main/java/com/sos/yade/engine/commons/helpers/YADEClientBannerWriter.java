@@ -340,8 +340,8 @@ public class YADEClientBannerWriter {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
-        if (jumpHostArgs.getDirectory().getValue() != null) {
-            sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getDirectory()));
+        if (jumpHostArgs.getTempDirectoryParent().getValue() != null) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getTempDirectoryParent()));
         }
         sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getYADEClientCommand()));
 

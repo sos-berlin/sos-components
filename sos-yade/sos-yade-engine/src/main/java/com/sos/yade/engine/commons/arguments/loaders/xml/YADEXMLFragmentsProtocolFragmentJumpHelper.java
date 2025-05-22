@@ -18,7 +18,7 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 switch (n.getNodeName()) {
                 // YADE1 - compatibility
                 case "JumpDirectory":
-                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getDirectory(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getTempDirectoryParent(), n);
                     break;
                 case "JumpCommand":
                     argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getYADEClientCommand(), n);
@@ -68,6 +68,14 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 case "SSHAuthentication":
                     YADEXMLFragmentsProtocolFragmentHelper.parseSFTPSSHAuthentication(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
                     break;
+
+                case "YADEClientCommand": // JS7 - YADE-626
+                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getYADEClientCommand(), n);
+                    break;
+                case "TempDirectoryParent":
+                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getTempDirectoryParent(), n);
+                    break;
+
                 case "ProxyForSFTP":
                     YADEXMLFragmentsProtocolFragmentHelper.parseProxy(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
                     break;
@@ -83,13 +91,6 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                     break;
                 case "ConfigurationFiles":
                     YADEXMLFragmentsProtocolFragmentHelper.parseConfigurationFiles(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
-                    break;
-
-                case "Directory":
-                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getDirectory(), n);
-                    break;
-                case "YADEClientCommand": // JS7 - YADE-626
-                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getYADEClientCommand(), n);
                     break;
 
                 case "SFTPPreProcessing":

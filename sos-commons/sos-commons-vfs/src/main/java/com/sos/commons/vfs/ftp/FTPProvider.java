@@ -56,6 +56,15 @@ import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
  * https://issues.apache.org/jira/browse/NET-408<br/>
  * - as Target (write files) - [425]425 Unable to build data connection: TLS session of data connection not resumed.<br/>
  * - as Source (list etc) - no result - Error: TLS session of data connection not resumed + 425<br/>
+ * <br/>
+ * TODO: FTP path handling with non-chrooted setup<br/>
+ * - In a non-chrooted FTP server configuration (e.g. vsftpd), FTPClient.printWorkingDirectory() may return an absolute filesystem path<br/>
+ * -- like "/home/vsftpd/myuser" instead of just "/".<br/>
+ * -- This means paths such as "/my_dir" (which work with curl, assuming a chrooted FTP root)<br/>
+ * --- may fail in Apache FTPClient because they are interpreted as absolute paths from the real filesystem root.<br/>
+ * -- To ensure compatibility, always:<br/>
+ * --- 1. Use printWorkingDirectory() to determine the session's FTP root.<br/>
+ * --- 2. If it’s not "/", prepend or adjust other FTP paths accordingly.<br/>
  */
 public class FTPProvider extends AProvider<FTPProviderArguments> {
 
@@ -129,7 +138,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             postLoginOperations();
 
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug(client.printWorkingDirectory());
+                getLogger().debug("%s[connect][after login][printWorkingDirectory]%s", getLogPrefix(), client.printWorkingDirectory());
             }
 
             getLogger().info(getConnectedMsg(getConnectedInfos()));

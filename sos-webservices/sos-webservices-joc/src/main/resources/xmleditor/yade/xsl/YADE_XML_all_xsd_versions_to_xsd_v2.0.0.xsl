@@ -320,7 +320,7 @@
     <xsl:template match="JumpFragment">
         <xsl:choose>
             <!-- If YADEClientCommand element exists, it's v2, so copy the entire JumpFragment as is -->
-            <xsl:when test="JumpYADEClientCommand">
+            <xsl:when test="YADEClientCommand">
                 <xsl:copy-of select="."/>
             </xsl:when>
 
@@ -333,6 +333,14 @@
                     
                     <xsl:copy-of select="BasicConnection"/>
                     <xsl:copy-of select="SSHAuthentication"/>
+                    
+                    <xsl:if test="JumpCommand">
+                        <YADEClientCommand><xsl:value-of select="JumpCommand"/></YADEClientCommand>
+                    </xsl:if>
+                    <xsl:if test="JumpDirectory">
+                        <TempDirectoryParent><xsl:value-of select="JumpDirectory"/></TempDirectoryParent>
+                    </xsl:if>                       
+                    
                     <xsl:if test="ProxyForSFTP">
                         <ProxyForSFTP><xsl:apply-templates select="ProxyForSFTP"/></ProxyForSFTP>
                     </xsl:if> 
@@ -351,13 +359,6 @@
                     </xsl:if>                    
                     <xsl:copy-of select="StrictHostkeyChecking"/>
                     <xsl:copy-of select="ConfigurationFiles"/>
-                    
-                    <xsl:if test="JumpDirectory">
-                        <Directory><xsl:value-of select="JumpDirectory"/></Directory>
-                    </xsl:if>   
-                    <xsl:if test="JumpCommand">
-                        <YADEClientCommand><xsl:value-of select="JumpCommand"/></YADEClientCommand>
-                    </xsl:if>   
                     
                     <xsl:if test="JumpCommandBeforeFile or JumpCommandBeforeOperation">
                         <SFTPPreProcessing>
@@ -392,8 +393,6 @@
                         <ProcessingCommandDelimiter><xsl:value-of select="JumpCommandDelimiter"/></ProcessingCommandDelimiter>
                     </xsl:if> 
                     <xsl:copy-of select="Platform"/>                    
-          
-                    <xsl:copy-of select="ConfigurationFiles"/>
                 </JumpFragment>
             </xsl:otherwise>
         </xsl:choose>     
