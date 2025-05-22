@@ -128,6 +128,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
 
             postLoginOperations();
 
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug(client.printWorkingDirectory());
+            }
+
             getLogger().info(getConnectedMsg(getConnectedInfos()));
         } catch (Throwable e) {
             if (isConnected()) {

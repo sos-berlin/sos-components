@@ -328,6 +328,7 @@ public class BaseHttpClient implements AutoCloseable {
             if (connectTimeout != null) {
                 httpClientBuilder.connectTimeout(connectTimeout);
             }
+
             if (auth != null) {
                 if (auth.hasAuthenticator()) { // BASIC
                     httpClientBuilder.authenticator(auth.toAuthenticator());
@@ -362,7 +363,7 @@ public class BaseHttpClient implements AutoCloseable {
                 httpClientBuilder.sslContext(sslContext);
                 // builder.sslParameters(sslParameters);
             }
-          
+
             BaseHttpClient client = new BaseHttpClient(logger, httpClientBuilder.build());
             client.setHeaders(headers);
             return client;

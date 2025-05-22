@@ -20,6 +20,7 @@ import com.sos.commons.httpclient.BaseHttpClient.Builder;
 import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
 import com.sos.commons.httpclient.commons.HttpOutputStream;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
+import com.sos.commons.httpclient.commons.auth.HttpClientAuthMethod;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -450,18 +451,21 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         return createProviderFile(uri.toString(), size, BaseHttpClient.getLastModifiedInMillis(response));
     }
 
+    /** JS7 new - auth_method - not in the XML schema - currently only BASIC supported */
     private HttpClientAuthConfig getAuthConfig() {
-        if (getArguments().getAuthMethod().getValue() == null) {
+        if (getArguments().getUser().isEmpty()) {
+            getArguments().getAuthMethod().setValue(HttpClientAuthMethod.NONE);
             return null;
         }
-        switch (getArguments().getAuthMethod().getValue()) {
-        case BASIC:
-            return new HttpClientAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
-        case NTLM: // TODO NTLM
-        case NONE:
-        default:
-            return null;
-        }
+        return new HttpClientAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
+        // switch (getArguments().getAuthMethod().getValue()) {
+        // case BASIC:
+        // return new HttpClientAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
+        // case NTLM: // TODO NTLM
+        // case NONE:
+        // default:
+        // return null;
+        // }
     }
 
 }

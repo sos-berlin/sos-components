@@ -215,24 +215,27 @@
     <!-- Template for SMBFragment: check if SMBConnection exists to determine if it's v2 -->
     <xsl:template match="SMBFragment">
         <xsl:choose>
-            <!-- If SMBConnection element exists, it's v2, so copy the entire SMBFragment as is -->
-            <xsl:when test="SMBConnection">
-                <xsl:copy-of select="."/>
-            </xsl:when>
-
-            <!-- If SMBConnection element does not exist, it must be v1, so transform it to v2 -->
-            <xsl:otherwise>
+            <!-- If SMBAuthentication/Account element exists, it's v1, so transform it to v2 -->
+            <xsl:when test="SMBAuthentication/Account">
                 <SMBFragment>
                     <xsl:copy-of select="@name"/>
           
                     <xsl:copy-of select="CredentialStoreFragmentRef"/>
                     <xsl:copy-of select="JumpFragmentRef"/>
-
-                    <!-- Handle Hostname in v2 format -->
-                    <SMBConnection>
-                        <xsl:copy-of select="Hostname"/>
-                    </SMBConnection>
-          
+                    
+                    <!-- Workaround: SMBConnection is v2, but was introduced before transformation, so it should be copied as is, or it is v1 -->
+                    <xsl:choose>
+                        <xsl:when test="SMBConnection">
+                            <xsl:copy-of select="SMBConnection"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <!-- Handle Hostname in v2 format -->
+                            <SMBConnection>
+                                <xsl:copy-of select="Hostname"/>
+                            </SMBConnection>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                    
                     <SMBAuthentication>
                         <xsl:choose>
                             <!-- If SMBAuthentication/Password exists in v1, transform it to SMBAuthenticationMethodNTLM for v2 -->
@@ -253,7 +256,13 @@
           
                     <xsl:copy-of select="ConfigurationFiles"/>
                 </SMBFragment>
+            </xsl:when>
+            
+            <!-- If SMBAuthentication/Account element does not exist, it must be v1, so copy the entire SMBFragment as is -->
+            <xsl:otherwise>
+                <xsl:copy-of select="."/>
             </xsl:otherwise>
+            
         </xsl:choose>
     </xsl:template>
     
@@ -307,17 +316,17 @@
         </WebDAVFragment>            
     </xsl:template> 
 
-    <!-- Template for JUMPFragment: check if YADEClientCommand exists to determine if it's v2 -->
-    <xsl:template match="JUMPFragment">
+    <!-- Template for JumpFragment: check if YADEClientCommand exists to determine if it's v2 -->
+    <xsl:template match="JumpFragment">
         <xsl:choose>
-            <!-- If YADEClientCommand element exists, it's v2, so copy the entire JUMPFragment as is -->
+            <!-- If YADEClientCommand element exists, it's v2, so copy the entire JumpFragment as is -->
             <xsl:when test="JumpYADEClientCommand">
                 <xsl:copy-of select="."/>
             </xsl:when>
 
             <!-- If YADEClientCommand element does not exist, it must be v1, so transform it to v2 -->
             <xsl:otherwise>
-                <JUMPFragment>
+                <JumpFragment>
                     <xsl:copy-of select="@name"/>
           
                     <xsl:copy-of select="CredentialStoreFragmentRef"/>
@@ -385,7 +394,7 @@
                     <xsl:copy-of select="Platform"/>                    
           
                     <xsl:copy-of select="ConfigurationFiles"/>
-                </JUMPFragment>
+                </JumpFragment>
             </xsl:otherwise>
         </xsl:choose>     
     </xsl:template>

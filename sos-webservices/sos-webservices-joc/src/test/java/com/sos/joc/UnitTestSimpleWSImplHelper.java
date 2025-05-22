@@ -244,6 +244,10 @@ public class UnitTestSimpleWSImplHelper {
         return post(methodName, filter == null ? null : Files.readAllBytes(filter));
     }
 
+    public CompletableFuture<JOCDefaultResponse> post(String methodName, Object filter) throws Exception {
+        return post(methodName, filter == null ? null : Globals.objectMapper.writeValueAsBytes(filter));
+    }
+
     private CompletableFuture<JOCDefaultResponse> post(String methodName, byte[] filter) throws Exception {
         CompletableFuture<JOCDefaultResponse> future = CompletableFuture.supplyAsync(() -> {
             try {

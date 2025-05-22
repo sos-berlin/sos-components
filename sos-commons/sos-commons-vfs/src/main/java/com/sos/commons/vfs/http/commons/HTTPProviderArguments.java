@@ -20,7 +20,7 @@ public class HTTPProviderArguments extends AProviderArguments {
     // otherwise, the WebDAVSPProviderArguments should extend HTTSPProviderArguments and not the WebDAVPProviderArguments ...
     private SslArguments ssl;
 
-    // JS7 new - auth_method - not in the XML schema - currently only BASIC supported
+    /** JS7 new - auth_method - not in the XML schema - currently only BASIC supported */
     private SOSArgument<HttpClientAuthMethod> authMethod = new SOSArgument<>("auth_method", false, HttpClientAuthMethod.NONE);
     private SOSArgument<List<String>> httpHeaders = new SOSArgument<>("http_headers", false);
 
