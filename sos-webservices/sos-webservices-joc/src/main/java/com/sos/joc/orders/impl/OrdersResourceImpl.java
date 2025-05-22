@@ -279,7 +279,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                         if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state()
                                 .getClass()))) {
                             Instant scheduledFor = OrdersHelper.getScheduledForInstant(o, zoneId);
-                            if (scheduledFor != null && scheduledFor.isAfter(until)) {
+                            if (scheduledFor != null && !scheduledFor.isBefore(until)) {
                                 if ((!withStatesFilter || lookingForPending) && scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
                                     return true;
                                 }

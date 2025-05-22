@@ -211,7 +211,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     final Instant until = (dateToInstant.isBefore(now)) ? now : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
                         Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
-                        return scheduledFor == null || !scheduledFor.isAfter(until);
+                        return scheduledFor == null || scheduledFor.isBefore(until);
                     };
                     numOfFreshOrders = freshOrderSet.stream().filter(dateToFilter).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string()))
                             .distinct().mapToInt(e -> 1).sum();
