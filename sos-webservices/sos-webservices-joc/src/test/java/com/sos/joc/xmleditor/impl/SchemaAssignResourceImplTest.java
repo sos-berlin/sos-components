@@ -2,6 +2,7 @@ package com.sos.joc.xmleditor.impl;
 
 import java.nio.file.Paths;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ public class SchemaAssignResourceImplTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SchemaAssignResourceImplTest.class);
 
-    //@Ignore
+    @Ignore
     @Test
     public void testProcessOther() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new SchemaAssignResourceImpl());

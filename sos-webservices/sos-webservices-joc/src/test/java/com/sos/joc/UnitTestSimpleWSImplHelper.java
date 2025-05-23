@@ -165,6 +165,8 @@ public class UnitTestSimpleWSImplHelper {
         SOSAuthCurrentAccount a = new SOSAuthCurrentAccount("root");
         a.setAccessToken("JOC", "tmp"); // avoid NPE
         a.setRoles(Collections.singleton("all"));
+        a.setIsApprover(true);
+
         mockRootJOCPermissions(a);
 
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(a);
@@ -173,6 +175,8 @@ public class UnitTestSimpleWSImplHelper {
         as.setAccessToken(a.getAccessToken());
         as.setAuthenticated(true);
         as.setIsForcePasswordChange(false);
+        as.setAuthenticated(true);
+
         SOSInternAuthSession s = (SOSInternAuthSession) as.getSession();
         s.setAccessToken(a.getAccessToken());
         s.touch();// avoid NPE
@@ -194,6 +198,7 @@ public class UnitTestSimpleWSImplHelper {
 
         p.getInventory().setView(true);
         p.getInventory().setManage(true);
+        p.getInventory().setDeploy(true);
 
         p.getNotification().setView(true);
         p.getNotification().setManage(true);

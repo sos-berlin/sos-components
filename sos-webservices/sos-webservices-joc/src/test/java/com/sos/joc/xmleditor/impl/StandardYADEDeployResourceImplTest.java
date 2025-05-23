@@ -22,13 +22,15 @@ public class StandardYADEDeployResourceImplTest {
     @Ignore
     @Test
     public void testDeploy() throws Exception {
+        Long xmlEditorId = 30L;
+
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StandardYADEDeployResourceImpl());
         h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
 
         try {
             h.init();
 
-            StringBuilder filter = getFilter(h.getControllerIds());
+            StringBuilder filter = getFilter(h.getControllerIds(), xmlEditorId);
             LOGGER.info("[filter]" + filter);
 
             h.post("deploy", filter);
@@ -39,19 +41,18 @@ public class StandardYADEDeployResourceImplTest {
         }
     }
 
-    private StringBuilder getFilter(List<String> controllerIds) throws Exception {
+    private StringBuilder getFilter(List<String> controllerIds, Long xmlEditorId) throws Exception {
         XmlEditorDbLayer dbLayer = null;
         try {
-            Long id = 1L;
             dbLayer = new XmlEditorDbLayer(Globals.getHibernateFactory().openStatelessSession("test"));
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(id);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(xmlEditorId);
             String configuration = item.getConfigurationDraft() == null ? item.getConfigurationReleased() : item.getConfigurationDraft();
 
             StringBuilder filter = new StringBuilder();
             filter.append("{");
             filter.append("\"objectType\": ").append(Globals.objectMapper.writeValueAsString(ObjectType.YADE));
             filter.append(",\"configuration\": ").append(Globals.objectMapper.writeValueAsString(configuration));
-            filter.append(",\"id\": ").append(id);
+            filter.append(",\"id\": ").append(xmlEditorId);
             filter.append(",\"controllerIds\": [");
             filter.append(SOSString.join(controllerIds, ",", c -> "\"" + c + "\""));
             filter.append("]");

@@ -26,7 +26,8 @@ public class StandardYADEJobResource {
     private final String name;
     private final String variable;
     private final String environmentVariable;
-    private final DBItemInventoryConfiguration inventoryItem;
+
+    private DBItemInventoryConfiguration inventoryItem;
 
     private StandardYADEJobResource(String name, String variable, String environmentVariable, DBItemInventoryConfiguration inventoryItem) {
         this.name = name;
@@ -103,6 +104,13 @@ public class StandardYADEJobResource {
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    public void createNewJobResourceInventoryItem() {
+        inventoryItem = new DBItemInventoryConfiguration();
+        inventoryItem.setId(null);
+        inventoryItem.setType(ConfigurationType.JOBRESOURCE);
+        inventoryItem.setPath("/" + name);
     }
 
     // String variableValue = "toFile( '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\r\n<Configurations>...</Configurations>', '*.xml' )";

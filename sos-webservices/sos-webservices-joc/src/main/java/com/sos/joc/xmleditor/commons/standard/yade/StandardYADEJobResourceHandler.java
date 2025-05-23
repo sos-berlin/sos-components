@@ -41,17 +41,69 @@ public class StandardYADEJobResourceHandler {
         if (yadeJobResource == null) {
             throw new SOSMissingDataException("[Configurations/JobResource]No JobResource configured for deployment");
         }
-        if (yadeJobResource.getInventoryItem() == null) {
-            throw new SOSMissingDataException("[JobResource=" + yadeJobResource.getName() + "]JobResource not found in the Inventory");
-        }
-
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[store]YADEJobResource=" + yadeJobResource);
         }
 
-        // 3) call JOC API inventory/store
+        // call JOC API inventory/store
         callJOCAPIInventoryStore(accessToken, yadeJobResource, doc, in.getConfiguration());
         return yadeJobResource;
+    }
+
+    private static void callJOCAPIInventoryStore(final String accessToken, final StandardYADEJobResource yadeJobResource, final Document doc,
+            final String xml) throws Exception {
+
+        // 1) Prepare JOC API call inventory/store - create filter
+        JobResource jr = null;
+        if (yadeJobResource.getInventoryItem() == null) {// JobResource not exists in the inventory
+            yadeJobResource.createNewJobResourceInventoryItem();
+        } else {
+            jr = Globals.objectMapper.readValue(yadeJobResource.getInventoryItem().getContent(), JobResource.class);
+        }
+        if (jr == null) {
+            jr = new JobResource();
+            jr.setTitle(yadeJobResource.getInventoryItem().getTitle());
+            Environment args = new Environment();
+            args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(doc, xml)
+                    + "', '*.xml' )");
+            jr.setArguments(args);
+
+            Environment env = new Environment();
+            env.setAdditionalProperty(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
+            jr.setEnv(env);
+        } else {
+            // change only a variable not the entire jobresource
+            Environment args = jr.getArguments();
+            if (args == null || args.getAdditionalProperties() == null) {
+                jr.setArguments(new Environment());
+            }
+            jr.getArguments().getAdditionalProperties().put(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler
+                    .getYADEXMLForDeployment(doc, xml) + "', '*.xml' )");
+
+            Environment env = jr.getEnv();
+            if (env == null || env.getAdditionalProperties() == null) {
+                jr.setEnv(new Environment());
+            }
+            jr.getEnv().getAdditionalProperties().put(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
+        }
+
+        ConfigurationObject co = new ConfigurationObject();
+        co.setObjectType(ConfigurationType.JOBRESOURCE);
+        if (yadeJobResource.getInventoryItem().getId() == null) {
+            co.setPath(yadeJobResource.getInventoryItem().getPath());
+        } else {
+            co.setId(yadeJobResource.getInventoryItem().getId());
+        }
+        co.setValid(true);
+        co.setConfiguration(jr);
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[callJOCAPIInventoryStore]" + Globals.objectMapper.writeValueAsString(co));
+        }
+
+        // 2) JOC API call inventory/store
+        JOCDefaultResponse response = new StoreConfigurationResourceImpl().store(accessToken, Globals.objectMapper.writeValueAsBytes(co));
+        checkResponse(response);
     }
 
     private static void deploy(final StandardYADEDeployResourceImpl impl, final String accessToken, final DeployConfiguration in,
@@ -88,73 +140,30 @@ public class StandardYADEJobResourceHandler {
         }
     }
 
-    private static void callJOCAPIInventoryStore(final String accessToken, final StandardYADEJobResource yadeJobResource, final Document doc,
-            final String xml) throws Exception {
-
-        // 1) Prepare JOC API call inventory/store - create filter
-        JobResource jr = Globals.objectMapper.readValue(yadeJobResource.getInventoryItem().getContent(), JobResource.class);
-        if (jr == null) {
-            jr = new JobResource();
-            jr.setTitle(yadeJobResource.getInventoryItem().getTitle());
-            Environment args = new Environment();
-            args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(doc, xml)
-                    + "', '*.xml' )");
-            jr.setArguments(args);
-
-            Environment env = new Environment();
-            env.setAdditionalProperty(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
-            jr.setEnv(env);
-        } else {
-            // change only a variable not the entire jobresource
-            Environment args = jr.getArguments();
-            if (args == null || args.getAdditionalProperties() == null) {
-                jr.setArguments(new Environment());
-            }
-            jr.getArguments().getAdditionalProperties().put(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler
-                    .getYADEXMLForDeployment(doc, xml) + "', '*.xml' )");
-
-            Environment env = jr.getEnv();
-            if (env == null || env.getAdditionalProperties() == null) {
-                jr.setEnv(new Environment());
-            }
-            jr.getEnv().getAdditionalProperties().put(yadeJobResource.getEnvironmentVariable(), "$" + yadeJobResource.getVariable());
-        }
-
-        ConfigurationObject co = new ConfigurationObject();
-        co.setObjectType(ConfigurationType.JOBRESOURCE);
-        co.setId(yadeJobResource.getInventoryItem().getId());
-        co.setValid(true);
-        co.setConfiguration(jr);
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[callJOCAPIInventoryStore]" + Globals.objectMapper.writeValueAsString(co));
-        }
-
-        // 2) JOC API call inventory/store
-        JOCDefaultResponse response = new StoreConfigurationResourceImpl().store(accessToken, Globals.objectMapper.writeValueAsBytes(co));
-        checkResponse(response);
-    }
-
     private static void checkResponse(JOCDefaultResponse response) throws Exception {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[checkResponse]" + response);
+            LOGGER.debug("[checkResponse]" + (response.getEntity() == null ? response : response.getEntity()));
         }
 
         if (response.getStatus() != 200) {
             StringBuilder msg = new StringBuilder();
-            if (response.getEntity() instanceof Err420) {
-                Err420 err = (Err420) response.getEntity();
-                msg.append("[").append(err.getClass().getSimpleName()).append("]");
-                msg.append("[").append(err.getError().getCode()).append("]");
-                msg.append(err.getError().getMessage());
-
-            } else if (response.getEntity() instanceof Err) {
-                Err err = (Err) response.getEntity();
-                msg.append("[").append(err.getClass().getSimpleName()).append("]");
-                msg.append("[").append(err.getCode()).append("]");
-                msg.append(err.getMessage());
+            if (response.getEntity() == null) {
+                msg.append(response);
             } else {
-                msg.append(response.getEntity());
+                if (response.getEntity() instanceof Err420) {
+                    Err420 err = (Err420) response.getEntity();
+                    msg.append("[").append(err.getClass().getSimpleName()).append("]");
+                    msg.append("[").append(err.getError().getCode()).append("]");
+                    msg.append(err.getError().getMessage());
+
+                } else if (response.getEntity() instanceof Err) {
+                    Err err = (Err) response.getEntity();
+                    msg.append("[").append(err.getClass().getSimpleName()).append("]");
+                    msg.append("[").append(err.getCode()).append("]");
+                    msg.append(err.getMessage());
+                } else {
+                    msg.append(response.getEntity());
+                }
             }
             throw new Exception("[" + StoreConfigurationResourceImpl.IMPL_PATH + "]" + msg);
         }
