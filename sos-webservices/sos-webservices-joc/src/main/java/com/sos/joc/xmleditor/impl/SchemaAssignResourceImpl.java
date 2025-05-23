@@ -29,11 +29,12 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
             JsonValidator.validateFailFast(filterBytes, SchemaAssignConfiguration.class);
             SchemaAssignConfiguration in = Globals.objectMapper.readValue(filterBytes, SchemaAssignConfiguration.class);
 
-            checkRequiredParameters(in);
+            boolean isYADE = JocXmlEditor.isYADE(in.getObjectType());
+            checkRequiredParameters(in, isYADE);
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(getSuccess(in));
+                response = JOCDefaultResponse.responseStatus200(getSuccess(in, isYADE));
             }
             return response;
         } catch (JocException e) {
@@ -44,20 +45,18 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
         }
     }
 
-    private void checkRequiredParameters(final SchemaAssignConfiguration in) throws Exception {
-        if (in.getUri() == null) {
+    private void checkRequiredParameters(final SchemaAssignConfiguration in, boolean isYADE) throws Exception {
+        if (!isYADE && !JocXmlEditor.isOther(in.getObjectType())) {
+            throw new Exception("Unsupported type=" + in.getObjectType());
+        }
+        if (!isYADE && in.getUri() == null) {
             if (in.getFileName() == null || in.getFileContent() == null) {
                 throw new JocMissingRequiredParameterException("uri param is null. missing fileName or fileContent parameters.");
             }
         }
     }
 
-    private SchemaAssignConfigurationAnswer getSuccess(final SchemaAssignConfiguration in) throws Exception {
-        boolean isYADE = JocXmlEditor.isYADE(in.getObjectType());
-        if (!isYADE && !JocXmlEditor.isOther(in.getObjectType())) {
-            throw new Exception("Unsupported type=" + in.getObjectType());
-        }
-
+    private SchemaAssignConfigurationAnswer getSuccess(final SchemaAssignConfiguration in, boolean isYADE) throws Exception {
         if (isYADE) {
             SchemaAssignConfigurationAnswer answer = new SchemaAssignConfigurationAnswer();
             answer.setSchema(StandardSchemaHandler.getYADESchema());
