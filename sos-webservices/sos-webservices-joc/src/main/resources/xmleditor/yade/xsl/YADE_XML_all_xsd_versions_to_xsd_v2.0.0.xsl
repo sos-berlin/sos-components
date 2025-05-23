@@ -137,8 +137,8 @@
                     <SSL>
                         <!-- Transfer AcceptUntrustedCertificate for v1 if it exists, otherwise use TrustedSSL -->
                         <xsl:choose>
-                            <!-- If AcceptUntrustedCertificate exists in v1 (HTTPSFragment) -->
-                            <xsl:when test="lower-case(normalize-space(AcceptUntrustedCertificate)) = 'true'">
+                            <!-- If AcceptUntrustedCertificate exists in v1 (HTTPSFragment) - XSLT v1 (translate) syntax is used instead of v2 (lowcase) because the Saxon HE dependency is missing in the JOC -->
+                            <xsl:when test="translate(normalize-space(AcceptUntrustedCertificate), 'TRUEFALS', 'truefals')">
                                 <UntrustedSSL>
                                     <xsl:copy-of select="DisableCertificateHostnameVerification"/>
                                 </UntrustedSSL>
@@ -288,8 +288,8 @@
                 </xsl:when>        
                 <xsl:otherwise><!-- v1 -->  
                     <xsl:choose>                
-                        <!-- If AcceptUntrustedCertificate exists in v1 (WebDAVFragment) -->
-                        <xsl:when test="lower-case(normalize-space(AcceptUntrustedCertificate)) = 'true'">
+                        <!-- If AcceptUntrustedCertificate exists in v1 (WebDAVFragment) -  XSLT v1 (translate) syntax is used instead of v2 (lowcase) because the Saxon HE dependency is missing in the JOC  -->
+                        <xsl:when test="translate(normalize-space(AcceptUntrustedCertificate), 'TRUEFALS', 'truefals')">
                             <SSL>
                                 <UntrustedSSL><xsl:copy-of select="DisableCertificateHostnameVerification"/></UntrustedSSL>
                             </SSL>

@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.UnitTestSimpleWSImplHelper;
+import com.sos.joc.model.xmleditor.common.ObjectType;
+import com.sos.joc.model.xmleditor.read.ReadConfiguration;
 
 public class ReadResourceImplTest {
 
@@ -21,7 +23,12 @@ public class ReadResourceImplTest {
         try {
             h.init();
 
-            h.post("process", Paths.get("src/test/resources/ws/xmleditor/impl/request-ReadResourceImpl-process-YADE.json"));
+            ReadConfiguration in = new ReadConfiguration();
+            in.setObjectType(ObjectType.YADE);
+            in.setId(4L);
+
+            h.post("process", in);
+            // h.post("process", Paths.get("src/test/resources/ws/xmleditor/impl/request-ReadResourceImpl-process-YADE.json"));
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {

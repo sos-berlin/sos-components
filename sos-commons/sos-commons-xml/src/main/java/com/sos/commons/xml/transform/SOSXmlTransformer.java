@@ -26,6 +26,8 @@ import org.w3c.dom.Node;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.xml.SOSXML;
 
+/** TODO Java default Transformer uses xalan(XSLT v1)<br/>
+ * to support XSLT v2 use net.sf.saxon (supports XSLT v2), artifactId Saxon-HE - see comment - newTransformer */
 public class SOSXmlTransformer {
 
     public static String nodeToString(Node node) throws Exception {
@@ -212,6 +214,8 @@ public class SOSXmlTransformer {
     }
 
     private static Transformer newTransformer(String content) throws TransformerConfigurationException {
+        // TransformerFactory f = net.sf.saxon.TransformerFactory.newInstance();
+        // default javax.xml.transform.TransformerFactory -> uses xalan(XSLT v1)
         TransformerFactory f = TransformerFactory.newInstance();
         return content == null ? f.newTransformer() : f.newTransformer(new StreamSource(new StringReader(content)));
     }

@@ -594,7 +594,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             }
             // HTTP PROXY
             else {
-                if (getProxyConfig().getUser().isEmpty()) {
+                if (SOSString.isEmpty(getProxyConfig().getUser())) {
                     client = new FTPHTTPClient(getProxyConfig().getHost(), getProxyConfig().getPort());
                 } else {
                     client = new FTPHTTPClient(getProxyConfig().getHost(), getProxyConfig().getPort(), getProxyConfig().getUser(), getProxyConfig()

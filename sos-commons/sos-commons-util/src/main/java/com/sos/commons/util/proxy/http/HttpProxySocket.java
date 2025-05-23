@@ -14,7 +14,6 @@ import java.util.Base64;
 
 import org.apache.commons.io.IOUtils;
 
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.proxy.ProxyConfig;
 
 public class HttpProxySocket extends Socket {
@@ -31,7 +30,7 @@ public class HttpProxySocket extends Socket {
         super.connect(config.getProxy().address(), config.getConnectTimeoutAsMillis());
 
         String basicAuth = null;
-        if (!SOSString.isEmpty(config.getUser())) {
+        if (config.hasUserAndPassword()) {
             basicAuth = new String(Base64.getEncoder().encode(new String(config.getUser() + ":" + config.getPassword()).getBytes()));
         }
 
