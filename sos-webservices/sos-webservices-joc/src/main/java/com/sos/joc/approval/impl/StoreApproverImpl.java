@@ -11,7 +11,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.approval.StoreApproverFilter;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.Approver;
 import com.sos.schema.JsonValidator;
