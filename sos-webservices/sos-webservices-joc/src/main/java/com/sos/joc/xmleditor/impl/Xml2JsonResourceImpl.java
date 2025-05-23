@@ -40,7 +40,7 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
                 break;
             case YADE:
                 schema = StandardSchemaHandler.getYADESchema();
-                in.setConfiguration(StandardSchemaHandler.getXML(in.getConfiguration(), true));
+                in.setConfiguration(StandardSchemaHandler.getXml(in.getConfiguration(), true));
                 break;
             case OTHER:
                 schema = OtherSchemaHandler.getSchema(in.getSchemaIdentifier(), false);

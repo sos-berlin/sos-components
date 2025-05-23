@@ -123,7 +123,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         // workaround YADE-626 to sets already deployed
         if (item.getConfigurationReleased() == null && item.getConfigurationDraft() != null) {
             try {
-                String xml = StandardSchemaHandler.getXML(item.getConfigurationDraft(), true);
+                String xml = StandardSchemaHandler.getXml(item.getConfigurationDraft(), true);
                 Document doc = JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), xml);
                 StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
                 if (yadeJobResource != null) {// JobResource element not defined

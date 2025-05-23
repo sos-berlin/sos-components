@@ -107,7 +107,7 @@ public class StandardSchemaHandler {
             answer.setHasReleases(true);
 
             if (forceRelease || item.getConfigurationDraft() == null) {
-                String xml = getXML(item.getConfigurationReleased(), isYADE);
+                String xml = getXml(item.getConfigurationReleased(), isYADE);
                 String json = item.getConfigurationReleasedJson();
 
                 answer.setConfigurationDate(item.getReleased());
@@ -133,7 +133,7 @@ public class StandardSchemaHandler {
         }
 
         if (item.getConfigurationDraft() != null) {
-            String xml = getXML(item.getConfigurationDraft(), isYADE);
+            String xml = getXml(item.getConfigurationDraft(), isYADE);
             String json = item.getConfigurationDraftJson();
 
             answer.setConfigurationDate(item.getModified());
@@ -231,7 +231,7 @@ public class StandardSchemaHandler {
         item.setReleased(item.getModified());
         return item;
     }
-    
+
     public ReadStandardConfigurationAnswer getAnswer() {
         return answer;
     }
@@ -240,15 +240,15 @@ public class StandardSchemaHandler {
         return JocXmlEditor.NOTIFICATION_SCHEMA_FILENAME;
     }
 
-    public static String getXML(String xml, boolean isYADE) throws Exception {
+    public static String getXml(String xml, boolean isYADE) throws Exception {
         if (!isYADE) {
             return xml;
         }
-        return SOSXmlTransformer.transformXmlWithXslEncloseTextInCdata(xml, getYADEXSLAllVersionsToCurrent(), true, 0);
+        return SOSXmlTransformer.transformXmlWithXslEncloseTextInCdata(xml, getYADEXslTransformSchemaAnyToCurrent(), true, 0);
     }
 
-    private static String getYADEXSLAllVersionsToCurrent() throws Exception {
-        return SOSClassUtil.readResourceFile(new JocXmlEditor().getClass(), JocXmlEditor.YADE_XSL_ALL_VERSIONS_TO_CURRENT_VERSION_RESOURCE_PATH);
+    private static String getYADEXslTransformSchemaAnyToCurrent() throws Exception {
+        return SOSClassUtil.readResourceFile(new JocXmlEditor().getClass(), JocXmlEditor.YADE_TRANSFORM_SCHEMA_ANY_TO_CURRENT_RESOURCE_PATH);
     }
 
     private void recreateJson(String xml) throws Exception {

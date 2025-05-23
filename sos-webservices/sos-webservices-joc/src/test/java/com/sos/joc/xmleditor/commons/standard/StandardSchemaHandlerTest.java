@@ -19,7 +19,7 @@ public class StandardSchemaHandlerTest {
     @Test
     public void test() throws Exception {
         Path file = Path.of("JobResource-Deployment-2025-05-17-YADE-FileTransfer-test-sftp.xml");
-        String xml = StandardSchemaHandler.getXML(SOSPath.readFile(file), true);
+        String xml = StandardSchemaHandler.getXml(SOSPath.readFile(file), true);
         LOGGER.info(xml);
 
         JocXmlEditor.validate(ObjectType.YADE, StandardSchemaHandler.getYADESchema(), xml);

@@ -66,9 +66,7 @@
 
                     <!-- Handle FTPSClientSecurity (e.g., SecurityMode) -->
                     <xsl:if test="FTPSClientSecurity/SecurityMode">
-                        <SecurityMode>
-                            <xsl:value-of select="FTPSClientSecurity/SecurityMode"/>
-                        </SecurityMode>
+                        <SecurityMode><xsl:value-of select="FTPSClientSecurity/SecurityMode"/></SecurityMode>
                     </xsl:if>
 
                     <!-- Transfer SSL information if it exists in v1 -->
@@ -139,9 +137,7 @@
                         <xsl:choose>
                             <!-- If AcceptUntrustedCertificate exists in v1 (HTTPSFragment) - XSLT v1 (translate) syntax is used instead of v2 (lowcase) because the Saxon HE dependency is missing in the JOC -->
                             <xsl:when test="translate(normalize-space(AcceptUntrustedCertificate), 'TRUEFALS', 'truefals')">
-                                <UntrustedSSL>
-                                    <xsl:copy-of select="DisableCertificateHostnameVerification"/>
-                                </UntrustedSSL>
+                                <UntrustedSSL><xsl:copy-of select="DisableCertificateHostnameVerification"/></UntrustedSSL>
                             </xsl:when>        
                             <xsl:otherwise>
                                 <TrustedSSL>

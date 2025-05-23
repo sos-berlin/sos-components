@@ -66,7 +66,7 @@ public class StandardYADEJobResource {
                 return null;
             }
             inventoryXML = extractXml(variableValue);
-            return StandardSchemaHandler.getXML(inventoryXML, true);
+            return StandardSchemaHandler.getXml(inventoryXML, true);
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.warn("[getDeployedXMLFromInventory][inventoryXML]" + inventoryXML);

@@ -44,7 +44,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                 switch (in.getObjectType()) {
                 case YADE:
                     schema = StandardSchemaHandler.getYADESchema();
-                    in.setConfiguration(StandardSchemaHandler.getXML(in.getConfiguration(), true));
+                    in.setConfiguration(StandardSchemaHandler.getXml(in.getConfiguration(), true));
                     break;
                 case NOTIFICATION:
                     schema = StandardSchemaHandler.getNotificationSchema();

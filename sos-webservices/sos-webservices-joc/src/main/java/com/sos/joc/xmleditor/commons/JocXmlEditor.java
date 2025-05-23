@@ -23,8 +23,7 @@ public class JocXmlEditor {
     public static final String YADE_SCHEMA_FILENAME = "YADE_configuration_v2.0.0.xsd";
     public static final String YADE_SCHEMA_URI = "https://www.sos-berlin.com/schema/yade/" + YADE_SCHEMA_FILENAME;
     public static final String YADE_SCHEMA_RESOURCE_PATH = "xmleditor/yade/xsd/" + YADE_SCHEMA_FILENAME;
-    public static final String YADE_XSL_ALL_VERSIONS_TO_CURRENT_VERSION_RESOURCE_PATH =
-            "xmleditor/yade/xsl/YADE_XML_all_xsd_versions_to_xsd_v2.0.0.xsl";
+    public static final String YADE_TRANSFORM_SCHEMA_ANY_TO_CURRENT_RESOURCE_PATH = "xmleditor/yade/xsl/YADE-transform-schema-any-to-v2.0.0.xsl";
 
     public static final String SCHEMA_ROOT_ELEMENT_NAME_YADE = "Configurations";
     public static final String SCHEMA_ROOT_ELEMENT_NAME__NOTIFICATION = "Configurations";

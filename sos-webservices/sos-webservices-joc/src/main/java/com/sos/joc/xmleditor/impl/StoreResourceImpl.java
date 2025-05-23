@@ -51,7 +51,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
             boolean isChanged = true;
             switch (in.getObjectType()) {
             case YADE:
-                in.setConfiguration(StandardSchemaHandler.getXML(in.getConfiguration(), true));
+                in.setConfiguration(StandardSchemaHandler.getXml(in.getConfiguration(), true));
                 name = in.getName();
                 if (in.getId() != null && in.getId() > 0) {
                     item = dbLayer.getObject(in.getId());

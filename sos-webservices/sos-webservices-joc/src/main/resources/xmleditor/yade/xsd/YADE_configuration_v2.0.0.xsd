@@ -2637,7 +2637,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="SOCKSProxy" type="UnauthenticatedProxyType">
+	  <xs:element name="SOCKSProxy" type="AuthenticatedProxyType">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/Proxy/SOCKSProxy"/>
          <xs:documentation>
@@ -9809,11 +9809,6 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    <xs:sequence>
 			      <xs:element ref="BasicConnection"/>
 			      <xs:element ref="BasicAuthentication" minOccurs="0"/>
-		    </xs:sequence>
-	  </xs:complexType>
-	  <xs:complexType name="UnauthenticatedProxyType">
-		    <xs:sequence>
-			      <xs:element ref="BasicConnection"/>
 		    </xs:sequence>
 	  </xs:complexType>
 	  <xs:complexType name="WriteableFragmentRefType">
