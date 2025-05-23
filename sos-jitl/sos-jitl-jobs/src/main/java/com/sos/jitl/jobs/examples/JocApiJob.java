@@ -13,7 +13,7 @@ public class JocApiJob extends Job<JocApiJobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<JocApiJobArguments> step) throws Exception {
-        ApiExecutor ex = new ApiExecutor(step.getLogger());
+        ApiExecutor ex = new ApiExecutor(step);
         try {
             ApiResponse apiResponse = ex.login();
             String token = apiResponse.getResponseBody();

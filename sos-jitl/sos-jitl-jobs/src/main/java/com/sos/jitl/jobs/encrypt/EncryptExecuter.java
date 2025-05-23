@@ -14,20 +14,18 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import com.sos.commons.encryption.executable.Encrypt;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public class EncryptExecuter {
 
-    private OrderProcessStepLogger logger;
     private EncryptJobArguments args;
     OrderProcessStep<EncryptJobArguments> step;
 
     public EncryptExecuter(OrderProcessStep<EncryptJobArguments> step) {
         this.args = step.getDeclaredArguments();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
@@ -58,19 +56,19 @@ public class EncryptExecuter {
 
         if (args.getInFile() != null && !args.getInFile().isEmpty() && args.getOutFile() != null && !args.getOutFile().isEmpty()) {
             if (cert != null) {
-                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encryptFile(cert, Paths.get(args.getInFile()), Paths.get(args
+                encryptedValue = Encrypt.encryptFile(cert, Paths.get(args.getInFile()), Paths.get(args
                         .getOutFile()));
             } else {
-                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encryptFile(pubKey, Paths.get(args.getInFile()), Paths.get(args
+                encryptedValue = Encrypt.encryptFile(pubKey, Paths.get(args.getInFile()), Paths.get(args
                         .getOutFile()));
             }
         } else {
             String input = args.getIn();
             if (input != null) {
                 if (cert != null) {
-                    encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(cert, input);
+                    encryptedValue = Encrypt.encrypt(cert, input);
                 } else {
-                    encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(pubKey, input);
+                    encryptedValue = Encrypt.encrypt(pubKey, input);
                 }
             }
         }

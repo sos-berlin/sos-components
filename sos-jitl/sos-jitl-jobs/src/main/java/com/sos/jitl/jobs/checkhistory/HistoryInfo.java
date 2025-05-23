@@ -26,16 +26,18 @@ public class HistoryInfo {
     private CheckHistoryJobArguments args;
     private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
+    private OrderProcessStep<?> step;
 
     public HistoryInfo(OrderProcessStep<CheckHistoryJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         this.logger = step.getLogger();
+        this.step = step;
     }
 
     private HistoryItem executeApiCall(String query) throws Exception {
 
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         apiExecutor.setJobResources(jobResources);
 
         String accessToken = null;

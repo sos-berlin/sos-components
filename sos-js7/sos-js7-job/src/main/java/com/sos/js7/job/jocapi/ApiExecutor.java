@@ -10,6 +10,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -49,6 +50,7 @@ import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
 import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.DetailValue;
+import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -94,11 +96,27 @@ public class ApiExecutor {
             PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS, PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY, PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD,
             PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH });
     private static final String DO_NOT_LOG_VAL = PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD;
+    private static final String JOB_ARGUMENT_DELIMITER = "|";
+    private static final String JOB_ARGUMENT_KEYSTORE_FILE = "js7.web.https.keystore.file";
+    private static final String JOB_ARGUMENT_KEYSTORE_KEY_PASSWD = "js7.web.https.keystore.key-password";
+    private static final String JOB_ARGUMENT_KEYSTORE_STORE_PASSWD = "js7.web.https.keystore.store-password";
+    private static final String JOB_ARGUMENT_KEYSTORE_ALIAS = "js7.web.https.keystore.alias";
+    private static final String JOB_ARGUMENT_TRUSTORE_FILE = "js7.web.https.truststore.file";
+    private static final String JOB_ARGUMENT_TRUSTSTORE_PWD = "js7.web.https.truststore.store-password";
+    private static final String JOB_ARGUMENT_APISERVER = "js7.api-server";
+    private static final String JOB_ARGUMENT_APISERVER_CSFILE = "js7.api-server.cs-file";
+    private static final String JOB_ARGUMENT_APISERVER_CSKEY = "js7.api-server.cs-key";
+    private static final String JOB_ARGUMENT_APISERVER_CSPASSWD = "js7.api-server.cs-password";
+    private static final String JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME = "js7.api-server.username";
+    private static final String JOB_ARGUMENT_APISERVER_BASIC_AUTH_TOKEN = "js7.api-server.token";
+    private static final String JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD = "js7.api-server.password";
+    private static final String JOB_ARGUMENT_APISERVER_PRIVATEKEYPATH = "js7.api-server.privatekey.path";
 
     private SOSRestApiClient client;
     private URI jocUri;
     private List<String> jocUris;
     private final OrderProcessStepLogger jobLogger;
+    private final OrderProcessStep<?> step;
     private Config config;
     private String truststorePath;
     private String keystorePath;
@@ -113,8 +131,9 @@ public class ApiExecutor {
         this.jobResources = jobResources;
     }
 
-    public ApiExecutor(OrderProcessStepLogger jobLogger) {
-        this.jobLogger = jobLogger;
+    public ApiExecutor(OrderProcessStep step) {
+        this.step = step;
+        this.jobLogger = step.getLogger();
     }
 
     private String getReasonPhrase() {
@@ -139,6 +158,11 @@ public class ApiExecutor {
     }
 
     public ApiResponse login() throws Exception {
+        /* 
+         * TODO: first check variables from OrderProcessStep if required values are available
+         * if available use this configuration
+         * if not available use configuration from private.conf
+        */
         logDebug("***ApiExecutor***");
         jocUris = getUris();
         String latestError = "";
@@ -255,10 +279,17 @@ public class ApiExecutor {
     }
 
     private List<String> getUris() throws SOSMissingDataException {
-        if (config == null) {
-            readConfig();
+        List<String> uris = new ArrayList<String>();
+        if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER)) {
+            String apiServers = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_APISERVER).getValue().toString(), JOB_ARGUMENT_APISERVER);
+            String[] apiServersSplitted = apiServers.split(JOB_ARGUMENT_DELIMITER);
+            uris = Arrays.asList(apiServersSplitted).stream().peek(item -> item.trim()).toList();
+        } else {
+            if (config == null) {
+                readConfig();
+            }
+            uris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
         }
-        List<String> uris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
         Collections.sort(uris);
         return uris;
 
@@ -292,10 +323,22 @@ public class ApiExecutor {
 
     private void applySSLContextCredentials(SOSRestApiClient client) throws KeyManagementException, SOSMissingDataException, NoSuchAlgorithmException,
             FileNotFoundException {
-        if (config == null) {
-            readConfig();
+        List<KeyStoreCredentials> truststoresCredentials = new ArrayList<KeyStoreCredentials>();
+        String truststorePwdFromOrder = "";
+        if(step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTORE_FILE)) {
+            String truststores = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTORE_FILE).getValue().toString(), JOB_ARGUMENT_TRUSTORE_FILE);
+            String[] truststoresSplitted = truststores.split(JOB_ARGUMENT_DELIMITER);
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTSTORE_PWD)) {
+                truststorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTSTORE_PWD).getValue().toString(), JOB_ARGUMENT_TRUSTSTORE_PWD);
+            }
+            final String truststorePwd = truststorePwdFromOrder;
+            truststoresCredentials = Arrays.asList(truststoresSplitted).stream().peek(item -> item.trim()).map(path -> new KeyStoreCredentials(path, truststorePwd)).toList();
+        } else {
+            if (config == null) {
+                readConfig();
+            }
+            truststoresCredentials = readTruststoreCredentials(config);
         }
-        List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
         SSLContextBuilder sslContextBuilder = SSLContexts.custom();
         sslContextBuilder.setKeyManagerFactoryAlgorithm(KeyManagerFactory.getDefaultAlgorithm());
         sslContextBuilder.setTrustManagerFactoryAlgorithm(TrustManagerFactory.getDefaultAlgorithm());
@@ -323,7 +366,25 @@ public class ApiExecutor {
                 }
             });
         }
-        KeyStoreCredentials credentials = readKeystoreCredentials(config);
+        KeyStoreCredentials credentials = null;
+        if(step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_FILE)) {
+            String keyStoreFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_FILE).getValue().toString(), JOB_ARGUMENT_KEYSTORE_FILE);
+            String keyStoreKeyPwdFromOrder = "";
+            String keyStoreStorePwdFromOrder = "";
+            String keyStoreAliasFromOrder = "";
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_KEY_PASSWD)) {
+                keyStoreKeyPwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_KEY_PASSWD).getValue().toString(), JOB_ARGUMENT_KEYSTORE_KEY_PASSWD);
+            }
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD)) {
+                keyStoreStorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD).getValue().toString(), JOB_ARGUMENT_KEYSTORE_STORE_PASSWD);
+            }
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_ALIAS)) {
+                keyStoreAliasFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_ALIAS).getValue().toString(), JOB_ARGUMENT_KEYSTORE_ALIAS);
+            }
+            credentials = new KeyStoreCredentials(keyStoreFromOrder, keyStoreStorePwdFromOrder, keyStoreKeyPwdFromOrder, keyStoreAliasFromOrder);
+        } else {
+            credentials = readKeystoreCredentials(config);
+        }
         if (keystorePath != null && keystoreType != null && keystorePasswd != null) {
             KeyStore keystore = readKeyStore(keystorePath, KeystoreType.fromValue(keystoreType), keystorePasswd);
             if (keystore != null) {
@@ -359,7 +420,37 @@ public class ApiExecutor {
             readConfig();
         }
         client = new SOSRestApiClient();
-        setBasicAuthorizationIfExists(config);
+        if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSFILE) ||
+                (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME) && 
+                        step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD))) {
+            String username = "";
+            String pwd = "";
+            String token = "";
+            String csFile = null;
+            String csPwd = null;
+            String csKey = null;
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME)) {
+                username = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME).getValue().toString();
+            }
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD)) {
+                pwd = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD).getValue().toString();
+            }
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_TOKEN)) {
+                token = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_BASIC_AUTH_TOKEN).getValue().toString();
+            }
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSFILE)) {
+                csFile = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_CSFILE).getValue().toString();
+            }
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSKEY)) {
+                csKey = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_CSKEY).getValue().toString();
+            }
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSPASSWD)) {
+                csPwd = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_CSPASSWD).getValue().toString();
+            }
+            setBasicAuthorizationIfExists(username, pwd, token, csFile, csKey, csPwd);
+        } else {
+            setBasicAuthorizationIfExists(config);
+        }
         logDebug("initiate REST api client");
         if (jocUri.toLowerCase().startsWith("https:")) {
             applySSLContextCredentials(client);
@@ -368,14 +459,22 @@ public class ApiExecutor {
 
     private String getPrivateKeyPath() {
         try {
-            return config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH);
+            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_PRIVATEKEYPATH)) {
+                return step.getAllArguments().get(JOB_ARGUMENT_APISERVER_PRIVATEKEYPATH).getValue().toString();
+            } else {
+                return config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH);
+            }
         } catch (ConfigException e) {
             logError("no private key path found in private.conf.");
         }
         return "";
     }
 
-    private String getDcryptedValue(String in, String privateKeyPath, String propertyName) {
+    private String getDecryptedValue(String in, String propertyName) {
+        return getDecryptedValue(in, null, propertyName);
+    }
+
+    private String getDecryptedValue(String in, String privateKeyPath, String propertyName) {
         if (in != null && in.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER)) {
             String encryptedIn = in;
             if (encryptedIn.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER + "//")) {
@@ -391,12 +490,54 @@ public class ApiExecutor {
             try {
                 in = decryptValue(encryptedIn, propertyName, privateKeyPath);
             } catch (SOSKeyException | SOSMissingDataException | SOSEncryptionException e) {
-                logError("error occurred decrypting ".concat(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD).concat(" !"), e);
+                logError("error occurred decrypting ".concat(propertyName).concat(" !"), e);
             }
         }
         return in;
     }
 
+    private void setBasicAuthorizationIfExists(String username, String pwd, String token, String csFile, String csKeyFile, String csPwd)
+            throws SOSKeePassDatabaseException {
+        if (csFile != null && !csFile.isEmpty()) {
+            csFile = getDecryptedValue(csFile, JOB_ARGUMENT_APISERVER_CSFILE);
+            
+            SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
+            username = resolver.resolve(username);
+            pwd = resolver.resolve(pwd);
+            token = resolver.resolve(token);
+        }
+        if (token.isEmpty()) {
+            username = getDecryptedValue(username, "username");
+            pwd = getDecryptedValue(pwd, "password");
+        }
+        if (!token.isEmpty() && jobResources != null) {
+            LOGGER.debug("get jobresource and variable from token:" + token);
+            String[] tokenJobResource = token.split(":");
+            if (tokenJobResource.length == 2) {
+                String variableName = tokenJobResource[1];
+                String jobResourceName = tokenJobResource[0];
+                DetailValue detailValue = jobResources.get(variableName);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(SOSString.toString(detailValue));
+                    LOGGER.debug("variableName:" + variableName);
+                    LOGGER.debug("jobResourceName:" + jobResourceName);
+                }
+                if (detailValue != null) {
+                    if (detailValue.getSource().equals(jobResourceName)) {
+                        token = (String) detailValue.getValue();
+                    } else {
+                        LOGGER.info("Name of JobResource: " + detailValue.getSource() + " does not match the " + tokenJobResource[0]);
+                    }
+                }
+            }
+            client.addHeader(X_ID_TOKEN, token);
+        }
+        if (!username.isEmpty() && !pwd.isEmpty()) {
+            String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
+            client.setBasicAuthorization(basicAuth);
+        }
+    }
+    
     private void setBasicAuthorizationIfExists(Config config) throws SOSKeePassDatabaseException, SOSMissingDataException {
         String csFile = null;
         String csKeyFile = null;
@@ -445,8 +586,8 @@ public class ApiExecutor {
                 }
                 
                 String privateKeyPath = null;
-                username = getDcryptedValue(username, privateKeyPath, "username");
-                pwd = getDcryptedValue(pwd, privateKeyPath, "password");
+                username = getDecryptedValue(username, privateKeyPath, "username");
+                pwd = getDecryptedValue(pwd, privateKeyPath, "password");
             }
 
         }
@@ -524,7 +665,7 @@ public class ApiExecutor {
                     privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toString()));
         }
     }
-
+        
     private KeyStoreCredentials readKeystoreCredentials(Config config) {
         String keystorePath = null;
         try {

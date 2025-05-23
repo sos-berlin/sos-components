@@ -86,10 +86,10 @@ public class CleanupService extends AJocActiveMemberService {
                                 }
                                 if (runServiceNow.get()) { // runServiceNow was set by another thread
                                     runNow = true; // 1) set runNow for the next while iteration
-                                    startupMode = StartupMode.run_now;
+                                    startupMode = com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode.run_now;
                                 }
                                 if (!runNow) {
-                                    startupMode = StartupMode.automatic;
+                                    startupMode = com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode.automatic;
                                     // waitFor(30);
                                 }
                             } catch (CleanupComputeException e) {

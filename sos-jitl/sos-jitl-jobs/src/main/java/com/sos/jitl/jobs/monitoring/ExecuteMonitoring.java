@@ -35,16 +35,18 @@ public class ExecuteMonitoring {
     private MonitoringJobArguments args;
     private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
+    private OrderProcessStep<?> step;
 
     public ExecuteMonitoring(OrderProcessStep<MonitoringJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         this.logger = step.getLogger();
+        this.step = step;
     }
 
     public MonitoringStatus getStatusInformations() throws Exception {
 
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         apiExecutor.setJobResources(jobResources);
 
         String accessToken = null;

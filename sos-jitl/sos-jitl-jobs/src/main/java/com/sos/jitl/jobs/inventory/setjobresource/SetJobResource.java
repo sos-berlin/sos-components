@@ -15,16 +15,18 @@ public class SetJobResource {
     private SetJobResourceJobArguments args;
     private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
+    private OrderProcessStep<?> step;
 
     public SetJobResource(OrderProcessStep<SetJobResourceJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         this.logger = step.getLogger();
+        this.step = step;
     }
 
     public void execute() throws Exception {
 
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         apiExecutor.setJobResources(jobResources);
 
         String accessToken = null;

@@ -21,15 +21,17 @@ public class RunReportImpl {
     private OrderProcessStepLogger logger;
     private RunReportJobArguments args;
     private Map<String, DetailValue> jobResources;
+    private OrderProcessStep<?> step;
 
     public RunReportImpl(OrderProcessStep<RunReportJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         this.logger = step.getLogger();
+        this.step = step;
     }
 
     public void execute() throws Exception {
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         apiExecutor.setJobResources(jobResources);
 
         String accessToken = null;

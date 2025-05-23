@@ -19,12 +19,14 @@ public class CheckLicense {
     private String body;
     private String subject;
     private Map<String, DetailValue> jobResources;
+    private OrderProcessStep<?> step;
 
 
     public CheckLicense(OrderProcessStep<CheckLicenseJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         this.logger = step.getLogger();
+        this.step = step;
     }
 
     private void log(String s) {
@@ -33,7 +35,7 @@ public class CheckLicense {
     }
 
     public void execute() throws Exception {
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         apiExecutor.setJobResources(jobResources);
         String accessToken = null;
 

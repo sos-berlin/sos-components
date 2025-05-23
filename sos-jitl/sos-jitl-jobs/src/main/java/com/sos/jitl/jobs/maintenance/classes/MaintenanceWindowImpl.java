@@ -18,17 +18,19 @@ public class MaintenanceWindowImpl {
     private MaintenanceWindowJobArguments args;
     private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
+    private OrderProcessStep<?> step;
     private String controllerId;
 
     public MaintenanceWindowImpl(OrderProcessStep<MaintenanceWindowJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
+        this.step = step;
         this.logger = step.getLogger();
     }
 
     public void executeApiCall() throws Exception {
 
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         apiExecutor.setJobResources(jobResources);
 
         String accessToken = null;

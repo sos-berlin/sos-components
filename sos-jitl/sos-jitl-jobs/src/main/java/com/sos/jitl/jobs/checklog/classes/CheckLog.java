@@ -27,7 +27,7 @@ public class CheckLog {
 
     private OrderProcessStepLogger logger;
     private CheckLogJobArguments args;
-    OrderProcessStep<CheckLogJobArguments> step;
+    private OrderProcessStep<CheckLogJobArguments> step;
     private long checkLogMatchCount = 0;
     private long checkLogGroupCount = 0;
     private long checkLogGroupsMatchesCount = 0;
@@ -352,7 +352,7 @@ public class CheckLog {
 
     public void execute() throws Exception {
 
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         String accessToken = null;
         try {
             ApiResponse apiResponse = apiExecutor.login();

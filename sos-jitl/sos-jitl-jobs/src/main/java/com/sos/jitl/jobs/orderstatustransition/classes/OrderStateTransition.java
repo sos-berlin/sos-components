@@ -28,6 +28,7 @@ public class OrderStateTransition {
     private static final String CANCELLED = "CANCELLED";
     private static final String CANCEL = "CANCEL";
     private OrderProcessStepLogger logger;
+    private OrderProcessStep<?> step;
     private OrderStateTransitionJobArguments args;
     private Map<String, DetailValue> jobResources;
 
@@ -36,6 +37,7 @@ public class OrderStateTransition {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         this.logger = step.getLogger();
+        this.step = step;
     }
 
     private OrdersFilterV newOrdersFilterV(String state) {
@@ -52,7 +54,7 @@ public class OrderStateTransition {
     public void execute() throws Exception {
 
         Map<String, OrdersV> resultsets = new HashMap<String, OrdersV>();
-        ApiExecutor apiExecutor = new ApiExecutor(logger);
+        ApiExecutor apiExecutor = new ApiExecutor(step);
         apiExecutor.setJobResources(jobResources);
 
         String accessToken = null;
