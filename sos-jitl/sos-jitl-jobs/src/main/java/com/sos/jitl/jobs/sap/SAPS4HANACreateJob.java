@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.sap;
 import java.util.Collections;
 import java.util.Map;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.ASAPS4HANAJob;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -12,7 +13,6 @@ import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.Schedule;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleData;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.exception.JobProblemException;
 
 public class SAPS4HANACreateJob extends ASAPS4HANAJob {
@@ -29,7 +29,7 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
 
     @Override
     public void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient,
-            OrderProcessStepLogger logger) throws Exception {
+            ISOSLogger logger) throws Exception {
         Map<String, Object> undeclaredArgs = step.getUndeclaredArgumentsAsNameValueMap();
         logger.info(undeclaredArgs.toString());
         ScheduleData data = new ScheduleData();

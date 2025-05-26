@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public abstract class AFileOperations {
 
@@ -38,11 +38,11 @@ public abstract class AFileOperations {
 
     private final int BUFF_SIZE = 100000;
     private final byte[] buffer = new byte[BUFF_SIZE];
-    private final OrderProcessStepLogger logger;
+    private final ISOSLogger logger;
 
     private List<File> resultList = null;
 
-    public AFileOperations(OrderProcessStepLogger logger) {
+    public AFileOperations(ISOSLogger logger) {
         this.logger = logger;
         this.resultList = new ArrayList<File>();
     }
@@ -1091,7 +1091,7 @@ public abstract class AFileOperations {
         return resultList;
     }
 
-    public OrderProcessStepLogger getLogger() {
+    public ISOSLogger getLogger() {
         return logger;
     }
 

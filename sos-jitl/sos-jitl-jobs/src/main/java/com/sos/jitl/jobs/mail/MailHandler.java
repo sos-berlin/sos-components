@@ -6,22 +6,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.mail.SOSMailAttachment;
-import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class MailHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailHandler.class);
     private Map<String, Object> variables = new HashMap<>();
-    private OrderProcessStepLogger logger = null;
-    private MailJobArguments args;
+    private final ISOSLogger logger;
+    private final MailJobArguments args;
 
-    public MailHandler(MailJobArguments args, Map<String, Object> variables, OrderProcessStepLogger logger) {
+    public MailHandler(MailJobArguments args, Map<String, Object> variables, ISOSLogger logger) {
         this.logger = logger;
         this.variables = variables;
         this.args = args;
@@ -40,7 +36,7 @@ public class MailHandler {
                     }
                 }
             }
-            //smtpProperties.put("mail.smtp.ssl.protocols", "asdfasdfasdf");
+            // smtpProperties.put("mail.smtp.ssl.protocols", "asdfasdfasdf");
             putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_HOST, args.getMailSmtpHost());
             putSmtpProperties(smtpProperties, SOSMail.PROPERTY_NAME_SMTP_PORT, args.getMailSmtpPort());
             if (args.getMailSmtpUser() != null && !args.getMailSmtpUser().isEmpty() && args.getMailSmtpPassword() != null && !args
@@ -110,10 +106,10 @@ public class MailHandler {
                     sosMail.addAttachment(attachment);
                 }
             }
-            log(logger, "sending mail: \n" + sosMail.dumpMessageAsString());
+            logger.info("sending mail: \n" + sosMail.dumpMessageAsString());
 
             if (!sosMail.send()) {
-                log(logger, "mail server is unavailable, mail for recipient [" + args.getTo() + "]" + sosMail.getLastError());
+                logger.info("mail server is unavailable, mail for recipient [" + args.getTo() + "]" + sosMail.getLastError());
             }
             if (args.getCleanupAttachment()) {
                 for (String attachment : args.getAttachments()) {
@@ -124,14 +120,12 @@ public class MailHandler {
                 }
             }
             sosMail.clearRecipients();
-        } catch (
-
-        Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (sosMail == null) {
-                log(logger, e.getMessage());
+                logger.info(e.getMessage());
             } else {
-                log(logger, sosMail.getLastError() + ":" + e.getMessage());
+                logger.info(sosMail.getLastError() + ":" + e.getMessage());
             }
             throw new Exception(e.getMessage(), e);
         }
@@ -141,14 +135,6 @@ public class MailHandler {
     private void putSmtpProperties(Properties smtpProperties, String key, String value) {
         if (value != null) {
             smtpProperties.put(key, value);
-        }
-    }
-
-    private void log(OrderProcessStepLogger logger, String log) {
-        if (logger != null) {
-            logger.info(log);
-        } else {
-            LOGGER.info(log);
         }
     }
 

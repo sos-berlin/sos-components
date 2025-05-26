@@ -2,12 +2,12 @@ package com.sos.jitl.jobs.file.common;
 
 import java.io.File;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public class FileOperationsCopyImpl extends AFileOperations {
 
-    public FileOperationsCopyImpl(OrderProcessStepLogger logger) {
+    public FileOperationsCopyImpl(ISOSLogger logger) {
         super(logger);
     }
 

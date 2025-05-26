@@ -10,23 +10,20 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.beans.SOSCommandResult;
-import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.js7.job.OrderProcessStepOutcome;
 
 public class SQLPLUSCommandHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SQLPLUSCommandHandler.class);
     private static final String EXIT_CODE = "exitCode";
     private static final String SQL_ERROR = "sql_error";
-    private Map<String, Object> variables = new HashMap<>();
-    private OrderProcessStepLogger logger = null;
 
-    public SQLPLUSCommandHandler(Map<String, Object> variables, OrderProcessStepLogger logger) {
+    private Map<String, Object> variables = new HashMap<>();
+    private final ISOSLogger logger;
+
+    public SQLPLUSCommandHandler(Map<String, Object> variables, ISOSLogger logger) {
         this.variables.putAll(variables);
         this.logger = logger;
     }
@@ -37,13 +34,14 @@ public class SQLPLUSCommandHandler {
     }
 
     public void createSqlFile(SQLPlusJobArguments args, String tempFileName) throws IOException {
-
         Path sqlScript = Paths.get(tempFileName);
 
         if (!args.getIncludeFiles().isEmpty()) {
             String[] includeFileNames = args.getIncludeFiles().split(";");
             for (String includeFileName : includeFileNames) {
-                debug(logger, String.format("Append file '%1$s' to script", includeFileName));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Append file '%s' to script", includeFileName);
+                }
                 Path dest = Paths.get(includeFileName);
                 SOSPath.appendFile(sqlScript, dest);
             }
@@ -65,7 +63,8 @@ public class SQLPLUSCommandHandler {
 
     }
 
-    public String[] getVariables(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, OrderProcessStepOutcome outcome, String[] stdOutStringArray) {
+    public String[] getVariables(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, OrderProcessStepOutcome outcome,
+            String[] stdOutStringArray) {
 
         int intRegExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
 
@@ -83,13 +82,15 @@ public class SQLPLUSCommandHandler {
             }
         }
         if (!aVariableFound) {
-            debug(logger, String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
+            if (logger.isDebugEnabled()) {
+                logger.debug("no JS-variable definitions found using reg-exp '%s'.", regExp);
+            }
         }
         return stdOutStringArray;
     }
 
-    public void handleMessages(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, OrderProcessStepOutcome outcome, String[] stdOutStringArray)
-            throws Exception {
+    public void handleMessages(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, OrderProcessStepOutcome outcome,
+            String[] stdOutStringArray) throws Exception {
         int intRegExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
 
         String strCC = String.valueOf(sosCommandResult.getExitCode());
@@ -128,12 +129,12 @@ public class SQLPLUSCommandHandler {
                 }
                 if (isError) {
                     sqlError += stdoutLine;
-                    log(logger, "error found: " + stdoutLine);
+                    logger.info("error found: %s", stdoutLine);
                 } else {
-                    log(logger, String.format("Error '%1$s' ignored due to settings", stdoutLine));
+                    logger.info("Error '%s' ignored due to settings", stdoutLine);
                 }
             } else {
-                log(logger, stdoutLine);
+                logger.info(stdoutLine);
             }
         }
         String stdErr = sosCommandResult.getStdErr();
@@ -152,19 +153,4 @@ public class SQLPLUSCommandHandler {
         }
     }
 
-    private void log(OrderProcessStepLogger logger, String log) {
-        if (logger != null) {
-            logger.info(log);
-        } else {
-            LOGGER.info(log);
-        }
-    }
-
-    private void debug(OrderProcessStepLogger logger, String log) {
-        if (logger != null) {
-            logger.debug(log);
-        } else {
-            LOGGER.debug(log);
-        }
-    }
 }

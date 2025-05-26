@@ -1,11 +1,11 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class ParameterResolver {
 
-    private OrderProcessStepLogger logger;
+    private ISOSLogger logger;
     private static final int EQ = 1;
     private static final int GE = 2;
     private static final int GT = 3;
@@ -24,7 +24,7 @@ public class ParameterResolver {
     protected int countCommand = 0;
     protected int count = 0;
 
-    public ParameterResolver(OrderProcessStepLogger logger) {
+    public ParameterResolver(ISOSLogger logger) {
         super();
         this.logger = logger;
     }

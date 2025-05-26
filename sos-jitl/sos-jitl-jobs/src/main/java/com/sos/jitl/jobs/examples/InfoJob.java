@@ -14,11 +14,11 @@ import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.OrderProcessStepOutcome;
 
 public class InfoJob extends Job<InfoJobArguments> {
@@ -217,7 +217,7 @@ public class InfoJob extends Job<InfoJobArguments> {
         }
     }
 
-    private void printEnvs(OrderProcessStepLogger logger) {
+    private void printEnvs(ISOSLogger logger) {
         logger.info("----------ENV-----------------");
         logger.info("    JS7");
         System.getenv().entrySet().stream().filter(e -> e.getKey().startsWith("JS7")).forEach(e -> {

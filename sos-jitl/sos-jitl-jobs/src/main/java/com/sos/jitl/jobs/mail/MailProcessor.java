@@ -19,30 +19,27 @@ import javax.mail.search.FromTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.commons.mail.SOSMimeMessage;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 import com.sos.js7.job.JobArgument;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
 public class MailProcessor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailProcessor.class);
     private final MailInboxArguments args;
-    private final OrderProcessStepLogger jobLogger;
+
+    private final ISOSLogger logger;
     private Folder inFolder;
     private Folder targetFolder;
     private Date dateMinAge = null;
 
-    public MailProcessor(MailInboxArguments args, OrderProcessStepLogger logger) {
+    public MailProcessor(MailInboxArguments args, ISOSLogger logger) {
         this.args = args;
-        this.jobLogger = logger;
+        this.logger = logger;
         setMinAgeDate();
     }
 
@@ -52,7 +49,9 @@ public class MailProcessor {
             if (minAge > 0L) {
                 Instant now = Instant.now();
                 dateMinAge = Date.from(now.minusSeconds(minAge));
-                logDebug("Min. Age defined: %1$s", dateMinAge.toString());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Min. Age defined: %1$s", dateMinAge.toString());
+                }
             }
         }
     }
@@ -61,10 +60,12 @@ public class MailProcessor {
         Date messageDate = sosMimeMessage.getSentDate();
         boolean result = true;
         if (dateMinAge != null && messageDate != null && dateMinAge.before(messageDate)) {
-            logDebug("message skipped due to date constraint: %s | %s", sosMimeMessage.getSubject(), messageDate.toString());
+            if (logger.isDebugEnabled()) {
+                logger.debug("message skipped due to date constraint: %s | %s", sosMimeMessage.getSubject(), messageDate.toString());
+            }
             result = false;
         } else {
-            logInfo("processing: %s | %s", sosMimeMessage.getSubject(), (messageDate != null) ? messageDate.toString() : "unknown date");
+            logger.info("processing: %s | %s", sosMimeMessage.getSubject(), (messageDate != null) ? messageDate.toString() : "unknown date");
         }
         return result;
     }
@@ -170,7 +171,9 @@ public class MailProcessor {
     public void performMessagesInFolder(SOSMailReceiver mailReader, final String messageFolder) throws MessagingException,
             JobRequiredArgumentMissingException {
         try {
-            logDebug("reading " + messageFolder);
+            if (logger.isDebugEnabled()) {
+                logger.debug("reading %s", messageFolder);
+            }
             inFolder = mailReader.openFolder(messageFolder, mailReader.READ_WRITE);
 
             String targetFolderName = getEmailFolderName(args.getAfterProcessMailDirectoryName());
@@ -201,25 +204,37 @@ public class MailProcessor {
                 FromTerm fromTerm = new FromTerm(new InternetAddress(args.getMailFromFilter().getValue()));
                 SubjectTerm subjectTerm = new SubjectTerm(args.getMailSubjectFilter().getValue());
                 SearchTerm searchTerm = new AndTerm(subjectTerm, fromTerm);
-                logDebug("looking for subject=%s and from=%s", args.getMailSubjectFilter().getValue(), args.getMailFromFilter().getValue());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("looking for subject=%s and from=%s", args.getMailSubjectFilter().getValue(), args.getMailFromFilter().getValue());
+                }
                 msgs2 = inFolder.search(searchTerm, msgs);
-                logDebug("%d messages found with subject=%s and from=%s", msgs2.length, args.getMailSubjectFilter().getValue(), args
-                        .getMailFromFilter().getValue());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("%d messages found with subject=%s and from=%s", msgs2.length, args.getMailSubjectFilter().getValue(), args
+                            .getMailFromFilter().getValue());
+                }
             } else {
 
                 if (!args.getMailSubjectFilter().isEmpty()) {
-                    logDebug("looking for subject=%s", args.getMailSubjectFilter().getValue());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("looking for subject=%s", args.getMailSubjectFilter().getValue());
+                    }
                     SubjectTerm subjectTerm = new SubjectTerm(args.getMailSubjectFilter().getValue());
                     msgs2 = inFolder.search(subjectTerm, msgs);
-                    logDebug("%d messages found with subject=%s", msgs2.length, args.getMailSubjectFilter().getValue());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("%d messages found with subject=%s", msgs2.length, args.getMailSubjectFilter().getValue());
+                    }
                 } else if (!args.getMailFromFilter().isEmpty()) {
                     FromTerm fromTerm = new FromTerm(new InternetAddress(args.getMailFromFilter().getValue()));
-                    logDebug("looking for from=%s", args.getMailFromFilter().getValue());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("looking for from=%s", args.getMailFromFilter().getValue());
+                    }
                     msgs2 = inFolder.search(fromTerm, msgs);
-                    logDebug("%d messages found with from=%s", msgs2.length, args.getMailFromFilter().getValue());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("%d messages found with from=%s", msgs2.length, args.getMailFromFilter().getValue());
+                    }
                 } else {
                     msgs2 = msgs;
-                    logDebug("%d messages found, folder = %s", msgs2.length, messageFolder);
+                    logger.debug("%d messages found, folder = %s", msgs2.length, messageFolder);
                 }
             }
 
@@ -227,7 +242,9 @@ public class MailProcessor {
                 int notUnreadMails = 0;
                 for (Message messageElement : msgs2) {
                     if (args.getMailOnlyUnseen().getValue() && messageElement.isSet(Flags.Flag.SEEN)) {
-                        logTrace("message skipped, already seen: %s", messageElement.getSubject());
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("message skipped, already seen: %s", messageElement.getSubject());
+                        }
                         notUnreadMails++;
                         continue;
                     }
@@ -237,15 +254,19 @@ public class MailProcessor {
                         SOSMimeMessage sosMailItem = new SOSMimeMessage(messageElement, true);
                         if (subjectPattern != null) {
                             if (!subjectPattern.matcher(sosMailItem.getSubject()).find()) {
-                                logTrace("message skipped, subject does not match [%1$s]: %2$s", args.getMailSubjectPattern().getValue(), sosMailItem
-                                        .getSubject());
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("message skipped, subject does not match [%1$s]: %2$s", args.getMailSubjectPattern().getValue(),
+                                            sosMailItem.getSubject());
+                                }
                                 continue;
                             }
                         }
                         if (bodyPattern != null) {
                             if (!bodyPattern.matcher(sosMailItem.getPlainTextBody()).find()) {
-                                logTrace("message with subject %s skipped, body does not match [%s]", sosMailItem.getSubject(), args
-                                        .getMailBodyPattern().getValue());
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("message with subject %s skipped, body does not match [%s]", sosMailItem.getSubject(), args
+                                            .getMailBodyPattern().getValue());
+                                }
                                 continue;
                             }
                         }
@@ -254,12 +275,14 @@ public class MailProcessor {
                         sosMailItem.init();
                         executeMessage(sosMailItem);
                     } catch (Exception e) {
-                        logInfo("message '%s' skipped, exception occured: %s", messageElement.getSubject(), e.toString());
+                        logger.info("message '%s' skipped, exception occured: %s", messageElement.getSubject(), e.toString());
                         continue;
                     }
                 }
                 if (notUnreadMails > 0) {
-                    logDebug("%d messages skipped because they are already read", notUnreadMails);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("%d messages skipped because they are already read", notUnreadMails);
+                    }
                 }
             }
         } finally {
@@ -269,88 +292,25 @@ public class MailProcessor {
 
     private void dumpMessage(final SOSMimeMessage message, String directory) throws IOException, MessagingException {
         File messageFile = new File(directory, message.getMessageId());
-        logDebug("dump message. subject=%s, date=%s, file=%s: ", message.getSubject(), message.getSentDateAsString(), messageFile);
+        if (logger.isDebugEnabled()) {
+            logger.debug("dump message. subject=%s, date=%s, file=%s: ", message.getSubject(), message.getSentDateAsString(), messageFile);
+        }
         message.dumpMessageToFile(messageFile, true, false);
     }
 
     private void deleteMessage(final SOSMimeMessage message) throws UnsupportedEncodingException, MessagingException {
-        logDebug("deleting message. subject=%s, date=%s", message.getSubject(), message.getSentDateAsString());
+        if (logger.isDebugEnabled()) {
+            logger.debug("deleting message. subject=%s, date=%s", message.getSubject(), message.getSentDateAsString());
+        }
         message.deleteMessage();
     }
 
     private void copyAttachmentsToFile(final SOSMimeMessage message) throws SOSInvalidDataException, IOException, MessagingException {
         String directory = args.getAttachmentDirectoryName().getValue();
-        logDebug("saving attachments. subject=%s, date=%s, directory=%s: ", message.getSubject(), message.getSentDateAsString(), directory);
+        if (logger.isDebugEnabled()) {
+            logger.debug("saving attachments. subject=%s, date=%s, directory=%s: ", message.getSubject(), message.getSentDateAsString(), directory);
+        }
         message.saveAttachments(message, args.getAttachmentFileNamePattern().getValue(), directory, args.getSaveBodyAsAttachment().getValue())
-                .forEach(s -> logDebug("attachment file [%s] successfully saved.", s));
+                .forEach(s -> logger.debug("attachment file [%s] successfully saved.", s));
     }
-
-    // private void logError(String format, Object... msg) {
-    // if (jobLogger != null) {
-    // jobLogger.error(format, msg);
-    // } else {
-    // if (msg.length == 0) {
-    // LOGGER.error(format);
-    // } else {
-    // LOGGER.error(String.format(format, msg));
-    // }
-    // }
-    // }
-    //
-    // private void logError(String msg, Throwable t) {
-    // if (jobLogger != null) {
-    // jobLogger.error(msg, t);
-    // } else {
-    // LOGGER.error(msg, t);
-    // }
-    // }
-
-    private void logInfo(String format, Object... msg) {
-        if (jobLogger != null) {
-            jobLogger.info(format, msg);
-        } else {
-            if (msg.length == 0) {
-                LOGGER.info(format);
-            } else {
-                LOGGER.info(String.format(format, msg));
-            }
-        }
-    }
-
-    private void logDebug(String format, Object... msg) {
-        if (jobLogger != null) {
-            jobLogger.debug(format, msg);
-        } else {
-            if (msg.length == 0) {
-                LOGGER.debug(format);
-            } else {
-                LOGGER.debug(String.format(format, msg));
-            }
-        }
-    }
-
-    private void logTrace(String format, Object... msg) {
-        if (jobLogger != null) {
-            jobLogger.trace(format, msg);
-        } else {
-            if (msg.length == 0) {
-                LOGGER.trace(format);
-            } else {
-                LOGGER.trace(String.format(format, msg));
-            }
-        }
-    }
-
-    // private void logWarn(String format, Object... msg) {
-    // if (jobLogger != null) {
-    // jobLogger.warn(format, msg);
-    // } else {
-    // if (msg.length == 0) {
-    // LOGGER.warn(format);
-    // } else {
-    // LOGGER.warn(String.format(format, msg));
-    // }
-    // }
-    // }
-
 }

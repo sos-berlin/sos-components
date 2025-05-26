@@ -2,11 +2,11 @@ package com.sos.jitl.jobs.file.common;
 
 import java.io.File;
 
-import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class FileOperationsImpl extends AFileOperations {
 
-    public FileOperationsImpl(OrderProcessStepLogger logger) {
+    public FileOperationsImpl(ISOSLogger logger) {
         super(logger);
     }
 

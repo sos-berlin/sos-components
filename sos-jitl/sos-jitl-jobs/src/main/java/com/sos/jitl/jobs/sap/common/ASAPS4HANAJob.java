@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
@@ -21,7 +22,6 @@ import com.sos.jitl.jobs.sap.common.bean.ScheduleLog;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.exception.JobProblemException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
@@ -32,10 +32,10 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
     }
 
     public abstract void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient,
-            OrderProcessStepLogger logger) throws Exception;
+            ISOSLogger logger) throws Exception;
 
     public boolean execute(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, RunIds.Scope scope) throws Exception {
-        OrderProcessStepLogger logger = step.getLogger();
+        ISOSLogger logger = step.getLogger();
         args.setIRunScope(scope);
         Path statusFile = Globals.getStatusFileDirectory(args).resolve(getStatusFilename(step));
 
@@ -100,13 +100,13 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
         }
     }
 
-    private void activateSchedule(RunIds ids, HttpClient httpClient, OrderProcessStepLogger logger) throws JsonParseException, JsonMappingException,
+    private void activateSchedule(RunIds ids, HttpClient httpClient, ISOSLogger logger) throws JsonParseException, JsonMappingException,
             SocketException, IOException, SOSException {
         httpClient.activateSchedule(ids.getJobId(), ids.getScheduleId());
         logger.info("Schedule jobId=%d scheduleId=%s is activated", ids.getJobId(), ids.getScheduleId());
     }
 
-    private boolean pollSchedule(CommonJobArguments args, HttpClient httpClient, OrderProcessStepLogger logger) throws JsonParseException,
+    private boolean pollSchedule(CommonJobArguments args, HttpClient httpClient, ISOSLogger logger) throws JsonParseException,
             JsonMappingException, SocketException, IOException, SOSException {
 
         Long interval = args.getCheckInterval().getValue();
@@ -129,8 +129,8 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
         return result;
     }
 
-    private boolean checkSchedule(CommonJobArguments args, HttpClient httpClient, boolean firstStep, OrderProcessStepLogger logger)
-            throws JsonParseException, JsonMappingException, SocketException, IOException, SOSException {
+    private boolean checkSchedule(CommonJobArguments args, HttpClient httpClient, boolean firstStep, ISOSLogger logger) throws JsonParseException,
+            JsonMappingException, SocketException, IOException, SOSException {
         RunIds runIds = args.getIds();
         ScheduleLog scheduleLog = new ScheduleLog().withRunStatus("UNKNOWN");
         try {
@@ -159,7 +159,7 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
         return false;
     }
 
-    private static void sleep(Long duration, OrderProcessStepLogger logger) {
+    private static void sleep(Long duration, ISOSLogger logger) {
         try {
             TimeUnit.SECONDS.sleep(duration);
         } catch (InterruptedException e) {
@@ -171,14 +171,14 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
         return String.format("%s#%s%s.json", step.getWorkflowName(), step.getJobInstructionLabel(), step.getOrderId().replace('|', '!'));
     }
 
-    private void createStatusFile(Path statusfile, CommonJobArguments args, OrderProcessStepLogger logger) throws Exception {
+    private void createStatusFile(Path statusfile, CommonJobArguments args, ISOSLogger logger) throws Exception {
         Files.createDirectories(statusfile.getParent());
         Files.write(statusfile, Globals.objectMapper.writeValueAsBytes(args.getIds()));
         // TODO change to debug if it works
         logger.info("status file '%s' is created with %s", statusfile.toString(), args.idsToString());
     }
 
-    private void deleteStatusFile(Path statusfile, CommonJobArguments args, OrderProcessStepLogger logger) throws Exception {
+    private void deleteStatusFile(Path statusfile, CommonJobArguments args, ISOSLogger logger) throws Exception {
         Files.deleteIfExists(statusfile);
         // TODO change to debug if it works
         logger.info("status file '%s' is deleted", statusfile.toString());

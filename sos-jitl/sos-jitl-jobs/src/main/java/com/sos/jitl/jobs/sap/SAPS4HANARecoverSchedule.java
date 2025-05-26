@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -22,7 +23,6 @@ import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleLog;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public class SAPS4HANARecoverSchedule extends Job<CommonJobArguments> {
 
@@ -32,7 +32,7 @@ public class SAPS4HANARecoverSchedule extends Job<CommonJobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<CommonJobArguments> step) throws Exception {
-        OrderProcessStepLogger logger = step.getLogger();
+        ISOSLogger logger = step.getLogger();
         CommonJobArguments args = step.getDeclaredArguments();
 
         // file pattern "workflow#joblabelorderId.json"
@@ -77,8 +77,8 @@ public class SAPS4HANARecoverSchedule extends Job<CommonJobArguments> {
         step.getOutcome().setReturnCode(0);
     }
 
-    private static boolean checkSchedule(RunIds runIds, ScheduleDescription desc, HttpClient httpClient, OrderProcessStepLogger logger)
-            throws SOSException, JsonParseException, JsonMappingException, IOException {
+    private static boolean checkSchedule(RunIds runIds, ScheduleDescription desc, HttpClient httpClient, ISOSLogger logger) throws SOSException,
+            JsonParseException, JsonMappingException, IOException {
 
         ScheduleLog scheduleLog = new ScheduleLog().withRunStatus("UNKNOWN");
         try {

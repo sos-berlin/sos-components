@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.sap;
 
 import java.util.Optional;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.ASAPS4HANAJob;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -11,7 +12,6 @@ import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.Schedule;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.exception.JobException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
@@ -27,9 +27,10 @@ public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
         checkJobIdName(args.getJobId(), args.getJobName());
         execute(step, args, RunIds.Scope.SCHEDULE);
     }
-    
+
     @Override
-    public void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, OrderProcessStepLogger logger) throws Exception {
+    public void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, ISOSLogger logger)
+            throws Exception {
         httpClient.fetchCSRFToken();
         ResponseJob job = httpClient.retrieveJob(args.getJobId().getValue(), args.getJobName().getValue());
         args.setIJobId(job.getJobId());
@@ -43,8 +44,7 @@ public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
             args.setIScheduleId(respSchedule.getScheduleId());
             logger.info("Schedule jobId=%d scheduleId=%s is created", args.getJobId().getValue(), respSchedule.getScheduleId());
         } else {
-            throw new JobException(String.format("A Schedule '%s' doesn't exist in the Job '%d'", job.getJobId(), args.getScheduleId()
-                    .getValue()));
+            throw new JobException(String.format("A Schedule '%s' doesn't exist in the Job '%d'", job.getJobId(), args.getScheduleId().getValue()));
         }
     }
 
@@ -54,5 +54,5 @@ public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
                     .getName()));
         }
     }
-    
+
 }

@@ -13,13 +13,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobFileExistsArguments;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public class FileExistsJob extends Job<FileOperationsJobFileExistsArguments> {
 
@@ -42,7 +42,7 @@ public class FileExistsJob extends Job<FileOperationsJobFileExistsArguments> {
         AFileOperationsJob.handleResult(step, fo.getResultList(), result);
     }
 
-    public boolean checkSteadyStateOfFiles(OrderProcessStepLogger logger, FileOperationsJobFileExistsArguments args, List<File> files)
+    public boolean checkSteadyStateOfFiles(ISOSLogger logger, FileOperationsJobFileExistsArguments args, List<File> files)
             throws Exception {
         if (files == null || files.size() == 0 || args.getSteadyStateCount().getValue() <= 0) {
             return true;

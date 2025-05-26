@@ -9,11 +9,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.OrderProcessStepOutcome;
 import com.sos.js7.job.exception.JobProblemException;
 
@@ -99,7 +99,7 @@ public class SSHJobUtil {
         return parameterSubstitutor;
     }
 
-    public static void checkStdErr(String stdErr, SSHJobArguments jobArgs, OrderProcessStepLogger logger) throws SOSJobSSHException {
+    public static void checkStdErr(String stdErr, SSHJobArguments jobArgs, ISOSLogger logger) throws SOSJobSSHException {
         if (jobArgs.getRaiseExceptionOnError().getValue()) {
             if (stdErr.length() > 0) {
                 if (jobArgs.getIgnoreStdErr().getValue()) {
@@ -111,7 +111,7 @@ public class SSHJobUtil {
         }
     }
 
-    public static void checkExitCode(Integer exitCode, SSHJobArguments jobArgs, OrderProcessStepOutcome outcome, OrderProcessStepLogger logger)
+    public static void checkExitCode(Integer exitCode, SSHJobArguments jobArgs, OrderProcessStepOutcome outcome, ISOSLogger logger)
             throws SOSJobSSHException {
         if (exitCode != null) {
             outcome.putVariable("exit_code", exitCode);

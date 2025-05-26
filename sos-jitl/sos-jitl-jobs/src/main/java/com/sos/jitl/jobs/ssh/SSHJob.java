@@ -26,6 +26,7 @@ import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -33,7 +34,6 @@ import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 import com.sos.jitl.jobs.ssh.util.SSHJobUtil;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public class SSHJob extends Job<SSHJobArguments> {
 
@@ -54,7 +54,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         SSHJobArguments jobArgs = step.getDeclaredArguments();
 
         SOSEnv envVars = new SOSEnv();
-        OrderProcessStepLogger logger = step.getLogger();
+        ISOSLogger logger = step.getLogger();
         String returnValuesFileName = "sos-ssh-return-values-" + UUID.randomUUID() + ".txt";
         String resolvedReturnValuesFileName = null;
         boolean isWindowsShell = false;
@@ -211,13 +211,13 @@ public class SSHJob extends Job<SSHJobArguments> {
         }
     }
 
-    private String[] splitCommands(SSHJobArguments jobArgs, OrderProcessStepLogger logger) {
+    private String[] splitCommands(SSHJobArguments jobArgs, ISOSLogger logger) {
         logger.info("[execute commands]%s", jobArgs.getCommand().getDisplayValue());
         return jobArgs.getCommand().getValue().split(jobArgs.getCommandDelimiter().getValue());
     }
 
     private String createRemoteCommandScript(SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
-            List<Path> localTempFilesToDelete, boolean isWindowsShell, OrderProcessStepLogger logger) throws Exception {
+            List<Path> localTempFilesToDelete, boolean isWindowsShell, ISOSLogger logger) throws Exception {
         if (!jobArgs.getCommandScript().isEmpty()) {
             logger.info("[execute command script]%s", jobArgs.getCommandScript().getDisplayValue());
             return putCommandScriptFile(SSHJobUtil.substituteVariables(parameterSubstitutor, jobArgs.getCommandScript().getValue()), provider,
@@ -231,7 +231,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         return null;
     }
 
-    private void logSosEnvVars(Map<String, String> env, OrderProcessStepLogger logger) {
+    private void logSosEnvVars(Map<String, String> env, ISOSLogger logger) {
         logger.debug("%-30s | %s", "KEY", "VALUE");
         for (Map.Entry<String, String> entry : env.entrySet()) {
             logger.debug("%-30s | %s", entry.getKey(), entry.getValue());
@@ -246,7 +246,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     }
 
     private String putCommandScriptFile(String content, SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
-            List<Path> localTempFilesToDelete, boolean isWindowsShell, OrderProcessStepLogger logger) throws Exception {
+            List<Path> localTempFilesToDelete, boolean isWindowsShell, ISOSLogger logger) throws Exception {
         if (!isWindowsShell) {
             content = content.replaceAll("(?m)\r", "");
         }
@@ -272,14 +272,14 @@ public class SSHJob extends Job<SSHJobArguments> {
         return target;
     }
 
-    private void addLocalTemporaryFilesToDelete(final String filepath, List<Path> localTempFilesToDelete, OrderProcessStepLogger logger) {
+    private void addLocalTemporaryFilesToDelete(final String filepath, List<Path> localTempFilesToDelete, ISOSLogger logger) {
         if (!SOSString.isEmpty(filepath)) {
             localTempFilesToDelete.add(Paths.get(filepath));
             logger.debug(String.format("local file %s marked for deletion", filepath));
         }
     }
 
-    private void addTemporaryFilesToDelete(final String filepath, List<String> tempFilesToDelete, OrderProcessStepLogger logger) {
+    private void addTemporaryFilesToDelete(final String filepath, List<String> tempFilesToDelete, ISOSLogger logger) {
         if (!SOSString.isEmpty(filepath)) {
             tempFilesToDelete.add(filepath);
             logger.debug(String.format("remote file %s marked for deletion", filepath));
@@ -287,7 +287,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     }
 
     private Map<String, String> resolveReturnValuesFilename(SSHJobArguments jobArgs, List<String> tempFilesToDelete, String returnValuesFileName,
-            boolean isWindowsShell, OrderProcessStepLogger logger) {
+            boolean isWindowsShell, ISOSLogger logger) {
         String resolvedReturnValuesFileName = SSHJobUtil.resolve(jobArgs, returnValuesFileName, isWindowsShell);
         addTemporaryFilesToDelete(resolvedReturnValuesFileName, tempFilesToDelete, logger);
         Map<String, String> retVal = new HashMap<String, String>();
@@ -296,7 +296,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     }
 
     private Map<String, Object> executePostCommand(SSHJobArguments jobArgs, SSHProvider provider, String resolvedReturnValuesFileName,
-            boolean isWindowsShell, OrderProcessStepLogger logger) {
+            boolean isWindowsShell, ISOSLogger logger) {
         Map<String, Object> outcomes = new HashMap<String, Object>();
         try {
             String postCommandRead = null;
@@ -344,7 +344,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     }
 
     private void deleteTempFiles(SSHJobArguments jobArgs, SSHProvider provider, List<String> tempFilesToDelete, boolean isWindowsShell,
-            OrderProcessStepLogger logger) {
+            ISOSLogger logger) {
         if (tempFilesToDelete != null && !tempFilesToDelete.isEmpty()) {
             for (String file : tempFilesToDelete) {
                 if (logger.isDebugEnabled()) {
@@ -373,7 +373,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         }
     }
 
-    private void deleteLocalTempFiles(List<Path> localTempFilesToDelete, OrderProcessStepLogger logger) {
+    private void deleteLocalTempFiles(List<Path> localTempFilesToDelete, ISOSLogger logger) {
         if (localTempFilesToDelete != null && !localTempFilesToDelete.isEmpty()) {
             for (Path tempFile : localTempFilesToDelete) {
                 try {
