@@ -292,7 +292,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         if (!arg.isScopeAll()) {
             return;
         }
-       
+
         // step calls another java job
         if (step != null && step.hasExecuteJobArguments() && step.getExecuteJobBean().getArguments().containsKey(arg.getName())) {
             JobArgument<?> a = step.getExecuteJobBean().getArguments().get(arg.getName());
@@ -611,22 +611,27 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     protected Class<A> getJobArgumensClass() throws JobArgumentException {
         try {
             Class<?> clazz = getClass();
-            while (clazz.getSuperclass() != Job.class) {
-                clazz = clazz.getSuperclass();
-                if (clazz == null)
-                    throw new JobArgumentException(String.format("%s super class not found for %s", Job.class.getSimpleName(), getClass()));
-            }
-            Type gsc = clazz.getGenericSuperclass();
-            try {
-                return (Class<A>) ((ParameterizedType) gsc).getActualTypeArguments()[0];
-            } catch (Throwable e) {
-                if (gsc.getTypeName().endsWith(">")) {// com.sos.jitl.jobs.common.ABlockingInternalJob<com.sos.jitl.jobs....Arguments>
-                    throw e;
+            while (clazz != null && clazz != Object.class) {
+                Type genericSuperclass = clazz.getGenericSuperclass();
+
+                if (genericSuperclass instanceof ParameterizedType) {
+                    ParameterizedType pt = (ParameterizedType) genericSuperclass;
+                    Type rawType = pt.getRawType();
+
+                    if (rawType instanceof Class && Job.class.isAssignableFrom((Class<?>) rawType)) {
+                        try {
+                            return (Class<A>) pt.getActualTypeArguments()[0];
+                        } catch (Throwable e) {
+                            return (Class<A>) JobArguments.class; // Fallback
+                        }
+                    }
                 }
-                return (Class<A>) JobArguments.class;// (Class<A>) Object.class;
+                clazz = clazz.getSuperclass();
             }
+            throw new JobArgumentException(String.format("%s superclass with type parameter not found for %s", Job.class.getSimpleName(),
+                    getClass()));
         } catch (Throwable e) {
-            throw new JobArgumentException(String.format("can't evaluate JobArguments class for job %s: %s", getClass().getName(), e.toString()), e);
+            throw new JobArgumentException(String.format("Can't evaluate JobArguments class for job %s: %s", getClass().getName(), e.toString()), e);
         }
     }
 
