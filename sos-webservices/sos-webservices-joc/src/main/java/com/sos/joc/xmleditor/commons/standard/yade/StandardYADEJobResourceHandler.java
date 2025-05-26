@@ -6,6 +6,8 @@ import org.w3c.dom.Document;
 
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSClassUtil;
+import com.sos.commons.xml.transform.SOSXmlTransformer;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
@@ -22,7 +24,7 @@ import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.xmleditor.deploy.DeployConfiguration;
 import com.sos.joc.publish.impl.ADeploy;
-import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.impl.StandardYADEDeployResourceImpl;
 
 public class StandardYADEJobResourceHandler {
@@ -50,7 +52,16 @@ public class StandardYADEJobResourceHandler {
         return yadeJobResource;
     }
 
-    private static void callJOCAPIInventoryStore(final String accessToken, final StandardYADEJobResource yadeJobResource, final Document doc,
+    private static String getInventoryDeployXml(String xml) throws Exception {
+        return SOSXmlTransformer.transformXmlWithXslEncloseTextInCdata(xml, getYADEXslTransformSchemaCurrentToMergedLegacy(), false, 4);
+    }
+
+    private static String getYADEXslTransformSchemaCurrentToMergedLegacy() throws Exception {
+        return SOSClassUtil.readResourceFile(new JocXmlEditor().getClass(),
+                JocXmlEditor.YADE_TRANSFORM_SCHEMA_CURRENT_TO_MERGED_LEGACY_RESOURCE_PATH);
+    }
+
+    private static void callJOCAPIInventoryStore(final String accessToken, final StandardYADEJobResource yadeJobResource, final Document doc2,
             final String xml) throws Exception {
 
         // 1) Prepare JOC API call inventory/store - create filter
@@ -60,12 +71,13 @@ public class StandardYADEJobResourceHandler {
         } else {
             jr = Globals.objectMapper.readValue(yadeJobResource.getInventoryItem().getContent(), JobResource.class);
         }
+
+        String inventoryXml = getInventoryDeployXml(xml);
         if (jr == null) {
             jr = new JobResource();
             jr.setTitle(yadeJobResource.getInventoryItem().getTitle());
             Environment args = new Environment();
-            args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler.getYADEXMLForDeployment(doc, xml)
-                    + "', '*.xml' )");
+            args.setAdditionalProperty(yadeJobResource.getVariable(), "toFile( '" + inventoryXml + "', '*.xml' )");
             jr.setArguments(args);
 
             Environment env = new Environment();
@@ -77,8 +89,7 @@ public class StandardYADEJobResourceHandler {
             if (args == null || args.getAdditionalProperties() == null) {
                 jr.setArguments(new Environment());
             }
-            jr.getArguments().getAdditionalProperties().put(yadeJobResource.getVariable(), "toFile( '" + StandardSchemaHandler
-                    .getYADEXMLForDeployment(doc, xml) + "', '*.xml' )");
+            jr.getArguments().getAdditionalProperties().put(yadeJobResource.getVariable(), "toFile( '" + inventoryXml + "', '*.xml' )");
 
             Environment env = jr.getEnv();
             if (env == null || env.getAdditionalProperties() == null) {

@@ -3,12 +3,22 @@ package com.sos.commons.xml.transform;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-public class SOSXmlCDataStreamWriter implements XMLStreamWriter, AutoCloseable {
+public class SOSXmlCDataIndentingStreamWriter implements XMLStreamWriter, AutoCloseable {
+
+    private static final String NEW_LINE = "\n";
 
     private final XMLStreamWriter delegate;
 
-    public SOSXmlCDataStreamWriter(XMLStreamWriter delegate) {
+    private final String indentStep;
+    private final boolean indentEnabled;
+
+    private int depth = 0;
+    private boolean newLinePending = false;
+
+    public SOSXmlCDataIndentingStreamWriter(XMLStreamWriter delegate, int indentAmount) {
         this.delegate = delegate;
+        this.indentStep = (indentAmount > 0) ? " ".repeat(indentAmount) : "";
+        this.indentEnabled = indentAmount > 0;
     }
 
     // general change: writeCharacters() writes CDATA
@@ -16,6 +26,7 @@ public class SOSXmlCDataStreamWriter implements XMLStreamWriter, AutoCloseable {
     public void writeCharacters(String text) throws XMLStreamException {
         if (text != null && !text.isEmpty()) {
             delegate.writeCData(text);
+            newLinePending = false;
         } else {
             delegate.writeCharacters(text);
         }
@@ -26,6 +37,7 @@ public class SOSXmlCDataStreamWriter implements XMLStreamWriter, AutoCloseable {
         if (text != null && len > 0) {
             String s = new String(text, start, len);
             delegate.writeCData(s);
+            newLinePending = false;
         } else {
             delegate.writeCharacters(text, start, len);
         }
@@ -34,37 +46,63 @@ public class SOSXmlCDataStreamWriter implements XMLStreamWriter, AutoCloseable {
     // delegate all other methods
     @Override
     public void writeStartElement(String localName) throws XMLStreamException {
+        writeIndent();
+
         delegate.writeStartElement(localName);
+        depth++;
+        newLinePending = true;
     }
 
     @Override
     public void writeStartElement(String namespaceURI, String localName) throws XMLStreamException {
+        writeIndent();
+
         delegate.writeStartElement(namespaceURI, localName);
+        depth++;
+        newLinePending = true;
     }
 
     @Override
     public void writeStartElement(String prefix, String localName, String namespaceURI) throws XMLStreamException {
+        writeIndent();
+
         delegate.writeStartElement(prefix, localName, namespaceURI);
+        depth++;
+        newLinePending = true;
     }
 
     @Override
     public void writeEmptyElement(String namespaceURI, String localName) throws XMLStreamException {
+        writeIndent();
+
         delegate.writeEmptyElement(namespaceURI, localName);
+        newLinePending = true;
     }
 
     @Override
     public void writeEmptyElement(String prefix, String localName, String namespaceURI) throws XMLStreamException {
+        writeIndent();
+
         delegate.writeEmptyElement(prefix, localName, namespaceURI);
+        newLinePending = true;
     }
 
     @Override
     public void writeEmptyElement(String localName) throws XMLStreamException {
+        writeIndent();
+
         delegate.writeEmptyElement(localName);
+        newLinePending = true;
     }
 
     @Override
     public void writeEndElement() throws XMLStreamException {
+        depth--;
+        if (indentEnabled && newLinePending) {
+            writeIndent();
+        }
         delegate.writeEndElement();
+        newLinePending = true;
     }
 
     @Override
@@ -180,5 +218,16 @@ public class SOSXmlCDataStreamWriter implements XMLStreamWriter, AutoCloseable {
     @Override
     public Object getProperty(String name) throws IllegalArgumentException {
         return delegate.getProperty(name);
+    }
+
+    private void writeIndent() throws XMLStreamException {
+        if (!indentEnabled) {
+            return;
+        }
+
+        delegate.writeCharacters(NEW_LINE);
+        for (int i = 0; i < depth; i++) {
+            delegate.writeCharacters(indentStep);
+        }
     }
 }

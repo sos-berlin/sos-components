@@ -3,8 +3,6 @@ package com.sos.joc.xmleditor.commons.standard;
 import java.io.InputStream;
 import java.util.Date;
 
-import org.w3c.dom.Document;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
@@ -196,11 +194,6 @@ public class StandardSchemaHandler {
         }
     }
 
-    public static String getYADEXMLForDeployment(Document doc, String xml) throws Exception {
-        // TODO activate
-        return SOSXmlTransformer.nodeToString(doc, true, 4);  // xml;// SOSXML.transformXMLWithXSL(xml, cccc());
-    }
-
     private static DBItemXmlEditorConfiguration createReleasedNotificationConfiguration(String name, String configuration, String configurationJson,
             String account, Long auditLogId) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
@@ -244,7 +237,7 @@ public class StandardSchemaHandler {
         if (!isYADE) {
             return xml;
         }
-        return SOSXmlTransformer.transformXmlWithXslEncloseTextInCdata(xml, getYADEXslTransformSchemaAnyToCurrent(), true, 0);
+        return SOSXmlTransformer.transformXmlWithXslEncloseTextInCdata(xml, getYADEXslTransformSchemaAnyToCurrent(), false, 0);
     }
 
     private static String getYADEXslTransformSchemaAnyToCurrent() throws Exception {

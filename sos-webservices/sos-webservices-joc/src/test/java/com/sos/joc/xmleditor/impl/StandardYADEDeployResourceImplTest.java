@@ -22,7 +22,7 @@ public class StandardYADEDeployResourceImplTest {
     @Ignore
     @Test
     public void testDeploy() throws Exception {
-        Long xmlEditorId = 30L;
+        Long xmlEditorId = 32L;
 
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StandardYADEDeployResourceImpl());
         h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");

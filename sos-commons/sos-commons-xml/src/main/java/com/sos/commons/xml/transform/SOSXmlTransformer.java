@@ -30,6 +30,11 @@ import com.sos.commons.xml.SOSXML;
  * to support XSLT v2 use net.sf.saxon (supports XSLT v2), artifactId Saxon-HE - see comment - newTransformer */
 public class SOSXmlTransformer {
 
+    /** Intended, without XML declaration: <?xml version=\"1.0\" encoding=\"UTF-8\"?>
+     * 
+     * @param node
+     * @return
+     * @throws Exception */
     public static String nodeToString(Node node) throws Exception {
         return nodeToString(node, true, 4);
     }
@@ -61,12 +66,10 @@ public class SOSXmlTransformer {
      * @param indentAmount Number of spaces for indentation; if zero or less, no indentation.
      * @return The transformed XML as a String.
      * @throws Exception If any transformation error occurs. */
-    public static String transformXmlWithXsl(String xmlContent, String xslContent) throws Exception {
-        return transformXmlWithXsl(xmlContent, xslContent, true, 4);
-    }
-
-    public static String transformXmlWithXsl(String xmlContent, String xslContent, boolean omitXmlDeclaration, int indentAmount) throws Exception {
-        Transformer t = createTransformer(omitXmlDeclaration, indentAmount, xslContent);
+    /** TODO indent, cdata ... */
+    @SuppressWarnings("unused")
+    private static String transformXmlWithXsl(String xmlContent, String xslContent) throws Exception {
+        Transformer t = newTransformer(xslContent);
         try (StringWriter sw = new StringWriter()) {
             t.transform(new StreamSource(new StringReader(xmlContent)), new StreamResult(sw));
             return sw.toString().trim();
@@ -101,7 +104,7 @@ public class SOSXmlTransformer {
 
             transformThread = new Thread(() -> {
                 try {
-                    Transformer t = createTransformer(omitXmlDeclaration, indentAmount, xslContent);
+                    Transformer t = newTransformer(xslContent);
                     t.transform(new StreamSource(new StringReader(xmlContent)), new StreamResult(pipeOut));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -120,10 +123,12 @@ public class SOSXmlTransformer {
             try {
                 reader = inputFactory.createXMLStreamReader(pipeIn);
                 rawWriter = outputFactory.createXMLStreamWriter(osWriter);
-                try (SOSXmlCDataStreamWriter cdataWriter = new SOSXmlCDataStreamWriter(rawWriter)) {
+                try (SOSXmlCDataIndentingStreamWriter cdataWriter = new SOSXmlCDataIndentingStreamWriter(rawWriter, indentAmount)) {
 
                     if (!omitXmlDeclaration) {
-                        cdataWriter.writeStartDocument("UTF-8", "1.0");
+                        // writes <?xml version='1.0' encoding='UTF-8'?> instead of <?xml version="1.0" encoding="UTF-8"?>
+                        // cdataWriter.writeStartDocument("UTF-8", "1.0");
+                        osWriter.write(SOSXML.DEFAULT_XML_DECLARATION);
                     }
 
                     while (reader.hasNext()) {
@@ -198,11 +203,7 @@ public class SOSXmlTransformer {
     }
 
     public static Transformer createTransformer(boolean omitXmlDeclaration, int indentAmount) throws Exception {
-        return createTransformer(omitXmlDeclaration, indentAmount, null);
-    }
-
-    public static Transformer createTransformer(boolean omitXmlDeclaration, int indentAmount, String xslContent) throws Exception {
-        Transformer t = newTransformer(xslContent);
+        Transformer t = newTransformer(null);
         t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclaration ? "yes" : "no");
         if (indentAmount > 0) {
             t.setOutputProperty(OutputKeys.INDENT, "yes");
