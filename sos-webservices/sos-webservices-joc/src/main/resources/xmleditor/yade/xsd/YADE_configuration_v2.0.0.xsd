@@ -1531,8 +1531,9 @@
                            </li>
                         </ul>
                         <strong>Notes</strong>
-                        <p>Parent directory on the jump host used to create exactly one temporary subdirectory per file transfer operation (e.g.<em>yade-dmz-&lt;uuid&gt;</em>).</p>
-                        <p>This subdirectory is deleted in all cases — whether the transfer succeeds or fails.</p>
+                        <p>Parent directory on the Jump host used to create exactly one temporary subdirectory (e.g.<em>yade-dmz-&lt;uuid&gt;</em>) per file transfer operation.</p>
+                        <p/>
+                        <p>This subdirectory is deleted in all cases - whether the transfer succeeds or fails.</p>
                         <p>The parent directory itself remains.</p>
                      </div>
                   </xs:documentation>
@@ -1544,18 +1545,39 @@
                     </xs:simpleType>	            
                 </xs:element>
                 
+                <xs:element name="SFTPProcessing" minOccurs="0">
+                    <xs:annotation>
+                  <xs:appinfo source="Fragments/ProtocolFragments/JUMP/SFTPProcessing"/>
+                  <xs:documentation>
+                     <div xmlns="http://www.w3.org/1999/xhtml">
+                        <strong>References</strong>
+                        <ul>
+                           <li>
+                              <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                           </li>
+                        </ul>
+                        <strong>Notes</strong>
+                        <p>Groups shell commands and settings related to <em>Pre-</em> and <em>Post-Processing</em> of file transfers, as well as other related configuration such as <em>Platform</em> information.</p>
+                     </div>
+                  </xs:documentation>
+               </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element ref="SFTPPreProcessing" minOccurs="0"/>
+                            <xs:element ref="SFTPPostProcessing" minOccurs="0"/>
+                            <xs:element ref="ProcessingCommandDelimiter" minOccurs="0"/>                
+                            <xs:element ref="Platform" minOccurs="0"/>
+                        </xs:sequence>
+                    </xs:complexType>	            
+                </xs:element>
+                
                 <xs:element ref="ProxyForSFTP" minOccurs="0"/>
 				
                 <xs:element ref="SocketTimeout" minOccurs="0"/>
                 <xs:element name="KeepAlive" type="SFTPKeepAliveType" minOccurs="0"/>
                 <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
-				        <xs:element ref="ConfigurationFiles" minOccurs="0"/>	
-				
-                <xs:element ref="SFTPPreProcessing" minOccurs="0"/>
-				        <xs:element ref="SFTPPostProcessing" minOccurs="0"/>
-                <xs:element ref="ProcessingCommandDelimiter" minOccurs="0"/>
+				        <xs:element ref="ConfigurationFiles" minOccurs="0"/>					
                 
-				        <xs:element ref="Platform" minOccurs="0"/>
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -3461,7 +3483,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>Platform / Operating system</p>
+               <p>Specifies the operating system platform of the Jump host.</p>
+               <p>This setting helps optimize actions like efficiently deleting the Jump temporary directory when the YADE client cannot automatically determine the platform.</p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -6665,10 +6688,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			Specifies commands that are executed on the SFTP server before transfer of files.
-			This includes SFTP commands, not shell commands.
-		</p>
+               <p>Specifies shell commands that are executed on the SFTP server via SSH before transfer of files.</p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -6685,10 +6705,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			Specifies commands that are executed on the SFTP server after transfer of files.
-			This includes SFTP commands, not shell commands.			
-		</p>
+               <p>Specifies shell commands that are executed on the SFTP server via SSH after transfer of files.</p>
             </div>
          </xs:documentation>
       </xs:annotation>

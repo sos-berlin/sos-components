@@ -13,10 +13,15 @@ import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLArgumentsLoader;
 
 public class YADEJob extends Job<YADEJobArguments> {
 
+    private boolean printMemoryUsage = false;
+
     @Override
     public void processOrder(OrderProcessStep<YADEJobArguments> step) throws Exception {
         // TODO to remove
-        long startMemory = SOSShell.getUsedMemory();
+        long startMemory = 0L;
+        if (printMemoryUsage) {
+            startMemory = SOSShell.getUsedMemory();
+        }
 
         YADEJobArguments args = step.getDeclaredArguments();
         AYADEArgumentsLoader argsLoader = null;
@@ -41,9 +46,15 @@ public class YADEJob extends Job<YADEJobArguments> {
             exception = e;
             throw e;
         } finally {
-            step.getLogger().info("[Memory used][before serialize for history]" + SOSShell.formatBytes(SOSShell.getUsedMemory() - startMemory));
+            if (printMemoryUsage) {
+                step.getLogger().info("[Memory used][before serialize for history]" + SOSShell.formatBytes(SOSShell.getUsedMemory() - startMemory));
+            }
+
             setOutcomeHistory(step, args, argsLoader, files, exception);
-            step.getLogger().info("[Memory used][total]" + SOSShell.formatBytes(SOSShell.getUsedMemory() - startMemory));
+
+            if (printMemoryUsage) {
+                step.getLogger().info("[Memory used][total]" + SOSShell.formatBytes(SOSShell.getUsedMemory() - startMemory));
+            }
         }
     }
 

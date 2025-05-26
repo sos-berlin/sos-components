@@ -161,6 +161,92 @@
         </xsl:choose>
     </xsl:template>
     
+    <!-- Template for JumpFragment: check if YADEClientCommand exists to determine if it's v2 -->
+    <xsl:template match="JumpFragment">
+        <xsl:choose>
+            <!-- If YADEClientCommand element exists, it's v2, so copy the entire JumpFragment as is -->
+            <xsl:when test="YADEClientCommand">
+                <xsl:copy-of select="."/>
+            </xsl:when>
+
+            <!-- If YADEClientCommand element does not exist, it must be v1, so transform it to v2 -->
+            <xsl:otherwise>
+                <JumpFragment>
+                    <xsl:copy-of select="@name"/>
+          
+                    <xsl:copy-of select="CredentialStoreFragmentRef"/>
+                    
+                    <xsl:copy-of select="BasicConnection"/>
+                    <xsl:copy-of select="SSHAuthentication"/>
+                    
+                    <xsl:if test="JumpCommand">
+                        <YADEClientCommand><xsl:value-of select="JumpCommand"/></YADEClientCommand>
+                    </xsl:if>
+                    <xsl:if test="JumpDirectory">
+                        <TempDirectoryParent><xsl:value-of select="JumpDirectory"/></TempDirectoryParent>
+                    </xsl:if>    
+
+                    <xsl:if test="Platform or JumpCommandBeforeFile or JumpCommandBeforeOperation or JumpCommandAfterFile or JumpCommandAfterOperationOnSuccess or JumpCommandAfterOperationOnError or JumpCommandAfterOperationFinal or JumpCommandBeforeRename">                    
+                        <SFTPProcessing>
+                            <xsl:if test="JumpCommandBeforeFile or JumpCommandBeforeOperation">
+                                <SFTPPreProcessing>
+                                    <xsl:if test="JumpCommandBeforeFile">
+                                        <CommandBeforeFile><xsl:value-of select="JumpCommandBeforeFile"/></CommandBeforeFile>
+                                    </xsl:if>
+                                    <xsl:if test="JumpCommandBeforeOperation">
+                                        <CommandBeforeOperation><xsl:value-of select="JumpCommandBeforeOperation"/></CommandBeforeOperation>
+                                    </xsl:if> 
+                                </SFTPPreProcessing>
+                            </xsl:if>
+                            <xsl:if test="JumpCommandAfterFile or JumpCommandAfterOperationOnSuccess or JumpCommandAfterOperationOnError or JumpCommandAfterOperationFinal or JumpCommandBeforeRename">
+                                <SFTPPostProcessing>
+                                    <xsl:if test="JumpCommandAfterFile">
+                                        <CommandAfterFile><xsl:value-of select="JumpCommandAfterFile"/></CommandAfterFile>
+                                    </xsl:if>
+                                    <xsl:if test="JumpCommandAfterOperationOnSuccess">
+                                        <CommandAfterOperationOnSuccess><xsl:value-of select="JumpCommandAfterOperationOnSuccess"/></CommandAfterOperationOnSuccess>
+                                    </xsl:if>
+                                    <xsl:if test="JumpCommandAfterOperationOnError">
+                                        <CommandAfterOperationOnError><xsl:value-of select="JumpCommandAfterOperationOnError"/></CommandAfterOperationOnError>
+                                    </xsl:if> 
+                                    <xsl:if test="JumpCommandAfterOperationFinal">
+                                        <CommandAfterOperationFinal><xsl:value-of select="JumpCommandAfterOperationFinal"/></CommandAfterOperationFinal>
+                                    </xsl:if> 
+                                    <xsl:if test="JumpCommandBeforeRename">
+                                        <CommandBeforeRename><xsl:value-of select="JumpCommandBeforeRename"/></CommandBeforeRename>
+                                    </xsl:if> 
+                                </SFTPPostProcessing>
+                            </xsl:if>
+                            <xsl:if test="JumpCommandDelimiter">
+                                <ProcessingCommandDelimiter><xsl:value-of select="JumpCommandDelimiter"/></ProcessingCommandDelimiter>
+                            </xsl:if> 
+                            <xsl:copy-of select="Platform"/>
+                        </SFTPProcessing>                        
+                    </xsl:if>                    
+                    
+                    <xsl:if test="ProxyForSFTP">
+                        <ProxyForSFTP><xsl:apply-templates select="ProxyForSFTP"/></ProxyForSFTP>
+                    </xsl:if> 
+                    <!-- SocketTimeout -->
+                    <xsl:if test="ChannelConnectTimeout">
+                        <SocketTimeout><xsl:value-of select="ChannelConnectTimeout"/></SocketTimeout>
+                    </xsl:if>                    
+                    <!-- KeepAlive -->
+                    <xsl:if test="ServerAliveInterval">
+                        <KeepAlive>
+                            <KeepAliveInterval><xsl:value-of select="ServerAliveInterval"/></KeepAliveInterval>
+                            <xsl:if test="ServerAliveCountMax">
+                                <MaxAliveCount><xsl:value-of select="ServerAliveCountMax"/></MaxAliveCount>
+                            </xsl:if> 
+                        </KeepAlive>
+                    </xsl:if>                    
+                    <xsl:copy-of select="StrictHostkeyChecking"/>
+                    <xsl:copy-of select="ConfigurationFiles"/>   
+                </JumpFragment>
+            </xsl:otherwise>
+        </xsl:choose>     
+    </xsl:template>
+    
     <!-- Template for SFTPFragment -->
     <xsl:template match="SFTPFragment">
         <SFTPFragment>
@@ -312,89 +398,7 @@
             </xsl:choose>    
         </WebDAVFragment>            
     </xsl:template> 
-
-    <!-- Template for JumpFragment: check if YADEClientCommand exists to determine if it's v2 -->
-    <xsl:template match="JumpFragment">
-        <xsl:choose>
-            <!-- If YADEClientCommand element exists, it's v2, so copy the entire JumpFragment as is -->
-            <xsl:when test="YADEClientCommand">
-                <xsl:copy-of select="."/>
-            </xsl:when>
-
-            <!-- If YADEClientCommand element does not exist, it must be v1, so transform it to v2 -->
-            <xsl:otherwise>
-                <JumpFragment>
-                    <xsl:copy-of select="@name"/>
-          
-                    <xsl:copy-of select="CredentialStoreFragmentRef"/>
-                    
-                    <xsl:copy-of select="BasicConnection"/>
-                    <xsl:copy-of select="SSHAuthentication"/>
-                    
-                    <xsl:if test="JumpCommand">
-                        <YADEClientCommand><xsl:value-of select="JumpCommand"/></YADEClientCommand>
-                    </xsl:if>
-                    <xsl:if test="JumpDirectory">
-                        <TempDirectoryParent><xsl:value-of select="JumpDirectory"/></TempDirectoryParent>
-                    </xsl:if>                       
-                    
-                    <xsl:if test="ProxyForSFTP">
-                        <ProxyForSFTP><xsl:apply-templates select="ProxyForSFTP"/></ProxyForSFTP>
-                    </xsl:if> 
-                    <!-- SocketTimeout -->
-                    <xsl:if test="ChannelConnectTimeout">
-                        <SocketTimeout><xsl:value-of select="ChannelConnectTimeout"/></SocketTimeout>
-                    </xsl:if>                    
-                    <!-- KeepAlive -->
-                    <xsl:if test="ServerAliveInterval">
-                        <KeepAlive>
-                            <KeepAliveInterval><xsl:value-of select="ServerAliveInterval"/></KeepAliveInterval>
-                            <xsl:if test="ServerAliveCountMax">
-                                <MaxAliveCount><xsl:value-of select="ServerAliveCountMax"/></MaxAliveCount>
-                            </xsl:if> 
-                        </KeepAlive>
-                    </xsl:if>                    
-                    <xsl:copy-of select="StrictHostkeyChecking"/>
-                    <xsl:copy-of select="ConfigurationFiles"/>
-                    
-                    <xsl:if test="JumpCommandBeforeFile or JumpCommandBeforeOperation">
-                        <SFTPPreProcessing>
-                            <xsl:if test="JumpCommandBeforeFile">
-                                <CommandBeforeFile><xsl:value-of select="JumpCommandBeforeFile"/></CommandBeforeFile>
-                            </xsl:if>
-                            <xsl:if test="JumpCommandBeforeOperation">
-                                <CommandBeforeOperation><xsl:value-of select="JumpCommandBeforeOperation"/></CommandBeforeOperation>
-                            </xsl:if> 
-                        </SFTPPreProcessing>
-                    </xsl:if>
-                    <xsl:if test="JumpCommandAfterFile or JumpCommandAfterOperationOnSuccess or JumpCommandAfterOperationOnError or JumpCommandAfterOperationFinal or JumpCommandBeforeRename">
-                        <SFTPPostProcessing>
-                            <xsl:if test="JumpCommandAfterFile">
-                                <CommandAfterFile><xsl:value-of select="JumpCommandAfterFile"/></CommandAfterFile>
-                            </xsl:if>
-                            <xsl:if test="JumpCommandAfterOperationOnSuccess">
-                                <CommandAfterOperationOnSuccess><xsl:value-of select="JumpCommandAfterOperationOnSuccess"/></CommandAfterOperationOnSuccess>
-                            </xsl:if>
-                            <xsl:if test="JumpCommandAfterOperationOnError">
-                                <CommandAfterOperationOnError><xsl:value-of select="JumpCommandAfterOperationOnError"/></CommandAfterOperationOnError>
-                            </xsl:if> 
-                            <xsl:if test="JumpCommandAfterOperationFinal">
-                                <CommandAfterOperationFinal><xsl:value-of select="JumpCommandAfterOperationFinal"/></CommandAfterOperationFinal>
-                            </xsl:if> 
-                            <xsl:if test="JumpCommandBeforeRename">
-                                <CommandBeforeRename><xsl:value-of select="JumpCommandBeforeRename"/></CommandBeforeRename>
-                            </xsl:if> 
-                        </SFTPPostProcessing>
-                    </xsl:if>
-                    <xsl:if test="JumpCommandDelimiter">
-                        <ProcessingCommandDelimiter><xsl:value-of select="JumpCommandDelimiter"/></ProcessingCommandDelimiter>
-                    </xsl:if> 
-                    <xsl:copy-of select="Platform"/>                    
-                </JumpFragment>
-            </xsl:otherwise>
-        </xsl:choose>     
-    </xsl:template>
-       
+           
     <!-- Handle BasicConnection in v2 format -->
     <xsl:template match="BasicConnection">
         <BasicConnection>

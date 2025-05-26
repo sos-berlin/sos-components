@@ -20,7 +20,7 @@ public class YADEJumpHostArguments extends ASOSArguments {
     private SOSArgument<String> tempDirectoryParent = new SOSArgument<>("TempDirectoryParent", false, "/tmp");
     private SOSArgument<JumpPlatform> platform = new SOSArgument<>("Platform", false);
 
-    private SOSArgument<String> yadeClientCommand = new SOSArgument<>("JumpCommand", false);
+    private SOSArgument<String> yadeClientCommand = new SOSArgument<>("YADEClientCommand", false);
 
     /** internal usage */
     private SOSArgument<Boolean> configuredOnSource = new SOSArgument<>(null, false);

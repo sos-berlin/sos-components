@@ -72,14 +72,16 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 case "YADEClientCommand": // JS7 - YADE-626
                     argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getYADEClientCommand(), n);
                     break;
-                case "TempDirectoryParent":
+                case "TempDirectoryParent": // JS7 - YADE-626
                     argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getTempDirectoryParent(), n);
+                    break;
+                case "SFTPProcessing": // JS7 - YADE-626
+                    parseSFTPProcessing(argsLoader, n);
                     break;
 
                 case "ProxyForSFTP":
                     YADEXMLFragmentsProtocolFragmentHelper.parseProxy(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
                     break;
-
                 case "SocketTimeout": // JS7 - YADE-626
                     argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getProvider().getSocketTimeout(), n);
                     break;
@@ -92,7 +94,17 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 case "ConfigurationFiles":
                     YADEXMLFragmentsProtocolFragmentHelper.parseConfigurationFiles(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
                     break;
+                }
+            }
+        }
+    }
 
+    public static void parseSFTPProcessing(YADEXMLArgumentsLoader argsLoader, Node sftpProcessing) throws Exception {
+        NodeList nl = sftpProcessing.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
                 case "SFTPPreProcessing":
                     YADEXMLProfileHelper.parsePreProcessing(argsLoader, argsLoader.getJumpHostArgs().getCommands(), n);
                     break;
@@ -100,7 +112,7 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                     YADEXMLProfileHelper.parsePostProcessing(argsLoader, argsLoader.getJumpHostArgs().getCommands(), n);
                     break;
                 case "ProcessingCommandDelimiter":
-                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getYADEClientCommand(), n);
+                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getCommands().getCommandDelimiter(), n);
                     break;
                 case "Platform":
                     argsLoader.getJumpHostArgs().setPlatform(argsLoader.getValue(n));

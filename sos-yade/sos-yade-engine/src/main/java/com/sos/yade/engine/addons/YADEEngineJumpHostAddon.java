@@ -272,7 +272,7 @@ public class YADEEngineJumpHostAddon {
         } catch (Throwable e) {
             throw new YADEEngineJumpHostException(e.toString(), e);
         } finally {
-            deleteJumpDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
+            deleteJumpHostTempDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
         }
     }
 
@@ -300,7 +300,7 @@ public class YADEEngineJumpHostAddon {
         }
     }
 
-    private void deleteJumpDirectory(AYADEProviderDelegator jumpHostDelegator, boolean isSourceDisconnectingEnabled) {
+    private void deleteJumpHostTempDirectory(AYADEProviderDelegator jumpHostDelegator, boolean isSourceDisconnectingEnabled) {
         if (jumpHostDelegator == null) {
             return;
         }
@@ -319,12 +319,12 @@ public class YADEEngineJumpHostAddon {
             }
 
             if (deleted) {
-                logger.info("[%s][DeleteJumpDirectory][%s]deleted", YADEJumpHostArguments.LABEL, dir);
+                logger.info("[%s][TempDirectory][%s]deleted", YADEJumpHostArguments.LABEL, dir);
             } else {
-                logger.info("[%s][DeleteJumpDirectory][%s]not found", YADEJumpHostArguments.LABEL, dir);
+                logger.info("[%s][TempDirectory][%s]not found", YADEJumpHostArguments.LABEL, dir);
             }
         } catch (ProviderException e) {
-            logger.warn("[%s][DeleteJumpDirectory][%s][delete]%s", YADEJumpHostArguments.LABEL, dir, e.toString(), e);
+            logger.warn("[%s][TempDirectory][%s][delete]%s", YADEJumpHostArguments.LABEL, dir, e.toString(), e);
         }
     }
 
