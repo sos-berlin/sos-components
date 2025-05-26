@@ -2,13 +2,16 @@ package com.sos.joc.db.approval;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -45,6 +48,50 @@ public class ApprovalDBLayer extends DBLayer {
             Globals.rollback(getSession());
             throw new DBInvalidDataException(ex);
         }
+    }
+    
+    public List<DBItemJocApprovalRequest> getApprovalRequests(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (ids.size() == 1) {
+            return Collections.singletonList(getApprovalRequest(ids.iterator().next()));
+        }
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS);
+            hql.append(" where id in (:ids)");
+                
+            Collection<List<Long>> chunkedIds = getChunkedCollection(ids);
+            List<DBItemJocApprovalRequest> result = new ArrayList<>();
+            if (chunkedIds != null) {
+                if (chunkedIds.size() == 1) {
+                    result = getApprovalRequests(hql, chunkedIds.iterator().next());
+                } else {
+                    for (List<Long> chunk : chunkedIds) {
+                        List<DBItemJocApprovalRequest> result1 = getApprovalRequests(hql, chunk);
+                        if (result1 != null) {
+                            result.addAll(result1);
+                        }
+                    }
+                }
+            }
+            
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    private List<DBItemJocApprovalRequest> getApprovalRequests(StringBuilder hql, Collection<Long> ids) throws SOSHibernateException {
+        Query<DBItemJocApprovalRequest> query = getSession().createQuery(hql);
+        query.setParameterList("ids", ids);
+        return getSession().getResultList(query);
     }
     
     public List<DBItemJocApprovalRequest> getApprovalRequests(ApprovalsFilter filter) {
@@ -85,7 +132,7 @@ public class ApprovalDBLayer extends DBLayer {
                     hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
                 }
             }
-            hql.append(" order by modified desc");
+            hql.append(" order by requestorStateDate desc");
             
             Query<DBItemJocApprovalRequest> query = getSession().createQuery(hql);
             if (filter != null) {
@@ -140,9 +187,11 @@ public class ApprovalDBLayer extends DBLayer {
             hql.append("select count(*) from ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS);
             hql.append(" where approver=:approver");
             hql.append(" and approverState=:approverState");
+            hql.append(" and requestorState=:requestorState");
             Query<Long> query = getSession().createQuery(hql);
             query.setParameter("approver", approver);
             query.setParameter("approverState", ApproverState.PENDING.intValue());
+            query.setParameter("requestorState", RequestorState.REQUESTED.intValue());
             return query.getSingleResult();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -159,6 +208,10 @@ public class ApprovalDBLayer extends DBLayer {
         updateStatusInclusiveTransaction(id, state.intValue(), "requestorState", null);
     }
     
+    public void updateRequestorStatusInclusiveTransaction(Collection<Long> ids, RequestorState state) {
+        updateStatusInclusiveTransaction(ids, state.intValue(), "requestorState", null);
+    }
+    
     public void updateApproverStatus(Long id, ApproverState state) {
         updateApproverStatus(id, state, null);
     }
@@ -171,8 +224,16 @@ public class ApprovalDBLayer extends DBLayer {
         updateApproverStatusInclusiveTransaction(id, state, null);
     }
     
+    public void updateApproverStatusInclusiveTransaction(Collection<Long> ids, ApproverState state) {
+        updateApproverStatusInclusiveTransaction(ids, state, null);
+    }
+    
     public void updateApproverStatusInclusiveTransaction(Long id, ApproverState state, String approver) {
         updateStatusInclusiveTransaction(id, state.intValue(), "approverState", approver);
+    }
+    
+    public void updateApproverStatusInclusiveTransaction(Collection<Long> ids, ApproverState state, String approver) {
+        updateStatusInclusiveTransaction(ids, state.intValue(), "approverState", approver);
     }
     
     private void updateStatus(Long id, Integer state, String field, String approver) {
@@ -199,13 +260,36 @@ public class ApprovalDBLayer extends DBLayer {
         }
     }
     
+    private void updateStatusInclusiveTransaction(Collection<Long> ids, Integer state, String field, String approver) {
+
+        if (ids != null && !ids.isEmpty()) {
+            Collection<List<Long>> chunkedIds = getChunkedCollection(ids);
+            if (chunkedIds != null) {
+                try {
+                    for (List<Long> chunk : chunkedIds) {
+                        Globals.beginTransaction(getSession());
+                        getSession().executeUpdate(getUpdateStatusQuery(chunk, state, field, approver));
+                        Globals.commit(getSession());
+                    }
+                } catch (SOSHibernateInvalidSessionException ex) {
+                    Globals.rollback(getSession());
+                    throw new DBConnectionRefusedException(ex);
+                } catch (Exception ex) {
+                    Globals.rollback(getSession());
+                    throw new DBInvalidDataException(ex);
+                }
+            }
+        }
+    }
+    
     private Query<?> getUpdateStatusQuery(Long id, Integer state, String stateField, String approver) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
-        hql.append("update ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS).append(" set ").append(stateField).append("=:state");
+        String stateDateField = stateField + "Date";
+        hql.append("update ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS).append(" set ").append(stateField).append("=:state, ");
         if (approver != null) {
-            hql.append(", approver=:approver");
+            hql.append("approver=:approver, ");
         }
-        hql.append(", modified=:now where id=:id");
+        hql.append(stateDateField).append("=:now where id=:id");
         Query<?> query = getSession().createQuery(hql);
         query.setParameter("id", id);
         query.setParameter("state", state);
@@ -214,6 +298,41 @@ public class ApprovalDBLayer extends DBLayer {
         }
         query.setParameter("now", Date.from(Instant.now()));
         return query;
+    }
+    
+    private Query<?> getUpdateStatusQuery(Collection<Long> ids, Integer state, String stateField, String approver) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        String stateDateField = stateField + "Date";
+        hql.append("update ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS).append(" set ").append(stateField).append("=:state, ");
+        if (approver != null) {
+            hql.append("approver=:approver, ");
+        }
+        hql.append(stateDateField).append("=:now where ");
+        if (ids.size() == 1) {
+            hql.append("id=:id");
+        } else {
+            hql.append("id in (:ids)");
+        }
+        Query<?> query = getSession().createQuery(hql);
+        if (ids.size() == 1) {
+            query.setParameter("id", ids.iterator().next());
+        } else {
+            query.setParameterList("ids", ids);
+        }
+        query.setParameter("state", state);
+        if (approver != null) {
+            query.setParameter("approver", approver);
+        }
+        query.setParameter("now", Date.from(Instant.now()));
+        return query;
+    }
+    
+    private static <T> Collection<List<T>> getChunkedCollection(Collection<T> coll) {
+        if (coll != null) {
+            AtomicInteger counter = new AtomicInteger();
+            return coll.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement() / SOSHibernate.LIMIT_IN_CLAUSE)).values();
+        }
+        return null;
     }
     
     public List<DBItemJocApprover> getApprovers() {

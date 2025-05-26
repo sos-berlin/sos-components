@@ -433,21 +433,25 @@ public class EventService {
         addEvent(eventSnapshot);
         
         if (evt.withNotification()) {
-            if (evt.getApprover() != null) {
-                EventApprovalNotification eventA = new EventApprovalNotification();
-                eventA.setEventId(eventSnapshot.getEventId());
-                eventA.setApprover(evt.getApprover());
-                eventA.setNumOfPendingApprovals(evt.numOfPending());
-                eventA.setEventType("ApproverNotification");
-                addEventA(eventA);
+            if (evt.getApprovers() != null) {
+                evt.getApprovers().entrySet().stream().map(entry -> {
+                    EventApprovalNotification eventA = new EventApprovalNotification();
+                    eventA.setEventId(eventSnapshot.getEventId());
+                    eventA.setApprover(entry.getKey());
+                    eventA.setNumOfPendingApprovals(entry.getValue());
+                    eventA.setEventType("ApproverNotification");
+                    return eventA;
+                }).forEach(this::addEventA);
             }
-            if (evt.getRequestor() != null) {
-                EventApprovalNotification eventA = new EventApprovalNotification();
-                eventA.setEventId(eventSnapshot.getEventId());
-                eventA.setRequestor(evt.getRequestor());
-                eventA.setApproverState(evt.getApproverAction());
-                eventA.setEventType("RequestorNotification");
-                addEventA(eventA);
+            if (evt.getRequestors() != null) {
+                evt.getRequestors().entrySet().stream().map(entry -> {
+                    EventApprovalNotification eventA = new EventApprovalNotification();
+                    eventA.setEventId(eventSnapshot.getEventId());
+                    eventA.setRequestor(entry.getKey());
+                    eventA.setApproverState(entry.getValue());
+                    eventA.setEventType("RequestorNotification");
+                    return eventA;
+                }).forEach(this::addEventA);
             }
         }
     }
@@ -967,7 +971,7 @@ public class EventService {
     private void addEventA(EventApprovalNotification eventApprovalNotification) {
         if (eventApprovalNotification != null && eventApprovalNotification.getEventId() != null && events.add(eventApprovalNotification)) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("add approval notification event for " + eventApprovalNotification.toString());
+                LOGGER.debug("add approval notification event: " + eventApprovalNotification.toString());
             }
             if (atLeastOneConditionIsHold()) {
                 signalAll();

@@ -59,13 +59,13 @@ public class DBItemJocApprovalRequest extends DBItem {
     @Column(name = "[COMMENT]", nullable = true)
     private String comment;
 
-    @Column(name = "[MODIFIED]", nullable = false)
+    @Column(name = "[REQUESTOR_STATE_DATE]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date modified;
+    private Date requestorStateDate;
 
-    @Column(name = "[CREATED]", nullable = false)
+    @Column(name = "[APPROVER_STATE_DATE]", nullable = true)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date created;
+    private Date approverStateDate;
 
     public Long getId() {
         return id;
@@ -180,19 +180,19 @@ public class DBItemJocApprovalRequest extends DBItem {
         comment = val;
     }
     
-    public Date getModified() {
-        return modified;
+    public Date getRequestorStateDate() {
+        return requestorStateDate;
     }
 
-    public void setModified(Date val) {
-        modified = val;
+    public void setRequestorStateDate(Date val) {
+        requestorStateDate = val;
     }
 
-    public Date getCreated() {
-        return created;
+    public Date getApproverStateDate() {
+        return approverStateDate;
     }
 
-    public void setCreated(Date val) {
-        created = val;
+    public void setApproverStateDate(Date val) {
+        approverStateDate = val;
     }
 }

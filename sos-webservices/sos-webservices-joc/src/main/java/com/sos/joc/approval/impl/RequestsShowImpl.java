@@ -38,7 +38,7 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
     public JOCDefaultResponse postRequests(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.MONITORING);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, ApprovalsFilter.class);
             ApprovalsFilter in = Globals.objectMapper.readValue(filterBytes, ApprovalsFilter.class);
             JOCDefaultResponse response = initPermissions(null, true);
@@ -85,8 +85,8 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
                 r.setRequestUrl(i.getRequest());
                 r.setApproverState(i.getApproverStateAsEnum());
                 r.setRequestorState(i.getRequestorStateAsEnum());
-                r.setModified(i.getModified());
-                r.setCreated(i.getCreated());
+                r.setRequestorStateDate(i.getRequestorStateDate());
+                r.setApproverStateDate(i.getApproverStateDate());
                 r.setTitle(i.getTitle());
                 return r;
             };

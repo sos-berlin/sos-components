@@ -26,13 +26,14 @@ public class DeleteApproverImpl extends JOCResourceImpl implements IDeleteApprov
     public JOCDefaultResponse postDelete(String xAccessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.MONITORING);
+            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, DeleteApproverFilter.class);
             DeleteApproverFilter filter = Globals.objectMapper.readValue(filterBytes, DeleteApproverFilter.class);
             JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);
             if (response != null) {
                 return response;
             }
+            
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             DBItemJocApprover dbApprover = dbLayer.getApprover(filter.getAccountName());

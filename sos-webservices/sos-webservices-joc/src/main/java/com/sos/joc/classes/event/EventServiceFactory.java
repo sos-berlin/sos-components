@@ -237,14 +237,14 @@ public class EventServiceFactory {
                         LOGGER.debug("Order monitoring events for " + controllerId + ": " + evtO.toString());
                     }
                     if (!evtA.isEmpty()) {
-                        LOGGER.debug("Approval notification events for " + evtA.toString());
+                        LOGGER.debug("Approval notification events: " + evtA.toString());
                     }
                 }
                 events.setEventId(evtIds.last());
-                events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
-                events.setEventsFromSystemMonitoring(evtM.stream().map(e -> cloneEventM(e)).distinct().collect(Collectors.toList()));
-                events.setEventsFromOrderMonitoring(evtO.stream().map(e -> cloneEventO(e)).distinct().collect(Collectors.toList()));
-                events.setEventsFromApprovalRequests(evtA.stream().map(e -> cloneEventA(e)).distinct().collect(Collectors.toList()));
+                events.setEventSnapshots(evt.stream().map(EventServiceFactory::cloneEvent).distinct().collect(Collectors.toList()));
+                events.setEventsFromSystemMonitoring(evtM.stream().map(EventServiceFactory::cloneEventM).distinct().collect(Collectors.toList()));
+                events.setEventsFromOrderMonitoring(evtO.stream().map(EventServiceFactory::cloneEventO).distinct().collect(Collectors.toList()));
+                events.setEventsFromApprovalRequests(evtA.stream().map(EventServiceFactory::cloneEventA).distinct().collect(Collectors.toList()));
             }
         } catch (SessionNotExistException e1) {
             throw e1;

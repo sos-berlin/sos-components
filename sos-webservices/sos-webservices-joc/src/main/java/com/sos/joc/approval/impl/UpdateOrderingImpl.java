@@ -33,7 +33,7 @@ public class UpdateOrderingImpl extends JOCResourceImpl implements IUpdateOrderi
     public JOCDefaultResponse postOrdering(String xAccessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.MONITORING);
+            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, UpdateOrderingFilter.class);
             UpdateOrderingFilter filter = Globals.objectMapper.readValue(filterBytes, UpdateOrderingFilter.class);
             JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);

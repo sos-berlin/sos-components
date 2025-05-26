@@ -1,5 +1,7 @@
 package com.sos.joc.event.bean.approval;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.event.bean.JOCEvent;
 
@@ -7,54 +9,34 @@ public class ApprovalUpdatedEvent extends JOCEvent {
     
     public ApprovalUpdatedEvent() {
         super("ApprovalUpdated", null, null);
-        putVariables(null, null, false, 0L, null);
+        putVariables(null, null, false);
     }
 
-    public ApprovalUpdatedEvent(String requestor, String approverAction) {
+    public ApprovalUpdatedEvent(Map<String, String> requestors, Map<String, Long> approvers) {
         super("ApprovalUpdated", null, null);
-        putVariables(requestor, null, true, 0L, approverAction);
+        putVariables(requestors, approvers, true);
     }
 
-    public ApprovalUpdatedEvent(String approver, Long numOfPending) {
-        super("ApprovalUpdated", null, null);
-        putVariables(null, approver, true, numOfPending, null);
-    }
-
-    public ApprovalUpdatedEvent(String requestor, String approver, Long numOfPending, String approverAction) {
-        super("ApprovalUpdated", null, null);
-        putVariables(requestor, approver, true, numOfPending, approverAction);
-    }
-
-    private void putVariables(String requestor, String approver, boolean withNotification, Long numOfPending, String approverAction) {
-        putVariable("requestor", requestor);
-        putVariable("approver", approver);
+    private void putVariables(Map<String, String> requestors, Map<String, Long> approvers, boolean withNotification) {
+        putVariable("requestors", requestors);
+        putVariable("approvers", approvers);
         putVariable("withNotification", withNotification);
-        putVariable("numOfPending", numOfPending);
-        putVariable("approverAction", approverAction);
     }
     
+    @SuppressWarnings("unchecked")
     @JsonIgnore
-    public String getRequestor() {
-        return (String) getVariables().get("requestor");
+    public Map<String, String> getRequestors() {
+        return (Map<String, String>) getVariables().get("requestors");
     }
     
+    @SuppressWarnings("unchecked")
     @JsonIgnore
-    public String getApprover() {
-        return (String) getVariables().get("approver");
+    public Map<String, Long> getApprovers() {
+        return (Map<String, Long>) getVariables().get("approvers");
     }
     
     @JsonIgnore
     public Boolean withNotification() {
         return (Boolean) getVariables().get("withNotification");
-    }
-    
-    @JsonIgnore
-    public Long numOfPending() {
-        return (Long) getVariables().get("numOfPending");
-    }
-    
-    @JsonIgnore
-    public String getApproverAction() {
-        return (String) getVariables().get("approverAction");
     }
 }

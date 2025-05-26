@@ -1,6 +1,7 @@
 package com.sos.joc.approval.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -51,6 +52,9 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             }
             
             FourEyesRequestId in = Globals.objectMapper.readValue(filterBytes, FourEyesRequestId.class);
+            
+            storeAuditLog(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(API_CALL + Action.WITHDRAW.name().toLowerCase());
             session.setAutoCommit(false);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
@@ -70,7 +74,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             
             if (item.getApproverState().equals(ApproverState.PENDING.intValue())) {
                 long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(item.getApprover());
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getApprover(), numOfPendingApprovals));
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(null, Collections.singletonMap(item.getApprover(), numOfPendingApprovals)));
             } else {
                 EventBus.getInstance().post(new ApprovalUpdatedEvent());
             }
@@ -98,6 +102,9 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             }
             
             FourEyesRequestId in = Globals.objectMapper.readValue(filterBytes, FourEyesRequestId.class);
+            
+            storeAuditLog(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(API_CALL + action.name().toLowerCase());
             session.setAutoCommit(false);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
@@ -107,7 +114,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             RequestorState requestorState = item.getRequestorStateAsEnum();
             
             switch (requestorState) {
-            case IN_PROGRESS:
+            case EXECUTED:
                 throw new JocBadRequestException("The approval request has already been used by the requestor");
             case WITHDRAWN:
                 // throw new JocBadRequestException("The approval request is already withdrawn by the requestor");
@@ -131,14 +138,14 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             if (item.getApprover().equals(curAccountName)) {
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState);
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), newState.value()));
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(Collections.singletonMap(item.getRequestor(), newState.value()), null));
             } else {
                 // with take over
                 String prevApprover = item.getApprover();
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState, curAccountName);
                 Long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(prevApprover);
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getRequestor(), prevApprover, numOfPendingApprovals, newState
-                        .value()));
+                EventBus.getInstance().post(new ApprovalUpdatedEvent(Collections.singletonMap(item.getRequestor(), newState.value()), Collections
+                        .singletonMap(prevApprover, numOfPendingApprovals)));
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -153,7 +160,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
     }
     
     private JOCDefaultResponse init(Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.MONITORING);
+        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.OTHERS);
         JsonValidator.validateFailFast(filterBytes, FourEyesRequestId.class);
         return initPermissions(null, true);
     }

@@ -24,11 +24,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "title",
     "approver",
     "unknownApprover",
-    "approverState",
     "reason",
+    "approverState",
+    "approverStateDate",
     "requestorState",
-    "created",
-    "modified"
+    "requestorStateDate"
 })
 public class ApprovalRequest
     extends ApprovalBase
@@ -66,6 +66,14 @@ public class ApprovalRequest
     @JsonPropertyDescription("An approver was selected for the approval request but is not longer configured as approver")
     private Boolean unknownApprover = false;
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("reason")
+    private String reason;
+    /**
      * approver state
      * <p>
      * 
@@ -74,13 +82,14 @@ public class ApprovalRequest
     @JsonProperty("approverState")
     private ApproverState approverState;
     /**
-     * string without < and >
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("reason")
-    private String reason;
+    @JsonProperty("approverStateDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date approverStateDate;
     /**
      * requestor state
      * <p>
@@ -95,18 +104,9 @@ public class ApprovalRequest
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("created")
+    @JsonProperty("requestorStateDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date created;
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("modified")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date modified;
+    private Date requestorStateDate;
 
     /**
      * No args constructor for use in serialization
@@ -119,7 +119,6 @@ public class ApprovalRequest
      * 
      * @param approver
      * @param reason
-     * @param created
      * @param title
      * @param unknownApprover
      * @param requestor
@@ -127,21 +126,22 @@ public class ApprovalRequest
      * @param requestBody
      * @param requestUrl
      * @param requestorState
-     * @param modified
+     * @param requestorStateDate
      * @param id
      * @param category
+     * @param approverStateDate
      */
-    public ApprovalRequest(Long id, String title, String approver, Boolean unknownApprover, ApproverState approverState, String reason, RequestorState requestorState, Date created, Date modified, String requestor, String requestUrl, RequestBody requestBody, CategoryType category) {
+    public ApprovalRequest(Long id, String title, String approver, Boolean unknownApprover, String reason, ApproverState approverState, Date approverStateDate, RequestorState requestorState, Date requestorStateDate, String requestor, String requestUrl, RequestBody requestBody, CategoryType category) {
         super(requestor, requestUrl, requestBody, category);
         this.id = id;
         this.title = title;
         this.approver = approver;
         this.unknownApprover = unknownApprover;
-        this.approverState = approverState;
         this.reason = reason;
+        this.approverState = approverState;
+        this.approverStateDate = approverStateDate;
         this.requestorState = requestorState;
-        this.created = created;
-        this.modified = modified;
+        this.requestorStateDate = requestorStateDate;
     }
 
     /**
@@ -229,6 +229,28 @@ public class ApprovalRequest
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("reason")
+    public String getReason() {
+        return reason;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("reason")
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    /**
      * approver state
      * <p>
      * 
@@ -251,25 +273,25 @@ public class ApprovalRequest
     }
 
     /**
-     * string without < and >
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("reason")
-    public String getReason() {
-        return reason;
+    @JsonProperty("approverStateDate")
+    public Date getApproverStateDate() {
+        return approverStateDate;
     }
 
     /**
-     * string without < and >
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("reason")
-    public void setReason(String reason) {
-        this.reason = reason;
+    @JsonProperty("approverStateDate")
+    public void setApproverStateDate(Date approverStateDate) {
+        this.approverStateDate = approverStateDate;
     }
 
     /**
@@ -300,9 +322,9 @@ public class ApprovalRequest
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("created")
-    public Date getCreated() {
-        return created;
+    @JsonProperty("requestorStateDate")
+    public Date getRequestorStateDate() {
+        return requestorStateDate;
     }
 
     /**
@@ -311,41 +333,19 @@ public class ApprovalRequest
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("created")
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("modified")
-    public Date getModified() {
-        return modified;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("modified")
-    public void setModified(Date modified) {
-        this.modified = modified;
+    @JsonProperty("requestorStateDate")
+    public void setRequestorStateDate(Date requestorStateDate) {
+        this.requestorStateDate = requestorStateDate;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("title", title).append("approver", approver).append("unknownApprover", unknownApprover).append("approverState", approverState).append("reason", reason).append("requestorState", requestorState).append("created", created).append("modified", modified).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("title", title).append("approver", approver).append("unknownApprover", unknownApprover).append("reason", reason).append("approverState", approverState).append("approverStateDate", approverStateDate).append("requestorState", requestorState).append("requestorStateDate", requestorStateDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(approver).append(approverState).append(reason).append(created).append(requestorState).append(modified).append(id).append(title).append(unknownApprover).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(approver).append(approverState).append(reason).append(requestorState).append(requestorStateDate).append(id).append(title).append(approverStateDate).append(unknownApprover).toHashCode();
     }
 
     @Override
@@ -357,7 +357,7 @@ public class ApprovalRequest
             return false;
         }
         ApprovalRequest rhs = ((ApprovalRequest) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(approver, rhs.approver).append(approverState, rhs.approverState).append(reason, rhs.reason).append(created, rhs.created).append(requestorState, rhs.requestorState).append(modified, rhs.modified).append(id, rhs.id).append(title, rhs.title).append(unknownApprover, rhs.unknownApprover).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(approver, rhs.approver).append(approverState, rhs.approverState).append(reason, rhs.reason).append(requestorState, rhs.requestorState).append(requestorStateDate, rhs.requestorStateDate).append(id, rhs.id).append(title, rhs.title).append(approverStateDate, rhs.approverStateDate).append(unknownApprover, rhs.unknownApprover).isEquals();
     }
 
 }

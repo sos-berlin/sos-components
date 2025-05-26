@@ -26,7 +26,7 @@ public class StoreApproverImpl extends JOCResourceImpl implements IStoreApprover
     public JOCDefaultResponse postStore(String xAccessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.MONITORING);
+            filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, Approver.class);
             Approver filter = Globals.objectMapper.readValue(filterBytes, Approver.class);
             JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);

@@ -1,9 +1,12 @@
 
 package com.sos.joc.model.security.foureyes;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -11,27 +14,26 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * FourEyesRequestId
+ * FourEyesRequestIds
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
+    "ids",
     "auditLog"
 })
-public class FourEyesRequestId {
+public class FourEyesRequestIds {
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("ids")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<Long> ids = new LinkedHashSet<Long>();
     /**
      * auditParams
      * <p>
@@ -45,42 +47,38 @@ public class FourEyesRequestId {
      * No args constructor for use in serialization
      * 
      */
-    public FourEyesRequestId() {
+    public FourEyesRequestIds() {
     }
 
     /**
      * 
      * @param auditLog
-     * @param id
+     * @param ids
      */
-    public FourEyesRequestId(Long id, AuditParams auditLog) {
+    public FourEyesRequestIds(Set<Long> ids, AuditParams auditLog) {
         super();
-        this.id = id;
+        this.ids = ids;
         this.auditLog = auditLog;
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public Long getId() {
-        return id;
+    @JsonProperty("ids")
+    public Set<Long> getIds() {
+        return ids;
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public void setId(Long id) {
-        this.id = id;
+    @JsonProperty("ids")
+    public void setIds(Set<Long> ids) {
+        this.ids = ids;
     }
 
     /**
@@ -107,12 +105,12 @@ public class FourEyesRequestId {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("ids", ids).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(id).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(ids).toHashCode();
     }
 
     @Override
@@ -120,11 +118,11 @@ public class FourEyesRequestId {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FourEyesRequestId) == false) {
+        if ((other instanceof FourEyesRequestIds) == false) {
             return false;
         }
-        FourEyesRequestId rhs = ((FourEyesRequestId) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(id, rhs.id).isEquals();
+        FourEyesRequestIds rhs = ((FourEyesRequestIds) other);
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(ids, rhs.ids).isEquals();
     }
 
 }

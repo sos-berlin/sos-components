@@ -1,6 +1,7 @@
 package com.sos.joc.approval.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -8,12 +9,14 @@ import com.sos.joc.Globals;
 import com.sos.joc.approval.resource.IRequestResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.FourEyesRequest;
@@ -31,7 +34,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
     public JOCDefaultResponse postRequest(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.MONITORING);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, FourEyesRequest.class);
             FourEyesRequest in = Globals.objectMapper.readValue(filterBytes, FourEyesRequest.class);
             JOCDefaultResponse response = initPermissions(null, true);
@@ -45,6 +48,11 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
                 throw new JocBadRequestException("The current user is not the requestor of the approval request");
             }
             
+            
+            AuditParams ap = new AuditParams();
+            ap.setComment(in.getTitle());
+            storeAuditLog(ap);
+            
             Date now = Date.from(Instant.now());
             DBItemJocApprovalRequest item = new DBItemJocApprovalRequest();
             item.setId(null);
@@ -52,8 +60,8 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             item.setApproverState(ApproverState.PENDING.intValue());
             item.setCategory(in.getCategory().intValue());
             item.setComment(in.getReason());
-            item.setCreated(now);
-            item.setModified(now);
+            item.setApproverStateDate(null);
+            item.setRequestorStateDate(now);
             item.setParameters(Globals.objectMapper.writeValueAsString(in.getRequestBody()));
             item.setRequest(in.getRequestUrl());
             item.setRequestor(curAccountName);
@@ -65,7 +73,8 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             session.save(item);
             
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
-            EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getApprover(), dbLayer.getNumOfPendingApprovals(item.getApprover())));
+            EventBus.getInstance().post(new ApprovalUpdatedEvent(null, Collections.singletonMap(item.getApprover(), dbLayer
+                    .getNumOfPendingApprovals(item.getApprover()))));
 
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {

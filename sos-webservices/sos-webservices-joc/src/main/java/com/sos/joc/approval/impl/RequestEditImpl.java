@@ -1,6 +1,7 @@
 package com.sos.joc.approval.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -14,6 +15,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.FourEyesRequestEdit;
@@ -31,7 +33,7 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
     public JOCDefaultResponse postEdit(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.MONITORING);
+            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, FourEyesRequestEdit.class);
             FourEyesRequestEdit in = Globals.objectMapper.readValue(filterBytes, FourEyesRequestEdit.class);
             JOCDefaultResponse response = initPermissions(null, true);
@@ -53,9 +55,12 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
             }
             
             if (!RequestorState.REQUESTED.equals(item.getRequestorStateAsEnum())) {
-                throw new JocBadRequestException("The approval request is already " + item.getRequestorStateAsEnum().value().toLowerCase().replace(
-                        '_', ' '));
+                throw new JocBadRequestException("The approval request is already " + item.getRequestorStateAsEnum().value().toLowerCase());
             }
+            
+            AuditParams ap = new AuditParams();
+            ap.setComment(in.getTitle());
+            storeAuditLog(ap);
             
             boolean updateDB = false;
             boolean approverIsChanged = false;
@@ -74,11 +79,12 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
             }
             Date now = Date.from(Instant.now());
             if (updateDB) {
-                item.setModified(now);
+                item.setRequestorStateDate(now);
                 session.update(item);
                 
                 if (approverIsChanged) {
-                    EventBus.getInstance().post(new ApprovalUpdatedEvent(item.getApprover(), dbLayer.getNumOfPendingApprovals(item.getApprover())));
+                    EventBus.getInstance().post(new ApprovalUpdatedEvent(null, Collections.singletonMap(item.getApprover(), dbLayer
+                            .getNumOfPendingApprovals(item.getApprover()))));
                 } else {
                     EventBus.getInstance().post(new ApprovalUpdatedEvent());
                 }

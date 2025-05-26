@@ -27,6 +27,8 @@ import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
@@ -464,11 +466,12 @@ public class JOCResourceImpl {
                     break;
                 case WITHDRAWN:
                     throw new JocAccessDeniedException("Approval request: request has already been withdrawn");
-                case IN_PROGRESS:
+                case EXECUTED:
                     throw new JocAccessDeniedException("Approval request: approved request is already in progress");
                 }
                 
-                new ApprovalDBLayer(hibernateSession).updateRequestorStatusInclusiveTransaction(aRId, RequestorState.IN_PROGRESS);
+                new ApprovalDBLayer(hibernateSession).updateRequestorStatusInclusiveTransaction(aRId, RequestorState.EXECUTED);
+                EventBus.getInstance().post(new ApprovalUpdatedEvent());
 
                 either = Either.right(item.getParameters() == null ? null : item.getParameters().getBytes(StandardCharsets.UTF_8));
             } catch (Exception e) {
