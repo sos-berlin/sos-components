@@ -16,19 +16,15 @@ import com.sos.joc.model.order.OrderHistoryItemChildren;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class CheckLogWebserviceExecuter {
 
-    private ApiExecutor apiExecutor;
-    private OrderProcessStepLogger logger;
+    private final ApiExecutor apiExecutor;
 
-    public CheckLogWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
-        super();
+    public CheckLogWebserviceExecuter(ApiExecutor apiExecutor) {
         this.apiExecutor = apiExecutor;
-        this.logger = logger;
     }
 
     public Workflow getWorkflow(WorkflowFilter workflowFilter, String accessToken) throws Exception {
@@ -45,8 +41,10 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
 
         Workflow workflow = new Workflow();
         workflow = Globals.objectMapper.readValue(answer, Workflow.class);
@@ -76,8 +74,8 @@ public class CheckLogWebserviceExecuter {
                 if (jsonConfigurationResponseError != null) {
                     String code = jsonConfigurationResponseError.getString("code", "");
                     String message = jsonConfigurationResponseError.getString("message", "");
-                    logger.info("code: " + code);
-                    logger.info("message: " + message);
+                    apiExecutor.getLogger().info("code: %s", code);
+                    apiExecutor.getLogger().info("message: %s", message);
                     if (code.equals("JOC-400") && message.startsWith("ControllerObjectNotExistException:")) {
                         throw new com.sos.commons.exception.SOSMissingDataException(apiResponse.getResponseBody());
                     }
@@ -85,8 +83,10 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
 
         OrderV order = new OrderV();
         order = Globals.objectMapper.readValue(answer, OrderV.class);
@@ -109,8 +109,10 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
 
         OrderHistoryItemChildren orderHistoryItemChildren = new OrderHistoryItemChildren();
         orderHistoryItemChildren = Globals.objectMapper.readValue(answer, OrderHistoryItemChildren.class);
@@ -133,8 +135,10 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
 
         TaskHistory taskHistory = new TaskHistory();
         taskHistory = Globals.objectMapper.readValue(answer, TaskHistory.class);
@@ -157,9 +161,10 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(body);
-        logger.debug("answer=" + answer);
-
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         return answer;
 
     }

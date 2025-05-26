@@ -16,7 +16,6 @@ import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.model.order.OrdersV;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
@@ -27,16 +26,14 @@ public class OrderStateTransition {
     private static final String CONTINUE = "CONTINUE";
     private static final String CANCELLED = "CANCELLED";
     private static final String CANCEL = "CANCEL";
-    private OrderProcessStepLogger logger;
-    private OrderProcessStep<?> step;
-    private OrderStateTransitionJobArguments args;
-    private Map<String, DetailValue> jobResources;
 
+    private final OrderProcessStep<OrderStateTransitionJobArguments> step;
+    private final OrderStateTransitionJobArguments args;
+    private final Map<String, DetailValue> jobResources;
 
     public OrderStateTransition(OrderProcessStep<OrderStateTransitionJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
@@ -63,7 +60,7 @@ public class OrderStateTransition {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            OrderStateWebserviceExecuter orderStateWebserviceExecuter = new OrderStateWebserviceExecuter(logger, apiExecutor);
+            OrderStateWebserviceExecuter orderStateWebserviceExecuter = new OrderStateWebserviceExecuter(apiExecutor);
 
             for (String state : args.getStates()) {
                 if (args.getWorkflowSearchPattern() != null && args.getWorkflowSearchPattern().size() > 0) {
@@ -130,7 +127,7 @@ public class OrderStateTransition {
                     mapOfOrders.put(order.getOrderId(), order);
                 }
 
-                logger.info(mapOfOrders.size() + " " + state.toLowerCase() + " orders found");
+                step.getLogger().info(mapOfOrders.size() + " " + state.toLowerCase() + " orders found");
                 ModifyOrders modifyOrders = new ModifyOrders();
                 modifyOrders.setControllerId(args.getControllerId());
 
@@ -147,7 +144,7 @@ public class OrderStateTransition {
                     }
                     count = count - modifyOrders.getOrderIds().size();
 
-                    logger.info(" ");
+                    step.getLogger().info(" ");
                     switch (args.getTransition()) {
                     case CANCEL:
                     case CANCELLED:
@@ -173,16 +170,16 @@ public class OrderStateTransition {
                     default:
                         break;
                     }
-                    logger.info(modifyOrders.getOrderIds().size() + " orders " + action);
+                    step.getLogger().info(modifyOrders.getOrderIds().size() + " orders " + action);
                     for (String order : modifyOrders.getOrderIds()) {
-                        logger.info(order + " " + action);
+                        step.getLogger().info(order + " " + action);
                     }
                     modifyOrders.getOrderIds().clear();
                 } while (count > 0);
             }
 
         } catch (Exception e) {
-            logger.error(e);
+            step.getLogger().error(e);
             throw e;
         } finally {
             if (accessToken != null) {

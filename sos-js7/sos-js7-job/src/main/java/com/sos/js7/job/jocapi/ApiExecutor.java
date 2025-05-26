@@ -48,10 +48,10 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
@@ -63,7 +63,7 @@ public class ApiExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiExecutor.class);
 
-    private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
+    // private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
     private static final String WS_API_PREFIX = "/joc/api";
@@ -95,7 +95,7 @@ public class ApiExecutor {
             PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD,
             PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS, PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY, PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD,
             PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH });
-    private static final String DO_NOT_LOG_VAL = PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD;
+    // private static final String DO_NOT_LOG_VAL = PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD;
     private static final String JOB_ARGUMENT_DELIMITER = "|";
     private static final String JOB_ARGUMENT_KEYSTORE_FILE = "js7.web.https.keystore.file";
     private static final String JOB_ARGUMENT_KEYSTORE_KEY_PASSWD = "js7.web.https.keystore.key-password";
@@ -112,11 +112,11 @@ public class ApiExecutor {
     private static final String JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD = "js7.api-server.password";
     private static final String JOB_ARGUMENT_APISERVER_PRIVATEKEYPATH = "js7.api-server.privatekey.path";
 
+    private final OrderProcessStep<?> step;
+
     private SOSRestApiClient client;
     private URI jocUri;
     private List<String> jocUris;
-    private final OrderProcessStepLogger jobLogger;
-    private final OrderProcessStep<?> step;
     private Config config;
     private String truststorePath;
     private String keystorePath;
@@ -127,13 +127,12 @@ public class ApiExecutor {
     private String keystoreType;
     private Map<String, DetailValue> jobResources;
 
-    public void setJobResources(Map<String, DetailValue> jobResources) {
-        this.jobResources = jobResources;
+    public ApiExecutor(OrderProcessStep<?> step) {
+        this.step = step;
     }
 
-    public ApiExecutor(OrderProcessStep step) {
-        this.step = step;
-        this.jobLogger = step.getLogger();
+    public void setJobResources(Map<String, DetailValue> jobResources) {
+        this.jobResources = jobResources;
     }
 
     private String getReasonPhrase() {
@@ -158,29 +157,35 @@ public class ApiExecutor {
     }
 
     public ApiResponse login() throws Exception {
-        /* 
-         * TODO: first check variables from OrderProcessStep if required values are available
-         * if available use this configuration
-         * if not available use configuration from private.conf
-        */
-        logDebug("***ApiExecutor***");
+        /*
+         * TODO: first check variables from OrderProcessStep if required values are available if available use this configuration if not available use
+         * configuration from private.conf
+         */
+        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+        step.getLogger().debug("***ApiExecutor***");
         jocUris = getUris();
         String latestError = "";
-        String latestResponse = "";
+        // String latestResponse = "";
         Integer statusCode = -1;
         URI loginUri = null;
         Exception latestException = null;
         for (String uri : jocUris) {
             try {
-                logDebug(String.format("processing Url - %1$s", uri));
+                if (isDebugEnabled) {
+                    step.getLogger().debug("processing Url - %s", uri);
+                }
                 tryCreateClient(uri);
                 this.jocUri = URI.create(uri);
                 loginUri = jocUri.resolve(WS_API_LOGIN);
-                logDebug("send login to: " + loginUri.toString());
+                if (isDebugEnabled) {
+                    step.getLogger().debug("send login to: %s", loginUri.toString());
+                }
                 String response = client.postRestService(loginUri, null);
-                latestResponse = response;
+                // latestResponse = response;
                 statusCode = client.statusCode();
-                logDebug("HTTP status code: " + statusCode);
+                if (isDebugEnabled) {
+                    step.getLogger().debug("HTTP status code: %s", statusCode);
+                }
                 handleExitCode(client);
                 if (client.statusCode() == 401) {
                     // 401 == Unauthorized!
@@ -203,30 +208,36 @@ public class ApiExecutor {
                     throw latestException;
                 } else if (statusCode == 200) {
                     // successful login
-                    logDebug(String.format("Connection to URI %1$s established.", loginUri.toString()));
+                    if (isDebugEnabled) {
+                        step.getLogger().debug("Connection to URI %s established.", loginUri.toString());
+                    }
                     return new ApiResponse(statusCode, getReasonPhrase(), response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
                 } else {
-                    String message = statusCode + " : " + getReasonPhrase();
+                    // String message = statusCode + " : " + getReasonPhrase();
                     throw new Exception(latestError);
                 }
             } catch (SOSConnectionRefusedException e) {
                 latestError = String.format("connection to URI %1$s failed, trying next Uri.", loginUri.toString());
-                logDebug(latestError);
+                if (isDebugEnabled) {
+                    step.getLogger().debug(latestError);
+                }
                 latestException = e;
                 continue;
             } catch (Exception e) {
                 if (loginUri != null) {
                     latestError = String.format("connection to URI %1$s: %2$s occurred: %3$s", loginUri, e.getClass(), e.getMessage());
-                    logDebug(latestError);
                 } else {
                     latestError = String.format("%1$s occurred: %2$s", e.getClass(), e.getMessage());
-                    logDebug(latestError);
                 }
+                if (isDebugEnabled) {
+                    step.getLogger().debug(latestError);
+                }
+
                 latestException = e;
                 continue;
             }
         }
-        logInfo("No connection attempt was successful. Check agents private.conf.");
+        step.getLogger().info("No connection attempt was successful. Check agents private.conf.");
         throw latestException;
     }
 
@@ -235,17 +246,24 @@ public class ApiExecutor {
             throw new SOSBadRequestException("no access token provided. permission denied.");
         } else {
             if (jocUri != null) {
+                boolean isDebugEnabled = step.getLogger().isDebugEnabled();
                 try {
                     client.addHeader(ACCESS_TOKEN_HEADER, token);
                     client.addHeader(CONTENT_TYPE, APPLICATION_JSON);
-                    logDebug("REQUEST: " + apiUrl);
-                    logDebug("PARAMS: " + body);
+                    if (isDebugEnabled) {
+                        step.getLogger().debug("REQUEST: %s", apiUrl);
+                        step.getLogger().debug("PARAMS: %s", body);
+                    }
                     if (!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
                         apiUrl = WS_API_PREFIX + apiUrl;
                     }
-                    logDebug("resolvedUri: " + jocUri.resolve(apiUrl).toString());
+                    if (isDebugEnabled) {
+                        step.getLogger().debug("resolvedUri: %s", jocUri.resolve(apiUrl).toString());
+                    }
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
-                    logDebug("HTTP status code: " + client.statusCode());
+                    if (isDebugEnabled) {
+                        step.getLogger().debug("HTTP status code: %s", client.statusCode());
+                    }
                     handleExitCode(client);
                     return new ApiResponse(client.statusCode(), getReasonPhrase(), response, token, null);
                 } catch (SOSException e) {
@@ -261,9 +279,11 @@ public class ApiExecutor {
         if (token != null && jocUri != null) {
             try {
                 client.addHeader(ACCESS_TOKEN_HEADER, token);
-                logDebug("send logout");
+                step.getLogger().debug("send logout");
                 String response = client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
-                logDebug("HTTP status code: " + client.statusCode());
+                if (step.getLogger().isDebugEnabled()) {
+                    step.getLogger().debug("HTTP status code: %s", client.statusCode());
+                }
                 handleExitCode(client);
                 return new ApiResponse(client.statusCode(), getReasonPhrase(), response, token, null);
             } catch (SOSException e) {
@@ -280,7 +300,7 @@ public class ApiExecutor {
 
     private List<String> getUris() throws SOSMissingDataException {
         List<String> uris = new ArrayList<String>();
-        if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER)) {
+        if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER)) {
             String apiServers = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_APISERVER).getValue().toString(), JOB_ARGUMENT_APISERVER);
             String[] apiServersSplitted = apiServers.split(JOB_ARGUMENT_DELIMITER);
             uris = Arrays.asList(apiServersSplitted).stream().peek(item -> item.trim()).toList();
@@ -325,14 +345,17 @@ public class ApiExecutor {
             FileNotFoundException {
         List<KeyStoreCredentials> truststoresCredentials = new ArrayList<KeyStoreCredentials>();
         String truststorePwdFromOrder = "";
-        if(step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTORE_FILE)) {
-            String truststores = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTORE_FILE).getValue().toString(), JOB_ARGUMENT_TRUSTORE_FILE);
+        if (step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTORE_FILE)) {
+            String truststores = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTORE_FILE).getValue().toString(),
+                    JOB_ARGUMENT_TRUSTORE_FILE);
             String[] truststoresSplitted = truststores.split(JOB_ARGUMENT_DELIMITER);
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTSTORE_PWD)) {
-                truststorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTSTORE_PWD).getValue().toString(), JOB_ARGUMENT_TRUSTSTORE_PWD);
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTSTORE_PWD)) {
+                truststorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTSTORE_PWD).getValue().toString(),
+                        JOB_ARGUMENT_TRUSTSTORE_PWD);
             }
             final String truststorePwd = truststorePwdFromOrder;
-            truststoresCredentials = Arrays.asList(truststoresSplitted).stream().peek(item -> item.trim()).map(path -> new KeyStoreCredentials(path, truststorePwd)).toList();
+            truststoresCredentials = Arrays.asList(truststoresSplitted).stream().peek(item -> item.trim()).map(path -> new KeyStoreCredentials(path,
+                    truststorePwd)).toList();
         } else {
             if (config == null) {
                 readConfig();
@@ -367,19 +390,23 @@ public class ApiExecutor {
             });
         }
         KeyStoreCredentials credentials = null;
-        if(step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_FILE)) {
-            String keyStoreFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_FILE).getValue().toString(), JOB_ARGUMENT_KEYSTORE_FILE);
+        if (step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_FILE)) {
+            String keyStoreFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_FILE).getValue().toString(),
+                    JOB_ARGUMENT_KEYSTORE_FILE);
             String keyStoreKeyPwdFromOrder = "";
             String keyStoreStorePwdFromOrder = "";
             String keyStoreAliasFromOrder = "";
             if (step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_KEY_PASSWD)) {
-                keyStoreKeyPwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_KEY_PASSWD).getValue().toString(), JOB_ARGUMENT_KEYSTORE_KEY_PASSWD);
+                keyStoreKeyPwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_KEY_PASSWD).getValue().toString(),
+                        JOB_ARGUMENT_KEYSTORE_KEY_PASSWD);
             }
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD)) {
-                keyStoreStorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD).getValue().toString(), JOB_ARGUMENT_KEYSTORE_STORE_PASSWD);
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD)) {
+                keyStoreStorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD).getValue().toString(),
+                        JOB_ARGUMENT_KEYSTORE_STORE_PASSWD);
             }
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_ALIAS)) {
-                keyStoreAliasFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_ALIAS).getValue().toString(), JOB_ARGUMENT_KEYSTORE_ALIAS);
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_KEYSTORE_ALIAS)) {
+                keyStoreAliasFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_KEYSTORE_ALIAS).getValue().toString(),
+                        JOB_ARGUMENT_KEYSTORE_ALIAS);
             }
             credentials = new KeyStoreCredentials(keyStoreFromOrder, keyStoreStorePwdFromOrder, keyStoreKeyPwdFromOrder, keyStoreAliasFromOrder);
         } else {
@@ -420,38 +447,37 @@ public class ApiExecutor {
             readConfig();
         }
         client = new SOSRestApiClient();
-        if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSFILE) ||
-                (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME) && 
-                        step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD))) {
+        if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSFILE) || (step.getAllArguments().containsKey(
+                JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME) && step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD))) {
             String username = "";
             String pwd = "";
             String token = "";
             String csFile = null;
             String csPwd = null;
             String csKey = null;
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME)) {
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME)) {
                 username = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_BASIC_AUTH_USERNAME).getValue().toString();
             }
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD)) {
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD)) {
                 pwd = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_BASIC_AUTH_PWD).getValue().toString();
             }
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_TOKEN)) {
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_BASIC_AUTH_TOKEN)) {
                 token = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_BASIC_AUTH_TOKEN).getValue().toString();
             }
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSFILE)) {
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSFILE)) {
                 csFile = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_CSFILE).getValue().toString();
             }
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSKEY)) {
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSKEY)) {
                 csKey = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_CSKEY).getValue().toString();
             }
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSPASSWD)) {
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_CSPASSWD)) {
                 csPwd = step.getAllArguments().get(JOB_ARGUMENT_APISERVER_CSPASSWD).getValue().toString();
             }
             setBasicAuthorizationIfExists(username, pwd, token, csFile, csKey, csPwd);
         } else {
             setBasicAuthorizationIfExists(config);
         }
-        logDebug("initiate REST api client");
+        step.getLogger().debug("initiate REST api client");
         if (jocUri.toLowerCase().startsWith("https:")) {
             applySSLContextCredentials(client);
         }
@@ -459,13 +485,13 @@ public class ApiExecutor {
 
     private String getPrivateKeyPath() {
         try {
-            if(step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_PRIVATEKEYPATH)) {
+            if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_PRIVATEKEYPATH)) {
                 return step.getAllArguments().get(JOB_ARGUMENT_APISERVER_PRIVATEKEYPATH).getValue().toString();
             } else {
                 return config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH);
             }
         } catch (ConfigException e) {
-            logError("no private key path found in private.conf.");
+            step.getLogger().error("no private key path found in private.conf.");
         }
         return "";
     }
@@ -490,7 +516,7 @@ public class ApiExecutor {
             try {
                 in = decryptValue(encryptedIn, propertyName, privateKeyPath);
             } catch (SOSKeyException | SOSMissingDataException | SOSEncryptionException e) {
-                logError("error occurred decrypting ".concat(propertyName).concat(" !"), e);
+                step.getLogger().error("error occurred decrypting ".concat(propertyName).concat(" !"), e);
             }
         }
         return in;
@@ -500,7 +526,7 @@ public class ApiExecutor {
             throws SOSKeePassDatabaseException {
         if (csFile != null && !csFile.isEmpty()) {
             csFile = getDecryptedValue(csFile, JOB_ARGUMENT_APISERVER_CSFILE);
-            
+
             SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
             username = resolver.resolve(username);
             pwd = resolver.resolve(pwd);
@@ -537,7 +563,7 @@ public class ApiExecutor {
             client.setBasicAuthorization(basicAuth);
         }
     }
-    
+
     private void setBasicAuthorizationIfExists(Config config) throws SOSKeePassDatabaseException, SOSMissingDataException {
         String csFile = null;
         String csKeyFile = null;
@@ -545,17 +571,17 @@ public class ApiExecutor {
         try {
             csFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE);
         } catch (Exception e) {
-            logDebug(e.getMessage());
+            step.getLogger().debug(e.getMessage());
         }
         try {
             csKeyFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE);
         } catch (Exception e) {
-            logDebug(e.getMessage());
+            step.getLogger().debug(e.getMessage());
         }
         try {
             csPwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD);
         } catch (Exception e) {
-            logDebug(e.getMessage());
+            step.getLogger().debug(e.getMessage());
         }
         String username = "";
         String pwd = "";
@@ -569,22 +595,22 @@ public class ApiExecutor {
             try {
                 token = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN);
             } catch (ConfigException e) {
-                logDebug("no token found in private.conf.");
+                step.getLogger().debug("no token found in private.conf.");
             }
 
             if (token.isEmpty()) {
                 try {
                     username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
                 } catch (ConfigException e) {
-                    logDebug("no username found in private.conf.");
+                    step.getLogger().debug("no username found in private.conf.");
 
                 }
                 try {
                     pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
                 } catch (ConfigException e) {
-                    logDebug("no (user-)password found in private.conf.");
+                    step.getLogger().debug("no (user-)password found in private.conf.");
                 }
-                
+
                 String privateKeyPath = null;
                 username = getDecryptedValue(username, privateKeyPath, "username");
                 pwd = getDecryptedValue(pwd, privateKeyPath, "password");
@@ -629,6 +655,8 @@ public class ApiExecutor {
     }
 
     public void readConfig() throws SOSMissingDataException {
+        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+
         String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
         if (agentConfDirPath == null) {
             agentConfDirPath = System.getProperty(AGENT_CONF_DIR_ENV_PARAM);
@@ -637,7 +665,9 @@ public class ApiExecutor {
             throw new SOSMissingDataException(String.format(
                     "Environment variable %1$s not set. Can´t read credentials from agents private.conf file.", AGENT_CONF_DIR_ENV_PARAM));
         }
-        logDebug("agentConfDirPath: " + agentConfDirPath);
+        if (isDebugEnabled) {
+            step.getLogger().debug("agentConfDirPath: %s", agentConfDirPath);
+        }
         Path agentConfDir = Paths.get(agentConfDirPath);
         // set default com.typesafe.config.Config
         Config defaultConfig = ConfigFactory.load();
@@ -645,9 +675,14 @@ public class ApiExecutor {
         Properties props = new Properties();
         props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfDir.toString());
         Path privatFolderPath = agentConfDir.resolve(PRIVATE_FOLDER_NAME);
-        logDebug("agents private folder: " + privatFolderPath.toString());
+        if (isDebugEnabled) {
+            step.getLogger().debug("agents private folder: %s", privatFolderPath.toString());
+        }
         Config defaultConfigWithAgentConfDir = ConfigFactory.parseProperties(props).withFallback(defaultConfig).resolve();
-        logDebug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(PRIVATE_CONF_JS7_PARAM_CONFDIR));
+        if (isDebugEnabled) {
+            step.getLogger().debug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(
+                    PRIVATE_CONF_JS7_PARAM_CONFDIR));
+        }
         if (Files.exists(privatFolderPath.resolve(PRIVATE_CONF_FILENAME))) {
             config = ConfigFactory.parseFile(privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toFile()).withFallback(defaultConfigWithAgentConfDir)
                     .resolve();
@@ -655,7 +690,9 @@ public class ApiExecutor {
                 for (Entry<String, ConfigValue> entry : config.entrySet()) {
                     if (entry.getKey().startsWith("js7")) {
                         if (!DO_NOT_LOG_KEY.contains(entry.getKey())) {
-                            logDebug(entry.getKey() + ": " + entry.getValue().toString());
+                            if (isDebugEnabled) {
+                                step.getLogger().debug(entry.getKey() + ": " + entry.getValue().toString());
+                            }
                         }
                     }
                 }
@@ -665,32 +702,34 @@ public class ApiExecutor {
                     privatFolderPath.resolve(PRIVATE_CONF_FILENAME).toString()));
         }
     }
-        
+
     private KeyStoreCredentials readKeystoreCredentials(Config config) {
         String keystorePath = null;
         try {
             keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH);
-            logDebug("read Keystore from: " + config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
+            if (step.getLogger().isDebugEnabled()) {
+                step.getLogger().debug("read Keystore from: %s", config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
+            }
         } catch (ConfigException e) {
-            logDebug("no keystore file found in private.conf.");
+            step.getLogger().debug("no keystore file found in private.conf.");
         }
         String keyPasswd = null;
         try {
             keyPasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD);
         } catch (ConfigException e) {
-            logDebug("no keystore key-password found in private.conf.");
+            step.getLogger().debug("no keystore key-password found in private.conf.");
         }
         String storePasswd = null;
         try {
             storePasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD);
         } catch (ConfigException e) {
-            logDebug("no keystore store-password found in private.conf.");
+            step.getLogger().debug("no keystore store-password found in private.conf.");
         }
         String alias = null;
         try {
             alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS);
         } catch (ConfigException e) {
-            logDebug("no (key-)alias found in private.conf.");
+            step.getLogger().debug("no (key-)alias found in private.conf.");
         }
         if (keystorePath != null && !keystorePath.isEmpty()) {
             return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd, alias);
@@ -705,47 +744,17 @@ public class ApiExecutor {
             credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> new KeyStoreCredentials(item.getString(
                     PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD))).filter(
                             Objects::nonNull).collect(Collectors.toList());
-            logDebug("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
-                    PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
+            if (step.getLogger().isDebugEnabled()) {
+                step.getLogger().debug("read Trustore from: %s", config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
+                        PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
+            }
         } catch (ConfigException e) {
-            logDebug("no truststore credentials found in private.conf.");
+            step.getLogger().debug("no truststore credentials found in private.conf.");
         }
         if (credentials != null) {
             return credentials;
         } else {
             return Collections.emptyList();
-        }
-    }
-
-    private void logInfo(String log) {
-        if (jobLogger != null) {
-            jobLogger.info(log);
-        } else {
-            LOGGER.info(log);
-        }
-    }
-
-    private void logDebug(String log) {
-        if (jobLogger != null) {
-            jobLogger.debug(log);
-        } else {
-            LOGGER.debug(log);
-        }
-    }
-
-    private void logError(String log) {
-        logError(log, null);
-    }
-
-    private void logError(String log, Throwable t) {
-        if (jobLogger != null) {
-            if (t != null) {
-                jobLogger.error(log, t);
-            } else {
-                jobLogger.error(log);
-            }
-        } else {
-            LOGGER.error(log);
         }
     }
 
@@ -764,6 +773,10 @@ public class ApiExecutor {
             readConfig();
         }
         return config;
+    }
+
+    public ISOSLogger getLogger() {
+        return step.getLogger();
     }
 
     private String decryptValue(String encryptedValue, String propertyName, String privateKeyPath) throws SOSKeyException, SOSMissingDataException,

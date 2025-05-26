@@ -9,23 +9,21 @@ import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.joc.Cockpit;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class MaintenanceWindowImpl {
 
-    private MaintenanceWindowJobArguments args;
-    private Map<String, DetailValue> jobResources;
-    private OrderProcessStepLogger logger;
-    private OrderProcessStep<?> step;
+    private final MaintenanceWindowJobArguments args;
+    private final Map<String, DetailValue> jobResources;
+    private final OrderProcessStep<MaintenanceWindowJobArguments> step;
+
     private String controllerId;
 
     public MaintenanceWindowImpl(OrderProcessStep<MaintenanceWindowJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         this.step = step;
-        this.logger = step.getLogger();
     }
 
     public void executeApiCall() throws Exception {
@@ -47,8 +45,8 @@ public class MaintenanceWindowImpl {
                     accessToken = apiResponse.getAccessToken();
                 }
 
-                MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
-            
+                MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(apiExecutor);
+
                 String controllerId = maintenanceWindowExecuter.getControllerid(accessToken, args.getControllerId());
                 if (controllerId == null || controllerId.isEmpty()) {
                     controllerId = this.controllerId;

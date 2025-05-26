@@ -4,26 +4,20 @@ import java.util.List;
 import java.util.Set;
 
 import com.sos.jitl.jobs.sap.common.Globals;
-import com.sos.joc.model.agent.DeployAgents;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.joc.Js7LicenseInfo;
 import com.sos.joc.model.reporting.Reports;
 import com.sos.joc.model.reporting.ReportsFilter;
 import com.sos.joc.model.reporting.RunReports;
 import com.sos.js7.job.JobHelper;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class RunReportsWebserviceExecuter {
 
-    private ApiExecutor apiExecutor;
-    private OrderProcessStepLogger logger;
+    private final ApiExecutor apiExecutor;
 
-    public RunReportsWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
-        super();
+    public RunReportsWebserviceExecuter(ApiExecutor apiExecutor) {
         this.apiExecutor = apiExecutor;
-        this.logger = logger;
     }
 
     public void generateReports(String accessToken, Set<String> reportPaths) throws Exception {
@@ -42,8 +36,9 @@ public class RunReportsWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug("answer=" + answer);
-
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
     }
 
     public Reports getReports(String accessToken, List<Folder> folders) throws Exception {
@@ -62,7 +57,10 @@ public class RunReportsWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
+
         Reports reports = new Reports();
         reports = Globals.objectMapper.readValue(answer, Reports.class);
 

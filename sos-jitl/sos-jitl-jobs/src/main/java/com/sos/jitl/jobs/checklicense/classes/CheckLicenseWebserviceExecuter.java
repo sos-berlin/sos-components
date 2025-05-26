@@ -2,19 +2,15 @@ package com.sos.jitl.jobs.checklicense.classes;
 
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.joc.Js7LicenseInfo;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class CheckLicenseWebserviceExecuter {
 
-    private ApiExecutor apiExecutor;
-    private OrderProcessStepLogger logger;
+    private final ApiExecutor apiExecutor;
 
-    public CheckLicenseWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
-        super();
+    public CheckLicenseWebserviceExecuter(ApiExecutor apiExecutor) {
         this.apiExecutor = apiExecutor;
-        this.logger = logger;
     }
 
     public Js7LicenseInfo getLicence(String accessToken) throws Exception {
@@ -31,7 +27,9 @@ public class CheckLicenseWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
 
         Js7LicenseInfo info = new Js7LicenseInfo();
         info = Globals.objectMapper.readValue(answer, Js7LicenseInfo.class);

@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.monitoring.classes;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.controller.Controller;
@@ -11,14 +12,13 @@ import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
 import com.sos.joc.model.joc.Cockpit;
 import com.sos.joc.model.joc.ControllerConnectionState;
 import com.sos.joc.model.order.OrdersSummary;
-import com.sos.js7.job.OrderProcessStepLogger;
 
 public class MonitoringChecker {
 
-    private OrderProcessStepLogger logger;
+    private ISOSLogger logger;
     private Integer count = 0;
 
-    public MonitoringChecker(OrderProcessStepLogger logger) {
+    public MonitoringChecker(ISOSLogger logger) {
         super();
         this.logger = logger;
     }

@@ -26,21 +26,18 @@ import com.sos.joc.model.order.OrdersHistoricSummary;
 import com.sos.joc.model.order.OrdersSummary;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class ExecuteMonitoring {
 
-    private MonitoringJobArguments args;
-    private Map<String, DetailValue> jobResources;
-    private OrderProcessStepLogger logger;
-    private OrderProcessStep<?> step;
+    private final MonitoringJobArguments args;
+    private final Map<String, DetailValue> jobResources;
+    private final OrderProcessStep<MonitoringJobArguments> step;
 
     public ExecuteMonitoring(OrderProcessStep<MonitoringJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
@@ -54,7 +51,7 @@ public class ExecuteMonitoring {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(logger, apiExecutor);
+            MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(apiExecutor);
             MonitoringControllerStatus monitoringControllerStatus = monitoringWebserviceExecuter.getControllerStatus(accessToken, args
                     .getControllerId());
             MonitoringJocStatus monitoringJocStatus = monitoringWebserviceExecuter.getJS7JOCInstance(accessToken, args.getControllerId());
@@ -72,7 +69,7 @@ public class ExecuteMonitoring {
 
             return monitoringStatus;
         } catch (Throwable e) {
-            logger.error(e);
+            step.getLogger().error(e);
             throw e;
         } finally {
             if (accessToken != null) {
@@ -99,14 +96,14 @@ public class ExecuteMonitoring {
             filename = args.getMonitorReportDir() + "/monitor." + monitoringParameters.getMonitorFileReportDate() + ".alert.json";
         }
         monitoringParameters.setMonitorReportFile(filename);
-        logger.debug("Report Filename: " + filename);
+        step.getLogger().debug("Report Filename: " + filename);
 
         String output = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(monitoringStatus);
         try (PrintWriter outWriter = new PrintWriter(filename)) {
-            logger.info(output);
+            step.getLogger().info(output);
             outWriter.println(output);
         } catch (Throwable e) {
-            logger.error(e);
+            step.getLogger().error(e);
         }
 
         long count = 0;
@@ -130,7 +127,7 @@ public class ExecuteMonitoring {
 
     public MonitoringCheckReturn checkStatusInformation(MonitoringStatus monitoringStatus, MonitoringParameters monitoringParameters)
             throws SOSException {
-        MonitoringChecker montitoringChecker = new MonitoringChecker(this.logger);
+        MonitoringChecker montitoringChecker = new MonitoringChecker(step.getLogger());
         return montitoringChecker.doCheck(monitoringStatus, monitoringParameters, args.getFrom());
     }
 

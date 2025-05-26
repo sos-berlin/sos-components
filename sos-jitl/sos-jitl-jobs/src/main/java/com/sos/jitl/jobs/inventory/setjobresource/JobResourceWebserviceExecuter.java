@@ -35,25 +35,25 @@ import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.js7.job.JobHelper;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class JobResourceWebserviceExecuter {
 
     private static final String ENC_PREFIX = "enc:";
-    private ApiExecutor apiExecutor;
-    private OrderProcessStepLogger logger;
 
-    public JobResourceWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
-        super();
+    private final ApiExecutor apiExecutor;
+
+    public JobResourceWebserviceExecuter(ApiExecutor apiExecutor) {
         this.apiExecutor = apiExecutor;
-        this.logger = logger;
     }
 
     private ConfigurationObject getInventoryItem(RequestFilter requestFilter, String accessToken) throws Exception {
-        logger.debug(".. getInventoryItem: path: " + requestFilter.getPath() + " , object type: " + requestFilter.getObjectType());
-
+        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug(".. getInventoryItem: path: " + requestFilter.getPath() + " , object type: " + requestFilter
+                    .getObjectType());
+        }
         String body = JobHelper.OBJECT_MAPPER.writeValueAsString(requestFilter);
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/inventory/read/configuration", body);
         String answer = null;
@@ -66,8 +66,10 @@ public class JobResourceWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(".... request body: " + body);
-        logger.debug("answer=" + answer);
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug(".... request body: %s", body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         ConfigurationObject configurationObjectReturn = new ConfigurationObject();
         if (answer != null) {
             configurationObjectReturn = JobHelper.OBJECT_MAPPER.readValue(answer, ConfigurationObject.class);
@@ -80,9 +82,11 @@ public class JobResourceWebserviceExecuter {
     }
 
     private ConfigurationObject setInventoryItem(ConfigurationObject configurationObject, String accessToken) throws Exception {
-
-        logger.debug(".. setInventoryItem: path: " + configurationObject.getPath() + " , object type: " + configurationObject.getObjectType());
-
+        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug(".. setInventoryItem: path: " + configurationObject.getPath() + " , object type: " + configurationObject
+                    .getObjectType());
+        }
         String body = JobHelper.OBJECT_MAPPER.writeValueAsString(configurationObject);
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/inventory/store", body);
         String answer = null;
@@ -95,8 +99,10 @@ public class JobResourceWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(".... request body: " + body);
-        logger.debug("answer=" + answer);
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug(".... request body: " + body);
+            apiExecutor.getLogger().debug("answer=" + answer);
+        }
         ConfigurationObject configurationObjectReturn = new ConfigurationObject();
         if (answer != null) {
             configurationObjectReturn = JobHelper.OBJECT_MAPPER.readValue(answer, ConfigurationObject.class);
@@ -105,9 +111,10 @@ public class JobResourceWebserviceExecuter {
     }
 
     private String getSelectedControllerId(String accessToken) throws Exception {
-
-        logger.debug(".. getSelectedControllerId: path: ");
-
+        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug(".. getSelectedControllerId: path: ");
+        }
         String body = JobHelper.OBJECT_MAPPER.writeValueAsString("{}");
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/controller/ids", body);
         String answer = null;
@@ -124,14 +131,19 @@ public class JobResourceWebserviceExecuter {
         if (answer != null) {
             controllerIds = JobHelper.OBJECT_MAPPER.readValue(answer, ControllerIds.class);
         }
-        logger.debug("answer=" + answer);
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         return controllerIds.getSelected();
     }
 
     private void publishDeployableItem(ConfigurationObject configurationObject, SetJobResourceJobArguments args, String accessToken)
             throws Exception {
-
-        logger.debug(".. publishDeployableItem: path: " + configurationObject.getPath() + " , object type: " + configurationObject.getObjectType());
+        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug(".. publishDeployableItem: path: " + configurationObject.getPath() + " , object type: "
+                    + configurationObject.getObjectType());
+        }
         DeployFilter deployFilter = new DeployFilter();
         deployFilter.setControllerIds(new ArrayList<String>());
         String controllerId = args.getControllerId();
@@ -166,9 +178,10 @@ public class JobResourceWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(".... request body: " + body);
-        logger.debug("answer=" + answer);
-
+        if (isDebugEnablerd) {
+            apiExecutor.getLogger().debug(".... request body: %s", body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
     }
 
     private String getValue(SetJobResourceJobArguments args) throws IOException {

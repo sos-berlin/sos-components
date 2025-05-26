@@ -12,21 +12,18 @@ import com.sos.joc.model.reporting.Report;
 import com.sos.joc.model.reporting.Reports;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class RunReportImpl {
 
-    private OrderProcessStepLogger logger;
-    private RunReportJobArguments args;
-    private Map<String, DetailValue> jobResources;
-    private OrderProcessStep<?> step;
+    private final RunReportJobArguments args;
+    private final Map<String, DetailValue> jobResources;
+    private final OrderProcessStep<RunReportJobArguments> step;
 
     public RunReportImpl(OrderProcessStep<RunReportJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
@@ -36,14 +33,15 @@ public class RunReportImpl {
 
         String accessToken = null;
 
+        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
         try {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
-            RunReportsWebserviceExecuter runReportsWebserviceExecuter = new RunReportsWebserviceExecuter(logger, apiExecutor);
+            RunReportsWebserviceExecuter runReportsWebserviceExecuter = new RunReportsWebserviceExecuter(apiExecutor);
             Set<String> reportPaths = new HashSet<String>();
-            if (logger.isDebugEnabled() && args.getReportPaths() != null  && args.getReportPaths().getValue() != null) {
+            if (isDebugEnabled && args.getReportPaths() != null && args.getReportPaths().getValue() != null) {
                 for (String report : args.getReportPaths().getValue()) {
-                    logger.debug("Add report from reportPaths: " + report);
+                    step.getLogger().debug("Add report from reportPaths: " + report);
                 }
             }
             if (args.getReportPaths().getValue() != null) {
@@ -63,7 +61,9 @@ public class RunReportImpl {
                     for (String inFolder : args.getReportFolders().getValue()) {
                         Folder folder = new Folder();
                         boolean recursive = false;
-                        logger.debug("Add reports /*: ");
+                        if (isDebugEnabled) {
+                            step.getLogger().debug("Add reports /*: ");
+                        }
 
                         if (inFolder.endsWith("/*")) {
                             recursive = true;
@@ -79,17 +79,17 @@ public class RunReportImpl {
             if (folders.size() > 0) {
                 Reports reports = runReportsWebserviceExecuter.getReports(accessToken, folders);
                 for (Report report : reports.getReports()) {
-                    logger.debug("Add report from folder: " + report.getPath());
+                    if (isDebugEnabled) {
+                        step.getLogger().debug("Add report from folder: %s", report.getPath());
+                    }
                     reportPaths.add(report.getPath());
                 }
             }
 
             runReportsWebserviceExecuter.generateReports(accessToken, reportPaths);
 
-        } catch (
-
-        Exception e) {
-            logger.error(e);
+        } catch (Exception e) {
+            step.getLogger().error(e);
             throw e;
         } finally {
             if (accessToken != null) {

@@ -19,15 +19,14 @@ import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class CheckLog {
 
-    private OrderProcessStepLogger logger;
-    private CheckLogJobArguments args;
-    private OrderProcessStep<CheckLogJobArguments> step;
+    private final CheckLogJobArguments args;
+    private final OrderProcessStep<CheckLogJobArguments> step;
+
     private long checkLogMatchCount = 0;
     private long checkLogGroupCount = 0;
     private long checkLogGroupsMatchesCount = 0;
@@ -38,7 +37,6 @@ public class CheckLog {
 
     public CheckLog(OrderProcessStep<CheckLogJobArguments> step) {
         this.args = step.getDeclaredArguments();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
@@ -178,7 +176,7 @@ public class CheckLog {
                 order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
                 t = 0;
             } catch (com.sos.commons.exception.SOSMissingDataException e) {
-                logger.info("... waiting for order information");
+                step.getLogger().info("... waiting for order information");
                 java.lang.Thread.sleep(3000);
                 t = t - 3;
             }
@@ -290,7 +288,7 @@ public class CheckLog {
                     if (t <= 0) {
                         throw e;
                     }
-                    logger.info("... waiting for task history");
+                    step.getLogger().info("... waiting for task history");
                     java.lang.Thread.sleep(3000);
                 }
             }
@@ -304,15 +302,15 @@ public class CheckLog {
 
         int options = 0;
         if (args.getCaseInsensitive()) {
-            logger.debug("CASE_INSITIVE");
+            step.getLogger().debug("CASE_INSITIVE");
             options = options + Pattern.CASE_INSENSITIVE;
         }
         if (args.getMultiline()) {
-            logger.debug("MULTILINE");
+            step.getLogger().debug("MULTILINE");
             options = options + Pattern.MULTILINE;
         }
         if (args.getUnixLines()) {
-            logger.debug("UNIX_LINES");
+            step.getLogger().debug("UNIX_LINES");
             options = options + Pattern.UNIX_LINES;
         }
         Pattern pattern = Pattern.compile(args.getPattern(), options);
@@ -321,15 +319,20 @@ public class CheckLog {
         checkLogMatchCount = matcher.results().count();
         matchFound = checkLogMatchCount > 0;
 
+        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
         matcher.reset();
         while (matcher.find()) {
             checkLogMatches = checkLogMatches + args.getSeparator() + matcher.group(0);
-            logger.debug("match: " + matcher.group(0));
+            if (isDebugEnabled) {
+                step.getLogger().debug("match: %s", matcher.group(0));
+            }
         }
         matcher.reset();
         while (matcher.find()) {
             for (int i = 1; i <= matcher.groupCount(); i++) {
-                logger.debug("Group" + i + ":" + matcher.group(i));
+                if (isDebugEnabled) {
+                    step.getLogger().debug("Group" + i + ":" + matcher.group(i));
+                }
                 checkLogGroupsMatchesCount = checkLogGroupsMatchesCount + 1;
                 checkLogMatchedGroups = checkLogMatchedGroups + args.getSeparator() + matcher.group(i);
             }
@@ -342,11 +345,13 @@ public class CheckLog {
             checkLogMatches = checkLogMatches.substring(1);
         }
         checkLogGroupCount = matcher.groupCount();
-        logger.debug(checkLogMatchCount + " matches");
-        logger.debug("matched:" + matchFound);
-        logger.debug(checkLogMatches);
-        logger.debug("groupCount:" + matcher.groupCount());
-        logger.debug(checkLogMatchedGroups);
+        if (isDebugEnabled) {
+            step.getLogger().debug(checkLogMatchCount + " matches");
+            step.getLogger().debug("matched:" + matchFound);
+            step.getLogger().debug(checkLogMatches);
+            step.getLogger().debug("groupCount:" + matcher.groupCount());
+            step.getLogger().debug(checkLogMatchedGroups);
+        }
 
     }
 
@@ -358,7 +363,7 @@ public class CheckLog {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            CheckLogWebserviceExecuter orderStateWebserviceExecuter = new CheckLogWebserviceExecuter(logger, apiExecutor);
+            CheckLogWebserviceExecuter orderStateWebserviceExecuter = new CheckLogWebserviceExecuter(apiExecutor);
             Long taskId = checkJob2LabelAssignment(accessToken, orderStateWebserviceExecuter);
 
             RunningTaskLogFilter runningTaskLogFilter = new RunningTaskLogFilter();

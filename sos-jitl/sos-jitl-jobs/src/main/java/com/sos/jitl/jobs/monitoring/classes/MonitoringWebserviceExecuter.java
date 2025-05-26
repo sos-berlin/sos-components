@@ -24,19 +24,15 @@ import com.sos.joc.model.order.OrdersOverView;
 import com.sos.joc.model.order.OrdersSnapshot;
 import com.sos.joc.model.order.OrdersSummary;
 import com.sos.js7.job.JobHelper;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class MonitoringWebserviceExecuter {
 
-    private ApiExecutor apiExecutor;
-    private OrderProcessStepLogger logger;
+    private final ApiExecutor apiExecutor;
 
-    public MonitoringWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
-        super();
+    public MonitoringWebserviceExecuter(ApiExecutor apiExecutor) {
         this.apiExecutor = apiExecutor;
-        this.logger = logger;
     }
 
     private Controller getVolatileControllerStatus(String body, String accessToken, String controllerId) throws Exception {
@@ -51,9 +47,10 @@ public class MonitoringWebserviceExecuter {
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
-
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         JobScheduler200 volatileStatus = JobHelper.OBJECT_MAPPER.readValue(answer, JobScheduler200.class);
 
         return volatileStatus.getController();
@@ -71,9 +68,10 @@ public class MonitoringWebserviceExecuter {
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
-
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         JobSchedulerP200 permanentStatus = JobHelper.OBJECT_MAPPER.readValue(answer, JobSchedulerP200.class);
 
         return permanentStatus.getController();
@@ -92,8 +90,10 @@ public class MonitoringWebserviceExecuter {
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         Controllers permanentStatus = JobHelper.OBJECT_MAPPER.readValue(answer, Controllers.class);
 
         return permanentStatus;
@@ -116,8 +116,11 @@ public class MonitoringWebserviceExecuter {
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
+
         Components components = JobHelper.OBJECT_MAPPER.readValue(answer, Components.class);
 
         MonitoringJocStatus monitoringJocStatus = new MonitoringJocStatus();
@@ -182,8 +185,10 @@ public class MonitoringWebserviceExecuter {
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         AgentsV agentsV = JobHelper.OBJECT_MAPPER.readValue(answer, AgentsV.class);
         return agentsV.getAgents();
 
@@ -206,8 +211,10 @@ public class MonitoringWebserviceExecuter {
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         OrdersSnapshot ordersSnapshot = JobHelper.OBJECT_MAPPER.readValue(answer, OrdersSnapshot.class);
         return ordersSnapshot.getOrders();
     }
@@ -228,8 +235,10 @@ public class MonitoringWebserviceExecuter {
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         OrdersOverView ordersOverView = JobHelper.OBJECT_MAPPER.readValue(answer, OrdersOverView.class);
         return ordersOverView.getOrders();
     }

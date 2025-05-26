@@ -17,21 +17,18 @@ import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class HistoryInfo {
 
-    private CheckHistoryJobArguments args;
-    private Map<String, DetailValue> jobResources;
-    private OrderProcessStepLogger logger;
-    private OrderProcessStep<?> step;
+    private final CheckHistoryJobArguments args;
+    private final Map<String, DetailValue> jobResources;
+    private final OrderProcessStep<CheckHistoryJobArguments> step;
 
     public HistoryInfo(OrderProcessStep<CheckHistoryJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
@@ -45,7 +42,7 @@ public class HistoryInfo {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(logger, apiExecutor);
+            HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(apiExecutor);
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setJob(args.getJob());
             historyFilter.setWorkflow(args.getWorkflow());
@@ -55,7 +52,7 @@ public class HistoryInfo {
             String queryName = CheckHistoryHelper.getQueryName(query);
             String parameter = CheckHistoryHelper.getParameter(query);
 
-            ParameterResolver parameterResolver = new ParameterResolver(logger);
+            ParameterResolver parameterResolver = new ParameterResolver(step.getLogger());
             parameterResolver.resolveParameter(parameter);
 
             historyFilter.setLimit(parameterResolver.getCount() + 1);
@@ -171,7 +168,7 @@ public class HistoryInfo {
 
             return historyItem;
         } catch (Exception e) {
-            logger.error(e);
+            step.getLogger().error(e);
             throw e;
         } finally {
             if (accessToken != null) {

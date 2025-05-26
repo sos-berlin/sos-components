@@ -7,19 +7,15 @@ import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.js7.job.JobHelper;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class HistoryWebserviceExecuter {
 
-    private ApiExecutor apiExecutor;
-    private OrderProcessStepLogger logger;
+    private final ApiExecutor apiExecutor;
 
-    public HistoryWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
-        super();
+    public HistoryWebserviceExecuter(ApiExecutor apiExecutor) {
         this.apiExecutor = apiExecutor;
-        this.logger = logger;
     }
 
     public OrderHistory getWorkflowHistoryEntry(OrdersFilter ordersFilter, String accessToken) throws Exception {
@@ -37,8 +33,10 @@ public class HistoryWebserviceExecuter {
             }
 
         }
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         OrderHistory orderHistory = new OrderHistory();
         orderHistory = JobHelper.OBJECT_MAPPER.readValue(answer, OrderHistory.class);
         if (orderHistory.getHistory().size() == 0) {
@@ -67,8 +65,10 @@ public class HistoryWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        logger.debug(body);
-        logger.debug("answer=" + answer);
+        if (apiExecutor.getLogger().isDebugEnabled()) {
+            apiExecutor.getLogger().debug(body);
+            apiExecutor.getLogger().debug("answer=%s", answer);
+        }
         TaskHistory taskHistory = new TaskHistory();
         taskHistory = JobHelper.OBJECT_MAPPER.readValue(answer, TaskHistory.class);
         if (taskHistory.getHistory().size() == 0) {

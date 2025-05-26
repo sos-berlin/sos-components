@@ -7,30 +7,27 @@ import com.sos.jitl.jobs.checklicense.CheckLicenseJobArguments;
 import com.sos.joc.model.joc.Js7LicenseInfo;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class CheckLicense {
 
-    private OrderProcessStepLogger logger;
-    private CheckLicenseJobArguments args;
+    private final CheckLicenseJobArguments args;
+    private final Map<String, DetailValue> jobResources;
+    private final OrderProcessStep<CheckLicenseJobArguments> step;
+
     private int exit;
     private String body;
     private String subject;
-    private Map<String, DetailValue> jobResources;
-    private OrderProcessStep<?> step;
-
 
     public CheckLicense(OrderProcessStep<CheckLicenseJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
     private void log(String s) {
-        this.logger.info(s);
+        step.getLogger().info(s);
         body += s + "\r\n";
     }
 
@@ -46,7 +43,7 @@ public class CheckLicense {
         try {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
-            CheckLicenseWebserviceExecuter checkLicenceWebserviceExecuter = new CheckLicenseWebserviceExecuter(logger, apiExecutor);
+            CheckLicenseWebserviceExecuter checkLicenceWebserviceExecuter = new CheckLicenseWebserviceExecuter(apiExecutor);
             Js7LicenseInfo js7LicenseInfo = checkLicenceWebserviceExecuter.getLicence(accessToken);
             log(".. Check License for validity period of " + args.getValidityDays().shortValue() + " days");
             log(".. Licence tpye: " + js7LicenseInfo.getType());
@@ -68,9 +65,11 @@ public class CheckLicense {
                     long timeUntilExpiration = (js7LicenseInfo.getValidUntil().getTime() - now.getTime()) / (1000 * 24 * 60 * 60);
                     long daysMs = args.getValidityDays();
 
-                    logger.debug("now: " + now.getTime());
-                    logger.debug("daysMs: " + daysMs);
-                    logger.debug("timeUntilExpiration: " + timeUntilExpiration);
+                    if (step.getLogger().isDebugEnabled()) {
+                        step.getLogger().debug("now: %s", now.getTime());
+                        step.getLogger().debug("daysMs: %s", daysMs);
+                        step.getLogger().debug("timeUntilExpiration: %s", timeUntilExpiration);
+                    }
                     if (timeUntilExpiration < daysMs) {
                         log("License Check warning: license will expire on " + js7LicenseInfo.getValidUntil());
                         subject = "JS7 JobScheduler Notification: license expiration warning";
@@ -85,7 +84,7 @@ public class CheckLicense {
             }
 
         } catch (Exception e) {
-            logger.error(e);
+            step.getLogger().error(e);
             exit = 4;
             throw e;
         } finally {

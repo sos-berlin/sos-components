@@ -6,21 +6,18 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.read.RequestFilter;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class SetJobResource {
 
-    private SetJobResourceJobArguments args;
-    private Map<String, DetailValue> jobResources;
-    private OrderProcessStepLogger logger;
-    private OrderProcessStep<?> step;
+    private final SetJobResourceJobArguments args;
+    private final Map<String, DetailValue> jobResources;
+    private final OrderProcessStep<SetJobResourceJobArguments> step;
 
     public SetJobResource(OrderProcessStep<SetJobResourceJobArguments> step) {
         this.args = step.getDeclaredArguments();
         this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
-        this.logger = step.getLogger();
         this.step = step;
     }
 
@@ -39,11 +36,11 @@ public class SetJobResource {
             requestFilter.setObjectType(ConfigurationType.JOBRESOURCE);
             requestFilter.setControllerId(args.getControllerId());
 
-            JobResourceWebserviceExecuter jobResourceWebserviceExecuter = new JobResourceWebserviceExecuter(logger, apiExecutor);
+            JobResourceWebserviceExecuter jobResourceWebserviceExecuter = new JobResourceWebserviceExecuter(apiExecutor);
             jobResourceWebserviceExecuter.handleJobResource(requestFilter, args, accessToken);
 
         } catch (Exception e) {
-            logger.error(e);
+            step.getLogger().error(e);
             throw e;
         } finally {
             if (accessToken != null) {
