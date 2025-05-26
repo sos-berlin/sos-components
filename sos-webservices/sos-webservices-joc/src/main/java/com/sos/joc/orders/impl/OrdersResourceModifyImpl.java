@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -264,7 +263,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (withOrders) {
             orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
             // determine possibly fresh cyclic orders in case of CANCEL or SUSPEND
-            if (Action.SUSPEND.equals(action) || Action.CANCEL.equals(action)) {
+            if (Action.SUSPEND.equals(action) || Action.CANCEL.equals(action) || Action.CHANGE.equals(action)) {
                 // determine cyclic ids
                 orderStream = Stream.concat(orderStream, cyclicFreshOrderIds(orders, currentState));
             }
@@ -933,9 +932,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
     
     private static CompletableFuture<Either<Problem, Void>> letRun(String controllerId, Set<JOrder> jOrders) {
-        Function<JOrder, JControllerCommand> toContinueCommand = o -> JControllerCommand.goOrder(o.id(), JPosition.apply(o.asScala().position()));
-        return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(jOrders.stream().map(toContinueCommand).collect(Collectors
-                .toList()))).thenApply(OrdersResourceModifyImpl::castEither);
+        List<JControllerCommand> commands = jOrders.stream().map(o -> JControllerCommand.goOrder(o.id(), JPosition.apply(o.asScala().position())))
+                .collect(Collectors.toList());
+        if (jOrders.size() == 1) {
+            return ControllerApi.of(controllerId).executeCommand(commands.get(0)).thenApply(OrdersResourceModifyImpl::castEither);
+        } else {
+            return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(commands)).thenApply(OrdersResourceModifyImpl::castEither);
+        }
     }
     
     private static Either<Problem, Void> castEither(Either<Problem, ControllerCommand.Response> either) {
