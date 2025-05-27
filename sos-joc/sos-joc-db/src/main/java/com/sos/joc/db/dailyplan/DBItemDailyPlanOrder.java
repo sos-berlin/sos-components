@@ -1,5 +1,6 @@
 package com.sos.joc.db.dailyplan;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -117,6 +118,9 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     @Transient
     private boolean isLastOfCycle = false;
+    
+    @Transient
+    private BigDecimal priority = null;
 
     public DBItemDailyPlanOrder() {
 
@@ -386,6 +390,16 @@ public class DBItemDailyPlanOrder extends DBItem {
             return ((Long.parseLong(m.group(1)) * 60 * 60) + (Long.parseLong(m.group(2)) * 60) + Long.parseLong(m.group(3)));
         }
         return 0;
+    }
+    
+    @Transient
+    public void setPriority(BigDecimal prio) {
+        priority = prio;
+    }
+
+    @Transient
+    public BigDecimal getPriority() {
+        return priority;
     }
 
 }

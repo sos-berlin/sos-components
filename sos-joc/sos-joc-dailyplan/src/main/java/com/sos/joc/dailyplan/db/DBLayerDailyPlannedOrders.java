@@ -1037,6 +1037,7 @@ public class DBLayerDailyPlannedOrders {
         OrderParameterisation op = new OrderParameterisation();
         op.setPositions(order.getPositions());
         op.setForceJobAdmission(order.getForceJobAdmission());
+        op.setPriority(order.getPriority());
         return Globals.objectMapper.writeValueAsString(op);
     }
 

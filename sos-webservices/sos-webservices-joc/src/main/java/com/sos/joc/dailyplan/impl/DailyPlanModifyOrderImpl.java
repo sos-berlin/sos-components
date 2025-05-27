@@ -105,7 +105,9 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
+import js7.data.order.OrderId;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 import js7.proxy.javaapi.JControllerProxy;
 
 @Path(WebservicePaths.DAILYPLAN)
@@ -129,7 +131,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 return response;
             }
 
-            List<Boolean> hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions()).toList();
+            List<Boolean> hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                    .getManagePositions()).toList();
             if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty())
                     || in.getBlockPosition() != null)) {
                 if (!hasManagePositionsPermission.get(0)) {
@@ -143,8 +146,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
             }
 
-            JControllerProxy proxy = null;
-            JControllerState currentState = null;
+            JControllerProxy proxy = Proxy.of(controllerId);
+            JControllerState currentState = proxy.currentState();
 
             // DailyPlan Orders: orderIds.get(Boolean.FALSE), Adhoc Orders: orderIds.get(Boolean.TRUE)
             Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#T[0-9]+-.*"), Collectors
@@ -171,13 +174,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             // some dailyplan orders are already submitted then these must be in state SCHEDULED
             if (someDailyPlanOrdersAreSubmitted || !orderIds.get(Boolean.TRUE).isEmpty()) {
-                if (proxy == null) {
-                    proxy = Proxy.of(controllerId);
-                }
-                if (currentState == null) {
-                    currentState = proxy.currentState();
-                }
-
                 OrdersHelper.getNotFreshOrders(in.getOrderIds(), currentState).ifPresent(s -> {
                     throw new JocBadRequestException("Some orders are not in the state SCHEDULED or PLANNED: " + s.toString());
                 });
@@ -214,14 +210,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
             }
 
-            if (!orderIds.get(Boolean.TRUE).isEmpty()) {
-                if (proxy == null) {
-                    proxy = Proxy.of(controllerId);
-                }
-                if (currentState == null) {
-                    currentState = proxy.currentState();
-                }
-            }
             setSettings(IMPL_PATH);
             ZoneId zoneId = getZoneId(IMPL_PATH);
             Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.TRUE), in, accessToken,
@@ -229,6 +217,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             OrderIdMap dailyPlanResult = null;
 
             if (!dailyPlanOrderItems.isEmpty()) {
+                
+                dailyPlanOrderItems = dailyPlanOrderItems.stream().peek(i -> {
+                    JOrder jOrder = currentState.idToOrder().get(OrderId.of(i.getOrderId()));
+                    if (jOrder != null) {
+                        i.setPriority(jOrder.priority());
+                    }
+                }).collect(Collectors.toList());
+                
                 if (!onlyStarttimeModifications) {
                     dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog, zoneId, labelMap, blockPositions);
                 } else {
@@ -457,12 +453,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.getNewFromOldOrderId(item.getOrderId(), newPart));
 
                             // prepare to modify later
-                            List<DBItemDailyPlanOrder> cyclic = dbLayer.getDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper
-                                    .getCyclicOrderIdMainPart(item.getOrderId()));
+                            Stream<DBItemDailyPlanOrder> cyclicS = dbLayer.getDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper
+                                    .getCyclicOrderIdMainPart(item.getOrderId())).stream().peek(c -> c.setPriority(item.getPriority()));
                             if (withNewPositions) {
-                                cyclic = cyclic.stream().peek(c -> c.setOrderParameterisation(item.getOrderParameterisation())).collect(Collectors
-                                        .toList());
+                                cyclicS = cyclicS.peek(c -> c.setOrderParameterisation(item.getOrderParameterisation()));
                             }
+                            List<DBItemDailyPlanOrder> cyclic = cyclicS.collect(Collectors.toList());
                             submittedCyclic.put(item.getId(), cyclic);
                             submitted.addAll(cyclic);
                         } else {
@@ -768,7 +764,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             for (DBItemDailyPlanOrder item : itemsMap.get(Boolean.TRUE)) { // cyclic orders
 
                 TreeSet<DBItemDailyPlanOrder> cyclicOrdersOfItem = dbLayer.getDailyPlanOrdersByCyclicMainPart(in.getControllerId(), OrdersHelper
-                        .getCyclicOrderIdMainPart(item.getOrderId())).stream().collect(Collectors.toCollection(() -> new TreeSet<>(comp)));
+                        .getCyclicOrderIdMainPart(item.getOrderId())).stream().peek(i -> i.setPriority(item.getPriority())).collect(Collectors
+                                .toCollection(() -> new TreeSet<>(comp)));
 
                 DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
                 Instant newPlannedStartOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
@@ -1255,6 +1252,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
             OrderParameterisation orderParameterisation = new OrderParameterisation();
             orderParameterisation.setOrderName(mainItem.getOrderName());
+            if (mainItem.getPriority() != null) {
+                orderParameterisation.setPriority(mainItem.getPriority().intValue());
+            }
             Variables variables = new Variables();
             if (variable != null && variable.getVariableValue() != null) {
                 variables = Globals.objectMapper.readValue(variable.getVariableValue(), Variables.class);

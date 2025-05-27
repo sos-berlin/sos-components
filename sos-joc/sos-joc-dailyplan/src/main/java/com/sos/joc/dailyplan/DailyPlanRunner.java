@@ -498,6 +498,9 @@ public class DailyPlanRunner extends TimerTask {
                 if (forceJobAdmission != null) {
                     orderParameterisation.setForceJobAdmission(forceJobAdmission);
                 }
+                if (item.getPriority() != null) {
+                    orderParameterisation.setPriority(item.getPriority().intValue());
+                }
                 orderParameterisation.setVariables(variables);
                 schedule.getOrderParameterisations().add(orderParameterisation);
 
@@ -853,7 +856,7 @@ public class DailyPlanRunner extends TimerTask {
         order.setWorkflowPath(scheduleWorkflow.getName());
         order.setPositions(orderParameterisation.getPositions());
         order.setForceJobAdmission(orderParameterisation.getForceJobAdmission());
-        order.setPriority(orderParameterisation.getPriority());
+        order.setPriority(orderParameterisation.getPriority() == null ? 0 : orderParameterisation.getPriority());
         return order;
     }
 

@@ -680,6 +680,9 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
             OrderParameterisation orderParameterisation = new OrderParameterisation();
             orderParameterisation.setOrderName(mainItem.getOrderName());
+            if (mainItem.getPriority() != null) {
+                orderParameterisation.setPriority(mainItem.getPriority().intValue());
+            }
             Variables variables = new Variables();
             if (variable != null && variable.getVariableValue() != null) {
                 variables = Globals.objectMapper.readValue(variable.getVariableValue(), Variables.class);
