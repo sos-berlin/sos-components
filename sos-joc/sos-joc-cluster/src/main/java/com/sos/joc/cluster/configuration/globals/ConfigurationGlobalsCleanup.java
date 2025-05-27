@@ -38,6 +38,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
     private ConfigurationEntry deploymentHistoryVersions = new ConfigurationEntry("deployment_history_versions", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry reportingAge = new ConfigurationEntry("reporting_age", "365d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry approvalRequestsAge = new ConfigurationEntry("approval_requests_age", "7d", GlobalSettingsSectionValueType.DURATION);
 
     public ConfigurationGlobalsCleanup() {
         int index = -1;
@@ -72,6 +73,8 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         reportingAge.setOrdering(++index);
         // DEPLOYMENT
         deploymentHistoryVersions.setOrdering(++index);
+        // APPROVAL REQUESTS
+        reportingAge.setOrdering(++index);
     }
 
     public ConfigurationEntry getTimeZone() {
@@ -140,6 +143,10 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public ConfigurationEntry getReportingAge() {
         return reportingAge;
+    }
+    
+    public ConfigurationEntry getApprovalRequestsAge() {
+        return approvalRequestsAge;
     }
 
     public ConfigurationEntry getDeploymentHistoryVersions() {
