@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Configurations>
+	<JobResourced name="yade" variable="settings"
+		environment_variable="SETTINGS" />
+	<Fragments>
+		<ProtocolFragments>
+			<JumpFragment name="jump">
+				<BasicConnection>
+					<Hostname><![CDATA[host]]></Hostname>
+				</BasicConnection>
+				<SSHAuthentication>
+					<Account><![CDATA[user]]></Account>
+				</SSHAuthentication>
+				<YADEClientCommand><![CDATA[command]]></YADEClientCommand>
+			</JumpFragment>
+		</ProtocolFragments>
+	</Fragments>
+	<Profiles />
+</Configurations>

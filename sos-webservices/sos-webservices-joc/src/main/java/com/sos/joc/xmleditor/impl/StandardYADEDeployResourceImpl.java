@@ -1,8 +1,7 @@
 package com.sos.joc.xmleditor.impl;
 
-import org.w3c.dom.Document;
-
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -40,15 +39,14 @@ public class StandardYADEDeployResourceImpl extends ADeploy implements IStandard
                 return response;
             }
             // step 1 - check for vulnerabilities and validate
-            Document doc = null;
             try {
-                doc = JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), in.getConfiguration());
+                JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
                 return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
             }
 
             // step 2 - store and deploy JobResource
-            StandardYADEJobResourceHandler.storeAndDeploy(this, accessToken, in, doc);
+            StandardYADEJobResourceHandler.storeAndDeploy(this, accessToken, in, SOSXML.parse(in.getConfiguration()));
 
             // step 3 - update db and reread
             ReadStandardConfigurationAnswer answer = handleStandardConfiguration(in, getAccount(), 0L);

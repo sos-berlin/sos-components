@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -124,7 +125,8 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         if (item.getConfigurationReleased() == null && item.getConfigurationDraft() != null) {
             try {
                 String xml = StandardSchemaHandler.getXml(item.getConfigurationDraft(), true);
-                Document doc = JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), xml);
+                JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), xml);
+                Document doc = SOSXML.parse(xml);
                 StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
                 if (yadeJobResource != null) {// JobResource element not defined
                     yadeJobResource.tryUpdateReleasedConfigurationIfJobResourceDeployed(item);

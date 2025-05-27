@@ -6,6 +6,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
@@ -25,6 +26,7 @@ import org.w3c.dom.Node;
 
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.xml.SOSXML;
+import com.sos.commons.xml.exception.SOSXMLException;
 
 /** TODO Java default Transformer uses xalan(XSLT v1)<br/>
  * to support XSLT v2 use net.sf.saxon (supports XSLT v2), artifactId Saxon-HE - see comment - newTransformer */
@@ -99,6 +101,7 @@ public class SOSXmlTransformer {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         Thread transformThread = null;
+        AtomicReference<Exception> transformExceptionRef = new AtomicReference<>();
         try (PipedOutputStream pipeOut = new PipedOutputStream(); PipedInputStream pipeIn = new PipedInputStream(pipeOut);
                 OutputStreamWriter osWriter = new OutputStreamWriter(baos, "UTF-8")) {
 
@@ -107,7 +110,7 @@ public class SOSXmlTransformer {
                     Transformer t = newTransformer(xslContent);
                     t.transform(new StreamSource(new StringReader(xmlContent)), new StreamResult(pipeOut));
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    transformExceptionRef.set(e);
                 } finally {
                     SOSClassUtil.closeQuietly(pipeOut);
                 }
@@ -184,16 +187,18 @@ public class SOSXmlTransformer {
                     }
                     cdataWriter.flush();
                 }
-
             } finally {
                 closeQuietly(reader);
                 closeQuietly(rawWriter);
             }
-
         } finally {
             try {
                 if (transformThread != null) {
                     transformThread.join();
+                }
+                Exception transformException = transformExceptionRef.get();
+                if (transformException != null) {
+                    throw new SOSXMLException(transformException.getCause() == null ? transformException : transformException.getCause());
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

@@ -45,8 +45,8 @@ public class JocXmlEditor {
     public static final String ERROR_CODE_UNSUPPORTED_OBJECT_TYPE = "XMLEDITOR-402";
     public static final String ERROR_CODE_MISSING_ARGUMENT = "XMLEDITOR-403";
 
-    public static Document validate(ObjectType type, String schema, String xml) throws Exception {
-        return SOSXmlXsdValidator.validate(schema, xml, ObjectType.YADE.equals(type) ? true : false);
+    public static void validate(ObjectType type, String schema, String xml) throws Exception {
+        SOSXmlXsdValidator.validate(schema, xml, ObjectType.YADE.equals(type) ? true : false);
     }
 
     public static boolean isYADE(ObjectType type) {

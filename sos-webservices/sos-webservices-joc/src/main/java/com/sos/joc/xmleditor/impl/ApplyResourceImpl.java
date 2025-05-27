@@ -38,12 +38,21 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
             checkRequiredParameters(in);
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
+            Exception transformException = null;
             if (response == null) {
                 String schema = null;
                 switch (in.getObjectType()) {
                 case YADE:
                     schema = StandardSchemaHandler.getYADESchema();
-                    in.setConfiguration(StandardSchemaHandler.getXml(in.getConfiguration(), true));
+                    try {
+                        // If XML is invalid (missing closing tag, etc.) -
+                        // - getXml() - The XSLT transformation cannot be performed.
+                        // - The XSLT transformation exception does not provide details about the validation line, etc. - Therefore, save this exception for
+                        // later use if validation was successful.
+                        in.setConfiguration(StandardSchemaHandler.getXml(in.getConfiguration(), true));
+                    } catch (Exception e) {
+                        transformException = e;
+                    }
                     break;
                 case NOTIFICATION:
                     schema = StandardSchemaHandler.getNotificationSchema();
@@ -52,12 +61,16 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                     schema = OtherSchemaHandler.getSchema(in.getSchemaIdentifier(), false);
                     break;
                 }
-
                 // step 1 - check for vulnerabilities and validate
                 try {
                     JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
                 } catch (SOSXMLXSDValidatorException e) {
                     return JOCDefaultResponse.responseStatus200(getError(e));
+                }
+
+                // step 1.1 - If validation is successful, a transformException is thrown – can this happen(validation is successful)?
+                if (transformException != null) {
+                    throw transformException;
                 }
 
                 // step 2 - xml2json

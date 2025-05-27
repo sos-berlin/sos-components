@@ -1,6 +1,5 @@
 package com.sos.commons.xml;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.file.Files;
@@ -14,7 +13,6 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 import javax.xml.XMLConstants;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Source;
@@ -23,7 +21,6 @@ import javax.xml.validation.SchemaFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -31,7 +28,6 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.exception.SOSXMLDoctypeException;
 import com.sos.commons.xml.exception.SOSXMLException;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 
@@ -39,14 +35,14 @@ public class SOSXmlXsdValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSXmlXsdValidator.class);
 
-    public static Document validate(URL schema, String xml, boolean awareness) throws Exception {
+    public static void validate(URL schema, String xml, boolean awareness) throws Exception {
         if (schema == null) {
             throw new SOSXMLException("missing schema");
         }
-        return validate(new StreamSource(schema.toExternalForm()), xml, awareness);
+        validate(new StreamSource(schema.toExternalForm()), xml, awareness);
     }
 
-    public static Document validate(Path schema, String xml, boolean awareness) throws Exception {
+    public static void validate(Path schema, String xml, boolean awareness) throws Exception {
         if (schema == null) {
             throw new SOSXMLException("missing schema");
         }
@@ -56,17 +52,17 @@ public class SOSXmlXsdValidator {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[schema][path]%s", schema));
         }
-        return validate(new StreamSource(schema.toFile()), xml, awareness);
+        validate(new StreamSource(schema.toFile()), xml, awareness);
     }
 
-    public static Document validate(String schema, String xml, boolean awareness) throws Exception {
+    public static void validate(String schema, String xml, boolean awareness) throws Exception {
         if (schema == null) {
             throw new SOSXMLException("missing schema");
         }
-        return validate(new StreamSource(new StringReader(schema)), xml, awareness);
+        validate(new StreamSource(new StringReader(schema)), xml, awareness);
     }
 
-    public static Document validate(Source schema, String xml, boolean awareness) throws SOSXMLException, SOSXMLXSDValidatorException {
+    public static void validate(Source schema, String xml, boolean awareness) throws Exception {
         if (schema == null) {
             throw new SOSXMLException("missing schema");
         }
@@ -75,25 +71,21 @@ public class SOSXmlXsdValidator {
             throw new SOSXMLXSDValidatorException(cause, "XML", "1", 1, true);
         }
 
-        Document doc = null;
-        try {
-            // check for vulnerabilities
-            doc = SOSXML.parse(xml);
-        } catch (SOSXMLDoctypeException e) {
-            throw e;
-        } catch (Throwable e) {
-        }
-
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
             factory.setNamespaceAware(awareness);// was false
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             factory.setSchema(schemaFactory.newSchema(schema));
 
             SAXParser parser = factory.newSAXParser();
             parser.parse(new InputSource(new StringReader(xml)), new SOSXmlXsdValidator().new Handler());
-            return doc;
-        } catch (ParserConfigurationException | SAXException | IOException e) {
+        } catch (SOSXMLXSDValidatorException e) {
+            throw e;
+        } catch (Exception e) {
             throw new SOSXMLException(e);
         }
     }

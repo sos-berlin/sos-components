@@ -9,24 +9,26 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.UnitTestSimpleWSImplHelper;
+import com.sos.joc.model.xmleditor.apply.ApplyConfiguration;
 import com.sos.joc.model.xmleditor.common.ObjectType;
-import com.sos.joc.model.xmleditor.validate.ValidateConfiguration;
 import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 
-public class ValidateResourceImplTest {
+public class ApplyResourceImplTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImplTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApplyResourceImplTest.class);
 
     @Ignore
     @Test
     public void testProcess() throws Exception {
-        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new ValidateResourceImpl());
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new ApplyResourceImpl());
         h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
         Path xml = Path.of("src/test/resources/ws/xmleditor/impl/yade.xml");
         try {
             h.init();
 
-            ValidateConfiguration filter = new ValidateConfiguration();
+            ApplyConfiguration filter = new ApplyConfiguration();
+            filter.setId(32L);
+            filter.setName("yade");
             filter.setObjectType(ObjectType.YADE);
             filter.setSchemaIdentifier(StandardSchemaHandler.getYADESchemaIdentifier());
             filter.setConfiguration(SOSPath.readFile(xml));
