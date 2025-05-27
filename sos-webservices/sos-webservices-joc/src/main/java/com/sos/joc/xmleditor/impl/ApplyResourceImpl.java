@@ -39,7 +39,6 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
-                // step 1 - check for vulnerabilities and validate
                 String schema = null;
                 switch (in.getObjectType()) {
                 case YADE:
@@ -54,9 +53,11 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                     break;
                 }
 
-                response = check(in, schema, false);
-                if (response != null) {
-                    return response;
+                // step 1 - check for vulnerabilities and validate
+                try {
+                    JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
+                } catch (SOSXMLXSDValidatorException e) {
+                    return JOCDefaultResponse.responseStatus200(getError(e));
                 }
 
                 // step 2 - xml2json
@@ -107,21 +108,6 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         } finally {
             Globals.disconnect(session);
         }
-    }
-
-    private JOCDefaultResponse check(ApplyConfiguration in, String schema, boolean validate) throws Exception {
-        if (validate) {
-            // check for vulnerabilities and validate
-            try {
-                JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
-            } catch (SOSXMLXSDValidatorException e) {
-                return JOCDefaultResponse.responseStatus200(getError(e));
-            }
-        } else {
-            // check for vulnerabilities
-            JocXmlEditor.parseXml(in.getConfiguration());
-        }
-        return null;
     }
 
     private ApplyConfigurationAnswer getSuccess(ApplyConfiguration in, DBItemXmlEditorConfiguration item, String json, boolean isChanged)
