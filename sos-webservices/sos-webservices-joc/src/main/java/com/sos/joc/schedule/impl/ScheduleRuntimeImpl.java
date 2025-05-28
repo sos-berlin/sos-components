@@ -1,24 +1,19 @@
 package com.sos.joc.schedule.impl;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
@@ -34,10 +28,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
-import com.sos.joc.dailyplan.common.DailyPlanHelper;
+import com.sos.joc.dailyplan.common.DailyPlanRuntimeAndProjectionsHelper;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -54,9 +47,6 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduleRuntimeImpl.class);
     private static final String API_CALL = "./schedule/runtime";
-
-    private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-    private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
 
     @Override
     public JOCDefaultResponse postScheduleRuntime(String accessToken, byte[] filterBytes) {
@@ -90,7 +80,8 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
 
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-                final List<Calendar> nonWorkingDayCalendars = DailyPlanHelper.getNonWorkingDayCalendars(dbLayer, in.getNonWorkingDayCalendars());
+                final List<Calendar> nonWorkingDayCalendars = DailyPlanRuntimeAndProjectionsHelper.getNonWorkingDayCalendars(dbLayer, in
+                        .getNonWorkingDayCalendars());
                 List<DBItemInventoryReleasedConfiguration> workingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getCalendars().stream().map(
                         AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList()));
                 Globals.disconnect(session);
@@ -123,11 +114,11 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                                 List<String> nonWorkingDates = new ArrayList<>();
                                 Set<String> workingDatesExtendedWithNonWorkingPrevNext = new HashSet<>();
 
-                                DailyPlanHelper.applyAdjustmentForNonWorkingDates(c, nonWorkingDayCalendars, asDailyPlanSingleDate, workingDates,
-                                        nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
-                                singleDatesPeriods.addAll(workingDates.stream().flatMap(date -> getSingleDatePeriods(date, c.getPeriods(),
-                                        nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext, timezone, getJocError())).collect(Collectors
-                                                .toSet()));
+                                DailyPlanRuntimeAndProjectionsHelper.applyAdjustmentForNonWorkingDates(c, nonWorkingDayCalendars,
+                                        asDailyPlanSingleDate, workingDates, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
+                                singleDatesPeriods.addAll(workingDates.stream().flatMap(date -> DailyPlanRuntimeAndProjectionsHelper
+                                        .getSingleDatePeriods(date, c.getPeriods(), nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext,
+                                                timezone)).collect(Collectors.toSet()));
                             } catch (Throwable e) {
                                 LOGGER.info("[" + API_CALL + "][" + asDailyPlanSingleDate + "]" + e, e);
                             }
@@ -147,63 +138,6 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
         } finally {
             Globals.disconnect(session);
         }
-    }
-
-    private static Stream<Period> getSingleDatePeriods(String date, List<Period> periods, List<String> nonWorkingDates,
-            Set<String> workingDatesExtendedWithNonWorkingPrevNext, ZoneId timezone, JocError jocError) {
-        if (periods == null) {
-            return Stream.empty();
-        }
-        return periods.stream().map(p -> getSingleDatePeriod(date, p, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext, timezone,
-                jocError)).filter(Objects::nonNull);
-    }
-
-    private static Period getSingleDatePeriod(String date, Period period, List<String> nonWorkingDates,
-            Set<String> workingDatesExtendedWithNonWorkingPrevNext, ZoneId timezone, JocError jocError) {
-        Period p = DailyPlanHelper.resolveSingleDatePeriod(date, period, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
-        if (p == null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[getSingleDatePeriod][" + date + "][skip]" + SOSString.toString(period, true));
-            }
-            return null;
-        }
-
-        // TODO JOC-1980 - should be normalized bei PeriodResolver
-        if (period.getSingleStart() != null) {
-            p.setSingleStart(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T" + normalizeTime(period.getSingleStart()),
-                    dateTimeFormatter), timezone)));
-            return p;
-        }
-        if (!SOSString.isEmpty(period.getRepeat())) {
-            p.setRepeat(period.getRepeat());
-            String begin = period.getBegin();
-            if (begin == null || begin.isEmpty()) {
-                begin = "00:00:00";
-            } else {
-                begin = normalizeTime(begin);
-            }
-
-            p.setBegin(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T" + begin, dateTimeFormatter), timezone)));
-            String end = period.getEnd();
-            if (end == null || end.isEmpty()) {
-                end = "24:00:00";
-            } else {
-                end = normalizeTime(end);
-            }
-            if (end.startsWith("24:00")) {
-                p.setEnd(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T23:59:59", dateTimeFormatter).plusSeconds(1L), timezone)));
-            } else {
-                p.setEnd(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T" + end, dateTimeFormatter), timezone)));
-            }
-            return p;
-        }
-        return null;
-    }
-
-    private static String normalizeTime(String time) {
-        String[] ss = (time + ":00:00:00").split(":", 3);
-        ss[2] = ss[2].substring(0, 2);
-        return String.format("%2s:%2s:%2s", ss[0], ss[1], ss[2]).replace(' ', '0');
     }
 
 }

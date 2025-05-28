@@ -62,16 +62,39 @@ import jakarta.ws.rs.core.StreamingOutput;
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyPlanProjectionsResource {
 
-    // Export
     @Override
-    public JOCDefaultResponse datesProjections(String accessToken, String acceptEncoding, byte[] filterBytes) {
-        return projections(accessToken, acceptEncoding, filterBytes, IMPL_PATH_DATES);
+    public JOCDefaultResponse recreate(String accessToken, byte[] filterBytes) {
+        try {
+            initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken);
+
+            // TODO run async
+            CompletableFuture.runAsync(() -> {
+                try {
+                    DailyPlanRunner.recreateProjections(JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH_RECREATE));
+                } catch (Exception e) {
+                    ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
+                }
+            });
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
     }
 
     // Month/Year
     @Override
     public JOCDefaultResponse calendarProjections(String accessToken, byte[] filterBytes) {
         return projections(accessToken, null, filterBytes, IMPL_PATH_CALENDAR);
+    }
+
+    // Export
+    @Override
+    public JOCDefaultResponse datesProjections(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        return projections(accessToken, acceptEncoding, filterBytes, IMPL_PATH_DATES);
     }
 
     private JOCDefaultResponse projections(String accessToken, String acceptEncoding, byte[] filterBytes, String action) {
@@ -347,29 +370,6 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
             pDayFromTo = pDayTo;
         }
         return pDayFromTo == null ? Optional.empty() : Optional.of(pDayFromTo);
-    }
-
-    @Override
-    public JOCDefaultResponse recreate(String accessToken, byte[] filterBytes) {
-        try {
-            filterBytes = initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken, CategoryType.DAILYPLAN);
-
-            // TODO run async
-            CompletableFuture.runAsync(() -> {
-                try {
-                    DailyPlanRunner.recreateProjections(JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH_RECREATE));
-                } catch (Exception e) {
-                    ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
-                }
-            });
-
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        }
     }
 
     private Integer getDay(String day) {

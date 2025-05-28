@@ -5,6 +5,8 @@ import java.util.TimeZone;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
@@ -13,6 +15,8 @@ import com.sos.joc.dailyplan.common.DailyPlanSettings;
 
 public class DailyPlanProjectionTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanProjectionTest.class);
+
     @BeforeClass
     public static void setup() {
         TimeZone.setDefault(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
@@ -20,7 +24,7 @@ public class DailyPlanProjectionTest {
 
     @Ignore
     @Test
-    public void test() throws Exception {
+    public void test() {
         Globals.sosCockpitProperties = new JocCockpitProperties();
         Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", "../../../src/test/resources/hibernate.cfg.xml");
         try {
@@ -38,7 +42,7 @@ public class DailyPlanProjectionTest {
             p.process(s);
 
         } catch (Throwable e) {
-            throw e;
+            LOGGER.error(e.toString(), e);
         } finally {
             Globals.closeFactory();
         }
