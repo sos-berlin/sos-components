@@ -534,9 +534,11 @@ public class DailyPlanProjections {
 
                             int total = getTotalOrders(schedule);
                             Map<String, List<DatePeriodItem>> periodDates = new LinkedHashMap<>();
+                            boolean usePeriodDate = false;// TODO
                             for (Period p : pl) {
                                 // use 'periodDate' instead of 'date' because some periods may have different dates assigned.
-                                String periodDate = extractDate(p);
+                                // using 'periodDate' instead of 'date' not solves the problem . TODO ....
+                                String periodDate = usePeriodDate ? extractDate(p) : date;
                                 if (periodDate == null) {
                                     continue;
                                 }
