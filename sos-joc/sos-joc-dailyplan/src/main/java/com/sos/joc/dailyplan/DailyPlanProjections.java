@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.hibernate.ScrollableResults;
@@ -29,10 +31,10 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
+import com.sos.joc.dailyplan.common.DailyPlanRuntimeAndProjectionsHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
-import com.sos.joc.dailyplan.common.PeriodHelper;
 import com.sos.joc.dailyplan.common.PeriodResolver;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
@@ -416,6 +418,31 @@ public class DailyPlanProjections {
         return mi;
     }
 
+    private Calendar getWorkingCalendar(InventoryDBLayer dbLayerInventory, Map<String, Calendar> workingCalendars, AssignedCalendars assignedCalendar,
+            boolean isDebugEnabled, String lp) throws Exception {
+        String calendarsKey = assignedCalendar.getCalendarName();// + "#" + schedule.getPath();
+        Calendar calendar = workingCalendars.get(calendarsKey);
+        if (calendar == null) {
+            try {
+                calendar = getWorkingDaysCalendar(dbLayerInventory, assignedCalendar.getCalendarName());
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][db]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
+                            calendar)));
+                }
+            } catch (DBMissingDataException e) {
+                LOGGER.warn(String.format("%s[WorkingDaysCalendar=%s][skip]not found", lp, assignedCalendar.getCalendarName()));
+                return null;
+            }
+            workingCalendars.put(calendarsKey, calendar);
+        } else {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][cache]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
+                        calendar)));
+            }
+        }
+        return calendar;
+    }
+
     // merge planned and projections
     private YearsItem getProjectionYear(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String year, String dateFrom, String dateTo, java.util.Calendar reallyDayFrom,
@@ -428,9 +455,6 @@ public class DailyPlanProjections {
             LOGGER.debug(String.format("%s%s", lp, caller));
         }
 
-        Map<String, Calendar> workingCalendars = new HashMap<String, Calendar>();
-        Map<String, Calendar> nonWorkingCalendars = new HashMap<String, Calendar>();
-
         MonthsItem msi = null;
         if (plannedYearItem != null) {
             msi = plannedYearItem.getAdditionalProperties().get(year);
@@ -439,90 +463,97 @@ public class DailyPlanProjections {
             msi = new MonthsItem();
         }
 
+        final AtomicReference<MonthsItem> msiRef = new AtomicReference<>(msi);
+        Map<String, Calendar> workingCalendars = new HashMap<String, Calendar>();
         InventoryDBLayer dbLayerInventory = new InventoryDBLayer(dbLayer.getSession());
         for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
             Schedule schedule = dailyPlanSchedule.getSchedule();
 
-            final Set<String> nonWorkingDays = DailyPlanHelper.getNonWorkingDays(caller, dbLayerInventory, schedule.getNonWorkingDayCalendars(),
-                    dateFrom, dateTo, nonWorkingCalendars);
+            final List<Calendar> nonWorkingDayCalendars = DailyPlanRuntimeAndProjectionsHelper.getNonWorkingDayCalendars(dbLayerInventory, schedule
+                    .getNonWorkingDayCalendars());
 
             for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
                 if (assignedCalendar.getTimeZone() == null) {
                     assignedCalendar.setTimeZone(SOSDate.TIMEZONE_UTC);
                 }
-                final ZoneId timezone = ZoneId.of(assignedCalendar.getTimeZone());
 
-                String calendarsKey = assignedCalendar.getCalendarName();// + "#" + schedule.getPath();
-                Calendar calendar = workingCalendars.get(calendarsKey);
+                final ZoneId timezone = ZoneId.of(assignedCalendar.getTimeZone());
+                final Calendar calendar = getWorkingCalendar(dbLayerInventory, workingCalendars, assignedCalendar, isDebugEnabled, lp);
                 if (calendar == null) {
-                    try {
-                        calendar = getWorkingDaysCalendar(dbLayerInventory, assignedCalendar.getCalendarName());
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][db]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
-                                    calendar)));
-                        }
-                    } catch (DBMissingDataException e) {
-                        LOGGER.warn(String.format("%s[WorkingDaysCalendar=%s][skip]not found", lp, assignedCalendar.getCalendarName()));
-                        continue;
-                    }
-                    workingCalendars.put(calendarsKey, calendar);
-                } else {
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][cache]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
-                                calendar)));
-                    }
+                    continue;
                 }
 
                 Calendar restrictions = new Calendar();
                 restrictions.setIncludes(assignedCalendar.getIncludes());
 
-                List<String> dates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, dateFrom, dateTo).getDates();
-                boolean checkDate = true;
-                for (String date : dates) {
-                    String[] arr = date.split("-");
-                    String m = arr[0] + "-" + arr[1];
-                    if (checkDate) {
-                        if (reallyDayFrom == null) {
-                            checkDate = false;
-                        } else {
-                            java.util.Calendar dateCal = FrequencyResolver.getCalendarFromString(date);
-                            if (dateCal.after(reallyDayFrom)) {
-                                checkDate = false;
-                            } else {
-                                continue;
+                SOSDate.getDatesInRange(dateFrom, dateTo).stream().parallel().forEach(asDailyPlanSingleDate -> {
+                    try {
+                        List<String> workingDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, asDailyPlanSingleDate,
+                                asDailyPlanSingleDate).getDates();
+
+                        List<String> nonWorkingDates = new ArrayList<>();
+                        Set<String> workingDatesExtendedWithNonWorkingPrevNext = new HashSet<>();
+
+                        DailyPlanRuntimeAndProjectionsHelper.applyAdjustmentForNonWorkingDates(assignedCalendar, nonWorkingDayCalendars,
+                                asDailyPlanSingleDate, workingDates, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
+
+                        boolean checkDate = true;
+                        for (String date : workingDates) {
+                            String[] arr = date.split("-");
+                            String m = arr[0] + "-" + arr[1];
+                            if (checkDate) {
+                                if (reallyDayFrom == null) {
+                                    checkDate = false;
+                                } else {
+                                    java.util.Calendar dateCal = FrequencyResolver.getCalendarFromString(date);
+                                    if (dateCal.after(reallyDayFrom)) {
+                                        checkDate = false;
+                                    } else {
+                                        continue;
+                                    }
+                                }
+                            }
+
+                            MonthItem mi = msiRef.get().getAdditionalProperties().get(m);
+                            if (mi == null) {
+                                mi = new MonthItem();
+                                msiRef.get().getAdditionalProperties().put(m, mi);
+                            }
+
+                            List<Period> pl = new ArrayList<>();
+                            for (Period period : assignedCalendar.getPeriods()) {
+                                Period p = DailyPlanRuntimeAndProjectionsHelper.getSingleDatePeriod(date, period, nonWorkingDates,
+                                        workingDatesExtendedWithNonWorkingPrevNext, timezone);
+                                if (p == null) {
+                                    continue;
+                                }
+                                pl.add(p);
+                            }
+
+                            DateItem di = mi.getAdditionalProperties().get(date);
+                            if (di == null) {
+                                di = new DateItem();
+                            }
+                            di.setPlanned(null);
+
+                            int total = getTotalOrders(schedule);
+                            for (Period p : pl) {
+                                for (int t = 0; t < total; t++) {
+                                    DatePeriodItem dp = new DatePeriodItem();
+                                    dp.setSchedule(schedule.getPath());
+                                    dp.setPeriod(p);
+
+                                    di.getPeriods().add(dp);
+                                }
+                            }
+                            if (di.getPeriods() != null && di.getPeriods().size() > 0) {
+                                mi.getAdditionalProperties().put(date, di);
                             }
                         }
+                    } catch (Exception e) {
+                        LOGGER.info(lp + "[" + asDailyPlanSingleDate + "]" + e, e);
                     }
-
-                    MonthItem mi = msi.getAdditionalProperties().get(m);
-                    if (mi == null) {
-                        mi = new MonthItem();
-                        msi.getAdditionalProperties().put(m, mi);
-                    }
-
-                    DateItem di = mi.getAdditionalProperties().get(date);
-                    if (di == null) {
-                        di = new DateItem();
-                        mi.getAdditionalProperties().put(date, di);
-                    }
-                    di.setPlanned(null);
-
-                    List<Period> pl = PeriodHelper.getPeriods(assignedCalendar.getPeriods(), nonWorkingDays.stream().collect(Collectors.toList()),
-                            date, timezone);
-
-                    int total = getTotalOrders(schedule);
-                    for (Period p : pl) {
-                        for (int t = 0; t < total; t++) {
-                            DatePeriodItem dp = new DatePeriodItem();
-                            dp.setSchedule(schedule.getPath());
-                            dp.setPeriod(p);
-
-                            di.getPeriods().add(dp);
-                        }
-                    }
-                    // PeriodResolver pr = createPeriodResolver(settings, assignedCalendar.getPeriods(), date, assignedCalendar.getTimeZone());
-                    // pr.getStartTimes(date, dateTo, caller)
-                }
+                });
             }
         }
 
