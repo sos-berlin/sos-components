@@ -65,7 +65,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
     @Override
     public JOCDefaultResponse recreate(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken);
+            initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken, CategoryType.DAILYPLAN);
 
             // TODO run async
             CompletableFuture.runAsync(() -> {
