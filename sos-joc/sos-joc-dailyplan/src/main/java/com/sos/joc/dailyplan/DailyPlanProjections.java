@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -486,7 +487,8 @@ public class DailyPlanProjections {
                 Calendar restrictions = new Calendar();
                 restrictions.setIncludes(assignedCalendar.getIncludes());
 
-                SOSDate.getDatesInRange(dateFrom, dateTo).stream().parallel().forEach(asDailyPlanSingleDate -> {
+                SOSDate.getDatesInRange(dateFrom, dateTo).stream().forEach(asDailyPlanSingleDate -> {
+                    // SOSDate.getDatesInRange(dateFrom, dateTo).stream().parallel().forEach(asDailyPlanSingleDate -> {
                     try {
                         List<String> workingDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, asDailyPlanSingleDate,
                                 asDailyPlanSingleDate).getDates();
@@ -530,24 +532,41 @@ public class DailyPlanProjections {
                                 pl.add(p);
                             }
 
-                            DateItem di = mi.getAdditionalProperties().get(date);
-                            if (di == null) {
-                                di = new DateItem();
-                            }
-                            di.setPlanned(null);
-
                             int total = getTotalOrders(schedule);
+                            Map<String, List<DatePeriodItem>> periodDates = new LinkedHashMap<>();
                             for (Period p : pl) {
+                                // use 'periodDate' instead of 'date' because some periods may have different dates assigned.
+                                String periodDate = extractDate(p);
+                                if (periodDate == null) {
+                                    continue;
+                                }
+
+                                List<DatePeriodItem> periodDatePeriods = periodDates.get(periodDate);
+                                if (periodDatePeriods == null) {
+                                    periodDatePeriods = new ArrayList<>();
+                                }
+
                                 for (int t = 0; t < total; t++) {
                                     DatePeriodItem dp = new DatePeriodItem();
                                     dp.setSchedule(schedule.getPath());
                                     dp.setPeriod(p);
 
-                                    di.getPeriods().add(dp);
+                                    periodDatePeriods.add(dp);
                                 }
+                                periodDates.put(periodDate, periodDatePeriods);
                             }
-                            if (di.getPeriods() != null && di.getPeriods().size() > 0) {
-                                mi.getAdditionalProperties().put(date, di);
+                            for (Map.Entry<String, List<DatePeriodItem>> entry : periodDates.entrySet()) {
+                                if (entry.getValue().size() == 0) {
+                                    continue;
+                                }
+                                String key = entry.getKey();
+                                DateItem di = mi.getAdditionalProperties().get(key);
+                                if (di == null) {
+                                    di = new DateItem();
+                                }
+                                di.setPlanned(null);
+                                di.setPeriods(entry.getValue());
+                                mi.getAdditionalProperties().put(key, di);
                             }
                         }
                     } catch (Exception e) {
@@ -560,6 +579,29 @@ public class DailyPlanProjections {
         YearsItem result = new YearsItem();
         result.setAdditionalProperty(year, msi);
         return result;
+    }
+
+    private static String extractDate(Period p) {
+        if (!SOSString.isEmpty(p.getSingleStart())) {
+            return extractDate(p.getSingleStart());
+        }
+        if (!SOSString.isEmpty(p.getBegin())) {
+            return extractDate(p.getBegin());
+        }
+        return null;
+    }
+
+    // 2025-11-24T10:00:00Z
+    private static String extractDate(String d) {
+        int t = d.indexOf("T");
+        if (t > 0) {
+            return d.substring(0, d.indexOf("T"));
+        }
+        String[] arr = d.split("-");
+        if (arr.length > 2 && arr[2].length() >= 2) {
+            return arr[0] + "-" + arr[1] + "-" + (arr[2].substring(0, 2));
+        }
+        return null;
     }
 
     private Collection<DailyPlanSchedule> convert4projections(DBLayerDailyPlannedOrders dbLayerPlannedOrders,
