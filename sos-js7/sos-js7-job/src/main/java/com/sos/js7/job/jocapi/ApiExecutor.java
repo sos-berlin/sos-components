@@ -78,9 +78,9 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS = "js7.web.https.keystore.alias";
-    private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY = "js7.web.https.truststores";
+    private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY = "js7.web.https.truststores";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH = "file";
-    private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD = "store-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD = "store-password";
     private static final String PRIVATE_FOLDER_NAME = "private";
     private static final String PRIVATE_CONF_FILENAME = "private.conf";
 
@@ -93,15 +93,15 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH = "js7.api-server.privatekey.path";
     private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String[] { PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD,
             PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD,
-            PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS, PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY, PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD,
+            PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS, PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY, PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD,
             PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH });
-    // private static final String DO_NOT_LOG_VAL = PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD;
+    // private static final String DO_NOT_LOG_VAL = PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD;
     private static final String JOB_ARGUMENT_DELIMITER = "|";
     private static final String JOB_ARGUMENT_KEYSTORE_FILE = "js7.web.https.keystore.file";
     private static final String JOB_ARGUMENT_KEYSTORE_KEY_PASSWD = "js7.web.https.keystore.key-password";
     private static final String JOB_ARGUMENT_KEYSTORE_STORE_PASSWD = "js7.web.https.keystore.store-password";
     private static final String JOB_ARGUMENT_KEYSTORE_ALIAS = "js7.web.https.keystore.alias";
-    private static final String JOB_ARGUMENT_TRUSTORE_FILE = "js7.web.https.truststore.file";
+    private static final String JOB_ARGUMENT_TRUSTSTORE_FILE = "js7.web.https.truststore.file";
     private static final String JOB_ARGUMENT_TRUSTSTORE_PWD = "js7.web.https.truststore.store-password";
     private static final String JOB_ARGUMENT_APISERVER = "js7.api-server";
     private static final String JOB_ARGUMENT_APISERVER_CSFILE = "js7.api-server.cs-file";
@@ -310,7 +310,7 @@ public class ApiExecutor {
             }
             uris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
         }
-        Collections.sort(uris);
+        //Collections.sort(uris);
         return uris;
 
     }
@@ -345,9 +345,9 @@ public class ApiExecutor {
             FileNotFoundException {
         List<KeyStoreCredentials> truststoresCredentials = new ArrayList<KeyStoreCredentials>();
         String truststorePwdFromOrder = "";
-        if (step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTORE_FILE)) {
-            String truststores = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTORE_FILE).getValue().toString(),
-                    JOB_ARGUMENT_TRUSTORE_FILE);
+        if (step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTSTORE_FILE)) {
+            String truststores = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTSTORE_FILE).getValue().toString(),
+                    JOB_ARGUMENT_TRUSTSTORE_FILE);
             String[] truststoresSplitted = truststores.split(JOB_ARGUMENT_DELIMITER);
             if (step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTSTORE_PWD)) {
                 truststorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTSTORE_PWD).getValue().toString(),
@@ -741,11 +741,11 @@ public class ApiExecutor {
     private List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
         List<KeyStoreCredentials> credentials = null;
         try {
-            credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> new KeyStoreCredentials(item.getString(
-                    PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD))).filter(
+            credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY).stream().map(item -> new KeyStoreCredentials(item.getString(
+                    PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD))).filter(
                             Objects::nonNull).collect(Collectors.toList());
             if (step.getLogger().isDebugEnabled()) {
-                step.getLogger().debug("read Trustore from: %s", config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(
+                step.getLogger().debug("read Truststore from: %s", config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY).get(0).getString(
                         PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
             }
         } catch (ConfigException e) {
