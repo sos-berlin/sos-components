@@ -122,18 +122,21 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
 
         // workaround YADE-626 to sets already deployed
-        if (item.getConfigurationReleased() == null && item.getConfigurationDraft() != null) {
-            try {
-                String xml = StandardSchemaHandler.getXml(item.getConfigurationDraft(), true);
-                JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), xml);
-                Document doc = SOSXML.parse(xml);
-                StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
-                if (yadeJobResource != null) {// JobResource element not defined
-                    yadeJobResource.tryUpdateReleasedConfigurationIfJobResourceDeployed(item);
-                }
-            } catch (Exception e) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.warn("[getSingleYADEConfiguration]" + e, e);
+        // TODO currently sets as deployed all new configurations if the JobResource was deployed
+        if (1 == 2) {
+            if (item.getConfigurationReleased() == null && item.getConfigurationDraft() != null) {
+                try {
+                    String xml = StandardSchemaHandler.getXml(item.getConfigurationDraft(), true);
+                    JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), xml);
+                    Document doc = SOSXML.parse(xml);
+                    StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
+                    if (yadeJobResource != null) {// JobResource element not defined
+                        yadeJobResource.tryUpdateReleasedConfigurationIfJobResourceDeployed(item);
+                    }
+                } catch (Exception e) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.warn("[getSingleYADEConfiguration]" + e, e);
+                    }
                 }
             }
         }
