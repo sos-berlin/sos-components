@@ -2,8 +2,12 @@ package com.sos.joc.cleanup.model;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,11 +23,19 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
+import com.sos.joc.cleanup.CleanupService;
+import com.sos.joc.cleanup.CleanupServiceConfiguration;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
+import com.sos.joc.cleanup.CleanupServiceSchedule;
+import com.sos.joc.cleanup.CleanupServiceTask;
+import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.model.CleanupTaskHistory.Range;
 import com.sos.joc.cleanup.model.CleanupTaskHistory.Scope;
 import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringRange;
 import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringScope;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsCleanup;
+import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
@@ -142,6 +154,50 @@ public class CleanupTaskTest {
         } finally {
             close(t, factory);
         }
+    }
+
+    @Ignore
+    @Test
+    public void testCleanupUserProfiles() throws Exception {
+        JocClusterHibernateFactory factory = null;
+        CleanupTaskUserProfiles t = null;
+
+        ConfigurationGlobalsCleanup cleanup = new ConfigurationGlobalsCleanup();
+        cleanup.getTimeZone().setValue("Europe/Berlin");
+        cleanup.getPeriodBegin().setValue("12:00");
+        cleanup.getMaxPoolSize().setValue("1");
+        cleanup.getBatchSize().setValue("1000");
+        cleanup.getDeploymentHistoryVersions().setValue("5");
+
+        cleanup.getProfileAge().setValue("365d");
+        cleanup.getFailedLoginHistoryAge().setValue("5d");
+
+        CleanupServiceTask cst = getCleanupServiceTask();
+        try {
+            factory = createFactory();
+            t = new CleanupTaskUserProfiles(factory, 1000, "profiles", null);
+
+            List<TaskDateTime> datetimes = new ArrayList<>();
+            datetimes.add(getTaskDateTime(cst, cleanup, cleanup.getProfileAge()));
+            datetimes.add(getTaskDateTime(cst, cleanup, cleanup.getFailedLoginHistoryAge()));
+
+            JocClusterServiceTaskState state = t.cleanup(datetimes);
+            LOGGER.info("[STATE]" + state);
+        } catch (Throwable e) {
+            rollback(t);
+            throw e;
+        } finally {
+            close(t, factory);
+        }
+    }
+
+    private static CleanupServiceTask getCleanupServiceTask() {
+        return new CleanupServiceTask(new CleanupServiceSchedule(new CleanupService(null, Thread.currentThread().getThreadGroup())));
+    }
+
+    private static TaskDateTime getTaskDateTime(CleanupServiceTask t, ConfigurationGlobalsCleanup cleanup, ConfigurationEntry entry) {
+        Age age = new CleanupServiceConfiguration(cleanup).new Age(entry);
+        return t.new TaskDateTime(age, Instant.now().atZone(ZoneId.of(cleanup.getTimeZone().getValue())));
     }
 
     @Ignore

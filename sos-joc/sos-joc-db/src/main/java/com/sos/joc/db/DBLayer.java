@@ -257,7 +257,7 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_TAGGINGS = DBItemInventoryTagging.class.getSimpleName();
     public static final String TABLE_INV_TAGGINGS = "INV_TAGGINGS";
     public static final String TABLE_INV_TAGGINGS_SEQUENCE = "SEQ_INV_TG";
-    
+
     public static final String DBITEM_INV_ORDER_TAGS = DBItemInventoryOrderTag.class.getSimpleName();
     public static final String TABLE_INV_ORDER_TAGS = "INV_ORDER_TAGS";
     public static final String TABLE_INV_ORDER_TAGS_SEQUENCE = "SEQ_INV_OT";
@@ -386,6 +386,7 @@ public class DBLayer implements Serializable {
     public static final String TABLE_IAM_ACCOUNT2ROLES = "IAM_ACCOUNT2ROLES";
     public static final String TABLE_IAM_ACCOUNT2ROLES_SEQUENCE = "SEQ_IAM_ACCOUNT2ROLES";
 
+    public static final String DBITEM_IAM_IDENTITY_SERVICES = DBItemIamIdentityService.class.getSimpleName();
     public static final String TABLE_IAM_IDENTITY_SERVICES = "IAM_IDENTITY_SERVICES";
     public static final String TABLE_IAM_IDENTITY_SERVICES_SEQUENCE = "SEQ_IAM_IDENTITY_SERVICES";
 
