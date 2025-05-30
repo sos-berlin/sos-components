@@ -122,8 +122,8 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
 
         // workaround YADE-626 to sets already deployed
-        // TODO currently sets as deployed all new configurations if the JobResource was deployed
-        if (1 == 2) {
+        // YADE_configuration_v2.0.0.xsd != YADE_configuration_v1.12.xsd
+        if (!JocXmlEditor.YADE_SCHEMA_FILENAME.equalsIgnoreCase(item.getSchemaLocation())) {
             if (item.getConfigurationReleased() == null && item.getConfigurationDraft() != null) {
                 try {
                     String xml = StandardSchemaHandler.getXml(item.getConfigurationDraft(), true);
