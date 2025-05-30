@@ -50,9 +50,9 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
                     log.append(r.toString());
                 }
                 log.append("]");
+                log.append(cleanupIamHistoryBasedOnProfileAge(profileAge));
 
                 if (failedLoginHistoryAge.getDatetime() == null) {
-                    log.append(cleanupIamHistoryIfIdentityServiceNotExists());
                     log.append(cleanupIamHistoryDetails());
                 }
                 getDbLayer().commit();
@@ -73,8 +73,8 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
                 log.append(String.format("[%s][failedLoginHistory][%s][deleted]", getIdentifier(), failedLoginHistoryAge.getAge().getConfigured()));
 
                 getDbLayer().beginTransaction();
-                log.append(cleanupIamHistoryIfIdentityServiceNotExists());
-                log.append(cleanupIamHistoryBasedOnLogin(failedLoginHistoryAge, false));
+                log.append(String.format("[%s][failedLoginHistory][%s][deleted]", getIdentifier(), failedLoginHistoryAge.getAge().getConfigured()));
+                log.append(cleanupIamHistoryBasedOnFailedLoginAge(failedLoginHistoryAge));
                 log.append(cleanupIamHistoryDetails());
                 getDbLayer().commit();
 
@@ -109,23 +109,24 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
         return null;
     }
 
-    private StringBuilder cleanupIamHistoryIfIdentityServiceNotExists() throws SOSHibernateException {
+    private StringBuilder cleanupIamHistoryBasedOnProfileAge(TaskDateTime datetime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_IAM_HISTORY).append(" ");
-        hql.append("where identityServiceId not in(select id from ").append(DBLayer.DBITEM_IAM_IDENTITY_SERVICES).append(")");
+        hql.append("where loginDate < :loginDate ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameter("loginDate", datetime.getDatetime());
+
         int r = getDbLayer().getSession().executeUpdate(query);
         return getDeleted(DBLayer.TABLE_IAM_HISTORY, r, r);
     }
 
-    private StringBuilder cleanupIamHistoryBasedOnLogin(TaskDateTime datetime, boolean loginSuccess) throws SOSHibernateException {
+    private StringBuilder cleanupIamHistoryBasedOnFailedLoginAge(TaskDateTime datetime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_IAM_HISTORY).append(" ");
         hql.append("where loginDate < :loginDate ");
-        hql.append("and loginSuccess=:loginSuccess ");
+        hql.append("and loginSuccess=false ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("loginDate", datetime.getDatetime());
-        query.setParameter("loginSuccess", loginSuccess);
 
         int r = getDbLayer().getSession().executeUpdate(query);
         return getDeleted(DBLayer.TABLE_IAM_HISTORY, r, r);
