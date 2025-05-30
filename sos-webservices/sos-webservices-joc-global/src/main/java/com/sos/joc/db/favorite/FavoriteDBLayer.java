@@ -98,7 +98,7 @@ public class FavoriteDBLayer extends DBLayer {
     }
     
     public int deleteByAccount(String accountName) throws SOSHibernateException {
-        String hql = "delete " + DBItemInventoryFavoriteClass + " where account=:accountName";
+        String hql = "delete from " + DBItemInventoryFavoriteClass + " where account=:accountName";
         Query<DBItemIamIdentityService> query = getSession().createQuery(hql);
         query.setParameter("accountName", accountName);
         int row = getSession().executeUpdate(query);
