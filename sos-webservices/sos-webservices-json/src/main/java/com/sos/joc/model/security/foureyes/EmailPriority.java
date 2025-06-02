@@ -1,31 +1,26 @@
 
-package com.sos.joc.model.configuration;
+package com.sos.joc.model.security.foureyes;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ConfigurationType {
+public enum EmailPriority {
 
-    CUSTOMIZATION("CUSTOMIZATION"),
-    IGNORELIST("IGNORELIST"),
-    PROFILE("PROFILE"),
-    SETTING("SETTING"),
-    GLOBALS("GLOBALS"),
-    IAM("IAM"),
-    GIT("GIT"),
-    APPROVAL("APPROVAL");
+    HIGH("HIGH"),
+    NORMAL("NORMAL"),
+    LOW("LOW");
     private final String value;
-    private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
+    private final static Map<String, EmailPriority> CONSTANTS = new HashMap<String, EmailPriority>();
 
     static {
-        for (ConfigurationType c: values()) {
+        for (EmailPriority c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private ConfigurationType(String value) {
+    private EmailPriority(String value) {
         this.value = value;
     }
 
@@ -40,8 +35,8 @@ public enum ConfigurationType {
     }
 
     @JsonCreator
-    public static ConfigurationType fromValue(String value) {
-        ConfigurationType constant = CONSTANTS.get(value);
+    public static EmailPriority fromValue(String value) {
+        EmailPriority constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

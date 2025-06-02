@@ -421,6 +421,7 @@ public class JsonValidator {
             put("FourEyesRequestIds", "security/fourEyes/four-eyes-request-ids-schema.json");
             put("FourEyesRequestEdit", "security/fourEyes/four-eyes-request-edit-schema.json");
             put("ApprovalsFilter", "security/fourEyes/approvals-filter-schema.json");
+            put("com.sos.joc.model.security.foureyes.EmailSettings", "security/fourEyes/email-settings-schema.json");
             // TODO complete the map
         }
     });
