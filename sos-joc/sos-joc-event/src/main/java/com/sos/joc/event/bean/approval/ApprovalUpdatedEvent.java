@@ -12,12 +12,12 @@ public class ApprovalUpdatedEvent extends JOCEvent {
         putVariables(null, null, false);
     }
 
-    public ApprovalUpdatedEvent(Map<String, String> requestors, Map<String, Long> approvers) {
+    public ApprovalUpdatedEvent(Map<String, Map<String, Long>> requestors, Map<String, Long> approvers) {
         super("ApprovalUpdated", null, null);
         putVariables(requestors, approvers, true);
     }
 
-    private void putVariables(Map<String, String> requestors, Map<String, Long> approvers, boolean withNotification) {
+    private void putVariables(Map<String, Map<String, Long>> requestors, Map<String, Long> approvers, boolean withNotification) {
         putVariable("requestors", requestors);
         putVariable("approvers", approvers);
         putVariable("withNotification", withNotification);
@@ -25,8 +25,8 @@ public class ApprovalUpdatedEvent extends JOCEvent {
     
     @SuppressWarnings("unchecked")
     @JsonIgnore
-    public Map<String, String> getRequestors() {
-        return (Map<String, String>) getVariables().get("requestors");
+    public Map<String, Map<String, Long>> getRequestors() {
+        return (Map<String, Map<String, Long>>) getVariables().get("requestors");
     }
     
     @SuppressWarnings("unchecked")

@@ -16,7 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
+import com.sos.joc.db.approval.ApprovalDBLayer;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
@@ -236,6 +239,38 @@ public class SOSAuthCurrentAccount {
         } else {
             return false;
         }
+    }
+    
+    //SOSHibernateSession sosHibernateSession
+    public Optional<ApprovalUpdatedEvent> createApprovalUpdatedEvent() {
+        SOSHibernateSession session = null;
+        try {
+            return createApprovalUpdatedEvent(session);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    public Optional<ApprovalUpdatedEvent> createApprovalUpdatedEvent(SOSHibernateSession session) {
+        try {
+            if (isApprover || isRequestor) {
+                ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
+                Map<String, Long> approverEvent = null;
+                if (isApprover) {
+                    approverEvent = Collections.singletonMap(accountName, dbLayer.getNumOfPendingApprovals(accountName));
+                }
+                Map<String, Map<String, Long>> requestorEvent = null;
+                if (isRequestor) {
+                    requestorEvent = Collections.singletonMap(accountName, dbLayer.getNumOfApprovedRejectedRequests(accountName));
+                }
+                if (approverEvent != null || requestorEvent != null) {
+                    return Optional.of(new ApprovalUpdatedEvent(requestorEvent, approverEvent));
+                }
+            }
+        } catch (Exception e) {
+            //
+        }
+        return Optional.empty();
     }
 
     private Permissions initPermissions() {

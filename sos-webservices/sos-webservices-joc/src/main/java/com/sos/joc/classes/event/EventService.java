@@ -2,9 +2,11 @@ package com.sos.joc.classes.event;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -448,7 +450,9 @@ public class EventService {
                     EventApprovalNotification eventA = new EventApprovalNotification();
                     eventA.setEventId(eventSnapshot.getEventId());
                     eventA.setRequestor(entry.getKey());
-                    eventA.setApproverState(entry.getValue());
+                    Map<String, Long> numOfs = Optional.ofNullable(entry.getValue()).orElse(Collections.emptyMap());
+                    eventA.setNumOfApprovedRequests(Optional.ofNullable(numOfs.get("APPROVED")).orElse(0L));
+                    eventA.setNumOfRejectedRequests(Optional.ofNullable(numOfs.get("REJECTED")).orElse(0L));
                     eventA.setEventType("RequestorNotification");
                     return eventA;
                 }).forEach(this::addEventA);

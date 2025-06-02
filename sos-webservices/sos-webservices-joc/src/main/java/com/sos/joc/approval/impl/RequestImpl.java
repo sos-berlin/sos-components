@@ -61,7 +61,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             item.setComment(in.getReason());
             item.setApproverStateDate(null);
             item.setRequestorStateDate(now);
-            item.setApproverStateDate(now);
+            item.setApproverStateDate(null);
             item.setParameters(Globals.objectMapper.writeValueAsString(in.getRequestBody()));
             item.setRequest(in.getRequestUrl());
             item.setRequestor(curAccountName);
@@ -73,8 +73,8 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             session.save(item);
             
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
-            EventBus.getInstance().post(new ApprovalUpdatedEvent(null, Collections.singletonMap(item.getApprover(), dbLayer
-                    .getNumOfPendingApprovals(item.getApprover()))));
+            EventBus.getInstance().post(new ApprovalUpdatedEvent(Collections.singletonMap(curAccountName, dbLayer.getNumOfApprovedRejectedRequests(
+                    curAccountName)), Collections.singletonMap(item.getApprover(), dbLayer.getNumOfPendingApprovals(item.getApprover()))));
 
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {

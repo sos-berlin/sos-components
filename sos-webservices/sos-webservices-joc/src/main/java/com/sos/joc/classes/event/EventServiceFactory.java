@@ -3,6 +3,7 @@ package com.sos.joc.classes.event;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.Timer;
@@ -22,6 +23,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JobSchedulerUser;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
@@ -39,6 +43,7 @@ public class EventServiceFactory {
     private static long responsePeriodInMillis = TimeUnit.SECONDS.toMillis(55);
     private final static long maxResponsePeriodInMillis = TimeUnit.MINUTES.toMillis(3);
     private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(30);
+    private Optional<ApprovalUpdatedEvent> approvalUpdatedEvent = Optional.empty();
     protected static Lock lock = new ReentrantLock();
     public static AtomicBoolean isClosed = new AtomicBoolean(false);
     
@@ -107,8 +112,8 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, Long eventId, ISOSSession session) throws SessionNotExistException {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, session);
+    public static Event getEvents(String controllerId, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, session, user);
     }
     
     public EventService getEventService(String controllerId) {
@@ -136,7 +141,7 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, ISOSSession session) throws SessionNotExistException {
+    private Event _getEvents(String controllerId, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
         Event events = new Event();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
@@ -146,9 +151,11 @@ public class EventServiceFactory {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }
         setResponsePeriodInMillis();
+        setApprovalUpdatedEvent(controllerId, user);
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
+            postApprovalUpdatedEvent();
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
             Set<EventSnapshot> agentEvt = new HashSet<>();
@@ -264,6 +271,18 @@ public class EventServiceFactory {
         return events;
     }
     
+    private void setApprovalUpdatedEvent(String controllerId, JobSchedulerUser user) {
+        // create events after login if EventService not started
+        approvalUpdatedEvent = Optional.empty();
+        if (eventServices.isEmpty()) {
+            approvalUpdatedEvent = user.getSOSAuthCurrentAccount().createApprovalUpdatedEvent();
+        }
+    }
+    
+    private void postApprovalUpdatedEvent() {
+        approvalUpdatedEvent.ifPresent(EventBus.getInstance()::post);
+    }
+    
     private static Mode waitingForEvents(EventCondition eventArrived, EventService service, long time) {
         try {
             if (eventArrived.isUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
@@ -338,9 +357,10 @@ public class EventServiceFactory {
         es.setEventId(null);
         es.setApprover(e.getApprover());
         es.setRequestor(e.getRequestor());
-        es.setNumOfPendingApprovals(e.getNumOfPendingApprovals());
         es.setEventType(e.getEventType());
-        es.setApproverState(e.getApproverState());
+        es.setNumOfPendingApprovals(e.getNumOfPendingApprovals());
+        es.setNumOfApprovedRequests(e.getNumOfApprovedRequests());
+        es.setNumOfRejectedRequests(e.getNumOfRejectedRequests());
         return es;
     }
     

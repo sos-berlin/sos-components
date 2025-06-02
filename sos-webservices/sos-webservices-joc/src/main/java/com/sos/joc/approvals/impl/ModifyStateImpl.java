@@ -82,15 +82,19 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                     if (!item.getRequestor().equals(curAccountName)) {
                         throw new JocBadRequestException("The current user is not the requestor of the approval request with id " + item.getId());
                     }
-                    if (!RequestorState.REQUESTED.equals(item.getRequestorStateAsEnum())) {
+                    if (RequestorState.EXECUTED.equals(item.getRequestorStateAsEnum())) {
                         throw new JocBadRequestException(String.format("The approval request '%s' is already %s", item.getTitle(), item.getRequestorStateAsEnum().value().toLowerCase()));
                     }
                     either = Either.right(item);
+                    if (RequestorState.WITHDRAWN.equals(item.getRequestorStateAsEnum())) {
+                        //throw new JocBadRequestException(String.format("The approval request '%s' is already %s", item.getTitle(), item.getRequestorStateAsEnum().value().toLowerCase()));
+                        either = null;
+                    }
                 } catch (Exception ex) {
                     either = Either.left(new BulkError(LOGGER).get(ex, getJocError(), (String) null));
                 }
                 return either;
-            }).collect(Collectors.groupingBy(Either::isRight));
+            }).filter(Objects::nonNull).collect(Collectors.groupingBy(Either::isRight));
 
             if (result.containsKey(Boolean.TRUE)) {
                 List<Long> ids = result.get(Boolean.TRUE).stream().map(Either::get).map(DBItemJocApprovalRequest::getId).toList();
@@ -167,18 +171,18 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                     default: // REQUESTED
                         break;
                     }
-                    
-                    if (newState.equals(prevApproverState)) {
-                        switch (prevApproverState) {
-                        case APPROVED:
-                            throw new JocBadRequestException(String.format("The approval request '%s' is already approved", item.getTitle()));
-                        case REJECTED:
-                            throw new JocBadRequestException(String.format("The approval request '%s' is already rejected", item.getTitle()));
-                        default: // PENDING never reached
-                            break;
-                        }
-                    }
                     either = Either.right(item);
+                    if (newState.equals(prevApproverState)) {
+//                        switch (prevApproverState) {
+//                        case APPROVED:
+//                            throw new JocBadRequestException(String.format("The approval request '%s' is already approved", item.getTitle()));
+//                        case REJECTED:
+//                            throw new JocBadRequestException(String.format("The approval request '%s' is already rejected", item.getTitle()));
+//                        default: // PENDING never reached
+//                            break;
+//                        }
+                        either = null;
+                    }
                 } catch (Exception ex) {
                     either = Either.left(new BulkError(LOGGER).get(ex, getJocError(), (String) null));
                 }
@@ -189,15 +193,16 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                 Set<Long> ids = new HashSet<>();
                 Set<Long> takeOverIds = new HashSet<>();
                 Map<String, Long> approversForEvents = new HashMap<>();
-                Map<String, String> requestorsForEvents = new HashMap<>();
+                Map<String, Map<String, Long>> requestorsForEvents = new HashMap<>();
                 
                 result.get(Boolean.TRUE).stream().map(Either::get).forEach(item -> {
-                    requestorsForEvents.put(item.getRequestor(), newState.value());
+                    requestorsForEvents.put(item.getRequestor(), null);
+                    approversForEvents.put(item.getApprover(), null);
                     if (item.getApprover().equals(curAccountName)) {
                         ids.add(item.getId());
                     } else {    
                         // with take over
-                        approversForEvents.put(item.getApprover(), null);
+                        //approversForEvents.put(item.getApprover(), null);
                         takeOverIds.add(item.getId());
                     }
                 });
@@ -212,13 +217,23 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                 if (!approversForEvents.isEmpty()) {
                     approversForEvents.keySet().stream().forEach(approver -> {
                         try {
-                            Long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(approver);
-                            approversForEvents.put(approver, numOfPendingApprovals);
+                            approversForEvents.put(approver, dbLayer.getNumOfPendingApprovals(approver));
                         } catch (Exception e) {
                             //
                         }
                     });
                     approversForEvents.values().removeIf(Objects::isNull);
+                }
+                
+                if (!requestorsForEvents.isEmpty()) {
+                    approversForEvents.keySet().stream().forEach(requestor -> {
+                        try {
+                            requestorsForEvents.put(requestor, dbLayer.getNumOfApprovedRejectedRequests(requestor));
+                        } catch (Exception e) {
+                            //
+                        }
+                    });
+                    requestorsForEvents.values().removeIf(Objects::isNull);
                 }
                 
                 if (!approversForEvents.isEmpty() || !requestorsForEvents.isEmpty()) {

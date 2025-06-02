@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.approval.items.ApprovedRejectedRequest;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -184,7 +187,7 @@ public class ApprovalDBLayer extends DBLayer {
     public Long getNumOfPendingApprovals(String approver) {
         try {
             StringBuilder hql = new StringBuilder();
-            hql.append("select count(*) from ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS);
+            hql.append("select count(id) from ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS);
             hql.append(" where approver=:approver");
             hql.append(" and approverState=:approverState");
             hql.append(" and requestorState=:requestorState");
@@ -193,6 +196,37 @@ public class ApprovalDBLayer extends DBLayer {
             query.setParameter("approverState", ApproverState.PENDING.intValue());
             query.setParameter("requestorState", RequestorState.REQUESTED.intValue());
             return query.getSingleResult();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Map<String, Long> getNumOfApprovedRejectedRequests(String requestor) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("select count(id) as numOf, approverState as approverState from ").append(DBLayer.DBITEM_JOC_APPROVAL_REQUESTS);
+            hql.append(" where requestor=:requestor");
+            hql.append(" and requestorState=:requestorState");
+            hql.append(" and approverState != :approverState");
+            hql.append(" group by approverState");
+            
+            Query<ApprovedRejectedRequest> query = getSession().createQuery(hql.toString(), ApprovedRejectedRequest.class);
+            query.setParameter("requestor", requestor);
+            query.setParameter("approverState", ApproverState.PENDING.intValue());
+            query.setParameter("requestorState", RequestorState.REQUESTED.intValue());
+            List<ApprovedRejectedRequest> result = query.getResultList();
+            
+            Map<String, Long> m = new HashMap<>();
+            if (result != null) {
+                m = result.stream().collect(Collectors.toMap(ApprovedRejectedRequest::getApproverState, ApprovedRejectedRequest::getNumOf, (r1,
+                        r2) -> r1));
+            }
+            m.putIfAbsent(ApproverState.APPROVED.value(), 0L);
+            m.putIfAbsent(ApproverState.REJECTED.value(), 0L);
+
+            return m;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

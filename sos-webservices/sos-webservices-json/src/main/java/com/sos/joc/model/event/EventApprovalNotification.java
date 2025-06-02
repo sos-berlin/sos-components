@@ -23,8 +23,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "eventType",
     "approver",
     "numOfPendingApprovals",
-    "requestor",
-    "approverState"
+    "numOfApprovedRequests",
+    "numOfRejectedRequests",
+    "requestor"
 })
 public class EventApprovalNotification implements IEventObject
 {
@@ -62,6 +63,22 @@ public class EventApprovalNotification implements IEventObject
     @JsonProperty("numOfPendingApprovals")
     private Long numOfPendingApprovals;
     /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfApprovedRequests")
+    private Long numOfApprovedRequests;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfRejectedRequests")
+    private Long numOfRejectedRequests;
+    /**
      * string without < and >
      * <p>
      * 
@@ -69,14 +86,6 @@ public class EventApprovalNotification implements IEventObject
      */
     @JsonProperty("requestor")
     private String requestor;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("approverState")
-    private String approverState;
 
     /**
      * non negative long
@@ -163,6 +172,50 @@ public class EventApprovalNotification implements IEventObject
     public void setNumOfPendingApprovals(Long numOfPendingApprovals) {
         this.numOfPendingApprovals = numOfPendingApprovals;
     }
+    
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfApprovedRequests")
+    public Long getNumOfApprovedRequests() {
+        return numOfApprovedRequests;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfApprovedRequests")
+    public void setNumOfApprovedRequests(Long numOfApprovedRequests) {
+        this.numOfApprovedRequests = numOfApprovedRequests;
+    }
+    
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfRejectedRequests")
+    public Long getNumOfRejectedRequests() {
+        return numOfRejectedRequests;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfRejectedRequests")
+    public void setNumOfRejectedRequests(Long numOfRejectedRequests) {
+        this.numOfRejectedRequests = numOfRejectedRequests;
+    }
 
     /**
      * string without < and >
@@ -186,36 +239,14 @@ public class EventApprovalNotification implements IEventObject
         this.requestor = requestor;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("approverState")
-    public String getApproverState() {
-        return approverState;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("approverState")
-    public void setApproverState(String approverState) {
-        this.approverState = approverState;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("eventType", eventType).append("approver", approver).append("numOfPendingApprovals", numOfPendingApprovals).append("requestor", requestor).append("approverState", approverState).toString();
+        return new ToStringBuilder(this).append("eventId", eventId).append("eventType", eventType).append("approver", approver).append("numOfPendingApprovals", numOfPendingApprovals).append("numOfApprovedRequests", numOfApprovedRequests).append("numOfRejectedRequests", numOfRejectedRequests).append("requestor", requestor).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(approver).append(approverState).append(eventId).append(eventType).append(numOfPendingApprovals).append(requestor).toHashCode();
+        return new HashCodeBuilder().append(approver).append(eventId).append(eventType).append(numOfPendingApprovals).append(numOfApprovedRequests).append(numOfApprovedRequests).append(requestor).toHashCode();
     }
 
     @Override
@@ -227,7 +258,7 @@ public class EventApprovalNotification implements IEventObject
             return false;
         }
         EventApprovalNotification rhs = ((EventApprovalNotification) other);
-        return new EqualsBuilder().append(approver, rhs.approver).append(approverState, rhs.approverState).append(eventId, rhs.eventId).append(eventType, rhs.eventType).append(numOfPendingApprovals, rhs.numOfPendingApprovals).append(requestor, rhs.requestor).isEquals();
+        return new EqualsBuilder().append(approver, rhs.approver).append(eventId, rhs.eventId).append(eventType, rhs.eventType).append(numOfPendingApprovals, rhs.numOfPendingApprovals).append(numOfApprovedRequests, rhs.numOfApprovedRequests).append(numOfRejectedRequests, rhs.numOfRejectedRequests).append(requestor, rhs.requestor).isEquals();
     }
 
 }

@@ -3,6 +3,8 @@ package com.sos.joc.approval.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -135,19 +137,20 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                 }
             }
 
+            Map<String, Long> approversForEvents = new HashMap<>();
             String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             if (item.getApprover().equals(curAccountName)) {
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState);
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(Collections.singletonMap(item.getRequestor(), newState.value()), null));
             } else {
                 // with take over
                 String prevApprover = item.getApprover();
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState, curAccountName);
-                Long numOfPendingApprovals = dbLayer.getNumOfPendingApprovals(prevApprover);
-                EventBus.getInstance().post(new ApprovalUpdatedEvent(Collections.singletonMap(item.getRequestor(), newState.value()), Collections
-                        .singletonMap(prevApprover, numOfPendingApprovals)));
+                approversForEvents.put(prevApprover, dbLayer.getNumOfPendingApprovals(prevApprover));
             }
-            
+            approversForEvents.put(item.getApprover(), dbLayer.getNumOfPendingApprovals(item.getApprover()));
+            EventBus.getInstance().post(new ApprovalUpdatedEvent(Collections.singletonMap(item.getRequestor(), dbLayer
+                    .getNumOfApprovedRejectedRequests(item.getRequestor())), approversForEvents));
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

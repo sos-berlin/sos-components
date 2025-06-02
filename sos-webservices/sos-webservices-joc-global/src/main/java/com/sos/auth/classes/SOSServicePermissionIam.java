@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -40,6 +41,8 @@ import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -711,6 +714,7 @@ public class SOSServicePermissionIam {
             SOSPermissionMerger sosPermissionMerger = new SOSPermissionMerger();
             SOSHibernateSession sosHibernateSession = null;
             String msg = "";
+            Optional<ApprovalUpdatedEvent> approvalUpdatedEvent = Optional.empty();
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Identity Services");
 
@@ -851,6 +855,8 @@ public class SOSServicePermissionIam {
                     // TODO create select count(*) from ... where accountName=
                     currentAccount.setIsApprover(approvalDbLayer.getApprovers().stream().anyMatch(i -> i.getAccountName().equals(currentAccount
                             .getAccountname())));
+                    
+                    approvalUpdatedEvent = currentAccount.createApprovalUpdatedEvent(sosHibernateSession);
 
                 } else {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, false);
@@ -907,6 +913,8 @@ public class SOSServicePermissionIam {
             boolean enableTouch = "true".equals(Globals.sosCockpitProperties.getProperty(WebserviceConstants.ENABLE_SESSION_TOUCH,
                     WebserviceConstants.ENABLE_SESSION_TOUCH_DEFAULT));
             sosAuthCurrentUserAnswer.setEnableTouch(enableTouch);
+            
+            approvalUpdatedEvent.ifPresent(EventBus.getInstance()::post);
 
             return sosAuthCurrentUserAnswer;
         } catch (JocAuthenticationException e) {
