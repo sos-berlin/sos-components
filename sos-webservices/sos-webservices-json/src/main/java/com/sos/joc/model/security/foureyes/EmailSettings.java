@@ -39,7 +39,7 @@ public class EmailSettings {
     @JsonProperty("body")
     private String body;
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * (Required)
@@ -48,7 +48,7 @@ public class EmailSettings {
     @JsonProperty("subject")
     private String subject;
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * 
@@ -56,7 +56,7 @@ public class EmailSettings {
     @JsonProperty("cc")
     private String cc;
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * 
@@ -68,18 +68,11 @@ public class EmailSettings {
     @JsonProperty("charset")
     private String charset = "ISO-8859-1";
     @JsonProperty("encoding")
-    private String encoding = "7-bit";
+    private String encoding = "7bit";
     @JsonProperty("priority")
     private EmailPriority priority = EmailPriority.fromValue("NORMAL");
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobResourceName")
-    private String jobResourceName;
+    private String jobResourceName = "eMailDefault";
 
     /**
      * No args constructor for use in serialization
@@ -138,7 +131,7 @@ public class EmailSettings {
     }
 
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * (Required)
@@ -150,7 +143,7 @@ public class EmailSettings {
     }
 
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * (Required)
@@ -162,7 +155,7 @@ public class EmailSettings {
     }
 
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * 
@@ -173,7 +166,7 @@ public class EmailSettings {
     }
 
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * 
@@ -184,7 +177,7 @@ public class EmailSettings {
     }
 
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * 
@@ -195,7 +188,7 @@ public class EmailSettings {
     }
 
     /**
-     * string without < and >
+     * disallow <script and <svg/on
      * <p>
      * 
      * 
@@ -245,25 +238,11 @@ public class EmailSettings {
         this.priority = priority;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobResourceName")
     public String getJobResourceName() {
         return jobResourceName;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("jobResourceName")
     public void setJobResourceName(String jobResourceName) {
         this.jobResourceName = jobResourceName;

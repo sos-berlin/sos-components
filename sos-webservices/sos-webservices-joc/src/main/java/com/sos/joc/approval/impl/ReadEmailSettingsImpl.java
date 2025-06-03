@@ -49,7 +49,7 @@ public class ReadEmailSettingsImpl extends JOCResourceImpl implements IReadEmail
         }
     }
     
-    private static ReadEmailSettings readEmailSettings(SOSHibernateSession session) throws SOSHibernateException, JsonMappingException,
+    protected static ReadEmailSettings readEmailSettings(SOSHibernateSession session) throws SOSHibernateException, JsonMappingException,
             JsonProcessingException {
 
         JocConfigurationFilter filter = new JocConfigurationFilter();

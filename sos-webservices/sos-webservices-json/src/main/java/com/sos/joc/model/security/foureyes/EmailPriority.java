@@ -8,9 +8,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EmailPriority {
 
+    HIGHEST("HIGHEST"),
     HIGH("HIGH"),
     NORMAL("NORMAL"),
-    LOW("LOW");
+    LOW("LOW"),
+    LOWEST("LOWEST");
     private final String value;
     private final static Map<String, EmailPriority> CONSTANTS = new HashMap<String, EmailPriority>();
 
