@@ -112,8 +112,8 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, session, user);
+    public static Event getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, evtIdIsEmpty, eventId, session, user);
     }
     
     public EventService getEventService(String controllerId) {
@@ -141,7 +141,7 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
+    private Event _getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
         Event events = new Event();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
@@ -151,7 +151,7 @@ public class EventServiceFactory {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }
         setResponsePeriodInMillis();
-        setApprovalUpdatedEvent(eventId, controllerId, user);
+        setApprovalUpdatedEvent(evtIdIsEmpty, controllerId, user);
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
@@ -271,10 +271,10 @@ public class EventServiceFactory {
         return events;
     }
     
-    private void setApprovalUpdatedEvent(Long eventId, String controllerId, JobSchedulerUser user) {
+    private void setApprovalUpdatedEvent(boolean evtIdIsEmpty, String controllerId, JobSchedulerUser user) {
         // create events after login if EventService not started
         approvalUpdatedEvent = Optional.empty();
-        if (eventServices.isEmpty() || eventId == null) {
+        if (eventServices.isEmpty() || evtIdIsEmpty) {
             approvalUpdatedEvent = user.getSOSAuthCurrentAccount().createApprovalUpdatedEvent();
         }
     }
