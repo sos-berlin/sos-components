@@ -151,7 +151,7 @@ public class EventServiceFactory {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }
         setResponsePeriodInMillis();
-        setApprovalUpdatedEvent(controllerId, user);
+        setApprovalUpdatedEvent(eventId, controllerId, user);
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
@@ -271,10 +271,10 @@ public class EventServiceFactory {
         return events;
     }
     
-    private void setApprovalUpdatedEvent(String controllerId, JobSchedulerUser user) {
+    private void setApprovalUpdatedEvent(Long eventId, String controllerId, JobSchedulerUser user) {
         // create events after login if EventService not started
         approvalUpdatedEvent = Optional.empty();
-        if (eventServices.isEmpty()) {
+        if (eventServices.isEmpty() || eventId == null) {
             approvalUpdatedEvent = user.getSOSAuthCurrentAccount().createApprovalUpdatedEvent();
         }
     }
