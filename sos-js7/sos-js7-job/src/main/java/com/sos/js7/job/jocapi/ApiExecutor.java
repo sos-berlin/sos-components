@@ -96,14 +96,14 @@ public class ApiExecutor {
             PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS, PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY, PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD,
             PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH });
     // private static final String DO_NOT_LOG_VAL = PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD;
-    private static final String JOB_ARGUMENT_DELIMITER = "|";
+    private static final String JOB_ARGUMENT_DELIMITER_REGEX = "\\|";
     private static final String JOB_ARGUMENT_KEYSTORE_FILE = "js7.web.https.keystore.file";
     private static final String JOB_ARGUMENT_KEYSTORE_KEY_PASSWD = "js7.web.https.keystore.key-password";
     private static final String JOB_ARGUMENT_KEYSTORE_STORE_PASSWD = "js7.web.https.keystore.store-password";
     private static final String JOB_ARGUMENT_KEYSTORE_ALIAS = "js7.web.https.keystore.alias";
     private static final String JOB_ARGUMENT_TRUSTSTORE_FILE = "js7.web.https.truststore.file";
     private static final String JOB_ARGUMENT_TRUSTSTORE_PWD = "js7.web.https.truststore.store-password";
-    private static final String JOB_ARGUMENT_APISERVER = "js7.api-server";
+    private static final String JOB_ARGUMENT_APISERVER_URL = "js7.api-server.url";
     private static final String JOB_ARGUMENT_APISERVER_CSFILE = "js7.api-server.cs-file";
     private static final String JOB_ARGUMENT_APISERVER_CSKEY = "js7.api-server.cs-key";
     private static final String JOB_ARGUMENT_APISERVER_CSPASSWD = "js7.api-server.cs-password";
@@ -300,9 +300,9 @@ public class ApiExecutor {
 
     private List<String> getUris() throws SOSMissingDataException {
         List<String> uris = new ArrayList<String>();
-        if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER)) {
-            String apiServers = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_APISERVER).getValue().toString(), JOB_ARGUMENT_APISERVER);
-            String[] apiServersSplitted = apiServers.split(JOB_ARGUMENT_DELIMITER);
+        if (step.getAllArguments().containsKey(JOB_ARGUMENT_APISERVER_URL)) {
+            String apiServers = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_APISERVER_URL).getValue().toString(), JOB_ARGUMENT_APISERVER_URL);
+            String[] apiServersSplitted = apiServers.split(JOB_ARGUMENT_DELIMITER_REGEX);
             uris = Arrays.asList(apiServersSplitted).stream().peek(item -> item.trim()).toList();
         } else {
             if (config == null) {
@@ -348,7 +348,7 @@ public class ApiExecutor {
         if (step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTSTORE_FILE)) {
             String truststores = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTSTORE_FILE).getValue().toString(),
                     JOB_ARGUMENT_TRUSTSTORE_FILE);
-            String[] truststoresSplitted = truststores.split(JOB_ARGUMENT_DELIMITER);
+            String[] truststoresSplitted = truststores.split(JOB_ARGUMENT_DELIMITER_REGEX);
             if (step.getAllArguments().containsKey(JOB_ARGUMENT_TRUSTSTORE_PWD)) {
                 truststorePwdFromOrder = getDecryptedValue(step.getAllArguments().get(JOB_ARGUMENT_TRUSTSTORE_PWD).getValue().toString(),
                         JOB_ARGUMENT_TRUSTSTORE_PWD);
