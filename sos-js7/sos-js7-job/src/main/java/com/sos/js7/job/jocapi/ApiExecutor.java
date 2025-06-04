@@ -550,7 +550,7 @@ public class ApiExecutor {
             }
             client.addHeader(X_ID_TOKEN, token);
         }
-        if (!username.isEmpty() && !pwd.isEmpty()) {
+        if (!SOSString.isEmpty(username) && !SOSString.isEmpty(pwd)) {
             String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());
             client.setBasicAuthorization(basicAuth);
         }
