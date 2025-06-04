@@ -90,6 +90,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsump
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPriorityChanged;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPromptAnswered;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
@@ -534,6 +535,9 @@ public class HistoryModel {
                         break;
                     case OrderSleeping:
                         orderLog(dbLayer, (FatEventOrderSleeping) entry, EventType.OrderSleeping, OrderLogEntryLogLevel.MAIN);
+                        break;
+                    case OrderPriorityChanged:
+                        orderLog(dbLayer, (FatEventOrderPriorityChanged) entry, EventType.OrderPriorityChanged);
                         break;
                     case EventWithProblem:
                         try {
@@ -994,7 +998,7 @@ public class HistoryModel {
             item.setConstraintHash(constraintHash);
             item.setCreated(new Date());
             item.setModified(item.getCreated());
-
+            
             dbLayer.getSession().save(item);
 
             item.setMainParentId(item.getId()); // TODO see above
@@ -1006,7 +1010,7 @@ public class HistoryModel {
 
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderStarted, eo.getEventDatetime(), null);
             CachedOrder co = new CachedOrder(item);
-            le.onOrder(co, eo.getPosition());
+            le.onStartOrder(co, eo.getPosition(), eo.getPriority());
             le.setArguments(arguments);
             storeLog2File(le);
             cacheHandler.addOrder(item.getOrderId(), co);
@@ -2083,6 +2087,7 @@ public class HistoryModel {
         ole.setPositionOriginalIfDiff(le.getPositionOriginalIfDiff());
         ole.setReturnCode(le.getReturnCode() == null ? null : le.getReturnCode().longValue());// TODO change to Integer
         ole.setReturnMessage(le.getReturnMessage());
+        ole.setPriority(le.getPriority());
         ole.setLocks(null);
         if (le.isError()) {
             OrderLogEntryError error = new OrderLogEntryError();

@@ -57,7 +57,8 @@ public enum EventType {
     OrderPromptAnswered("OrderPromptAnswered"),
     OrderCyclingPrepared("OrderCyclingPrepared"),
     OrderOrderAdded("OrderOrderAdded"),
-    OrderSleeping("OrderSleeping");
+    OrderSleeping("OrderSleeping"),
+    OrderPriorityChanged("OrderPriorityChanged");
     private final String value;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 

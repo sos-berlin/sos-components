@@ -18,6 +18,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEven
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCyclingPrepared;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPriorityChanged;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSleeping;
@@ -70,6 +71,7 @@ public class LogEntry {
     private Variables arguments;
     private String question;
     private boolean isOrderStarted;
+    private Integer priority;
 
     public LogEntry(OrderLogEntryLogLevel level, EventType type, Date controllerDate, Date agentDate) {
         this.logLevel = level;
@@ -101,6 +103,11 @@ public class LogEntry {
         }
         this.info = co.getOrderId();
     }
+    
+    public void onStartOrder(CachedOrder co, FatPosition position, Integer priority) {
+        onOrder(co, position);
+        this.priority = priority;
+    }
 
     public void onOrderBase(CachedOrder co, AFatEventOrderBase eo) {
         onOrder(co, eo.getPosition());
@@ -123,6 +130,9 @@ public class LogEntry {
             break;
         case OrderSleeping:
             sleepUntil = ((FatEventOrderSleeping) eo).getUntil();
+            break;
+        case OrderPriorityChanged:
+            priority = ((FatEventOrderPriorityChanged) eo).getPriority();
             break;
         default:
             break;
@@ -444,6 +454,10 @@ public class LogEntry {
     
     public Date getSleepUntil() {
         return sleepUntil;
+    }
+    
+    public Integer getPriority() {
+        return priority;
     }
 
     public Caught getCaught() {

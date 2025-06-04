@@ -347,7 +347,7 @@ public class HistoryControllerHandlerTest {
 
                 event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate(), order.getOrderStartedInfo());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition(), order.getArguments());
+                        .getPosition(), order.getArguments(), order.getPriority());
                 break;
 
             case OrderForked:

@@ -253,6 +253,18 @@ public class HistoryEventEntry {
         public String getOrderId() {
             return orderId.string();
         }
+        
+        public Integer getPriority() {
+            if (order == null) {
+                return null;
+            }
+            try {
+                return order.priority().intValue();
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][getPriority]%s", getOrderId(), e.toString()), e);
+                return null;
+            }
+        }
 
         public State getOrderState() {
             if (order == null) {

@@ -9,11 +9,18 @@ public final class FatEventOrderStarted extends AFatEventOrder {
 
     private Date scheduledFor;
     private boolean maybePreviousStatesLogged;
+    private Integer priority;
 
     public FatEventOrderStarted(Long eventId, Date eventDatetime, OrderStartedInfo osi) {
         super(eventId, eventDatetime);
         this.scheduledFor = osi.getScheduledFor();
         this.maybePreviousStatesLogged = osi.maybePreviousStatesLogged();
+    }
+    
+    @Override
+    public void set(Object... objects) {
+        super.set(objects);
+        this.priority = (Integer) objects[objects.length - 1];
     }
 
     @Override
@@ -27,5 +34,9 @@ public final class FatEventOrderStarted extends AFatEventOrder {
 
     public boolean maybePreviousStatesLogged() {
         return maybePreviousStatesLogged;
+    }
+    
+    public Integer getPriority() {
+        return priority;
     }
 }

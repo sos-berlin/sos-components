@@ -30,6 +30,9 @@ public class HistoryLogMapper {
         if (!SOSString.isEmpty(entry.getPosition())) {
             info.add("pos=" + entry.getPosition());
         }
+        if (entry.getPriority() != null) {
+            info.add("prio=" + entry.getPriority());
+        }
         if (!SOSString.isEmpty(entry.getJob())) {
             info.add("Job=" + entry.getJob());
         }

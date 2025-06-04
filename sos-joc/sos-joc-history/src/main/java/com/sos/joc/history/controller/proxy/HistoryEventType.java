@@ -30,6 +30,7 @@ import js7.data.order.OrderEvent.OrderNoticesExpected;
 import js7.data.order.OrderEvent.OrderNoticesRead$;
 import js7.data.order.OrderEvent.OrderOrderAdded;
 import js7.data.order.OrderEvent.OrderOutcomeAdded;
+import js7.data.order.OrderEvent.OrderPriorityChanged;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
 import js7.data.order.OrderEvent.OrderPromptAnswered;
@@ -136,7 +137,9 @@ public enum HistoryEventType {
 
     OrderStepProcessed(OrderProcessed.class.getSimpleName()),
     
-    OrderSleeping(OrderSleeping.class.getSimpleName());
+    OrderSleeping(OrderSleeping.class.getSimpleName()),
+    
+    OrderPriorityChanged(OrderPriorityChanged.class.getSimpleName());
 
     private final static Map<String, HistoryEventType> VALUES = new HashMap<String, HistoryEventType>();
 

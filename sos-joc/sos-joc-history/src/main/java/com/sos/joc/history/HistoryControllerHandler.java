@@ -75,6 +75,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpecte
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOutcomeAdded;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPriorityChanged;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPromptAnswered;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
@@ -102,6 +103,7 @@ import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderMoved;
 import js7.data.order.OrderEvent.OrderNoticesConsumed;
+import js7.data.order.OrderEvent.OrderPriorityChanged;
 import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderSleeping;
@@ -539,7 +541,7 @@ public class HistoryControllerHandler {
 
                 event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate(), order.getOrderStartedInfo());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition(), order.getArguments());
+                        .getPosition(), order.getArguments(), order.getPriority());
                 break;
 
             case OrderForked:
@@ -796,6 +798,13 @@ public class HistoryControllerHandler {
                 OrderSleeping os = (OrderSleeping) entry.getEvent();
                 event = new FatEventOrderSleeping(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
                         HistoryEventEntry.getDate(os.until()));
+                break;
+                
+            case OrderPriorityChanged:
+                order = entry.getCheckedOrder();
+                OrderPriorityChanged opc = (OrderPriorityChanged) entry.getEvent();
+                event = new FatEventOrderPriorityChanged(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), opc.priority().intValue());
                 break;
 
             default:
