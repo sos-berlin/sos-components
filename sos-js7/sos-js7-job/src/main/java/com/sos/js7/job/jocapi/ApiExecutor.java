@@ -305,7 +305,7 @@ public class ApiExecutor {
         String apiServers = getDecrytedValueOfArgument(JOB_ARGUMENT_APISERVER_URL);
         if (apiServers != null) {
             String[] apiServersSplitted = apiServers.split(JOB_ARGUMENT_DELIMITER_REGEX);
-            uris = Arrays.asList(apiServersSplitted).stream().peek(item -> item.trim()).toList();
+            uris = Arrays.asList(apiServersSplitted).stream().peek(String::trim).toList();
         } else {
             if (config == null) {
                 readConfig();
@@ -351,7 +351,7 @@ public class ApiExecutor {
         if (truststores != null) {
             String[] truststoresSplitted = truststores.split(JOB_ARGUMENT_DELIMITER_REGEX);
             String truststorePwd = getDecrytedValueOfArgument(JOB_ARGUMENT_TRUSTSTORE_PWD, "");
-            truststoresCredentials = Arrays.asList(truststoresSplitted).stream().peek(item -> item.trim()).map(path -> new KeyStoreCredentials(path,
+            truststoresCredentials = Arrays.asList(truststoresSplitted).stream().peek(String::trim).map(path -> new KeyStoreCredentials(path,
                     truststorePwd)).toList();
         } else {
             if (config == null) {
@@ -402,21 +402,21 @@ public class ApiExecutor {
             KeyStore keystore = readKeyStore(keystorePath, KeystoreType.fromValue(keystoreType), keystorePasswd);
             if (keystore != null) {
                 try {
-                    if (keystoreKeyPasswd != null) {
-                        sslContextBuilder.loadKeyMaterial(keystore, keystoreKeyPasswd.toCharArray());
-                    } else {
-                        sslContextBuilder.loadKeyMaterial(keystore, "".toCharArray());
-                    }
+                    // TODO consider alias
+                    char[] keyPasswd = Optional.ofNullable(keystoreKeyPasswd).orElse("").toCharArray();
+                    sslContextBuilder.loadKeyMaterial(keystore, keyPasswd);
                 } catch (Exception e) {
                 }
             }
         } else if (credentials != null) {
             KeyStore keystore = readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
             try {
-                if (keystoreKeyPasswd != null) {
-                    sslContextBuilder.loadKeyMaterial(keystore, keystoreKeyPasswd.toCharArray());
+                char[] keyPasswd = Optional.ofNullable(credentials.getKeyPwd()).orElse("").toCharArray();
+                String alias = credentials.getKeyStoreAlias();
+                if (SOSString.isEmpty(alias)) {
+                    sslContextBuilder.loadKeyMaterial(keystore, keyPasswd);
                 } else {
-                    sslContextBuilder.loadKeyMaterial(keystore, "".toCharArray());
+                    sslContextBuilder.loadKeyMaterial(keystore, keyPasswd, (aliases, socket) -> alias);
                 }
             } catch (Exception e) {
             }
