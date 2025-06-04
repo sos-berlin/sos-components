@@ -428,17 +428,20 @@ public class EventService {
     
     @Subscribe({ ApprovalUpdatedEvent.class })
     public void createEvent(ApprovalUpdatedEvent evt) {
-        EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId() / 1000);
-        eventSnapshot.setEventType(evt.getKey());
-        eventSnapshot.setObjectType(EventType.APPROVAL);
-        addEvent(eventSnapshot);
+        Long evtId = evt.getEventId() / 1000;
+        if (!evt.onlyNotification()) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evtId);
+            eventSnapshot.setEventType(evt.getKey());
+            eventSnapshot.setObjectType(EventType.APPROVAL);
+            addEvent(eventSnapshot);
+        }
         
         if (evt.withNotification()) {
             if (evt.getApprovers() != null) {
                 evt.getApprovers().entrySet().stream().map(entry -> {
                     EventApprovalNotification eventA = new EventApprovalNotification();
-                    eventA.setEventId(eventSnapshot.getEventId());
+                    eventA.setEventId(evtId);
                     eventA.setApprover(entry.getKey());
                     eventA.setNumOfPendingApprovals(entry.getValue());
                     eventA.setEventType("ApproverNotification");
@@ -448,7 +451,7 @@ public class EventService {
             if (evt.getRequestors() != null) {
                 evt.getRequestors().entrySet().stream().map(entry -> {
                     EventApprovalNotification eventA = new EventApprovalNotification();
-                    eventA.setEventId(eventSnapshot.getEventId());
+                    eventA.setEventId(evtId);
                     eventA.setRequestor(entry.getKey());
                     Map<String, Long> numOfs = Optional.ofNullable(entry.getValue()).orElse(Collections.emptyMap());
                     eventA.setNumOfApprovedRequests(Optional.ofNullable(numOfs.get("APPROVED")).orElse(0L));

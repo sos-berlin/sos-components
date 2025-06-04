@@ -59,7 +59,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
             session = checkSession();
             boolean evtIdIsEmpty = in.getEventId() == null || in.getEventId() <= 0L;
-            long eventId = evtIdIsEmpty ? Instant.now().getEpochSecond() : in.getEventId();
+            long eventId = evtIdIsEmpty ? Instant.now().getEpochSecond() - 1L : in.getEventId();
             entity.setEventId(eventId);
             entity.setControllerId(controllerId);
             entity.setEventSnapshots(Collections.emptyList());

@@ -856,7 +856,7 @@ public class SOSServicePermissionIam {
                     currentAccount.setIsApprover(approvalDbLayer.getApprovers().stream().anyMatch(i -> i.getAccountName().equals(currentAccount
                             .getAccountname())));
                     
-                    approvalUpdatedEvent = currentAccount.createApprovalUpdatedEvent(sosHibernateSession);
+                    //approvalUpdatedEvent = currentAccount.createApprovalUpdatedEvent(sosHibernateSession);
 
                 } else {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, false);

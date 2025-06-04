@@ -241,10 +241,10 @@ public class SOSAuthCurrentAccount {
         }
     }
     
-    //SOSHibernateSession sosHibernateSession
     public Optional<ApprovalUpdatedEvent> createApprovalUpdatedEvent() {
         SOSHibernateSession session = null;
         try {
+            session = Globals.createSosHibernateStatelessConnection("createApprovalNotification");
             return createApprovalUpdatedEvent(session);
         } finally {
             Globals.disconnect(session);
@@ -264,7 +264,7 @@ public class SOSAuthCurrentAccount {
                     requestorEvent = Collections.singletonMap(accountName, dbLayer.getNumOfApprovedRejectedRequests(accountName));
                 }
                 if (approverEvent != null || requestorEvent != null) {
-                    return Optional.of(new ApprovalUpdatedEvent(requestorEvent, approverEvent));
+                    return Optional.of(new ApprovalUpdatedEvent(requestorEvent, approverEvent, true));
                 }
             }
         } catch (Exception e) {
