@@ -26,6 +26,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "noticeSpaceKeys",
     "noticeBoardPaths",
     "compact",
+    "includeOrders",
     "limit"
 })
 public class PlansFilter
@@ -51,6 +52,8 @@ public class PlansFilter
     private Set<String> noticeBoardPaths = new LinkedHashSet<String>();
     @JsonProperty("compact")
     private Boolean compact = false;
+    @JsonProperty("includeOrders")
+    private Boolean includeOrders = false;
     /**
      * -1=unlimited
      * 
@@ -107,6 +110,16 @@ public class PlansFilter
         this.compact = compact;
     }
 
+    @JsonProperty("includeOrders")
+    public Boolean getIncludeOrders() {
+        return includeOrders;
+    }
+
+    @JsonProperty("includeOrders")
+    public void setIncludeOrders(Boolean includeOrders) {
+        this.includeOrders = includeOrders;
+    }
+
     /**
      * -1=unlimited
      * 
@@ -127,12 +140,12 @@ public class PlansFilter
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("planSchemaIds", planSchemaIds).append("noticeSpaceKeys", noticeSpaceKeys).append("noticeBoardPaths", noticeBoardPaths).append("compact", compact).append("limit", limit).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("planSchemaIds", planSchemaIds).append("noticeSpaceKeys", noticeSpaceKeys).append("noticeBoardPaths", noticeBoardPaths).append("compact", compact).append("includeOrders", includeOrders).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(planSchemaIds).append(noticeBoardPaths).append(limit).append(noticeSpaceKeys).append(compact).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(planSchemaIds).append(includeOrders).append(compact).append(noticeBoardPaths).append(limit).append(noticeSpaceKeys).toHashCode();
     }
 
     @Override
@@ -144,7 +157,7 @@ public class PlansFilter
             return false;
         }
         PlansFilter rhs = ((PlansFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(planSchemaIds, rhs.planSchemaIds).append(noticeBoardPaths, rhs.noticeBoardPaths).append(limit, rhs.limit).append(noticeSpaceKeys, rhs.noticeSpaceKeys).append(compact, rhs.compact).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(planSchemaIds, rhs.planSchemaIds).append(includeOrders, rhs.includeOrders).append(compact, rhs.compact).append(noticeBoardPaths, rhs.noticeBoardPaths).append(limit, rhs.limit).append(noticeSpaceKeys, rhs.noticeSpaceKeys).isEquals();
     }
 
 }

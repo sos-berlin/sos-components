@@ -4,11 +4,13 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.board.Board;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -54,6 +57,7 @@ import js7.data_for_java.board.JPlannedBoard;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.plan.JPlan;
+import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("plans")
 public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource {
@@ -137,68 +141,66 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             return null;
         }
         
-//        Stream<JOrder> jOrders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState);
         Map<OrderId, OrderV> orders = Collections.emptyMap();
         
-//        Map<JWorkflowId, Set<JOrder>> workflowToOrder = jOrders.collect(Collectors.groupingBy(JOrder::workflowId, Collectors.toSet()));
         
-        // TODO check what workflow has (plannable?) boards -> filter workflowToOrder
-        // TODO check position of expecting/consuming notice instruction on top level after order position
-        
-//        jOrders = workflowToOrder.values().stream().flatMap(Set::stream);
-//        boolean compact = Boolean.TRUE == filter.getCompact();
-//        
-//        if (compact) {
-//            plan.setOrders(null);
-//            plan.setNumOfOrders(jOrders.mapToInt(o -> 1).sum());
-//        } else {
-//            Map<String, Set<String>> orderTags = getOrderTags(filter.getControllerId(), jp); // TODO 
-//            Long surveyDateMillis = currentState.instant().toEpochMilli();
-//            AtomicInteger counter = new AtomicInteger(0);
-//
-//            Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
-//                try {
-//                    counter.incrementAndGet();
-//                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
-//                } catch (Exception e) {
-//                    return null;
-//                }
-//            };
-//
-//            Stream<OrderV> ordersStream = jOrders.map(mapJOrderToOrderV).filter(Objects::nonNull);
-//            
-//            Integer limitOrders = filter.getLimit() == null ? limitOrdersDefault : filter.getLimit();
-//            if (limitOrders > -1 && jp.orderIds().size() > limitOrders) {
-//                ordersStream = ordersStream.sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders.longValue()); 
-//            }
-//            orders = ordersStream.collect(Collectors.toMap(o -> OrderId.of(o.getOrderId()), Function.identity()));
-//
-//            plan.setOrders(orders.values());
-//            plan.setNumOfOrders(counter.get());
-//        }
-        
-        // Orders are too much for this API (decrease performance significantly). It should be sent by another API, e.g. ./plans/orders
-        plan.setOrders(null);
-        plan.setNumOfOrders(null);
+        if (filter.getIncludeOrders()) {
+            Stream<JOrder> jOrders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState);
+            Map<JWorkflowId, Set<JOrder>> workflowToOrder = jOrders.collect(Collectors.groupingBy(JOrder::workflowId, Collectors.toSet()));
+
+            jOrders = workflowToOrder.values().stream().flatMap(Set::stream);
+
+            Map<String, Set<String>> orderTags = getOrderTags(filter.getControllerId(), jp);
+            Long surveyDateMillis = currentState.instant().toEpochMilli();
+            AtomicInteger counter = new AtomicInteger(0);
+
+            Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
+                try {
+                    counter.incrementAndGet();
+                    return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
+                } catch (Exception e) {
+                    return null;
+                }
+            };
+
+            orders = jOrders.map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toMap(o -> OrderId.of(o.getOrderId()), Function
+                    .identity()));
+
+            Integer limitOrders = filter.getLimit() == null ? -1 : filter.getLimit();
+            if (limitOrders == 0) {
+                plan.setOrders(Collections.emptyList());
+            } else if (limitOrders > 0 && jp.orderIds().size() > limitOrders) {
+                plan.setOrders(orders.values().stream().sorted(Comparator.comparingLong(OrderV::getScheduledFor).reversed()).limit(limitOrders
+                        .longValue()).toList());
+            } else {
+                plan.setOrders(orders.values());
+            }
+            plan.setNumOfOrders(counter.get());
+            
+        } else {
+            
+            plan.setOrders(null);
+            plan.setNumOfOrders(null);
+        }
 
         plan.setNoticeBoards(getBoards(jp.toPlannedBoard(), filter, orders));
         
         return plan;
     }
     
-//    private Map<String, Set<String>> getOrderTags(String controllerId, JPlan jp) {
-//        Map<String, Set<String>> orderTags = null;
-//        try {
-//            orderTags = OrderTags.getTagsByOrderIds(controllerId, jp.orderIds().stream().map(OrderId::string), session);
-//        } catch (SOSHibernateException e) {
-//            if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
-//                LOGGER.info(getJocError().printMetaInfo());
-//                getJocError().clearMetaInfo();
-//            }
-//            LOGGER.error("", e);
-//        }
-//        return orderTags;
-//    }
+    private Map<String, Set<String>> getOrderTags(String controllerId, JPlan jp) {
+        Map<String, Set<String>> orderTags = null;
+        try {
+            orderTags = OrderTags.getTagsByOrderIds(controllerId, jp.orderIds().stream().map(OrderId::string), session);
+        } catch (SOSHibernateException e) {
+            if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                LOGGER.info(getJocError().printMetaInfo());
+                getJocError().clearMetaInfo();
+            }
+            LOGGER.error("", e);
+        }
+        return orderTags;
+    }
     
     private List<Board> getBoards(Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<OrderId, OrderV> orders) {
         try {

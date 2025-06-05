@@ -516,8 +516,7 @@ public class OrdersHelper {
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, JControllerState controllerState, Boolean compact,
             Set<Folder> listOfFolders, Map<String, Set<String>> orderTags, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
-            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws IOException,
-            JocFolderPermissionsException {
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
         if (finalParameters != null) {
@@ -756,8 +755,8 @@ public class OrdersHelper {
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,
             Map<String, Set<String>> orderTags, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
-            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws JsonParseException,
-            JsonMappingException, IOException, JocFolderPermissionsException {
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws JsonMappingException,
+            JsonProcessingException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, listOfFolders, orderTags, blockedButWaitingForAdmissionOrderIds,
@@ -765,8 +764,8 @@ public class OrdersHelper {
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Map<String, Set<String>> orderTags,
-            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws JsonParseException,
-            JsonMappingException, IOException, JocFolderPermissionsException {
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws JsonMappingException,
+            JsonProcessingException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, null, orderTags, null, finalParameters, surveyDateMillis, zoneId);

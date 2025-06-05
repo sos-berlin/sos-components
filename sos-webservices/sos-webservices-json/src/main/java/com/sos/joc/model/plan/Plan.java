@@ -2,6 +2,7 @@
 package com.sos.joc.model.plan;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -49,7 +50,7 @@ public class Plan {
     @JsonProperty("numOfOrders")
     private Integer numOfOrders;
     @JsonProperty("orders")
-    private List<OrderV> orders = new ArrayList<OrderV>();
+    private Collection<OrderV> orders;
     /**
      * 
      * (Required)
@@ -123,12 +124,12 @@ public class Plan {
     }
 
     @JsonProperty("orders")
-    public List<OrderV> getOrders() {
+    public Collection<OrderV> getOrders() {
         return orders;
     }
 
     @JsonProperty("orders")
-    public void setOrders(List<OrderV> orders) {
+    public void setOrders(Collection<OrderV> orders) {
         this.orders = orders;
     }
 
