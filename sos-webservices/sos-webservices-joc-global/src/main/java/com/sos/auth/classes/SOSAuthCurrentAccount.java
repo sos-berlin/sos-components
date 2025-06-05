@@ -257,11 +257,17 @@ public class SOSAuthCurrentAccount {
                 ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
                 Map<String, Long> approverEvent = null;
                 if (isApprover) {
-                    approverEvent = Collections.singletonMap(accountName, dbLayer.getNumOfPendingApprovals(accountName));
+                    Long numOfPA = dbLayer.getNumOfPendingApprovals(accountName);
+                    if (numOfPA > 0L) {
+                        approverEvent = Collections.singletonMap(accountName, numOfPA);
+                    }
                 }
                 Map<String, Map<String, Long>> requestorEvent = null;
                 if (isRequestor) {
-                    requestorEvent = Collections.singletonMap(accountName, dbLayer.getNumOfApprovedRejectedRequests(accountName));
+                    Map<String, Long> numOfARR = dbLayer.getNumOfApprovedRejectedRequests(accountName);
+                    if (numOfARR.values().stream().mapToLong(Long::longValue).sum() > 0L) {
+                        requestorEvent = Collections.singletonMap(accountName, numOfARR);
+                    }
                 }
                 if (approverEvent != null || requestorEvent != null) {
                     return Optional.of(new ApprovalUpdatedEvent(requestorEvent, approverEvent, true));
