@@ -30,8 +30,28 @@ public class HistoryLogMapper {
         if (!SOSString.isEmpty(entry.getPosition())) {
             info.add("pos=" + entry.getPosition());
         }
+        //20000 - HIGH, 10000 - ABOVE NORMAL, 0 - NORMAL, -10000 - BELOW NORMAL, -20000 - LOW
         if (entry.getPriority() != null) {
-            info.add("prio=" + entry.getPriority());
+            switch (entry.getPriority()) {
+            case 20000:
+                info.add("prio=HIGH");
+                break;
+            case 10000:
+                info.add("prio=ABOVE NORMAL");
+                break;
+            case 0:
+                info.add("prio=NORMAL");
+                break;
+            case -10000:
+                info.add("prio=BELOW NORMAL");
+                break;
+            case -20000:
+                info.add("prio=LOW");
+                break;
+            default:
+                info.add("prio=" + entry.getPriority());
+                break;
+            }
         }
         if (!SOSString.isEmpty(entry.getJob())) {
             info.add("Job=" + entry.getJob());
