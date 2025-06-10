@@ -44,39 +44,53 @@ public class MailResource {
 
     private boolean available;
 
-    /** Create a MailResource from a certain JobResource */
+    /** Create a MailResource from a certain JobResource JSON content */
     public void parse(String name, String content) {
         jobResourceName = name;
         init();
         try {
-            Environment env = Globals.objectMapper.readValue(content, JobResource.class).getArguments();
-            Map<String, String> arguments = env.getAdditionalProperties();
-            if (arguments != null) {
-                arguments.entrySet().stream().forEach(e -> {
-                    setCredentialStoreArgs(e.getKey(), strip(e.getValue()));
-                    if (e.getKey().startsWith("mail.")) {
-                        mailProperties.put(e.getKey(), strip(e.getValue()));
-                    }
-                });
-
-                from = strip(arguments.get(ARG_FROM));
-                fromName = strip(arguments.get(ARG_FROM_NAME));
-                replayTo = strip(arguments.get(ARG_REPLAY_TO));
-                to = strip(arguments.get(ARG_TO));
-                cc = strip(arguments.get(ARG_CC));
-                bcc = strip(arguments.get(ARG_BCC));
-                charset = strip(arguments.get(ARG_CHARSET));
-                encoding = strip(arguments.get(ARG_ENCODING));
-                contentType = strip(arguments.get(ARG_CONTENT_TYPE));
-            }
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[parse][%s][mail properties]%s", jobResourceName, getMaskedMailProperties()));
-                LOGGER.debug(String.format("[parse][%s][credentialStoreArgs]%s", jobResourceName, SOSString.toString(credentialStoreArgs)));
-            }
-            available = true;
+            parse(Globals.objectMapper.readValue(content, JobResource.class).getArguments());
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
+    }
+    
+    /** Create a MailResource from a certain JobResource arguments */
+    public void parse(String name, Environment env) {
+        jobResourceName = name;
+        init();
+        try {
+            parse(env);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+    
+    private void parse(Environment env) {
+        Map<String, String> arguments = env.getAdditionalProperties();
+        if (arguments != null) {
+            arguments.entrySet().stream().forEach(e -> {
+                setCredentialStoreArgs(e.getKey(), strip(e.getValue()));
+                if (e.getKey().startsWith("mail.")) {
+                    mailProperties.put(e.getKey(), strip(e.getValue()));
+                }
+            });
+
+            from = strip(arguments.get(ARG_FROM));
+            fromName = strip(arguments.get(ARG_FROM_NAME));
+            replayTo = strip(arguments.get(ARG_REPLAY_TO));
+            to = strip(arguments.get(ARG_TO));
+            cc = strip(arguments.get(ARG_CC));
+            bcc = strip(arguments.get(ARG_BCC));
+            charset = strip(arguments.get(ARG_CHARSET));
+            encoding = strip(arguments.get(ARG_ENCODING));
+            contentType = strip(arguments.get(ARG_CONTENT_TYPE));
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[parse][%s][mail properties]%s", jobResourceName, getMaskedMailProperties()));
+            LOGGER.debug(String.format("[parse][%s][credentialStoreArgs]%s", jobResourceName, SOSString.toString(credentialStoreArgs)));
+        }
+        available = true;
     }
 
     /** Create a MailResource from the JobResource list.<br />

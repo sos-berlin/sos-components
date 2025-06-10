@@ -6,6 +6,7 @@ import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
+import com.sos.joc.approval.impl.mail.Notifier;
 import com.sos.joc.approval.resource.IRequestEditResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -85,6 +86,8 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
                 if (approverIsChanged) {
                     EventBus.getInstance().post(new ApprovalUpdatedEvent(null, Collections.singletonMap(item.getApprover(), dbLayer
                             .getNumOfPendingApprovals(item.getApprover()))));
+                    
+                    Notifier.send(item, dbLayer, getJocError());
                 } else {
                     EventBus.getInstance().post(new ApprovalUpdatedEvent());
                 }
