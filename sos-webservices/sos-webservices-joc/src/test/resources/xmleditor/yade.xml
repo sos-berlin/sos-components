@@ -1,413 +1,488 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Configurations>
+  <JobResource name="Yade" environment_variable="SETTINGS" variable="settings" />
   <Fragments>
     <ProtocolFragments>
-      <FTPFragment name="my_server">
+      <FTPFragment name="ftp">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
         <BasicConnection>
-          <Hostname><![CDATA[cs://yade/FTP/ftp_server@url]]></Hostname>
+          <Hostname><![CDATA[host]]></Hostname>
+          <Port>1</Port>
+          <ConnectTimeout><![CDATA[0s]]></ConnectTimeout>
         </BasicConnection>
         <BasicAuthentication>
-          <Account><![CDATA[cs://yade/FTP/ftp_server@user]]></Account>
-          <Password><![CDATA[cs://yade/FTP/ftp_server@password]]></Password>
+          <Account><![CDATA[account]]></Account>
+          <Password><![CDATA[pass]]></Password>
         </BasicAuthentication>
-        <CredentialStoreFragmentRef ref="yade_credential_store" />
+        <ProxyForFTP>
+          <SOCKSProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[proxy]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[account]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </SOCKSProxy>
+        </ProxyForFTP>
+        <KeepAlive>
+          <KeepAliveTimeout><![CDATA[180s]]></KeepAliveTimeout>
+        </KeepAlive>
         <PassiveMode>true</PassiveMode>
+        <TransferMode><![CDATA[ascii]]></TransferMode>
       </FTPFragment>
-      <SFTPFragment name="my_server">
+      <FTPSFragment name="ftps">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
         <BasicConnection>
-          <Hostname><![CDATA[cs://yade/SFTP/sftp_server@url]]></Hostname>
+          <Hostname><![CDATA[host]]></Hostname>
+          <Port>1</Port>
+          <ConnectTimeout><![CDATA[0s]]></ConnectTimeout>
+        </BasicConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[1]]></Password>
+        </BasicAuthentication>
+        <ProxyForFTPS>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForFTPS>
+        <KeepAlive>
+          <KeepAliveTimeout><![CDATA[180s]]></KeepAliveTimeout>
+        </KeepAlive>
+        <SecurityMode><![CDATA[explicit]]></SecurityMode>
+        <SSL>
+          <TrustedSSL>
+            <TrustStore>
+              <TrustStoreType><![CDATA[JKS]]></TrustStoreType>
+              <TrustStoreFile><![CDATA[ss]]></TrustStoreFile>
+              <TrustStorePassword><![CDATA[kpass]]></TrustStorePassword>
+            </TrustStore>
+          </TrustedSSL>
+        </SSL>
+      </FTPSFragment>
+      <HTTPFragment name="http">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForHTTP>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForHTTP>
+        <HTTPHeaders>
+          <HTTPHeader><![CDATA[1]]></HTTPHeader>
+          <HTTPHeader><![CDATA[2]]></HTTPHeader>
+        </HTTPHeaders>
+      </HTTPFragment>
+      <HTTPSFragment name="https-trusted-keystore">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForHTTP>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForHTTP>
+        <HTTPHeaders>
+          <HTTPHeader><![CDATA[1]]></HTTPHeader>
+          <HTTPHeader><![CDATA[2]]></HTTPHeader>
+        </HTTPHeaders>
+        <SSL>
+          <TrustedSSL>
+            <TrustStore>
+              <TrustStoreType><![CDATA[JKS]]></TrustStoreType>
+              <TrustStoreFile><![CDATA[file]]></TrustStoreFile>
+              <TrustStorePassword><![CDATA[pass]]></TrustStorePassword>
+            </TrustStore>
+          </TrustedSSL>
+        </SSL>
+      </HTTPSFragment>
+      <HTTPSFragment name="https-trusted-default">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForHTTP>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForHTTP>
+        <HTTPHeaders>
+          <HTTPHeader><![CDATA[1]]></HTTPHeader>
+          <HTTPHeader><![CDATA[2]]></HTTPHeader>
+        </HTTPHeaders>
+        <SSL>
+          <TrustedSSL />
+        </SSL>
+      </HTTPSFragment>
+      <HTTPSFragment name="https-untrusted-with-keystore">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForHTTP>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForHTTP>
+        <HTTPHeaders>
+          <HTTPHeader><![CDATA[1]]></HTTPHeader>
+          <HTTPHeader><![CDATA[2]]></HTTPHeader>
+        </HTTPHeaders>
+        <SSL>
+          <UntrustedSSL>
+            <DisableCertificateHostnameVerification>false</DisableCertificateHostnameVerification>
+          </UntrustedSSL>
+        </SSL>
+      </HTTPSFragment>
+      <HTTPSFragment name="https-untrusted-with-disable_hostname_verification">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForHTTP>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForHTTP>
+        <HTTPHeaders>
+          <HTTPHeader><![CDATA[1]]></HTTPHeader>
+          <HTTPHeader><![CDATA[2]]></HTTPHeader>
+        </HTTPHeaders>
+        <SSL>
+          <UntrustedSSL>
+            <DisableCertificateHostnameVerification>true</DisableCertificateHostnameVerification>
+          </UntrustedSSL>
+        </SSL>
+      </HTTPSFragment>
+      <JumpFragment name="jump">
+        <CredentialStoreFragmentRef ref="cs-key" />
+        <BasicConnection>
+          <Hostname><![CDATA[host]]></Hostname>
+          <Port>1</Port>
         </BasicConnection>
         <SSHAuthentication>
-          <Account><![CDATA[cs://yade/SFTP/sftp_server@user]]></Account>
+          <Account><![CDATA[account]]></Account>
+          <PreferredAuthentications><![CDATA[password,publickey]]></PreferredAuthentications>
           <AuthenticationMethodPassword>
-            <Password><![CDATA[cs://yade/SFTP/sftp_server@password]]></Password>
+            <Password><![CDATA[pa]]></Password>
           </AuthenticationMethodPassword>
         </SSHAuthentication>
-        <CredentialStoreFragmentRef ref="yade_credential_store" />
+        <YADEClientCommand><![CDATA[jump_command]]></YADEClientCommand>
+        <TempDirectoryParent><![CDATA[/tmp]]></TempDirectoryParent>
+        <SFTPProcessing>
+          <SFTPPreProcessing>
+            <CommandBeforeFile enable_for_skipped_transfer="true"><![CDATA[beforefile]]></CommandBeforeFile>
+            <CommandBeforeOperation><![CDATA[beforeopertion]]></CommandBeforeOperation>
+          </SFTPPreProcessing>
+          <SFTPPostProcessing>
+            <CommandAfterFile disable_for_skipped_transfer="true"><![CDATA[afterfile]]></CommandAfterFile>
+            <CommandAfterOperationOnSuccess><![CDATA[onsuccess]]></CommandAfterOperationOnSuccess>
+            <CommandAfterOperationOnError><![CDATA[onerror]]></CommandAfterOperationOnError>
+            <CommandAfterOperationFinal><![CDATA[onfinal]]></CommandAfterOperationFinal>
+            <CommandBeforeRename><![CDATA[beforerename]]></CommandBeforeRename>
+          </SFTPPostProcessing>
+          <ProcessingCommandDelimiter><![CDATA[;]]></ProcessingCommandDelimiter>
+          <Platform><![CDATA[unix]]></Platform>
+        </SFTPProcessing>
+        <ProxyForSFTP>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[proxy_host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[proxy_user]]></Account>
+              <Password><![CDATA[proxy_pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForSFTP>
+        <SocketTimeout><![CDATA[0s]]></SocketTimeout>
+        <KeepAlive>
+          <KeepAliveInterval><![CDATA[30s]]></KeepAliveInterval>
+          <MaxAliveCount>1</MaxAliveCount>
+        </KeepAlive>
+        <StrictHostkeyChecking>false</StrictHostkeyChecking>
+        <ConfigurationFiles>
+          <ConfigurationFile><![CDATA[file]]></ConfigurationFile>
+        </ConfigurationFiles>
+      </JumpFragment>
+      <SFTPFragment name="sftp">
+        <CredentialStoreFragmentRef ref="cs-key" />
+        <JumpFragmentRef ref="jump" />
+        <BasicConnection>
+          <Hostname><![CDATA[host]]></Hostname>
+          <Port>1</Port>
+          <ConnectTimeout><![CDATA[0s]]></ConnectTimeout>
+        </BasicConnection>
+        <SSHAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <PreferredAuthentications><![CDATA[password,publickey]]></PreferredAuthentications>
+          <AuthenticationMethodPassword>
+            <Password><![CDATA[pass]]></Password>
+          </AuthenticationMethodPassword>
+          <AuthenticationMethodPublickey>
+            <AuthenticationFile><![CDATA[ssss]]></AuthenticationFile>
+          </AuthenticationMethodPublickey>
+        </SSHAuthentication>
+        <ProxyForSFTP>
+          <SOCKSProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </SOCKSProxy>
+        </ProxyForSFTP>
+        <SocketTimeout><![CDATA[0s]]></SocketTimeout>
+        <KeepAlive>
+          <KeepAliveInterval><![CDATA[30s]]></KeepAliveInterval>
+          <MaxAliveCount>1</MaxAliveCount>
+        </KeepAlive>
+        <StrictHostkeyChecking>true</StrictHostkeyChecking>
+        <ConfigurationFiles>
+          <ConfigurationFile><![CDATA[config_file]]></ConfigurationFile>
+        </ConfigurationFiles>
       </SFTPFragment>
-      <SMBFragment name="my_smb_server">
-        <Hostname><![CDATA[cs://yade/SMB/file_server@url]]></Hostname>
+      <SMBFragment name="smb">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <SMBConnection>
+          <Hostname><![CDATA[host]]></Hostname>
+          <Port>1</Port>
+          <Sharename><![CDATA[sharename]]></Sharename>
+        </SMBConnection>
         <SMBAuthentication>
-          <Account><![CDATA[cs://yade/SMB/file_server@user]]></Account>
-          <Password><![CDATA[cs://yade/SMB/file_server@password]]></Password>
+          <SMBAuthenticationMethodNTLM>
+            <Account><![CDATA[user]]></Account>
+            <Password><![CDATA[pass]]></Password>
+            <Domain><![CDATA[dimain]]></Domain>
+          </SMBAuthenticationMethodNTLM>
         </SMBAuthentication>
-        <CredentialStoreFragmentRef ref="yade_credential_store" />
+        <ConfigurationFiles>
+          <ConfigurationFile><![CDATA[file]]></ConfigurationFile>
+        </ConfigurationFiles>
       </SMBFragment>
+      <WebDAVFragment name="webdav">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForWebDAV>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForWebDAV>
+      </WebDAVFragment>
+      <WebDAVFragment name="webdavs-trusted">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForWebDAV>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForWebDAV>
+        <SSL>
+          <TrustedSSL>
+            <TrustStore>
+              <TrustStoreType><![CDATA[JKS]]></TrustStoreType>
+              <TrustStoreFile><![CDATA[file]]></TrustStoreFile>
+              <TrustStorePassword><![CDATA[pass]]></TrustStorePassword>
+            </TrustStore>
+          </TrustedSSL>
+        </SSL>
+      </WebDAVFragment>
+      <WebDAVFragment name="webdavs-untrusted">
+        <CredentialStoreFragmentRef ref="cs-pass" />
+        <JumpFragmentRef ref="jump" />
+        <URLConnection>
+          <URL>url</URL>
+        </URLConnection>
+        <BasicAuthentication>
+          <Account><![CDATA[user]]></Account>
+          <Password><![CDATA[pass]]></Password>
+        </BasicAuthentication>
+        <ProxyForWebDAV>
+          <HTTPProxy>
+            <BasicConnection>
+              <Hostname><![CDATA[host]]></Hostname>
+              <Port>1</Port>
+            </BasicConnection>
+            <BasicAuthentication>
+              <Account><![CDATA[user]]></Account>
+              <Password><![CDATA[pass]]></Password>
+            </BasicAuthentication>
+          </HTTPProxy>
+        </ProxyForWebDAV>
+        <SSL>
+          <UntrustedSSL>
+            <DisableCertificateHostnameVerification>true</DisableCertificateHostnameVerification>
+          </UntrustedSSL>
+        </SSL>
+      </WebDAVFragment>
     </ProtocolFragments>
+    <NotificationFragments>
+      <MailFragment name="mail">
+        <Header>
+          <From><![CDATA[from]]></From>
+          <To><![CDATA[to]]></To>
+          <CC><![CDATA[cc]]></CC>
+          <BCC><![CDATA[bcc]]></BCC>
+          <Subject><![CDATA[subject]]></Subject>
+        </Header>
+        <Attachment><![CDATA[1.txt]]></Attachment>
+        <Body><![CDATA[body]]></Body>
+        <ContentType><![CDATA[text/plain]]></ContentType>
+        <Encoding><![CDATA[7bit]]></Encoding>
+      </MailFragment>
+    </NotificationFragments>
     <CredentialStoreFragments>
-      <CredentialStoreFragment name="yade_credential_store">
-        <CSFile><![CDATA[C:\Program Files\yade\yade.kdbx]]></CSFile>
+      <CredentialStoreFragment name="cs-pass">
+        <CSFile><![CDATA[csfile]]></CSFile>
+        <CSAuthentication>
+          <PasswordAuthentication>
+            <CSPassword><![CDATA[cspass]]></CSPassword>
+          </PasswordAuthentication>
+        </CSAuthentication>
+      </CredentialStoreFragment>
+      <CredentialStoreFragment name="cs-key">
+        <CSFile><![CDATA[file]]></CSFile>
         <CSAuthentication>
           <KeyFileAuthentication>
-            <CSKeyFile><![CDATA[C:\Program Files\yade\yade.key]]></CSKeyFile>
+            <CSKeyFile><![CDATA[keyfile]]></CSKeyFile>
+            <CSPassword><![CDATA[cspass]]></CSPassword>
           </KeyFileAuthentication>
         </CSAuthentication>
       </CredentialStoreFragment>
     </CredentialStoreFragments>
+    <MailServerFragments>
+      <MailServerFragment name="mailserver">
+        <MailHost>
+          <BasicConnection>
+            <Hostname><![CDATA[host]]></Hostname>
+            <Port>123</Port>
+          </BasicConnection>
+          <BasicAuthentication>
+            <Account><![CDATA[account]]></Account>
+            <Password><![CDATA[pass]]></Password>
+          </BasicAuthentication>
+        </MailHost>
+        <QueueDirectory><![CDATA[queue]]></QueueDirectory>
+      </MailServerFragment>
+    </MailServerFragments>
   </Fragments>
-  <Profiles>
-    <Profile profile_id="from_smb">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <SMBFragmentRef ref="my_smb_server" />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FileSpecSelection>
-                  <FileSpec><![CDATA[^.+\.csv$]]></FileSpec>
-                  <Directory><![CDATA[/tmp/files]]></Directory>
-                </FileSpecSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <LocalTarget />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[c:\temp]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="from_sftp">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FileSpecSelection>
-                  <FileSpec><![CDATA[\.txt$]]></FileSpec>
-                  <Directory><![CDATA[/tmp/to_product_demo]]></Directory>
-                </FileSpecSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <LocalTarget />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[c:/tmp/jobscheduler/file/product_demo/success]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_sftp">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server">
-                <SFTPPreProcessing>
-                  <CommandBeforeFile enable_for_skipped_transfer="false"><![CDATA[xxx]]></CommandBeforeFile>
-                </SFTPPreProcessing>
-              </SFTPFragmentRef>
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_sftp1">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_sftp2">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_sftp3">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_sftp4">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_sftp5">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_sftp6">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="to_smb">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <LocalSource />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FilePathSelection>
-                  <FilePath><![CDATA[${scheduler_file_path}]]></FilePath>
-                </FilePathSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SMBFragmentRef ref="my_smb_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/share/nobackup/users/files]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="from_ftp_to_sftp">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <FTPFragmentRef ref="my_server" />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FileSpecSelection>
-                  <FileSpec><![CDATA[.*]]></FileSpec>
-                  <Directory><![CDATA[/home/test/data/from_product_demo/ftp]]></Directory>
-                </FileSpecSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/home/test/data/from_product_demo/sftp]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="test">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FileSpecSelection>
-                  <FileSpec><![CDATA[.*\.txt$]]></FileSpec>
-                  <Directory><![CDATA[/home/test/tmp/test]]></Directory>
-                </FileSpecSelection>
-              </Selection>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <SFTPFragmentRef ref="my_server" />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[/tmp]]></Directory>
-          </CopyTarget>
-          <TransferOptions>
-            <Transactional>true</Transactional>
-          </TransferOptions>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="smb_test_copy">
-      <Operation>
-        <Copy>
-          <CopySource>
-            <CopySourceFragmentRef>
-              <SMBFragmentRef ref="my_smb_server" />
-            </CopySourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FileSpecSelection>
-                  <FileSpec><![CDATA[.+\.csv$]]></FileSpec>
-                  <Directory><![CDATA[/tmp/polling]]></Directory>
-                </FileSpecSelection>
-              </Selection>
-              <Polling>
-                <PollInterval>60</PollInterval>
-                <PollTimeout>0</PollTimeout>
-                <WaitForSourceFolder>true</WaitForSourceFolder>
-                <PollingServer>true</PollingServer>
-                <PollForever>true</PollForever>
-              </Polling>
-            </SourceFileOptions>
-          </CopySource>
-          <CopyTarget>
-            <CopyTargetFragmentRef>
-              <LocalTarget />
-            </CopyTargetFragmentRef>
-            <Directory><![CDATA[C:\tmp\jobscheduler\file\polling]]></Directory>
-          </CopyTarget>
-        </Copy>
-      </Operation>
-    </Profile>
-    <Profile profile_id="smb_test_move">
-      <Operation>
-        <Move>
-          <MoveSource>
-            <MoveSourceFragmentRef>
-              <SMBFragmentRef ref="my_smb_server" />
-            </MoveSourceFragmentRef>
-            <SourceFileOptions>
-              <Selection>
-                <FileSpecSelection>
-                  <FileSpec><![CDATA[.+\.csv$]]></FileSpec>
-                  <Directory><![CDATA[/tmp/polling]]></Directory>
-                </FileSpecSelection>
-              </Selection>
-              <Polling>
-                <PollInterval>15</PollInterval>
-                <PollTimeout>0</PollTimeout>
-                <WaitForSourceFolder>true</WaitForSourceFolder>
-                <PollingServer>true</PollingServer>
-                <PollForever>true</PollForever>
-              </Polling>
-            </SourceFileOptions>
-          </MoveSource>
-          <MoveTarget>
-            <MoveTargetFragmentRef>
-              <LocalTarget />
-            </MoveTargetFragmentRef>
-            <Directory><![CDATA[C:\tmp\jobscheduler\file\polling]]></Directory>
-          </MoveTarget>
-        </Move>
-      </Operation>
-    </Profile>
-  </Profiles>
+  <Profiles />
+  <General>
+    <SystemPropertyFiles>
+      <SystemPropertyFile><![CDATA[geberal_sp_file]]></SystemPropertyFile>
+    </SystemPropertyFiles>
+    <Notifications>
+      <MailServerFragmentRef ref="mailserver" />
+    </Notifications>
+    <RetryOnConnectionError>
+      <RetryCountMax>3</RetryCountMax>
+      <RetryInterval><![CDATA[0s]]></RetryInterval>
+    </RetryOnConnectionError>
+  </General>
 </Configurations>

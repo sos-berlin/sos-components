@@ -11,12 +11,14 @@ import org.w3c.dom.Node;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.commons.xml.SOSXmlHashComparator;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 
 public class StandardYADEJobResource {
@@ -52,58 +54,38 @@ public class StandardYADEJobResource {
         return new StandardYADEJobResource(name, variable, environmentVariable, getYADEJobResourceFromInventory(name));
     }
 
-    public String getDeployedXMLFromInventory() {
-        if (inventoryItem == null || !inventoryItem.getDeployed()) {
-            return null;
+    /** Sets a YADE1 configurations as deployed */
+    public static DBItemXmlEditorConfiguration trySetDeployedIfYADE1(DBItemXmlEditorConfiguration item) {
+        if (!"YADE_configuration_v1.12.xsd".equalsIgnoreCase(item.getSchemaLocation())) {
+            return item;
         }
-        String inventoryXML = null;
+        if (item.getConfigurationDraft() == null) {
+            return item;
+        }
+
         try {
-            JobResource jr = Globals.objectMapper.readValue(inventoryItem.getContent(), JobResource.class);
-            if (jr == null) {
-                return null;
+            // XMLEDITOR - YADE2 xml
+            String draftXml = StandardSchemaHandler.getXml(item.getConfigurationDraft(), true);
+            // JocXmlEditor.validate(ObjectType.YADE, StandardSchemaHandler.getYADESchema(), xml);
+            Document doc = SOSXML.parse(draftXml);
+            StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
+            if (yadeJobResource != null) {// JobResource element not defined
+                // INVENTORY JobResource - YADE2 xml
+                String inventoryXml = yadeJobResource.getDeployedXmlFromInventory();
+                if (inventoryXml != null) {
+                    if (SOSXmlHashComparator.equals(draftXml, inventoryXml)) {
+                        yadeJobResource.setDeployedIfYADE1(item, inventoryXml, null);
+                    } else {
+                        yadeJobResource.setDeployedIfYADE1(item, inventoryXml, draftXml);
+                    }
+                }
             }
-            String variableValue = jr.getArguments().getAdditionalProperties().get(variable);
-            if (variableValue == null) {
-                return null;
-            }
-            inventoryXML = extractXml(variableValue);
-            return StandardSchemaHandler.getXml(inventoryXML, true);
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.warn("[getDeployedXMLFromInventory][inventoryXML]" + inventoryXML);
-                LOGGER.warn("[getDeployedXMLFromInventory]" + e, e);
+                LOGGER.debug("[trySetYADE1AsDeployed]" + e, e);
             }
-            return null;
         }
-    }
-
-    public void tryUpdateReleasedConfigurationIfJobResourceDeployed(DBItemXmlEditorConfiguration item) {
-        String inventoryXML = getDeployedXMLFromInventory();
-        if (inventoryXML == null) {
-            return;
-        }
-
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("tryUpdateReleasedConfigurationIfJobResourceDeployed-" + item.getId());
-            session.beginTransaction();
-
-            item.setConfigurationDraft(null);
-            item.setConfigurationDraftJson(null);
-            item.setConfigurationReleased(inventoryXML);
-            item.setConfigurationReleasedJson(null);
-            item.setAuditLogId(inventoryItem.getAuditLogId());
-            // item.setAccount(account);
-            item.setModified(new Date());
-            item.setReleased(inventoryItem.getModified());
-
-            session.update(item);
-            session.commit();
-        } catch (Throwable e) {
-            Globals.rollback(session);
-        } finally {
-            Globals.disconnect(session);
-        }
+        return item;
     }
 
     public void createNewJobResourceInventoryItem() {
@@ -111,18 +93,6 @@ public class StandardYADEJobResource {
         inventoryItem.setId(null);
         inventoryItem.setType(ConfigurationType.JOBRESOURCE);
         inventoryItem.setPath("/" + name);
-    }
-
-    // String variableValue = "toFile( '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\r\n<Configurations>...</Configurations>', '*.xml' )";
-    private static String extractXml(String variableValue) {
-        int start = variableValue.indexOf('<'); // first <
-        int quoteEnd = variableValue.lastIndexOf('\''); // last '
-        int end = variableValue.lastIndexOf('>', quoteEnd); // last > before '
-        if (start == -1 || end == -1 || end <= start) {
-            return null;
-        }
-        String xml = variableValue.substring(start, end + 1);
-        return xml.replace("\\r\\n", "\r\n").replace("\\\"", "\"").trim();
     }
 
     public String getName() {
@@ -174,5 +144,71 @@ public class StandardYADEJobResource {
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private String getDeployedXmlFromInventory() {
+        if (inventoryItem == null || !inventoryItem.getDeployed()) {
+            return null;
+        }
+        String inventoryXML = null;
+        try {
+            JobResource jr = Globals.objectMapper.readValue(inventoryItem.getContent(), JobResource.class);
+            if (jr == null) {
+                return null;
+            }
+            String variableValue = jr.getArguments().getAdditionalProperties().get(variable);
+            if (variableValue == null) {
+                return null;
+            }
+            inventoryXML = extractXml(variableValue);
+            return StandardSchemaHandler.getXml(inventoryXML, true);
+        } catch (Exception e) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.warn("[getDeployedXmlFromInventory][inventoryXML]" + inventoryXML);
+                LOGGER.warn("[getDeployedXmlFromInventory]" + e, e);
+            }
+            return null;
+        }
+    }
+
+    private void setDeployedIfYADE1(DBItemXmlEditorConfiguration item, String inventoryXml, String draftXml) {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("setDeployedIfYADE1-" + item.getId());
+            session.beginTransaction();
+
+            item.setSchemaLocation(JocXmlEditor.YADE_SCHEMA_FILENAME);
+
+            item.setConfigurationDraft(draftXml);
+            item.setConfigurationDraftJson(null);
+            item.setConfigurationReleased(inventoryXml);
+            item.setConfigurationReleasedJson(null);
+
+            item.setReleased(inventoryItem.getModified());
+            item.setModified(new Date());
+
+            if (draftXml == null) {
+                item.setAuditLogId(inventoryItem.getAuditLogId());
+            }
+
+            session.update(item);
+            session.commit();
+        } catch (Throwable e) {
+            Globals.rollback(session);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
+    // String variableValue = "toFile( '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\r\n<Configurations>...</Configurations>', '*.xml' )";
+    private static String extractXml(String variableValue) {
+        int start = variableValue.indexOf('<'); // first <
+        int quoteEnd = variableValue.lastIndexOf('\''); // last '
+        int end = variableValue.lastIndexOf('>', quoteEnd); // last > before '
+        if (start == -1 || end == -1 || end <= start) {
+            return null;
+        }
+        String xml = variableValue.substring(start, end + 1);
+        return xml.replace("\\r\\n", "\r\n").replace("\\\"", "\"").trim();
     }
 }

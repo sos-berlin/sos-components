@@ -5,12 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -39,8 +34,7 @@ import jakarta.ws.rs.Path;
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ReadResourceImpl extends ACommonResourceImpl implements IReadResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReadResourceImpl.class);
-
+  
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
@@ -121,25 +115,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
                     .getObjectType().name(), in.getId())));
         }
 
-        // workaround YADE-626 to sets already deployed
-        // YADE_configuration_v2.0.0.xsd != YADE_configuration_v1.12.xsd
-        if (!JocXmlEditor.YADE_SCHEMA_FILENAME.equalsIgnoreCase(item.getSchemaLocation())) {
-            if (item.getConfigurationReleased() == null && item.getConfigurationDraft() != null) {
-                try {
-                    String xml = StandardSchemaHandler.getXml(item.getConfigurationDraft(), true);
-                    JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), xml);
-                    Document doc = SOSXML.parse(xml);
-                    StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
-                    if (yadeJobResource != null) {// JobResource element not defined
-                        yadeJobResource.tryUpdateReleasedConfigurationIfJobResourceDeployed(item);
-                    }
-                } catch (Exception e) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.warn("[getSingleYADEConfiguration]" + e, e);
-                    }
-                }
-            }
-        }
+        item = StandardYADEJobResource.trySetDeployedIfYADE1(item);
 
         StandardSchemaHandler handler = new StandardSchemaHandler(ObjectType.YADE);
         handler.readCurrent(item, (in.getForceRelease() != null && in.getForceRelease()));
@@ -286,4 +262,5 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             Globals.disconnect(session);
         }
     }
+
 }

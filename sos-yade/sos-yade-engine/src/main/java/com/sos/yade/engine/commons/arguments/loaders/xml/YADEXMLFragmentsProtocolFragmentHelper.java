@@ -383,7 +383,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
     protected static void parseHTTPHeaders(YADEXMLArgumentsLoader argsLoader, HTTPProviderArguments args, Node headers) throws Exception {
         NodeList nl = headers.getChildNodes();
-        args.getHttpHeaders().setValue(new ArrayList<>());
+        if (args.getHttpHeaders().getValue() == null) {
+            args.getHttpHeaders().setValue(new ArrayList<>());
+        }
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {

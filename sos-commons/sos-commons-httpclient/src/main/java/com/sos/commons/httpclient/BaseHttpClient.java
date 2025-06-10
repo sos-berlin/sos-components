@@ -390,9 +390,9 @@ public class BaseHttpClient implements AutoCloseable {
                             String name = header.substring(0, p).trim();
                             String value = header.substring(p).trim();
                             if (isDebugEnabled) {
-                                logger.debug("[BaseHttpClient][setHeaders]" + name + ":" + value);
+                                logger.debug("[BaseHttpClient][setHeaders]name=" + name + ", value=" + value);
                             }
-                            headers.put(header, value);
+                            headers.put(name, value);
                         }
                     });
         }
