@@ -34,19 +34,19 @@ public class HistoryLogMapper {
         if (entry.getPriority() != null) {
             switch (entry.getPriority()) {
             case 20000:
-                info.add("prio=HIGH");
+                info.add("prio=high");
                 break;
             case 10000:
-                info.add("prio=ABOVE NORMAL");
+                info.add("prio=above normal");
                 break;
             case 0:
-                info.add("prio=NORMAL");
+                info.add("prio=normal");
                 break;
             case -10000:
-                info.add("prio=BELOW NORMAL");
+                info.add("prio=below normal");
                 break;
             case -20000:
-                info.add("prio=LOW");
+                info.add("prio=low");
                 break;
             default:
                 info.add("prio=" + entry.getPriority());

@@ -835,10 +835,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {
+        return cyclicFreshOrderIds(orderIds.stream(), currentState);
+    }
+    
+    public static Stream<JOrder> cyclicFreshOrderIds(Stream<String> orderIds, JControllerState currentState) {
         Stream<JOrder> cyclicOrderStream = Stream.empty();
         // determine cyclic ids
         Map<OrderId, JOrder> knownOrders = currentState.idToOrder();
-        Set<String> freshCyclicIds = orderIds.stream().filter(s -> OrdersHelper.isCyclicOrderId(s)).map(s -> knownOrders.get(OrderId.of(s))).filter(
+        Set<String> freshCyclicIds = orderIds.filter(s -> OrdersHelper.isCyclicOrderId(s)).map(OrderId::of).map(knownOrders::get).filter(
                 Objects::nonNull).filter(o -> Order.Fresh.class.isInstance(o.asScala().state())).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o
                         .id().string())).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {

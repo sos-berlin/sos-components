@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -36,6 +37,7 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
@@ -850,6 +852,11 @@ public class DBLayerDailyPlannedOrders {
 
     public int updateDailyPlanOrdersByCyclicMainPart(String controllerId, String mainPart, String orderParameterisation)
             throws SOSHibernateException {
+        return updateDailyPlanOrdersByCyclicMainPart(controllerId, mainPart, orderParameterisation, Date.from(Instant.now()));
+    }
+    
+    public int updateDailyPlanOrdersByCyclicMainPart(String controllerId, String mainPart, String orderParameterisation, Date now)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("set orderParameterisation=:orderParameterisation ");
         hql.append(", modified=:modified ");
@@ -860,8 +867,24 @@ public class DBLayerDailyPlannedOrders {
         query.setParameter("controllerId", controllerId);
         query.setParameter("mainPart", mainPart + "%");
         query.setParameter("orderParameterisation", orderParameterisation);
-        query.setParameter("modified", Date.from(Instant.now()));
+        query.setParameter("modified", now);
         return executeUpdate("updateOrderParameterisation", query);
+    }
+    
+    public void updateOrderParameterisation(DBItemDailyPlanOrder item, Date now) {
+        try {
+            if (item.isCyclic()) {
+                updateDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId()), item
+                        .getOrderParameterisation(), now);
+            } else {
+                item.setModified(now);
+                session.update(item);
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
     private List<DBItemDailyPlanOrder> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {

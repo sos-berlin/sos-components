@@ -291,6 +291,7 @@ public class JsonValidator {
 
             put("com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef", "orderManagement/dailyplan/dailyPlanOrdersFilterDefRequired-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanModifyOrder", "orderManagement/dailyplan/dailyPlanModifyOrder-schema.json");
+            put("com.sos.joc.model.dailyplan.DailyPlanChangePriority", "orderManagement/dailyplan/dailyPlanChangePriority-schema.json");
             put("com.sos.joc.model.dailyplan.generate.GenerateRequest", "dailyplan/generate/generate-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.MainRequest", "dailyplan/history/main-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.SubmissionsRequest", "dailyplan/history/submissions-request-schema.json");
