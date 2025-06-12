@@ -22,6 +22,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditTrail;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
@@ -47,7 +48,9 @@ import com.sos.joc.model.security.foureyes.RequestBody;
 import com.sos.joc.model.security.foureyes.RequestorState;
 
 import io.vavr.control.Either;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.core.Context;
 
 public class JOCResourceImpl {
 
@@ -56,10 +59,13 @@ public class JOCResourceImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
 //    private String accessToken;
     private String headerAccessToken;
-    private JocAuditLog jocAuditLog;
+    private JocAuditTrail jocAuditLog;
     
     @HeaderParam("X-Approval-Request-Id")
     private String approvalRequestId;
+    
+    @Context
+    private HttpServletRequest servletRequest;
     
     private byte[] origBody;
 
@@ -377,7 +383,7 @@ public class JOCResourceImpl {
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
-        body = initLogging(request, body, category);
+        body = initLogging2(request, body, accessToken, category);
 
         if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             throw new SessionNotExistException("Session is broken and no longer valid. New login is neccessary");
@@ -391,8 +397,12 @@ public class JOCResourceImpl {
         
         return body;
     }
-
+    
     public byte[] initLogging(String request, byte[] body, CategoryType category) throws Exception {
+        return initLogging2(request, body, null, category);
+    }
+
+    private byte[] initLogging2(String request, byte[] body, String accessToken, CategoryType category) throws Exception {
         String user;
         try {
             user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
@@ -417,7 +427,7 @@ public class JOCResourceImpl {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
         }
-        jocAuditLog = new JocAuditLog(user, request, bodyStr, category);
+        jocAuditLog = new JocAuditTrail(user, request, bodyStr, accessToken, servletRequest.getRemoteAddr(), category);
         
         if (bodyStr.length() > 4096) {
             bodyStr = bodyStr.substring(0, 4093) + "...";

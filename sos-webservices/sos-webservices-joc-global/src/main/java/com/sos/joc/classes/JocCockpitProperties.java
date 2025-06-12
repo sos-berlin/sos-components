@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +32,7 @@ public class JocCockpitProperties {
 	private volatile long modTime = 0L;
 	private volatile long log4jModTime = 0L;
 	public static AtomicBoolean auditObjectsLoggerIsDefined = new AtomicBoolean(false);
+	public static AtomicBoolean auditTrailLoggerIsDefined = new AtomicBoolean(false);
 
 	public JocCockpitProperties() {
 		readProperties();
@@ -206,10 +209,11 @@ public class JocCockpitProperties {
     }
     
     private void setAuditObjectsLoggerIsDefined(Path p) {
-        auditObjectsLoggerIsDefined.getAndSet(Configurator.initialize("joc_config", null, p.toUri()).getConfiguration().getLoggers().values().stream()
-                .map(l -> l.getName()).anyMatch(l -> l.equals(WebserviceConstants.AUDIT_OBJECTS_LOGGER)));
+        Collection<LoggerConfig> lg = Configurator.initialize("joc_config", null, p.toUri()).getConfiguration().getLoggers().values();
+        auditObjectsLoggerIsDefined.getAndSet(lg.stream().map(LoggerConfig::getName).anyMatch(l -> l.equals(WebserviceConstants.AUDIT_OBJECTS_LOGGER)));
+        auditTrailLoggerIsDefined.getAndSet(lg.stream().map(LoggerConfig::getName).anyMatch(l -> l.equals(WebserviceConstants.AUDIT_TRAIL_LOGGER)));
     }
-
+    
 	private void substituteProperties() {
 		parameterSubstitutor = new SOSParameterSubstitutor();
 		for (Map.Entry<Object, Object> e : properties.entrySet()) {

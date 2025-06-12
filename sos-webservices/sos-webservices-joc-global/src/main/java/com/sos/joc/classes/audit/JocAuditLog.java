@@ -10,6 +10,8 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
@@ -26,11 +28,22 @@ public class JocAuditLog {
 
     private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_LOGGER);
     private static final Logger LOGGER = LoggerFactory.getLogger(JocAuditLog.class);
+    
+    @JsonProperty("account")
     private String user;
+    
+    @JsonProperty("requestUrl")
     private String request;
+    
+    @JsonProperty("requestBody")
     private String params;
+    
+    @JsonIgnore
     private boolean isLogged = false;
+    
+    @JsonIgnore
     private CategoryType category;
+    
     public static final String EMPTY_STRING = "-";
     private static final List<Integer> typesOfWorkflowEvent = Arrays.asList(ObjectType.ORDER.intValue(), ObjectType.WORKFLOW.intValue());
     
@@ -62,16 +75,17 @@ public class JocAuditLog {
         return params;
     }
     
+    @JsonProperty("account")
     public String getUser() {
         return user;
     }
 
-    
+    @JsonProperty("requestUrl")
     public String getRequest() {
         return request;
     }
 
-    
+    @JsonProperty("requestBody")
     public String getParams() {
         return params;
     }

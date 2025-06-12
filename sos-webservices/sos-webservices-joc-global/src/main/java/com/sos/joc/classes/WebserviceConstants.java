@@ -8,6 +8,7 @@ public class WebserviceConstants {
     public static final String DEFAULT_ERROR_CODE = "JOC-420";
     public static final String COMMAND_ERROR_CODE = "COMMAND-001";
     public static final String AUDIT_LOGGER = "JOCAuditLog";
+    public static final String AUDIT_TRAIL_LOGGER = "JOCAuditTrailLog";
     public static final String AUDIT_OBJECTS_LOGGER = "JOCAuditObjectsLog";
     public static final Marker NOT_NOTIFY_LOGGER = MarkerFactory.getMarker("NOT_NOTIFY");
     
