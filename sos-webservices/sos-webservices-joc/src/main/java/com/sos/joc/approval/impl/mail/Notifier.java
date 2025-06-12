@@ -32,12 +32,70 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.configuration.ConfigurationType;
+import com.sos.joc.model.security.foureyes.EmailPriority;
 import com.sos.joc.model.security.foureyes.EmailSettings;
 import com.sos.joc.model.security.foureyes.ReadEmailSettings;
 
 public class Notifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Notifier.class);
+    private static final String DefaultJobResource = "eMailDefault";
+    private static final String DefaultCharset = "ISO-8859-1";
+    private static final String DefaultContentType = "text/html";
+    private static final String DefaultEncoding = "7bit";
+    private static final EmailPriority DefaultPriority = EmailPriority.NORMAL;
+    private static final String DefaultSubject = "JS7 Request for Approval";
+    private static final String DefaultBody = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <style>
+        .tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}
+        .tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}
+        .tg th {font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#fff;background-color:#f38630;}
+    </style>
+    <title>JS7 JobScheduler Notification</title>
+</head>
+<body>
+    <table class="tg">
+        <tr>
+            <th colspan="4">JS7 Request for Approval</th>
+        </tr>
+        <tr>
+            <td>Title:</td>
+            <td colspan="3">${Title}</td>
+        </tr>
+        <tr>
+            <td>Reason:</td>
+            <td colspan="3">${Reason}</td>
+        </tr>
+        <tr>
+            <td>Request URI:</td>
+            <td colspan="3">${RequestURI}</td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td colspan="3">${RequestBody}</td>
+        </tr>
+        <tr>
+            <td>JOC Cockpit Link:</td>
+            <td colspan="3">${jocURL}</td>
+        </tr>
+        <tr>
+            <td>Requestor Account:</td>
+            <td>${Requestor}</td>
+            <td>Category:</td>
+            <td>${Category}</td>
+        </tr>
+        <tr>
+            <td>Request Status:</td>
+            <td>${RequestStatus}</td>
+            <td>Request Status Date:</td>
+            <td>${RequestStatusDate}</td>
+        </tr>
+    </table>
+</body>""";
 
     public static ReadEmailSettings readEmailSettings(SOSHibernateSession session) throws SOSHibernateException, JsonMappingException,
             JsonProcessingException {
@@ -51,9 +109,31 @@ public class Notifier {
         List<DBItemJocConfiguration> jocConfs = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
         if (jocConfs != null && !jocConfs.isEmpty()) {
             entity = Globals.objectMapper.readValue(jocConfs.get(0).getConfigurationItem(), ReadEmailSettings.class);
+            if (SOSString.isEmpty(entity.getBody())) {
+                entity.setContentType(DefaultContentType);
+                entity.setBody(DefaultBody);
+            }
+            if (SOSString.isEmpty(entity.getSubject())) {
+                entity.setSubject(DefaultSubject); 
+            }
+        } else {
+            entity = getDefaultEmailSettings();
         }
         entity.setDeliveryDate(Date.from(Instant.now()));
         return entity;
+    }
+    
+    private static ReadEmailSettings getDefaultEmailSettings() {
+        ReadEmailSettings _default = new ReadEmailSettings();
+        _default.setBody(DefaultBody);
+        _default.setCharset(DefaultCharset);
+        _default.setContentType(DefaultContentType);
+        _default.setEncoding(DefaultEncoding);
+        _default.setJobResourceName(DefaultJobResource);
+        _default.setPriority(DefaultPriority);
+        _default.setSubject(DefaultSubject);
+        return _default;
+        
     }
 
     public static void send(DBItemJocApprovalRequest item, ApprovalDBLayer dbLayer, JocError jocError) {
@@ -164,22 +244,24 @@ public class Notifier {
         if (!SOSString.isEmpty(emailSettings.getEncoding())) {
             mail.setEncoding(emailSettings.getEncoding());
         }
-        switch (emailSettings.getPriority()) {
-        case NORMAL:
-            mail.setPriorityNormal();
-            break;
-        case HIGH:
-            mail.setPriorityHigh();
-            break;
-        case HIGHEST:
-            mail.setPriorityHighest();
-            break;
-        case LOW:
-            mail.setPriorityLow();
-            break;
-        case LOWEST:
-            mail.setPriorityLowest();
-            break;
+        if (emailSettings.getPriority() != null) {
+            switch (emailSettings.getPriority()) {
+            case NORMAL:
+                mail.setPriorityNormal();
+                break;
+            case HIGH:
+                mail.setPriorityHigh();
+                break;
+            case HIGHEST:
+                mail.setPriorityHighest();
+                break;
+            case LOW:
+                mail.setPriorityLow();
+                break;
+            case LOWEST:
+                mail.setPriorityLowest();
+                break;
+            }
         }
         mail.setFrom(mailResource.getFrom());
         if (!SOSString.isEmpty(mailResource.getFromName())) {
