@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -15,9 +14,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -63,7 +59,6 @@ import js7.data_for_java.order.JOrder;
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements IDailyPlanModifyPriority {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanModifyPriorityImpl.class);
     private JControllerState currentState = null;
 
     @Override
@@ -110,37 +105,10 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
                 session.setAutoCommit(false);
                 Globals.beginTransaction(session);
                 
-                Function<DBItemDailyPlanOrder, DBItemDailyPlanOrder> setPrio = item -> {
-                    try {
-                        OrderParameterisation op = new OrderParameterisation();
-                        if (item.getOrderParameterisation() == null) {
-                            if (in.getPriority() == 0) {
-                                return null;
-                            }
-                            op.setPriority(in.getPriority());
-                        } else {
-                            op = Globals.objectMapper.readValue(item.getOrderParameterisation(), OrderParameterisation.class);
-                            Integer origPrio = op.getPriority();
-                            if (origPrio == null) {
-                                origPrio = 0;
-                            }
-                            if (origPrio == in.getPriority()) {
-                                return null;
-                            }
-                            op.setPriority(in.getPriority());
-                        }
-                        item.setOrderParameterisation(Globals.objectMapper.writeValueAsString(op));
-                        LOGGER.info(item.toString());
-                        return item;
-                    } catch (Exception e) {
-                        LOGGER.error("", e);
-                        return null;
-                    }
-                };
-
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 auditLogDetails = getDailyPlanOrders(controllerId, orderIds.get(Boolean.TRUE), dbLayer).stream().filter(item -> folderIsPermitted(item
-                        .getWorkflowFolder(), permittedFolders)).map(setPrio).filter(Objects::nonNull).map(item -> {
+                        .getWorkflowFolder(), permittedFolders)).map(setPriority(in.getPriority())).filter(Optional::isPresent).map(Optional::get)
+                        .map(item -> {
                             if (item.getSubmitted()) {
                                 submittedOrdersWithChangedPrio.add(item);
                             } else {
@@ -196,6 +164,34 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    public static Function<DBItemDailyPlanOrder, Optional<DBItemDailyPlanOrder>> setPriority(Integer priority) {
+        return item -> {
+            try {
+                OrderParameterisation op = new OrderParameterisation();
+                if (item.getOrderParameterisation() == null) {
+                    if (priority == 0) {
+                        return Optional.empty();
+                    }
+                    op.setPriority(priority);
+                } else {
+                    op = Globals.objectMapper.readValue(item.getOrderParameterisation(), OrderParameterisation.class);
+                    Integer origPrio = op.getPriority();
+                    if (origPrio == null) {
+                        origPrio = 0;
+                    }
+                    if (origPrio == priority) {
+                        return Optional.empty();
+                    }
+                    op.setPriority(priority);
+                }
+                item.setOrderParameterisation(Globals.objectMapper.writeValueAsString(op));
+                return Optional.of(item);
+            } catch (Exception e) {
+                return Optional.empty();
+            }
+        };
     }
     
     private CompletableFuture<Either<Problem, ControllerCommand.Response>> command(DailyPlanChangePriority in,

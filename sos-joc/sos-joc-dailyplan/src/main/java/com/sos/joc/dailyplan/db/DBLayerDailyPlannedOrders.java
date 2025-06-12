@@ -820,7 +820,11 @@ public class DBLayerDailyPlannedOrders {
             Query<DBItemDailyPlanOrder> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameterList("orderIds", orderIds);
-            return session.getResultList(query);
+            List<DBItemDailyPlanOrder> res = session.getResultList(query);
+            if (res == null) {
+                return Collections.emptyList();
+            }
+            return res;
         }
     }
 
