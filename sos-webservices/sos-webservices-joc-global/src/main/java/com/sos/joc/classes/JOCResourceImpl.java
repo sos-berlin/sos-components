@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -261,6 +262,10 @@ public class JOCResourceImpl {
     public JocAuditLog getJocAuditLog() {
         return jocAuditLog;
     }
+    
+    public void logAuditTrail() {
+        jocAuditLog.log();
+    }
 
     public DBItemJocAuditLog storeAuditLog(AuditParams audit) {
         checkRequiredComment(audit);
@@ -427,7 +432,8 @@ public class JOCResourceImpl {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
         }
-        jocAuditLog = new JocAuditTrail(user, request, bodyStr, accessToken, servletRequest.getRemoteAddr(), category);
+        String ipAddress = Optional.ofNullable(servletRequest).map(HttpServletRequest::getRemoteAddr).orElse("");
+        jocAuditLog = new JocAuditTrail(user, request, bodyStr, accessToken, ipAddress, category);
         
         if (bodyStr.length() > 4096) {
             bodyStr = bodyStr.substring(0, 4093) + "...";
