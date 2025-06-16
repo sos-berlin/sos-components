@@ -192,7 +192,7 @@ public class ProjectionsRequest {
     public void setWorkflowFolders(List<Folder> workflowFolders) {
         this.workflowFolders = workflowFolders;
     }
-    
+
     @JsonProperty("withoutStartTime")
     public Boolean getWithoutStartTime() {
         return withoutStartTime;
@@ -210,7 +210,7 @@ public class ProjectionsRequest {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulePaths).append(workflowFolders).append(controllerIds).append(dateTo).append(workflowPaths).append(dateFrom).append(scheduleFolders).append(withoutStartTime).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(workflowFolders).append(withoutStartTime).append(controllerIds).append(dateTo).append(workflowPaths).append(dateFrom).append(scheduleFolders).toHashCode();
     }
 
     @Override
@@ -222,7 +222,7 @@ public class ProjectionsRequest {
             return false;
         }
         ProjectionsRequest rhs = ((ProjectionsRequest) other);
-        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(dateTo, rhs.dateTo).append(workflowPaths, rhs.workflowPaths).append(dateFrom, rhs.dateFrom).append(scheduleFolders, rhs.scheduleFolders).append(withoutStartTime, rhs.withoutStartTime).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(withoutStartTime, rhs.withoutStartTime).append(controllerIds, rhs.controllerIds).append(dateTo, rhs.dateTo).append(workflowPaths, rhs.workflowPaths).append(dateFrom, rhs.dateFrom).append(scheduleFolders, rhs.scheduleFolders).isEquals();
     }
 
 }

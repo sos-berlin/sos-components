@@ -41,12 +41,6 @@ public class ProjectionsDayRequest {
     @JsonProperty("date")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String date;
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
     @JsonProperty("controllerIds")
     private List<String> controllerIds = new ArrayList<String>();
     @JsonProperty("schedulePaths")
@@ -169,7 +163,7 @@ public class ProjectionsDayRequest {
     public void setWorkflowFolders(List<Folder> workflowFolders) {
         this.workflowFolders = workflowFolders;
     }
-    
+
     @JsonProperty("withoutStartTime")
     public Boolean getWithoutStartTime() {
         return withoutStartTime;
@@ -187,7 +181,7 @@ public class ProjectionsDayRequest {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(date).append(schedulePaths).append(workflowFolders).append(controllerIds).append(workflowPaths).append(scheduleFolders).append(withoutStartTime).toHashCode();
+        return new HashCodeBuilder().append(date).append(schedulePaths).append(workflowFolders).append(withoutStartTime).append(controllerIds).append(workflowPaths).append(scheduleFolders).toHashCode();
     }
 
     @Override
@@ -199,7 +193,7 @@ public class ProjectionsDayRequest {
             return false;
         }
         ProjectionsDayRequest rhs = ((ProjectionsDayRequest) other);
-        return new EqualsBuilder().append(date, rhs.date).append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(workflowPaths, rhs.workflowPaths).append(scheduleFolders, rhs.scheduleFolders).append(withoutStartTime, rhs.withoutStartTime).isEquals();
+        return new EqualsBuilder().append(date, rhs.date).append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(withoutStartTime, rhs.withoutStartTime).append(controllerIds, rhs.controllerIds).append(workflowPaths, rhs.workflowPaths).append(scheduleFolders, rhs.scheduleFolders).isEquals();
     }
 
 }

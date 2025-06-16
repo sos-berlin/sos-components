@@ -34,6 +34,12 @@ public class DailyPlanSettings {
     private boolean overwrite = false;
     private boolean submit = true;
 
+    // Projections(DONE) and Schedule Preview(TODO)
+    // The DailyPlanRunner start time calculation returns OrderListSynchronizer, which contains absolute Periods.
+    // - Period start times: contains the date and time.
+    // - For Cyclic Periods : only one Period with an absolute begin and end
+    private boolean calculateAbsoluteMainPeriodsOnly = false;
+
     private int daysAheadPlan = 0;
     private int daysAheadSubmit = 0;
     private int projectionsMonthAhead = 0;
@@ -135,6 +141,14 @@ public class DailyPlanSettings {
         overwrite = val;
     }
 
+    public boolean isCalculateAbsoluteMainPeriodsOnly() {
+        return calculateAbsoluteMainPeriodsOnly;
+    }
+
+    public void setCalculateAbsoluteMainPeriodsOnly(boolean val) {
+        calculateAbsoluteMainPeriodsOnly = val;
+    }
+
     public int getDaysAheadPlan() {
         return daysAheadPlan;
     }
@@ -185,7 +199,7 @@ public class DailyPlanSettings {
     public int getProjectionsMonthAhead() {
         return projectionsMonthAhead;
     }
-    
+
     public void setAgeOfPlansToBeClosedAutomatically(int val) {
         ageOfPlansToBeClosedAutomatically = val;
     }

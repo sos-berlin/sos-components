@@ -35,6 +35,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.ProjectionsImpl;
+import com.sos.joc.dailyplan.common.ScheduleOrderCounter;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
 import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
@@ -158,6 +159,8 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                         throw new DBInvalidDataException(e);
                     }
                 });
+                // use the original metadata for this calculation, as totalOrdes will be removed later(due to meta recreated)
+                Map<String, ScheduleOrderCounter> scheduleOrderCounter = mapScheduleOrderCounter(metaContentOpt, allowedControllers);
 
                 Set<String> permittedSchedules = new HashSet<>();
                 final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNames, in
@@ -165,8 +168,8 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
                 Set<String> schedulesExcludedFromProjection = getSchedulesExcludedFromProjection(metaContentOpt, false);
                 for (DBItemDailyPlanProjection item : items) {
-                    setYearsItem(item, invertedProjection, export, schedulesExcludedFromProjection, unPermittedSchedulesExist, permittedSchedules,
-                            pDayFromTo, yearsItem);
+                    setYearsItem(scheduleOrderCounter, item, invertedProjection, export, schedulesExcludedFromProjection, unPermittedSchedulesExist,
+                            permittedSchedules, pDayFromTo, yearsItem);
                 }
 
                 if (export) {
@@ -275,9 +278,9 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
         }
     }
 
-    private void setYearsItem(DBItemDailyPlanProjection item, boolean invertedProjection, boolean export, Set<String> schedulesExcludedFromProjection,
-            boolean unPermittedSchedulesExist, Set<String> permittedSchedules, Optional<Predicate<String>> pDayFromTo, YearsItem yearsItem)
-            throws StreamReadException, DatabindException, IOException {
+    private void setYearsItem(Map<String, ScheduleOrderCounter> scheduleOrderCounter, DBItemDailyPlanProjection item, boolean invertedProjection,
+            boolean export, Set<String> schedulesExcludedFromProjection, boolean unPermittedSchedulesExist, Set<String> permittedSchedules,
+            Optional<Predicate<String>> pDayFromTo, YearsItem yearsItem) throws StreamReadException, DatabindException, IOException {
         if (!item.isMeta()) {
             final int numOfPermittedSchedules = permittedSchedules.size();
             final Integer numOfPermittedSchedulesForProjectionDays;
@@ -322,7 +325,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                     dateItem.setPeriods(null);
                 } else {
                     if (!export) {
-                        dateItem.setNumOfPeriods(dateItem.getPeriods().size());
+                        setDateItemNumOfOrders(dateItem, scheduleOrderCounter);
                         dateItem.setPeriods(null);
                     }
                 }
@@ -338,7 +341,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                 if (export) {
                     monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getPeriods().isEmpty());
                 } else {
-                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfPeriods() == 0);
+                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfOrders() == 0);
                 }
             }
 

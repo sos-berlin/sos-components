@@ -24,6 +24,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "schedule",
+    "scheduleOrderName",
+    "workflow",
     "period"
 })
 public class DatePeriodItem {
@@ -38,10 +40,25 @@ public class DatePeriodItem {
     @JsonProperty("schedule")
     private String schedule;
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleOrderName")
+    private String scheduleOrderName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflow")
+    private String workflow;
+    /**
      * periods
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("period")
@@ -74,10 +91,53 @@ public class DatePeriodItem {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleOrderName")
+    public String getScheduleOrderName() {
+        return scheduleOrderName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleOrderName")
+    public void setScheduleOrderName(String scheduleOrderName) {
+        this.scheduleOrderName = scheduleOrderName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflow")
+    public String getWorkflow() {
+        return workflow;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflow")
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
+    }
+
+    /**
      * periods
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("period")
@@ -89,7 +149,6 @@ public class DatePeriodItem {
      * periods
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("period")
@@ -109,12 +168,12 @@ public class DatePeriodItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("schedule", schedule).append("period", period).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("schedule", schedule).append("scheduleOrderName", scheduleOrderName).append("workflow", workflow).append("period", period).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedule).append(period).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(schedule).append(period).append(additionalProperties).append(workflow).append(scheduleOrderName).toHashCode();
     }
 
     @Override
@@ -126,7 +185,7 @@ public class DatePeriodItem {
             return false;
         }
         DatePeriodItem rhs = ((DatePeriodItem) other);
-        return new EqualsBuilder().append(schedule, rhs.schedule).append(period, rhs.period).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(schedule, rhs.schedule).append(period, rhs.period).append(additionalProperties, rhs.additionalProperties).append(workflow, rhs.workflow).append(scheduleOrderName, rhs.scheduleOrderName).isEquals();
     }
 
 }

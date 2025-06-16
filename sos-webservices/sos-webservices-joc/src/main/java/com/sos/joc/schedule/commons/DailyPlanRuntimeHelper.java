@@ -1,4 +1,4 @@
-package com.sos.joc.dailyplan.common;
+package com.sos.joc.schedule.commons;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -28,9 +28,9 @@ import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class DailyPlanRuntimeAndProjectionsHelper {
+public class DailyPlanRuntimeHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRuntimeAndProjectionsHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRuntimeHelper.class);
 
     public static List<Calendar> getNonWorkingDayCalendars(InventoryDBLayer dbLayer, List<AssignedNonWorkingDayCalendars> nonWorkingDayCalendars)
             throws Exception {

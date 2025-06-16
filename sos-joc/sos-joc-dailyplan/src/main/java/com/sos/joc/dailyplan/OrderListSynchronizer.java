@@ -7,12 +7,14 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +29,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.calendar.Period;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
@@ -35,6 +39,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.dailyplan.common.AbsoluteMainPeriod;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.MainCyclicOrderKey;
@@ -70,10 +75,60 @@ public class OrderListSynchronizer {
     private DBItemDailyPlanSubmission submission;
     private String accessToken = null;
 
+    private List<AbsoluteMainPeriod> absoluteMainPeriods = null;
+    private Map<MainCyclicOrderKey, Map<Long, Period>> absoluteMainCyclicPeriodsHelper = null;
+
     public OrderListSynchronizer(DailyPlanSettings settings) {
         this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
         this.settings = settings;
         this.callerForLog = DailyPlanHelper.getCallerForLog(this.settings);
+        if (this.settings.isCalculateAbsoluteMainPeriodsOnly()) {
+            this.absoluteMainPeriods = new ArrayList<>();
+            this.absoluteMainCyclicPeriodsHelper = new TreeMap<>();
+        }
+    }
+
+    protected void addAbsoluteMainPeriod(String controllerId, Schedule schedule, Entry<Long, Period> periodEntry) {
+        if (periodEntry == null) {
+            return;
+        }
+        if (periodEntry.getValue().getSingleStart() == null) {
+            MainCyclicOrderKey key = new MainCyclicOrderKey(controllerId, schedule, periodEntry.getValue());
+            absoluteMainCyclicPeriodsHelper.putIfAbsent(key, new HashMap<>());
+            absoluteMainCyclicPeriodsHelper.get(key).put(periodEntry.getKey(), periodEntry.getValue());
+        } else {
+            Period p = new Period();
+            p.setWhenHoliday(null);
+            p.setSingleStart(DailyPlanHelper.toZonedUTCDateTime(periodEntry.getKey()));
+            absoluteMainPeriods.add(new AbsoluteMainPeriod(schedule.getPath(), p));
+        }
+    }
+
+    public List<AbsoluteMainPeriod> getAbsoluteMainPeriods() {
+        if (!absoluteMainCyclicPeriodsHelper.isEmpty()) {
+            for (Entry<MainCyclicOrderKey, Map<Long, Period>> entry : absoluteMainCyclicPeriodsHelper.entrySet()) {
+                Optional<Long> min = entry.getValue().keySet().stream().min(Long::compareTo);
+                Optional<Long> max = entry.getValue().keySet().stream().max(Long::compareTo);
+                if (min.isPresent() && max.isPresent()) {
+                    Period p = new Period();
+                    p.setWhenHoliday(null);
+                    p.setRepeat(entry.getValue().values().iterator().next().getRepeat());
+                    p.setBegin(DailyPlanHelper.toZonedUTCDateTime(min.get()));
+                    p.setEnd(DailyPlanHelper.toZonedUTCDateTime(max.get()));
+                    absoluteMainPeriods.add(new AbsoluteMainPeriod(entry.getKey(), p));
+                }
+            }
+            absoluteMainCyclicPeriodsHelper.clear();
+        }
+        absoluteMainPeriods.sort(Comparator.comparing(period -> {
+            String start = period.getPeriod().getSingleStart();
+            if (start != null && !start.isEmpty()) {
+                return Instant.parse(start);
+            }
+            String begin = period.getPeriod().getBegin();
+            return Instant.parse(begin);
+        }));
+        return absoluteMainPeriods;
     }
 
     protected boolean add(StartupMode startupMode, PlannedOrder o, String controllerId, String dailyPlanDate) {
@@ -102,7 +157,8 @@ public class OrderListSynchronizer {
         }
     }
 
-    private Map<String, DBItemDailyPlanHistory> insertHistory(SOSHibernateSession session, Set<PlannedOrder> addedOrders) throws SOSHibernateException {
+    private Map<String, DBItemDailyPlanHistory> insertHistory(SOSHibernateSession session, Set<PlannedOrder> addedOrders)
+            throws SOSHibernateException {
 
         Date submissionTime = settings.getSubmissionTime() == null ? new Date() : settings.getSubmissionTime();
 

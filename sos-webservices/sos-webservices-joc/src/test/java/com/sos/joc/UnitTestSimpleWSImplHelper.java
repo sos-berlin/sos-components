@@ -186,6 +186,7 @@ public class UnitTestSimpleWSImplHelper {
 
         jp.getCalendars().setView(true);
         jp.getDailyPlan().setView(true);
+        jp.getDailyPlan().setManage(true);
         jp.getFileTransfer().setView(true);
         jp.getInventory().setView(true);
         jp.getNotification().setView(true);

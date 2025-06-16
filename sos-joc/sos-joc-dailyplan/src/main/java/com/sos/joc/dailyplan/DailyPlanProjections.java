@@ -2,14 +2,12 @@ package com.sos.joc.dailyplan;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,19 +22,17 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.dailyplan.common.AbsoluteMainPeriod;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
-import com.sos.joc.dailyplan.common.DailyPlanRuntimeAndProjectionsHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
-import com.sos.joc.dailyplan.common.PeriodResolver;
+import com.sos.joc.dailyplan.common.ScheduleOrderCounter;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
@@ -44,9 +40,6 @@ import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.dailyplan.projections.items.meta.ControllerInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.ScheduleInfoItem;
@@ -57,7 +50,6 @@ import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthsItem;
 import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DailyPlanProjections {
 
@@ -69,7 +61,7 @@ public class DailyPlanProjections {
     private static final int PLANNED_ENTRIES_AGE = 2;
 
     private Map<String, Long> workflowsAvg = new HashMap<>();
-    private Map<String, Integer> totalOrders = new HashMap<>();
+    private Map<String, ScheduleOrderCounter> totalOrders = new HashMap<>();
     private boolean onlyPlanOrderAutomatically = true;
 
     private String logPrefix;
@@ -78,11 +70,12 @@ public class DailyPlanProjections {
         String add = DailyPlanHelper.getCallerForLog(settings);
         logPrefix = String.format("[%s]%s[projections]", settings.getStartMode(), add);
         if (settings.getProjectionsMonthAhead() == 0) {
-            LOGGER.info(logPrefix + "[skip]getProjectionsMonthAhead=0");
+            LOGGER.info(logPrefix + "[skip]projections_month_ahead=0");
             return;
         }
         Instant start = Instant.now();
-        LOGGER.info(logPrefix + "start...");
+        LOGGER.info(String.format("%s[dailyplan time_zone=%s, period_begin=%s, projections_month_ahead=%s]start...", logPrefix, settings
+                .getTimeZone(), settings.getPeriodBegin(), settings.getProjectionsMonthAhead()));
 
         DBLayerDailyPlanProjections dbLayer = null;
         try {
@@ -194,7 +187,7 @@ public class DailyPlanProjections {
         result.meta = mi;
         result.year = yi;
 
-        LOGGER.info(lp + "[end][" + result.lastDate + "]" + SOSDate.getDuration(start, Instant.now()));
+        LOGGER.info(lp + "[end][submissionForDate=" + result.lastDate + "]" + SOSDate.getDuration(start, Instant.now()));
         return result;
     }
 
@@ -222,6 +215,7 @@ public class DailyPlanProjections {
             so.add(soKey);
         }
         sii.setTotalOrders(Long.valueOf(so.size()));
+        sii.setOrderNames(null);
         scheduleOrders.put(item.getScheduleName(), so);
 
         WorkflowsItem wsi = sii.getWorkflows();
@@ -284,6 +278,11 @@ public class DailyPlanProjections {
 
         DatePeriodItem dp = new DatePeriodItem();
         dp.setSchedule(item.getSchedulePath());
+        // schedule order
+        if (!item.getScheduleName().equals(item.getOrderName())) {
+            dp.setScheduleOrderName(item.getOrderName());
+        }
+        dp.setWorkflow(item.getWorkflowPath());
         dp.setPeriod(p);
         di.getPeriods().add(dp);
 
@@ -314,43 +313,37 @@ public class DailyPlanProjections {
 
                 // current implementation - calculates "from/to" from the current date
                 // alternative (not implemented) - calculates "from/to" from the last planned date (dpr.lastDate) if set
-                java.util.Calendar from = DailyPlanHelper.getUTCCalendarNow();
-                java.util.Calendar to = DailyPlanHelper.add2Clone(from, java.util.Calendar.MONTH, settings.getProjectionsMonthAhead());
+                java.util.Calendar fromNow = DailyPlanHelper.getUTCCalendarNow();
+                java.util.Calendar to = DailyPlanHelper.add2Clone(fromNow, java.util.Calendar.MONTH, settings.getProjectionsMonthAhead());
 
-                int yearFrom = DailyPlanHelper.getYear(from);
+                int yearFrom = DailyPlanHelper.getYear(fromNow);
                 int yearTo = DailyPlanHelper.getYear(to);
 
                 for (int i = yearFrom; i <= yearTo; i++) {
-                    java.util.Calendar reallyDateFrom = null;
+                    // java.util.Calendar reallyDateFrom = null;
                     YearsItem plannedYearsItem = null;
 
                     String dateFrom = i + "-01-01";
                     String dateTo = i + "-12-31";
                     if (i == yearFrom) {
-                        if (dpr == null || dpr.lastDate == null) {
-                            reallyDateFrom = from;
-                        } else {
-                            reallyDateFrom = DailyPlanHelper.getNextDateUTCCalendar(dpr.lastDate);
-                        }
                         plannedYearsItem = dpr.year;
-
+                        if (dpr.lastDate == null) {
+                            dateFrom = DailyPlanHelper.getDate(fromNow);
+                        } else {
+                            // next day after last planned date
+                            dateFrom = DailyPlanHelper.getDate(DailyPlanHelper.getNextDateUTCCalendar(dpr.lastDate));
+                        }
                         // dateFrom - <year>-<moth>-01 for day of month etc calculations
                         // reallyDayFrom will be used later to filter entries before it
-                        dateFrom = DailyPlanHelper.getFirstDateOfMonth(reallyDateFrom);
+                        // dateFrom = DailyPlanHelper.getFirstDateOfMonth(reallyDateFrom);
                     }
-
-                    // use the last date of year if the projections_ahead settings defined in years (instead of getLastDateOfMonth)
-                    // if (!settings.isProjectionsAheadConfiguredAsYears() && i == yearTo) {
-                    // dateTo = DailyPlanHelper.getLastDateOfMonth(to);
-                    // }
 
                     if (i == yearTo) {
                         dateTo = DailyPlanHelper.getLastDateOfMonth(to);
                     }
 
-                    String logDateFrom = reallyDateFrom == null ? dateFrom : DailyPlanHelper.getDate(reallyDateFrom);
-                    LOGGER.info(String.format("%s[projection][creating]from %s to %s", lp, logDateFrom, dateTo));
-                    dbLayer.insert(i, getProjectionYear(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, reallyDateFrom,
+                    LOGGER.info(String.format("%s[projection][creating]from %s to %s", lp, dateFrom, dateTo));
+                    dbLayer.insert(i, getProjectionYear(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo,
                             plannedYearsItem));
                 }
 
@@ -397,7 +390,9 @@ public class DailyPlanProjections {
                 }
                 // overwrite orders (previously (if)set by planned)
                 // schedulerOrders * workflows
-                sii.setTotalOrders(Long.valueOf(getTotalOrders(s)));
+                ScheduleOrderCounter oc = getScheduleOrderCounter(s);
+                sii.setTotalOrders(oc.getTotalAsLong());
+                sii.setOrderNames(oc.getOrderNamesNormalized());
 
                 WorkflowsItem wsi = sii.getWorkflows();
                 if (wsi == null) {
@@ -419,35 +414,10 @@ public class DailyPlanProjections {
         return mi;
     }
 
-    private Calendar getWorkingCalendar(InventoryDBLayer dbLayerInventory, Map<String, Calendar> workingCalendars, AssignedCalendars assignedCalendar,
-            boolean isDebugEnabled, String lp) throws Exception {
-        String calendarsKey = assignedCalendar.getCalendarName();// + "#" + schedule.getPath();
-        Calendar calendar = workingCalendars.get(calendarsKey);
-        if (calendar == null) {
-            try {
-                calendar = getWorkingDaysCalendar(dbLayerInventory, assignedCalendar.getCalendarName());
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][db]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
-                            calendar)));
-                }
-            } catch (DBMissingDataException e) {
-                LOGGER.warn(String.format("%s[WorkingDaysCalendar=%s][skip]not found", lp, assignedCalendar.getCalendarName()));
-                return null;
-            }
-            workingCalendars.put(calendarsKey, calendar);
-        } else {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][cache]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
-                        calendar)));
-            }
-        }
-        return calendar;
-    }
-
-    // merge planned and projections
     private YearsItem getProjectionYear(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer,
-            Collection<DailyPlanSchedule> dailyPlanSchedules, String year, String dateFrom, String dateTo, java.util.Calendar reallyDayFrom,
-            YearsItem plannedYearItem) throws Exception {
+            Collection<DailyPlanSchedule> dailyPlanSchedules, String year, String dateFrom, String dateTo, YearsItem plannedYearItem)
+            throws Exception {
+
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String lp = logPrefix + "[getProjectionYear]";
         String caller = IDENTIFIER + "-" + dateFrom + "-" + dateTo;
@@ -464,146 +434,55 @@ public class DailyPlanProjections {
             msi = new MonthsItem();
         }
 
+        settings.setCalculateAbsoluteMainPeriodsOnly(true);
+        settings.setStartMode(StartupMode.automatic);
+        final DailyPlanRunner runner = new DailyPlanRunner(settings);
         final AtomicReference<MonthsItem> msiRef = new AtomicReference<>(msi);
-        Map<String, Calendar> workingCalendars = new HashMap<String, Calendar>();
-        InventoryDBLayer dbLayerInventory = new InventoryDBLayer(dbLayer.getSession());
-        for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
-            Schedule schedule = dailyPlanSchedule.getSchedule();
+        SOSDate.getDatesInRange(dateFrom, dateTo).stream().forEach(asDailyPlanSingleDate -> {
+            // SOSDate.getDatesInRange(dateFrom, dateTo).stream().parallel().forEach(asDailyPlanSingleDate -> {
+            try {
+                settings.setDailyPlanDate(SOSDate.getDate(asDailyPlanSingleDate));
 
-            final List<Calendar> nonWorkingDayCalendars = DailyPlanRuntimeAndProjectionsHelper.getNonWorkingDayCalendars(dbLayerInventory, schedule
-                    .getNonWorkingDayCalendars());
+                DBItemDailyPlanSubmission dummySubmission = new DBItemDailyPlanSubmission();
+                dummySubmission.setId(-1L);
+                dummySubmission.setSubmissionForDate(settings.getDailyPlanDate());
 
-            for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
-                if (assignedCalendar.getTimeZone() == null) {
-                    assignedCalendar.setTimeZone(SOSDate.TIMEZONE_UTC);
-                }
+                OrderListSynchronizer synchronizer = runner.calculateStartTimes(settings.getStartMode(), "controllerId", dailyPlanSchedules,
+                        asDailyPlanSingleDate, dummySubmission);
 
-                final ZoneId timezone = ZoneId.of(assignedCalendar.getTimeZone());
-                final Calendar calendar = getWorkingCalendar(dbLayerInventory, workingCalendars, assignedCalendar, isDebugEnabled, lp);
-                if (calendar == null) {
-                    continue;
-                }
+                if (synchronizer.getAbsoluteMainPeriods().size() > 0) {
+                    String[] arr = asDailyPlanSingleDate.split("-");
+                    String m = arr[0] + "-" + arr[1];
 
-                Calendar restrictions = new Calendar();
-                restrictions.setIncludes(assignedCalendar.getIncludes());
-
-                SOSDate.getDatesInRange(dateFrom, dateTo).stream().forEach(asDailyPlanSingleDate -> {
-                    // SOSDate.getDatesInRange(dateFrom, dateTo).stream().parallel().forEach(asDailyPlanSingleDate -> {
-                    try {
-                        List<String> workingDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, asDailyPlanSingleDate,
-                                asDailyPlanSingleDate).getDates();
-
-                        List<String> nonWorkingDates = new ArrayList<>();
-                        Set<String> workingDatesExtendedWithNonWorkingPrevNext = new HashSet<>();
-
-                        DailyPlanRuntimeAndProjectionsHelper.applyAdjustmentForNonWorkingDates(assignedCalendar, nonWorkingDayCalendars,
-                                asDailyPlanSingleDate, workingDates, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
-
-                        boolean checkDate = true;
-                        for (String date : workingDates) {
-                            String[] arr = date.split("-");
-                            String m = arr[0] + "-" + arr[1];
-                            if (checkDate) {
-                                if (reallyDayFrom == null) {
-                                    checkDate = false;
-                                } else {
-                                    java.util.Calendar dateCal = FrequencyResolver.getCalendarFromString(date);
-                                    if (dateCal.after(reallyDayFrom)) {
-                                        checkDate = false;
-                                    } else {
-                                        continue;
-                                    }
-                                }
-                            }
-
-                            MonthItem mi = msiRef.get().getAdditionalProperties().get(m);
-                            if (mi == null) {
-                                mi = new MonthItem();
-                                msiRef.get().getAdditionalProperties().put(m, mi);
-                            }
-
-                            List<Period> pl = new ArrayList<>();
-                            for (Period period : assignedCalendar.getPeriods()) {
-                                Period p = DailyPlanRuntimeAndProjectionsHelper.getSingleDatePeriod(date, period, nonWorkingDates,
-                                        workingDatesExtendedWithNonWorkingPrevNext, timezone);
-                                if (p == null) {
-                                    continue;
-                                }
-                                pl.add(p);
-                            }
-
-                            int total = getTotalOrders(schedule);
-                            Map<String, List<DatePeriodItem>> periodDates = new LinkedHashMap<>();
-                            boolean usePeriodDate = false;// TODO
-                            for (Period p : pl) {
-                                // use 'periodDate' instead of 'date' because some periods may have different dates assigned.
-                                // using 'periodDate' instead of 'date' not solves the problem . TODO ....
-                                String periodDate = usePeriodDate ? extractDate(p) : date;
-                                if (periodDate == null) {
-                                    continue;
-                                }
-
-                                List<DatePeriodItem> periodDatePeriods = periodDates.get(periodDate);
-                                if (periodDatePeriods == null) {
-                                    periodDatePeriods = new ArrayList<>();
-                                }
-
-                                for (int t = 0; t < total; t++) {
-                                    DatePeriodItem dp = new DatePeriodItem();
-                                    dp.setSchedule(schedule.getPath());
-                                    dp.setPeriod(p);
-
-                                    periodDatePeriods.add(dp);
-                                }
-                                periodDates.put(periodDate, periodDatePeriods);
-                            }
-                            for (Map.Entry<String, List<DatePeriodItem>> entry : periodDates.entrySet()) {
-                                if (entry.getValue().size() == 0) {
-                                    continue;
-                                }
-                                String key = entry.getKey();
-                                DateItem di = mi.getAdditionalProperties().get(key);
-                                if (di == null) {
-                                    di = new DateItem();
-                                }
-                                di.setPlanned(null);
-                                di.setPeriods(entry.getValue());
-                                mi.getAdditionalProperties().put(key, di);
-                            }
-                        }
-                    } catch (Exception e) {
-                        LOGGER.info(lp + "[" + asDailyPlanSingleDate + "]" + e, e);
+                    MonthItem mi = msiRef.get().getAdditionalProperties().get(m);
+                    if (mi == null) {
+                        mi = new MonthItem();
+                        msiRef.get().getAdditionalProperties().put(m, mi);
                     }
-                });
+                    DateItem di = mi.getAdditionalProperties().get(asDailyPlanSingleDate);
+                    if (di == null) {
+                        di = new DateItem();
+                        di.setPeriods(new ArrayList<>());
+                    }
+                    di.setPlanned(null);
+
+                    for (AbsoluteMainPeriod ap : synchronizer.getAbsoluteMainPeriods()) {
+                        DatePeriodItem dp = new DatePeriodItem();
+                        dp.setSchedule(ap.getSchedulePath());
+                        dp.setPeriod(ap.getPeriod());
+                        di.getPeriods().add(dp);
+                    }
+                    mi.getAdditionalProperties().put(asDailyPlanSingleDate, di);
+                }
+
+            } catch (Exception e) {
+                LOGGER.info(lp + "[" + asDailyPlanSingleDate + "]" + e, e);
             }
-        }
+        });
 
         YearsItem result = new YearsItem();
         result.setAdditionalProperty(year, msi);
         return result;
-    }
-
-    private static String extractDate(Period p) {
-        if (!SOSString.isEmpty(p.getSingleStart())) {
-            return extractDate(p.getSingleStart());
-        }
-        if (!SOSString.isEmpty(p.getBegin())) {
-            return extractDate(p.getBegin());
-        }
-        return null;
-    }
-
-    // 2025-11-24T10:00:00Z
-    private static String extractDate(String d) {
-        int t = d.indexOf("T");
-        if (t > 0) {
-            return d.substring(0, d.indexOf("T"));
-        }
-        String[] arr = d.split("-");
-        if (arr.length > 2 && arr[2].length() >= 2) {
-            return arr[0] + "-" + arr[1] + "-" + (arr[2].substring(0, 2));
-        }
-        return null;
     }
 
     private Collection<DailyPlanSchedule> convert4projections(DBLayerDailyPlannedOrders dbLayerPlannedOrders,
@@ -691,62 +570,36 @@ public class DailyPlanProjections {
         return result;
     }
 
-    private Calendar getWorkingDaysCalendar(InventoryDBLayer dbLayer, String calendarName) throws Exception {
-        DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(calendarName, ConfigurationType.WORKINGDAYSCALENDAR);
-        if (config == null) {
-            throw new DBMissingDataException(String.format("calendar '%s' not found", calendarName));
-        }
-        Calendar calendar = Globals.objectMapper.readValue(config.getContent(), Calendar.class);
-        calendar.setId(config.getId());
-        calendar.setPath(config.getPath());
-        calendar.setName(config.getName());
-        return calendar;
-    }
-
     // Meta
-    private int getTotalOrders(DailyPlanSchedule s) {
+    private ScheduleOrderCounter getScheduleOrderCounter(DailyPlanSchedule s) {
         if (s == null || s.getSchedule() == null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[getTotalOrders][orders]total=0"));
+                LOGGER.debug(String.format("[getScheduleOrderCounter][orders]total,schedule=0"));
             }
-            return 0;
+            return new ScheduleOrderCounter(null, 0);
         }
-        return getTotalOrders(s.getSchedule());
+        return getScheduleOrderCounter(s.getSchedule());
     }
 
     // Projections
-    private int getTotalOrders(Schedule s) {
+    private ScheduleOrderCounter getScheduleOrderCounter(Schedule s) {
         if (totalOrders.containsKey(s.getPath())) {
             return totalOrders.get(s.getPath());
         }
-
-        int o = s.getOrderParameterisations() != null && s.getOrderParameterisations().size() > 1 ? s.getOrderParameterisations().size() : 1;
+        Set<String> orderNames = null;
+        if (s.getOrderParameterisations() != null) {
+            orderNames = s.getOrderParameterisations().stream().filter(e -> e.getOrderName() != null).map(e -> e.getOrderName()).collect(Collectors
+                    .toSet());
+        }
+        int o = orderNames != null && orderNames.size() > 1 ? orderNames.size() : 1;
         int w = s.getWorkflowNames() != null && s.getWorkflowNames().size() > 1 ? s.getWorkflowNames().size() : 1;
         int t = o * w;
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[getTotalOrders][schedule=%s][orders=%s,workflows=%s]total=%s", logPrefix, s.getPath(), o, w, t));
         }
-        totalOrders.put(s.getPath(), t);
-        return t;
-    }
-
-    @SuppressWarnings("unused")
-    private PeriodResolver createPeriodResolver(DailyPlanSettings settings, List<Period> periods, String date, String timeZone) throws Exception {
-        PeriodResolver pr = new PeriodResolver(settings);
-        for (Period p : periods) {
-            Period period = new Period();
-            period.setBegin(p.getBegin());
-            period.setEnd(p.getEnd());
-            period.setRepeat(p.getRepeat());
-            period.setSingleStart(p.getSingleStart());
-            period.setWhenHoliday(p.getWhenHoliday());
-            try {
-                pr.addStartTimes(period, date, timeZone);
-            } catch (Throwable e) {
-                throw new Exception(String.format("[%s][timeZone=%s][%s]%s", date, timeZone, DailyPlanHelper.toString(period), e.toString()), e);
-            }
-        }
-        return pr;
+        ScheduleOrderCounter c = new ScheduleOrderCounter(orderNames, t);
+        totalOrders.put(s.getPath(), c);
+        return c;
     }
 
     private class DailyPlanResult {
@@ -755,6 +608,5 @@ public class DailyPlanProjections {
         private YearsItem year;
 
         private Date lastDate;
-
     }
 }

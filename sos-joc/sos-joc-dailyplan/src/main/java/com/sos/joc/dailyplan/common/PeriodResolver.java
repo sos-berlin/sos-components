@@ -8,7 +8,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -66,7 +65,7 @@ public class PeriodResolver {
 
     
     public Map<Long, Period> getStartTimes(String frequencyResolverDate, String dailyPlanDate, String timeZone, boolean includeLate) throws ParseException {
-        Map<Long, Period> startTimes = new HashMap<>();
+        Map<Long, Period> startTimes = new LinkedHashMap<>();
 
         if (frequencyResolverDates.contains(frequencyResolverDate)) {
             if (LOGGER.isDebugEnabled()) {
