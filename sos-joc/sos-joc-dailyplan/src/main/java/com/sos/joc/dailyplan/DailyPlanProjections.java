@@ -87,8 +87,11 @@ public class DailyPlanProjections {
             // 2- evaluate already planned daily plan entries
             DailyPlanResult dpr = calculatePlanned(settings, dbLayer);
 
-            // 3 - evaluate projections(after the last planned daily plan entry)
-            calculateProjections(settings, dbLayer, dpr);
+            // 3 - evaluate projections(after the last planned daily plan entry) and insert merged planned and projections
+            if (!calculateProjectionsAndInsertMerged(settings, dbLayer, dpr)) {
+                // 4 - insert planned only
+                insertPlannedOnly(dbLayer, dpr);
+            }
 
             dbLayer.close();
             dbLayer = null;
@@ -120,7 +123,7 @@ public class DailyPlanProjections {
         }
     }
 
-    // 2- already planned
+    // 2- already planned - calculates only for the "currentYear"
     private DailyPlanResult calculatePlanned(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer) {
         Instant start = Instant.now();
         String lp = logPrefix + "[calculatePlanned]";
@@ -129,17 +132,18 @@ public class DailyPlanProjections {
         java.util.Calendar now = DailyPlanHelper.getUTCCalendarNow();
         java.util.Calendar from = DailyPlanHelper.add2Clone(now, java.util.Calendar.MONTH, -1 * PLANNED_ENTRIES_AGE);
 
-        // only for current year ???
-        if (DailyPlanHelper.getYear(from) < DailyPlanHelper.getYear(now)) {
+        int currentYear = DailyPlanHelper.getYear(now);
+        if (DailyPlanHelper.getYear(from) < currentYear) {
             // set to <currentYear>-01-01
-            from = DailyPlanHelper.getFirstDayOfYearCalendar(from, DailyPlanHelper.getYear(now));
+            from = DailyPlanHelper.getFirstDayOfYearCalendar(from, currentYear);
         }
 
         DailyPlanResult result = new DailyPlanResult();
+        result.plannedFrom = from.getTime();
         MetaItem mi = null;
         YearsItem yi = null;
         try {
-            List<DBItemDailyPlanSubmission> l = dbLayer.getSubmissions(from.getTime());
+            List<DBItemDailyPlanSubmission> l = dbLayer.getSubmissions(result.plannedFrom);
             if (l.size() > 0) {
                 mi = new MetaItem();
                 yi = new YearsItem();
@@ -148,7 +152,10 @@ public class DailyPlanProjections {
 
                 for (DBItemDailyPlanSubmission s : l) {
                     // database- ordered by submissionFordate, otherwise order with java ...
-                    result.lastDate = s.getSubmissionForDate();
+                    result.plannedLastDate = s.getSubmissionForDate();
+                    if (result.plannedFirstDate == null) {
+                        result.plannedFirstDate = result.plannedLastDate;
+                    }
 
                     ScrollableResults<DBItemDailyPlanOrder> sr = null;
                     try {
@@ -169,7 +176,7 @@ public class DailyPlanProjections {
                                 }
 
                                 setPlannedMeta(mi, item, scheduleOrders);
-                                setPlannedYears(yi, item, result.lastDate);
+                                setPlannedYears(yi, item, result.plannedLastDate);
                             }
                         }
                     } catch (Throwable e) {
@@ -185,9 +192,11 @@ public class DailyPlanProjections {
             LOGGER.info(lp + e.toString(), e);
         }
         result.meta = mi;
-        result.year = yi;
+        result.plannedYear = yi;
+        result.currentYear = currentYear;
 
-        LOGGER.info(lp + "[end][submissionForDate=" + result.lastDate + "]" + SOSDate.getDuration(start, Instant.now()));
+        LOGGER.info(lp + "[end][plannedFrom=" + result.plannedFrom + ", plannedLastDate=" + result.plannedLastDate + "]" + SOSDate.getDuration(start,
+                Instant.now()));
         return result;
     }
 
@@ -290,7 +299,8 @@ public class DailyPlanProjections {
     }
 
     // 3 - merge planned and year projections
-    private void calculateProjections(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer, DailyPlanResult dpr) throws Exception {
+    private boolean calculateProjectionsAndInsertMerged(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer, DailyPlanResult dpr)
+            throws Exception {
 
         Instant start = Instant.now();
         String lp = logPrefix + "[calculateProjections]";
@@ -299,15 +309,14 @@ public class DailyPlanProjections {
         List<DBBeanReleasedSchedule2DeployedWorkflow> schedules2workflows = new DBLayerSchedules(dbLayer.getSession())
                 .getReleasedSchedule2DeployedWorkflows(null, null);
 
-        // tmp log
-        // LOGGER.info(lp + "[schedules2workflows]" + SOSDate.getDuration(start, Instant.now()));
-
+        boolean calculated = false;
         if (schedules2workflows.size() > 0) {
             DBLayerDailyPlannedOrders dbLayerPlannedOrders = new DBLayerDailyPlannedOrders(dbLayer.getSession());
             Collection<DailyPlanSchedule> dailyPlanSchedules = convert4projections(dbLayerPlannedOrders, schedules2workflows,
                     onlyPlanOrderAutomatically, dpr);
 
             if (dailyPlanSchedules.size() > 0) {
+                calculated = true;
                 // TODO insertMeta later ?? - filter unused schedules/workflows ...
                 // dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
 
@@ -321,17 +330,17 @@ public class DailyPlanProjections {
 
                 for (int i = yearFrom; i <= yearTo; i++) {
                     // java.util.Calendar reallyDateFrom = null;
-                    YearsItem plannedYearsItem = null;
+                    YearsItem plannedLastYear = null;
 
                     String dateFrom = i + "-01-01";
                     String dateTo = i + "-12-31";
                     if (i == yearFrom) {
-                        plannedYearsItem = dpr.year;
-                        if (dpr.lastDate == null) {
+                        plannedLastYear = dpr.plannedYear;
+                        if (dpr.plannedLastDate == null) {
                             dateFrom = DailyPlanHelper.getDate(fromNow);
                         } else {
                             // next day after last planned date
-                            dateFrom = DailyPlanHelper.getDate(DailyPlanHelper.getNextDateUTCCalendar(dpr.lastDate));
+                            dateFrom = DailyPlanHelper.getDate(DailyPlanHelper.getNextDateUTCCalendar(dpr.plannedLastDate));
                         }
                         // dateFrom - <year>-<moth>-01 for day of month etc calculations
                         // reallyDayFrom will be used later to filter entries before it
@@ -343,14 +352,25 @@ public class DailyPlanProjections {
                     }
 
                     LOGGER.info(String.format("%s[projection][creating]from %s to %s", lp, dateFrom, dateTo));
-                    dbLayer.insert(i, getProjectionYear(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo,
-                            plannedYearsItem));
+                    dbLayer.insert(i, getProjectionYear(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, plannedLastYear));
                 }
 
                 dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
             }
         }
         LOGGER.info(lp + "[end]" + SOSDate.getDuration(start, Instant.now()));
+        return calculated;
+    }
+
+    private void insertPlannedOnly(DBLayerDailyPlanProjections dbLayer, DailyPlanResult dpr) throws Exception {
+        if (dpr == null) {
+            return;
+        }
+        if (dpr.plannedLastDate != null && dpr.meta != null) {
+            LOGGER.info(String.format("%s[planned][creating]from %s to %s", logPrefix, dpr.plannedFirstDate, dpr.plannedLastDate));
+            dbLayer.insert(dpr.currentYear, dpr.plannedYear);
+            dbLayer.insertMeta(dpr.meta);
+        }
     }
 
     /** set planned meta schedules as "excludedFromProjection" if a schedule has been removed (or "Plan Order automatically" is deactivated) */
@@ -415,7 +435,7 @@ public class DailyPlanProjections {
     }
 
     private YearsItem getProjectionYear(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer,
-            Collection<DailyPlanSchedule> dailyPlanSchedules, String year, String dateFrom, String dateTo, YearsItem plannedYearItem)
+            Collection<DailyPlanSchedule> dailyPlanSchedules, String year, String dateFrom, String dateTo, YearsItem plannedLastYear)
             throws Exception {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -427,8 +447,8 @@ public class DailyPlanProjections {
         }
 
         MonthsItem msi = null;
-        if (plannedYearItem != null) {
-            msi = plannedYearItem.getAdditionalProperties().get(year);
+        if (plannedLastYear != null) {
+            msi = plannedLastYear.getAdditionalProperties().get(year);
         }
         if (msi == null) {
             msi = new MonthsItem();
@@ -605,8 +625,11 @@ public class DailyPlanProjections {
     private class DailyPlanResult {
 
         private MetaItem meta;
-        private YearsItem year;
+        private YearsItem plannedYear;
 
-        private Date lastDate;
+        private int currentYear;
+        private Date plannedFrom;
+        private Date plannedFirstDate;
+        private Date plannedLastDate;
     }
 }
