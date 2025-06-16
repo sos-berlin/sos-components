@@ -14,5 +14,9 @@
         <Logger name="com.mchange.v2" level="fatal" />
         <Logger name="com.sos" level="debug" />
         <Logger name="com.sos.joc.classes.calendar.FrequencyResolver" level="warn" />
+        <Logger name="com.sos.joc.dailyplan.DailyPlanRunner" level="warn" />
+        <Logger name="com.sos.joc.dailyplan.common.PeriodResolver" level="warn" />
+        <Logger name="com.sos.joc.dailyplan.common.DailyPlanHelper" level="warn" />
+        <Logger name="com.sos.commons.hibernate" level="warn" />
     </Loggers>
 </Configuration>

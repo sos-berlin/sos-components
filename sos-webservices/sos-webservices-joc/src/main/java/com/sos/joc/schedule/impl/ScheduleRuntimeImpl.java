@@ -28,7 +28,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
-import com.sos.joc.dailyplan.common.DailyPlanRuntimeAndProjectionsHelper;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -37,6 +36,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.RunTime;
 import com.sos.joc.model.order.ScheduleDatesFilter;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+import com.sos.joc.schedule.commons.DailyPlanRuntimeHelper;
 import com.sos.joc.schedule.resource.IScheduleRuntimeResource;
 import com.sos.schema.JsonValidator;
 
@@ -80,7 +80,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
 
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-                final List<Calendar> nonWorkingDayCalendars = DailyPlanRuntimeAndProjectionsHelper.getNonWorkingDayCalendars(dbLayer, in
+                final List<Calendar> nonWorkingDayCalendars = DailyPlanRuntimeHelper.getNonWorkingDayCalendars(dbLayer, in
                         .getNonWorkingDayCalendars());
                 List<DBItemInventoryReleasedConfiguration> workingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getCalendars().stream().map(
                         AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList()));
@@ -114,11 +114,11 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                                 List<String> nonWorkingDates = new ArrayList<>();
                                 Set<String> workingDatesExtendedWithNonWorkingPrevNext = new HashSet<>();
 
-                                DailyPlanRuntimeAndProjectionsHelper.applyAdjustmentForNonWorkingDates(c, nonWorkingDayCalendars,
-                                        asDailyPlanSingleDate, workingDates, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
-                                singleDatesPeriods.addAll(workingDates.stream().flatMap(date -> DailyPlanRuntimeAndProjectionsHelper
-                                        .getSingleDatePeriods(date, c.getPeriods(), nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext,
-                                                timezone)).collect(Collectors.toSet()));
+                                DailyPlanRuntimeHelper.applyAdjustmentForNonWorkingDates(c, nonWorkingDayCalendars, asDailyPlanSingleDate,
+                                        workingDates, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
+                                singleDatesPeriods.addAll(workingDates.stream().flatMap(date -> DailyPlanRuntimeHelper.getSingleDatePeriods(date, c
+                                        .getPeriods(), nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext, timezone)).collect(Collectors
+                                                .toSet()));
                             } catch (Throwable e) {
                                 LOGGER.info("[" + API_CALL + "][" + asDailyPlanSingleDate + "]" + e, e);
                             }

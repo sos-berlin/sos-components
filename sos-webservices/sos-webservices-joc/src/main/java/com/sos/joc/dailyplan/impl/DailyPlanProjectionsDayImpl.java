@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -19,6 +20,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.common.ProjectionsImpl;
+import com.sos.joc.dailyplan.common.ScheduleOrderCounter;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
 import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsDayResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
@@ -86,7 +88,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
             Set<String> permittedSchedules = new HashSet<>();
             ProjectionsDayResponse entity = new ProjectionsDayResponse();
-            entity.setNumOfPeriods(0);
+            entity.setNumOfOrders(0);
             Optional<DBItemDailyPlanProjection> metaOpt = Optional.empty();
             Optional<MetaItem> metaContentOpt = Optional.empty();
 
@@ -103,6 +105,8 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
                         throw new DBInvalidDataException(e);
                     }
                 });
+                // use the original metadata for this calculation, as totalOrdes will be removed later(due to meta recreated)
+                Map<String, ScheduleOrderCounter> scheduleOrderCounter = mapScheduleOrderCounter(metaContentOpt, allowedControllers);
 
                 Set<String> scheduleNames = Collections.emptySet();
                 for (DBItemDailyPlanProjection item : items) {
@@ -153,13 +157,13 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
                         // remove Periods
                         entity.setPeriods(null);
-                        entity.setNumOfPeriods(null);
+                        entity.setNumOfOrders(null);
 
                     } else {
                         if (unPermittedSchedulesExist) {
                             entity.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
                         }
-                        entity.setNumOfPeriods(entity.getPeriods().size());
+                        setDateItemNumOfOrders(entity, scheduleOrderCounter);
 
                         // remove NonPeriods
                         entity.setNonPeriods(null);
@@ -171,7 +175,9 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
             metaOpt.ifPresent(meta -> entity.setSurveyDate(meta.getCreated()));
             entity.setDeliveryDate(Date.from(Instant.now()));
+            // if (entity.getPlanned() == null || !entity.getPlanned()) {
             metaContentOpt.ifPresent(mc -> entity.setMeta(mc));
+            // }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (DBMissingDataException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);

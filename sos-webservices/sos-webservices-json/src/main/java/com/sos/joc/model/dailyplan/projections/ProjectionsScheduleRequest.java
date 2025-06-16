@@ -62,6 +62,7 @@ public class ProjectionsScheduleRequest {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schedulePath")
@@ -147,6 +148,7 @@ public class ProjectionsScheduleRequest {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schedulePath")
@@ -158,6 +160,7 @@ public class ProjectionsScheduleRequest {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schedulePath")

@@ -196,9 +196,9 @@ public class DailyPlanRunner extends TimerTask {
 
             java.util.Calendar savCalendar = java.util.Calendar.getInstance();
             savCalendar.setTime(calendar.getTime());
-            
+
             int ageOfPlansToBeClosedAutomatically = settings.getAgeOfPlansToBeClosedAutomatically();
-            
+
             for (ControllerConfiguration conf : controllers) {
                 String controllerId = conf.getCurrent().getId();
 
@@ -246,12 +246,12 @@ public class DailyPlanRunner extends TimerTask {
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
                     settings.setDailyPlanDate(dailyPlanCalendar.getTime());
                 }
-                
+
                 closeOldPlans(startupMode, controllerId, ageOfPlansToBeClosedAutomatically);
                 setUnknownPlansAreOpenFromDate(startupMode, controllerId);
 
             }
-            
+
             if (ageOfPlansToBeClosedAutomatically == 0) {
                 LOGGER.info(String.format("[%s][closePlans][skip] because of daily plan settings", startupMode));
             }
@@ -336,7 +336,6 @@ public class DailyPlanRunner extends TimerTask {
 
         String caller = DailyPlanHelper.getCallerForLog(settings);
         String lp = String.format("[%s]%s[%s][%s]", startupMode, caller, controllerId, dailyPlanDate);
-        
 
         // with using everyday Calendar
         OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, submission,
@@ -544,6 +543,10 @@ public class DailyPlanRunner extends TimerTask {
     // service - use only with getPlanOrderAutomatically and not check the folder permissions
     private Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean infoOnMissingDeployedWorkflow) {
         return convert(items, true, false, null, null, infoOnMissingDeployedWorkflow);
+    }
+
+    public Collection<DailyPlanSchedule> getDailyPlanSchedules(String controllerId, boolean infoOnMissingDeployedWorkflow) throws Exception {
+        return convert(getReleasedSchedule2DeployedWorkflow(controllerId), infoOnMissingDeployedWorkflow);
     }
 
     // DailyPlanOrdersGenerateImpl, SchedulesImpl
@@ -756,7 +759,7 @@ public class DailyPlanRunner extends TimerTask {
             }
         }
     }
-    
+
     // service
     private void closeOldPlans(StartupMode startupMode, String controllerId, int ageOfPlansToBeClosedAutomatically) {
 
@@ -776,8 +779,8 @@ public class DailyPlanRunner extends TimerTask {
 
                 proxy.currentState().toPlan().entrySet().stream().filter(isDailyPlanPlan).filter(planIsOlder).filter(isOpen).map(Map.Entry::getKey)
                         .map(pId -> {
-                            LOGGER.info(String.format("[%s][closePlan][%s]try %s/%s", startupMode, controllerId, PlanSchemas.DailyPlanPlanSchemaId, pId
-                                    .planKey().string()));
+                            LOGGER.info(String.format("[%s][closePlan][%s]try %s/%s", startupMode, controllerId, PlanSchemas.DailyPlanPlanSchemaId,
+                                    pId.planKey().string()));
                             return JControllerCommand.changePlan(pId, JPlanStatus.Closed());
                         }).map(JControllerCommand::apply).forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper
                                 .postProblemEventIfExist(e, null, null, controllerId)));
@@ -786,39 +789,38 @@ public class DailyPlanRunner extends TimerTask {
             }
         }
     }
-    
+
     // service
     private void setUnknownPlansAreOpenFromDate(StartupMode startupMode, String controllerId) {
 
-            try {
-                LocalDate ld = LocalDate.now(ZoneOffset.UTC);
-                ld = ld.minusMonths(1l);
-                String date = ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
-                
-                LOGGER.info(String.format("[%s][unknownPlansCanBeOpenFrom][%s] %s", startupMode, controllerId, date));
-                PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.DailyPlanPlanSchemaId);
-                JControllerProxy proxy = Proxy.of(controllerId);
-                
-                JPlanSchemaState schemaState = proxy.currentState().idToPlanSchemaState().get(dailyPlanSchemaId);
-                Value val = schemaState.namedValues().get(PlanSchemas.DailyPlanThresholdKey);
-                Map<String, Value> newNamedValues = new HashMap<>(schemaState.namedValues());
-                if (val != null) {
-                    String oldValue = val.toStringValueString().getOrElse(null);
-                    if (oldValue == null || (oldValue != null && oldValue.compareTo(date) < 0)) {
-                        newNamedValues.put(PlanSchemas.DailyPlanThresholdKey, StringValue.of(date));
-                        proxy.api().executeCommand(JControllerCommand.apply(JControllerCommand.changePlanSchema(dailyPlanSchemaId, Optional.of(
-                                newNamedValues), Optional.empty()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null,
-                                        controllerId));
-                    }
-                } else {
+        try {
+            LocalDate ld = LocalDate.now(ZoneOffset.UTC);
+            ld = ld.minusMonths(1l);
+            String date = ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+            LOGGER.info(String.format("[%s][unknownPlansCanBeOpenFrom][%s] %s", startupMode, controllerId, date));
+            PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.DailyPlanPlanSchemaId);
+            JControllerProxy proxy = Proxy.of(controllerId);
+
+            JPlanSchemaState schemaState = proxy.currentState().idToPlanSchemaState().get(dailyPlanSchemaId);
+            Value val = schemaState.namedValues().get(PlanSchemas.DailyPlanThresholdKey);
+            Map<String, Value> newNamedValues = new HashMap<>(schemaState.namedValues());
+            if (val != null) {
+                String oldValue = val.toStringValueString().getOrElse(null);
+                if (oldValue == null || (oldValue != null && oldValue.compareTo(date) < 0)) {
                     newNamedValues.put(PlanSchemas.DailyPlanThresholdKey, StringValue.of(date));
                     proxy.api().executeCommand(JControllerCommand.apply(JControllerCommand.changePlanSchema(dailyPlanSchemaId, Optional.of(
                             newNamedValues), Optional.empty()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, controllerId));
                 }
-
-            } catch (Exception e) {
-                LOGGER.error(String.format("[%s][unknownPlansAreOpenFrom][%s]fails: %s", startupMode, controllerId, e.toString()), e);
+            } else {
+                newNamedValues.put(PlanSchemas.DailyPlanThresholdKey, StringValue.of(date));
+                proxy.api().executeCommand(JControllerCommand.apply(JControllerCommand.changePlanSchema(dailyPlanSchemaId, Optional.of(
+                        newNamedValues), Optional.empty()))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, controllerId));
             }
+
+        } catch (Exception e) {
+            LOGGER.error(String.format("[%s][unknownPlansAreOpenFrom][%s]fails: %s", startupMode, controllerId, e.toString()), e);
+        }
     }
 
     private Calendar getWorkingDaysCalendar(String controllerId, String calendarName) throws DBMissingDataException, JsonParseException,
@@ -867,8 +869,7 @@ public class DailyPlanRunner extends TimerTask {
         return mode.equals(StartupMode.automatic) || mode.equals(StartupMode.manual_restart);
     }
 
-    @SuppressWarnings("unused")
-    private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<DailyPlanSchedule> dailyPlanSchedules,
+    public OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<DailyPlanSchedule> dailyPlanSchedules,
             String dailyPlanDate, DBItemDailyPlanSubmission submission) throws SOSInvalidDataException, ParseException, JsonParseException,
             JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, SOSMissingDataException, SOSHibernateException, IOException {
@@ -1172,6 +1173,11 @@ public class DailyPlanRunner extends TimerTask {
                                         startMode = 0;
                                     }
 
+                                    if (settings.isCalculateAbsoluteMainPeriodsOnly()) {
+                                        synchronizer.addAbsoluteMainPeriod(controllerId, schedule, periodEntry);
+                                        continue;
+                                    }
+
                                     if (schedule.getOrderParameterisations() == null || schedule.getOrderParameterisations().size() == 0) {
                                         OrderParameterisation orderParameterisation = new OrderParameterisation();
                                         schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
@@ -1213,13 +1219,17 @@ public class DailyPlanRunner extends TimerTask {
                         LOGGER.error(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s][FrequencyResolver dates=%s]%s", logPrefix, assignedCalendar
                                 .getCalendarName(), assignedCalendar.getTimeZone(), String.join(",", frequencyResolverDates), e.toString()), e);
                     }
-                    if (plannedOrdersCount == 0) {
-                        LOGGER.info(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s0 planned orders", logPrefix, assignedCalendar
-                                .getCalendarName(), assignedCalendar.getTimeZone(), logNonWorkingDayCalendars));
+                    if (settings.isCalculateAbsoluteMainPeriodsOnly()) {
+
                     } else {
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s%s planned orders", logPrefix, assignedCalendar
-                                    .getCalendarName(), assignedCalendar.getTimeZone(), logNonWorkingDayCalendars, plannedOrdersCount));
+                        if (plannedOrdersCount == 0) {
+                            LOGGER.info(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s0 planned orders", logPrefix, assignedCalendar
+                                    .getCalendarName(), assignedCalendar.getTimeZone(), logNonWorkingDayCalendars));
+                        } else {
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s%s planned orders", logPrefix, assignedCalendar
+                                        .getCalendarName(), assignedCalendar.getTimeZone(), logNonWorkingDayCalendars, plannedOrdersCount));
+                            }
                         }
                     }
                 }

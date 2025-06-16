@@ -1,6 +1,7 @@
 package com.sos.joc.dailyplan.common;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.ScheduleInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.WorkflowsItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DateItem;
+import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
 
 public class ProjectionsImpl extends JOCOrderResourceImpl {
 
@@ -39,6 +41,46 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
             names = Optional.of(paths.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
         }
         return names;
+    }
+
+    public static Map<String, ScheduleOrderCounter> mapScheduleOrderCounter(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers) {
+        if (metaContentOpt.isEmpty()) {
+            return Map.of();
+        }
+
+        final Map<String, ScheduleOrderCounter> map = new HashMap<>();
+        MetaItem meta = metaContentOpt.get();
+        if (meta.getAdditionalProperties() != null) {
+            m: for (Map.Entry<String, ControllerInfoItem> entry : meta.getAdditionalProperties().entrySet()) {
+                if (allowedControllers.contains(entry.getKey())) {
+                    entry.getValue().getAdditionalProperties().forEach((k, v) -> {
+                        map.put(k, new ScheduleOrderCounter(v.getOrderNames(), v.getTotalOrders()));
+                    });
+                    break m;
+                }
+            }
+        }
+        return map;
+    }
+
+    public static void setDateItemNumOfOrders(DateItem dateItem, Map<String, ScheduleOrderCounter> scheduleOrderCounter) {
+        // Planned
+        if (dateItem.getPlanned() != null && dateItem.getPlanned()) {
+            dateItem.setNumOfOrders(dateItem.getPeriods().size());
+            return;
+        }
+
+        // Projection
+        int total = 0;
+        for (DatePeriodItem p : dateItem.getPeriods()) {
+            if (p.getSchedule() == null) {
+                total += 1;
+            } else {
+                ScheduleOrderCounter oc = scheduleOrderCounter.get(p.getSchedule());
+                total += (oc == null ? 1 : oc.getTotalAsLong().intValue());
+            }
+        }
+        dateItem.setNumOfOrders(total);
     }
 
     public boolean setPermittedSchedules(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers, Optional<Set<String>> scheduleNames,
@@ -186,6 +228,9 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
                         sii.setWorkflowPaths(sii.getWorkflows().getAdditionalProperties().keySet());
                         sii.setWorkflows(null);
                         sii.setTotalOrders(null);
+                    }
+                    if (sii.getOrderNames() != null && sii.getOrderNames().size() == 0) {
+                        sii.setOrderNames(null);
                     }
                 }
             });

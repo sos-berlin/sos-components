@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "totalOrders",
+    "orderNames",
     "workflows",
     "workflowPaths",
     "excludedFromProjection"
@@ -37,6 +38,14 @@ public class ScheduleInfoItem {
      */
     @JsonProperty("totalOrders")
     private Long totalOrders;
+    /**
+     * this property is only set if the schedule defines orders
+     * 
+     */
+    @JsonProperty("orderNames")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("this property is only set if the schedule defines orders")
+    private Set<String> orderNames = new LinkedHashSet<String>();
     /**
      * daily plan projection
      * <p>
@@ -79,6 +88,24 @@ public class ScheduleInfoItem {
     @JsonProperty("totalOrders")
     public void setTotalOrders(Long totalOrders) {
         this.totalOrders = totalOrders;
+    }
+
+    /**
+     * this property is only set if the schedule defines orders
+     * 
+     */
+    @JsonProperty("orderNames")
+    public Set<String> getOrderNames() {
+        return orderNames;
+    }
+
+    /**
+     * this property is only set if the schedule defines orders
+     * 
+     */
+    @JsonProperty("orderNames")
+    public void setOrderNames(Set<String> orderNames) {
+        this.orderNames = orderNames;
     }
 
     /**
@@ -135,12 +162,12 @@ public class ScheduleInfoItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("totalOrders", totalOrders).append("workflows", workflows).append("workflowPaths", workflowPaths).append("excludedFromProjection", excludedFromProjection).toString();
+        return new ToStringBuilder(this).append("totalOrders", totalOrders).append("orderNames", orderNames).append("workflows", workflows).append("workflowPaths", workflowPaths).append("excludedFromProjection", excludedFromProjection).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPaths).append(excludedFromProjection).append(totalOrders).append(workflows).toHashCode();
+        return new HashCodeBuilder().append(workflowPaths).append(excludedFromProjection).append(totalOrders).append(workflows).append(orderNames).toHashCode();
     }
 
     @Override
@@ -152,7 +179,7 @@ public class ScheduleInfoItem {
             return false;
         }
         ScheduleInfoItem rhs = ((ScheduleInfoItem) other);
-        return new EqualsBuilder().append(workflowPaths, rhs.workflowPaths).append(excludedFromProjection, rhs.excludedFromProjection).append(totalOrders, rhs.totalOrders).append(workflows, rhs.workflows).isEquals();
+        return new EqualsBuilder().append(workflowPaths, rhs.workflowPaths).append(excludedFromProjection, rhs.excludedFromProjection).append(totalOrders, rhs.totalOrders).append(workflows, rhs.workflows).append(orderNames, rhs.orderNames).isEquals();
     }
 
 }

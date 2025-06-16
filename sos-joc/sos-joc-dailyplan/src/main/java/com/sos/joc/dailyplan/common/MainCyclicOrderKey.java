@@ -7,6 +7,8 @@ import java.util.Comparator;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.sos.inventory.model.calendar.Period;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 
 public class MainCyclicOrderKey implements Comparable<MainCyclicOrderKey> {
@@ -41,6 +43,22 @@ public class MainCyclicOrderKey implements Comparable<MainCyclicOrderKey> {
         repeat = String.valueOf(item.getRepeatInterval());
         periodBegin = format.format(item.getPeriodBegin());
         periodEnd = format.format(item.getPeriodEnd());
+    }
+
+    /** e.g. Projections : addAbsoluteMainPeriod */
+    public MainCyclicOrderKey(String controllerId, Schedule schedule, Period period) {
+        this.controllerId = controllerId;
+        this.workflowName = "";
+        this.scheduleName = schedule.getPath();
+        this.orderName = "";
+        // orderName not used ...
+        // if (schedule.getOrderParameterisations() != null && schedule.getOrderParameterisations().size() > 0) {
+        // this.orderName = "...";
+        // }
+
+        repeat = period.getRepeat();
+        periodBegin = period.getBegin();
+        periodEnd = period.getEnd();
     }
 
     @Override

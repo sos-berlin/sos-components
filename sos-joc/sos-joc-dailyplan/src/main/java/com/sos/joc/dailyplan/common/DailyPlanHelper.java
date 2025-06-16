@@ -488,6 +488,10 @@ public class DailyPlanHelper {
         return result;
     }
 
+    public static String toZonedUTCDateTime(Long dateTime) {
+        return toZonedUTCDateTime(SOSDate.tryGetDateTimeAsString(dateTime));
+    }
+
     public static String toZonedUTCDateTime(String dateTime) {
         return dateTime.replace(' ', 'T') + "Z";
     }
