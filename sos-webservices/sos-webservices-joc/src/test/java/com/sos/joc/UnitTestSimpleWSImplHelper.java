@@ -192,7 +192,7 @@ public class UnitTestSimpleWSImplHelper {
 
         p.getCalendars().setView(true);
         p.getDailyPlan().setView(true);
-        jp.getDailyPlan().setManage(true);
+        p.getDailyPlan().setManage(true);
         p.getFileTransfer().setView(true);
         p.getFileTransfer().setManage(true);
 
