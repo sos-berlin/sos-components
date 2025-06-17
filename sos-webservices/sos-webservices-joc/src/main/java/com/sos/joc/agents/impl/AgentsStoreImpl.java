@@ -22,7 +22,6 @@ import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.StoreAgents;
@@ -111,14 +110,10 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             Globals.commit(connection);
             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentIds.keySet()));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -209,14 +204,10 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 //                        .postProblemEventIfExist(e, accessToken, getJocError(), null));
 //            }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

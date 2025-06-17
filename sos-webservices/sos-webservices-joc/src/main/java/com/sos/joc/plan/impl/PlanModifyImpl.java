@@ -13,7 +13,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.plan.PlansModifyFilter;
 import com.sos.joc.plan.resource.IPlanModify;
@@ -106,12 +105,9 @@ public class PlanModifyImpl extends JOCResourceImpl implements IPlanModify {
             planIdStream.map(pId -> JControllerCommand.changePlan(pId, status)).map(JControllerCommand::apply).forEach(command -> proxy.api()
                     .executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId)));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

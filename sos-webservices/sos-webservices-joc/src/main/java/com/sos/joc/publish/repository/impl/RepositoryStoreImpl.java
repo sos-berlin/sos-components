@@ -18,7 +18,6 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -81,16 +80,12 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** store to repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
             if (permitted) {

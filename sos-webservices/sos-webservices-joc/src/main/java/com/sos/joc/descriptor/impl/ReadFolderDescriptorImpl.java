@@ -5,7 +5,6 @@ import java.util.Arrays;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IReadFolderDescriptor;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.AReadFolder;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.descriptor.common.RequestFolder;
@@ -28,14 +27,11 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.common.RequestFolder.class);
             JOCDefaultResponse response = checkPermissions(accessToken, filter, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(readFolder(accessToken, filter, false));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, false)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -50,14 +46,11 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
             filter.setPath(normalizeFolder(filter.getPath()));
             JOCDefaultResponse response = checkPermissions(accessToken, filter, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(readFolder(accessToken, filter, true));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, true)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

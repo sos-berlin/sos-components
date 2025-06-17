@@ -20,7 +20,6 @@ import com.sos.joc.dailyplan.resource.IDailyPlanSubmissionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest;
@@ -69,12 +68,9 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             SubmissionsResponse answer = new SubmissionsResponse();
             answer.setSubmissionHistoryItems(result);
             answer.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(answer);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -116,14 +112,10 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
                     EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getFilter().getDateFrom()));
                 }
             }
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(new Date());
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
             JocClusterServiceLogger.removeLogger(ClusterServices.dailyplan.name());

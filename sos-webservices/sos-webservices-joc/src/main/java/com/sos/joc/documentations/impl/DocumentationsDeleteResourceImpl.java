@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -21,11 +19,12 @@ import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.resource.IDocumentationsDeleteResource;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.docu.DocumentationsDeleteFilter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("documentations")
 public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements IDocumentationsDeleteResource {
@@ -72,12 +71,9 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
                     DocumentationResourceImpl.postFolderEvent(parentFolder); 
                 }
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

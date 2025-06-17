@@ -3,15 +3,14 @@ package com.sos.joc.dailyplan.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.resource.IDailyPlanCalendarResource;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanCalendarImpl extends JOCOrderResourceImpl implements IDailyPlanCalendarResource {
@@ -27,13 +26,10 @@ public class DailyPlanCalendarImpl extends JOCOrderResourceImpl implements IDail
                 return response;
             }
             DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
             
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 }

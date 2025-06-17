@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
@@ -25,7 +23,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -34,6 +31,8 @@ import com.sos.joc.model.event.Event;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("events")
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
@@ -66,21 +65,19 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
             entity = processAfter(EventServiceFactory.getEvents(controllerId, evtIdIsEmpty, eventId, session, getJobschedulerUser()),
                     folderPermissions.getListOfFolders(), accessToken);
+            
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
         } catch (ControllerConnectionRefusedException e) {
             e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Throwable e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatus434JSError(e);
+        } catch (Exception e) {
+            return responseStatusJSError(e);
         }
-        if (EventServiceFactory.isClosed.get()) {
-            return null;
-        }
-        entity.setDeliveryDate(Date.from(Instant.now()));
-        return JOCDefaultResponse.responseStatus200(entity);
+//        if (EventServiceFactory.isClosed.get()) {
+//            return null;
+//        }
     }
 
     private ISOSSession checkSession() throws SessionNotExistException {

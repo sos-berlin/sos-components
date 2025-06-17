@@ -2,8 +2,6 @@ package com.sos.joc.keys.sign.ca.impl;
 
 import java.security.cert.X509Certificate;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
@@ -12,13 +10,14 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IShowKey;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
+
+import jakarta.ws.rs.Path;
 
 
 @Path("profile/key/ca")
@@ -54,12 +53,9 @@ public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
                 jocKeyPair.setKeyID(certificate.getSubjectX500Principal().getName());
                 jocKeyPair.setValidUntil(certificate.getNotAfter());
             }
-            return JOCDefaultResponse.responseStatus200(jocKeyPair);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(jocKeyPair));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

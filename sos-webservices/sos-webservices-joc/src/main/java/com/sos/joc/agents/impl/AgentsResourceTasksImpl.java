@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResourceTasks;
@@ -21,7 +19,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentTaskOrder;
 import com.sos.joc.model.agent.AgentTasks;
 import com.sos.joc.model.agent.AgentsTasks;
@@ -29,6 +26,7 @@ import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data.order.Order;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.controller.JControllerState;
@@ -112,12 +110,9 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
             agents.setDeliveryDate(Date.from(Instant.now()));
             agents.setAgents(agentsList);
 
-            return JOCDefaultResponse.responseStatus200(agents);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(agents));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

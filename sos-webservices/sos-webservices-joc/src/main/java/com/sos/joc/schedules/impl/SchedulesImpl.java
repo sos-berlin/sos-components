@@ -20,7 +20,6 @@ import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.schedules.resource.ISchedulesResource;
@@ -77,12 +76,9 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
                         .toList()));
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -27,7 +27,6 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.AgentItem;
 import com.sos.joc.model.monitoring.AgentItemEntryItem;
@@ -86,7 +85,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                 if (dateFrom.getTime() > new Date().getTime()) {
                     answer.setDeliveryDate(new Date());
                     answer.setControllers(new ArrayList<>());
-                    return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+                    return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
                 }
             }
 
@@ -102,12 +101,9 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             mergeInventoryAgentsIfNotInHistory(historyTimeZones, historyAgents, inventoryAgents);
             answer.setControllers(getItems(historyAgents, inventoryAgents, dateFrom, dateTo));
             answer.setDeliveryDate(new Date());
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

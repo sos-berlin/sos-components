@@ -60,7 +60,6 @@ import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.inventory.resource.IReleaseResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -98,20 +97,17 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 response = getReleaseResponse(in, true, accessToken);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
     private JOCDefaultResponse getReleaseResponse(ReleaseFilter in, boolean withDeletionOfEmptyFolders, String accessToken) throws Exception {
         List<Err419> errors = release(in, getJocError(), withDeletionOfEmptyFolders, accessToken);
         if (errors != null && !errors.isEmpty()) {
-            return JOCDefaultResponse.responseStatus419(errors);
+            return responseStatus419(errors);
         }
-        return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        return responseStatusJSOk(Date.from(Instant.now()));
     }
     
     private List<Err419> release(ReleaseFilter in, JocError jocError, boolean withDeletionOfEmptyFolders, String accessToken) throws Exception {

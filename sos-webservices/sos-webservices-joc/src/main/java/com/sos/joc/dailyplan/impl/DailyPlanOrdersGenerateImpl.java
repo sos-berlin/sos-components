@@ -57,7 +57,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.common.Folder;
@@ -88,15 +87,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 return accessDeniedResponse();
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
+            return responseStatusJSOk(new Date());
 
-        } catch (JocException e) {
-            JocClusterServiceLogger.clearAllLoggers();
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             JocClusterServiceLogger.clearAllLoggers();
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -41,7 +41,6 @@ import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.projections.ProjectionsCalendarResponse;
@@ -77,12 +76,9 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                 }
             });
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -184,27 +180,24 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
             entity.setYears(yearsItem);
 
             if (export) {
-                return export(acceptEncoding, entity, metaContentOpt);
+                metaContentOpt.ifPresent(meta -> entity.setMeta(meta));
+                return export(acceptEncoding, entity);
             } else {
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
             }
         } catch (DBMissingDataException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
     }
 
-    private JOCDefaultResponse export(String acceptEncoding, ProjectionsCalendarResponse entity, Optional<MetaItem> metaContentOpt) {
-        metaContentOpt.ifPresent(meta -> entity.setMeta(meta));
+    private JOCDefaultResponse export(String acceptEncoding, ProjectionsCalendarResponse entity) {
 
+        getJocAuditTrail().setResponse(entity);
         boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
         StreamingOutput entityStream = new StreamingOutput() {
 
@@ -236,7 +229,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                 }
             }
         };
-        return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding));
+        return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding), getJocAuditTrail());
     }
 
     private Map<String, Object> getGzipHeaders(boolean withGzipEncoding) {

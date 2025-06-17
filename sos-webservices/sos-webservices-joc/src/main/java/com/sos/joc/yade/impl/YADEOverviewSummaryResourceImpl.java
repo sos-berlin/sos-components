@@ -14,7 +14,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.yade.JocDBLayerYade;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.TransferFilesOverView;
@@ -76,12 +75,9 @@ public class YADEOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             files.setFailed(dbLayer.getFailedTransfersCount(allowedControllers, from, to, permittedFoldersMap));
             answer.setFiles(files);
             answer.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

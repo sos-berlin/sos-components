@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
@@ -18,7 +19,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReferenceResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -139,13 +139,10 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                 Globals.disconnect(session);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(entity).replaceAll(
-                    ",\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"|\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"\\s*,", ""));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsString(entity).replaceAll(
+                    ",\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"|\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"\\s*,", "").getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

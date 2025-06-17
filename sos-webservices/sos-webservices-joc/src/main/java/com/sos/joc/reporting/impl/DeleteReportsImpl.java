@@ -11,7 +11,6 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.reporting.ReportsUpdated;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.reporting.DeleteReports;
 import com.sos.joc.reporting.resource.IDeleteReportsResource;
@@ -48,14 +47,10 @@ public class DeleteReportsImpl extends JOCResourceImpl implements IDeleteReports
             
             EventBus.getInstance().post(new ReportsUpdated());
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

@@ -20,7 +20,6 @@ import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrdersSummaryResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
@@ -152,13 +151,10 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                     }
                 }
             }
-            return JOCDefaultResponse.responseStatus200(answer);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

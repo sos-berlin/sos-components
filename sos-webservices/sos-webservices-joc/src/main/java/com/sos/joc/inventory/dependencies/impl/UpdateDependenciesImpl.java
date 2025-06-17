@@ -12,7 +12,6 @@ import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.dependencies.common.DependencySemaphore;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.dependencies.resource.IUpdateDependencies;
 import com.sos.joc.model.audit.CategoryType;
 
@@ -32,7 +31,7 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
             initLogging(API_CALL, "".getBytes(), xAccessToken, CategoryType.INVENTORY);
             permitted = DependencySemaphore.tryAcquire();
             if (!permitted) {
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                return responseStatusJSOk(Date.from(Instant.now()));
             }
             session = Globals.createSosHibernateStatelessConnection(xAccessToken);
             InventoryDBLayer dblayer = new InventoryDBLayer(session);
@@ -40,12 +39,9 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
             
             DependencyResolver.updateDependencies(allConfigs);
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

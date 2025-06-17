@@ -3,15 +3,12 @@ package com.sos.joc.keys.sign.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
@@ -22,6 +19,8 @@ import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 
 @Path("profile/key")
@@ -68,12 +67,9 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
 //            DeployAudit audit = new DeployAudit(setKeyFilter.getAuditLog(), reason);
 //            logAuditMessage(audit);
 //            storeAuditLogEntry(audit);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

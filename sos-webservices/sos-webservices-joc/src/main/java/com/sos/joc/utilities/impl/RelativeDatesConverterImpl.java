@@ -3,8 +3,6 @@ package com.sos.joc.utilities.impl;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,11 +11,12 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.RelativeDatesConverter;
 import com.sos.joc.utilities.resource.IRelativeDateConverterResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.UTILITIES)
 public class RelativeDatesConverterImpl extends JOCResourceImpl implements IRelativeDateConverterResource {
@@ -46,12 +45,9 @@ public class RelativeDatesConverterImpl extends JOCResourceImpl implements IRela
                 in.getAbsoluteDates().add(format.format(JobSchedulerDate.getDateFrom(relativeDate, in.getTimeZone())));
             }
 
-            return JOCDefaultResponse.responseStatus200(in);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(in));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

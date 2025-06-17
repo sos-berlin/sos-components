@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.ClusterAgents;
 import com.sos.joc.model.agent.ReadAgents;
@@ -92,7 +91,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     jocError.clearMetaInfo();
                 }
                 LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
-                return JOCDefaultResponse.responseStatus200(agents);
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(agents));
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -135,12 +134,9 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             }
             agents.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(agents);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(agents));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

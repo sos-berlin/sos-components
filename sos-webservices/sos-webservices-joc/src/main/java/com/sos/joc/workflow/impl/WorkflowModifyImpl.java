@@ -14,7 +14,6 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflow;
 import com.sos.joc.workflow.resource.IWorkflowModify;
@@ -49,12 +48,9 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
                 return jocDefaultResponse;
             }
             postWorkflowModify(Action.TRANSITION, workflow);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -68,12 +64,9 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
                 return jocDefaultResponse;
             }
             postWorkflowModify(Action.TRANFER, workflow);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -9,7 +9,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.reporting.LoadData;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.reporting.LoadFilter;
 import com.sos.joc.reporting.resource.ILoadDataResource;
@@ -42,12 +41,9 @@ public class LoadDataImpl extends JOCResourceImpl implements ILoadDataResource {
             // TODO: consider in.getMonthTo()
             LoadData.writeCSVFiles(in.getMonthFrom(), null).thenAccept(e -> ProblemHelper.postExceptionEventIfExist(e, accessToken, getJocError(), null));
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

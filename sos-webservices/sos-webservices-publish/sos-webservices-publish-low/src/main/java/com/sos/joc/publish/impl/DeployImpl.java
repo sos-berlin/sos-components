@@ -8,7 +8,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.DeployFilter;
@@ -42,12 +41,9 @@ public class DeployImpl extends ADeploy implements IDeploy {
 
             deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, account, JocSecurityLevel.LOW, API_CALL);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

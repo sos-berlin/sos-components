@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.StreamingOutput;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsExport;
@@ -20,7 +17,6 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
@@ -31,6 +27,9 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.publish.util.ExportUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @Path("agents")
 public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
@@ -88,12 +87,9 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
             } else {
                 stream = ExportUtils.writeAgentExportTarGzipFile(agents);
             }
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

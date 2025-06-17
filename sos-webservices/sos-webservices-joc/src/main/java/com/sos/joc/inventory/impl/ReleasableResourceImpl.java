@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -20,7 +18,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocDeployException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.inventory.resource.IReleasableResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -30,6 +27,8 @@ import com.sos.joc.model.inventory.release.ResponseReleasable;
 import com.sos.joc.model.inventory.release.ResponseReleasableTreeItem;
 import com.sos.joc.model.inventory.release.ResponseReleasableVersion;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasableResource {
@@ -45,14 +44,11 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(releasable(in));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(releasable(in)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

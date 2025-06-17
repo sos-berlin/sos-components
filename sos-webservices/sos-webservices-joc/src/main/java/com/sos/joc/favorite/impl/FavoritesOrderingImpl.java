@@ -3,18 +3,17 @@ package com.sos.joc.favorite.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesOrdering;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.OrderingFavorites;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/favorites")
 public class FavoritesOrderingImpl extends JOCResourceImpl implements IFavoritesOrdering {
@@ -42,14 +41,10 @@ public class FavoritesOrderingImpl extends JOCResourceImpl implements IFavorites
             dbLayer.setFavoritesOrdering(orderingParam.getName(), orderingParam.getType(), orderingParam.getPredecessorName());
             Globals.commit(connection);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

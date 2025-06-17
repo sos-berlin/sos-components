@@ -15,7 +15,6 @@ import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamPermissionDBLayer;
 import com.sos.joc.db.security.IamPermissionFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -80,13 +79,10 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             } else {
                 throw new JocObjectNotExistException("Couldn't find the permission <" + folderFilter.getFolderName() + ">");
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(folderItem));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(folderItem));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -146,14 +142,10 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             storeAuditLog(folders.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -192,17 +184,11 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
-        } catch (
-
-        JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -247,12 +233,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
 
             storeAuditLog(foldersFilter.getAuditLog());
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -300,12 +283,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folders.getFolders().add(folder);
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(folders));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(folders));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

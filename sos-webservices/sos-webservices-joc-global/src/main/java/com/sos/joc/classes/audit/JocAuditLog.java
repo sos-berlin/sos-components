@@ -57,13 +57,20 @@ public class JocAuditLog {
     public JocAuditLog(String user, String request, String params, CategoryType category) {
         this.user = setProperty(user);
         this.request = setProperty(request);
-        this.params = setProperty(params);
+        this.params = setParamProperty(params);
         this.category = category;
     }
 
     private String setProperty(String prop) {
         if (prop == null || prop.isEmpty()) {
-            prop = EMPTY_STRING;
+            return EMPTY_STRING;
+        }
+        return prop;
+    }
+    
+    private String setParamProperty(String prop) {
+        if (prop == null) {
+            return "";
         }
         return prop;
     }
@@ -121,10 +128,10 @@ public class JocAuditLog {
                 }
                 if (!JocAuditObjectsLog.isEnabled() || auditLogId == 0L) {
                     AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
-                            request, user, params, comment, timeSpent, ticketLink));
+                            request, user, setProperty(params), comment, timeSpent, ticketLink));
                 } else {
                     AUDIT_LOGGER.info(String.format("REQUEST: %1$s - ID: %7$d - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
-                        request, user, params, comment, timeSpent, ticketLink, auditLogId));
+                        request, user, setProperty(params), comment, timeSpent, ticketLink, auditLogId));
                 }
                 truncateParams();
                 

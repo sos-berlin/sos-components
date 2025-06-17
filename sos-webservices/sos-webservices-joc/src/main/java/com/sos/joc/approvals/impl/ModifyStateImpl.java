@@ -25,7 +25,6 @@ import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.security.foureyes.ApproverState;
@@ -120,15 +119,12 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             }
 
             if (result.containsKey(Boolean.FALSE)) {
-                return JOCDefaultResponse.responseStatus419(result.get(Boolean.FALSE).stream().map(Either::getLeft).collect(Collectors.toList()));
+                return responseStatus419(result.get(Boolean.FALSE).stream().map(Either::getLeft).collect(Collectors.toList()));
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -242,15 +238,12 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             }
 
             if (result.containsKey(Boolean.FALSE)) {
-                return JOCDefaultResponse.responseStatus419(result.get(Boolean.FALSE).stream().map(Either::getLeft).collect(Collectors.toList()));
+                return responseStatus419(result.get(Boolean.FALSE).stream().map(Either::getLeft).collect(Collectors.toList()));
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

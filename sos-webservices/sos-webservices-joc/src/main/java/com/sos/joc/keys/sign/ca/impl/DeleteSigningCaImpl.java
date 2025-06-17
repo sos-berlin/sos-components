@@ -10,7 +10,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IDeleteSigningCa;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -53,12 +52,9 @@ public class DeleteSigningCaImpl extends JOCResourceImpl implements IDeleteSigni
             if(dbCert != null) {
                 hibernateSession.delete(dbCert);
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

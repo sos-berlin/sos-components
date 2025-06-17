@@ -12,7 +12,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.keys.ca.resource.ISetRootCa;
 import com.sos.joc.model.audit.CategoryType;
@@ -67,12 +66,9 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
                 DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
                 dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, accountName, Globals.getJocSecurityLevel().intValue());
             } 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

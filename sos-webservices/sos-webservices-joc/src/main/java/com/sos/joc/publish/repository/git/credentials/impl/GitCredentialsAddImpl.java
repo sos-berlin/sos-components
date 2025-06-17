@@ -18,7 +18,6 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocGitException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -115,12 +114,9 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             Date finished = Date.from(Instant.now());
             LOGGER.trace("*** add credentials finished ***" + finished);
             LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

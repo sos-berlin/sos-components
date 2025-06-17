@@ -21,7 +21,6 @@ import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.StoreSubAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.audit.CategoryType;
@@ -122,14 +121,10 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
             connection = null;
             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, agentId));
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

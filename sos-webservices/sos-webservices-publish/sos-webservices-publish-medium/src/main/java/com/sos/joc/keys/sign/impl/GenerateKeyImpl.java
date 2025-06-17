@@ -3,8 +3,6 @@ package com.sos.joc.keys.sign.impl;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.ca.CAUtils;
@@ -14,7 +12,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IGenerateKey;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -23,6 +20,8 @@ import com.sos.joc.model.publish.GenerateKeyFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.SigningCertificateUtil;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("profile/key")
 public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
@@ -96,12 +95,9 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             }
             // store private key to the db
             dbLayer.saveOrUpdateGeneratedKey(keyPair, accountName, JocSecurityLevel.MEDIUM, filter.getDn());
-            return JOCDefaultResponse.responseStatus200(keyPair);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(keyPair));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

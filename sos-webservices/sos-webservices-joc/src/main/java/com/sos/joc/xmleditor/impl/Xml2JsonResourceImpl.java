@@ -2,7 +2,6 @@ package com.sos.joc.xmleditor.impl;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfiguration;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfigurationAnswer;
@@ -48,14 +47,11 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
             }
 
             Xml2JsonConverter converter = new Xml2JsonConverter();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(converter.convert(in.getObjectType(),
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(converter.convert(in.getObjectType(),
                     schema, in.getConfiguration()))));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -35,7 +35,6 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderIdToOrder;
@@ -238,11 +237,8 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             entity.setDeliveryDate(Date.from(Instant.now()));
             return response(acceptEncoding, Globals.objectMapper.writeValueAsBytes(entity));
             //return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -250,8 +246,10 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
     
     private JOCDefaultResponse response(String acceptEncoding, byte[] responseEntity) {
         
+        getJocAuditTrail().setResponse(responseEntity);
+        
         if (responseEntity.length < 1024 * 512) {
-            return JOCDefaultResponse.responseStatus200(responseEntity);
+            return responseStatus200(responseEntity);
         }
 
         boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
@@ -285,7 +283,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
                 }
             }
         };
-        return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding));
+        return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding), getJocAuditTrail());
     }
 
     private Map<String, Object> getGzipHeaders(boolean withGzipEncoding) {

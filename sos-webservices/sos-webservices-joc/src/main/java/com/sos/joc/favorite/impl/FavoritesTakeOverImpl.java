@@ -6,20 +6,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesTakeOver;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.FavoriteSharedIdentifier;
 import com.sos.joc.model.favorite.FavoriteSharedIdentifiers;
 import com.sos.joc.model.favorite.FavoriteType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/favorites")
 public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavoritesTakeOver {
@@ -58,14 +57,10 @@ public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavorites
             
             Globals.commit(connection);
             
-            return JOCDefaultResponse.responseStatusJSOk(now);
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(now);
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

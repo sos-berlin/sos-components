@@ -24,7 +24,6 @@ import com.sos.joc.event.bean.JOCEvent;
 import com.sos.joc.event.bean.inventory.InventoryGroupAddEvent;
 import com.sos.joc.event.bean.inventory.InventoryGroupDeleteEvent;
 import com.sos.joc.event.bean.inventory.InventoryGroupsEvent;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.tag.group.RequestFilters;
 import com.sos.joc.tags.resource.ITagsModify;
@@ -67,12 +66,9 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
             Stream<JOCEvent> events = postTagsModify(action, modifyTags);
             events.forEach(evt -> EventBus.getInstance().post(evt));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -38,7 +38,6 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IRevalidateResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -75,14 +74,11 @@ public class RevalidateResourceImpl extends JOCResourceImpl implements IRevalida
             }
 
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(revalidate(in));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(revalidate(in)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -16,7 +16,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.reporting.RunReport;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -64,12 +63,9 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             }
             
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -95,12 +91,9 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             // TODO: event when ready without exception
             RunReport.run(in).thenAccept(e -> ProblemHelper.postExceptionEventIfExist(e, accessToken, getJocError(), null));
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -9,7 +9,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.sessions.ActiveSession;
 import com.sos.joc.model.security.sessions.ActiveSessions;
@@ -65,12 +64,9 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(activeSessions));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(activeSessions));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -129,14 +125,9 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
 
             storeAuditLog(activeSessionsCancelFilter.getAuditLog());
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (
-
-        JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

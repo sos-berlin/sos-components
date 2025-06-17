@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.audit.resource.IAuditLogDetailResource;
@@ -18,12 +16,13 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.audit.AuditLogDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditLogDetailFilter;
 import com.sos.joc.model.audit.AuditLogDetailItem;
 import com.sos.joc.model.audit.AuditLogDetails;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("audit_log")
 public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAuditLogDetailResource {
@@ -119,12 +118,9 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -21,7 +19,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.yade.FileFilter;
@@ -30,6 +27,8 @@ import com.sos.joc.model.yade.xmleditor.ProfilesAnswer;
 import com.sos.joc.model.yade.xmleditor.common.Profile;
 import com.sos.joc.yade.resource.xmleditor.IProfilesResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("yade")
 public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesResource {
@@ -81,13 +80,10 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
                 LOGGER.debug("YADE configuration not found");
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

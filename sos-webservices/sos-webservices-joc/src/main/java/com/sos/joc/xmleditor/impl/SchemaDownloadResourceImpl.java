@@ -10,7 +10,6 @@ import javax.json.JsonObjectBuilder;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.schema.SchemaDownloadConfiguration;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
@@ -51,11 +50,8 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
                 return download(in);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -118,10 +114,11 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
                 }
             }
         };
+        
         if (in.getShow()) {
-            return JOCDefaultResponse.responsePlainStatus200(fileStream);
+            return JOCDefaultResponse.responsePlainStatus200(fileStream, null, getJocAuditTrail());
         } else {
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, downloadFileName);
+            return responseOctetStreamDownloadStatus200(fileStream, downloadFileName);
         }
     }
 }

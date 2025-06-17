@@ -3,17 +3,16 @@ package com.sos.joc.audit.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
 import com.sos.joc.audit.resource.ICommentsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.Comments;
+
+import jakarta.ws.rs.Path;
 
 @Path("audit_log")
 public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsResource {
@@ -36,12 +35,9 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
             entity.setComments(ClusterSettings.getCommentsForAuditLog(clusterSettings));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } 
     }
 }

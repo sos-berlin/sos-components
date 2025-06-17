@@ -11,7 +11,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.db.yade.JocDBLayerYade;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.joc.model.yade.TransferFiles;
@@ -54,12 +53,9 @@ public class YADEFilesResourceImpl extends JOCResourceImpl implements IYADEFiles
                 answer.setFiles(dbFiles.stream().map(file -> TransferFileUtils.getFile(file)).collect(Collectors.toList()));
             }
             answer.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

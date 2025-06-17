@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -31,7 +29,6 @@ import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -40,6 +37,8 @@ import com.sos.joc.model.inventory.common.RequestFilters;
 import com.sos.joc.model.inventory.common.RequestFolder;
 import com.sos.joc.model.inventory.delete.ResponseItem;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteDraftResource {
@@ -59,11 +58,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 response = delete(in);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -79,11 +75,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 response = deleteFolder(in, true);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -142,7 +135,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(entity);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (SOSHibernateException e) {
             Globals.rollback(session);
             throw e;
@@ -206,7 +199,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(entity);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (SOSHibernateException e) {
             Globals.rollback(session);
             throw e;

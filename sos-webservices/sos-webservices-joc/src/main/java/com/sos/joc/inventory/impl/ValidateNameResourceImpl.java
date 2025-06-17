@@ -4,8 +4,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
@@ -14,13 +12,14 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IValidateNameResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ValidateNameResourceImpl extends JOCResourceImpl implements IValidateNameResource {
@@ -37,11 +36,8 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
                 response = validate(in);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -85,7 +81,7 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
                 }
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             throw e;
         } finally {

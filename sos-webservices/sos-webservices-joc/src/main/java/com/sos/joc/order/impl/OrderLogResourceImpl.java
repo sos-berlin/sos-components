@@ -10,7 +10,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,13 +22,14 @@ import com.sos.joc.classes.logs.RunningOrderLogs;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryOrderLogArrived;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderRunningLogFilter;
 import com.sos.joc.model.order.RunningOrderLogEvents;
 import com.sos.joc.order.resource.IOrderLogResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("order")
 public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogResource {
@@ -57,12 +57,9 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             }
 
             LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(logOrderContent.getOrderLog()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(logOrderContent.getOrderLog()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -94,13 +91,10 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             }
 
             LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(),
+            return responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(),
                     logOrderContent.getUnCompressedLength());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -157,12 +151,9 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 break;
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(orderLog));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(orderLog));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             EventBus.getInstance().unRegister(this);
         }

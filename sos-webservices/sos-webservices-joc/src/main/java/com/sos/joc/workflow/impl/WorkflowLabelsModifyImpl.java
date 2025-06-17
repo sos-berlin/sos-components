@@ -34,7 +34,6 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowLabels;
 import com.sos.joc.workflow.resource.IWorkflowLabelsModify;
@@ -100,12 +99,9 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
                 return jocDefaultResponse;
             }
             postWorkflowJobsModify(Action.SKIP, modifyWorkflow);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -119,12 +115,9 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
                 return jocDefaultResponse;
             }
             postWorkflowJobsModify(Action.UNSKIP, modifyWorkflow);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

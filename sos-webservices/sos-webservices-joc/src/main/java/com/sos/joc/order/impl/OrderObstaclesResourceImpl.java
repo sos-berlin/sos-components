@@ -7,8 +7,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -16,7 +14,6 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.Obstacle;
 import com.sos.joc.model.order.Obstacle200;
@@ -26,6 +23,7 @@ import com.sos.joc.order.resource.IOrderObstaclesResource;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
 import js7.data_for_java.controller.JControllerState;
@@ -69,13 +67,10 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
             
             entry.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(entry);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entry));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

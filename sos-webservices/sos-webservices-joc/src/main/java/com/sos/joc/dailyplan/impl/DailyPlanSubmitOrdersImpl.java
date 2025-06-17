@@ -48,7 +48,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.schema.JsonValidator;
@@ -88,12 +87,9 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
             }
             
             submitOrdersToController(in, allowedControllers, accessToken, true);
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(new Date());
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

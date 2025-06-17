@@ -79,13 +79,10 @@ public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWork
 
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

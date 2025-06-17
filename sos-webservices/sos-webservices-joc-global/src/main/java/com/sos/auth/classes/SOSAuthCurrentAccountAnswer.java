@@ -2,9 +2,11 @@ package com.sos.auth.classes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = false)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SOSAuthCurrentAccountAnswer {
 
     private String account;
@@ -14,8 +16,8 @@ public class SOSAuthCurrentAccountAnswer {
     @JsonProperty("permission")
     private String permission;
 
-    @JsonProperty("isPermittet")
-    private boolean isPermittet;
+    @JsonProperty("isPermitted")
+    private boolean isPermitted;
 
     @JsonProperty("hasRole")
     private boolean hasRole;
@@ -91,13 +93,14 @@ public class SOSAuthCurrentAccountAnswer {
     }
 
     public void setIsPermitted(boolean isPermitted) {
-        this.isPermittet = isPermitted;
+        this.isPermitted = isPermitted;
     }
 
     public boolean getIsPermitted() {
-        return this.isPermittet;
+        return this.isPermitted;
     }
 
+    @JsonIgnore
     public boolean isPermitted() {
         return getIsPermitted();
     }
@@ -225,7 +228,7 @@ public class SOSAuthCurrentAccountAnswer {
     @Override
     public String toString() {
         return String.format("Account: %s Role: %s hasRole: %s Permission: %s isPermitted: %s -- AccessToken=%s", this.account, this.role,
-                this.hasRole, this.permission, this.isPermittet, this.accessToken);
+                this.hasRole, this.permission, this.isPermitted, this.accessToken);
     }
 
     

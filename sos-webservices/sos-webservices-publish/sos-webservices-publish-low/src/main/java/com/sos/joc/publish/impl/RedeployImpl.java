@@ -13,8 +13,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -43,6 +41,7 @@ import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 
 @Path("inventory/deployment")
@@ -139,12 +138,9 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, Collections.emptySet(), account, commitId, controllerId,
                         getAccessToken(), getJocError(), action);
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentReport;
 import com.sos.joc.model.agent.AgentReportFilter;
 import com.sos.joc.model.agent.AgentReports;
@@ -86,7 +85,7 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
                     jocError.clearMetaInfo();
                 }
                 LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
-                return JOCDefaultResponse.responseStatus200(agentReports);
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(agentReports));
             }
             
             boolean withAgentFilter = (agentParameter.getAgentIds() != null && !agentParameter.getAgentIds().isEmpty()) || (agentParameter
@@ -145,12 +144,9 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
             }
             agentReports.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(agentReports);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(agentReports));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

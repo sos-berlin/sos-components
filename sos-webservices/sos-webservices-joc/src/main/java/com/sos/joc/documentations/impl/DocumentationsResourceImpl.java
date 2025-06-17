@@ -17,7 +17,6 @@ import com.sos.joc.classes.documentation.DocumentationHelper;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentations.resource.IDocumentationsResource;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.docu.Documentation;
@@ -76,12 +75,9 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             Documentations documentations = new Documentations();
             documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, documentationsFilter.getOnlyWithAssignReference(), folderPermissions.getListOfFolders()));
             documentations.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(documentations);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(documentations));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

@@ -19,7 +19,6 @@ import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobs.resource.IJobsResourceOverviewSummary;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -84,7 +83,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
                     jocError.clearMetaInfo();
                 }
                 LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
-                return JOCDefaultResponse.responseStatus200(entity);
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
             }
             
             HistoryFilter historyFilter = new HistoryFilter();
@@ -112,12 +111,9 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             jobsHistoricSummary.setSuccessful(successful);
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

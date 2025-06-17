@@ -47,7 +47,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.JocDeployException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
@@ -258,12 +257,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             Set<DBItemDeploymentHistory> toDeleteForRename = UpdateItemUtils.checkRenamingForUpdate(objectsToCheckPathRenaming, controllerId,
                     dbLayer);
             deployItems(importedObjects, toDeleteForRename, account, commitIdForUpdate, controllerId, auditLogId, keyPair, caCertificates, filter);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
             try {

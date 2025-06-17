@@ -24,7 +24,6 @@ import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -96,16 +95,12 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
             if (permitted) {

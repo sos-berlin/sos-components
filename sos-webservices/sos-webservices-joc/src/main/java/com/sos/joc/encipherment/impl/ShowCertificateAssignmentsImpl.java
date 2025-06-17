@@ -12,7 +12,6 @@ import com.sos.joc.db.encipherment.DBItemEncAgentCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IShowCertificateAssgnments;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.AgentAssignments;
 import com.sos.joc.model.encipherment.ShowAgentAssignmentsRequestFilter;
@@ -45,16 +44,12 @@ public class ShowCertificateAssignmentsImpl extends JOCResourceImpl implements I
                 mappings = dbLayer.getEnciphermentCertificateMappingsByCertAliases(filter.getCertAliases());
             }
             
-            return JOCDefaultResponse.responseStatus200(mapDbItems(mappings));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(mapDbItems(mappings)));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

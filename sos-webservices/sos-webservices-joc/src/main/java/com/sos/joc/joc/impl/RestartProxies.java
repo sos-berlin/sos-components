@@ -7,7 +7,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.ProxiesEdit;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IRestartProxiesResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.ClusterServiceRun;
@@ -33,12 +32,9 @@ public class RestartProxies extends JOCResourceImpl implements IRestartProxiesRe
             storeAuditLog(in.getAuditLog());
             ProxiesEdit.forcedRestartForJOC();
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

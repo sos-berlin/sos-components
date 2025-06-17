@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IUpdateWorkflowsFromTemplates;
 import com.sos.joc.jobtemplates.impl.JobTemplatesResourceImpl;
 import com.sos.joc.model.audit.CategoryType;
@@ -54,14 +53,11 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             in.setFolder(normalizeFolder(in.getFolder()));
             JOCDefaultResponse response = checkPermissions(accessToken, in, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -154,7 +150,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                     ResponseFolder entity = new ResponseFolder();
                     entity.setDeliveryDate(Date.from(Instant.now()));
                     entity.setPath(in.getFolder());
-                    response = JOCDefaultResponse.responseStatus200(entity);
+                    response = responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
                 }
 
             } else {

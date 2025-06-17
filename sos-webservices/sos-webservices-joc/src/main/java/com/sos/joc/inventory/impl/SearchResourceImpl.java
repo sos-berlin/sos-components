@@ -8,8 +8,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSReflection;
@@ -21,7 +19,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventorySearchDBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.ISearchResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -32,6 +29,8 @@ import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseSearch;
 import com.sos.joc.model.inventory.search.ResponseSearchItem;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class SearchResourceImpl extends JOCResourceImpl implements ISearchResource {
@@ -51,12 +50,9 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             ResponseSearch answer = new ResponseSearch();
             answer.setResults(getSearchResult(in, folderPermissions));
             answer.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

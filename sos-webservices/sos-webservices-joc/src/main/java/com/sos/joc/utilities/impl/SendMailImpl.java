@@ -14,7 +14,6 @@ import com.sos.joc.classes.monitoring.mail.MailResource;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -47,12 +46,9 @@ public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResou
 
             sendMail(sendMail);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
 

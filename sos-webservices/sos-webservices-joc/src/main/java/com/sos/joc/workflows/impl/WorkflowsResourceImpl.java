@@ -32,7 +32,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflows;
@@ -89,13 +88,10 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             }
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

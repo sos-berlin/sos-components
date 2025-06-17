@@ -130,17 +130,13 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 throw new JocObjectNotExistException("Couldn't find the registration <" + fidoRegistrationFilter.getAccountName()
                         + " in identity service " + fidoRegistrationFilter.getIdentityServiceName() + ">");
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRegistration));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRegistration));
 
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -235,21 +231,15 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             storeAuditLog(fidoRegistration.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
-            Globals.rollback(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
     }
@@ -296,19 +286,14 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             storeAuditLog(fidoAddDevice.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -350,19 +335,14 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             storeAuditLog(fidoRemoveDevices.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -513,20 +493,15 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             storeAuditLog(fidoRegistration.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fido2RegistrationStartResponse));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(fido2RegistrationStartResponse));
 
         } catch (JocAuthenticationException e) {
             e.getError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.rollback(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
@@ -577,12 +552,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -658,20 +630,15 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             fidoRequestAuthenticationResponse.setRequestId(dbItemIamFido2Requests.getRequestId());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRequestAuthenticationResponse));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRequestAuthenticationResponse));
 
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -719,19 +686,14 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             storeAuditLog(fidoRegistrationsFilter.getAuditLog());
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocAuthenticationException e) {
             Globals.rollback(sosHibernateSession);
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            Globals.rollback(sosHibernateSession);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -785,16 +747,12 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 fidoRegistrations.getFidoRegistrationItems().add(fidoRegistration);
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRegistrations));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRegistrations));
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -906,22 +864,17 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             }
 
             Globals.commit(sosHibernateSession);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-        return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
     }
 
     @Override
@@ -973,20 +926,15 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             storeAuditLog(fidoRegistrationsFilter.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
         } catch (JocAuthenticationException e) {
             getJocError().setLogAsInfo(true);
-            e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
 
         } finally {
             fidoRegistrationsFilter = null;
@@ -1029,15 +977,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             sendConfirmedMail(dbItemIamIdentityService.getIdentityServiceName(), dbItemIamFido2Registration);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
 
         } finally {
             fidoConfirmationFilter = null;
@@ -1107,12 +1051,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             Configuration conf = setConfigurationValues(dbItem, configuration.getControllerId());
 
             entity.setConfiguration(conf);
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

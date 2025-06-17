@@ -1,6 +1,9 @@
 package com.sos.joc.documentation.impl;
 
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+
+import java.nio.charset.StandardCharsets;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -10,7 +13,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationShowResource;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 
 @Path("documentation")
@@ -51,13 +53,9 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                     + "      window.location.replace(\"%s\");%n"
                     + "   </script>%n</body>%n</html>",
                     JOCJsonCommand.urlEncodedPath(path.replaceFirst("^/", "")));
-
-            return JOCDefaultResponse.responseHtmlStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseHTMLStatusJSError(e);
+            return responseStatus200(entity.getBytes(StandardCharsets.UTF_8), MediaType.TEXT_HTML + "; charset=UTF-8");
         } catch (Exception e) {
-            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
+            return responseStatusJSError(e, MediaType.TEXT_HTML + "; charset=UTF-8");
         }
     }
     

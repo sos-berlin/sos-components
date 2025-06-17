@@ -18,7 +18,6 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.identityservice.IdentityService;
@@ -96,12 +95,9 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 throw new JocObjectNotExistException("Couldn't find the identity service <" + identityServiceFilter.getIdentityServiceName() + ">");
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -180,14 +176,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
 
             storeAuditLog(identityService.getAuditLog());
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
-        } catch (JocException e) {
-            Globals.rollback(sosHibernateSession);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -236,14 +228,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
 
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityServiceRename));
-        } catch (JocException e) {
-            Globals.rollback(sosHibernateSession);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityServiceRename));
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -287,14 +275,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 Globals.commit(sosHibernateSession);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(sosHibernateSession);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -364,12 +348,9 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityServices.getIdentityServiceItems().add(identityService);
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityServices));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityServices));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -411,14 +392,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             storeAuditLog(identityServices.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

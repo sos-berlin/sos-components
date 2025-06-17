@@ -9,15 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryFavorite;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.Favorite;
@@ -26,6 +23,8 @@ import com.sos.joc.model.favorite.FavoriteType;
 import com.sos.joc.model.favorite.Favorites;
 import com.sos.joc.model.favorite.ReadFavoritesFilter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/favorites")
 public class FavoritesResourceImpl extends JOCResourceImpl implements IFavoritesResource {
@@ -111,12 +110,9 @@ public class FavoritesResourceImpl extends JOCResourceImpl implements IFavorites
             }
             favorites.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(favorites);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(favorites));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

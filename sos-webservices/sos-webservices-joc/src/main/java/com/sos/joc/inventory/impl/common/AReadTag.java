@@ -23,7 +23,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.inventory.IDBItemTag;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -47,14 +46,11 @@ public abstract class AReadTag extends JOCResourceImpl {
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 ResponseTag tag = readTag(in, action, forTrash, dbLayer);
-                response = JOCDefaultResponse.responseStatus200(tag);
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(tag));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

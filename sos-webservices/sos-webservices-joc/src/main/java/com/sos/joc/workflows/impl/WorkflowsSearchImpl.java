@@ -15,7 +15,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.impl.SearchResourceImpl;
 import com.sos.joc.inventory.resource.ISearchResource;
@@ -88,12 +87,9 @@ public class WorkflowsSearchImpl extends JOCResourceImpl implements ISearchResou
             }
             
             answer.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

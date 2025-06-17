@@ -1,6 +1,7 @@
 package com.sos.joc.joc.impl;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import jakarta.ws.rs.core.MediaType;
 
@@ -37,29 +38,26 @@ public class AboutImpl extends JOCResourceImpl implements IAboutResource {
     }
 
     public JOCDefaultResponse getAbout(String accept, String apiCall) {
-        String mediaType = MediaType.TEXT_PLAIN;
+        String mediaType = MediaType.TEXT_HTML + "; charset=UTF-8";
         if (MediaType.APPLICATION_JSON.equalsIgnoreCase(accept)) {
             mediaType = MediaType.APPLICATION_JSON;
         }
         try {
             initLogging(apiCall, null, CategoryType.OTHERS);
-            return JOCDefaultResponse.responseStatus200(readVersion(mediaType), mediaType);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e, mediaType);
+            return responseStatus200(readVersion(mediaType), mediaType);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError(), mediaType);
+            return responseStatusJSError(e, mediaType);
         }
     }
 
-    private Object readVersion(String mediaType) throws JocException {
+    private byte[] readVersion(String mediaType) throws JocException {
         InputStream stream = null;
         String versionFile = "/version.json";
         try {
             stream = this.getClass().getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
                 Version v = Globals.objectMapper.readValue(stream, Version.class);
-                return MediaType.TEXT_PLAIN.equals(mediaType) ? versionClassToString(v) : v;
+                return MediaType.TEXT_PLAIN.equals(mediaType) ? versionClassToString(v) : Globals.objectMapper.writeValueAsBytes(v);
             } else {
                 throw new JocException(new JocError("JOC-002", String.format("Couldn't find version file %1$s in classpath", versionFile)));
             }
@@ -77,8 +75,8 @@ public class AboutImpl extends JOCResourceImpl implements IAboutResource {
         }
     }
     
-    private String versionClassToString(Version v) {
-        return String.format("version: %s%ngitHash: %s%ndate: %s%n", v.getVersion(), v.getGitHash(), v.getDate());
+    private byte[] versionClassToString(Version v) {
+        return String.format("version: %s%ngitHash: %s%ndate: %s%n", v.getVersion(), v.getGitHash(), v.getDate()).getBytes(StandardCharsets.UTF_8);
     }
 
 }

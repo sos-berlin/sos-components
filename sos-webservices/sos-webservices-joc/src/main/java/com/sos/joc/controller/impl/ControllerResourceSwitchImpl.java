@@ -3,8 +3,6 @@ package com.sos.joc.controller.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSSessionHandler;
 import com.sos.joc.Globals;
@@ -13,10 +11,11 @@ import com.sos.joc.classes.JOCPreferences;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.controller.resource.IControllerResourceSwitch;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("controller")
 public class ControllerResourceSwitchImpl extends JOCResourceImpl implements IControllerResourceSwitch {
@@ -43,13 +42,10 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(sosAuthCurrentAccount);
             sosSessionHandler.setAttribute(SESSION_KEY, selectedInstance);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 }

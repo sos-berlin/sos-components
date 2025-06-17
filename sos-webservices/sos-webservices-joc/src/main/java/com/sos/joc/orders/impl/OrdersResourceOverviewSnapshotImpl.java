@@ -13,8 +13,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -31,7 +29,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
@@ -42,6 +39,7 @@ import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
@@ -79,17 +77,13 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             JControllerState controllerState = Proxy.of(body.getControllerId()).currentState();
             Set<VersionedItemId<WorkflowPath>> checkedWorkflows = checkFolderPermission(controllerState, body.getWorkflowIds(), permittedFolders);
 
-            return JOCDefaultResponse.responseStatus200(getSnapshot(controllerState, body, checkedWorkflows, permittedFolders, withWorkFlowFilter,
-                    withFolderFilter));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getSnapshot(controllerState, body, checkedWorkflows, permittedFolders,
+                    withWorkFlowFilter, withFolderFilter)));
 
         } catch (ControllerConnectionResetException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
 
     }

@@ -14,7 +14,6 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
@@ -76,18 +75,15 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
                 securityConfiguration.setDeliveryDate(Date.from(Instant.now()));
 
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
             } finally {
                 identityServiceFilter = null;
                 securityConfiguration = null;
                 Globals.disconnect(sosHibernateSession);
             }
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -140,19 +136,14 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
                 storeAuditLog(securityConfiguration.getAuditLog());
 
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                return responseStatusJSOk(Date.from(Instant.now()));
 
             } finally {
                 securityConfiguration = null;
                 Globals.disconnect(sosHibernateSession);
             }
-        } catch (
-
-        JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
 
     }

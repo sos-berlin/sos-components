@@ -5,7 +5,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.classes.tag.GroupedTag;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.ITagSearchResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.DeployedObjectQuickSearchFilter;
@@ -36,12 +35,9 @@ public class WorkflowTagSearchImpl extends JOCResourceImpl implements ITagSearch
             
             in.setSearch(new GroupedTag(in.getSearch()).getTag());
             ResponseQuickSearch answer = QuickSearchStore.getTagsAnswer(in, ConfigurationType.WORKFLOW, accessToken, folderPermissions);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Throwable e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
         }
     }
 }

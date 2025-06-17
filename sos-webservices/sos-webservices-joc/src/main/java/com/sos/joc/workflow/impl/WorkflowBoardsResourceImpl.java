@@ -30,7 +30,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
@@ -275,13 +274,10 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
 
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

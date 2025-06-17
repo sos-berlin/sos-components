@@ -1,12 +1,11 @@
 package com.sos.joc.publish.impl;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.publish.resource.IRedeploy;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/deployment")
 public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
@@ -16,12 +15,8 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
         try {
             //  Use ./inventory/export and ./inventory/deployment/import_deploy instead.
             throw new JocNotImplementedException("The web service is not available for Security Level HIGH.");
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
+            return responseStatusJSError(e);
         }
     }
     
@@ -30,12 +25,8 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
         try {
             //  Use ./inventory/export and ./inventory/deployment/import_deploy instead.
             throw new JocNotImplementedException("The web service is not available for Security Level HIGH.");
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
+            return responseStatusJSError(e);
         }
     }
 

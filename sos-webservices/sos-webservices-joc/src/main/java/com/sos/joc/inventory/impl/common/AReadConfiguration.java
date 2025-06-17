@@ -171,7 +171,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -202,7 +202,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setIsReferencedBy(null);
             item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
         } catch (Throwable e) {
             throw e;
         } finally {

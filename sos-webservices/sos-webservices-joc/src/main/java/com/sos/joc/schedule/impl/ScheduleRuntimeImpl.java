@@ -30,7 +30,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.RunTime;
@@ -129,12 +128,9 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                 entity.setPeriods(new ArrayList<>(periods));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

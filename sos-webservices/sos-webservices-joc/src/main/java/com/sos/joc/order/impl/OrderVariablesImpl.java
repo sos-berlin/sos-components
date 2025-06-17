@@ -16,7 +16,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderVariablesFilter;
@@ -84,13 +83,10 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             cop.setPositions(null);
             cop.setWithCyclePosition(null);
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(cop));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(cop));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

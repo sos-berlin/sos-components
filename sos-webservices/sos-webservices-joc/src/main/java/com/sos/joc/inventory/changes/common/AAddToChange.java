@@ -28,7 +28,7 @@ public abstract class AAddToChange extends JOCResourceImpl {
             
             add(request, session);
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

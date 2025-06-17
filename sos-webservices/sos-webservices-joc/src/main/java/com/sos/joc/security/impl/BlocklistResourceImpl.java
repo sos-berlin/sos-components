@@ -12,7 +12,6 @@ import com.sos.joc.classes.security.SOSBlocklist;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.blocklist.BlockedAccount;
 import com.sos.joc.model.security.blocklist.BlockedAccounts;
@@ -53,14 +52,10 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
             storeAuditLog(blockedAccount.getAuditLog());
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -90,12 +85,9 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
 
             storeAuditLog(blockedAccountsDeleteFilter.getAuditLog());
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -137,12 +129,9 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
                 blockedAccounts.getBlockedAccounts().add(blockedAccount);
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(blockedAccounts));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(blockedAccounts));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

@@ -69,12 +69,9 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 return response;
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(getBoards(filter)));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoards(filter)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

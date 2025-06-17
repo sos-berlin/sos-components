@@ -137,12 +137,9 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, Collections.emptySet(), account, commitId, controllerId,
                         getAccessToken(), getJocError(), action);
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

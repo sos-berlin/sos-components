@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResourceReassign;
@@ -18,12 +16,12 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
@@ -98,12 +96,9 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
                 });
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

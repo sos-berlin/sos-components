@@ -26,7 +26,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -76,12 +75,9 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             ControllerApi.of(controllerId).executeCommand(resetAgentCommand).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
                     getJocError(), controllerId));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -136,12 +132,9 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 deleteAgentInstance(agentId, accessToken, getJocError(), controllerId);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -176,12 +169,9 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -228,12 +218,9 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

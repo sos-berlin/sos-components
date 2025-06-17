@@ -8,7 +8,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -81,15 +80,11 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
             }
             session.commit();
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in.getObjectType(), item, isChanged)));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in.getObjectType(), item, isChanged)));
 
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

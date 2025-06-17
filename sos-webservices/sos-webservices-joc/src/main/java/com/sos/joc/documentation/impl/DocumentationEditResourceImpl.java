@@ -16,7 +16,6 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.documentation.resource.IDocumentationEditResource;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.ObjectType;
@@ -75,12 +74,9 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
                 }
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

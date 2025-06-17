@@ -63,7 +63,6 @@ import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -113,12 +112,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             postOrdersModify(Action.CONTINUE, modifyOrders);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -132,12 +128,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             postOrdersModify(Action.SUSPEND, modifyOrders);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -155,12 +148,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             postResumeOrders(modifyOrders, permResumeFailed.get(0) && !permSuspendResume.get(0));
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -174,12 +164,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             postOrdersModify(Action.CANCEL, modifyOrders);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -193,12 +180,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             postOrdersModify(Action.ANSWER_PROMPT, modifyOrders);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -213,12 +197,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
             checkRequiredParameter("priority", modifyOrders.getPriority());
             postOrdersModify(Action.CHANGE, modifyOrders);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -232,12 +213,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             postOrdersModify(Action.REMOVE_WHEN_TERMINATED, modifyOrders);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

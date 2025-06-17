@@ -53,16 +53,12 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
                 }
 
                 session.commit();
-                response = JOCDefaultResponse.responseStatus200(getSuccess(item.getId(), item.getModified()));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(item.getId(), item.getModified())));
             }
             return response;
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

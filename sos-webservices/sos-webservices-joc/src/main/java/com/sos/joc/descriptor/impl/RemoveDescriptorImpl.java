@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IRemoveDescriptor;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ADeleteConfiguration;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.descriptor.common.RequestFilter;
@@ -34,11 +33,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
                 response = remove(accessToken, in, IMPL_PATH_REMOVE);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -56,11 +52,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
                 response = removeFolder(accessToken, in, true, IMPL_PATH_REMOVE_FOLDER);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -78,11 +71,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
                 response = delete(accessToken, in, IMPL_PATH_TRASH_DELETE);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -100,11 +90,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
                 response = deleteFolder(accessToken, in, true, PATH_TRASH_DELETE_FOLDER);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

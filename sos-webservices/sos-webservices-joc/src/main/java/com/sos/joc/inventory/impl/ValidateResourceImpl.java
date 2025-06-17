@@ -3,12 +3,12 @@ package com.sos.joc.inventory.impl;
 import java.time.Instant;
 import java.util.Date;
 
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidateResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.Validate;
@@ -45,12 +45,9 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                 throw new JocBadRequestException("Unsupported objectType:" + objectType);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

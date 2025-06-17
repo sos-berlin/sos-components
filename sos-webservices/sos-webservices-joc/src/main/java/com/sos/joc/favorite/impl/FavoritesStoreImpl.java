@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -15,7 +13,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryFavorite;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.favorite.resource.IFavoritesStore;
 import com.sos.joc.model.audit.CategoryType;
@@ -25,6 +22,8 @@ import com.sos.joc.model.favorite.RenameFavorites;
 import com.sos.joc.model.favorite.StoreFavorite;
 import com.sos.joc.model.favorite.StoreFavorites;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/favorites")
 public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesStore {
@@ -63,14 +62,10 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
             }
             Globals.commit(connection);
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -111,14 +106,10 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
             
             Globals.commit(connection);
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

@@ -51,12 +51,9 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             }
             sosLocker.removeContent(lockerFilter.getKey());
             refreshTimer();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -80,9 +77,11 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             locker.setKey(key);
             locker.setContent(null);
             refreshTimer();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
+        } catch (JocException e) {
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatus434JSError(e);
+            return responseStatusJSError(e);
         }
 
     }
@@ -96,12 +95,9 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().renewContent(lockerFilter.getKey());
             refreshTimer();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -114,12 +110,9 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().removeContent(lockerFilter.getKey());
             refreshTimer();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

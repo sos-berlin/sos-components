@@ -26,7 +26,6 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.Board;
 import com.sos.joc.model.board.BoardFilter;
@@ -60,12 +59,9 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             if (response != null) {
                 return response;
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoard(filter)));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoard(filter)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

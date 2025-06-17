@@ -45,7 +45,6 @@ import com.sos.joc.event.bean.inventory.InventoryTagDeleteEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.tag.Tags;
@@ -282,16 +281,13 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             switch (responseObject) {
             case GROUPS:
                 Groups groups = postGroups(apiCall, dbLayer);
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(groups));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(groups));
             default: //case all tags
                 Tags tags = postTags(apiCall, dbLayer);
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(tags));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(tags));
             }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -313,12 +309,9 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             entity.setAdditionalProperties(getUsedBy(in.getFolders(), folderPermissions.getListOfFolders(), dbLayer));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -337,12 +330,9 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             Stream<JOCEvent> events = postTagsModify(responseObject, apiCall, action, modifyTags, dbLayer);
             events.forEach(evt -> EventBus.getInstance().post(evt));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -366,7 +356,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             
             if (groupedName.toString().equals(groupedNewName.toString())) {
                 // nothing to do
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                return responseStatusJSOk(Date.from(Instant.now()));
             }
             
             String objectName = ResponseObject.GROUPS.equals(responseObject) ? "group" : "tag";
@@ -443,14 +433,10 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             }
             
             
-            return JOCDefaultResponse.responseStatusJSOk(now);
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(now);
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

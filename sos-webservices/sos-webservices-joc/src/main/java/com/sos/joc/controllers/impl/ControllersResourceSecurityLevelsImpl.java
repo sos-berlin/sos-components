@@ -5,8 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -14,12 +12,13 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.controllers.resource.IControllersResourceSecurityLevels;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("controllers")
 public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl implements IControllersResourceSecurityLevels {
@@ -53,13 +52,10 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
             entity.setControllers(controllers);
             entity.setCurrentSecurityLevel(Globals.getJocSecurityLevel());
 
-            return JOCDefaultResponse.responseStatus200(entity);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -94,13 +90,10 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
                     }
                 }
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

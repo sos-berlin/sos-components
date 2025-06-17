@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,13 +23,13 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.workflow.resource.IWorkflowResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.position.JPosition;
 
@@ -135,13 +133,10 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

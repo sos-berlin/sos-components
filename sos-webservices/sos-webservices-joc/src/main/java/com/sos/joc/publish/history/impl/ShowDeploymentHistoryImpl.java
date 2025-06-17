@@ -17,7 +17,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -77,7 +76,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             }
             
             if (Proxies.getControllerDbInstances().isEmpty()) {
-                return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(Collections.emptyList()));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(getDepHistoryFromDBItems(Collections.emptyList())));
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -118,12 +117,9 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                 dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter, allowedControllers).stream()
                 		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toList());
             }
-            return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(dbHistoryItems));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getDepHistoryFromDBItems(dbHistoryItems)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
              if (hibernateSession != null) {
                  hibernateSession.close();

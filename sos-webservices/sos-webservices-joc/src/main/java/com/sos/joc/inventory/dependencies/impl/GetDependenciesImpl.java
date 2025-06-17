@@ -66,12 +66,9 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             GetDependenciesResponse response  = new GetDependenciesResponse();
             response.setDeliveryDate(Date.from(Instant.now()));
             response.setDependencies(resolve(depItems, dblayer));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(response));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

@@ -23,7 +23,6 @@ import com.sos.joc.db.yade.DBItemYadeTransfer;
 import com.sos.joc.db.yade.JocDBLayerYade;
 import com.sos.joc.db.yade.JocYadeFilter;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err;
@@ -84,12 +83,9 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(fillTransfer(dbLayer, item, in.getCompact()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(fillTransfer(dbLayer, item, in.getCompact())));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -178,12 +174,9 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
             }
             entity.setTransfers(transfers);
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

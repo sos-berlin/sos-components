@@ -11,7 +11,6 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IAddCertificateAssgnment;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.AgentAssignmentRequestFilter;
 import com.sos.schema.JsonValidator;
@@ -36,16 +35,12 @@ public class AddCertificateAssignmentImpl extends JOCResourceImpl implements IAd
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
             dbLayer.addEnciphermentCertificateMapping(filter.getCertAlias(), filter.getAgentId());
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

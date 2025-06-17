@@ -67,12 +67,9 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
                     removeAllMultiple(type);
                 }
             }
-            return JOCDefaultResponse.responseStatus200(getSuccess());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

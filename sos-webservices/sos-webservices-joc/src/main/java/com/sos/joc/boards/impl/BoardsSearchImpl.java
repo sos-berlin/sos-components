@@ -3,21 +3,20 @@ package com.sos.joc.boards.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
+import com.sos.joc.boards.resource.ISearchResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.impl.SearchResourceImpl;
-import com.sos.joc.boards.resource.ISearchResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.search.RequestDeployedSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseSearch;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("notice")
 public class BoardsSearchImpl extends JOCResourceImpl implements ISearchResource {
@@ -49,12 +48,9 @@ public class BoardsSearchImpl extends JOCResourceImpl implements ISearchResource
             ResponseSearch answer = new ResponseSearch();
             answer.setResults(SearchResourceImpl.getSearchResult(in, folderPermissions));
             answer.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

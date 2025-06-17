@@ -3,8 +3,6 @@ package com.sos.joc.configuration.impl;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,11 +13,12 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.common.FilenameSanitizer;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.configuration.resource.ILoginConfigurationResource;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Login;
 import com.sos.joc.model.configuration.LoginLogo;
 import com.sos.joc.model.configuration.LoginLogoPosition;
+
+import jakarta.ws.rs.Path;
 
 @Path("configuration")
 public class LoginConfigurationResourceImpl extends JOCResourceImpl implements ILoginConfigurationResource {
@@ -81,12 +80,9 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
             }
             login.setDefaultProfileAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             
-            return JOCDefaultResponse.responseStatus200(login);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(login));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

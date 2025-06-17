@@ -31,7 +31,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.Configuration200;
@@ -212,6 +211,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
                 break;
             case GIT:
+            case APPROVAL:
                 break;
             }
 
@@ -243,12 +243,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(now);
-            return JOCDefaultResponse.responseStatus200(ok);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(ok));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -337,12 +334,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
             }
             entity.setConfiguration(conf);
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -430,12 +424,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(ok);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(ok));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -490,12 +481,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(ok);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(ok));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -549,12 +537,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(ok);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(ok));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

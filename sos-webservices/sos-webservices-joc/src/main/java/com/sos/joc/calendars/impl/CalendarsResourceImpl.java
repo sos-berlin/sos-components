@@ -12,8 +12,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +26,13 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.calendar.Calendars;
 import com.sos.joc.model.calendar.CalendarsFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("calendars")
 public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendarsResource {
@@ -123,12 +122,9 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             }
 
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

@@ -24,7 +24,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -148,12 +147,9 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             LOGGER.trace("*** revoke finished ***" + deployWSFinished);
             LOGGER.trace("complete WS time : " + (deployWSFinished.getTime() - started.getTime()) + " ms");
             LOGGER.trace("collecting items took: " + (collectingItemsFinished.getTime() - started.getTime()) + " ms");
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

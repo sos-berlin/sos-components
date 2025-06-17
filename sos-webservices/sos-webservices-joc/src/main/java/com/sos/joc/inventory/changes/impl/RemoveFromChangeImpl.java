@@ -1,13 +1,8 @@
 package com.sos.joc.inventory.changes.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.changes.common.ARemoveFromChange;
 import com.sos.joc.inventory.changes.resource.IRemoveFromChange;
 import com.sos.joc.model.audit.CategoryType;
@@ -21,7 +16,6 @@ import jakarta.ws.rs.Path;
 public class RemoveFromChangeImpl extends ARemoveFromChange implements IRemoveFromChange {
 
     private static final String API_CALL = "./inventory/change/remove";
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoveFromChangeImpl.class);
     
     @Override
     public JOCDefaultResponse postRemoveFromChange(String xAccessToken, byte[] filter) {
@@ -36,11 +30,8 @@ public class RemoveFromChangeImpl extends ARemoveFromChange implements IRemoveFr
                 response = removeFromChange(removeFilter, API_CALL);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

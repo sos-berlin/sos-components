@@ -9,8 +9,6 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.job.Job;
@@ -26,7 +24,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IUpdateJobFromTemplates;
 import com.sos.joc.jobtemplates.impl.JobTemplatesResourceImpl;
 import com.sos.joc.model.audit.CategoryType;
@@ -36,6 +33,8 @@ import com.sos.joc.model.jobtemplate.propagate.JobReport;
 import com.sos.joc.model.jobtemplate.propagate.JobReports;
 import com.sos.joc.model.jobtemplate.propagate.WorkflowReport;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpdateJobFromTemplates {
@@ -49,14 +48,11 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

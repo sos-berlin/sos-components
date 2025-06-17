@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -24,11 +22,12 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.JobScheduler200;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("controller")
 public class ControllerResourceImpl extends JOCResourceImpl implements IControllerResource {
@@ -106,16 +105,12 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             JobScheduler200 entity = new JobScheduler200();
             entity.setController(master);
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
         } catch (ControllerConnectionRefusedException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

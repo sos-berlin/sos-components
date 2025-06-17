@@ -175,11 +175,8 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
 //            e.addErrorMetaInfo(getJocError());
 //            return JOCDefaultResponse.responseStatus434JSError(e);
             throw new JocNotImplementedException("deprecated");
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

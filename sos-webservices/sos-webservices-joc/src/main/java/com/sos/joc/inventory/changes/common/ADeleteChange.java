@@ -3,7 +3,6 @@ package com.sos.joc.inventory.changes.common;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -13,10 +12,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryChange;
 import com.sos.joc.db.inventory.DBItemInventoryChangesMapping;
 import com.sos.joc.db.inventory.changes.DBLayerChanges;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.changes.DeleteChangesRequest;
 import com.sos.joc.model.inventory.changes.common.Change;
-import com.sos.joc.model.inventory.changes.common.ChangeItem;
 
 public abstract class ADeleteChange extends JOCResourceImpl {
 
@@ -27,7 +24,7 @@ public abstract class ADeleteChange extends JOCResourceImpl {
             
             delete(request, session);
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

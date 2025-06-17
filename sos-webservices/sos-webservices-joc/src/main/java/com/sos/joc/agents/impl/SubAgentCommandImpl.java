@@ -27,7 +27,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.SubAgentCommand;
 import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.audit.CategoryType;
@@ -133,14 +132,10 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             }
             
             Globals.commit(connection);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -215,14 +210,10 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             }
             
             Globals.commit(connection);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -267,12 +258,9 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                 throw new ControllerObjectNotExistException(String.format("Unknown Subagent '%s'", subAgentCommand.getSubagentId()));
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -353,12 +341,9 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                 });
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

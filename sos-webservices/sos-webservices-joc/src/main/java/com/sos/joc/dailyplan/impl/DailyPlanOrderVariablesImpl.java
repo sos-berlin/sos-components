@@ -2,8 +2,6 @@ package com.sos.joc.dailyplan.impl;
 
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
@@ -13,11 +11,12 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrderVariablesResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.OrderVariables;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDailyPlanOrderVariablesResource {
@@ -49,12 +48,9 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
                 // TODO @ur throw exception
             }
             answer.setDeliveryDate(new Date());
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

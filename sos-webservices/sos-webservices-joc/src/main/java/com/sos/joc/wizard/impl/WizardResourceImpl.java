@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
@@ -49,7 +48,6 @@ import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.wizard.Job;
 import com.sos.joc.model.wizard.JobWizardFilter;
@@ -57,6 +55,8 @@ import com.sos.joc.model.wizard.Jobs;
 import com.sos.joc.model.wizard.Param;
 import com.sos.joc.wizard.resource.IWizardResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/wizard")
 public class WizardResourceImpl extends JOCResourceImpl implements IWizardResource {
@@ -115,13 +115,10 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             }
             jobs.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(jobs);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(jobs));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -254,12 +251,9 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
 
             job.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(job));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(job));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

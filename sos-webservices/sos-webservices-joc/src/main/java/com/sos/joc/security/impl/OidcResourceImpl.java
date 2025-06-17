@@ -2,7 +2,6 @@ package com.sos.joc.security.impl;
 
 import java.io.InputStream;
 import java.time.Instant;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +26,6 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.impl.DocumentationsImportResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
@@ -198,12 +196,9 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -272,12 +267,9 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -334,12 +326,9 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         + DocumentationHelper.SUPPORTED_SUBTYPES.toString());
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
             try {
@@ -361,13 +350,11 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             initLogging(request, null, CategoryType.IDENTITY);
 
             checkRequiredParameter("identityServiceName", identityServiceName);
-            return DocumentationResourceImpl.postDocumentation(DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + identityServiceName);
+            return DocumentationResourceImpl.postDocumentation(DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + identityServiceName,
+                    getJocAuditTrail());
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseHTMLStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

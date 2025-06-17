@@ -14,7 +14,6 @@ import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IStoreCertificate;
 import com.sos.joc.encipherment.util.EnciphermentUtils;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.StoreCertificateRequestFilter;
 import com.sos.schema.JsonValidator;
@@ -48,16 +47,12 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             dbLayer.storeEnciphermentCertificate(filter.getCertAlias(), filter.getCertificate(), filter.getPrivateKeyPath());
             // create or Update JobResource 
             EnciphermentUtils.createRelatedJobResource(hibernateSession, filter, auditLog.getId());
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

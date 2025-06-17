@@ -15,6 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.JocAuditTrail;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
@@ -23,7 +24,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.documentation.DocumentationFolderEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 
 import jakarta.ws.rs.Path;
@@ -53,16 +53,13 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
             }
             
             checkRequiredParameter("path", path);
-            return postDocumentation(path);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseHTMLStatusJSError(e);
+            return postDocumentation(path, getJocAuditTrail());
         } catch (Exception e) {
-            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
+            return responseStatusJSError(e, MediaType.TEXT_HTML + "; charset=UTF-8");
         }
     }
     
-    public static JOCDefaultResponse postDocumentation(String path) {
+    public static JOCDefaultResponse postDocumentation(String path, JocAuditTrail auditTrail) {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -85,13 +82,14 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
                 if (type.isEmpty()) {
                     type = MediaType.APPLICATION_OCTET_STREAM;
                 }
-                return JOCDefaultResponse.responseStatus200(dbItemImage.getImage(), getType(type));
+                return JOCDefaultResponse.responseStatus200(dbItemImage.getImage(), getType(type), auditTrail);
 
             } else if (dbItem.getContent() != null && !dbItem.getContent().isEmpty()) {
                 if ("markdown".equals(type)) {
-                    return JOCDefaultResponse.responseStatus200(createHTMLfromMarkdown(dbItem), MediaType.TEXT_HTML);
+                    return JOCDefaultResponse.responsePlainStatus200(createHTMLfromMarkdown(dbItem).getBytes(StandardCharsets.UTF_8),
+                            MediaType.TEXT_PLAIN + "; charset=UTF-8", auditTrail);
                 } else {
-                    return JOCDefaultResponse.responseStatus200(dbItem.getContent(), getType(type));
+                    return JOCDefaultResponse.responsePlainStatus200(dbItem.getContent().getBytes(StandardCharsets.UTF_8), getType(type), auditTrail);
                 }
 
             } else {

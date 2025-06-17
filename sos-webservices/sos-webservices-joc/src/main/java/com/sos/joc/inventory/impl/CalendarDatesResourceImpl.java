@@ -1,7 +1,5 @@
 package com.sos.joc.inventory.impl;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.Calendar;
@@ -13,13 +11,14 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.inventory.resource.ICalendarDatesResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalendarDatesResource {
@@ -34,15 +33,12 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
 
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(read(in));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(read(in)));
             }
             return response;
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

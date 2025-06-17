@@ -12,7 +12,6 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.board.BoardHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.ModifyNotice;
 import com.sos.schema.JsonValidator;
@@ -36,11 +35,8 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
     public JOCDefaultResponse postNotice(String accessToken, byte[] filterBytes) {
         try {
             return modifyNotice(accessToken, filterBytes, Action.POST);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -48,11 +44,8 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
     public JOCDefaultResponse deleteNotice(String accessToken, byte[] filterBytes) {
         try {
             return modifyNotice(accessToken, filterBytes, Action.DELETE);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -100,7 +93,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
             break;
         }
 
-        return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
+        return responseStatusJSOk(Date.from(now));
     }
 
 }

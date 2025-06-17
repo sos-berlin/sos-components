@@ -9,7 +9,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.apply.ApplyConfiguration;
@@ -65,7 +64,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                 try {
                     JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
                 } catch (SOSXMLXSDValidatorException e) {
-                    return JOCDefaultResponse.responseStatus200(getError(e));
+                    return responseStatus200(Globals.objectMapper.writeValueAsBytes(getError(e)));
                 }
 
                 // step 1.1 - If validation is successful, a transformException is thrown – can this happen(validation is successful)?
@@ -108,16 +107,12 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                 }
                 session.commit();
 
-                response = JOCDefaultResponse.responseStatus200(getSuccess(in, item, json, isChanged));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in, item, json, isChanged)));
             }
             return response;
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

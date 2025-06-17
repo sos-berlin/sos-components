@@ -15,7 +15,6 @@ import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamPermissionDBLayer;
 import com.sos.joc.db.security.IamPermissionFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.permissions.Permission;
@@ -84,15 +83,10 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
                 throw new JocObjectNotExistException("Couldn't find the permission <" + permissionFilter.getPermissionPath() + ">");
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(permissionItem));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(permissionItem));
 
-        } catch (
-
-        JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -154,14 +148,10 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
                 Globals.commit(sosHibernateSession);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
             if (permissions != null) {
@@ -205,17 +195,11 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
-        } catch (
-
-        JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -261,12 +245,9 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 
             storeAuditLog(permissionsFilter.getAuditLog());
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -316,12 +297,9 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
                 permissions.getPermissions().add(permission);
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(permissions));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(permissions));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

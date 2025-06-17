@@ -10,7 +10,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +21,13 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.Configuration200;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.settings.resource.IReadSettings;
+
+import jakarta.ws.rs.Path;
 
 @Path("settings")
 public class ReadSettingsImpl extends JOCResourceImpl implements IReadSettings {
@@ -62,12 +62,9 @@ public class ReadSettingsImpl extends JOCResourceImpl implements IReadSettings {
             Configuration200 response = new Configuration200();
             response.setConfiguration(cfg);
             response.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(response);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

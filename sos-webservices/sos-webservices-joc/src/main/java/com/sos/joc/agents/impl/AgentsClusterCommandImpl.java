@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsClusterCommand;
@@ -21,12 +19,12 @@ import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.DeployClusterAgents;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.item.JUpdateItemOperation;
@@ -101,12 +99,9 @@ public class AgentsClusterCommandImpl extends JOCResourceImpl implements IAgents
                 });
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

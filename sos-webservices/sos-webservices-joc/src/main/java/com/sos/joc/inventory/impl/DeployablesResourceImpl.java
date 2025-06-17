@@ -65,14 +65,11 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                response = JOCDefaultResponse.responseStatus200(deployables(in, false));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(deployables(in, false)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -90,14 +87,11 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                response = JOCDefaultResponse.responseStatus200(deployables(in, true));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(deployables(in, true)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

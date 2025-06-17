@@ -4,15 +4,12 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.keys.ca.resource.ISetRootCa;
@@ -22,6 +19,8 @@ import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 
 @Path("profile/ca")
@@ -65,12 +64,9 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

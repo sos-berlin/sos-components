@@ -1,15 +1,16 @@
 package com.sos.joc.joc.impl;
 
-import jakarta.ws.rs.Path;
-
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
-import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.joc.resource.ILicense;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.Js7LicenseInfo;
 import com.sos.joc.model.joc.LicenseType;
+
+import jakarta.ws.rs.Path;
 
 @Path("joc")
 public class LicenseImpl extends JOCResourceImpl implements ILicense {
@@ -41,14 +42,11 @@ public class LicenseImpl extends JOCResourceImpl implements ILicense {
                     info.setValid(false);
                 }
             } else {
-                return JOCDefaultResponse.responseStatusJSError("cluster service not available, retry in a few seconds.");
+                throw new JocServiceException("cluster service not available, retry in a few seconds.");
             }
-            return JOCDefaultResponse.responseStatus200(info);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(info));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

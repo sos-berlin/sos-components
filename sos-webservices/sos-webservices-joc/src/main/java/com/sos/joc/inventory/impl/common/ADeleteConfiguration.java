@@ -146,7 +146,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 JocInventory.postDeployHistoryEventWhenDeleted(allDeployments);
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -220,7 +220,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
                 // TODO post JocInventory::postJobTaggingEvent
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -264,7 +264,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 JocInventory.postTrashEvent(folder);
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -298,7 +298,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());
             JocInventory.postTrashFolderEvent(config.getPath());
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

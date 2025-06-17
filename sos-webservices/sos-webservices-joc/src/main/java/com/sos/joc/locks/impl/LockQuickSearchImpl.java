@@ -4,7 +4,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IQuickSearchResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.DeployedObjectQuickSearchFilter;
@@ -33,12 +32,9 @@ public class LockQuickSearchImpl extends JOCResourceImpl implements IQuickSearch
                 return response;
             }
             ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.LOCK, accessToken, folderPermissions);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Throwable e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
         }
     }
 }

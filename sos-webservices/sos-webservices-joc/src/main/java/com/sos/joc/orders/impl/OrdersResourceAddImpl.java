@@ -48,7 +48,6 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
@@ -300,14 +299,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             if (result.containsKey(false) && !result.get(false).isEmpty()) {
-                return JOCDefaultResponse.responseStatus419(result.get(false).stream().map(Either::getLeft).collect(Collectors.toList()));
+                return responseStatus419(result.get(false).stream().map(Either::getLeft).collect(Collectors.toList()));
             }
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

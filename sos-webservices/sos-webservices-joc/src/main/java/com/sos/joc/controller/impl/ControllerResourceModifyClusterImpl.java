@@ -19,7 +19,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.controller.resource.IControllerResourceModifyCluster;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.joc.impl.StateImpl;
 import com.sos.joc.model.audit.CategoryType;
@@ -67,12 +66,9 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             ControllerApi.of(controllerId).executeCommand(JControllerCommand.clusterSwitchover(Optional.empty())).thenAccept(e -> ProblemHelper
                     .postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -98,12 +94,9 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
 
             ClusterWatch.getInstance().appointNodes(controllerId, null, Proxy.of(controllerId), null, accessToken, getJocError());
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -129,12 +122,9 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             storeAuditLog(body.getAuditLog(), controllerId);
             ClusterWatch.getInstance().confirmNodeLoss(controllerId, getAccount(), accessToken, getJocError());
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

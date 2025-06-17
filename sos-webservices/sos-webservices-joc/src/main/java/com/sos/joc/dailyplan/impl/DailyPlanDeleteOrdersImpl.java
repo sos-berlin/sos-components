@@ -38,7 +38,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
@@ -69,13 +68,10 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 return accessDeniedResponse();
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
+            return responseStatusJSOk(new Date());
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

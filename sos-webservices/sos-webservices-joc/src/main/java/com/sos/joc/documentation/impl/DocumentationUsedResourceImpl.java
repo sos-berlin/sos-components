@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -16,12 +14,13 @@ import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationUsedResource;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.InventoryObject;
 import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.UsedBy;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("documentation")
 public class DocumentationUsedResourceImpl extends JOCResourceImpl implements IDocumentationUsedResource {
@@ -65,12 +64,9 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
                 
             }
             usedBy.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(usedBy);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(usedBy));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

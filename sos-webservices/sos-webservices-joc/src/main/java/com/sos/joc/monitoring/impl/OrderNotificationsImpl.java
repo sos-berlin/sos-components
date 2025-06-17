@@ -23,7 +23,6 @@ import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.NotificationDBItemEntity;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
@@ -108,12 +107,9 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
             OrderNotificationsAnswer answer = new OrderNotificationsAnswer();
             answer.setDeliveryDate(new Date());
             answer.setNotifications(notifications);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

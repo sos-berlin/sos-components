@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
@@ -23,7 +21,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobtemplates.resource.IAssignedWorkflows;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -38,6 +35,8 @@ import com.sos.joc.model.jobtemplate.JobTemplateWorkflowStateText;
 import com.sos.joc.model.jobtemplate.JobTemplatesFilter;
 import com.sos.joc.model.jobtemplate.JobTemplatesUsedBy;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("job_templates")
 public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedWorkflows {
@@ -142,12 +141,9 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
             }
 
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

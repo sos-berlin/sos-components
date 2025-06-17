@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -24,7 +22,6 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.ControllerItem;
 import com.sos.joc.model.monitoring.ControllerItemEntryItem;
@@ -32,6 +29,8 @@ import com.sos.joc.model.monitoring.ControllersAnswer;
 import com.sos.joc.model.monitoring.ControllersFilter;
 import com.sos.joc.monitoring.resource.IControllers;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.MONITORING)
 public class ControllersImpl extends JOCResourceImpl implements IControllers {
@@ -81,12 +80,9 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
             } else {
                 answer.setControllers(getControllers(dbLayer, map, dateFrom, dateTo, in.getDateFrom() != null, in.getDateTo() != null));
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

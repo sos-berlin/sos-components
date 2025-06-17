@@ -12,7 +12,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.foureyes.EmailSettings;
@@ -71,12 +70,9 @@ public class StoreEmailSettingsImpl extends JOCResourceImpl implements IStoreEma
                 session.update(dbItem);
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(now);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(now);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

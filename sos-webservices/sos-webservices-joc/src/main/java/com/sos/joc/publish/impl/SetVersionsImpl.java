@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -16,7 +14,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.DeploymentVersion;
@@ -24,6 +21,8 @@ import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersions;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/deployment")
 public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
@@ -45,12 +44,9 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             updateVersions(filter, dbLayer);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

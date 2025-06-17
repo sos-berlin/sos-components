@@ -22,7 +22,6 @@ import com.sos.joc.classes.logs.RunningTaskLogs;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryOrderTaskLogArrived;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.job.RunningTaskLog;
 import com.sos.joc.model.job.RunningTaskLogFilter;
@@ -122,12 +121,9 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                     break;
                 }
             }
-            return JOCDefaultResponse.responseStatus200(taskLog);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(taskLog));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             EventBus.getInstance().unRegister(this);
         }
@@ -180,16 +176,13 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             switch (apiCall) {
             case API_CALL_LOG:
                 RunningTaskLogs.getInstance().registerLastLogAPICall(accessToken, taskFilter.getTaskId());
-                return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(false), logTaskContent.getHeaders());
+                return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(false), logTaskContent.getHeaders(), getJocAuditTrail());
             default:  // API_CALL_DOWNLOAD:
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(true), logTaskContent
+                return responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(true), logTaskContent
                         .getDownloadFilename(), logTaskContent.getUnCompressedLength());
             }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

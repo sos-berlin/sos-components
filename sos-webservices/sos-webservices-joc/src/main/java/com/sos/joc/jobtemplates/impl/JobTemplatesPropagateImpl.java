@@ -11,8 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
@@ -26,7 +24,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobtemplates.resource.IJobTemplatesPropagate;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -38,6 +35,8 @@ import com.sos.joc.model.jobtemplate.propagate.JobTemplatesPropagateFilter;
 import com.sos.joc.model.jobtemplate.propagate.Report;
 import com.sos.joc.model.jobtemplate.propagate.WorkflowReport;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("job_templates")
 public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTemplatesPropagate {
@@ -141,14 +140,10 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(report));
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(report));
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

@@ -27,7 +27,6 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DailyPlanHistoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.history.MainRequest;
@@ -96,7 +95,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                     jocError.clearMetaInfo();
                 }
                 LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
             }
 
             Date dateFrom = toUTCDate(in.getDateFrom());
@@ -153,12 +152,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             // descending sort
             // answer.setDates(map.values().stream().sorted((e1, e2) -> e2.getDate().compareTo(e1.getDate())).collect(Collectors.toList()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -211,12 +207,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             session.close();
             session = null;
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -276,12 +269,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 // .sorted((e1, e2) -> e1.getScheduledFor().compareTo(e2.getScheduledFor()))
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

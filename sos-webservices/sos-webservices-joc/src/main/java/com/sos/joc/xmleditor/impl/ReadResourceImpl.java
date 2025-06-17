@@ -49,30 +49,27 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
                 switch (in.getObjectType()) {
                 case YADE:
                     if (isReadAllMultipleConfigurations(in)) {
-                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getMultipleConfigurations(in)));
+                        response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getMultipleConfigurations(in)));
                     } else {
-                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSingleYADEConfiguration(in)));
+                        response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getSingleYADEConfiguration(in)));
                     }
                     break;
                 case NOTIFICATION:
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getNotificationConfiguration(in)));
+                    response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getNotificationConfiguration(in)));
                     break;
                 case OTHER:
                     if (isReadAllMultipleConfigurations(in)) {
-                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getMultipleConfigurations(in)));
+                        response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getMultipleConfigurations(in)));
                     } else {
                         OtherSchemaHandler.setRealPath();
-                        response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSingleOTHERConfiguration(in)));
+                        response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getSingleOTHERConfiguration(in)));
                     }
                     break;
                 }
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

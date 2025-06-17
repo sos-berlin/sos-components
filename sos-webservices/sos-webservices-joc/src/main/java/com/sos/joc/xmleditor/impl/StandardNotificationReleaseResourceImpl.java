@@ -39,7 +39,7 @@ public class StandardNotificationReleaseResourceImpl extends ACommonResourceImpl
             try {
                 JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
-                return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(ValidateResourceImpl.getError(e)));
             }
 
             // step 2 - update db and reread
@@ -48,12 +48,9 @@ public class StandardNotificationReleaseResourceImpl extends ACommonResourceImpl
             // step 3 - post events
             EventBus.getInstance().post(new NotificationConfigurationReleased());
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

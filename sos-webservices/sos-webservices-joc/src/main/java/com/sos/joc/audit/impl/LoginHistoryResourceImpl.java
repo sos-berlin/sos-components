@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -16,7 +14,6 @@ import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamHistoryFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.history.LoginHistory;
 import com.sos.joc.model.security.history.LoginHistoryDetailItem;
@@ -24,6 +21,8 @@ import com.sos.joc.model.security.history.LoginHistoryDetails;
 import com.sos.joc.model.security.history.LoginHistoryFilter;
 import com.sos.joc.model.security.history.LoginHistoryItem;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("audit_log")
 public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginHistoryResource {
@@ -79,12 +78,9 @@ public class LoginHistoryResourceImpl extends JOCResourceImpl implements ILoginH
             }
 
             loginHistory.setDeliveryDate(new Date());
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(loginHistory));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(loginHistory));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

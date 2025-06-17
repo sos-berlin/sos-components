@@ -27,7 +27,6 @@ import com.sos.joc.event.bean.JOCEvent;
 import com.sos.joc.event.bean.inventory.InventoryJobTagsEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.tag.group.GroupTagsFilter;
 import com.sos.joc.tag.resource.ITagModify;
@@ -117,14 +116,10 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
             Globals.commit(session);
             events.forEach(e -> EventBus.getInstance().post(e));
             
-            return JOCDefaultResponse.responseStatusJSOk(now);
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(now);
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

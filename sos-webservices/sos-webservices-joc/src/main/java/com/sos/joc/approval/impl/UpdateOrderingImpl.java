@@ -17,7 +17,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.approval.UpdateOrderingFilter;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -45,12 +44,9 @@ public class UpdateOrderingImpl extends JOCResourceImpl implements IUpdateOrderi
             
             updateOrdering(filter, dbLayer);
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

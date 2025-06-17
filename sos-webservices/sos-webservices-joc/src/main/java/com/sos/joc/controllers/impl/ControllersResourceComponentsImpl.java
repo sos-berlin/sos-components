@@ -31,7 +31,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ClusterNodeStateText;
@@ -95,12 +94,9 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             entity.setDatabase(getDB(connection));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

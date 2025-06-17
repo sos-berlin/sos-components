@@ -22,7 +22,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.BoardDeps;
 import com.sos.joc.model.board.BoardFilter;
@@ -42,17 +41,14 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, BoardFilter.class);
             BoardPathFilter filter = Globals.objectMapper.readValue(filterBytes, BoardPathFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(), accessToken)
-                    .getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
+                    accessToken).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoard(filter)));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoard(filter)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

@@ -11,7 +11,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.Approvers;
 
@@ -37,12 +36,9 @@ public class ShowApproversImpl extends JOCResourceImpl implements IShowApprovers
             Approvers approvers = new Approvers();
             approvers.setApprovers(dbApprovers.stream().map(DBItemJocApprover::mapToApprover).toList());
             approvers.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(approvers));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(approvers));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

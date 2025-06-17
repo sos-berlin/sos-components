@@ -27,7 +27,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.BoardsDeps;
 import com.sos.joc.model.board.BoardsPathFilter;
@@ -53,12 +52,9 @@ public class BoardsDependenciesImpl extends JOCResourceImpl implements IBoardsDe
             if (response != null) {
                 return response;
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoards(filter)));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoards(filter)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

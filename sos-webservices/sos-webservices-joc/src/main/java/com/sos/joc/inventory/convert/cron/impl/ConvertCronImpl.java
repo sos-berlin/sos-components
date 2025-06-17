@@ -44,7 +44,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.convert.cron.CronUtils;
 import com.sos.joc.inventory.convert.cron.resource.IConvertCronResource;
@@ -143,12 +142,9 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             
             auditLogObjectsLogging.log();
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
             try {

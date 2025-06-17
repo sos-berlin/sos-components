@@ -7,7 +7,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.notification.ReleaseNotificationFilter;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -61,18 +60,15 @@ public class ReleaseNotificationImpl extends JOCResourceImpl implements IRelease
                 JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getNotificationSchema(), in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
                 // LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
-                return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(ValidateResourceImpl.getError(e)));
             }
 
             // step 2 - update db
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(StandardNotificationReleaseResourceImpl
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(StandardNotificationReleaseResourceImpl
                     .handleStandardConfiguration(in, getAccount(), dbAuditlog.getId())));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

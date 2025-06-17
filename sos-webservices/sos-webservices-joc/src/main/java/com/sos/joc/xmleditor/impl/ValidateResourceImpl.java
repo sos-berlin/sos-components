@@ -5,7 +5,6 @@ import java.util.Date;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.validate.ErrorMessage;
 import com.sos.joc.model.xmleditor.validate.ValidateConfiguration;
@@ -49,16 +48,13 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
                 try {
                     JocXmlEditor.validate(in.getObjectType(), schema, in.getConfiguration());
                 } catch (SOSXMLXSDValidatorException e) {
-                    return JOCDefaultResponse.responseStatus200(getError(e));
+                    return responseStatus200(Globals.objectMapper.writeValueAsBytes(getError(e)));
                 }
-                response = JOCDefaultResponse.responseStatus200(getSuccess());
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess()));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

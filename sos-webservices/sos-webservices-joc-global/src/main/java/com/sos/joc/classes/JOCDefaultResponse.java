@@ -2,14 +2,10 @@ package com.sos.joc.classes;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import jakarta.ws.rs.core.CacheControl;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import java.util.Optional;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -18,8 +14,7 @@ import org.slf4j.MarkerFactory;
 
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
-import com.sos.joc.Globals;
-import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditTrail;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -28,8 +23,11 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Err420;
 import com.sos.joc.model.common.Errs;
 import com.sos.joc.model.common.Ok;
-import com.sos.joc.model.security.foureyes.FourEyesRequest;
-import com.sos.joc.model.security.foureyes.RequestBody;
+
+import jakarta.ws.rs.core.CacheControl;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 
 public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
@@ -52,41 +50,42 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         super(delegate);
     }
 
-    public static JOCDefaultResponse responseStatus200(Object entity, String mediaType, Map<String, Object> headers) {
+    public static JOCDefaultResponse responseStatus200(Object entity, String mediaType, Map<String, Object> headers, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", mediaType).cacheControl(setNoCaching());
+        jocAuditTrail.addContentTypeHeader(mediaType);
         if (headers != null) {
-            headers.keySet().stream().filter(s -> headers.get(s) != null).forEach(s -> responseBuilder.header(s, headers.get(s)));
-        }
-
+            headers.keySet().stream().filter(s -> headers.get(s) != null).forEach(s -> {
+                responseBuilder.header(s, headers.get(s));
+                if (!s.equals(X_ACCESS_TOKEN)) {
+                    jocAuditTrail.addResponseHeader(s, headers.get(s));
+                }
+            });
+        } 
+        // jocAuditTrail.setResponse(null); has to set earlier at the caller
+        jocAuditTrail.log();
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }
-
-    public static JOCDefaultResponse responseStatus200(Object entity, String mediaType) {
-        return responseStatus200(entity, mediaType, null);
+    
+    public static JOCDefaultResponse responseStatus200(byte[] entity, String mediaType, JocAuditTrail jocAuditTrail) {
+        return responseStatus200(entity, mediaType, null, jocAuditTrail);
+    }
+    
+    public static JOCDefaultResponse responseStatus200(byte[] entity) { // called by SOSServicePermissionIam
+        return responseStatus200(entity, MediaType.APPLICATION_JSON, new JocAuditTrail());
+    }
+    
+    public static JOCDefaultResponse responsePlainStatus200(byte[] entity, String mediaType, JocAuditTrail jocAuditTrail) {
+        jocAuditTrail.setResponse(entity);
+        return responseStatus200(entity, mediaType, jocAuditTrail);
     }
 
-    public static JOCDefaultResponse responseStatus200(Object entity) {
-        return responseStatus200(entity, MediaType.APPLICATION_JSON);
+    public static JOCDefaultResponse responsePlainStatus200(StreamingOutput entity, Map<String, Object> headers, JocAuditTrail jocAuditTrail) {
+        return responseStatus200(entity, MediaType.TEXT_PLAIN + "; charset=UTF-8", headers, jocAuditTrail);
     }
 
-    public static JOCDefaultResponse responseHtmlStatus200(Object entity) {
-        return responseStatus200(entity, MediaType.TEXT_HTML + "; charset=UTF-8");
-    }
-
-    public static JOCDefaultResponse responsePlainStatus200(Object entity) {
-        return responseStatus200(entity, MediaType.TEXT_PLAIN + "; charset=UTF-8");
-    }
-
-    public static JOCDefaultResponse responsePlainStatus200(Object entity, Map<String, Object> headers) {
-        return responseStatus200(entity, MediaType.TEXT_PLAIN + "; charset=UTF-8", headers);
-    }
-
-    public static JOCDefaultResponse responseOctetStreamDownloadStatus200(Object entity, String filename) {
-        return responseOctetStreamDownloadStatus200(entity, filename, null);
-    }
-
-    public static JOCDefaultResponse responseOctetStreamDownloadStatus200(Object entity, String filename, Long uncompressedLength) {
+    protected static JOCDefaultResponse responseOctetStreamDownloadStatus200(StreamingOutput entity, String filename, Long uncompressedLength,
+            JocAuditTrail jocAuditTrail) {
         try {
             filename = URLEncoder.encode(filename, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -95,22 +94,36 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
                 "attachment; filename*=UTF-8''" + filename).header("Access-Control-Expose-Headers", "Content-Dispositon").cacheControl(
                         setNoCaching());
 
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_OCTET_STREAM);
+        jocAuditTrail.addResponseHeader("Content-Disposition", "attachment; filename*=UTF-8''" + filename);
+        jocAuditTrail.addResponseHeader("Access-Control-Expose-Headers", "Content-Dispositon");
+
         if (uncompressedLength != null) {
             responseBuilder.header("X-Uncompressed-Length", uncompressedLength);
+            jocAuditTrail.addResponseHeader("X-Uncompressed-Length", uncompressedLength);
         }
+        jocAuditTrail.log();
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatus200WithHeaders(Object entity, String accessToken, long timeout) {
+    public static JOCDefaultResponse responseStatus200WithHeaders(SOSAuthCurrentAccountAnswer entity, long timeout,
+            JocAuditTrail jocAuditTrail) {
+        // called by SOSServicePermissionIam (./login)
         Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
                 setNoCaching());
         responseBuilder.entity(entity);
-        responseBuilder.header(X_ACCESS_TOKEN, accessToken);
+        responseBuilder.header(X_ACCESS_TOKEN, entity.getAccessToken());
         responseBuilder.header(TIMEOUT, timeout);
+
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.addResponseHeader(TIMEOUT, timeout);
+        jocAuditTrail.setResponse(entity);
+        jocAuditTrail.log();
+
         return new JOCDefaultResponse(responseBuilder.build());
     }
-
-    public static JOCDefaultResponse responseStatusJSOk(Date surveyDate) {
+    
+    protected static JOCDefaultResponse responseStatusJSOk(Date surveyDate, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
                 setNoCaching());
         Ok entity = new Ok();
@@ -120,18 +133,23 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         entity.setDeliveryDate(new Date());
         entity.setOk(true);
         responseBuilder.entity(entity);
+
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.setResponse(entity);
+        jocAuditTrail.log();
+
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
     public static JOCDefaultResponse responseNotYetImplemented() {
-        return responseStatus420(getErr420(new JocError("444", "Not yet implemented")));
+        return responseStatus420(getErr420(new JocError("444", "Not yet implemented")), new JocAuditTrail());
     }
 
     public static JOCDefaultResponse responseStatusJSError(String message) {
-        return responseStatus420(getErr420(new JocError(message)));
+        return responseStatus420(getErr420(new JocError(message)), new JocAuditTrail()); // TODO
     }
 
-    public static JOCDefaultResponse responseStatusJSError(SessionNotExistException e, String mediaType) {
+    public static JOCDefaultResponse responseStatusJSError(SessionNotExistException e, String mediaType, JocAuditTrail jocAuditTrail) {
         String errorOutput = "";
         if (e.getCause() != null) {
             errorOutput = e.getCause().getClass().getSimpleName() + ": " + e.getCause().getMessage();
@@ -140,10 +158,15 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         }
         Response.ResponseBuilder responseBuilder = Response.status(440, REASON_PHRASE_440).header("Content-Type", mediaType).cacheControl(
                 setNoCaching());
+        
+        jocAuditTrail.addContentTypeHeader(mediaType);
+        
         LOGGER.info(errorOutput);
         if (mediaType.contains(MediaType.TEXT_HTML)) {
             String entityStr = String.format(ERROR_HTML, "JOC-440", StringEscapeUtils.escapeHtml4(errorOutput));
             responseBuilder.entity(entityStr);
+            
+            jocAuditTrail.setResponse(entityStr);
         } else {
             SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();
             sosAuthCurrentAccountAnswer.setHasRole(false);
@@ -151,118 +174,102 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             sosAuthCurrentAccountAnswer.setIsPermitted(false);
             sosAuthCurrentAccountAnswer.setMessage(errorOutput);
             responseBuilder.entity(sosAuthCurrentAccountAnswer);
+            
+            jocAuditTrail.setResponse(sosAuthCurrentAccountAnswer);
         }
+        jocAuditTrail.log();
+        
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatusJSError(SessionNotExistException e) {
-        return responseStatusJSError(e, MediaType.APPLICATION_JSON);
-    }
+//    public static JOCDefaultResponse responseStatusJSError(SessionNotExistException e) {
+//        return responseStatusJSError(e, MediaType.APPLICATION_JSON);
+//    }
 
-    public static JOCDefaultResponse responseStatusJSError(JocException e, String mediaType) {
+    private static JOCDefaultResponse responseStatusJSError(JocException e, String mediaType, JocAuditTrail jocAuditTrail) {
         if (e instanceof SessionNotExistException) {
-            return responseStatusJSError((SessionNotExistException) e, mediaType);
+            return responseStatusJSError((SessionNotExistException) e, mediaType, jocAuditTrail);
         }
-        if (!"".equals(e.getError().printMetaInfo())) {
+        if (!e.getError().printMetaInfo().isEmpty()) {
             LOGGER.info(e.getError().printMetaInfo());
         }
         String errorMsg = getErrorMessage(e);
         e.getError().setMessage(errorMsg);
-        return responseStatus420(getErr420(e.getError()), mediaType);
+        return responseStatus420(getErr420(e.getError()), mediaType, jocAuditTrail);
 
     }
 
-    public static JOCDefaultResponse responseStatusJSError(JocException e) {
-        return responseStatusJSError(e, MediaType.APPLICATION_JSON);
-    }
-
-    public static JOCDefaultResponse responseHTMLStatusJSError(JocException e) {
-        return responseStatusJSError(e, MediaType.TEXT_HTML + "; charset=UTF-8");
-    }
-
-    public static JOCDefaultResponse responseStatusJSError(Throwable e, String mediaType) {
+    public static JOCDefaultResponse responseStatusJSError(Throwable e, String mediaType) { // SOSServicePermissionIam
         if (e instanceof JocException) {
             return responseStatusJSError((JocException) e, mediaType);
         }
         if (e.getCause() != null && e.getCause() instanceof JocException) {
             return responseStatusJSError((JocException) e.getCause(), mediaType);
         }
-        return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType);
+        return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType, new JocAuditTrail());
     }
 
-    public static JOCDefaultResponse responseStatusJSError(Throwable e) {
+    public static JOCDefaultResponse responseStatusJSError(Throwable e) { // SOSServicePermissionIam
         return responseStatusJSError(e, MediaType.APPLICATION_JSON);
     }
 
-    public static JOCDefaultResponse responseHTMLStatusJSError(Throwable e) {
-        return responseStatusJSError(e, MediaType.TEXT_HTML + "; charset=UTF-8");
-    }
-
-    public static JOCDefaultResponse responseStatusJSError(Throwable e, JocError err, String mediaType) {
+    public static JOCDefaultResponse responseStatusJSError(Throwable e, JocError err, String mediaType, JocAuditTrail jocAuditTrail) {
         if (e instanceof JocException) {
             JocException ee = (JocException) e;
             ee.addErrorMetaInfo(err);
-            return responseStatusJSError(ee, mediaType);
+            return responseStatusJSError(ee, mediaType, jocAuditTrail);
         }
         if (e.getCause() != null && e.getCause() instanceof JocException) {
             JocException ee = (JocException) e.getCause();
             ee.addErrorMetaInfo(err);
-            return responseStatusJSError(ee, mediaType);
+            return responseStatusJSError(ee, mediaType, jocAuditTrail);
         }
-        if (!"".equals(err.printMetaInfo())) {
+        if (!err.printMetaInfo().isEmpty()) {
             LOGGER.info(err.printMetaInfo());
         }
-        return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType);
+        return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType, jocAuditTrail);
     }
 
-    public static JOCDefaultResponse responseStatusJSError(Throwable e, JocError err) {
-        return responseStatusJSError(e, err, MediaType.APPLICATION_JSON);
-    }
-
-    public static JOCDefaultResponse responseHTMLStatusJSError(Throwable e, JocError err) {
-        return responseStatusJSError(e, err, MediaType.TEXT_HTML + "; charset=UTF-8");
-    }
-
-    public static JOCDefaultResponse responseStatus420(Err420 entity, String mediaType) {
+    private static JOCDefaultResponse responseStatus420(Err420 entity, String mediaType, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", mediaType).cacheControl(
                 setNoCaching());
+        jocAuditTrail.addContentTypeHeader(mediaType);
         if (mediaType.contains(MediaType.TEXT_HTML)) {
             String entityStr = String.format(ERROR_HTML, entity.getError().getCode(), StringEscapeUtils.escapeHtml4(entity.getError().getMessage()));
             responseBuilder.entity(entityStr);
+            jocAuditTrail.setResponse(entityStr);
         } else {
             responseBuilder.entity(entity);
+            jocAuditTrail.setResponse(entity);
         }
+        jocAuditTrail.log();
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatus420(Err420 entity) {
-        return responseStatus420(entity, MediaType.APPLICATION_JSON);
+    private static JOCDefaultResponse responseStatus420(Err420 entity, JocAuditTrail jocAuditTrail) {
+        return responseStatus420(entity, MediaType.APPLICATION_JSON, jocAuditTrail);
     }
 
-    public static JOCDefaultResponse responseHTMLStatus420(Err420 entity) {
-        return responseStatus420(entity, MediaType.TEXT_HTML + "; charset=UTF-8");
-    }
+//    public static JOCDefaultResponse responseHTMLStatus420(Err420 entity) {
+//        return responseStatus420(entity, MediaType.TEXT_HTML + "; charset=UTF-8");
+//    }
 
-    public static JOCDefaultResponse responseHTMLStatus420(String entity) {
-        entity = String.format(ERROR_HTML, "JOC-420", StringEscapeUtils.escapeHtml4(entity));
-        Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", MediaType.TEXT_HTML
-                + "; charset=UTF-8").cacheControl(setNoCaching());
-        responseBuilder.entity(entity);
-        return new JOCDefaultResponse(responseBuilder.build());
-    }
+//    public static JOCDefaultResponse responseHTMLStatus420(String entity) {
+//        entity = String.format(ERROR_HTML, "JOC-420", StringEscapeUtils.escapeHtml4(entity));
+//        Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", MediaType.TEXT_HTML
+//                + "; charset=UTF-8").cacheControl(setNoCaching());
+//        responseBuilder.entity(entity);
+//        return new JOCDefaultResponse(responseBuilder.build());
+//    }
 
-    public static JOCDefaultResponse responsePlainStatus420(String entity) {
-        Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", MediaType.TEXT_PLAIN
-                + "; charset=UTF-8").cacheControl(setNoCaching());
-        responseBuilder.entity(entity);
-        return new JOCDefaultResponse(responseBuilder.build());
-    }
+//    public static JOCDefaultResponse responsePlainStatus420(String entity) {
+//        Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", MediaType.TEXT_PLAIN
+//                + "; charset=UTF-8").cacheControl(setNoCaching());
+//        responseBuilder.entity(entity);
+//        return new JOCDefaultResponse(responseBuilder.build());
+//    }
 
-    public static JOCDefaultResponse responseStatus434JSError(JocException e) {
-        return responseStatus434JSError(e, false);
-    }
-
-    public static JOCDefaultResponse responseStatus434JSError(JocException e, boolean withoutLogging) {
+    public static JOCDefaultResponse responseStatus434JSError(JocException e, boolean withoutLogging, JocAuditTrail jocAuditTrail) {
         String errorMsg = e.toString();
         if (!withoutLogging) {
             if (!"".equals(e.getError().printMetaInfo())) {
@@ -271,76 +278,81 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             errorMsg = getErrorMessage(e);
         }
         e.getError().setMessage(errorMsg);
-        return responseStatus434(getErr420(e.getError()));
+        return responseStatus434(getErr420(e.getError()), jocAuditTrail);
     }
 
-    public static JOCDefaultResponse responseStatus434JSError(Exception e) {
-        if (e instanceof JocException) {
-            return responseStatus434JSError((JocException) e);
-        }
-        if (e.getCause() != null && e.getCause() instanceof JocException) {
-            return responseStatus434JSError((JocException) e.getCause());
-        }
-        return responseStatus434(getErr420(new JocError(getErrorMessage(e))));
-    }
-
-    public static JOCDefaultResponse responseStatus434(Err420 entity) {
+    private static JOCDefaultResponse responseStatus434(Err420 entity, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(434, REASON_PHRASE_420).header("Content-Type", MediaType.APPLICATION_JSON)
                 .cacheControl(setNoCaching());
         responseBuilder.entity(entity);
+        
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.setResponse(entity);
+        jocAuditTrail.log();
+        
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatus419(List<Err419> listOfErrors) {
+    public static JOCDefaultResponse responseStatus419(List<Err419> listOfErrors, JocAuditTrail jocAuditTrail) {
         Errs errors = new Errs();
         errors.setErrors(listOfErrors);
 
         Response.ResponseBuilder responseBuilder = Response.status(419, REASON_PHRASE_420).header("Content-Type", MediaType.APPLICATION_JSON)
                 .cacheControl(setNoCaching());
         responseBuilder.entity(errors);
+        
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.setResponse(errors);
+        jocAuditTrail.log();
+        
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatus419(Object entity) {
-        Response.ResponseBuilder responseBuilder = Response.status(419, REASON_PHRASE_420).header("Content-Type", MediaType.APPLICATION_JSON)
-                .cacheControl(setNoCaching());
-        responseBuilder.entity(entity);
-        return new JOCDefaultResponse(responseBuilder.build());
-    }
+//    public static JOCDefaultResponse responseStatus419(Object entity) {
+//        Response.ResponseBuilder responseBuilder = Response.status(419, REASON_PHRASE_420).header("Content-Type", MediaType.APPLICATION_JSON)
+//                .cacheControl(setNoCaching());
+//        responseBuilder.entity(entity);
+//        return new JOCDefaultResponse(responseBuilder.build());
+//    }
 
-    public static JOCDefaultResponse responseStatus419(List<Err419> listOfErrors, JocError err) {
-        if (!"".equals(err.printMetaInfo())) {
-            LOGGER.info(err.printMetaInfo());
-        }
-        return responseStatus419(listOfErrors);
-    }
+//    public static JOCDefaultResponse responseStatus419(List<Err419> listOfErrors, JocError err) {
+//        if (!err.printMetaInfo().isEmpty()) {
+//            LOGGER.info(err.printMetaInfo());
+//        }
+//        return responseStatus419(listOfErrors);
+//    }
 
-    public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) {
+    public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) { // SOSServicePermissionIam
+        return responseStatus401(entity, new JocAuditTrail());
+    }
+    
+    public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
                 setNoCaching());
         LOGGER.info(entity.getMessage());
         responseBuilder.entity(entity);
+        
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.setResponse(entity);
+        jocAuditTrail.log();
+        
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity, String mediaType) {
-        Response.ResponseBuilder responseBuilder = Response.status(403).header("Content-Type", mediaType).cacheControl(setNoCaching());
+    public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity, JocAuditTrail jocAuditTrail) {
+        Response.ResponseBuilder responseBuilder = Response.status(403).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(setNoCaching());
         if (entity.getApiCall() == null) {
             LOGGER.error(entity.getMessage());
         } else {
             LOGGER.error(MarkerFactory.getMarker(entity.getApiCall()), entity.getMessage());
         }
-        if (mediaType.contains(MediaType.TEXT_HTML)) {
-            String entityStr = String.format(ERROR_HTML, "JOC-403", StringEscapeUtils.escapeHtml4(entity.getMessage()));
-            responseBuilder.entity(entityStr);
-        } else {
-            responseBuilder.entity(entity);
-        }
+        responseBuilder.entity(entity);
+        
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.setResponse(entity);
+        jocAuditTrail.log();
+        
         return new JOCDefaultResponse(responseBuilder.build());
-    }
-    
-    public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity) {
-        return responseStatus403(entity, MediaType.APPLICATION_JSON);
     }
     
     public static JOCDefaultResponse responseStatus433(byte[] entity) {
@@ -349,12 +361,8 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, String apiCall) {
-        return getError401Schema(sosJobschedulerUser, null, apiCall);
-    }
-
     public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err) {
-        String apiCall = (err != null) ? err.getApiCall() : null;
+        String apiCall = Optional.ofNullable(err).map(JocError::getApiCall).orElse(null);
         return getError401Schema(sosJobschedulerUser, err, apiCall);
     }
 

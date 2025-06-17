@@ -19,7 +19,6 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderHistoryItemChildItem;
@@ -63,7 +62,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
                 if (historyId == null) {
                     DBMissingDataException e = new DBMissingDataException(String.format("Couldn't find order log for '%s'", in.getOrderId()));
                     ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), controllerId);
-                    return JOCDefaultResponse.responseStatus434JSError(e, true);
+                    return responseStatus434JSError(e, true);
                 } else {
                     in.setHistoryId(historyId);
                 }
@@ -76,12 +75,9 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
 
             answer.setDeliveryDate(new Date());
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

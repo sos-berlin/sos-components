@@ -1,5 +1,6 @@
 package com.sos.auth.classes;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class GlobalsTest {
 
@@ -17,7 +18,7 @@ public class GlobalsTest {
         return sosAuthCurrentAccountAnswer.getAccessToken();
     }
 
-    protected static void logout() {
+    protected static void logout() throws JsonProcessingException {
         sosServicePermissionIam.logout(sosAuthCurrentAccountAnswer.getAccessToken());
     }
 

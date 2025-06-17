@@ -11,7 +11,6 @@ import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgementId;
 import com.sos.joc.db.monitoring.DBItemSystemNotification;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
 import com.sos.joc.model.monitoring.notification.common.NotificationAcknowledgeAnswer;
@@ -81,14 +80,10 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
             NotificationAcknowledgeAnswer answer = new NotificationAcknowledgeAnswer();
             answer.setDeliveryDate(new Date());
             answer.setAcknowledgement(ac);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            Globals.rollback(session);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             Globals.rollback(session);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

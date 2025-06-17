@@ -5,7 +5,6 @@ import com.sos.joc.boards.resource.IQuickSearchResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.DeployedObjectQuickSearchFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -34,12 +33,9 @@ public class BoardQuickSearchImpl extends JOCResourceImpl implements IQuickSearc
             }
             
             ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.NOTICEBOARD, accessToken, folderPermissions);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Throwable e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
         }
     }
 }

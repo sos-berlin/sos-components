@@ -5,15 +5,12 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStatisticsResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -21,6 +18,8 @@ import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.joc.model.inventory.Statistics;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisticsResource {
@@ -62,12 +61,9 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

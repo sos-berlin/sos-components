@@ -17,7 +17,6 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.SystemNotificationDBItemEntity;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
 import com.sos.joc.model.monitoring.notification.system.SystemNotificationsAnswer;
@@ -78,12 +77,9 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
             SystemNotificationsAnswer answer = new SystemNotificationsAnswer();
             answer.setDeliveryDate(new Date());
             answer.setNotifications(notifications);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

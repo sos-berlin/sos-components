@@ -11,7 +11,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.MonitoringMonitorTypeText;
 import com.sos.joc.model.monitoring.notification.common.MonitorItem;
@@ -60,12 +59,9 @@ public class OrderNotificationImpl extends JOCResourceImpl implements IOrderNoti
             NotificationAnswer answer = new NotificationAnswer();
             answer.setDeliveryDate(new Date());
             answer.setMonitors(monitors);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

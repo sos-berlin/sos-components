@@ -34,7 +34,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
@@ -88,12 +87,9 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             entity.setPlans(get(filter));
             
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -119,12 +115,9 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                     .peek(plan -> plan.setOrders(null)).collect(Collectors.toList()));
 
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

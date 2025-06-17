@@ -42,7 +42,7 @@ public class StandardYADEDeployResourceImpl extends ADeploy implements IStandard
             try {
                 JocXmlEditor.validate(in.getObjectType(), StandardSchemaHandler.getYADESchema(), in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
-                return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(ValidateResourceImpl.getError(e)));
             }
 
             // step 2 - store and deploy JobResource
@@ -54,12 +54,9 @@ public class StandardYADEDeployResourceImpl extends ADeploy implements IStandard
             // step 4 - post events
             EventBus.getInstance().post(new YADEConfigurationDeployed("", ""));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

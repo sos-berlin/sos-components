@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentNames;
 import com.sos.joc.model.agent.SelectionIdsPerAgentName;
 import com.sos.joc.model.audit.CategoryType;
@@ -95,7 +94,7 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
                     jocError.clearMetaInfo();
                 }
                 LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(agentNames));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(agentNames));
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -139,12 +138,9 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
             }
             agentNames.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(agentNames));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(agentNames));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

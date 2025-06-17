@@ -12,7 +12,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.DeleteConfiguration;
@@ -46,20 +45,17 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
                 case OTHER:
                     checkRequiredParameter("id", in.getId());
 
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleMultipleConfigurations(in)));
+                    response = responseStatus200(Globals.objectMapper.writeValueAsBytes(handleMultipleConfigurations(in)));
                     break;
                 default:
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in,
+                    response = responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in,
                             getAccount(), 0L)));
                     break;
                 }
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

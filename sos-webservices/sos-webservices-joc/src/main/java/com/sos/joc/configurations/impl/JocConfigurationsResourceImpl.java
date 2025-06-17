@@ -13,7 +13,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import jakarta.ws.rs.Path;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -32,7 +31,6 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.ConfigurationType;
@@ -44,6 +42,8 @@ import com.sos.joc.model.configuration.Profiles;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("configurations")
 public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJocConfigurationsResource {
@@ -205,12 +205,9 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             configurations.setConfigurations(listOfConfigurations);
             configurations.setDefaultGlobals(defaultGlobalSettings);
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(configurations));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(configurations));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -236,12 +233,9 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             jocConfigurationDBLayer.deleteConfigurations(configurationsFilter.getConfigurationType(),configurationsFilter.getAccounts());
             Globals.commit(connection);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -287,13 +281,10 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
 
             resultProfiles.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(resultProfiles));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(resultProfiles));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

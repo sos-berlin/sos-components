@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
@@ -66,6 +67,7 @@ public class SOSAuthCurrentAccount {
     private String kid;
     private boolean isApprover = false;
     private boolean isRequestor = false;
+    private String ipAddress;
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
@@ -417,16 +419,26 @@ public class SOSAuthCurrentAccount {
     }
 
     public String getCallerIpAddress() {
-        if (sosLoginParameters.getRequest() != null) {
-            String s = sosLoginParameters.getRequest().getRemoteAddr();
-            if ("[0:0:0:0:0:0:0:1]".equals(s)) {
-                return "127.0.0.1";
-            } else {
-                return s;
-            }
-        } else {
-            return "0.0.0.0";
+        if (ipAddress == null) {
+            ipAddress = Optional.ofNullable(sosLoginParameters.getRequest()).map(HttpServletRequest::getRemoteAddr).map(ip -> {
+                if ("127.0.0.1".equals(ip) || "[0:0:0:0:0:0:0:1]".equals(ip)) {
+                    return SOSShell.getLocalHostNameOptional().flatMap(SOSShell::getHostAddressOptional).orElse(ip);
+                }
+                return ip;
+            }).orElse("0.0.0.0");
         }
+        return ipAddress;
+        
+//        if (sosLoginParameters.getRequest() != null) {
+//            String s = sosLoginParameters.getRequest().getRemoteAddr();
+//            if ("[0:0:0:0:0:0:0:1]".equals(s)) {
+//                return "127.0.0.1";
+//            } else {
+//                return s;
+//            }
+//        } else {
+//            return "0.0.0.0";
+//        }
     }
 
     public HttpServletRequest getHttpServletRequest() {

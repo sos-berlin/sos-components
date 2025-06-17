@@ -109,12 +109,9 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
             } else {
                 throw new JocAuthenticationException("No valid one-time token(s) found!");
             }
-            return JOCDefaultResponse.responseStatus200(response);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
             Optional<OnetimeToken> optional = onetimeTokens.getTokens().stream().filter(item -> item.getUUID().equals(token)).filter(Objects::nonNull)

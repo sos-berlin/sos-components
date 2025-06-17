@@ -3,7 +3,6 @@ package com.sos.joc.inventory.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.AReadConfiguration;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -29,11 +28,8 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
             }
             return response;
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -51,11 +47,8 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
             }
             return response;
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

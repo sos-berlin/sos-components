@@ -9,7 +9,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IDeleteKey;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -44,12 +43,9 @@ public class DeleteKeyImpl extends JOCResourceImpl implements IDeleteKey {
             if (signatureKeyPair != null) {
                 hibernateSession.delete(signatureKeyPair);
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

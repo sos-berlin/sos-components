@@ -22,7 +22,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.WorkflowsBoards;
@@ -117,13 +116,10 @@ public class WorkflowsBoardsResourceImpl extends JOCResourceImpl implements IWor
             entity.setConsumingWorkflows(consumingWorkflows);
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

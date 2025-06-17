@@ -12,7 +12,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
@@ -64,13 +63,10 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
             workflows.setDeliveryDate(Date.from(Instant.now()));
             workflows.setNumOfAllOrders(allOrders);
 
-            return JOCDefaultResponse.responseStatus200(workflows);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

@@ -30,7 +30,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReleasablesResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -58,14 +57,11 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                response = JOCDefaultResponse.responseStatus200(releasables(in, false));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(releasables(in, false)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -83,14 +79,11 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                response = JOCDefaultResponse.responseStatus200(releasables(in, true));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(releasables(in, true)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

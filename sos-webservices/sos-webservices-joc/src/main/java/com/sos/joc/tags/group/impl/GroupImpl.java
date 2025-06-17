@@ -12,7 +12,6 @@ import com.sos.joc.classes.tag.ATagsModifyImpl;
 import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
 import com.sos.joc.db.inventory.InventoryTagGroupDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.tag.group.GroupTags;
 import com.sos.joc.model.tag.group.RequestFilter;
@@ -51,13 +50,10 @@ public class GroupImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> implemen
             entity.setTags(dbLayer.getTagsByGroupId(groups.get(0).getGroupId()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

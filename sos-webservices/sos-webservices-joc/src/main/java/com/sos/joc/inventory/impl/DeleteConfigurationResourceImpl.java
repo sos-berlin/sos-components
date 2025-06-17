@@ -3,7 +3,6 @@ package com.sos.joc.inventory.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ADeleteConfiguration;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -29,11 +28,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
                 response = remove(accessToken, in, IMPL_PATH_DELETE);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -50,11 +46,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
                 response = removeFolder(accessToken, in, IMPL_PATH_FOLDER_DELETE);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -71,11 +64,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
                 response = delete(accessToken, in, IMPL_PATH_TRASH_DELETE);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -92,11 +82,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
                 response = deleteFolder(accessToken, in, IMPL_PATH_TRASH_DELETE);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

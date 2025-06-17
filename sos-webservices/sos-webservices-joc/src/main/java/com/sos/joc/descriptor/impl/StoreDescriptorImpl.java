@@ -5,7 +5,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.descriptor.resource.IStoreDescriptor;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.AStoreConfiguration;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -32,11 +31,8 @@ public class StoreDescriptorImpl extends AStoreConfiguration implements IStoreDe
                 response = store(filter, ConfigurationType.DESCRIPTORFOLDER, IMPL_PATH_STORE);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

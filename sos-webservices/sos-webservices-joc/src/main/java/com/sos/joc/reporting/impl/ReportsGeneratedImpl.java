@@ -20,7 +20,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.db.reporting.items.ReportDbItem;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportHistoryFilter;
@@ -89,12 +88,9 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
                     dateFrom, dateTo).stream().map(mapToReportItem).filter(Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

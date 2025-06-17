@@ -14,19 +14,15 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import jakarta.ws.rs.core.StreamingOutput;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.ILogResource;
 import com.sos.joc.model.JOClog;
 import com.sos.joc.model.JOClogs;
 import com.sos.joc.model.audit.CategoryType;
 
-import io.vavr.control.Either;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @jakarta.ws.rs.Path("joc")
 public class LogImpl extends JOCResourceImpl implements ILogResource {
@@ -47,8 +43,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     
             return postLog(accessToken, jocLog);
         } catch (Exception e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -71,12 +66,9 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             JOClogs entity = new JOClogs();
             entity.setFilenames(filenames);
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -100,11 +92,8 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             JOClog jocLog = new JOClog();
             jocLog.setFilename(filename);
             return postLog(accessToken, jocLog);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -150,9 +139,9 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
         
         // log file could be already compressed
         if (logFilename.endsWith(".gz")) {
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString(), 0L);
+            return responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString(), 0L);
         }
-        return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString());
+        return responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString());
     }
     
     private static String toAbsolutePath(Path p) {

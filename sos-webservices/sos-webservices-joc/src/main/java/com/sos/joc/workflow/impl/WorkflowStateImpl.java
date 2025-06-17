@@ -8,8 +8,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +21,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.model.workflow.WorkflowState;
@@ -31,6 +28,7 @@ import com.sos.joc.workflow.resource.IWorkflowState;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.workflow.WorkflowPath;
@@ -117,13 +115,10 @@ public class WorkflowStateImpl extends JOCResourceImpl implements IWorkflowState
             entity.setState(SyncStateHelper.getState(stateText));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

@@ -3,7 +3,6 @@ package com.sos.joc.notification.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.notification.ReadNotificationFilter;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -30,12 +29,9 @@ public class ReadNotificationImpl extends JOCResourceImpl implements IReadNotifi
                 return jocDefaultResponse;
             }
             in.setObjectType(ObjectType.NOTIFICATION);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(ReadResourceImpl.getNotificationConfiguration(in)));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(ReadResourceImpl.getNotificationConfiguration(in)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

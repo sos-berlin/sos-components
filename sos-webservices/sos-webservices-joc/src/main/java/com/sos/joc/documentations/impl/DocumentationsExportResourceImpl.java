@@ -16,9 +16,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.StreamingOutput;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -34,7 +31,6 @@ import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -42,6 +38,9 @@ import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.DocumentationsFilter;
 import com.sos.joc.model.docu.ExportInfo;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @Path("documentations")
 public class DocumentationsExportResourceImpl extends JOCResourceImpl implements IDocumentationsExportResource {
@@ -89,12 +88,9 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
                     }
                 }
             };
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(streamingOutput, targetFilename);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseOctetStreamDownloadStatus200(streamingOutput, targetFilename);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -154,12 +150,9 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
                 }
             };
 
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, "sos-documentations" + ".zip");
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseOctetStreamDownloadStatus200(fileStream, "sos-documentations" + ".zip");
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -198,12 +191,9 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             DeleteTempFile runnable = new DeleteTempFile(path);
             new Thread(runnable).start();
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
             if (zipOut != null) {

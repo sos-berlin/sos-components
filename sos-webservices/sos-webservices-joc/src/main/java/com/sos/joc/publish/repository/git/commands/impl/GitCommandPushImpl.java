@@ -19,7 +19,6 @@ import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocGitException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -98,16 +97,12 @@ public class GitCommandPushImpl extends JOCResourceImpl implements IGitCommandPu
             Date finished = Date.from(Instant.now());
             LOGGER.trace("*** push finished ***" + finished);
             LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
-            return JOCDefaultResponse.responseStatus200(response);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Throwable t) {
-            return JOCDefaultResponse.responseStatusJSError(t, getJocError());
+            return responseStatus434JSError(e);
+        } catch (Exception e) {
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
             if (permitted) {

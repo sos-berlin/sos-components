@@ -61,12 +61,9 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
                     deleteAllMultiple(type);
                 }
             }
-            return JOCDefaultResponse.responseStatus200(getSuccess());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -4,16 +4,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidatePredicateResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.Validate;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ValidatePredicateResourceImpl extends JOCResourceImpl implements IValidatePredicateResource {
@@ -36,12 +36,9 @@ public class ValidatePredicateResourceImpl extends JOCResourceImpl implements IV
                 entity.setInvalidMsg(e.getMessage());
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 }

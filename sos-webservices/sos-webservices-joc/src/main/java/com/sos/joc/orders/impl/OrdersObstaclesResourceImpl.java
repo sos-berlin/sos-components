@@ -9,14 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.Obstacle;
 import com.sos.joc.model.order.ObstacleType;
@@ -27,6 +24,7 @@ import com.sos.joc.orders.resource.IOrdersObstaclesResource;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
 import js7.data_for_java.controller.JControllerState;
@@ -97,13 +95,10 @@ public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrd
             entry.setOrders(obstaclesSet);
             entry.setDeliveryDate(Date.from(Instant.now()));
             
-            return JOCDefaultResponse.responseStatus200(entry);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entry));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -220,7 +220,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             }
             DependencyResolver.updateDependencies(updated);
             response.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(response);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

@@ -22,7 +22,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IReleasablesRecall;
 import com.sos.joc.model.audit.CategoryType;
@@ -77,12 +76,9 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             JocAuditLog.storeAuditLogDetails(auditLogDetails, hibernateSession, dbAuditLogId, dbAuditLog.getCreated());
             events.stream().forEach(JocInventory::postEvent);
             
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(new Date());
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }
@@ -130,12 +126,9 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                 JocInventory.postEvent(recallFilter.getPath());
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(new Date());
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

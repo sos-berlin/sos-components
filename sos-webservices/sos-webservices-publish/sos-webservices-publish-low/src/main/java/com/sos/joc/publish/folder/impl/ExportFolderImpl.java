@@ -10,9 +10,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.StreamingOutput;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -23,7 +20,6 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.Version;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -38,6 +34,9 @@ import com.sos.joc.publish.resource.IExportFolderResource;
 import com.sos.joc.publish.util.ExportUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @Path("inventory")
 public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderResource {
@@ -156,12 +155,9 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                             filter.getUseShortPath(), filter.getShallowCopy().getFolders());
                 }
             }
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

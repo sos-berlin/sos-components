@@ -16,7 +16,6 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventorySubagentClustersDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.StoreSubagentClusters;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -76,14 +75,10 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             
             controllerIds.forEach(controllerId -> EventBus.getInstance().post(new AgentInventoryEvent(controllerId)));
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

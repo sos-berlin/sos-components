@@ -80,7 +80,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.Cycle;
@@ -146,13 +145,10 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             OrderIdMap200 entity = new OrderIdMap200();
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setOrderIds(dailyPlanResult);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

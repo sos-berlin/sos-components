@@ -6,7 +6,6 @@ import com.sos.joc.approval.impl.mail.Notifier;
 import com.sos.joc.approval.resource.IReadEmailSettingsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 
 import jakarta.ws.rs.Path;
@@ -27,12 +26,9 @@ public class ReadEmailSettingsImpl extends JOCResourceImpl implements IReadEmail
             }
             
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(Notifier.readEmailSettings(session)));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(Notifier.readEmailSettings(session)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

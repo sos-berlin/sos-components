@@ -139,7 +139,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             answer.setReleased(false);
             answer.setState(ItemStateEnum.DRAFT_IS_NEWER);// TODO
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

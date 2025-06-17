@@ -10,8 +10,6 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.util.encoders.Base64;
@@ -25,7 +23,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IShowKey;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -33,6 +30,8 @@ import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
+
+import jakarta.ws.rs.Path;
 
 
 @Path("profile/key")
@@ -150,12 +149,9 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     }
                 }
             }
-            return JOCDefaultResponse.responseStatus200(jocKeyPair);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(jocKeyPair));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

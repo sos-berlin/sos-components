@@ -3,8 +3,6 @@ package com.sos.joc.profiles.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -13,13 +11,14 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.profile.Profile;
 import com.sos.joc.model.profile.ProfileFilter;
 import com.sos.joc.profiles.resource.IJocProfileResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("profile/prefs")
 public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfileResource {
@@ -74,13 +73,10 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
                 sosHibernateSession.update(dbItem);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -123,13 +119,10 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             profile.setModified(dbItem.getModified());
             profile.setProfileItem(dbItem.getConfigurationItem());
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(profile));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(profile));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

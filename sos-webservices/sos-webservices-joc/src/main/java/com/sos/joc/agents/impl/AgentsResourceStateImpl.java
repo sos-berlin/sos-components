@@ -40,7 +40,6 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentClusterState;
 import com.sos.joc.model.agent.AgentClusterStateText;
 import com.sos.joc.model.agent.AgentState;
@@ -407,20 +406,17 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 agents.setAgents(Stream.concat(agentsList.stream(), subagentsPerAgentId.values().stream().flatMap(List::stream)).sorted(Comparator
                         .comparingInt(AgentStateV::getRunningTasks).reversed()).collect(Collectors.toList()));
 
-                return JOCDefaultResponse.responseStatus200(agents);
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(agents));
             } else {
                 AgentsV agents = new AgentsV();
                 agents.setSurveyDate(currentStateMoment == null ? null : Date.from(currentStateMoment));
                 agents.setDeliveryDate(Date.from(Instant.now()));
                 agents.setAgents(agentsList);
 
-                return JOCDefaultResponse.responseStatus200(agents);
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(agents));
             }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

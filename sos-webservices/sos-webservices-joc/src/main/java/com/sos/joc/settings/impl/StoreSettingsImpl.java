@@ -26,7 +26,6 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.settings.StoreSettingsFilter;
@@ -76,12 +75,9 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
             }
             jocConfigurationDBLayer.saveOrUpdateGlobalSettingsConfiguration(cfg, oldCfg);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

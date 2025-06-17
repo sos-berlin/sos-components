@@ -10,7 +10,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprover;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.Approver;
 import com.sos.schema.JsonValidator;
@@ -50,12 +49,9 @@ public class StoreApproverImpl extends JOCResourceImpl implements IStoreApprover
                 dbApprover.setOrdering(dbLayer.getMaxOrdering() + 1);
                 session.save(dbApprover);
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

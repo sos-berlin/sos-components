@@ -77,7 +77,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 response.setPath(newPath);
                 response.setId(config.getId());
                 response.setDeliveryDate(Date.from(Instant.now()));
-                return JOCDefaultResponse.responseStatus200(response);
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
             }
             
             // Check folder permissions
@@ -238,7 +238,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             }
 
             response.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(response);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

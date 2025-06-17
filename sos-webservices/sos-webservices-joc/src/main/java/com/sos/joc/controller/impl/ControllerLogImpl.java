@@ -16,7 +16,6 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.controller.resource.IControllerLogResource;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
@@ -60,13 +59,10 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             jocJsonCommand.setSocketTimeout(socketTimeout);
             jocJsonCommand.setUriBuilderForMainLog(true);
 
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(jocJsonCommand.getStreamingOutputFromGet(
+            return responseOctetStreamDownloadStatus200(jocJsonCommand.getStreamingOutputFromGet(
                     "text/plain,application/octet-stream", true), "controller.log.gz");
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

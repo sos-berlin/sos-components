@@ -17,7 +17,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.DeployAgents;
 import com.sos.joc.model.agent.ResetAgents;
 import com.sos.joc.model.audit.CategoryType;
@@ -65,12 +64,9 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
             api.executeCommand(JControllerCommand.batch(commands)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(),
                     getJocError(), controllerId));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

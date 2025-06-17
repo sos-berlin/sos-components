@@ -3,8 +3,6 @@ package com.sos.joc.utilities.impl;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,12 +11,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderIds;
 import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.utilities.resource.ICyclicOrdersResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.UTILITIES)
 public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrdersResource {
@@ -59,12 +58,9 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(answer);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

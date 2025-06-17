@@ -15,7 +15,6 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadAddOrderPositions;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -41,11 +40,8 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
             }
             return response;
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -71,7 +67,7 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
                 throw new DBMissingDataException(String.format("Couldn't find Workflow instructions: %s", in.getWorkflowPath()));
             }
             entry.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entry));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entry));
         } catch (Throwable e) {
             throw e;
         } finally {

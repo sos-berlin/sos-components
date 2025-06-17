@@ -194,7 +194,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
                     ResponseFolder entity = new ResponseFolder();
                     entity.setDeliveryDate(Date.from(Instant.now()));
                     entity.setPath(in.getPath());
-                    response = JOCDefaultResponse.responseStatus200(entity);
+                    response = responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
                 }
 
             } else {

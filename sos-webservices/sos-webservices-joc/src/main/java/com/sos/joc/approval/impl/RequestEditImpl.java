@@ -15,7 +15,6 @@ import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
@@ -93,12 +92,9 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
                 }
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(now);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(now);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

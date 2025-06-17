@@ -34,7 +34,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocSosHibernateException;
@@ -314,12 +313,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     .forEach(JocInventory::postFolderEvent);
                 }
             });
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
             try {

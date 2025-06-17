@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.auth.certificate.classes.SOSCertificateAuthLogin;
 import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.auth.fido.classes.SOSFidoAuthLogin;
@@ -32,6 +33,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditTrail;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
@@ -102,7 +104,7 @@ public class SOSServicePermissionIam {
                 LOGGER.debug("Account is not valid");
                 return JOCDefaultResponse.responseStatusJSError("Account is not valid");
             }
-
+            // TODO JOC-2047 JocAuditTrail
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentAccount
                     .getSosPermissionJocCockpitControllers()));
 
@@ -120,10 +122,11 @@ public class SOSServicePermissionIam {
     public JOCDefaultResponse getSize() {
         MDC.put("context", ThreadCtx);
         try {
+            // TODO JOC-2047 JocAuditTrail
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
-                return JOCDefaultResponse.responseStatus200(-1);
+                return JOCDefaultResponse.responseStatus200("-1".getBytes());
             } else {
-                return JOCDefaultResponse.responseStatus200(Globals.jocWebserviceDataContainer.getCurrentAccountsList().size());
+                return JOCDefaultResponse.responseStatus200((Globals.jocWebserviceDataContainer.getCurrentAccountsList().size() + "").getBytes());
             }
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -141,12 +144,12 @@ public class SOSServicePermissionIam {
         try {
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
                 SOSAuthCurrentAccountAnswer s = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByName(account);
-                return JOCDefaultResponse.responseStatus200(s);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
             } else {
                 SOSAuthCurrentAccountAnswer s = new SOSAuthCurrentAccountAnswer();
                 s.setAccessToken("not-valid");
                 s.setAccount(account);
-                return JOCDefaultResponse.responseStatus200(s);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
             }
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -166,11 +169,11 @@ public class SOSServicePermissionIam {
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
 
                 SOSAuthCurrentAccountAnswer s = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByToken(token);
-                return JOCDefaultResponse.responseStatus200(s);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
             } else {
                 SOSAuthCurrentAccountAnswer s = new SOSAuthCurrentAccountAnswer();
                 s.setAccessToken("not-valid");
-                return JOCDefaultResponse.responseStatus200(s);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
             }
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -259,7 +262,7 @@ public class SOSServicePermissionIam {
         }
     }
 
-    protected JOCDefaultResponse logout(String accessToken) {
+    protected JOCDefaultResponse logout(String accessToken) throws JsonProcessingException {
 
         if (accessToken == null || accessToken.isEmpty()) {
             return JOCDefaultResponse.responseStatusJSError(ACCESS_TOKEN_EXPECTED);
@@ -302,7 +305,7 @@ public class SOSServicePermissionIam {
             Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
         }
 
-        return JOCDefaultResponse.responseStatus200(sosAuthCurrentAccountAnswer);
+        return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosAuthCurrentAccountAnswer));
 
     }
 
@@ -334,8 +337,8 @@ public class SOSServicePermissionIam {
                 Globals.sosHibernateFactory.close();
                 Globals.sosHibernateFactory.build();
             }
-
-            return JOCDefaultResponse.responseStatus200("Db connections reconnected");
+            // TODO JOC-2047 JocAuditTrail
+            return JOCDefaultResponse.responseStatus200("Db connections reconnected".getBytes());
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -353,7 +356,7 @@ public class SOSServicePermissionIam {
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
             SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = hasRole(accessToken, role);
-            return JOCDefaultResponse.responseStatus200(sosAuthCurrentAccountAnswer);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosAuthCurrentAccountAnswer));
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -386,7 +389,7 @@ public class SOSServicePermissionIam {
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
             SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = isPermitted(accessToken, permission);
-            return JOCDefaultResponse.responseStatus200(sosAuthCurrentAccountAnswer);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosAuthCurrentAccountAnswer));
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -430,7 +433,7 @@ public class SOSServicePermissionIam {
             String accessToken = this.getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
             this.getCurrentAccount(accessToken);
             SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions();
-            return JOCDefaultResponse.responseStatus200(sosListOfPermissions.getSosPermissions());
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosListOfPermissions.getSosPermissions()));
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -1030,7 +1033,9 @@ public class SOSServicePermissionIam {
             }
 
             LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
-            JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login", CategoryType.IDENTITY);
+            JocAuditTrail jocAuditLog = new JocAuditTrail(currentAccount.getAccountname(), "./login", null, Optional.ofNullable(
+                    sosAuthCurrentUserAnswer.getAccessToken()), Optional.ofNullable(sosAuthCurrentUserAnswer.getCallerIpAddress()),
+                    CategoryType.IDENTITY);
             AuditParams audit = new AuditParams();
 
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
@@ -1056,12 +1061,11 @@ public class SOSServicePermissionIam {
             if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
                 audit.setComment("===> Failed login");
                 jocAuditLog.logAuditMessage(audit);
-                return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
+                return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer, jocAuditLog);
             } else {
                 jocAuditLog.logAuditMessage(audit);
                 SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-                return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosAuthCurrentUserAnswer.getAccessToken(),
-                        sosSessionHandler.getTimeout());
+                return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosSessionHandler.getTimeout(), jocAuditLog);
             }
         } finally {
             Globals.disconnect(sosHibernateSession);

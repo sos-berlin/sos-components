@@ -91,7 +91,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
@@ -236,19 +235,16 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             // TODO is not only adhocCall.isLeft() dependent ...
             if (adhocCall.isLeft()) {
-                return JOCDefaultResponse.responseStatus419(adhocCall.getLeft());
+                return responseStatus419(adhocCall.getLeft());
             } else {
                 OrderIdMap200 entity = new OrderIdMap200();
                 entity.setDeliveryDate(Date.from(Instant.now()));
                 entity.setOrderIds(getResult(adhocCall.get(), dailyPlanResult));
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
             }
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

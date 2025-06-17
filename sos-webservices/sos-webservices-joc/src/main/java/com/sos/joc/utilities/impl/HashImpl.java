@@ -6,9 +6,10 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.utilities.resource.IHashResource;
+
+import jakarta.ws.rs.core.MediaType;
 
 @jakarta.ws.rs.Path(WebservicePaths.UTILITIES)
 public class HashImpl extends JOCResourceImpl implements IHashResource {
@@ -26,14 +27,11 @@ public class HashImpl extends JOCResourceImpl implements IHashResource {
             String s = (body == null) ? "" : new String(body, StandardCharsets.UTF_8);
             s = s.trim();
             if (s.isEmpty()) {
-                return JOCDefaultResponse.responsePlainStatus200("plain:");
+                return responseStatus200("plain:".getBytes(), MediaType.TEXT_PLAIN + "; charset=UTF-8");
             }
-            return JOCDefaultResponse.responsePlainStatus200("sha512:" + SOSString.hash512(s).toUpperCase());
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(("sha512:" + SOSString.hash512(s).toUpperCase()).getBytes(), MediaType.TEXT_PLAIN + "; charset=UTF-8");
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 }

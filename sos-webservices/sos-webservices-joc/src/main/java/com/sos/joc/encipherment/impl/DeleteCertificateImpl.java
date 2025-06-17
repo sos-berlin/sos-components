@@ -10,7 +10,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.encipherment.DBItemEncCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IDeleteCertificate;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.DeleteCertificateRequestFilter;
 import com.sos.schema.JsonValidator;
@@ -42,14 +41,10 @@ public class DeleteCertificateImpl extends JOCResourceImpl implements IDeleteCer
                 hibernateSession.delete(dbCert);
                 Globals.commit(hibernateSession);
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(hibernateSession);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(hibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

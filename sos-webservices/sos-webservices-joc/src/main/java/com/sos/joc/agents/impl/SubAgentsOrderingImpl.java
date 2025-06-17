@@ -3,18 +3,17 @@ package com.sos.joc.agents.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentsOrdering;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.OrderingSubagents;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("agents")
 public class SubAgentsOrderingImpl extends JOCResourceImpl implements ISubAgentsOrdering {
@@ -46,14 +45,10 @@ public class SubAgentsOrderingImpl extends JOCResourceImpl implements ISubAgents
             agentDBLayer.setSubAgentsOrdering(orderingParam.getSubagentId(), orderingParam.getPredecessorSubagentId());
             Globals.commit(connection);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

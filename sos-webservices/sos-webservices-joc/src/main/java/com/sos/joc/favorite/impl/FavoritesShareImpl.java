@@ -8,7 +8,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.favorite.resource.IFavoritesShare;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.favorite.FavoriteIdentifiers;
@@ -57,14 +56,10 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
             }
             Globals.commit(connection);
             
-            return JOCDefaultResponse.responseStatusJSOk(now);
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(now);
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

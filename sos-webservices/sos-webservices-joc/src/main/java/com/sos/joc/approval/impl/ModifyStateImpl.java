@@ -17,7 +17,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.foureyes.ApproverState;
 import com.sos.joc.model.security.foureyes.FourEyesRequestId;
@@ -81,12 +80,9 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
                 EventBus.getInstance().post(new ApprovalUpdatedEvent());
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -151,12 +147,9 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             EventBus.getInstance().post(new ApprovalUpdatedEvent(Collections.singletonMap(item.getRequestor(), dbLayer
                     .getNumOfApprovedRejectedRequests(item.getRequestor())), approversForEvents));
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

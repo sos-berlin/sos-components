@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -14,7 +12,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.auth.resource.IOnetimeToken;
 import com.sos.joc.keys.auth.token.OnetimeTokens;
 import com.sos.joc.model.audit.CategoryType;
@@ -24,6 +21,8 @@ import com.sos.joc.model.auth.token.OnetimeToken;
 import com.sos.joc.model.auth.token.OnetimeTokensResponse;
 import com.sos.joc.publish.util.ClientServerCertificateUtil;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 
 @Path("token")
@@ -97,12 +96,9 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
                     response.getTokens().add(token);
                 });
             }
-            return JOCDefaultResponse.responseStatus200(response);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }
@@ -144,12 +140,9 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
                     });
                 }
             }
-            return JOCDefaultResponse.responseStatus200(response);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -9,8 +9,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +25,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.lock.common.LockEntryHelper;
 import com.sos.joc.locks.resource.ILocksResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -36,6 +33,7 @@ import com.sos.joc.model.lock.Locks;
 import com.sos.joc.model.lock.LocksFilter;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 
 @Path("locks")
@@ -56,12 +54,9 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
                 return response;
             }
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(getLocks(filter)));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getLocks(filter)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

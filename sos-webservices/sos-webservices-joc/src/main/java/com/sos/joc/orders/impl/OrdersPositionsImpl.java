@@ -2,20 +2,19 @@ package com.sos.joc.orders.impl;
 
 import java.util.Set;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.orders.resource.IOrdersPositions;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("orders")
 public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPositions {
@@ -43,13 +42,10 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             CheckedResumeOrdersPositions entity = new CheckedResumeOrdersPositions().get(orders, Proxy.of(controllerId).currentState(), folderPermissions
                     .getListOfFolders());
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -70,13 +66,10 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             CheckedAddOrdersPositions entity = new CheckedAddOrdersPositions().get(workflowFilter.getWorkflowId(), controllerId, Proxy.of(
                     controllerId).currentState(), folderPermissions.getListOfFolders());
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

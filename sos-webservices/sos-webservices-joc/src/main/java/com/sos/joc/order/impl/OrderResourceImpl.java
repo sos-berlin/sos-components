@@ -21,7 +21,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.joc.model.order.OrderStateText;
@@ -80,16 +79,13 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 }
                 o.setSurveyDate(Date.from(surveyDateInstant));
                 o.setDeliveryDate(Date.from(Instant.now()));
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(o));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(o));
             } else {
                 throw new ControllerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
             }
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

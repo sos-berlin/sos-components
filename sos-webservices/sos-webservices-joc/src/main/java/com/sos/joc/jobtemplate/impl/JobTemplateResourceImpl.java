@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.jobtemplate.Parameter;
@@ -17,7 +15,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.jobtemplate.resource.IJobTemplateResource;
 import com.sos.joc.jobtemplates.impl.AssignedWorkflowsImpl;
@@ -28,6 +25,8 @@ import com.sos.joc.model.jobtemplate.JobTemplateState;
 import com.sos.joc.model.jobtemplate.JobTemplateStateFilter;
 import com.sos.joc.model.jobtemplate.JobTemplateStateText;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("job_template")
 public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemplateResource {
@@ -75,12 +74,9 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
             }
 
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -116,13 +112,10 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
                     entity = AssignedWorkflowsImpl.getState(JobTemplateStateText.NOT_IN_SYNC);
                 }
             }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

@@ -20,7 +20,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.ClusterResponse;
@@ -56,14 +55,11 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             if (response == null) {
                 storeAuditLog(in.getAuditLog());
                 response = processAnswer(in.getType(), JocClusterService.getInstance().runServiceNow(in, StartupMode.run_now));
-                // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                // response = responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -83,14 +79,11 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                 } else {
                     response = processAnswer(in.getType(), JocClusterService.getInstance().restartService(in, StartupMode.manual_restart));
                 }
-                // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                // response = responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -105,14 +98,11 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                 storeAuditLog(in.getAuditLog());
                 response = processAnswer(ClusterServices.cluster, JocClusterService.getInstance().switchMember(StartupMode.manual_switchover, in
                         .getMemberId()));
-                // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                // response = responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -158,14 +148,11 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                                         .getClusterId(), member.getOrdering()));
                     }
                 }
-                response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                response = responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }
@@ -184,7 +171,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
         response.setType(type);
         response.setState(answer.getState());
         response.setDeliveryDate(Date.from(Instant.now()));
-        return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
+        return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
     }
 
 }

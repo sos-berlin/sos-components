@@ -6,7 +6,6 @@ import java.nio.file.StandardCopyOption;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfiguration;
@@ -34,14 +33,11 @@ public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISc
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(getSuccess(in, isYADE));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in, isYADE)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

@@ -3,7 +3,6 @@ package com.sos.joc.inventory.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.AReadFolder;
 import com.sos.joc.inventory.resource.IFolderResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -28,14 +27,11 @@ public class FolderResourceImpl extends AReadFolder implements IFolderResource {
             if (response == null) {
                 ResponseFolder folder = readFolder(in, IMPL_PATH);
                 folder.setDeploymentDescriptors(null);
-                response = JOCDefaultResponse.responseStatus200(folder);
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(folder));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -51,14 +47,11 @@ public class FolderResourceImpl extends AReadFolder implements IFolderResource {
             if (response == null) {
                 ResponseFolder folder = readFolder(in, TRASH_IMPL_PATH);
                 folder.setDeploymentDescriptors(null);
-                response = JOCDefaultResponse.responseStatus200(folder);
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(folder));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

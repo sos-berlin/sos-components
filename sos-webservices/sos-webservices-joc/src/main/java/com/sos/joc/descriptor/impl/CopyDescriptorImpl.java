@@ -3,7 +3,6 @@ package com.sos.joc.descriptor.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.ICopyDescriptor;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ACopyConfiguration;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.descriptor.copy.RequestFilter;
@@ -28,11 +27,8 @@ public class CopyDescriptorImpl extends ACopyConfiguration implements ICopyDescr
                 response = copy(in, true, IMPL_PATH_COPY);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

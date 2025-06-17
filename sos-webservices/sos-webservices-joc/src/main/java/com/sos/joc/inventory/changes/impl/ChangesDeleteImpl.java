@@ -3,7 +3,6 @@ package com.sos.joc.inventory.changes.impl;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.changes.common.ADeleteChange;
 import com.sos.joc.inventory.changes.resource.IChangesDelete;
 import com.sos.joc.model.audit.CategoryType;
@@ -31,11 +30,8 @@ public class ChangesDeleteImpl extends ADeleteChange implements IChangesDelete {
                 response = deleteChange(deletefilter, API_CALL);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

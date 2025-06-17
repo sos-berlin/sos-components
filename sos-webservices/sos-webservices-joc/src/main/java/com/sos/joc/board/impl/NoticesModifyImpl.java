@@ -24,7 +24,6 @@ import com.sos.joc.classes.board.ExpectingOrder;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.DeleteNotices;
 import com.sos.joc.model.board.ModifyNotices;
@@ -89,12 +88,9 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                                 e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -145,12 +141,9 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                 }
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(now));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -191,12 +184,9 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                                 e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(now));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

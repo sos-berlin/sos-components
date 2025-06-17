@@ -19,7 +19,6 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.versions.resource.IGetVersionsResource;
 import com.sos.joc.joc.versions.util.CheckVersion;
 import com.sos.joc.model.audit.CategoryType;
@@ -49,12 +48,9 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
     public JOCDefaultResponse postGetVersion(String xAccessToken) {
         try {
             initLogging(API_CALL_VERSION, null, xAccessToken, CategoryType.OTHERS);
-            return JOCDefaultResponse.responseStatus200(Globals.curVersion);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(Globals.curVersion));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -105,12 +101,9 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
             response.setAgentVersions(agentVersions);
             response.setControllerVersions(controllerVersions);
             response.setJocVersion(jocVersion);
-            return JOCDefaultResponse.responseStatus200(response);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

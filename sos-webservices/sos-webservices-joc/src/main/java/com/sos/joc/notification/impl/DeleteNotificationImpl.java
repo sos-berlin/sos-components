@@ -4,7 +4,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.notification.DeleteNotificationFilter;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -32,13 +31,10 @@ public class DeleteNotificationImpl extends JOCResourceImpl implements IDeleteNo
             }
             DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog());
             in.setObjectType(ObjectType.NOTIFICATION);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(DeleteResourceImpl.handleStandardConfiguration(in,
-                    getAccount(), auditLog.getId())));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(DeleteResourceImpl.handleStandardConfiguration(in, getAccount(), auditLog
+                    .getId())));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 }

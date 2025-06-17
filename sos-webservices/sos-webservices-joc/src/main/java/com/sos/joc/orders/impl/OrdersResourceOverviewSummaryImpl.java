@@ -20,7 +20,6 @@ import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
@@ -82,7 +81,7 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
                     jocError.clearMetaInfo();
                 }
                 LOGGER.warn(InventoryInstancesDBLayer.noRegisteredControllers());
-                return JOCDefaultResponse.responseStatus200(entity);
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
             }
             
             Map<String, Set<Folder>> permittedFoldersMap = null;
@@ -119,12 +118,9 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             ordersHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountOrders(HistoryStateText.SUCCESSFUL, permittedFoldersMap));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

@@ -27,7 +27,6 @@ import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamHistoryFilter;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.Profile;
@@ -79,12 +78,9 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
 
             Globals.commit(sosHibernateSession);
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -204,13 +200,10 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
 
             resultProfiles.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(resultProfiles));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(resultProfiles));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

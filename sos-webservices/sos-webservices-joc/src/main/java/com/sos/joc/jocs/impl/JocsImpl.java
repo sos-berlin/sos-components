@@ -20,7 +20,6 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jocs.resource.IJocsResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -57,12 +56,9 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
             entity.setJocs(setCockpits(in));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

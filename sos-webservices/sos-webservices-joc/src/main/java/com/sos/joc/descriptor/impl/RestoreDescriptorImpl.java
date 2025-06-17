@@ -3,7 +3,6 @@ package com.sos.joc.descriptor.impl;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IRestoreDescriptor;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ARestoreConfiguration;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.descriptor.restore.RequestFilter;
@@ -27,11 +26,8 @@ public class RestoreDescriptorImpl extends ARestoreConfiguration implements IRes
                 response = restore(filter, IMPL_PATH_RESTORE, true);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 

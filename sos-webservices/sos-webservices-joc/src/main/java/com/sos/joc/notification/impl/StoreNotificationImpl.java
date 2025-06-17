@@ -8,7 +8,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.notification.StoreNotificationFilter;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -61,15 +60,10 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
                 }
             }
             Globals.commit(hibernateSession);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(StoreResourceImpl.getSuccess(notificationType, item,
-                    isChanged)));
-        } catch (JocException e) {
-            Globals.rollback(hibernateSession);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(StoreResourceImpl.getSuccess(notificationType, item, isChanged)));
         } catch (Exception e) {
             Globals.rollback(hibernateSession);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

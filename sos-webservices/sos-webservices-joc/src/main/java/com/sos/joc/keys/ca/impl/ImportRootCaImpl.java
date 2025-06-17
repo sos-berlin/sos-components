@@ -8,8 +8,6 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -23,7 +21,6 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.ca.resource.IImportRootCa;
@@ -33,6 +30,8 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
+
+import jakarta.ws.rs.Path;
 
 @Path("profile/ca")
 public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
@@ -96,12 +95,9 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             PublishUtils.storeKey(keyPair, hibernateSession, "", JocSecurityLevel.LOW);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
             try {

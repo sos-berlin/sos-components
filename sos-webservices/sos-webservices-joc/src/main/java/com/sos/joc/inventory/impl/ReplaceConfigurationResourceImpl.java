@@ -11,8 +11,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
@@ -26,7 +24,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IReplaceConfigurationResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -35,6 +32,8 @@ import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.replace.RequestFilters;
 import com.sos.joc.model.inventory.replace.RequestFolder;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements IReplaceConfigurationResource {
@@ -51,11 +50,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 response = replace(in);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -71,11 +67,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 response = replaceFolder(in);
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -127,7 +120,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 JocInventory.postFolderEvent(config.getFolder());
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
 
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -165,7 +158,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(newName);
 
                 if (config.getName().equals(newName)) { // Nothing to do
-                    //return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                    //return responseStatusJSOk(Date.from(Instant.now()));
                     continue;
                 }
 
@@ -210,7 +203,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

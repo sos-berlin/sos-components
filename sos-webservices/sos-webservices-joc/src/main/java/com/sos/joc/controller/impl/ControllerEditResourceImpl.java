@@ -257,16 +257,13 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
             
             if (firstController) { // GUI needs permissions directly for the first controller(s)
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSOSAuthCurrentAccount()
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSOSAuthCurrentAccount()
                         .getSosPermissionJocCockpitControllers()));
             } else {
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                return responseStatusJSOk(Date.from(Instant.now()));
             }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -330,14 +327,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                ProxiesEdit.remove(controllerId);
             }
             Globals.commit(connection);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            Globals.rollback(connection);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }
@@ -370,12 +363,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             JobScheduler200 entity = new JobScheduler200();
             entity.setController(jobScheduler);
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     

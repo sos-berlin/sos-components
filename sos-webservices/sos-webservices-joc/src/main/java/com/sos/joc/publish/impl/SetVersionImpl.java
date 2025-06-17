@@ -3,10 +3,6 @@ package com.sos.joc.publish.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -15,13 +11,14 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersion;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory/deployment")
 public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
@@ -43,12 +40,9 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             storeAuditLog(filter.getAuditLog());
             updateVersions(filter, dbLayer);
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }
@@ -56,7 +50,6 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
 
     private void updateVersions(SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
         List<DBItemDeploymentHistory> depHistoryItems = dbLayer.getFilteredDeployments(filter);
-        Set<String> paths = depHistoryItems.stream().map(item -> item.getPath()).collect(Collectors.toSet());
         depHistoryItems.stream().forEach(item -> {
             DBItemDepVersions newVersion = new DBItemDepVersions();
             newVersion.setInvConfigurationId(item.getInventoryConfigurationId());

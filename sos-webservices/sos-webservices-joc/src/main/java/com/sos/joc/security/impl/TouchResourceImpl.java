@@ -1,7 +1,5 @@
 package com.sos.joc.security.impl;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,10 +8,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.security.resource.ITouchResource;
+
+import jakarta.ws.rs.Path;
 
 @Path("touch")
 public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource {
@@ -30,22 +29,19 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
         try {
             initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
             if (!jobschedulerUser.isAuthenticated()) {
-                return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, API_CALL));
+                return responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, getJocError()));
             }
             try {
                  jobschedulerUser.resetTimeOut();
             } catch (SessionNotExistException e) {
                 LOGGER.info(e.getMessage());
             }
-            return JOCDefaultResponse.responseStatusJSOk(null);
+            return responseStatusJSOk(null);
         } catch (DBConnectionRefusedException e) {
         	LOGGER.info(e.getMessage());
-        	return JOCDefaultResponse.responseStatusJSOk(null);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+        	return responseStatusJSOk(null);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
     
@@ -58,15 +54,12 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
             } else {
                 Globals.sosCockpitProperties.touchLog4JConfiguration();
             }
-            return JOCDefaultResponse.responseStatusJSOk(null);
+            return responseStatusJSOk(null);
         } catch (DBConnectionRefusedException e) {
             LOGGER.info(e.getMessage());
-            return JOCDefaultResponse.responseStatusJSOk(null);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(null);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 }

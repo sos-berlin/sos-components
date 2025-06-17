@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -16,9 +14,10 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.controller.resource.IControllerResourceIds;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.ControllerIds;
+
+import jakarta.ws.rs.Path;
 
 @Path("controller")
 public class ControllerResourceIdsImpl extends JOCResourceImpl implements IControllerResourceIds {
@@ -77,13 +76,10 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
             entity.setSelected(selectedInstanceSchedulerId);
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

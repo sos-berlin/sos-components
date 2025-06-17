@@ -12,7 +12,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IGetPathResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -93,12 +92,9 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                 response.setPath(path);
             }
             response.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(response);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(hibernateSession);
         }

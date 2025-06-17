@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -41,6 +43,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
@@ -49,9 +52,9 @@ import com.sos.joc.model.security.foureyes.RequestBody;
 import com.sos.joc.model.security.foureyes.RequestorState;
 
 import io.vavr.control.Either;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.StreamingOutput;
 
 public class JOCResourceImpl {
 
@@ -64,9 +67,6 @@ public class JOCResourceImpl {
     
     @HeaderParam("X-Approval-Request-Id")
     private String approvalRequestId;
-    
-    @Context
-    private HttpServletRequest servletRequest;
     
     private byte[] origBody;
 
@@ -263,6 +263,10 @@ public class JOCResourceImpl {
         return jocAuditLog;
     }
     
+    public JocAuditTrail getJocAuditTrail() {
+        return jocAuditLog;
+    }
+    
     public void logAuditTrail() {
         jocAuditLog.log();
     }
@@ -365,7 +369,7 @@ public class JOCResourceImpl {
 
     public JOCDefaultResponse accessDeniedResponse(String message) {
         jocError.setMessage(message);
-        return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+        return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
     
     public JOCDefaultResponse accessDeniedResponseByUnsupported4EyesPrinciple() {
@@ -374,7 +378,7 @@ public class JOCResourceImpl {
                 "An approval should be requested according to the permissions configuration '%s' (Role: %s) but this is unsupported. Access denied.",
                 "joc:adminstration:accounts:manage", approvalRequestorRole);
         jocError.setMessage(message);
-        return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+        return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
     
     public byte[] initLogging(String request, byte[] maskedBody, byte[] originBody, String accessToken, CategoryType category) throws Exception {
@@ -432,9 +436,9 @@ public class JOCResourceImpl {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
         }
-        String ipAddress = Optional.ofNullable(servletRequest).map(HttpServletRequest::getRemoteAddr).orElse("");
-        jocAuditLog = new JocAuditTrail(user, request, bodyStr, accessToken, ipAddress, category);
-        
+        jocAuditLog = new JocAuditTrail(user, request, bodyStr, Optional.ofNullable(accessToken), Optional.ofNullable(jobschedulerUser
+                .getSOSAuthCurrentAccount()).map(SOSAuthCurrentAccount::getCallerIpAddress), category);
+
         if (bodyStr.length() > 4096) {
             bodyStr = bodyStr.substring(0, 4093) + "...";
         }
@@ -580,8 +584,7 @@ public class JOCResourceImpl {
         JOCDefaultResponse jocDefaultResponse = null;
         
         if (!jobschedulerUser.isAuthenticated()) {
-            String apiCall = jocError == null ? null : jocError.getApiCall();
-            return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, apiCall));
+            return responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
         }
 
         if (!permission) {
@@ -658,6 +661,67 @@ public class JOCResourceImpl {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    
+    public JOCDefaultResponse responseStatus200(byte[] entity, Map<String, Object> headers) {
+        jocAuditLog.setResponse(entity);
+        return JOCDefaultResponse.responseStatus200(entity, MediaType.APPLICATION_JSON, headers, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatus200(byte[] entity, String mediaType) {
+        /** no response iff
+         * application/pdf
+         * application/octet-stream
+         * image/*
+         */
+        jocAuditLog.setResponse(entity);
+        return JOCDefaultResponse.responseStatus200(entity, mediaType, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatus200(byte[] entity) {
+        return responseStatus200(entity, MediaType.APPLICATION_JSON);
+    }
+    
+    public JOCDefaultResponse responseOctetStreamDownloadStatus200(StreamingOutput entity, String downloadFileName) {
+        return responseOctetStreamDownloadStatus200(entity, downloadFileName, null);
+    }
+    
+    public JOCDefaultResponse responseOctetStreamDownloadStatus200(StreamingOutput entity, String downloadFileName, Long uncompressedLength) {
+        return JOCDefaultResponse.responseOctetStreamDownloadStatus200(entity, downloadFileName, uncompressedLength, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatusJSOk(Date surveyDate) {
+        return JOCDefaultResponse.responseStatusJSOk(surveyDate, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatusJSError(Throwable e) {
+        return responseStatusJSError(e, MediaType.APPLICATION_JSON);
+    }
+    
+    public JOCDefaultResponse responseStatusJSError(Throwable e, String mediaType) {
+        return JOCDefaultResponse.responseStatusJSError(e, jocError, mediaType, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatus434JSError(JocException e) {
+        return responseStatus434JSError(e, false);
+    }
+    
+    public JOCDefaultResponse responseStatus434JSError(JocException e, boolean withoutLogging) {
+        e.addErrorMetaInfo(jocError);
+        return JOCDefaultResponse.responseStatus434JSError(e, withoutLogging, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatus419(List<Err419> listOfErrors) {
+        return JOCDefaultResponse.responseStatus419(listOfErrors, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) {
+        return JOCDefaultResponse.responseStatus401(entity, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity) {
+        return JOCDefaultResponse.responseStatus403(entity, jocAuditLog);
     }
 
 }

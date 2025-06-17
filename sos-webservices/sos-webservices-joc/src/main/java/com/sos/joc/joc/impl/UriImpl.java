@@ -15,7 +15,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IUriResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.CockpitURI;
@@ -71,12 +70,9 @@ public class UriImpl extends JOCResourceImpl implements IUriResource {
                 JocClusterService.getInstance().updateJocUri(StartupMode.settings_changed, dbInstance.getMemberId(), dbInstance.getUri());
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
         }

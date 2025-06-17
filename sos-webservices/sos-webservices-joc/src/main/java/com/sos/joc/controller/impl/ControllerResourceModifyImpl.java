@@ -48,11 +48,8 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
                 terminateCommand.setClusterAction(new ClusterAction());
             }
             return executeModifyJobSchedulerCommand("terminate", terminateCommand, urlParameter, accessToken, permission);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -67,11 +64,8 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
                 terminateCommand.setClusterAction(new ClusterAction());
             }
             return executeModifyJobSchedulerCommand("restart", terminateCommand, urlParameter, accessToken, permission);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -82,11 +76,8 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
 
             Stream<Boolean> permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).map(p -> p.getTerminate());
             return executeModifyJobSchedulerCommand("abort", new Abort(), urlParameter, accessToken, permission);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -97,11 +88,8 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
 
             Stream<Boolean> permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).map(p -> p.getRestart());
             return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
@@ -141,7 +129,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         } else {
             jocJsonCommand.getJsonObjectFromPost(body);
         }
-        return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        return responseStatusJSOk(Date.from(Instant.now()));
     }
 
 }

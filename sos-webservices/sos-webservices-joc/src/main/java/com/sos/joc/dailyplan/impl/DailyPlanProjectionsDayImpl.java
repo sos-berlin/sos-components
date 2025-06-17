@@ -26,7 +26,6 @@ import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsDayResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.projections.ProjectionsDayRequest;
 import com.sos.joc.model.dailyplan.projections.ProjectionsDayResponse;
@@ -178,16 +177,12 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
             // if (entity.getPlanned() == null || !entity.getPlanned()) {
             metaContentOpt.ifPresent(mc -> entity.setMeta(mc));
             // }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (DBMissingDataException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatus434JSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         } finally {
             Globals.disconnect(session);
         }

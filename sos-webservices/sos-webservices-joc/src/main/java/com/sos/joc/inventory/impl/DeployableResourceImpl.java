@@ -15,8 +15,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -27,7 +25,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocDeployException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.inventory.resource.IDeployableResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -39,6 +36,8 @@ import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeployableResourceImpl extends JOCResourceImpl implements IDeployableResource {
@@ -54,14 +53,11 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(deployable(in));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(deployable(in)));
             }
             return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            return responseStatusJSError(e);
         }
     }
 
