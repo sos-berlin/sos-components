@@ -33,7 +33,7 @@ public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCreden
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** get credentials started ***" + started);
-            initLogging(API_CALL, null, xAccessToken, CategoryType.IDENTITY);
+            initLogging(API_CALL, "{}".getBytes(), xAccessToken, CategoryType.IDENTITY);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

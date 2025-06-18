@@ -65,7 +65,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_IDENTITY_PROVIDERS, null, CategoryType.IDENTITY);
+            initLogging(API_CALL_IDENTITY_PROVIDERS, "{}".getBytes(), CategoryType.IDENTITY);
 
             IdentityProviders identityProviders = new IdentityProviders();
 

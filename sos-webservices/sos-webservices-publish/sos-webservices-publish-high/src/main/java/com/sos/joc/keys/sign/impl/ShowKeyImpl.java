@@ -44,7 +44,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
     public JOCDefaultResponse postShowKey(String xAccessToken) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken, CategoryType.CERTIFICATES);
+            initLogging(API_CALL, "{}".getBytes(), xAccessToken, CategoryType.CERTIFICATES);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
                     .getView());
             if (jocDefaultResponse != null) {

@@ -43,7 +43,7 @@ public class AboutImpl extends JOCResourceImpl implements IAboutResource {
             mediaType = MediaType.APPLICATION_JSON;
         }
         try {
-            initLogging(apiCall, null, CategoryType.OTHERS);
+            initLogging(apiCall, "{}".getBytes(), CategoryType.OTHERS);
             return responseStatus200(readVersion(mediaType), mediaType);
         } catch (Exception e) {
             return responseStatusJSError(e, mediaType);

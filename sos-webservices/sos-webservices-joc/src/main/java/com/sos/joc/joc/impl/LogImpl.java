@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +28,7 @@ import jakarta.ws.rs.core.StreamingOutput;
 @jakarta.ws.rs.Path("joc")
 public class LogImpl extends JOCResourceImpl implements ILogResource {
 
-    private static final String API_CALL = "./log";
+    private static final String API_CALL = "./joc/log";
     private static final String logDirectory = "logs";
     private static final String currentLogFileName = "joc.log";
 
@@ -50,7 +51,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     @Override
     public JOCDefaultResponse postLogs(String accessToken) {
         try {
-            initLogging(API_CALL + "s", null, accessToken, CategoryType.OTHERS);
+            initLogging(API_CALL + "s", "{}".getBytes(), accessToken, CategoryType.OTHERS);
 
             Path logDir = Paths.get(logDirectory);
             if (!Files.exists(logDir)) {
@@ -80,9 +81,9 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             }
             if (filename != null) {
                 String s = "{\"filename\":\"" + filename + "\"}";
-                initLogging(API_CALL, s.getBytes(), accessToken, CategoryType.CONTROLLER);
+                initLogging(API_CALL, s.getBytes(StandardCharsets.UTF_8), accessToken, CategoryType.CONTROLLER);
             } else {
-                initLogging(API_CALL, null, accessToken, CategoryType.CONTROLLER);
+                initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.CONTROLLER);
             }
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {

@@ -31,7 +31,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
         SOSHibernateSession connection = null;
 
         try {
-            initLogging(API_CALL_LEVELS, null, accessToken, CategoryType.CONTROLLER);
+            initLogging(API_CALL_LEVELS, "{}".getBytes(), accessToken, CategoryType.CONTROLLER);
             com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers controllerPermissions = getBasicJocPermissions(accessToken)
                     .getAdministration().getControllers();
             // TODO admin permissions to take over security level

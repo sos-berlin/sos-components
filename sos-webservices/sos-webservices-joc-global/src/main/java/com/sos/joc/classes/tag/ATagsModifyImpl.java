@@ -273,7 +273,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
 
     protected JOCDefaultResponse postTagsOrGroups(ResponseObject responseObject, String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
         try {
-            initLogging(apiCall, null, accessToken, CategoryType.INVENTORY);
+            initLogging(apiCall, "{}".getBytes(), accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

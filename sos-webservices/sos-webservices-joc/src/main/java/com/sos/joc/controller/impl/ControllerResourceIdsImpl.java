@@ -29,7 +29,7 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
         SOSHibernateSession connection = null;
 
         try {
-            initLogging(API_CALL, null, accessToken, CategoryType.CONTROLLER);
+            initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.CONTROLLER);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

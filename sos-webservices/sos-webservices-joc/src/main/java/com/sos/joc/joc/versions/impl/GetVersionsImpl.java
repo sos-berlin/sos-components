@@ -47,7 +47,7 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
     @Override
     public JOCDefaultResponse postGetVersion(String xAccessToken) {
         try {
-            initLogging(API_CALL_VERSION, null, xAccessToken, CategoryType.OTHERS);
+            initLogging(API_CALL_VERSION, "{}".getBytes(), xAccessToken, CategoryType.OTHERS);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(Globals.curVersion));
         } catch (Exception e) {
             return responseStatusJSError(e);

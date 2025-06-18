@@ -35,7 +35,7 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
     @Override
     public JOCDefaultResponse getLoginConfiguration() {
         try {
-            initLogging(API_CALL, null, CategoryType.SETTINGS);
+            initLogging(API_CALL, "{}".getBytes(), CategoryType.SETTINGS);
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
             }

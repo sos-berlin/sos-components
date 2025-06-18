@@ -27,7 +27,7 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
     public JOCDefaultResponse postComments(String accessToken) throws Exception {
         
         try {
-            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
+            initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
             
             ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
             Comments entity = new Comments();

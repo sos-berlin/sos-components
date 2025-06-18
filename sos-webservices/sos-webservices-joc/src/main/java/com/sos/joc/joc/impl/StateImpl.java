@@ -21,7 +21,7 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
     @Override
     public JOCDefaultResponse postIsActive(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
+            initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

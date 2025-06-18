@@ -71,7 +71,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
     public JOCDefaultResponse postJobs(final String accessToken) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_JOBS, null, accessToken, CategoryType.INVENTORY);
+            initLogging(API_CALL_JOBS, "{}".getBytes(), accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

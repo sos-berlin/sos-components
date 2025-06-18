@@ -27,7 +27,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
 
     public JOCDefaultResponse postTouch(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
+            initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
             if (!jobschedulerUser.isAuthenticated()) {
                 return responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, getJocError()));
             }
@@ -48,7 +48,7 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
     @Override
     public JOCDefaultResponse postTouchLog4j(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
+            initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
             } else {

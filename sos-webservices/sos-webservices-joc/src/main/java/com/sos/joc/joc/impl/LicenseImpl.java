@@ -20,7 +20,7 @@ public class LicenseImpl extends JOCResourceImpl implements ILicense {
     @Override
     public JOCDefaultResponse postLicense(String accessToken) {
         try {
-            initLogging(API_CALL, null, accessToken, CategoryType.OTHERS);
+            initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
