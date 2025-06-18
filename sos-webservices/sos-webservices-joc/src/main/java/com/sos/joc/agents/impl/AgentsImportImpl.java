@@ -37,6 +37,7 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.publish.util.ImportUtils;
+import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -60,6 +61,7 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
         filter.setFormat(ArchiveFormat.fromValue(format));
         filter.setControllerId(controllerId);
         filter.setOverwrite(overwrite);
+        filter.setFilename(PublishUtils.getImportFilename(body));
         return postImport(xAccessToken, body, filter, auditLog);
     }
 
@@ -69,8 +71,9 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken, CategoryType.CONTROLLER); 
-            JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), AgentImportFilter.class);
+            byte[] fakeRequest = Globals.objectMapper.writeValueAsBytes(filter);
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.CONTROLLER); 
+            JsonValidator.validateFailFast(fakeRequest, AgentImportFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getControllers()
                     .getManage(), false); //4-eyes principle cannot support uploads
             if (jocDefaultResponse != null) {

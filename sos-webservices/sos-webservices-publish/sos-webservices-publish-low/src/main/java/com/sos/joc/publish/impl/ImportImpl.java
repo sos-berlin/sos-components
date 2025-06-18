@@ -55,6 +55,7 @@ import com.sos.joc.publish.mapper.ArchiveValues;
 import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.ImportUtils;
+import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -89,6 +90,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         filter.setPrefix(prefix);
         filter.setSuffix(suffix);
         filter.setFormat(ArchiveFormat.fromValue(format));
+        filter.setFilename(PublishUtils.getImportFilename(body));
 		return postImportConfiguration(xAccessToken, body, filter, auditLog);
 	}
 
@@ -98,8 +100,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken, CategoryType.INVENTORY); 
-            JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter), ImportFilter.class);
+            byte[] fakeRequest = Globals.objectMapper.writeValueAsBytes(filter);
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.INVENTORY); 
+            JsonValidator.validate(fakeRequest, ImportFilter.class);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
             if (jocDefaultResponse != null) {

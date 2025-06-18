@@ -3,6 +3,7 @@ package com.sos.joc.documentations.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.docu.DocumentationImport;
+import com.sos.joc.publish.util.PublishUtils;
 
 import jakarta.ws.rs.Path;
 
@@ -58,7 +60,9 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, null, xAccessToken, CategoryType.DOCUMENTATIONS);
+            byte[] fakeRequest = String.format("{\"folder\":\"%s\",\"filename\":\"%s\"}", folder, PublishUtils.getImportFilename(body)).getBytes(
+                    StandardCharsets.UTF_8);
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.DOCUMENTATIONS);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getDocumentations().getManage(), false);
             if (jocDefaultResponse != null) {

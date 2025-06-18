@@ -31,7 +31,7 @@ public interface IOidcResource {
     @Path("import")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postImportDocumentations(@HeaderParam("X-Access-Token") String xAccessToken,
+    public JOCDefaultResponse postImport(@HeaderParam("X-Access-Token") String xAccessToken,
             @FormDataParam("identityServiceName") String identityServiceName, @FormDataParam("file") FormDataBodyPart file,
             @FormDataParam("timeSpent") String timeSpent, @FormDataParam("ticketLink") String ticketLink, @FormDataParam("comment") String comment);
 

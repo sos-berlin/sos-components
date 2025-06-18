@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "agentName",
     "subagentClusterId",
     "systemCrontab",
+    "filename",
     "auditLog"
 })
 public class ConvertCronFilter {
@@ -57,6 +58,8 @@ public class ConvertCronFilter {
     private String subagentClusterId;
     @JsonProperty("systemCrontab")
     private Boolean systemCrontab = false;
+    @JsonProperty("filename")
+    private String filename;
     /**
      * auditParams
      * <p>
@@ -154,6 +157,16 @@ public class ConvertCronFilter {
     @JsonProperty("systemCrontab")
     public void setSystemCrontab(Boolean systemCrontab) {
         this.systemCrontab = systemCrontab;
+    }
+    
+    @JsonProperty("filename")
+    public String getFilename() {
+        return filename;
+    }
+
+    @JsonProperty("filename")
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     /**

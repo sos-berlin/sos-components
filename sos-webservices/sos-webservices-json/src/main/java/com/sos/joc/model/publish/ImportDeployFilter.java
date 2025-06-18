@@ -21,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "controllerId",
     "signatureAlgorithm",
     "format",
+    "filename",
     "auditLog"
 })
 public class ImportDeployFilter {
@@ -50,6 +51,8 @@ public class ImportDeployFilter {
      */
     @JsonProperty("format")
     private ArchiveFormat format = ArchiveFormat.fromValue("ZIP");
+    @JsonProperty("filename")
+    private String filename;
     /**
      * auditParams
      * <p>
@@ -126,6 +129,16 @@ public class ImportDeployFilter {
     public void setFormat(ArchiveFormat format) {
         this.format = format;
     }
+    
+    @JsonProperty("filename")
+    public String getFilename() {
+        return filename;
+    }
+
+    @JsonProperty("filename")
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
 
     /**
      * auditParams
@@ -151,12 +164,12 @@ public class ImportDeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("signatureAlgorithm", signatureAlgorithm).append("format", format).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("signatureAlgorithm", signatureAlgorithm).append("format", format).append("filename", filename).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(format).append(controllerId).append(auditLog).append(signatureAlgorithm).toHashCode();
+        return new HashCodeBuilder().append(format).append(controllerId).append(auditLog).append(signatureAlgorithm).append(filename).toHashCode();
     }
 
     @Override
@@ -168,7 +181,7 @@ public class ImportDeployFilter {
             return false;
         }
         ImportDeployFilter rhs = ((ImportDeployFilter) other);
-        return new EqualsBuilder().append(format, rhs.format).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(signatureAlgorithm, rhs.signatureAlgorithm).isEquals();
+        return new EqualsBuilder().append(format, rhs.format).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(signatureAlgorithm, rhs.signatureAlgorithm).append(filename, rhs.filename).isEquals();
     }
 
 }

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "certAlias",
     "privateKeyPath",
     "jobResourceFolder",
+    "filename",
     "auditLog"
 })
 public class ImportCertificateRequestFilter {
@@ -41,6 +42,8 @@ public class ImportCertificateRequestFilter {
      */
     @JsonProperty("jobResourceFolder")
     private String jobResourceFolder;
+    @JsonProperty("filename")
+    private String filename;
     /**
      * auditParams
      * <p>
@@ -99,6 +102,16 @@ public class ImportCertificateRequestFilter {
     public void setJobResourceFolder(String jobResourceFolder) {
         this.jobResourceFolder = jobResourceFolder;
     }
+    
+    @JsonProperty("filename")
+    public String getFilename() {
+        return filename;
+    }
+
+    @JsonProperty("filename")
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
 
     /**
      * auditParams
@@ -124,12 +137,12 @@ public class ImportCertificateRequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("certAlias", certAlias).append("privateKeyPath", privateKeyPath).append("jobResourceFolder", jobResourceFolder).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("certAlias", certAlias).append("privateKeyPath", privateKeyPath).append("jobResourceFolder", jobResourceFolder).append("filename", filename).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(certAlias).append(privateKeyPath).append(auditLog).append(jobResourceFolder).toHashCode();
+        return new HashCodeBuilder().append(certAlias).append(privateKeyPath).append(auditLog).append(jobResourceFolder).append(filename).toHashCode();
     }
 
     @Override
@@ -141,7 +154,7 @@ public class ImportCertificateRequestFilter {
             return false;
         }
         ImportCertificateRequestFilter rhs = ((ImportCertificateRequestFilter) other);
-        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(privateKeyPath, rhs.privateKeyPath).append(auditLog, rhs.auditLog).append(jobResourceFolder, rhs.jobResourceFolder).isEquals();
+        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(privateKeyPath, rhs.privateKeyPath).append(auditLog, rhs.auditLog).append(jobResourceFolder, rhs.jobResourceFolder).append(filename, rhs.filename).isEquals();
     }
 
 }

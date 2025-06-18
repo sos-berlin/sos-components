@@ -53,6 +53,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
+            checkRequiredParameter("importKeyFilter", importKeyFilter);
+            importKeyFilter = importKeyFilter.trim().replaceFirst("}$", "\"filename\":\"" + PublishUtils.getImportFilename(body) + "\"}");
             initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportKeyFilter.class);
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);

@@ -1,6 +1,7 @@
 package com.sos.joc.security.impl;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -37,6 +38,7 @@ import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.identityservice.OidcIdentityProvider;
 import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
+import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.security.resource.IOidcResource;
 import com.sos.schema.JsonValidator;
 
@@ -276,12 +278,14 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
     }
 
     @Override
-    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String identityServiceName, FormDataBodyPart file, String timeSpent,
+    public JOCDefaultResponse postImport(String xAccessToken, String identityServiceName, FormDataBodyPart file, String timeSpent,
             String ticketLink, String comment) {
         InputStream stream = null;
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_IMPORT_ICON, null, xAccessToken, CategoryType.IDENTITY);
+            byte[] fakeRequest = String.format("{\"identityServiceName\":\"%s\",\"filename\":\"%s\"}", identityServiceName, PublishUtils
+                    .getImportFilename(file)).getBytes(StandardCharsets.UTF_8);
+            initLogging(API_CALL_IMPORT_ICON, fakeRequest, xAccessToken, CategoryType.IDENTITY);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(xAccessToken);
             if (jocDefaultResponse != null) {

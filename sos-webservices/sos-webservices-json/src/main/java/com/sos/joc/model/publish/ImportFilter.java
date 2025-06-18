@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "overwrite",
     "targetFolder",
     "format",
+    "filename",
     "suffix",
     "prefix",
     "auditLog"
@@ -58,6 +59,8 @@ public class ImportFilter {
      * 
      * 
      */
+    @JsonProperty("filename")
+    private String filename;
     @JsonProperty("suffix")
     private String suffix;
     /**
@@ -140,6 +143,16 @@ public class ImportFilter {
     public void setFormat(ArchiveFormat format) {
         this.format = format;
     }
+    
+    @JsonProperty("filename")
+    public String getFilename() {
+        return filename;
+    }
+
+    @JsonProperty("filename")
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
 
     /**
      * string without < and >
@@ -209,12 +222,12 @@ public class ImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("overwrite", overwrite).append("targetFolder", targetFolder).append("format", format).append("suffix", suffix).append("prefix", prefix).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("overwrite", overwrite).append("targetFolder", targetFolder).append("format", format).append("filename", filename).append("suffix", suffix).append("prefix", prefix).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(targetFolder).append(auditLog).append(prefix).append(format).append(suffix).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(targetFolder).append(auditLog).append(prefix).append(format).append(filename).append(suffix).append(overwrite).toHashCode();
     }
 
     @Override
@@ -226,7 +239,7 @@ public class ImportFilter {
             return false;
         }
         ImportFilter rhs = ((ImportFilter) other);
-        return new EqualsBuilder().append(targetFolder, rhs.targetFolder).append(auditLog, rhs.auditLog).append(prefix, rhs.prefix).append(format, rhs.format).append(suffix, rhs.suffix).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(targetFolder, rhs.targetFolder).append(auditLog, rhs.auditLog).append(prefix, rhs.prefix).append(format, rhs.format).append(filename, rhs.filename).append(suffix, rhs.suffix).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

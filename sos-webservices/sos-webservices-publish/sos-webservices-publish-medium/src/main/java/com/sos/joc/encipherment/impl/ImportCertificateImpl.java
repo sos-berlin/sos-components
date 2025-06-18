@@ -59,6 +59,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         filter.setCertAlias(certAlias);
         filter.setPrivateKeyPath(privateKeyPath);
         filter.setJobResourceFolder(jobResourceFolder);
+        filter.setFilename(PublishUtils.getImportFilename(body));
         return postImportCertificate(xAccessToken, body, filter);
     }
     
@@ -66,8 +67,9 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         SOSHibernateSession hibernateSession = null;
         InputStream stream = null;
         try {
-            initLogging(API_CALL, filter.toString().getBytes(), xAccessToken, CategoryType.CERTIFICATES);
-            JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ImportCertificateRequestFilter.class);
+            byte[] fakeRequest = Globals.objectMapper.writeValueAsBytes(filter);
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.CERTIFICATES);
+            JsonValidator.validateFailFast(fakeRequest, ImportCertificateRequestFilter.class);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
                     .getManage(), false);   

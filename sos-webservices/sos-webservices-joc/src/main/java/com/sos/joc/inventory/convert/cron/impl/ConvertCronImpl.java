@@ -54,6 +54,7 @@ import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.convert.ConvertCronFilter;
 import com.sos.joc.model.inventory.workflow.WorkflowEdit;
+import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
 
@@ -89,6 +90,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         filter.setAgentName(agentName);
         filter.setSubagentClusterId(subagentClusterId);
         filter.setSystemCrontab(systemCrontab);
+        filter.setFilename(PublishUtils.getImportFilename(body));
 		return postConvertCron(xAccessToken, body, filter, auditLog);
 	}
 
@@ -97,8 +99,9 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken, CategoryType.INVENTORY); 
-            JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ConvertCronFilter.class);
+            byte[] fakeRequest = Globals.objectMapper.writeValueAsBytes(filter);
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.INVENTORY); 
+            JsonValidator.validateFailFast(fakeRequest, ConvertCronFilter.class);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
             if (jocDefaultResponse != null) {

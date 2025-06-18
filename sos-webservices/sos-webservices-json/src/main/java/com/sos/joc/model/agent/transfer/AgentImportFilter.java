@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "format",
     "overwrite",
     "controllerId",
+    "filename",
     "auditLog"
 })
 public class AgentImportFilter {
@@ -45,6 +46,8 @@ public class AgentImportFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    @JsonProperty("filename")
+    private String filename;
     /**
      * auditParams
      * <p>
@@ -109,6 +112,16 @@ public class AgentImportFilter {
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
+    
+    @JsonProperty("filename")
+    public String getFilename() {
+        return filename;
+    }
+
+    @JsonProperty("filename")
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
 
     /**
      * auditParams
@@ -134,12 +147,12 @@ public class AgentImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("format", format).append("overwrite", overwrite).append("controllerId", controllerId).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("format", format).append("overwrite", overwrite).append("controllerId", controllerId).append("filename", filename).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(format).append(controllerId).append(auditLog).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(format).append(controllerId).append(filename).append(auditLog).append(overwrite).toHashCode();
     }
 
     @Override
@@ -151,7 +164,7 @@ public class AgentImportFilter {
             return false;
         }
         AgentImportFilter rhs = ((AgentImportFilter) other);
-        return new EqualsBuilder().append(format, rhs.format).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(format, rhs.format).append(controllerId, rhs.controllerId).append(filename, rhs.filename).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

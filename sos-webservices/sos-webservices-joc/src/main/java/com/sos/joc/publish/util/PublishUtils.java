@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
@@ -40,6 +41,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.bouncycastle.openpgp.PGPException;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1816,6 +1819,16 @@ public abstract class PublishUtils {
             }
         }
         return outStream.toString();
+    }
+    
+    public static String getImportFilename(FormDataBodyPart body) {
+        return Optional.ofNullable(body).map(FormDataBodyPart::getContentDisposition).map(ContentDisposition::getFileName).map(s -> {
+            try {
+                return URLDecoder.decode(s, "UTF-8");
+            } catch (Exception e) {
+                return null;
+            }
+        }).orElse(null);
     }
 
 }

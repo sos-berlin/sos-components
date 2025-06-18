@@ -50,7 +50,7 @@ public class JocAuditLog {
     public JocAuditLog(String user, String request, CategoryType category) {
         this.user = setProperty(user);
         this.request = setProperty(request);
-        this.params = EMPTY_STRING;
+        this.params = "";
         this.category = category;
     }
     

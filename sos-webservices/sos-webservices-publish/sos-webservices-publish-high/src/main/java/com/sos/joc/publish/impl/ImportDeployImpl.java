@@ -94,17 +94,18 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         filter.setControllerId(controllerId);
         filter.setFormat(ArchiveFormat.fromValue(format));
         filter.setSignatureAlgorithm(signatureAlgorithm);
-        return postImportDeploy(xAccessToken, body, Globals.objectMapper.writeValueAsBytes(filter));
+        filter.setFilename(PublishUtils.getImportFilename(body));
+        return postImportDeploy(xAccessToken, body, filter);
     }
 
-    private JOCDefaultResponse postImportDeploy(String xAccessToken, FormDataBodyPart body, byte[] importDeployFilter) throws Exception {
+    private JOCDefaultResponse postImportDeploy(String xAccessToken, FormDataBodyPart body, ImportDeployFilter filter) throws Exception {
         InputStream stream = null;
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, importDeployFilter, xAccessToken, CategoryType.DEPLOYMENT);
-            JsonValidator.validateFailFast(importDeployFilter, ImportDeployFilter.class);
-            ImportDeployFilter filter = Globals.objectMapper.readValue(importDeployFilter, ImportDeployFilter.class);
+            byte[] fakeRequest = Globals.objectMapper.writeValueAsBytes(filter);
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.DEPLOYMENT);
+            JsonValidator.validateFailFast(fakeRequest, ImportDeployFilter.class);
             // copy&paste Permission, has to be changed to the correct permission for upload
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getDeploy(), false);

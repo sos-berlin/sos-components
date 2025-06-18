@@ -3,6 +3,7 @@ package com.sos.joc.keys.sign.ca.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
@@ -57,7 +58,8 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, null, xAccessToken, CategoryType.CERTIFICATES);
+            byte[] fakeRequest = String.format("{\"filename\":\"%s\"}", PublishUtils.getImportFilename(body)).getBytes(StandardCharsets.UTF_8);
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.CERTIFICATES);
             //4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
                     .getManage(), false);
