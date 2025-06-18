@@ -469,7 +469,7 @@ public class Autosys2JS7Converter {
             if (!AdditionalInstructionsHelper.convertBoards(result, p, boardName)) {
                 Condition condition = entry.getKey();
                 if (condition.isDummy()) {
-                    Path reportDirPath = reportDir.resolve("js7-configurations").resolve("Cross-Instance");
+                    Path reportDirPath = reportDir.resolve("js7-configurations").resolve("cross-instance");
                     JS7ConverterHelper.createNoticeBoardByParentPath(result, false, reportDirPath, false, boardName, BoardHelper.getBoardTitle(
                             condition), BoardHelper.getLifeTimeInMinutes(condition));
                     continue;

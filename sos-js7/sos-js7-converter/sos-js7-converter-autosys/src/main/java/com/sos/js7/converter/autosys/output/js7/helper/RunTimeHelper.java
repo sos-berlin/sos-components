@@ -20,6 +20,8 @@ import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
+import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.schedule.CycleSchedule;
 import com.sos.inventory.model.instruction.schedule.Periodic;
 import com.sos.inventory.model.instruction.schedule.Repeat;
@@ -190,7 +192,8 @@ public class RunTimeHelper {
     }
 
     // TODO replace by toCyclicInstruction method ...
-    public static List<Instruction> getCyclicWorkflowInstructions(WorkflowResult wr, ACommonJob j, List<Instruction> in, BoardTryCatchHelper btch) {
+    public static List<Instruction> getCyclicWorkflowInstructions(WorkflowResult wr, ACommonJob j, List<Instruction> in, BoardTryCatchHelper btch,
+            PostNotices postNoticeToItSelf) {
         if (!convertToCyclic(j)) {
             return in;
         }
@@ -221,8 +224,12 @@ public class RunTimeHelper {
             if (btch.getTryPostNotices() != null) {
                 wr.addPostNotices(btch.getTryPostNotices());
 
-                in.add(btch.getTryPostNotices());
+                in.add(BoardHelper.mergePostNoticesSecondAsFirst(btch.getTryPostNotices(), postNoticeToItSelf));
                 btch.resetTryPostNotices();
+            } else {
+                if (postNoticeToItSelf != null) {
+                    in.add(postNoticeToItSelf);
+                }
             }
             // TODO to remove ConsumeNotice because not generated...
             ConsumeNotices cn = btch.getConsumeNotices();
@@ -235,6 +242,15 @@ public class RunTimeHelper {
 
         Instructions ci = new Instructions(in);
 
+        if (Autosys2JS7Converter.CONFIG.getWorkflowConfig().getForcedCyclicInstruction().onErrorContinue()) {
+            TryCatch tryCatch = new TryCatch();
+            tryCatch.setTry(ci);
+            tryCatch.setCatch(new Instructions(new ArrayList<>()));
+            List<Instruction> l = new ArrayList<>();
+            l.add(tryCatch);
+            ci = new Instructions(l);
+        }
+
         in = new ArrayList<>();
         in.add(new Cycle(ci, cs));
 
@@ -243,7 +259,7 @@ public class RunTimeHelper {
         return in;
     }
 
-    public static boolean convertToCyclic(ACommonJob j) {
+    private static boolean convertToCyclic(ACommonJob j) {
         if (!j.hasRunTime() || !j.getRunTime().isCyclic()) {
             return false;
         }

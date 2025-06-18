@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -337,6 +338,21 @@ public class BoardHelper {
             return null;
         }
         return l;
+    }
+
+    public static PostNotices mergePostNoticesSecondAsFirst(PostNotices current, PostNotices second) {
+        if (second == null) {
+            return current;
+        }
+
+        // merge without duplicates
+        // Set<String> mergedSet = new LinkedHashSet<>(tpn.getNoticeBoardNames());
+        // mergedSet.addAll(postNoticeToBoxSelf.getNoticeBoardNames());
+        Set<String> mergedSet = new LinkedHashSet<>(second.getNoticeBoardNames());
+        mergedSet.addAll(current.getNoticeBoardNames());
+
+        current.setNoticeBoardNames(new ArrayList<>(mergedSet));
+        return current;
     }
 
 }

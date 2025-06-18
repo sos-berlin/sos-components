@@ -2,9 +2,7 @@ package com.sos.js7.converter.autosys.output.js7.helper;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,38 +112,30 @@ public class ConverterStandaloneJobs {
 
         // 1.3) Lock around Retry Instruction
         tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, jilJob, tryInstructions);
-        // 1.4) Cyclic around all previous instructions
-        if (RunTimeHelper.convertToCyclic(jilJob)) {
-            tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, jilJob, tryInstructions, btch);
-        }
-        // 1.5)
-        wr.addPostNotices(btch); // after cyclic
-        PostNotices postNoticeToBoxSelf = AdditionalInstructionsHelper.tryCreatePostNoticeToStandaloneWorkflowItSelf(converter.getAnalyzer(), wr,
+        // 1.4) PostNoticeToItSelf
+        PostNotices postNoticeToItSelf = AdditionalInstructionsHelper.tryCreatePostNoticeToStandaloneWorkflowItSelf(converter.getAnalyzer(), wr,
                 jilJob);
-        if (postNoticeToBoxSelf != null) {
-            wr.addPostNotices(postNoticeToBoxSelf, 0);
+        // 1.5) Cyclic around all previous instructions
+        tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, jilJob, tryInstructions, btch, postNoticeToItSelf);
+        // 1.6)
+        wr.addPostNotices(btch); // after cyclic
+        if (postNoticeToItSelf != null) {
+            wr.addPostNotices(postNoticeToItSelf, 0);
         }
 
         tryInstructions = AdditionalInstructionsHelper.consumeNoticesIfExists(analyzer, wr, tryInstructions);
-        // if (btch.getTryPostNotices() != null) {
-        // tryInstructions.add(btch.getTryPostNotices());
-        // }
+
         if (btch.getTryPostNotices() != null) {
-            PostNotices tpn = btch.getTryPostNotices();
-            if (postNoticeToBoxSelf != null) {
-                // merge without duplicates
-                // Set<String> mergedSet = new LinkedHashSet<>(tpn.getNoticeBoardNames());
-                // mergedSet.addAll(postNoticeToBoxSelf.getNoticeBoardNames());
-
-                Set<String> mergedSet = new LinkedHashSet<>(postNoticeToBoxSelf.getNoticeBoardNames());
-                mergedSet.addAll(tpn.getNoticeBoardNames());
-
-                tpn.setNoticeBoardNames(new ArrayList<>(mergedSet));
+            if (wr.isCycle()) {
+                tryInstructions.add(btch.getTryPostNotices());
+            } else {
+                tryInstructions.add(BoardHelper.mergePostNoticesSecondAsFirst(btch.getTryPostNotices(), postNoticeToItSelf));
             }
-            tryInstructions.add(tpn);
         } else {
-            if (postNoticeToBoxSelf != null) {
-                tryInstructions.add(postNoticeToBoxSelf);
+            if (!wr.isCycle()) {
+                if (postNoticeToItSelf != null) {
+                    tryInstructions.add(postNoticeToItSelf);
+                }
             }
         }
 
@@ -174,8 +164,8 @@ public class ConverterStandaloneJobs {
         // ##################################
         in.add(tryCatch);
 
-        if (postNoticeToBoxSelf != null) {
-            String postNoticeToBoxSelfName = "'" + postNoticeToBoxSelf.getNoticeBoardNames().get(0) + "'";
+        if (postNoticeToItSelf != null) {
+            String postNoticeToBoxSelfName = "'" + postNoticeToItSelf.getNoticeBoardNames().get(0) + "'";
             if (AdditionalInstructionsHelper.WORKFLOW_ITSELF_BOARDS_CREATE_AS_SEPARATE_EXPECT_NOTICE) {
                 ExpectNotices en = new ExpectNotices();
                 en.setNoticeBoardNames(postNoticeToBoxSelfName);
