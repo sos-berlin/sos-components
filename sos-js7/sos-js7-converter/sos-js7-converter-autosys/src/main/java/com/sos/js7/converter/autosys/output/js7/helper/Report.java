@@ -117,6 +117,9 @@ public class Report {
     }
 
     public static void writeJS7BOXReport(Path reportDir, JobBOX box, Workflow w) {
+        if (box.isReference()) {
+            return;
+        }
 
         try {
             Path f = reportDir.resolve(FILE_NAME_JS7_BOX_ERROR);
@@ -202,6 +205,9 @@ public class Report {
     }
 
     public static void writeAllAttributes(Path reportDir, Properties p, ACommonJob j) {
+        if (j.isReference()) {
+            return;
+        }
         try {
             Path d = reportDir.resolve(FOLDER_NAME_JIL_PARSER_ATTRIBUTES);
             if (!Files.exists(d)) {
@@ -285,6 +291,9 @@ public class Report {
             String indentDetails = "%-15s";
             for (Condition c : BoardHelper.JS7_CONSUME_NOTICES) {
                 ACommonJob cj = analyzer.getAllJobs().get(c.getJobName());
+                if (cj.isReference()) {
+                    continue;
+                }
                 String cjp = PathResolver.getJILJobParentPathNormalized(cj);
                 String cjn = cj.getName();
 
@@ -318,7 +327,7 @@ public class Report {
     }
 
     public static void writePerJobBOXConditionRecursionReport(Path reportDir, JobBOX boxJob, ACommonJob j, Set<String> reportBOXNames) {
-        if (reportDir == null) {
+        if (reportDir == null || boxJob.isReference()) {
             return;
         }
 
@@ -348,7 +357,7 @@ public class Report {
 
     public static void writePerJobBOXConditionRefersReports(Path reportDir, AutosysAnalyzer analyzer, JobBOX boxJob,
             Map<String, Condition> toRemoveConditionsRefersToChildrenJobs, Map<String, Condition> toRemoveConditionsRefersToBoxItself) {
-        if (reportDir == null) {
+        if (reportDir == null || boxJob.isReference()) {
             return;
         }
 
@@ -415,7 +424,7 @@ public class Report {
 
     public static void writePerStandaloneJobConditionRefersReports(Path reportDir, AutosysAnalyzer analyzer, ACommonJob job,
             Map<String, Condition> toRemoveConditionsRefersToItself) {
-        if (reportDir == null) {
+        if (reportDir == null || job.isReference()) {
             return;
         }
 
@@ -463,7 +472,7 @@ public class Report {
     }
 
     public static void writePerJobConditionReport(Path reportDir, ACommonJob j) {
-        if (reportDir == null) {
+        if (reportDir == null || j.isReference()) {
             return;
         }
 
@@ -602,13 +611,17 @@ public class Report {
 
     private static void writeJobReportJobsByApplicationGroup(DirectoryParserResult pr, Path reportDir) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_JOBS_BY_APPLICATION_GROUP);
-
         SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> njobs = pr.getNonReferenceJobs();
+        if (njobs.size() == 0) {
+            return;
+        }
 
         SOSPath.appendLine(f, "Jobs by application/group:       Total    Standalone     BOX      BOX Children Jobs");
 
         Map<String, TreeSet<ACommonJob>> map = new LinkedHashMap<>();
-        for (ACommonJob j : pr.getJobs()) {
+        for (ACommonJob j : njobs) {
             String key = PathResolver.getJILJobParentPathNormalized(j);
             TreeSet<ACommonJob> jobs = map.get(key);
             if (jobs == null) {
@@ -714,14 +727,18 @@ public class Report {
 
     private static void writeJobReportJobsByType(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_JOBS_BY_TYPE);
-
         SOSPath.deleteIfExists(f);
+
+        Map<String, ACommonJob> map = analyzer.getNonReferenceJobs();
+        if (map.size() == 0) {
+            return;
+        }
 
         // SOSPath.appendLine(f, "Jobs by type:");
         SOSPath.appendLine(f, "Jobs by type:           Total    Standalone     BOX      BOX Children Jobs");
 
         Map<ConverterJobType, TreeSet<ACommonJob>> mapByType = new LinkedHashMap<>();
-        mapJobsByType(mapByType, analyzer.getAllJobs().values());
+        mapJobsByType(mapByType, map.values());
 
         String msg = "";
         int totalTotal = 0;
@@ -796,8 +813,12 @@ public class Report {
 
     private static void writeJobReportJobsAllByRuntime(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_RUNTIME);
-
         SOSPath.deleteIfExists(f);
+
+        Map<String, ACommonJob> map = analyzer.getNonReferenceJobs();
+        if (map.size() == 0) {
+            return;
+        }
 
         // SOSPath.appendLine(f, "Jobs by type:");
         SOSPath.appendLine(f,
@@ -812,7 +833,7 @@ public class Report {
         Set<ACommonJob> runtimeWithoutTimezone = AutosysConverterHelper.newJobTreeSet();
         Map<String, Integer> calendars = new TreeMap<>();
         Map<String, Integer> timezones = new TreeMap<>();
-        for (ACommonJob j : analyzer.getAllJobs().values()) {
+        for (ACommonJob j : map.values()) {
             jobs++;
             if (!j.hasRunTime()) {
                 continue;
@@ -874,6 +895,10 @@ public class Report {
         Set<ACommonJob> runtimeCyclic = AutosysConverterHelper.newJobTreeSet();
         Set<ACommonJob> runtimeUnknown = AutosysConverterHelper.newJobTreeSet();
         for (ACommonJob j : jobs) {
+            if (j.isReference()) {
+                continue;
+            }
+
             if (j.getRunTime().isSingleStarts()) {
                 runtimeSingleStarts.add(j);
             } else if (j.getRunTime().isCyclic()) {
@@ -892,7 +917,7 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_RESOURCES);
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.hasResources()).collect(Collectors.toList());
+        List<ACommonJob> jobs = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.hasResources()).collect(Collectors.toList());
         if (jobs.size() == 0) {
             return;
         }
@@ -941,7 +966,8 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_NRETRYS);
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getNRetrys().getValue() != null).collect(Collectors.toList());
+        List<ACommonJob> jobs = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.getNRetrys().getValue() != null).collect(Collectors
+                .toList());
         if (jobs.size() == 0) {
             return;
         }
@@ -989,7 +1015,7 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_MAX_RUN_ALARM);
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getMaxRunAlarm().getValue() != null).collect(Collectors
+        List<ACommonJob> jobs = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.getMaxRunAlarm().getValue() != null).collect(Collectors
                 .toList());
         if (jobs.size() == 0) {
             return;
@@ -1038,7 +1064,7 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_MIN_RUN_ALARM);
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getMinRunAlarm().getValue() != null).collect(Collectors
+        List<ACommonJob> jobs = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.getMinRunAlarm().getValue() != null).collect(Collectors
                 .toList());
         if (jobs.size() == 0) {
             return;
@@ -1087,7 +1113,7 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_TERM_RUN_TIME);
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getTermRunTime().getValue() != null).collect(Collectors
+        List<ACommonJob> jobs = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.getTermRunTime().getValue() != null).collect(Collectors
                 .toList());
         if (jobs.size() == 0) {
             return;
@@ -1136,7 +1162,7 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_INTERACTIVE);
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.isInteractive()).collect(Collectors.toList());
+        List<ACommonJob> jobs = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.isInteractive()).collect(Collectors.toList());
         if (jobs.size() == 0) {
             return;
         }
@@ -1151,6 +1177,10 @@ public class Report {
 
     private static void mapJobsByType(Map<ConverterJobType, TreeSet<ACommonJob>> mapByType, Collection<ACommonJob> jobs) {
         for (ACommonJob job : jobs) {
+            if (job.isReference()) {
+                continue;
+            }
+
             ConverterJobType key = job.getConverterJobType();
             TreeSet<ACommonJob> ct = mapByType.get(key);
             if (ct == null) {
@@ -1180,6 +1210,10 @@ public class Report {
         try {
             Path f = reportDir.resolve(FILE_NAME_BOX_RUNTIME_TIMEZONE_CHILDREN_JOBS);
             SOSPath.deleteIfExists(f);
+
+            if (box.isReference()) {
+                return;
+            }
 
             String timezone = box.getRunTime().getTimezone().getValue();
             int childrenTimezonesSize = childrenTimezones.size();
@@ -1223,7 +1257,7 @@ public class Report {
         Map<JobBOX, Long> runtimeUnknown = AutosysConverterHelper.newJobBoxTreeMap();
         Map<String, Integer> calendars = new TreeMap<>();
         Map<String, Integer> timezones = new TreeMap<>();
-        for (ACommonJob j : analyzer.getAllJobs().values()) {
+        for (ACommonJob j : analyzer.getNonReferenceJobs().values()) {
             if (!j.isBox()) {
                 continue;
             }
@@ -1288,6 +1322,10 @@ public class Report {
         try {
             SOSPath.appendLine(f, "    " + title + ":");
             for (ACommonJob j : l) {
+                if (j.isReference()) {
+                    continue;
+                }
+
                 String msg = String.format(INDENT_JOB_PATH + "%-20s %s", PathResolver.getJILJobParentPathNormalized(j), j.getName(), getDetails(j), j
                         .getRunTime());
                 SOSPath.appendLine(f, "        " + msg);
@@ -1305,6 +1343,9 @@ public class Report {
         try {
             SOSPath.appendLine(f, "    " + title + ":");
             for (JobBOX j : map.keySet()) {
+                if (j.isReference()) {
+                    continue;
+                }
                 List<ACommonJob> childrenWithRuntime = j.getJobs().stream().filter(e -> e.hasRunTime()).collect(Collectors.toList());
                 String msg = String.format(INDENT_JOB_PATH + "%-40s %s", PathResolver.getJILJobParentPathNormalized(j), j.getName(), "Children(total="
                         + j.getJobs().size() + ", with runtime=" + childrenWithRuntime.size() + ")", "BOX runtime=" + j.getRunTime()
@@ -1326,11 +1367,10 @@ public class Report {
 
     private static void writeJobReportJobsBoxChildrenZero(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_BOX_CHILDREN_JOBS_ZERO);
-
         SOSPath.deleteIfExists(f);
 
-        List<JobBOX> boxes = analyzer.getAllJobs().values().stream().filter(j -> j.isBox()).map(j -> (JobBOX) j).filter(j -> j.getJobs().size() == 0)
-                .collect(Collectors.toList());
+        List<JobBOX> boxes = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.isBox()).map(j -> (JobBOX) j).filter(j -> j.getJobs()
+                .size() == 0).collect(Collectors.toList());
 
         if (boxes.size() == 0) {
             return;
@@ -1393,11 +1433,10 @@ public class Report {
     private static void writeJobReportJobsBoxChildrenBoxTerminator(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer)
             throws Exception {
         Path f = reportDir.resolve(FILE_NAME_BOX_CHILDREN_JOBS_BOX_TERMINATOR);
-
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> boxTerminators = analyzer.getAllJobs().values().stream().filter(j -> j.isBoxChildJob() && j.getBox().isBoxTerminator())
-                .collect(Collectors.toList());
+        List<ACommonJob> boxTerminators = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.isBoxChildJob() && j.getBox()
+                .isBoxTerminator()).collect(Collectors.toList());
 
         if (boxTerminators.size() == 0) {
             return;
@@ -1416,10 +1455,10 @@ public class Report {
 
     private static void writeJobReportJobsByJobTerminator(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_JOB_TERMINATOR);
-
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobTerminators = analyzer.getAllJobs().values().stream().filter(j -> j.isJobTerminator()).collect(Collectors.toList());
+        List<ACommonJob> jobTerminators = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.isJobTerminator()).collect(Collectors
+                .toList());
 
         if (jobTerminators.size() == 0) {
             return;
@@ -1450,8 +1489,8 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_BOX_CONDITIONS_SUCCESS_FAILURE);
         SOSPath.deleteIfExists(f);
 
-        List<JobBOX> boxes = analyzer.getAllJobs().values().stream().filter(j -> j.isBox() && (((JobBOX) j).hasBoxSuccessOrBoxFailure())).map(
-                j -> (JobBOX) j).sorted((j1, j2) -> j1.getName().compareTo(j2.getName())).collect(Collectors.toList());
+        List<JobBOX> boxes = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.isBox() && (((JobBOX) j).hasBoxSuccessOrBoxFailure()))
+                .map(j -> (JobBOX) j).sorted((j1, j2) -> j1.getName().compareTo(j2.getName())).collect(Collectors.toList());
 
         if (boxes.size() == 0) {
             return;
@@ -1476,7 +1515,8 @@ public class Report {
         Path f = reportDir.resolve(FILE_NAME_BOX_CONDITION_USED_BY_OTHER_JOBS);
         SOSPath.deleteIfExists(f);
 
-        List<JobBOX> boxes = analyzer.getAllJobs().values().stream().filter(j -> j.isBox()).map(j -> (JobBOX) j).collect(Collectors.toList());
+        List<JobBOX> boxes = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.isBox()).map(j -> (JobBOX) j).collect(Collectors
+                .toList());
 
         if (boxes.size() == 0) {
             return;
@@ -1513,8 +1553,11 @@ public class Report {
 
     private static void writeSummaryConditionsReportByType(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_CONDITIONS_BY_TYPE);
-
         SOSPath.deleteIfExists(f);
+
+        if (analyzer.getConditionAnalyzer().getAllConditionsByType().size() == 0) {
+            return;
+        }
 
         SOSPath.appendLine(f, "Conditions by type:");
         String msg = "";
@@ -1574,7 +1617,6 @@ public class Report {
 
     private static void writeSummaryConditionsReportByTypeNotrunning(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_CONDITIONS_BY_TYPE_NOTRUNNING);
-
         SOSPath.deleteIfExists(f);
 
         Set<Condition> set = analyzer.getConditionAnalyzer().getAllConditionsByType().get(ConditionType.NOTRUNNING);
@@ -1615,10 +1657,9 @@ public class Report {
 
     private static void writeSummaryConditionsReportByLookBack(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_CONDITIONS_WITH_LOOKBACK);
-
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobsWithLookBack = analyzer.getAllJobs().values().stream().filter(j -> j.hasLookBackConditions()).collect(Collectors
+        List<ACommonJob> jobsWithLookBack = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.hasLookBackConditions()).collect(Collectors
                 .toList());
         if (jobsWithLookBack.size() == 0) {
             return;
@@ -1742,10 +1783,9 @@ public class Report {
 
     private static void writeSummaryConditionsReportByLookBackUsage(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_CONDITIONS_WITH_LOOKBACK_USAGE);
-
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobsWithLookBack = analyzer.getAllJobs().values().stream().filter(j -> j.hasLookBackConditions()).collect(Collectors
+        List<ACommonJob> jobsWithLookBack = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.hasLookBackConditions()).collect(Collectors
                 .toList());
         if (jobsWithLookBack.size() == 0) {
             return;
@@ -1762,10 +1802,10 @@ public class Report {
 
     private static void writeSummaryConditionsReportJobsNotFound(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_CONDITIONS_JOBS_NOT_FOUND);
-
         SOSPath.deleteIfExists(f);
 
-        List<ACommonJob> jobsWithConditions = analyzer.getAllJobs().values().stream().filter(j -> j.hasJobConditions()).collect(Collectors.toList());
+        List<ACommonJob> jobsWithConditions = analyzer.getNonReferenceJobs().values().stream().filter(j -> j.hasJobConditions()).collect(Collectors
+                .toList());
         if (jobsWithConditions.size() == 0) {
             return;
         }
@@ -1784,6 +1824,10 @@ public class Report {
                 jobsRefersToNotFoundJobs.put(j, cl);
             }
         }
+        if (notFoundJobs.size() == 0) {
+            return;
+        }
+
         SOSPath.appendLine(f, "Total:");
         String msg = String.format("%-4s%-55s%s", "", "Jobs not found", notFoundJobs.size());
         SOSPath.appendLine(f, msg);
@@ -1816,12 +1860,13 @@ public class Report {
 
     public static void writeJILParserDuplicatesReport(Path dir) {
         try {
+            Path f = dir.resolve(FILE_NAME_JIL_PARSER_DUPLICATES);
+            SOSPath.deleteIfExists(f);
+
             FILE_JIL_PARSER_DUPLICATES = null;
             if (dir == null || JILJobParser.INSERT_JOBS == null || JILJobParser.INSERT_JOBS.size() == 0) {
                 return;
             }
-            Path f = dir.resolve(FILE_NAME_JIL_PARSER_DUPLICATES);
-            SOSPath.deleteIfExists(f);
             FILE_JIL_PARSER_DUPLICATES = f;
 
             int totalDuplicates = 0;
@@ -1842,6 +1887,10 @@ public class Report {
                     }
                 }
             }
+            if (totalDuplicates == 0) {
+                return;
+            }
+
             SOSPath.appendLine(f, "TOTAL  duplicates=" + totalDuplicates + ", without duplicates=" + (JILJobParser.COUNTER_INSERT_JOB
                     - totalDuplicates));
             SOSPath.appendLine(f, "TOTAL  files with duplicates=" + paths.size() + " ");

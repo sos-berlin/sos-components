@@ -28,12 +28,14 @@ public abstract class AFileParser {
     private final JobParser jobParser = new JobParser();
     private final AutosysConverterConfig config;
     private final Path reportDir;
+    private final boolean references;
     private final Set<String> extensions;
 
-    public AFileParser(ParserType parserType, AutosysConverterConfig config, Path reportDir) {
+    public AFileParser(ParserType parserType, AutosysConverterConfig config, Path reportDir, boolean references) {
         this.parserType = parserType;
         this.config = config;
         this.reportDir = reportDir;
+        this.references = references;
         this.extensions = new HashSet<>();
     }
 
@@ -41,6 +43,10 @@ public abstract class AFileParser {
 
     public ParserType getParserType() {
         return parserType;
+    }
+
+    public boolean isReferences() {
+        return references;
     }
 
     public Set<String> getExtensions() {

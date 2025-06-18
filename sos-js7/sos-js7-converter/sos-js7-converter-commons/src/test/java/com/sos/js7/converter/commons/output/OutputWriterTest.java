@@ -14,13 +14,15 @@ public class OutputWriterTest {
     @Ignore
     @Test
     public void test() throws IOException {
-        JS7ExportObjects<Workflow> wl = new JS7ExportObjects<>();
-        wl.addItem(Paths.get("/1/w.json"), new Workflow());
-        wl.addItem(Paths.get("/2/w.json"), new Workflow());
+        boolean reference = false;
 
-        wl.addItem(Paths.get("3/w-001.json"), new Workflow());
-        wl.addItem(Paths.get("4/w-001.json"), new Workflow());
-        wl.addItem(Paths.get("5/w-001.json"), new Workflow());
+        JS7ExportObjects<Workflow> wl = new JS7ExportObjects<>();
+        wl.addItem(Paths.get("/1/w.json"), new Workflow(), reference);
+        wl.addItem(Paths.get("/2/w.json"), new Workflow(), reference);
+
+        wl.addItem(Paths.get("3/w-001.json"), new Workflow(), reference);
+        wl.addItem(Paths.get("4/w-001.json"), new Workflow(), reference);
+        wl.addItem(Paths.get("5/w-001.json"), new Workflow(), reference);
 
         OutputWriter.write(Paths.get("src/test/resources/output"), wl);
     }

@@ -17,8 +17,8 @@ public abstract class ACommonFileWatcherJob extends ACommonMachineJob {
      */
     private SOSArgument<String> watchFile = new SOSArgument<>(ATTR_WATCH_FILE, true);
 
-    public ACommonFileWatcherJob(Path source, ConverterJobType type) {
-        super(source, type);
+    public ACommonFileWatcherJob(Path source, ConverterJobType type, boolean reference) {
+        super(source, type, reference);
     }
 
     public SOSArgument<String> getWatchFile() {

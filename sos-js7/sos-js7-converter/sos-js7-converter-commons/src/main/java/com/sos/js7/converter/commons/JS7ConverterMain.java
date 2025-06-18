@@ -5,10 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSCLIArgumentsParser;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSGzip.SOSGzipResult;
@@ -22,12 +24,13 @@ public abstract class JS7ConverterMain {
 
     public abstract String getProductAndVersion();
 
-    public abstract void doConvert(Path input, Path outputDir, Path reportDir) throws Exception;
+    public abstract void doConvert(Path input, Path outputDir, Path reportDir, Path references) throws Exception;
 
     private void printUsage() {
         System.out.println("Usage:");
         System.out.println("  Options:");
         System.out.println("    --input=<location of input file or directory>                   | required argument");
+        System.out.println("    --references=<location of file(s) used to resolve dependencies> | ");
         System.out.println("    --output-dir=<location of output directory>                     | default: ./output");
         System.out.println("    --report-dir=<location of report directory>                     | default: ./report");
         System.out.println("    --archive=<location of resulting .zip archive for JS7 import>   | default: ./js7_converted.tar.gz | .zip");
@@ -37,6 +40,7 @@ public abstract class JS7ConverterMain {
 
     public void doMain(JS7ConverterConfig config, String[] args) {
         String argInput = null;
+        String argReferences = null;
         String argOutputDir = null;
         String argReportDir = null;
         String argArhive = null;
@@ -46,22 +50,15 @@ public abstract class JS7ConverterMain {
         if (args == null) {
             argHelp = "help";
         } else {
-            for (int i = 0; i < args.length; i++) {
-                String arg = args[i].trim();
-                if (arg.startsWith("--input=")) {
-                    argInput = getOptionValue(arg);
-                } else if (arg.startsWith("--output-dir=")) {
-                    argOutputDir = getOptionValue(arg);
-                } else if (arg.startsWith("--report-dir=")) {
-                    argReportDir = getOptionValue(arg);
-                } else if (arg.startsWith("--archive=")) {
-                    argArhive = getOptionValue(arg);
-                } else if (arg.startsWith("--config=")) {
-                    argConfig = getOptionValue(arg);
-                } else if (arg.startsWith("--help")) {
-                    argHelp = "help";
-                }
-            }
+            Map<String, String> clientArgs = SOSCLIArgumentsParser.parse(args);
+            argInput = clientArgs.get("input");
+
+            argReferences = clientArgs.get("references");
+            argOutputDir = clientArgs.get("output-dir");
+            argReportDir = clientArgs.get("report-dir");
+            argArhive = clientArgs.get("archive");
+            argConfig = clientArgs.get("config");
+            argHelp = clientArgs.get("help");
         }
         int status = 0;
 
@@ -77,6 +74,12 @@ public abstract class JS7ConverterMain {
                 if (!Files.exists(input)) {
                     throw new Exception("[" + input + "]input file or directory not found");
                 }
+
+                Path references = argReferences == null ? null : SOSPath.toAbsolutePath(argReferences);
+                if (references != null && !Files.exists(references)) {
+                    throw new Exception("[" + references + "]references file or directory not found");
+                }
+
                 Path outputDir = SOSPath.toAbsolutePath(getValue(argOutputDir, "output"));
                 Path reportDir = SOSPath.toAbsolutePath(getValue(argReportDir, "report"));
                 Path archive = SOSPath.toAbsolutePath(getValue(argArhive, "js7_converted.tar.gz"));
@@ -84,13 +87,16 @@ public abstract class JS7ConverterMain {
 
                 LOGGER.info(SOSDate.getCurrentDateTimeAsString());
                 LOGGER.info("--input       = " + input);
+                if (references != null) {
+                    LOGGER.info("--references  = " + references);
+                }
                 LOGGER.info("--output-dir  = " + outputDir);
                 LOGGER.info("--report-dir  = " + reportDir);
                 LOGGER.info("--archive     = " + archive);
                 LOGGER.info("--config      = " + configFile);
                 LOGGER.info("                " + doConfig(config, configFile));
 
-                doConvert(input, outputDir, reportDir);
+                doConvert(input, outputDir, reportDir, references);
                 createArchiveFile(outputDir, archive);
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
@@ -143,11 +149,6 @@ public abstract class JS7ConverterMain {
             config.parse(configFile);
         }
         return config;
-    }
-
-    private String getOptionValue(String argVal) {
-        String[] arr = argVal.split("=");
-        return arr.length < 2 ? null : arr[1].trim();
     }
 
     private String getValue(String val, String defaultVal) {

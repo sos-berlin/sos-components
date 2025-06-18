@@ -93,8 +93,8 @@ public class JobCMD extends ACommonMachineJob {
      */
     private SOSArgument<Long> heartbeatInterval = new SOSArgument<>(ATTR_HEARTBEAT_INTERVAL, false);
 
-    public JobCMD(Path source) {
-        super(source, ConverterJobType.CMD);
+    public JobCMD(Path source, boolean reference) {
+        super(source, ConverterJobType.CMD, reference);
     }
 
     public SOSArgument<String> getCommand() {

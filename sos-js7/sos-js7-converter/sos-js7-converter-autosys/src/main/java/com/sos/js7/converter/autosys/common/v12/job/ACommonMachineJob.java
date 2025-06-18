@@ -47,8 +47,8 @@ public abstract class ACommonMachineJob extends ACommonJob {
      */
     private SOSArgument<Integer> priority = new SOSArgument<>(ATTR_PRIORITY, false);
 
-    public ACommonMachineJob(Path source, ConverterJobType type) {
-        super(source, type);
+    public ACommonMachineJob(Path source, ConverterJobType type, boolean reference) {
+        super(source, type, reference);
     }
 
     public SOSArgument<String> getMachine() {

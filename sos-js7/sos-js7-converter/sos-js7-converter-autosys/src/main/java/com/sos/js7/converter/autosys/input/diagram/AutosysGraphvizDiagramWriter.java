@@ -89,6 +89,10 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
      * @return
      * @throws Exception */
     private boolean createDiagram(JobBOX box) throws Exception {
+        if (box.isReference()) {
+            return false;
+        }
+
         this.boxName = box.getName();
         if (prepareContent(box)) {
             this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory, box, true, AFileParser.EXPORT_FILE_PREFIX_BOX);
@@ -143,6 +147,10 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
      * @return
      * @throws Exception */
     private boolean createDiagram(ACommonJob standaloneJob) throws Exception {
+        if (standaloneJob.isReference()) {
+            return false;
+        }
+
         if (prepareContent(standaloneJob)) {
             this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory, standaloneJob, true, AFileParser.EXPORT_FILE_PREFIX_STANDALONE);
             // LOGGER.info("[createDiagram][" + range + "][standaloneJob]" + outputPath);

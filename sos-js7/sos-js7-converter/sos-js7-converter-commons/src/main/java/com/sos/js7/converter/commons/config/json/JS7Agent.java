@@ -24,6 +24,7 @@ public class JS7Agent extends Agent {
     // extra
     private String js7AgentName;
     private String originalAgentName;
+    private boolean reference;
 
     @JsonProperty("platform")
     public String getPlatform() {
@@ -73,6 +74,17 @@ public class JS7Agent extends Agent {
 
     public void setOriginalAgentName(String val) {
         originalAgentName = val;
+    }
+
+    public boolean isReference() {
+        return reference;
+    }
+
+    public void trySetAsReference(boolean val) {
+        // set as reference if used by another (referenced) jobs
+        if (!reference && val) {
+            reference = true;
+        }
     }
 
     @Override

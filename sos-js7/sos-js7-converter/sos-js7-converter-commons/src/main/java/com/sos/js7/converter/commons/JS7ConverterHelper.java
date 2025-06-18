@@ -44,6 +44,8 @@ import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.script.Script;
 import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter;
+import com.sos.js7.converter.commons.beans.JS7IncludeScript;
+import com.sos.js7.converter.commons.beans.JS7Lock;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.report.ConverterReport;
@@ -606,30 +608,30 @@ public class JS7ConverterHelper {
         return parent.resolve(boardName + ".noticeboard.json");
     }
 
-    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, boolean isBusinessDaySpecific,
-            String boardName, String boardTitle) {
-        createNoticeBoardFromWorkflowPath(result, workflowPath, isBusinessDaySpecific, boardName, boardTitle, null);
+    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, boolean reference, Path workflowPath,
+            boolean isBusinessDaySpecific, String boardName, String boardTitle) {
+        createNoticeBoardFromWorkflowPath(result, reference, workflowPath, isBusinessDaySpecific, boardName, boardTitle, null);
     }
 
-    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, boolean isBusinessDaySpecific,
-            String boardName, String boardTitle, Integer lifeTimeMinutes) {
+    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, boolean reference, Path workflowPath,
+            boolean isBusinessDaySpecific, String boardName, String boardTitle, Integer lifeTimeMinutes) {
         result.add(getNoticeBoardPathFromJS7Path(workflowPath, boardName), createNoticeBoard(isBusinessDaySpecific, boardName, boardTitle,
-                lifeTimeMinutes));
+                lifeTimeMinutes), reference);
     }
 
-    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, boolean isBusinessDaySpecific, String boardName,
-            String boardTitle) {
-        createNoticeBoardByParentPath(result, parentPath, isBusinessDaySpecific, boardName, boardTitle, null);
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, boolean reference, Path parentPath, boolean isBusinessDaySpecific,
+            String boardName, String boardTitle) {
+        createNoticeBoardByParentPath(result, reference, parentPath, isBusinessDaySpecific, boardName, boardTitle, null);
     }
 
-    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, boolean isBusinessDaySpecific, String boardName,
-            String boardTitle, Integer lifeTimeMinutes) {
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, boolean reference, Path parentPath, boolean isBusinessDaySpecific,
+            String boardName, String boardTitle, Integer lifeTimeMinutes) {
         result.add(parentPath.resolve(boardName + ".noticeboard.json"), createNoticeBoard(isBusinessDaySpecific, boardName, boardTitle,
-                lifeTimeMinutes));
+                lifeTimeMinutes), reference);
     }
 
-    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, String boardName, Board board) {
-        result.add(parentPath.resolve(boardName + ".noticeboard.json"), board);
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, boolean reference, Path parentPath, String boardName, Board board) {
+        result.add(parentPath.resolve(boardName + ".noticeboard.json"), board, reference);
     }
 
     private static Board createNoticeBoard(boolean isBusinessDaySpecific, String boardName, String boardTitle, Integer lifeTimeMinutes) {
@@ -683,24 +685,25 @@ public class JS7ConverterHelper {
         return b;
     }
 
-    public static void createLockByParentPath(JS7ConverterResult result, Path parentPath, String name, Integer capacity) {
-        result.add(parentPath.resolve(name + ".lock.json"), createLock(name, capacity));
+    public static void createLockByParentPath(JS7ConverterResult result, Path parentPath, JS7Lock lock) {
+        result.add(parentPath.resolve(lock.getName() + ".lock.json"), createLock(lock), lock.isReference());
     }
 
-    public static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
+    @SuppressWarnings("unused")
+    private static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
         for (Map.Entry<String, Integer> e : locks.entrySet()) {
             Lock l = new Lock();
             l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(e.getKey()));
             l.setLimit(e.getValue());
-            result.add(Paths.get(e.getKey() + ".lock.json"), createLock(e.getKey(), e.getValue()));
+            // result.add(Paths.get(e.getKey() + ".lock.json"), createLock(e.getKey(), e.getValue()));
         }
         return result;
     }
 
-    private static Lock createLock(String name, Integer capacity) {
+    private static Lock createLock(JS7Lock lock) {
         Lock l = new Lock();
-        l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(name));
-        l.setLimit(capacity);
+        l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(lock.getName()));
+        l.setLimit(lock.getCapacity());
         return l;
     }
 
@@ -745,18 +748,18 @@ public class JS7ConverterHelper {
                 ConverterReport.INSTANCE.addErrorRecord("[agent=" + agent.getJS7AgentName()
                         + "][cannot be converted]missing standalone or agentCluster");
             } else {
-                result.add(Paths.get(agent.getJS7AgentName() + ".agent.json"), a);
+                result.add(Paths.get(agent.getJS7AgentName() + ".agent.json"), a, agent.isReference());
             }
         }
         return result;
     }
 
-    public static JS7ConverterResult convertIncludeScripts(JS7ConverterResult result, Map<String, String> includeScripts) {
-        for (Map.Entry<String, String> e : includeScripts.entrySet()) {
-            Script si = new Script();
-            si.setScript(e.getValue());
+    public static JS7ConverterResult convertIncludeScripts(JS7ConverterResult result, List<JS7IncludeScript> includeScripts) {
+        for (JS7IncludeScript is : includeScripts) {
+            Script s = new Script();
+            s.setScript(is.getScript());
 
-            result.add(Paths.get(e.getKey() + ".includescript.json"), si);
+            result.add(Paths.get(is.getName() + ".includescript.json"), s, is.isReference());
         }
         return result;
     }

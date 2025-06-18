@@ -2,7 +2,9 @@ package com.sos.js7.converter.autosys.output.js7.helper;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,13 +14,14 @@ import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
-import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
+import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -36,14 +39,14 @@ public class ConverterStandaloneJobs {
         this.result = result;
     }
 
-    public void convert(List<ACommonJob> stabdaloneJobs, ConverterJobType type) {
+    public void convert(List<ACommonJob> standaloneJobs, ConverterJobType type) {
         String method = "convert";
-        int size = stabdaloneJobs.size();
+        int size = standaloneJobs.size();
 
         LOGGER.info(String.format("[%s][standalone][%s jobs=%s][start]...", method, type, size));
         switch (type) {
         case CMD:
-            for (ACommonJob j : stabdaloneJobs) {
+            for (ACommonJob j : standaloneJobs) {
                 convertStandalone(result, (JobCMD) j);
             }
             break;
@@ -115,9 +118,33 @@ public class ConverterStandaloneJobs {
         tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, jilJob, tryInstructions, btch);
         // 1.5)
         wr.addPostNotices(btch); // after cyclic
+        PostNotices postNoticeToBoxSelf = AdditionalInstructionsHelper.tryCreatePostNoticeToStandaloneWorkflowItSelf(converter.getAnalyzer(), wr,
+                jilJob);
+        if (postNoticeToBoxSelf != null) {
+            wr.addPostNotices(postNoticeToBoxSelf, 0);
+        }
+
         tryInstructions = AdditionalInstructionsHelper.consumeNoticesIfExists(analyzer, wr, tryInstructions);
+        //if (btch.getTryPostNotices() != null) {
+        //    tryInstructions.add(btch.getTryPostNotices());
+        //}
         if (btch.getTryPostNotices() != null) {
-            tryInstructions.add(btch.getTryPostNotices());
+            PostNotices tpn = btch.getTryPostNotices();
+            if (postNoticeToBoxSelf != null) {
+                // merge without duplicates
+                // Set<String> mergedSet = new LinkedHashSet<>(tpn.getNoticeBoardNames());
+                // mergedSet.addAll(postNoticeToBoxSelf.getNoticeBoardNames());
+
+                Set<String> mergedSet = new LinkedHashSet<>(postNoticeToBoxSelf.getNoticeBoardNames());
+                mergedSet.addAll(tpn.getNoticeBoardNames());
+
+                tpn.setNoticeBoardNames(new ArrayList<>(mergedSet));
+            }
+            tryInstructions.add(tpn);
+        } else {
+            if (postNoticeToBoxSelf != null) {
+                tryInstructions.add(postNoticeToBoxSelf);
+            }
         }
 
         Instructions inst;
@@ -145,11 +172,33 @@ public class ConverterStandaloneJobs {
         // ##################################
         in.add(tryCatch);
 
+        if (postNoticeToBoxSelf != null) {
+            String postNoticeToBoxSelfName = "'" + postNoticeToBoxSelf.getNoticeBoardNames().get(0) + "'";
+            if (AdditionalInstructionsHelper.WORKFLOW_ITSELF_BOARDS_CREATE_AS_SEPARATE_EXPECT_NOTICE) {
+                ExpectNotices en = new ExpectNotices();
+                en.setNoticeBoardNames(postNoticeToBoxSelfName);
+                in.add(0, en);
+            } else {
+                Instruction firstInstruction = in.get(0);
+                if (firstInstruction != null) {
+                    if (firstInstruction instanceof ExpectNotices) {
+                        ExpectNotices en = ((ExpectNotices) firstInstruction);
+                        en.setNoticeBoardNames(postNoticeToBoxSelfName + " && " + en.getNoticeBoardNames());
+                    } else {
+                        ExpectNotices en = new ExpectNotices();
+                        en.setNoticeBoardNames(postNoticeToBoxSelfName);
+                        in.add(0, en);
+                    }
+                }
+            }
+        }
+        
+        
         w.setInstructions(in);
 
         // w = AdditionalInstructionsHelper.consumeNoticesIfExists(wr, w, btch);
 
-        result.add(wr.getPath(), w);
+        result.add(wr.getPath(), w, jilJob.isReference());
         return wr;
     }
 

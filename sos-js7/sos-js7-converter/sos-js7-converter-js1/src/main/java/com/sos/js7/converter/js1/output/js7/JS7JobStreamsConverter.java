@@ -226,7 +226,7 @@ public class JS7JobStreamsConverter {
             js.setAdditionalProperty(j.getJS7JobName(), j.getJS7Job());
         }
         w.setJobs(js);
-        result.add(workflowPath, w);
+        result.add(workflowPath, w, false);
 
         ConverterReport.INSTANCE.addAnalyzerRecord(workflowPath, "from JOBSTREAM", "jobs=" + jobs.size());
     }

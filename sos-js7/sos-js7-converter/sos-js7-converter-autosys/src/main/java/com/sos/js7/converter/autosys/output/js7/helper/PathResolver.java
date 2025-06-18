@@ -15,7 +15,7 @@ public class PathResolver {
         if (j == null) {
             return "";
         }
-        String p = JS7ConverterHelper.normalizePath(j.getJobFullPathFromJILDefinition().getParent().toString());
+        String p = JS7ConverterHelper.normalizePath(j.getJobFullPathFromJILDefinitionParent().toString());
         return SOSString.isEmpty(p) ? "" : p;
     }
 
@@ -36,7 +36,7 @@ public class PathResolver {
         if (j == null) {
             return outputDirectory;
         }
-        Path p = outputDirectory.resolve(j.getJobFullPathFromJILDefinition().getParent());
+        Path p = outputDirectory.resolve(j.getJobFullPathFromJILDefinitionParent());
         String pr = SOSString.isEmpty(prefix) ? "" : prefix;
 
         // j.getJobBaseName returns name after lastIndex of .
@@ -52,20 +52,21 @@ public class PathResolver {
 
     public static Path getJS7ParentPath(ACommonJob j, String js7Name) {
         Path p = null;
-        if (usePathsFromConfig(j.getApplication())) {
-            String app = j.getApplication();
-            p = Paths.get(app == null ? "" : app);
+        // if (usePathsFromConfig(j.getApplication())) {
+        // String app = j.getApplication();
+        // p = Paths.get(app == null ? "" : app);
 
-            Path subFolders = getSubFoldersFromConfig(app, js7Name);
-            if (subFolders != null) {
-                p = p.resolve(subFolders);
-            }
-        } else {
-            p = j.getJobFullPathFromJILDefinition().getParent();
-        }
+        // Path subFolders = getSubFoldersFromConfig(app, js7Name);
+        // if (subFolders != null) {
+        // p = p.resolve(subFolders);
+        // }
+        // } else {
+        p = j.getJobFullPathFromJILDefinitionParent();
+        // }
         return p;
     }
 
+    @SuppressWarnings("unused")
     private static boolean usePathsFromConfig(String application) {
         if (application == null) {
             return false;
@@ -80,6 +81,7 @@ public class PathResolver {
         return false;
     }
 
+    @SuppressWarnings("unused")
     private static Path getSubFoldersFromConfig(String application, String normalizedName) {
         SubFolderConfig c = Autosys2JS7Converter.CONFIG.getSubFolderConfig();
         if (c.getMappings().size() > 0 && c.getSeparator() != null && application != null) {

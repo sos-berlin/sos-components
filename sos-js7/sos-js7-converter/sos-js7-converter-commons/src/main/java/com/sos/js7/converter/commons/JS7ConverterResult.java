@@ -16,7 +16,6 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.agent.transfer.Agent;
-import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 
 public class JS7ConverterResult {
 
@@ -39,67 +38,70 @@ public class JS7ConverterResult {
     private Set<String> applications = new HashSet<>();
     private List<Object> nonSupported;
 
-    public void add(Path path, Workflow val) {
-        workflows.addItem(path, val);
+    public void add(Path path, Workflow val, boolean reference) {
+        workflows.addItem(path, val, reference);
     }
 
-    public void addPseudoWorkflow(Path path, Workflow val) {
-        pseudoWorkflows.addItem(path, val);
+    public void addPseudoWorkflow(Path path, Workflow val, boolean reference) {
+        pseudoWorkflows.addItem(path, val, reference);
     }
 
-    public void add(Path path, Agent val) {
-        agents.addItem(path, val);
+    public void add(Path path, Agent val, boolean reference) {
+        agents.addItem(path, val, reference);
     }
 
-    public void addOrReplace(Path path, Workflow val) {
-        workflows.addOrReplaceItem(path, val);
+    public void addOrReplace(Path path, Workflow val, boolean reference) {
+        workflows.addOrReplaceItem(path, val, reference);
     }
 
-    public void add(Path path, Calendar val) {
-        calendars.addItem(path, val);
+    public void add(Path path, Calendar val, boolean reference) {
+        calendars.addItem(path, val, reference);
     }
 
-    public void add(Path path, Schedule val) {
-        schedules.addItem(path, val);
+    public void add(Path path, Schedule val, boolean reference) {
+        schedules.addItem(path, val, reference);
     }
 
-    public void add(Path path, Board val) {
-        boards.addItem(path, val);
+    public void add(Path path, Board val, boolean reference) {
+        boards.addItem(path, val, reference);
     }
 
-    public void add(Path path, JobResource val) {
-        jobResources.addItem(path, val);
+    public void add(Path path, JobResource val, boolean reference) {
+        jobResources.addItem(path, val, reference);
     }
 
-    public void add(Path path, FileOrderSource val) {
-        fileOrderSources.addItem(path, val);
+    public void add(Path path, FileOrderSource val, boolean reference) {
+        fileOrderSources.addItem(path, val, reference);
     }
 
-    public void add(Path path, Script val) {
-        includeScripts.addItem(path, val);
+    public void add(Path path, Script val, boolean reference) {
+        includeScripts.addItem(path, val, reference);
     }
 
-    public void add(Path path, Lock val) {
-        locks.addItem(path, val);
+    public void add(Path path, Lock val, boolean reference) {
+        locks.addItem(path, val, reference);
     }
 
-    public void add(Path path, JobTemplate val) {
-        jobTemplates.addItem(path, val);
+    public void add(Path path, JobTemplate val, boolean reference) {
+        jobTemplates.addItem(path, val, reference);
     }
 
-    @SuppressWarnings("rawtypes")
-    public JS7ExportObject getExportObjectWorkflowByPath(String name) {
-        return workflows.getItems().stream().filter(o -> o.getOriginalPath().getPath().getFileName().toString().equals(name + ".workflow.json"))
+    public JS7ExportObject<Workflow> getExportObjectWorkflowByPath(String name) {
+        return workflows.getAllItems().stream().filter(o -> o.getOriginalPath().getPath().getFileName().toString().equals(name + ".workflow.json"))
                 .findAny().orElse(null);
     }
 
-    @SuppressWarnings("rawtypes")
-    public JS7ExportObject getExportObjectWorkflowByPath(Path path) {
+    public JS7ExportObject<Workflow> getExportObjectWorkflowByPath(Path path) {
         if (path == null) {
             return null;
         }
         Path p = normalize(path);
-        return workflows.getItems().stream().filter(o -> o.getOriginalPath().getPath().equals(p)).findAny().orElse(null);
+        return workflows.getAllItems().stream().filter(o -> o.getOriginalPath().getPath().equals(p)).findAny().orElse(null);
+    }
+
+    public JS7ExportObject<Workflow> getExportObjectWorkflowByJobName(String name) {
+        return workflows.getAllItems().stream().filter(o -> o.getObject().getJobs() != null && o.getObject().getJobs()
+                .getAdditionalProperties() != null && o.getObject().getJobs().getAdditionalProperties().containsKey(name)).findAny().orElse(null);
     }
 
     public static Path normalize(Path path) {
@@ -111,12 +113,6 @@ public class JS7ConverterResult {
             return Paths.get(s.substring(1));
         }
         return path;
-    }
-
-    @SuppressWarnings("rawtypes")
-    public JS7ExportObject getExportObjectWorkflowByJobName(String name) {
-        return workflows.getItems().stream().filter(o -> o.getObject().getJobs() != null && o.getObject().getJobs().getAdditionalProperties() != null
-                && o.getObject().getJobs().getAdditionalProperties().containsKey(name)).findAny().orElse(null);
     }
 
     public JS7ExportObjects<Workflow> getWorkflows() {

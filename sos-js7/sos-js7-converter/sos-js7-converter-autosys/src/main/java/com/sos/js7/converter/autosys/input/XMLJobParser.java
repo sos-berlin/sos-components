@@ -42,8 +42,8 @@ public class XMLJobParser extends AFileParser {
 
     private Path splitConfigurationMainDir;
 
-    public XMLJobParser(AutosysConverterConfig config, Path reportDir) {
-        super(ParserType.XML, config, reportDir);
+    public XMLJobParser(AutosysConverterConfig config, Path reportDir, boolean references) {
+        super(ParserType.XML, config, reportDir, references);
         if (doSplitConfiguration()) {
             splitConfigurationMainDir = AutosysAnalyzer.getMainDirSplitConfiguration(AutosysAnalyzer.getAnalyzerDir(getReportDir()));
         }
@@ -81,7 +81,7 @@ public class XMLJobParser extends AFileParser {
 
                     Properties p = toProperties(xpath, n);
                     if (p.size() > 0) {
-                        ACommonJob job = getJobParser().parse(inputFile, p);
+                        ACommonJob job = getJobParser().parse(inputFile, p, isReferences());
 
                         Report.writeAllAttributes(getReportDir(), p, job);
 
@@ -105,7 +105,7 @@ public class XMLJobParser extends AFileParser {
 
                                     Properties bp = toProperties(xpath, bn);
                                     if (bp.size() > 0) {
-                                        boxHandler.addChild(job.getName(), getJobParser().parse(inputFile, bp));
+                                        boxHandler.addChild(job.getName(), getJobParser().parse(inputFile, bp, isReferences()));
                                     }
                                 }
                             }

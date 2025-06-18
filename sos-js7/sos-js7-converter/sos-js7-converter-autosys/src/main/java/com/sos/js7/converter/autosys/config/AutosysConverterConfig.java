@@ -3,8 +3,8 @@ package com.sos.js7.converter.autosys.config;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import com.sos.js7.converter.autosys.config.items.AutosysGenerateConfig;
 import com.sos.js7.converter.autosys.config.items.AutosysInputConfig;
+import com.sos.js7.converter.autosys.config.items.AutosysOutputConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 
 public class AutosysConverterConfig extends JS7ConverterConfig {
@@ -13,7 +13,6 @@ public class AutosysConverterConfig extends JS7ConverterConfig {
 
     private final Autosys autosys;
 
-   
     public AutosysConverterConfig() {
         super();
         autosys = new Autosys();
@@ -21,7 +20,7 @@ public class AutosysConverterConfig extends JS7ConverterConfig {
 
     public Properties parse(Path propertiesFile) throws Exception {
         Properties p = super.parse(propertiesFile);
-        autosys.getGenerateConfig().parse(p);
+        autosys.getOutputConfig().parse(p);
         autosys.getInputConfig().parse(p);
         return p;
     }
@@ -30,13 +29,11 @@ public class AutosysConverterConfig extends JS7ConverterConfig {
         return autosys;
     }
 
-    
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(super.toString());
-        if (!autosys.getGenerateConfig().isEmpty()) {
-            sb.append(",").append(autosys.getGenerateConfig().toString());
+        if (!autosys.getOutputConfig().isEmpty()) {
+            sb.append(",").append(autosys.getOutputConfig().toString());
         }
         if (!autosys.getInputConfig().isEmpty()) {
             sb.append(",").append(autosys.getInputConfig().toString());
@@ -46,16 +43,16 @@ public class AutosysConverterConfig extends JS7ConverterConfig {
 
     public class Autosys {
 
-        private final AutosysGenerateConfig generateConfig;
+        private final AutosysOutputConfig outputConfig;
         private final AutosysInputConfig inputConfig;
 
         private Autosys() {
-            generateConfig = new AutosysGenerateConfig();
+            outputConfig = new AutosysOutputConfig();
             inputConfig = new AutosysInputConfig();
         }
 
-        public AutosysGenerateConfig getGenerateConfig() {
-            return generateConfig;
+        public AutosysOutputConfig getOutputConfig() {
+            return outputConfig;
         }
 
         public AutosysInputConfig getInputConfig() {

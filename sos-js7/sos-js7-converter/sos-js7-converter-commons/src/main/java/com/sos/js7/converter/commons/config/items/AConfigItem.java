@@ -21,8 +21,8 @@ public abstract class AConfigItem {
 
     protected static final String LIST_VALUE_DELIMITER = ";";
 
-    private final List<String> EXCLUDED_PROPERTIES = Arrays.asList("EXCLUDED_PROPERTIES", "configKey", "propertiesFile", "windowsNewLine",
-            "unixNewLine");
+    private final List<String> EXCLUDED_PROPERTIES = Arrays.asList("EXCLUDED_PROPERTIES", "configKey", "propertiesFile", "forcedWindowsNewLine",
+            "forcedUnixNewLine");
 
     private final String configKey;
     private Path configFile;
@@ -83,7 +83,7 @@ public abstract class AConfigItem {
 
     @Override
     public String toString() {
-        return SOSString.toString(this, EXCLUDED_PROPERTIES);
+        return SOSString.toString(this, EXCLUDED_PROPERTIES, true);
     }
 
 }

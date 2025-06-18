@@ -15,7 +15,7 @@ import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
-import com.sos.js7.converter.autosys.output.js7.helper.bean.Resource2Lock;
+import com.sos.js7.converter.autosys.output.js7.helper.beans.Resource2Lock;
 
 public class LockHelper {
 
@@ -39,9 +39,20 @@ public class LockHelper {
             Resource2Lock r2l = LOCKS.get(key);
             if (r2l == null) {
                 r2l = new Resource2Lock(analyzer, r);
+                if (Autosys2JS7Converter.HAS_REFERENCES) {
+                    r2l.setReference(j.isReference());
+                }
                 LOCKS.put(key, r2l);
+            } else {
+                if (Autosys2JS7Converter.HAS_REFERENCES) {
+                    if (!r2l.isReference() && j.isReference()) {
+                        r2l.setReference(true);
+                        LOCKS.put(key, r2l);
+                    }
+                }
             }
-            demands.add(new LockDemand(r2l.getJS7Name(), r.getQuantity() > 0 ? r.getQuantity() : null));
+
+            demands.add(new LockDemand(r2l.getLock().getName(), r.getQuantity() > 0 ? r.getQuantity() : null));
         }
 
         l.setDemands(demands);

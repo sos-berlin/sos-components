@@ -41,8 +41,8 @@ public class JobParser {
         init();
     }
 
-    public ACommonJob parse(Path source, Properties p) {
-        ACommonJob job = newJob(source, getConverterJobType(source, p.getProperty(PROPERTY_JOB_NAME), p.getProperty(PROPERTY_JOB_TYPE)));
+    public ACommonJob parse(Path source, Properties p, boolean reference) {
+        ACommonJob job = newJob(source, getConverterJobType(source, p.getProperty(PROPERTY_JOB_NAME), p.getProperty(PROPERTY_JOB_TYPE)), reference);
         return set(p, job);
     }
 
@@ -71,20 +71,20 @@ public class JobParser {
         return t;
     }
 
-    private ACommonJob newJob(Path source, ConverterJobType type) {
+    private ACommonJob newJob(Path source, ConverterJobType type, boolean reference) {
         switch (type) {
         case CMD:
-            return new JobCMD(source);
+            return new JobCMD(source, reference);
         case FT:
-            return new JobFT(source);
+            return new JobFT(source, reference);
         case FW:
-            return new JobFW(source);
+            return new JobFW(source, reference);
         case BOX:
-            return new JobBOX(source);
+            return new JobBOX(source, reference);
         case OMTF:
-            return new JobOMTF(source);
+            return new JobOMTF(source, reference);
         default:
-            return new JobNotSupported(source);
+            return new JobNotSupported(source, reference);
         }
     }
 

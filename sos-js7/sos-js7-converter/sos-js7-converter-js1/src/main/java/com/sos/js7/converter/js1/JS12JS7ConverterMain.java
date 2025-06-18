@@ -13,7 +13,7 @@ public class JS12JS7ConverterMain extends JS7ConverterMain {
     }
 
     @Override
-    public void doConvert(Path input, Path outputDir, Path reportDir) throws Exception {
+    public void doConvert(Path input, Path outputDir, Path reportDir, Path references) throws Exception {
         JS12JS7Converter.convert(input, outputDir, reportDir);
     }
 

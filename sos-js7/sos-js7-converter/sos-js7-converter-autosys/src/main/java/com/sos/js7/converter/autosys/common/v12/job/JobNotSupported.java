@@ -4,8 +4,8 @@ import java.nio.file.Path;
 
 public class JobNotSupported extends ACommonJob {
 
-    public JobNotSupported(Path source) {
-        super(source, ConverterJobType.NOT_SUPPORTED);
+    public JobNotSupported(Path source, boolean reference) {
+        super(source, ConverterJobType.NOT_SUPPORTED, reference);
     }
 
 }

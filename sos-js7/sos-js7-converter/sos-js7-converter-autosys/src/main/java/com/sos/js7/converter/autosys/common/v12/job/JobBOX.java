@@ -46,8 +46,8 @@ public class JobBOX extends ACommonJob {
 
     private List<ACommonJob> jobs = new ArrayList<>();
 
-    public JobBOX(Path source) {
-        super(source, ConverterJobType.BOX);
+    public JobBOX(Path source, boolean reference) {
+        super(source, ConverterJobType.BOX, reference);
     }
 
     public SOSArgument<String> getBoxSuccess() {

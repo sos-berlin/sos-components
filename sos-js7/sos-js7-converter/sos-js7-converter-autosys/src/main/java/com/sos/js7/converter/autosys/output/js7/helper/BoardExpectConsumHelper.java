@@ -24,20 +24,22 @@ public class BoardExpectConsumHelper {
     }
 
     public ExpectNotices toExpectNotices() {
-        if (SOSString.isEmpty(expectNotices)) {
+        String val = tryTrim(expectNotices);
+        if (SOSString.isEmpty(val)) {
             return null;
         }
         ExpectNotices n = new ExpectNotices();
-        n.setNoticeBoardNames(expectNotices);
+        n.setNoticeBoardNames(val);
         return n;
     }
 
     public ConsumeNotices toConsumeNotices() {
-        if (SOSString.isEmpty(consumeNotices)) {
+        String val = tryTrim(consumeNotices);
+        if (SOSString.isEmpty(val)) {
             return null;
         }
         ConsumeNotices n = new ConsumeNotices();
-        n.setNoticeBoardNames(consumeNotices);
+        n.setNoticeBoardNames(val);
         return n;
     }
 
@@ -67,6 +69,10 @@ public class BoardExpectConsumHelper {
 
     public boolean isNotEmpty() {
         return !SOSString.isEmpty(expectNotices) || !SOSString.isEmpty(consumeNotices);
+    }
+
+    private String tryTrim(String val) {
+        return val == null ? null : val.trim();
     }
 
 }

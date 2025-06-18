@@ -27,10 +27,11 @@ public class DirectoryParserTest {
     public void testXMLParser() {
         Path inputDir = Paths.get("src/test/resources/input/xml");
         Path reportDir = Paths.get("src/test/resources/output/report");
+        boolean reference = false;
 
         AutosysConverterConfig config = new AutosysConverterConfig();
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new XMLJobParser(config, reportDir), inputDir);
+        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new XMLJobParser(config, reportDir, reference), inputDir);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);
@@ -41,10 +42,11 @@ public class DirectoryParserTest {
     public void testJILParser() {
         Path inputDir = Paths.get("src/test/resources/input/jil");
         Path reportDir = Paths.get("src/test/resources/output/report");
+        boolean reference = false;
 
         AutosysConverterConfig config = new AutosysConverterConfig();
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new JILJobParser(config, reportDir), inputDir);
+        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new JILJobParser(config, reportDir, reference), inputDir);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);

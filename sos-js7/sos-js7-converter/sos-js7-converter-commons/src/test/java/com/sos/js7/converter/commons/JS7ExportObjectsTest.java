@@ -17,10 +17,10 @@ public class JS7ExportObjectsTest {
     @Test
     public void test() {
         JS7ExportObjects<Workflow> w = new JS7ExportObjects<>();
-        w.addItem(Paths.get("/w1.json"), new Workflow());
-        w.addItem(Paths.get("/w2.json"), new Workflow());
+        w.addItem(Paths.get("/w1.json"), new Workflow(), false);
+        w.addItem(Paths.get("/w2.json"), new Workflow(), false);
 
-        for (JS7ExportObjects<Workflow>.JS7ExportObject item : w.getItems()) {
+        for (JS7ExportObject<Workflow> item : w.getAllItems()) {
             LOGGER.info(String.format("[%s]%s", Workflow.class.getSimpleName(), item.getUniquePath().getPath()));
         }
     }

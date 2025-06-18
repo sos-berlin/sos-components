@@ -2,9 +2,9 @@ package com.sos.js7.converter.autosys.output.js7.helper;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ import com.sos.js7.converter.commons.report.ConverterReport;
 public class RunTimeHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RunTimeHelper.class);
-    public static final Set<String> JS7_CALENDARS = new HashSet<>();
+    public static final Map<String, Boolean> JS7_CALENDARS = new HashMap<>();
 
     public static void clear() {
         JS7_CALENDARS.clear();
@@ -147,9 +147,7 @@ public class RunTimeHelper {
         } else if (config.getScheduleConfig().getDefaultWorkingDayCalendarName() != null) {
             name = config.getScheduleConfig().getDefaultWorkingDayCalendarName();
         }
-        if (!JS7_CALENDARS.contains(name)) {
-            JS7_CALENDARS.add(name);
-        }
+        setCalendarAsReference(name, j);
         return name;
     }
 
@@ -163,10 +161,18 @@ public class RunTimeHelper {
         } else if (config.getScheduleConfig().getDefaultNonWorkingDayCalendarName() != null) {
             name = config.getScheduleConfig().getDefaultNonWorkingDayCalendarName();
         }
-        if (!JS7_CALENDARS.contains(name)) {
-            JS7_CALENDARS.add(name);
-        }
+        setCalendarAsReference(name, j);
         return name;
+    }
+
+    private static void setCalendarAsReference(String name, ACommonJob j) {
+        Boolean isReference = JS7_CALENDARS.get(name);
+        if (isReference == null) {// not exists
+            JS7_CALENDARS.put(name, j.isReference());// reference or not reference
+        }// set as reference if used by other (referenced)jobs
+        else if (!isReference && j.isReference()) {
+            JS7_CALENDARS.put(name, true);
+        }
     }
 
     @SuppressWarnings("unused")

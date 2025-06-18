@@ -16,15 +16,18 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
+import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions.Operator;
+import com.sos.js7.converter.autosys.config.items.AutosysOutputConfig.CrossInstanceCondition;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.OutConditionHolder;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
-import com.sos.js7.converter.autosys.output.js7.helper.bean.Job2Condition;
+import com.sos.js7.converter.autosys.output.js7.helper.beans.BoardCrossInstance;
+import com.sos.js7.converter.autosys.output.js7.helper.beans.Job2Condition;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class BoardHelper {
@@ -216,6 +219,15 @@ public class BoardHelper {
                 JS7_BOARDS.put(j2c.getCondition(), Paths.get(js7Name));
             } else {
                 ACommonJob j = analyzer.getAllJobs().get(j2c.getCondition().getJobName());
+
+                if (j == null) {
+                    BoardCrossInstance bci = tryCreateDummyIfCrossInstance(analyzer, j2c.getCondition());
+                    if (bci != null) {
+                        j = bci.getJob();
+                        js7Name = bci.getJS7BoardName();
+                    }
+                }
+
                 if (j == null) {
                     if (Autosys2JS7Converter.NOT_CREATE_NOTICES_IF_JOB_NOT_FOUND) {
                         LOGGER.info("IGNORED BECAUSE JOB NOT FOUND=" + j2c.getCondition());
@@ -237,6 +249,27 @@ public class BoardHelper {
             }
         }
         return js7Name;
+    }
+
+    private static BoardCrossInstance tryCreateDummyIfCrossInstance(AutosysAnalyzer analyzer, Condition condition) {
+        if (condition.getInstanceTag() == null) {
+            return null;
+        }
+        CrossInstanceCondition config = Autosys2JS7Converter.CONFIG.getAutosys().getOutputConfig().getCrossInstanceCondition();
+        if (config.isIgnore()) {
+            return null;
+        }
+        condition.setDummy();
+
+        ACommonJob j = analyzer.getAllJobs().get(condition.getJobName());
+        if (j == null) {
+            j = new JobCMD(null, true);
+            j.setInsertJob(condition.getJobName());
+            analyzer.getAllJobs().put(condition.getJobName(), j);
+        }
+        String js7Name = config.isMapToLocal() ? JS7ConverterHelper.getJS7ObjectName(condition.getKeyWithoutInstance()) : JS7ConverterHelper
+                .getJS7ObjectName(condition.getKey());
+        return new BoardCrossInstance(j, js7Name);
     }
 
     private static String quote(String val) {

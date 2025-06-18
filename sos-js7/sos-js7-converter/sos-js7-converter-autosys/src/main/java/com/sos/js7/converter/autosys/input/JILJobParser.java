@@ -33,12 +33,11 @@ public class JILJobParser extends AFileParser {
 
     private XMLWriter xmlWriter;
 
-    public JILJobParser(AutosysConverterConfig config, Path reportDir) {
-        super(ParserType.JIL, config, reportDir);
+    public JILJobParser(AutosysConverterConfig config, Path reportDir, boolean references) {
+        super(ParserType.JIL, config, reportDir, references);
         COUNTER_INSERT_JOB = 0;
         INSERT_JOBS = new TreeMap<>();
         MULTIPLE_ATTRIBUTES = new TreeMap<>();
-
         if (config.getParserConfig().hasExtensions()) {
             getExtensions().addAll(config.getParserConfig().getExtensions());
         } else {
@@ -64,7 +63,6 @@ public class JILJobParser extends AFileParser {
     public FileParserResult parse(DirectoryParserResult r, Path file) {
 
         try {
-
             int counterFileInsertJob = 0;
 
             LinkedHashMap<String, String> m = null;

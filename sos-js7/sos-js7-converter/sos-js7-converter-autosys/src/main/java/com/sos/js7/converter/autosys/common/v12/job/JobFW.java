@@ -25,8 +25,8 @@ public class JobFW extends ACommonFileWatcherJob {
      */
     private SOSArgument<Long> watchInterval = new SOSArgument<>(ATTR_WATCH_INTERVAL, false);
 
-    public JobFW(Path source) {
-        super(source, ConverterJobType.FW);
+    public JobFW(Path source, boolean reference) {
+        super(source, ConverterJobType.FW, reference);
     }
 
     public SOSArgument<Long> getWatchInterval() {

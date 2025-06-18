@@ -2,6 +2,7 @@ package com.sos.js7.converter.autosys;
 
 import java.nio.file.Path;
 
+import com.sos.commons.util.SOSVersionInfo;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.commons.JS7ConverterMain;
 
@@ -9,12 +10,12 @@ public class Autosys2JS7ConverterMain extends JS7ConverterMain {
 
     @Override
     public String getProductAndVersion() {
-        return "Autosys 2024-04-04 JS7 2.7.4";
+        return "Autosys " + SOSVersionInfo.VERSION_BUILD_DATE;
     }
 
     @Override
-    public void doConvert(Path input, Path outputDir, Path reportDir) throws Exception {
-        Autosys2JS7Converter.convert(input, outputDir, reportDir);
+    public void doConvert(Path input, Path outputDir, Path reportDir, Path references) throws Exception {
+        Autosys2JS7Converter.convert(input, outputDir, reportDir, references);
     }
 
     public static void main(String[] args) {

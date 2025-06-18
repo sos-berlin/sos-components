@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class JS7ExportObjects<T> {
     private static final String UNIQUE_NAME_DELIMITER = "-";
     private static final String UNIQUE_NAME_REGEX = ".*" + UNIQUE_NAME_DELIMITER + "[0-9]{" + UNIQUE_NAME_MAX_DIGITS + "}$";
 
-    private List<JS7ExportObject> items;
+    private List<JS7ExportObject<T>> items;
 
     // TODO temporary solution - unique should be checked before write to file ...
     private boolean useUniquePath = false;
@@ -32,18 +33,18 @@ public class JS7ExportObjects<T> {
         this.items = new ArrayList<>();
     }
 
-    public JS7ExportObject addItem(Path path, T o) {
+    public JS7ExportObject<T> addItem(Path path, T o, boolean reference) {
         if (path == null || o == null) {
             return null;
         }
-        JS7ExportObject eo = new JS7ExportObject(o, path, getUniquePath(path));
+        JS7ExportObject<T> eo = new JS7ExportObject<T>(o, reference, path, getUniquePath(path));
         items.add(eo);
         return eo;
     }
 
-    public JS7ExportObject addOrReplaceItem(Path path, T o) {
-        JS7ExportObject newEo = new JS7ExportObject(o, path, getUniquePath(path));
-        JS7ExportObject oldEo = items.stream().filter(e -> e.getOriginalPath().getPath().equals(path)).findAny().orElse(null);
+    public JS7ExportObject<T> addOrReplaceItem(Path path, T o, boolean reference) {
+        JS7ExportObject<T> newEo = new JS7ExportObject<T>(o, reference, path, getUniquePath(path));
+        JS7ExportObject<T> oldEo = items.stream().filter(e -> e.getOriginalPath().getPath().equals(path)).findAny().orElse(null);
         if (oldEo == null) {
             items.add(newEo);
         } else {
@@ -52,13 +53,17 @@ public class JS7ExportObjects<T> {
         return newEo;
     }
 
-    public List<JS7ExportObject> getItems() {
+    public List<JS7ExportObject<T>> getAllItems() {
         return items;
+    }
+
+    public List<JS7ExportObject<T>> getItemsToGenerate() {
+        return items.stream().filter(i -> !i.isReference()).collect(Collectors.toList());
     }
 
     // TODO max length 255?
     private Path getUniquePath(Path path) {
-        JS7ExportObject eo = find(path);
+        JS7ExportObject<T> eo = find(path);
         if (eo == null) {
             return path;
         }
@@ -115,62 +120,18 @@ public class JS7ExportObjects<T> {
         return parent == null ? Paths.get(sb.toString()) : parent.resolve(sb.toString());
     }
 
-    private JS7ExportObject find(Path path) {
-        if (path == null || this.getItems() == null) {
+    private JS7ExportObject<T> find(Path path) {
+        if (path == null || this.getAllItems() == null) {
             return null;
         }
-        return this.getItems().stream().filter(o -> o != null && o.getUniquePath().getName().equals(getName(path))).findFirst().orElse(null);
+        return this.getAllItems().stream().filter(o -> o != null && o.getUniquePath().getName().equals(getName(path))).findFirst().orElse(null);
     }
 
-    private String getName(Path path) {
+    public static String getName(Path path) {
         if (path == null) {
             return null;
         }
         return path.getFileName().toString().trim().replace(".json", "");
     }
 
-    public class JS7ExportObject {
-
-        private final T object;
-        private final JS7ExportObjectPath originalPath;
-        private final JS7ExportObjectPath uniquePath;
-
-        private JS7ExportObject(T object, Path originalPath, Path uniquePath) {
-            this.object = object;
-            this.originalPath = new JS7ExportObjectPath(originalPath);
-            this.uniquePath = new JS7ExportObjectPath(uniquePath);
-        }
-
-        public T getObject() {
-            return object;
-        }
-
-        public JS7ExportObjectPath getOriginalPath() {
-            return originalPath;
-        }
-
-        public JS7ExportObjectPath getUniquePath() {
-            return uniquePath;
-        }
-
-    }
-
-    public class JS7ExportObjectPath {
-
-        private final Path path;
-        private final String name;
-
-        private JS7ExportObjectPath(Path path) {
-            this.path = JS7ConverterResult.normalize(path);
-            this.name = JS7ExportObjects.this.getName(path);
-        }
-
-        public Path getPath() {
-            return path;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
 }

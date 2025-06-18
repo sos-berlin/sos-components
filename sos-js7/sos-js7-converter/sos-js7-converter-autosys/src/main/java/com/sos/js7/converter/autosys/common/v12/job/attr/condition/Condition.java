@@ -38,6 +38,7 @@ public class Condition implements Serializable {
     private final String instanceTag;
 
     private String jobName;
+    private boolean dummy;
 
     // Internal usage
     public Condition(ConditionType type, String name) {
@@ -230,9 +231,17 @@ public class Condition implements Serializable {
     }
 
     public String getKey() {
+        return getKey(true);
+    }
+
+    public String getKeyWithoutInstance() {
+        return getKey(false);
+    }
+
+    private String getKey(boolean withInstance) {
         StringBuilder sb = new StringBuilder(type.name());
         sb.append("-").append(name);
-        if (instanceTag != null) {
+        if (instanceTag != null && withInstance) {
             sb.append("-").append(instanceTag);
         }
         if (lookBack != null) {
@@ -254,6 +263,14 @@ public class Condition implements Serializable {
 
     public boolean isNotrunning() {
         return ConditionType.NOTRUNNING.equals(type);
+    }
+
+    public void setDummy() {
+        dummy = true;
+    }
+
+    public boolean isDummy() {
+        return dummy;
     }
 
     @Override

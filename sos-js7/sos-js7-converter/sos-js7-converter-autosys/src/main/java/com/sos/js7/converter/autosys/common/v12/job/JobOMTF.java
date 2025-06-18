@@ -62,8 +62,8 @@ public class JobOMTF extends ACommonMachineJob {
      */
     private SOSArgument<String> textFileName = new SOSArgument<>(ATTR_TEXT_FILE_NAME, true);
 
-    public JobOMTF(Path source) {
-        super(source, ConverterJobType.OMTF);
+    public JobOMTF(Path source, boolean reference) {
+        super(source, ConverterJobType.OMTF, reference);
     }
 
     public SOSArgument<String> getEncoding() {

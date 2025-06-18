@@ -75,31 +75,34 @@ public class DirectoryParser {
                 if (jilParser != null) {
                     jilParser.writeXMLEnd();
 
-                    Report.writeJILParserDuplicatesReport(parent);
-                    Report.writeJILParserMultipleAttributes(parent);
+                    if (!jilParser.isReferences()) {
 
-                    int totalDuplicates = 0;
-                    for (Map.Entry<String, Map<Path, Integer>> e : JILJobParser.INSERT_JOBS.entrySet()) {
-                        int counter = 0;
-                        for (Map.Entry<Path, Integer> v : e.getValue().entrySet()) {
-                            counter += v.getValue();
-                        }
-                        if (counter > 1) {
+                        Report.writeJILParserDuplicatesReport(parent);
+                        Report.writeJILParserMultipleAttributes(parent);
 
-                            totalDuplicates += (counter - 1);
-
-                            LOGGER.info("[DUPLICATE][insert_job]" + e.getKey());
+                        int totalDuplicates = 0;
+                        for (Map.Entry<String, Map<Path, Integer>> e : JILJobParser.INSERT_JOBS.entrySet()) {
+                            int counter = 0;
                             for (Map.Entry<Path, Integer> v : e.getValue().entrySet()) {
-                                LOGGER.info("    [" + v.getKey() + "]" + v.getValue());
+                                counter += v.getValue();
+                            }
+                            if (counter > 1) {
+
+                                totalDuplicates += (counter - 1);
+
+                                LOGGER.info("[DUPLICATE][insert_job]" + e.getKey());
+                                for (Map.Entry<Path, Integer> v : e.getValue().entrySet()) {
+                                    LOGGER.info("    [" + v.getKey() + "]" + v.getValue());
+                                }
                             }
                         }
+                        LOGGER.info("[TOTAL][DUPLICATE][insert_job]" + totalDuplicates);
+                        LOGGER.info("[TOTAL][WITHOUT DUPLICATES]" + (JILJobParser.COUNTER_INSERT_JOB - totalDuplicates));
                     }
-                    LOGGER.info("[TOTAL][DUPLICATE][insert_job]" + totalDuplicates);
-                    LOGGER.info("[TOTAL][WITHOUT DUPLICATES]" + (JILJobParser.COUNTER_INSERT_JOB - totalDuplicates));
                     JILJobParser.INSERT_JOBS.clear();
 
                     LOGGER.info("[parse][" + jilParser.getXMLFile() + "]start...");
-                    XMLJobParser xmlParser = new XMLJobParser(jilParser.getConfig(), jilParser.getReportDir());
+                    XMLJobParser xmlParser = new XMLJobParser(jilParser.getConfig(), jilParser.getReportDir(), jilParser.isReferences());
                     r = DirectoryParser.parse(config, xmlParser, jilParser.getXMLFile());
                     LOGGER.info("[parse][" + jilParser.getXMLFile() + "]end");
 
@@ -154,6 +157,26 @@ public class DirectoryParser {
             this.parserType = parserType;
         }
 
+        public void mergeReferences(DirectoryParserResult other) {
+            int bj = jobs.size();
+            int bjn = jobNames.size();
+            for (ACommonJob j : other.getJobs()) {
+                if (!jobNames.contains(j.getName())) {
+                    jobs.add(j);
+                }
+            }
+            // jobNames is a HashSet - not need to be filtered
+            jobNames.addAll(other.getJobNames());
+            countFiles += other.getCountFiles();
+
+            int aj = jobs.size();
+            int ajn = jobNames.size();
+
+            LOGGER.info(String.format(
+                    "[mergeReferences][input jobs=%s(jobNames=%s)][references added jobs=%s(jobNames=%s)]total jobs=%s(jobNames=%s)", bj, bjn, (aj
+                            - bj), (ajn - bjn), aj, ajn));
+        }
+
         protected void addCountFiles() {
             countFiles++;
         }
@@ -168,6 +191,10 @@ public class DirectoryParser {
 
         public List<ACommonJob> getJobs() {
             return jobs;
+        }
+
+        public List<ACommonJob> getNonReferenceJobs() {
+            return jobs.stream().filter(j -> !j.isReference()).collect(Collectors.toList());
         }
 
         public int getCountFiles() {

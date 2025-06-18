@@ -19,6 +19,8 @@ import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobResource;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobRunTime;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
+import com.sos.js7.converter.autosys.config.items.AutosysOutputConfig.FolderMapping;
+import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.annotation.ArgumentInclude;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
@@ -66,6 +68,7 @@ public abstract class ACommonJob {
     private static final String ATTR_JOB_TERMINATOR = "job_terminator";
 
     private final Path source;
+    private final boolean reference;
 
     /** Subcommands */
 
@@ -306,9 +309,10 @@ public abstract class ACommonJob {
     // --------------------calculated properties
     private Path jobFullPathFromJILDefinition;
 
-    public ACommonJob(Path source, ConverterJobType type) {
+    public ACommonJob(Path source, ConverterJobType type, boolean reference) {
         this.source = source;
         this.converterJobType = type;
+        this.reference = reference;
     }
 
     public Path getSource() {
@@ -317,6 +321,10 @@ public abstract class ACommonJob {
 
     public ConverterJobType getConverterJobType() {
         return converterJobType;
+    }
+
+    public boolean isReference() {
+        return reference;
     }
 
     public SOSArgument<String> getJobType() {
@@ -745,8 +753,14 @@ public abstract class ACommonJob {
         return i > -1 ? jobName.substring(0, i) : null;
     }
 
+    public Path getJobFullPathFromJILDefinitionParent() {
+        Path p = getJobFullPathFromJILDefinition();
+        return p == null || p.getParent() == null ? Paths.get("") : p.getParent();
+    }
+
     // see com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder
     // TODO not works for PNG -> arcp.test_conn.ksh ...
+    // - optimize ....
     public Path getJobFullPathFromJILDefinition() {
         if (jobFullPathFromJILDefinition != null) {
             return jobFullPathFromJILDefinition;
@@ -754,51 +768,64 @@ public abstract class ACommonJob {
 
         Path path = Paths.get("");
         if (folder != null) {
-            String jobParent = getJobParentAsJILDefinition();
-            if (!SOSString.isEmpty(folder.getApplication().getValue())) {
-                String[] parts = folder.getApplication().getValue().split("\\.");
-                for (int i = 0; i < parts.length; i++) {
-                    String part = parts[i];
-                    path = path.resolve(part);
-                    if (jobParent != null) {
-                        if (jobParent.contains(".")) {
-                            if (jobParent.startsWith(part + ".")) {
-                                jobParent = jobParent.substring(0, (part + ".").length());
-                                if (jobParent.length() == 0) {
-                                    jobParent = null;
+            FolderMapping mapping = Autosys2JS7Converter.CONFIG.getAutosys().getOutputConfig().getFolderMapping();
+            if (!mapping.isEmpty()) {
+                List<String> addedParts = new ArrayList<>();
+                if (mapping.firstIsApplication()) {
+                    String jobParent = getJobParentAsJILDefinition();
+                    if (!SOSString.isEmpty(folder.getApplication().getValue())) {
+                        String[] parts = folder.getApplication().getValue().split("\\.");
+                        for (int i = 0; i < parts.length; i++) {
+                            String part = parts[i];
+                            path = path.resolve(part);
+                            if (jobParent != null) {
+                                if (jobParent.contains(".")) {
+                                    if (jobParent.startsWith(part + ".")) {
+                                        jobParent = jobParent.substring(0, (part + ".").length());
+                                        if (jobParent.length() == 0) {
+                                            jobParent = null;
+                                        }
+                                    }
+                                } else {
+                                    if (jobParent.equals(part)) {
+                                        jobParent = null;
+                                    }
                                 }
                             }
-                        } else {
-                            if (jobParent.equals(part)) {
-                                jobParent = null;
+                        }
+                    }
+                    addedParts = new ArrayList<>();
+                    if (!SOSString.isEmpty(jobParent)) {
+                        String[] parts = jobParent.split("\\.");
+                        for (String part : parts) {
+                            path = path.resolve(part);
+                            addedParts.add(part);
+                        }
+                    }
+                }
+
+                if (mapping.secondIsGroup() || mapping.firstIsGroup()) {
+                    if (!SOSString.isEmpty(folder.getGroup().getValue())) {
+                        String[] parts = folder.getGroup().getValue().split("\\.");
+                        for (int i = 0; i < parts.length; i++) {
+                            String part = parts[i];
+                            if (addedParts.size() > i && addedParts.get(i).equals(part)) {
+                                continue;
+                            } else {
+                                path = path.resolve(part);
                             }
                         }
-
-                    }
-                }
-            }
-            List<String> addedParts = new ArrayList<>();
-            if (!SOSString.isEmpty(jobParent)) {
-                String[] parts = jobParent.split("\\.");
-                for (String part : parts) {
-                    path = path.resolve(part);
-                    addedParts.add(part);
-                }
-            }
-
-            if (!SOSString.isEmpty(folder.getGroup().getValue())) {
-                String[] parts = folder.getGroup().getValue().split("\\.");
-                for (int i = 0; i < parts.length; i++) {
-                    String part = parts[i];
-                    if (addedParts.size() > i && addedParts.get(i).equals(part)) {
-                        continue;
                     } else {
-                        path = path.resolve(part);
                     }
                 }
-            } else {
-            }
 
+                if (mapping.secondIsApplication()) {
+                    // TODO see application handling above...
+                    if (!SOSString.isEmpty(folder.getApplication().getValue())) {
+                        path = path.resolve(folder.getApplication().getValue());
+                    }
+                }
+            }
             path = path.resolve(getBaseName());
         } else {
             String[] parts = insertJob.getValue().split("\\.");

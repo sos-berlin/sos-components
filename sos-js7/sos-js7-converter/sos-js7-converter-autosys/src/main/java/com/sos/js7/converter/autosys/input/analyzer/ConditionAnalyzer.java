@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
-import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
@@ -39,11 +38,14 @@ public class ConditionAnalyzer {
     // key - job name, value - entire original condition as text
     private Map<String, String> jobsWithORConditions;
 
+    private Set<String> standaloneRefersToItSelf;
     private Set<String> boxRefersToItSelf;
     private Set<String> lookBacks;
 
     private boolean logAllINConditions = false;
     private boolean logAllOUTConditions = false;
+
+    private boolean writeReport;
 
     public ConditionAnalyzer(Path reportDir) {
         this.reportDir = reportDir;
@@ -55,11 +57,14 @@ public class ConditionAnalyzer {
         allOUTConditions = new TreeMap<>();
         allConditionsByType = new TreeMap<>();
         jobsWithORConditions = new TreeMap<>();
+        standaloneRefersToItSelf = new TreeSet<>();
         boxRefersToItSelf = new TreeSet<>();
         lookBacks = new TreeSet<>();
+        writeReport = true;
     }
 
-    public void analyze(List<ACommonJob> jobs) {
+    public void analyze(List<ACommonJob> jobs, boolean writeReport) {
+        this.writeReport = writeReport;
         for (ACommonJob j : jobs) {
             if (j.isBox()) {
                 mapIN(j);
@@ -211,8 +216,9 @@ public class ConditionAnalyzer {
             if (j.hasORConditions()) {
                 jobsWithORConditions.put(j.getName(), j.getCondition().getOriginalCondition());
             }
-
-            Report.writePerJobConditionReport(reportDir, j);
+            if (writeReport) {
+                Report.writePerJobConditionReport(reportDir, j);
+            }
         }
     }
 
@@ -230,6 +236,10 @@ public class ConditionAnalyzer {
 
     public Set<String> getBoxRefersToItSelf() {
         return boxRefersToItSelf;
+    }
+
+    public Set<String> getStandaloneRefersToItSelf() {
+        return standaloneRefersToItSelf;
     }
 
     private void conditionsByType(Condition c) {
@@ -504,11 +514,12 @@ public class ConditionAnalyzer {
                         used = isAlreadyUsed(boxJob, j, ljc, c);
                     } catch (StackOverflowError e) {
                         used = false;
+                        if (!boxJob.isReference()) {
+                            LOGGER.warn("[handleJobBoxConditions][BOX=" + boxJob.getName() + "][recursion detected][" + j.getName() + "]" + c
+                                    .getOriginalValue());
 
-                        LOGGER.warn("[handleJobBoxConditions][BOX=" + boxJob.getName() + "][recursion detected][" + j.getName() + "]" + c
-                                .getOriginalValue());
-
-                        Report.writePerJobBOXConditionRecursionReport(reportDir, boxJob, j, reportBOXNames);
+                            Report.writePerJobBOXConditionRecursionReport(reportDir, boxJob, j, reportBOXNames);
+                        }
                         // throw e;
                     }
                     if (used) {
@@ -613,6 +624,10 @@ public class ConditionAnalyzer {
             Report.writePerStandaloneJobConditionRefersReports(reportDir, analyzer, job, toRemoveConditionsRefersToItself);
 
             if (toRemoveConditionsRefersToItself.size() > 0) {
+                if (!standaloneRefersToItSelf.contains(job.getName())) {
+                    standaloneRefersToItSelf.add(job.getName());
+                }
+
                 OutConditionHolder h = getJobOUTConditions(job);
                 if (h != null) {
                     Iterator<Map.Entry<String, Map<String, Condition>>> iter = h.getJobConditions().entrySet().iterator();
@@ -797,6 +812,18 @@ public class ConditionAnalyzer {
 
         public Set<String> getJobNames() {
             return jobNames;
+        }
+
+        public boolean hasReferenceJobs(AutosysAnalyzer analyzer) {
+            if (jobNames != null && jobNames.size() > 0) {
+                for (String jn : jobNames) {
+                    ACommonJob j = analyzer.getAllJobs().get(jn);
+                    if (j != null && j.isReference()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         @Override

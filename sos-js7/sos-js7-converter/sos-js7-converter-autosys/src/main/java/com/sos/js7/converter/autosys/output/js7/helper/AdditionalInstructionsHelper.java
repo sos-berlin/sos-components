@@ -13,17 +13,19 @@ import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
+import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
 
 public class AdditionalInstructionsHelper {
 
-    // 1) Create/handle additional Notices when a workflow(currently implemented for BOX) uses IN condition for itself
+    // 1) Create/handle additional Notices when a workflow(implemented for BOX and Standalone) uses IN condition for itself
     private static final boolean WORKFLOW_ITSELF_BOARDS_CREATE = true;
     // true - extra ExpectNotice, false - merged in the existing ExpectNotices
     public static final boolean WORKFLOW_ITSELF_BOARDS_CREATE_AS_SEPARATE_EXPECT_NOTICE = false;
@@ -45,12 +47,15 @@ public class AdditionalInstructionsHelper {
         POST_CONSUME_BOARDS.clear();
     }
 
+    /** when using references, no OK,OK-WORKFLOW Boards are generated */
     public static boolean convertBoards(JS7ConverterResult result, Path p, String boardName) {
+        boolean reference = Autosys2JS7Converter.HAS_REFERENCES;
         if (POST_CONSUME_BOARDS.containsKey(boardName)) {
-            JS7ConverterHelper.createNoticeBoardByParentPath(result, p, boardName, AdditionalInstructionsHelper.POST_CONSUME_BOARDS.get(boardName));
+            JS7ConverterHelper.createNoticeBoardByParentPath(result, reference, p, boardName, AdditionalInstructionsHelper.POST_CONSUME_BOARDS.get(
+                    boardName));
             return true;
         } else if (WORKFLOW_ITSELF_BOARDS.containsKey(boardName)) {
-            JS7ConverterHelper.createNoticeBoardByParentPath(result, p, boardName, AdditionalInstructionsHelper.WORKFLOW_ITSELF_BOARDS.get(
+            JS7ConverterHelper.createNoticeBoardByParentPath(result, reference, p, boardName, AdditionalInstructionsHelper.WORKFLOW_ITSELF_BOARDS.get(
                     boardName));
             return true;
         }
@@ -60,6 +65,26 @@ public class AdditionalInstructionsHelper {
     public static PostNotices tryCreatePostNoticeToWorkflowItSelf(AutosysAnalyzer analyzer, WorkflowResult wr, JobBOX box) {
         PostNotices pn = null;
         if (WORKFLOW_ITSELF_BOARDS_CREATE && analyzer.getConditionAnalyzer().getBoxRefersToItSelf().contains(box.getName())) {
+            String boardName = getWorkflowItSelfBoardName(wr);
+
+            Condition boxIfSelfBoardCondition = new Condition(ConditionType.JS7_INTERNAL, boardName);
+            Path boardPath = BoardHelper.JS7_BOARDS.get(boxIfSelfBoardCondition);
+            if (boardPath == null) {
+                BoardHelper.JS7_BOARDS.put(boxIfSelfBoardCondition, Paths.get(boardName));
+            }
+            pn = new PostNotices(Collections.singletonList(boardName));
+
+            Board ok = WORKFLOW_ITSELF_BOARDS.get(boardName);
+            if (ok == null) {
+                WORKFLOW_ITSELF_BOARDS.put(boardName, getWorkflowItSelfBoard(boardName));
+            }
+        }
+        return pn;
+    }
+
+    public static PostNotices tryCreatePostNoticeToStandaloneWorkflowItSelf(AutosysAnalyzer analyzer, WorkflowResult wr, ACommonJob job) {
+        PostNotices pn = null;
+        if (WORKFLOW_ITSELF_BOARDS_CREATE && analyzer.getConditionAnalyzer().getStandaloneRefersToItSelf().contains(job.getName())) {
             String boardName = getWorkflowItSelfBoardName(wr);
 
             Condition boxIfSelfBoardCondition = new Condition(ConditionType.JS7_INTERNAL, boardName);
@@ -109,7 +134,7 @@ public class AdditionalInstructionsHelper {
         // okNotizeName = DEFAULT_POST_CONSUME_BOARD_NAME+"-"+wr.getName();// evtl. extends with the workflow name
 
         // 3) Create Instruction - PostNotices - internal Notice
-        //PostNotices instructionPostNotice = new PostNotices(Collections.singletonList("'" + okNoticeName + "'"));
+        // PostNotices instructionPostNotice = new PostNotices(Collections.singletonList("'" + okNoticeName + "'"));
         PostNotices instructionPostNotice = new PostNotices(Collections.singletonList(okNoticeName));
 
         // 4.1) Create Instruction - ConsumeNotices - the Notices separated by or(||) - controller will remove the existing notices

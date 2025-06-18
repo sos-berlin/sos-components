@@ -1,4 +1,4 @@
-package com.sos.js7.converter.autosys.output.js7.helper.bean;
+package com.sos.js7.converter.autosys.output.js7.helper.beans;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,14 +9,15 @@ import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.helper.PathResolver;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.beans.AJS7Object;
+import com.sos.js7.converter.commons.beans.JS7Lock;
 
-public class Resource2Lock {
+public class Resource2Lock extends AJS7Object {
 
     private static int DEFAULT_CAPACYTY;
 
-    private final String js7Name;
     private final Path path;
-    private final int capacity;
+    private final JS7Lock lock;
 
     static {
         DEFAULT_CAPACYTY = getDefaultCapacity();
@@ -25,14 +26,14 @@ public class Resource2Lock {
     public Resource2Lock(AutosysAnalyzer analyzer, CommonJobResource r) {
         String key = r.getName();
 
-        this.js7Name = JS7ConverterHelper.getJS7ObjectName(key);
+        String js7Name = JS7ConverterHelper.getJS7ObjectName(key);
         ACommonJob j = analyzer.getAllJobs().get(key);
         if (j == null) {
             this.path = Paths.get(js7Name);
         } else {
             this.path = PathResolver.getJS7ParentPath(j, js7Name).resolve(js7Name);
         }
-        this.capacity = r.isExclusive() ? 1 : DEFAULT_CAPACYTY;
+        this.lock = new JS7Lock(js7Name, r.isExclusive() ? 1 : DEFAULT_CAPACYTY);
     }
 
     private static int getDefaultCapacity() {
@@ -46,15 +47,12 @@ public class Resource2Lock {
         return capacity == null ? 1 : capacity.intValue();
     }
 
-    public String getJS7Name() {
-        return js7Name;
+    public JS7Lock getLock() {
+        return lock;
     }
 
     public Path getPath() {
         return path;
     }
 
-    public int getCapacity() {
-        return capacity;
-    }
 }

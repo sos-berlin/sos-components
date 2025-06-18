@@ -30,7 +30,6 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
@@ -67,14 +66,15 @@ import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Parameters;
 import com.sos.inventory.model.workflow.Requirements;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
+import com.sos.js7.converter.commons.JS7ExportObject;
 import com.sos.js7.converter.commons.JS7ExportObjects;
-import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
 import com.sos.js7.converter.commons.agent.JS7AgentHelper;
@@ -272,14 +272,14 @@ public class JS12JS7Converter {
             LOGGER.info(String.format("[%s][JS7][write][start]...", method));
 
             if (CONFIG.getGenerateConfig().getAgents()) {
-                long total = result.getAgents().getItems().size();
+                long total = result.getAgents().getItemsToGenerate().size();
                 if (total > 0) {
                     LOGGER.info(String.format("[%s][JS7][write][Agents]...", method));
                     OutputWriter.write(outputDir, result.getAgents());
                 } else {
                     LOGGER.info(String.format("[%s][JS7][write][Agents][skip]0 items", method));
                 }
-                long standalone = result.getAgents().getItems().stream().filter(a -> a.getObject().getStandaloneAgent() != null).count();
+                long standalone = result.getAgents().getItemsToGenerate().stream().filter(a -> a.getObject().getStandaloneAgent() != null).count();
                 ConverterReport.INSTANCE.addSummaryRecord("Agents", total + ", STANDALONE=" + standalone + ", CLUSTER=" + (total - standalone));
             } else {
                 LOGGER.info(String.format("[%s][JS7][write][Agents][skip]%s=false", method, CONFIG.getGenerateConfig().getFullPropertyNameAgents()));
@@ -311,12 +311,13 @@ public class JS12JS7Converter {
 
     private static <T> void write(Path outputDir, String title, JS7ExportObjects<T> exportObject, boolean doWrite, String configPropertyName) {
         String logPrefix = String.format("[convert][JS7][write][%s]", title);
-        int size = exportObject.getItems().size();
+        List<JS7ExportObject<T>> l = exportObject.getItemsToGenerate();
+        int size = l.size();
         try {
             if (doWrite) {
                 if (size > 0) {
                     LOGGER.info(logPrefix + size + " items ...");
-                    OutputWriter.write(outputDir, exportObject);
+                    OutputWriter.write(outputDir, l);
                 } else {
                     LOGGER.info(logPrefix + "[skip]0 items");
                 }
@@ -367,17 +368,17 @@ public class JS12JS7Converter {
     }
 
     private void convertCalendars(JS7ConverterResult result) {
-        if (result.getSchedules() != null && result.getSchedules().getItems().size() > 0) {
+        if (result.getSchedules() != null && result.getSchedules().getAllItems().size() > 0) {
             Path rootPath = CONFIG.getCalendarConfig().getForcedFolder() == null ? Paths.get("") : CONFIG.getCalendarConfig().getForcedFolder();
             Set<String> names = new HashSet<>();
-            for (JS7ExportObjects<Schedule>.JS7ExportObject item : result.getSchedules().getItems()) {
+            for (JS7ExportObject<Schedule> item : result.getSchedules().getAllItems()) {
                 Schedule s = item.getObject();
                 if (s.getCalendars() != null && s.getCalendars().size() > 0) {
                     for (AssignedCalendars ac : s.getCalendars()) {
                         if (!SOSString.isEmpty(ac.getCalendarName())) {
                             if (!names.contains(ac.getCalendarName())) {
                                 result.add(JS7ConverterHelper.getCalendarPath(rootPath, ac.getCalendarName()), JS7ConverterHelper
-                                        .createDefaultWorkingDaysCalendar());
+                                        .createDefaultWorkingDaysCalendar(), false);
                                 names.add(ac.getCalendarName());
                             }
                         }
@@ -418,8 +419,7 @@ public class JS12JS7Converter {
     private void postProcessing(JS7ConverterResult result) {
         for (Map.Entry<Path, List<BoardHelper>> e : js7BoardHelpers.entrySet()) {
             for (BoardHelper h : e.getValue()) {
-                @SuppressWarnings("rawtypes")
-                JS7ExportObject eo = result.getExportObjectWorkflowByPath(h.getWorkflowPath());
+                JS7ExportObject<Workflow> eo = result.getExportObjectWorkflowByPath(h.getWorkflowPath());
                 if (eo == null) {
                     LOGGER.error(String.format("[postProcessing][boards][%s]workflow not found", h.getWorkflowPath()));
                     ConverterReport.INSTANCE.addErrorRecord("[postProcessing][boards][workflow not found]" + h.getWorkflowPath());
@@ -436,7 +436,8 @@ public class JS12JS7Converter {
                             String replacement = "$1" + boardName + "\"\\]";
                             w = w.replaceAll(regex, replacement);
 
-                            JS7ConverterHelper.createNoticeBoardFromWorkflowPath(result, eo.getOriginalPath().getPath(), true, boardName, boardName);
+                            JS7ConverterHelper.createNoticeBoardFromWorkflowPath(result, false, eo.getOriginalPath().getPath(), true, boardName,
+                                    boardName);
 
                             // Generate n ExpectNotices of all workflows
                             List<String> al = new ArrayList<>();
@@ -448,7 +449,7 @@ public class JS12JS7Converter {
                             replacement = "$1" + String.join(" && ", al) + "\"";
                             w = w.replaceAll(regex, replacement);
                         }
-                        result.addOrReplace(eo.getOriginalPath().getPath(), JS7ConverterHelper.JSON_OM.readValue(w, Workflow.class));
+                        result.addOrReplace(eo.getOriginalPath().getPath(), JS7ConverterHelper.JSON_OM.readValue(w, Workflow.class), false);
                     } catch (Throwable ex) {
                         LOGGER.error(String.format("[postProcessing][boards][%s]%s", h.getWorkflowPath(), ex.toString()), ex);
                         ConverterReport.INSTANCE.addErrorRecord(h.getWorkflowPath(), "[postProcessing][boards]", ex);
@@ -508,7 +509,7 @@ public class JS12JS7Converter {
                     schedule.setOrderParameterisations(e.getValue().getOrderParams());
                 }
                 // result.add(getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), e.getKey(), ""), schedule);
-                result.add(schedulePath, schedule);
+                result.add(schedulePath, schedule, false);
             }
         });
     }
@@ -696,7 +697,7 @@ public class JS12JS7Converter {
                 });
                 JobResource jr = new JobResource(args, envs, null, null);
 
-                result.add(js7Path, jr);
+                result.add(js7Path, jr, false);
             } catch (Throwable e1) {
                 ConverterReport.INSTANCE.addErrorRecord(e.getKey(), "jobResource=" + e.getValue(), e1);
             }
@@ -710,7 +711,7 @@ public class JS12JS7Converter {
 
         js7LockHelpers.entrySet().forEach(e -> {
             try {
-                result.add(e.getValue().getJS7Path(), e.getValue().getJS7Lock());
+                result.add(e.getValue().getJS7Path(), e.getValue().getJS7Lock(), false);
             } catch (Throwable e1) {
                 ConverterReport.INSTANCE.addErrorRecord(e.getKey(), "lock=" + e.getValue(), e1);
             }
@@ -729,7 +730,7 @@ public class JS12JS7Converter {
 
                 JobResource jr = new JobResource(args, envs, null, null);
                 // result.add(Paths.get(YADE_MAIN_CONFIGURATION_JOBRESOURCE + ".jobresource.json"), jr);
-                result.add(JS7ConverterHelper.getJobResourcePath(Paths.get(""), YADE_MAIN_CONFIGURATION_JOBRESOURCE), jr);
+                result.add(JS7ConverterHelper.getJobResourcePath(Paths.get(""), YADE_MAIN_CONFIGURATION_JOBRESOURCE), jr, false);
             } catch (IOException e) {
                 ConverterReport.INSTANCE.addErrorRecord(pr.getYadeConfiguration(), "yade jobResource=yade", e);
                 pr.setYadeConfiguration(null);
@@ -833,7 +834,7 @@ public class JS12JS7Converter {
         // boolean hasSchedule = false;
         if (rth != null) {
             if (rth.getSchedule() != null) {
-                result.add(rth.getPath(), rth.getSchedule());
+                result.add(rth.getPath(), rth.getSchedule(), false);
                 // hasSchedule = true;
             }
         }
@@ -879,7 +880,7 @@ public class JS12JS7Converter {
             ConverterReport.INSTANCE.addErrorRecord(js1Job.getPath(), js7Name, e);
         }
 
-        result.add(workflowPath, w);
+        result.add(workflowPath, w, false);
         return workflowName;
     }
 
@@ -1314,7 +1315,7 @@ public class JS12JS7Converter {
                 if (th == null) {
                     th = new JobTemplateHelper(this, p, j);
                     js7JobTemplateHelpers.put(p, th);
-                    result.add(th.getJS7Path(), th.getJobTemplate());
+                    result.add(th.getJS7Path(), th.getJobTemplate(), false);
                 }
                 JobTemplateRef r = new JobTemplateRef();
                 r.setName(th.getJS7Name());
@@ -2775,7 +2776,7 @@ public class JS12JS7Converter {
         convertJobChainOrders2Schedules(result, jobChain, usedStates, workflowPath, workflowName, w, yadeJobs);
         convertJobChainFileOrderSources(result, jobChain, fileOrderSources, workflowPath, workflowName, jobChainFileWatchingAgent);
 
-        result.add(workflowPath, w);
+        result.add(workflowPath, w, false);
 
         if (notUsedStates.size() > 0) {
             if (isMailJobChain) {
@@ -2901,7 +2902,7 @@ public class JS12JS7Converter {
                     }
                 }
                 fos.setDelay(delay);
-                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(workflowPath, name), fos);
+                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(workflowPath, name), fos, false);
             }
         }
     }
@@ -3004,7 +3005,7 @@ public class JS12JS7Converter {
                         if (startPosition != null) {
                             setSchedulePosition(s, startPosition);
                         }
-                        result.add(rth.getPath(), s);
+                        result.add(rth.getPath(), s, false);
                     } else {
                         addJS1ScheduleFromScheduleOrRunTime(o.getRunTime(), l, startPosition, workflowPath, workflowName, add);
                     }

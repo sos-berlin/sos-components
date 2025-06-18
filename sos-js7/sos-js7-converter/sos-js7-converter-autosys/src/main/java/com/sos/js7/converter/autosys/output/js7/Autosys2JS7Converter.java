@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.board.Board;
+import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.NamedJob;
@@ -26,12 +28,14 @@ import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.job.JobReturnCode;
+import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
+import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
@@ -45,6 +49,7 @@ import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult
 import com.sos.js7.converter.autosys.input.JILJobParser;
 import com.sos.js7.converter.autosys.input.XMLJobParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
+import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.InConditionHolder;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.OutConditionHolder;
 import com.sos.js7.converter.autosys.output.js7.helper.AdditionalInstructionsHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.BoardHelper;
@@ -55,12 +60,13 @@ import com.sos.js7.converter.autosys.output.js7.helper.PathResolver;
 import com.sos.js7.converter.autosys.output.js7.helper.Report;
 import com.sos.js7.converter.autosys.output.js7.helper.RetryHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.RunTimeHelper;
-import com.sos.js7.converter.autosys.output.js7.helper.bean.Job2Condition;
-import com.sos.js7.converter.autosys.output.js7.helper.bean.Resource2Lock;
+import com.sos.js7.converter.autosys.output.js7.helper.beans.Job2Condition;
+import com.sos.js7.converter.autosys.output.js7.helper.beans.Resource2Lock;
 import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobsHelper;
 import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
+import com.sos.js7.converter.commons.JS7ExportObject;
 import com.sos.js7.converter.commons.JS7ExportObjects;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
@@ -80,6 +86,15 @@ import com.sos.js7.converter.commons.report.ConverterReportWriter;
  * --- admission times<br/>
  * --- post/expected notices - box and box job<br/>
  * , TODO Report<br/>
+ * - References:<br/>
+ * -- Note: no flag is required to force the generation of an un-generated configuration(see below).<br/>
+ * --- Simply starting the conversion without references is sufficient.<br/>
+ * -- Boards<br/>
+ * --- OK/OK-WORKFLOWS.noticeboard.json: are not generated<br/>
+ * --- VARIABLE-....noticeboard.json: is not generated if the same variable is used in the reference jobs<br/>
+ * -- Agent: '...agent.json' is not generated if the same Agent is used in the reference jobs<br/>
+ * -- Calendars: '...calendar.json' is not generated if the same Calendar is used in the reference jobs<br/>
+ * -- Locks: '...lock.json' is not generated if the same Lock is used in the reference jobs<br/>
  */
 public class Autosys2JS7Converter {
 
@@ -88,19 +103,37 @@ public class Autosys2JS7Converter {
     public static final boolean NOT_CREATE_NOTICES_IF_JOB_NOT_FOUND = true;
 
     public static AutosysConverterConfig CONFIG = new AutosysConverterConfig();
+    // Note: do not use this to programmatically set when the reference directory is not used - due to side effects (no OK/OK-WORKFLOW boards created etc.)
+    public static boolean HAS_REFERENCES = false;
 
     private AutosysAnalyzer analyzer;
-
     private Map<String, JS7Agent> machine2js7Agent = new HashMap<>();
 
-    public static DirectoryParserResult parseInput(Path input, Path reportDir, boolean isXMLParser) {
-        AFileParser parser = isXMLParser ? new XMLJobParser(Autosys2JS7Converter.CONFIG, reportDir) : new JILJobParser(Autosys2JS7Converter.CONFIG,
-                reportDir);
+    public static DirectoryParserResult parseInput(Path input, Path references, Path reportDir) throws Exception {
+        boolean isXMLParser = isXMLInputFiles(input);
+        AFileParser parser = isXMLParser ? new XMLJobParser(Autosys2JS7Converter.CONFIG, reportDir, false) : new JILJobParser(
+                Autosys2JS7Converter.CONFIG, reportDir, false);
         LOGGER.info("[" + input + "][isXMLParser=" + isXMLParser + "]" + parser.getClass().getName());
-        return DirectoryParser.parse(CONFIG.getParserConfig(), parser, input);
+
+        DirectoryParserResult dpr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input);
+        LOGGER.info("[" + input + "]" + dpr.getCountFiles() + " files parsed");
+
+        if (references != null) {
+            isXMLParser = isXMLInputFiles(references);
+            parser = isXMLParser ? new XMLJobParser(Autosys2JS7Converter.CONFIG, reportDir, true) : new JILJobParser(Autosys2JS7Converter.CONFIG,
+                    reportDir, true);
+            LOGGER.info("[" + references + "][isXMLParser=" + isXMLParser + "]" + parser.getClass().getName());
+            dpr.mergeReferences(DirectoryParser.parse(CONFIG.getParserConfig(), parser, references));
+        }
+        return dpr;
     }
 
     private static boolean isXMLInputFiles(Path input) throws IOException {
+        if (CONFIG.getParserConfig().hasExtensions()) {
+            long r = CONFIG.getParserConfig().getExtensions().stream().filter(e -> e.equalsIgnoreCase("xml")).count();
+            return r > 0;
+        }
+
         boolean r = false;
         if (Files.isDirectory(input)) {
             List<Path> l = SOSPath.getFileList(input, ".*\\.xml$", java.util.regex.Pattern.CASE_INSENSITIVE);
@@ -111,9 +144,10 @@ public class Autosys2JS7Converter {
         return r;
     }
 
-    public static void convert(Path input, Path outputDir, Path reportDir) throws Exception {
+    public static void convert(Path input, Path outputDir, Path reportDir, Path references) throws Exception {
 
         JS7ConverterHelper.setBoardsConfig(CONFIG);
+        HAS_REFERENCES = references != null;
 
         String method = "convert";
 
@@ -121,18 +155,16 @@ public class Autosys2JS7Converter {
         Instant appStart = Instant.now();
         LOGGER.info(String.format("[%s][start]...", method));
 
-        boolean isXMLInputFiles = isXMLInputFiles(input);
-
         OutputWriter.prepareDirectory(outputDir);
         OutputWriter.prepareDirectory(reportDir);
 
         // 1 - Parse Autosys files
         LOGGER.info(String.format("[%s][parse][start]...", method));
-        DirectoryParserResult pr = parseInput(input, reportDir, isXMLInputFiles);
+        DirectoryParserResult pr = parseInput(input, references, reportDir);
 
         // 2- Analyze and create Diagram
         AutosysAnalyzer analyzer = new AutosysAnalyzer();
-        pr = analyzer.analyzeAndCreateDiagram(pr, input, reportDir);
+        pr = analyzer.analyzeAndCreateDiagram(pr, input, reportDir, references);
 
         LOGGER.info(String.format("[%s][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
 
@@ -148,7 +180,7 @@ public class Autosys2JS7Converter {
         Instant start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
 
-        ConverterResult cr = convert(reportDir, pr, analyzer);
+        ConverterResult cr = convert(reportDir, pr, analyzer, references);
         JS7ConverterResult result = cr.getResult();
         LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
         // 5.1 - Converter Reports
@@ -167,39 +199,41 @@ public class Autosys2JS7Converter {
         }
 
         if (CONFIG.getGenerateConfig().getWorkflows()) {
-            LOGGER.info(String.format("[%s][JS7][write][workflows]...", method));
-            OutputWriter.write(outputDir, result.getWorkflows());
-            ConverterReport.INSTANCE.addSummaryRecord("Workflows", result.getWorkflows().getItems().size());
+            LOGGER.info(String.format("[%s][JS7][write][Workflows]...", method));
+            List<JS7ExportObject<Workflow>> r = OutputWriter.write(outputDir, result.getWorkflows());
+            ConverterReport.INSTANCE.addSummaryRecord("Workflows", r.size());
         }
 
         if (CONFIG.getGenerateConfig().getAgents()) {
             LOGGER.info(String.format("[%s][JS7][write][Agents]...", method));
-            OutputWriter.write(outputDir, result.getAgents());
-            long total = result.getAgents().getItems().size();
-            long standalone = result.getAgents().getItems().stream().filter(a -> a.getObject().getStandaloneAgent() != null).count();
+            List<JS7ExportObject<Agent>> r = OutputWriter.write(outputDir, result.getAgents());
+            long total = r.size();
+            long standalone = r.stream().filter(a -> a.getObject().getStandaloneAgent() != null).count();
             ConverterReport.INSTANCE.addSummaryRecord("Agents", total + ", STANDALONE=" + standalone + ", CLUSTER=" + (total - standalone));
         }
         if (CONFIG.getGenerateConfig().getCalendars()) {
-            LOGGER.info(String.format("[%s][JS7][write][calendars]...", method));
-            OutputWriter.write(outputDir, result.getCalendars());
-            ConverterReport.INSTANCE.addSummaryRecord("Calendars", result.getCalendars().getItems().size());
+            LOGGER.info(String.format("[%s][JS7][write][Calendars]...", method));
+            List<JS7ExportObject<Calendar>> r = OutputWriter.write(outputDir, result.getCalendars());
+            ConverterReport.INSTANCE.addSummaryRecord("Calendars", r.size());
         }
         if (CONFIG.getGenerateConfig().getSchedules()) {
-            LOGGER.info(String.format("[%s][JS7][write][schedules]...", method));
-            OutputWriter.write(outputDir, result.getSchedules());
-            ConverterReport.INSTANCE.addSummaryRecord("Schedules", result.getSchedules().getItems().size());
+            LOGGER.info(String.format("[%s][JS7][write][Schedules]...", method));
+            List<JS7ExportObject<Schedule>> r = OutputWriter.write(outputDir, result.getSchedules());
+            ConverterReport.INSTANCE.addSummaryRecord("Schedules", r.size());
         }
 
-        if (result.getBoards().getItems().size() > 0) {
-            LOGGER.info(String.format("[%s][JS7][write][boards]...", method));
-            OutputWriter.write(outputDir, result.getBoards());
-            ConverterReport.INSTANCE.addSummaryRecord("Boards", result.getBoards().getItems().size());
+        List<JS7ExportObject<Board>> boards = result.getBoards().getItemsToGenerate();
+        if (boards.size() > 0) {
+            LOGGER.info(String.format("[%s][JS7][write][Boards]...", method));
+            OutputWriter.write(outputDir, boards);
+            ConverterReport.INSTANCE.addSummaryRecord("Boards", boards.size());
         }
 
-        if (result.getLocks().getItems().size() > 0) {
-            LOGGER.info(String.format("[%s][JS7][write][locks]...", method));
-            OutputWriter.write(outputDir, result.getLocks());
-            ConverterReport.INSTANCE.addSummaryRecord("Locks", result.getLocks().getItems().size());
+        List<JS7ExportObject<Lock>> locks = result.getLocks().getItemsToGenerate();
+        if (locks.size() > 0) {
+            LOGGER.info(String.format("[%s][JS7][write][Locks]...", method));
+            OutputWriter.write(outputDir, locks);
+            ConverterReport.INSTANCE.addSummaryRecord("Locks", locks.size());
         }
 
         // TODO all with write(...
@@ -216,12 +250,13 @@ public class Autosys2JS7Converter {
 
     private static <T> void write(Path outputDir, String title, JS7ExportObjects<T> exportObject, boolean doWrite, String configPropertyName) {
         String logPrefix = String.format("[convert][JS7][write][%s]", title);
-        int size = exportObject.getItems().size();
+        List<JS7ExportObject<T>> l = exportObject.getItemsToGenerate();
+        int size = l.size();
         try {
             if (doWrite) {
                 if (size > 0) {
                     LOGGER.info(logPrefix + size + " items ...");
-                    OutputWriter.write(outputDir, exportObject);
+                    OutputWriter.write(outputDir, l);
                 } else {
                     LOGGER.info(logPrefix + "[skip]0 items");
                 }
@@ -238,7 +273,7 @@ public class Autosys2JS7Converter {
         }
     }
 
-    private static ConverterResult convert(Path reportDir, DirectoryParserResult pr, AutosysAnalyzer analyzer) {
+    private static ConverterResult convert(Path reportDir, DirectoryParserResult pr, AutosysAnalyzer analyzer, Path references) {
         // ----------------------------
         BoardHelper.clear();
         RunTimeHelper.clear();
@@ -251,6 +286,7 @@ public class Autosys2JS7Converter {
 
         Autosys2JS7Converter c = new Autosys2JS7Converter();
         c.analyzer = analyzer;
+
         JS7ConverterResult result = new JS7ConverterResult();
         result.getApplications().addAll(pr.getJobs().stream().map(e -> e.getFolder().getApplication().getValue()).filter(Objects::nonNull).distinct()
                 .collect(Collectors.toSet()));
@@ -320,7 +356,7 @@ public class Autosys2JS7Converter {
         }
 
         // postProcessing(result);
-        c.convertBoards(result);
+        c.convertBoards(result, reportDir, analyzer);
         c.convertAgents(result, reportDir);
         c.convertLocks(result);
         c.convertCalendars(result);
@@ -376,7 +412,7 @@ public class Autosys2JS7Converter {
             PostNotices pn = BoardHelper.newPostNotices(analyzer, jilJob, jobsConditions.values().stream().collect(Collectors.toSet()));
             in.add(pn);
             w.setInstructions(in);
-            result.add(wr.getPath(), w);
+            result.add(wr.getPath(), w, jilJob.isReference());
 
             // FILE ORDER SOURCE
             convertFileOrderSources(result, Collections.singletonList(jilJob), wr, null);
@@ -418,12 +454,12 @@ public class Autosys2JS7Converter {
                     delay = j.getWatchInterval().getValue();
                 }
                 fos.setDelay(delay);
-                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(wr.getPath(), name), fos);
+                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(wr.getPath(), name), fos, n.isReference());
             }
         }
     }
 
-    private void convertBoards(JS7ConverterResult result) {
+    private void convertBoards(JS7ConverterResult result, Path reportDir, AutosysAnalyzer analyzer) {
         for (Map.Entry<Condition, Path> entry : BoardHelper.JS7_BOARDS.entrySet()) {
             Path p = entry.getValue().getParent();
             if (p == null) {
@@ -431,8 +467,31 @@ public class Autosys2JS7Converter {
             }
             String boardName = entry.getValue().getFileName().toString();
             if (!AdditionalInstructionsHelper.convertBoards(result, p, boardName)) {
-                JS7ConverterHelper.createNoticeBoardByParentPath(result, p, false, boardName, BoardHelper.getBoardTitle(entry.getKey()), BoardHelper
-                        .getLifeTimeInMinutes(entry.getKey()));
+                Condition condition = entry.getKey();
+                if (condition.isDummy()) {
+                    Path reportDirPath = reportDir.resolve("js7-configurations").resolve("Cross-Instance");
+                    JS7ConverterHelper.createNoticeBoardByParentPath(result, false, reportDirPath, false, boardName, BoardHelper.getBoardTitle(
+                            condition), BoardHelper.getLifeTimeInMinutes(condition));
+                    continue;
+                }
+
+                boolean reference = false;
+                if (HAS_REFERENCES) {
+                    if (condition.getJobName() == null) {
+                        InConditionHolder h = analyzer.getConditionAnalyzer().getAllINConditions().get(condition.getKey());
+                        if (h != null && h.hasReferenceJobs(analyzer)) {
+                            reference = true;
+                        }
+                    } else {
+                        ACommonJob job = analyzer.getAllJobs().get(condition.getJobName());
+                        if (job != null) {
+                            reference = job.isReference();
+                        }
+                    }
+                }
+
+                JS7ConverterHelper.createNoticeBoardByParentPath(result, reference, p, false, boardName, BoardHelper.getBoardTitle(condition),
+                        BoardHelper.getLifeTimeInMinutes(condition));
             }
         }
     }
@@ -444,23 +503,35 @@ public class Autosys2JS7Converter {
             if (p == null) {
                 p = Paths.get("");
             }
-            JS7ConverterHelper.createLockByParentPath(result, p, r2l.getJS7Name(), r2l.getCapacity());
+            if (HAS_REFERENCES) {
+                r2l.getLock().setReference(r2l.isReference());
+            }
+            JS7ConverterHelper.createLockByParentPath(result, p, r2l.getLock());
         }
     }
 
     private void convertAgents(JS7ConverterResult result, Path reportDir) {
-        if (CONFIG.getGenerateConfig().getAgents()) {
-            result = JS7ConverterHelper.convertAgents(result, machine2js7Agent.entrySet().stream().map(e -> e.getValue()).collect(Collectors
-                    .toList()));
+        Map<String, JS7Agent> ma = null;
+        if (HAS_REFERENCES) {
+            ma = machine2js7Agent.entrySet().stream().filter(a -> !a.getValue().isReference()).collect(Collectors.toMap(Map.Entry::getKey,
+                    Map.Entry::getValue));
+        } else {
+            ma = machine2js7Agent;
         }
-        Report.writeAgentMappingsConfig(reportDir, machine2js7Agent);
+        //
+
+        if (CONFIG.getGenerateConfig().getAgents()) {
+            result = JS7ConverterHelper.convertAgents(result, ma.entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList()));
+        }
+        Report.writeAgentMappingsConfig(reportDir, ma);
     }
 
     private void convertCalendars(JS7ConverterResult result) {
         if (CONFIG.getGenerateConfig().getCalendars()) {
             Path rootPath = CONFIG.getCalendarConfig().getForcedFolder() == null ? Paths.get("") : CONFIG.getCalendarConfig().getForcedFolder();
-            for (String name : RunTimeHelper.JS7_CALENDARS) {
-                result.add(JS7ConverterHelper.getCalendarPath(rootPath, name), JS7ConverterHelper.createDefaultWorkingDaysCalendar());
+            for (Map.Entry<String, Boolean> entry : RunTimeHelper.JS7_CALENDARS.entrySet()) {
+                result.add(JS7ConverterHelper.getCalendarPath(rootPath, entry.getKey()), JS7ConverterHelper.createDefaultWorkingDaysCalendar(), entry
+                        .getValue());
             }
         }
     }
@@ -471,6 +542,7 @@ public class Autosys2JS7Converter {
         j = setFromConfig(j);
 
         JS7Agent js7Agent = getAgent(jilJob);
+
         j = JS7AgentHelper.setAgent(j, js7Agent);
         j = setExecutable(j, jilJob, js7Agent.getPlatform());
         j = setJobOptions(j, jilJob);
@@ -480,7 +552,7 @@ public class Autosys2JS7Converter {
     public void convertSchedule(JS7ConverterResult result, WorkflowResult wr, ACommonJob j) {
         Schedule s = RunTimeHelper.toSchedule(CONFIG, wr, j);
         if (s != null) {
-            result.add(JS7ConverterHelper.getSchedulePathFromJS7Path(wr.getPath(), wr.getName(), ""), s);
+            result.add(JS7ConverterHelper.getSchedulePathFromJS7Path(wr.getPath(), wr.getName(), ""), s, j.isReference());
         }
     }
 
@@ -503,7 +575,12 @@ public class Autosys2JS7Converter {
     public JS7Agent getAgent(ACommonMachineJob jilJob) {
         String machine = JS7ConverterHelper.getJS7ObjectName(jilJob.getMachine().getValue());
         if (machine != null && machine2js7Agent.containsKey(machine)) {
-            return machine2js7Agent.get(machine);
+            JS7Agent agent = machine2js7Agent.get(machine);
+            if (!agent.isReference() && jilJob.isReference()) {
+                agent.trySetAsReference(jilJob.isReference());
+                machine2js7Agent.put(machine, agent);
+            }
+            return agent;
         }
 
         JS7Agent agent = null;
@@ -527,7 +604,9 @@ public class Autosys2JS7Converter {
             agent = convertAgentFrom(JS7AgentConvertType.CONFIG_DEFAULT, CONFIG.getAgentConfig().getDefaultAgent(), null, machine);
         }
         if (agent != null) {
-            machine2js7Agent.put(machine == null ? agent.getJS7AgentName() : machine, agent);
+            String key = machine == null ? agent.getJS7AgentName() : machine;
+            agent.trySetAsReference(jilJob.isReference());
+            machine2js7Agent.put(key, agent);
         }
         return agent;
     }

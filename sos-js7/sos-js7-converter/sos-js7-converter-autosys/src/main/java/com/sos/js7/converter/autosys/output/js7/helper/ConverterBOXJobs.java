@@ -206,11 +206,7 @@ public class ConverterBOXJobs {
                 }
             }
 
-            // LOGGER.info("SSSSS[" + box.getName() + "][" + firstLevelChildren.size() + "]" + firstLevelChildren);
             tryInstructions.addAll(getInstructions(wr, box, box, firstLevelChildren, bin));
-
-            // LOGGER.info("SSS2=" + BOXJobsHelper.CLOSING_BOX_JOB_HELPERS);
-
         }
         // 1.3) Lock around Retry Instruction ???
         tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, box, tryInstructions);
@@ -291,7 +287,7 @@ public class ConverterBOXJobs {
 
         w.setInstructions(in);
         w = setWorkflowOrderPreparation(w, fileWatchers);
-        result.add(wr.getPath(), w);
+        result.add(wr.getPath(), w, box.isReference());
 
         if (fileWatchers.size() > 0) {
             try {

@@ -42,7 +42,7 @@ public class AutosysAnalyzer {
         analyzerDir = getAnalyzerDir(reportDir);
     }
 
-    public DirectoryParserResult analyzeAndCreateDiagram(DirectoryParserResult pr, Path input, Path reportDir) throws Exception {
+    public DirectoryParserResult analyzeAndCreateDiagram(DirectoryParserResult pr, Path input, Path reportDir, Path references) throws Exception {
         init(reportDir);
         analyze(pr, reportDir);
 
@@ -51,7 +51,7 @@ public class AutosysAnalyzer {
             // do not re-parse (do not delete reports already created) if the workflows should not be generated
             if (Autosys2JS7Converter.CONFIG.getGenerateConfig().getWorkflows()) {
                 // 1 - reinitialize properties
-                pr.reset();
+                // pr.reset();
                 reset();
 
                 // 2 - delete reports already created
@@ -61,7 +61,7 @@ public class AutosysAnalyzer {
                 ParserReport.INSTANCE.clear();
 
                 // 4 - re-parse
-                pr = Autosys2JS7Converter.parseInput(pr.getInput(), reportDir, pr.isXMLParser());
+                pr = Autosys2JS7Converter.parseInput(input, references, reportDir);
                 analyze(pr, reportDir);
             }
         }
@@ -76,7 +76,7 @@ public class AutosysAnalyzer {
     private void analyze(DirectoryParserResult pr, Path reportDir) {
         Condition.ADJUST_LOOK_BACK_FOR_JS7 = false;
         setAllJobs(pr.getJobs());
-        conditionAnalyzer.analyze(pr.getJobs());
+        conditionAnalyzer.analyze(pr.getJobs(), false);
     }
 
     private void adjustConditions(DirectoryParserResult pr) {
@@ -91,7 +91,7 @@ public class AutosysAnalyzer {
         });
 
         resetConditionAnalyzer();
-        conditionAnalyzer.analyze(pr.getJobs());
+        conditionAnalyzer.analyze(pr.getJobs(), true);
     }
 
     private void setAllJobs(List<ACommonJob> jobs) {
@@ -178,11 +178,14 @@ public class AutosysAnalyzer {
                 break;
             default: // Standalone
                 int i = 0;
-                // one file per application/group
-                try {
-                    AutosysGraphvizDiagramWriter.createDiagram(diagramConfig, this, range, outputDir, value);
-                } catch (Throwable e) {
-                    LOGGER.error("[createDiagram][" + range + "][standalone][application/group]" + e.toString(), e);
+
+                if (!Autosys2JS7Converter.HAS_REFERENCES) {
+                    // one file per application/group
+                    try {
+                        AutosysGraphvizDiagramWriter.createDiagram(diagramConfig, this, range, outputDir, value);
+                    } catch (Throwable e) {
+                        LOGGER.error("[createDiagram][" + range + "][standalone][application/group]" + e.toString(), e);
+                    }
                 }
                 if (isRangeOriginal) {
                     for (ACommonJob j : value) {
@@ -236,4 +239,7 @@ public class AutosysAnalyzer {
         return allJobs;
     }
 
+    public Map<String, ACommonJob> getNonReferenceJobs() {
+        return allJobs.entrySet().stream().filter(e -> !e.getValue().isReference()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
 }

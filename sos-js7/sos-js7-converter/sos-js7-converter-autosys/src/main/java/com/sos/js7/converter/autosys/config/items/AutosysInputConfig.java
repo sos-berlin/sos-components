@@ -26,11 +26,11 @@ public class AutosysInputConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
+        switch (key.toLowerCase()) {
         case "cleanup":
             withCleanup(Boolean.parseBoolean(val));
             break;
-        case "splitConfiguration":
+        case "splitconfiguration":
             withSplitConfiguration(Boolean.parseBoolean(val));
             break;
         }
