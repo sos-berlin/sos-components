@@ -211,7 +211,9 @@ public class ConverterBOXJobs {
         // 1.3) Lock around Retry Instruction ???
         tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, box, tryInstructions);
         // 1.4) Cyclic around all previous instructions
-        tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, box, tryInstructions, btch);
+        if (RunTimeHelper.convertToCyclic(box)) {
+            tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, box, tryInstructions, btch);
+        }
         // 1.5)
         wr.addPostNotices(btch); // after cyclic
         PostNotices postNoticeToBoxSelf = AdditionalInstructionsHelper.tryCreatePostNoticeToWorkflowItSelf(converter.getAnalyzer(), wr, box);

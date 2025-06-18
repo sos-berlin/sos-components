@@ -115,7 +115,9 @@ public class ConverterStandaloneJobs {
         // 1.3) Lock around Retry Instruction
         tryInstructions = LockHelper.getLockInstructions(converter.getAnalyzer(), wr, jilJob, tryInstructions);
         // 1.4) Cyclic around all previous instructions
-        tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, jilJob, tryInstructions, btch);
+        if (RunTimeHelper.convertToCyclic(jilJob)) {
+            tryInstructions = RunTimeHelper.getCyclicWorkflowInstructions(wr, jilJob, tryInstructions, btch);
+        }
         // 1.5)
         wr.addPostNotices(btch); // after cyclic
         PostNotices postNoticeToBoxSelf = AdditionalInstructionsHelper.tryCreatePostNoticeToStandaloneWorkflowItSelf(converter.getAnalyzer(), wr,
@@ -125,9 +127,9 @@ public class ConverterStandaloneJobs {
         }
 
         tryInstructions = AdditionalInstructionsHelper.consumeNoticesIfExists(analyzer, wr, tryInstructions);
-        //if (btch.getTryPostNotices() != null) {
-        //    tryInstructions.add(btch.getTryPostNotices());
-        //}
+        // if (btch.getTryPostNotices() != null) {
+        // tryInstructions.add(btch.getTryPostNotices());
+        // }
         if (btch.getTryPostNotices() != null) {
             PostNotices tpn = btch.getTryPostNotices();
             if (postNoticeToBoxSelf != null) {
@@ -192,8 +194,7 @@ public class ConverterStandaloneJobs {
                 }
             }
         }
-        
-        
+
         w.setInstructions(in);
 
         // w = AdditionalInstructionsHelper.consumeNoticesIfExists(wr, w, btch);

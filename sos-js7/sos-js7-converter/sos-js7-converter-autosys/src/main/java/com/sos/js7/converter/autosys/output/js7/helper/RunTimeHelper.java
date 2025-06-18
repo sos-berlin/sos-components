@@ -177,7 +177,7 @@ public class RunTimeHelper {
 
     @SuppressWarnings("unused")
     public static Scheme toCyclicInstruction(WorkflowResult wr, ACommonJob j, BoardTryCatchHelper btch) {
-        if (!convert2cyclic(j)) {
+        if (!convertToCyclic(j)) {
             return null;
         }
 
@@ -191,7 +191,7 @@ public class RunTimeHelper {
 
     // TODO replace by toCyclicInstruction method ...
     public static List<Instruction> getCyclicWorkflowInstructions(WorkflowResult wr, ACommonJob j, List<Instruction> in, BoardTryCatchHelper btch) {
-        if (!convert2cyclic(j)) {
+        if (!convertToCyclic(j)) {
             return in;
         }
 
@@ -243,7 +243,7 @@ public class RunTimeHelper {
         return in;
     }
 
-    private static boolean convert2cyclic(ACommonJob j) {
+    public static boolean convertToCyclic(ACommonJob j) {
         if (!j.hasRunTime() || !j.getRunTime().isCyclic()) {
             return false;
         }
