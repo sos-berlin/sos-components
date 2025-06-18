@@ -121,13 +121,13 @@ public class JocAuditTrail extends JocAuditLog {
     }
 
     public void setResponse(byte[] response) {
-        if (isEnabled && !md5AccessToken.isEmpty()) {
+        if (response != null && isEnabled && !md5AccessToken.isEmpty()) {
             setResponse(new String(response, StandardCharsets.UTF_8));
         }
     }
 
     public void setResponse(Object response) {
-        if (isEnabled && !md5AccessToken.isEmpty()) {
+        if (response != null && isEnabled && !md5AccessToken.isEmpty()) {
             try {
                 setResponse(Globals.objectMapper.writeValueAsString(response).replaceAll("(\"accessToken\")\\s*:\\s*\"[^\"]*\"", "$1:\"\""));
             } catch (JsonProcessingException e) {
@@ -138,18 +138,6 @@ public class JocAuditTrail extends JocAuditLog {
     }
     
     public void log() {
-        /**no response if
-         * MediaType.APPLICATION_OCTET_STREAM
-         * application/pdf
-         * image/*
-         * object instanceof StreamingOutput
-         * 
-         */
-        
-        /**
-         * MediaType.TEXT_PLAIN -> ???
-         */
-        
         if (isEnabled && !md5AccessToken.isEmpty()) {
         //if (!md5AccessToken.isEmpty()) {    
             try {

@@ -436,8 +436,14 @@ public class JOCResourceImpl {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
         }
-        jocAuditLog = new JocAuditTrail(user, request, bodyStr, Optional.ofNullable(accessToken), Optional.ofNullable(jobschedulerUser).map(
-                JobSchedulerUser::getSOSAuthCurrentAccount).map(SOSAuthCurrentAccount::getCallerIpAddress), category);
+        Optional<String> ipAddress = Optional.ofNullable(jobschedulerUser).map(u -> {
+            try {
+                return u.getSOSAuthCurrentAccount();
+            } catch (Exception e) {
+                return null;
+            }
+        }).map(SOSAuthCurrentAccount::getCallerIpAddress);
+        jocAuditLog = new JocAuditTrail(user, request, bodyStr, Optional.ofNullable(accessToken), ipAddress, category);
 
         if (bodyStr.length() > 4096) {
             bodyStr = bodyStr.substring(0, 4093) + "...";
