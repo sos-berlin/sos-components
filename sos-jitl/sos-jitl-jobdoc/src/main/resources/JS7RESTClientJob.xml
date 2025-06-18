@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+   <job xmlns:xi="http://www.w3.org/2001/XInclude"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        name="JS7RESTClientJob"
+        title="Send Requst to a JOC API">
+        <script language="java" java_class="com.sos.jitl.jobs.rest.JS7RESTClientJob" resource="1"/>
+    </job>
+   <configuration>
+      <params id="job_parameter">
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="request"
+                required="true">
+                <note>
+    <title>JSON for the API Request</title>
+    <p>
+        JSON Object that holds two keys: 
+        <br/>1) endpoint: The endpoint of the API. <br/>Example: If you want to execute a REST request to <code>http://localhost:2101/joc/api/orders/add</code>, then the endpoint will be <code>/orders/add</code>.
+        <br/>2) body: Request body/payload for the API specified by the endpoint. <br/>Example: 
+        <code><pre><![CDATA[
+        {
+            "controllerId": "controller_2102",
+            "orders": [{
+                "workflowPath": "/JS7RESTClientJob/w1",
+                "orderName": "",
+                "forceJobAdmission": false,
+                "priority": 0,
+                "tags": [],
+                "arguments": {},
+                "scheduledFor": "now"
+            }],
+            "auditLog": {}
+        }
+        ]]></pre></code>
+    </p>
+</note>
+            </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="return_variable"
+                required="false">
+                <note>
+                    <title>JSON Object Array </title>                                                                                      
+                    An array of JSON objects, each containing two keys:
+                    <br/>1) name: The variable name used to access the value extracted by the JQ query defined in the path key.
+                    <br/>2) path: A JQ query to extract a value from a JSON input. Optionally, this key may also contain file output instructions in the format:
+                    <br/>[JQ query] || [Processing Instruction] [File Path]
+                    <br/>If || is present, it indicates that the query result should be written to a file. In this case, the processing instruction and file path must be provided. Supported processing instructions are:
+                    <br/>
+                    <ul>
+                    <li>&gt; : Overwrites the file with the query result.</li>
+                    <li>&gt;&gt; : Appends the query result to the file.</li>
+                </ul>
+                <p>
+                     Note: There must be at least one space between the processing instruction and the file path. To get the value from a JQ query you need to place the Jackson-jq Java .jar file inside the JS7_AGENT_HOME/lib/user_lib directory of the Agent see <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+JITL+JS7RESTClientJob">JS7 - REST Client Job</a>.
+                </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.api-server.url"
+                required="true">
+                <note>
+                    <title>Base URLs of JOC Cockpit</title>
+                    <p>
+                        Base URLs of JOC Cockpit separated with | (pipe character).
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.api-server.username"
+                required="true">
+                <note>
+				    <title>Username</title>
+                    Username can be specified in the following formats:
+					<br/>
+                    <ul> 
+                       <li>Plain text</li>
+                       <li>Encrypted value</li>
+                       <li>Reference to a credential that holds the account name</li>
+                    </ul>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.api-server.password"
+                required="true">
+                <note>
+				    <title>Password</title>
+                    Password can be specified in the following formats:<br/>
+                    <ul> 
+                       <li>Plain text</li>
+                       <li>Encrypted value</li>
+                       <li>Reference to a credential that holds the passoword</li>
+                    </ul>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="encipherment_private_key_path"
+                required="false">
+                <note>
+                    <title>Path of the Encipherment Private Key</title>
+                    Specifies the path to the private key that is used for decryption of username and password settings, see JS7 - Encryption and Decryption. 
+					The path must be in reach of the Agent that executes the JITL job.
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.web.https.keystore.alias"
+                required="false">
+                <note>
+                    <title>Alias Name</title>
+                    <p>
+                        Certificate alias name.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.web.https.keystore.file"
+                required="false">
+                <note>
+                    <title>Path to the Certificate</title>
+                    <p>
+                        Path to certificate store in PKCS12 format holding the private key and certificate.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.web.https.keystore.store-password"
+                required="false">
+                <note>
+                    <title>Password of Certificate (keystore)</title>
+                    <p>
+                        Password for access to certificate store.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.web.https.keystore.key-password"
+                required="false">
+                <note>
+                    <title>Password of Private key</title>
+                    <p>
+                        Password for access to private key.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.web.https.truststore.file"
+                required="false">
+                <note>
+                    <title>Path to the CA Certificate</title>
+                    <p>
+                       List of paths to certificate stores in PKCS12 format holding the CA certificate. 
+					   If more than one path is specfied, then they are separated by a pipe "|" character.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.web.https.truststore.store-password"
+                required="false">
+                <note>
+                    <title>Password of Certificate (truststore)</title>
+                    <p>
+                        Password for access to certificate store.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.api-server.cs-file"
+                required="false">
+                <note>
+                    <title>Path of the KeePass database file</title>
+                    <p>
+                        Specifies the path to a KeePass database file (required if Credential Store is used).
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.api-server.cs-key"
+                required="false">
+                <note>
+                    <title>Path of the KeePass key file</title>
+                    <p>
+                        Specifies the path to a KeePass key file.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.api-server.cs-password"
+                required="false">
+                <note>
+                    <title>Password of the KeePass database file</title>
+                    <p>
+                        Specifies the password for the KeePass database file.
+                    </p>
+                </note>
+            </param>
+			<param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="js7.api-server.token"
+                required="false">
+                <note>
+                    <title>Access Token</title>
+                    <p>
+                        Specifies an access token.
+                    </p>
+                </note>
+            </param>
+      </params>
+	  <params order="1" id="return_parameter">
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="return_value"
+                required="false">
+                <note>
+    <title>Status Code of API Request</title>
+    <p>
+        This variable stores the HTTP status code returned by the JOC API request.
+    </p>
+</note>
+            </param>
+		</params>
+   </configuration>
+   <documentation xmlns:xi="http://www.w3.org/2001/XInclude"
+                  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+      	<p>
+           The JITL JS7RESTClientJob job template can be used to execute REST requests to JOC Cockpit.
+        </p>
+	</documentation>
+</description>
