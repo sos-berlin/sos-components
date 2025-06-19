@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -30,16 +33,29 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
             accessToken = getAccessToken(xAccessToken, accessToken);
 
             JsonObjectBuilder builder = Json.createObjectBuilder();
+            List<String> queryParams = new ArrayList<>(3);
             if (objectType != null) {
                 builder.add("objectType", objectType);
+                queryParams.add("objectType=" + objectType);
             }
+            
             builder.add("show", show == null ? false : Boolean.parseBoolean(show));
+            if (show != null) {
+                queryParams.add("show=" + show);
+            }
 
             if (schemaIdentifier != null) {
                 builder.add("schemaIdentifier", URLDecoder.decode(schemaIdentifier, JocXmlEditor.CHARSET));
+                queryParams.add("schemaIdentifier=" + schemaIdentifier);
             }
+            
             String json = builder.build().toString();
-            initLogging(IMPL_PATH, json.getBytes(), accessToken, CategoryType.SETTINGS); // GET change IMPL_PATH and body null
+            String query = "";
+            if (!queryParams.isEmpty()) {
+                query = queryParams.stream().collect(Collectors.joining("&", "?", ""));
+            }
+            
+            initLogging(IMPL_PATH + query, null, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(json.getBytes(), SchemaDownloadConfiguration.class);
             SchemaDownloadConfiguration in = Globals.objectMapper.readValue(json.getBytes(), SchemaDownloadConfiguration.class);
 
