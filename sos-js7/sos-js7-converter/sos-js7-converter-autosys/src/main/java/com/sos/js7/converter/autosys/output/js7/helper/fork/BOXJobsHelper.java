@@ -108,7 +108,7 @@ public class BOXJobsHelper {
         List<BOXJobHelper> children = new ArrayList<>();
         List<BOXJobHelper> closing = new ArrayList<>();
 
-        boolean doLog = box.getName().equals("ctba.ctb_p_c_edi_split_calc_ess_box");
+        boolean doLog = false;// box.getName().equals("ctba.ctb_p_c_edi_split_calc_ess_box");
         if (doLog) {
             LOGGER.info("currentJob=" + currentJob);
         }

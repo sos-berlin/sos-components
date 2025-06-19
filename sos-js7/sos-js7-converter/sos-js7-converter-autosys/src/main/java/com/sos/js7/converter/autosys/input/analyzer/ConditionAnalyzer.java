@@ -515,9 +515,10 @@ public class ConditionAnalyzer {
                     } catch (StackOverflowError e) {
                         used = false;
                         if (!boxJob.isReference()) {
-                            LOGGER.warn("[handleJobBoxConditions][BOX=" + boxJob.getName() + "][recursion detected][" + j.getName() + "]" + c
-                                    .getOriginalValue());
-
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.warn("[handleJobBoxConditions][BOX=" + boxJob.getName() + "][recursion detected][" + j.getName() + "]" + c
+                                        .getOriginalValue());
+                            }
                             Report.writePerJobBOXConditionRecursionReport(reportDir, boxJob, j, reportBOXNames);
                         }
                         // throw e;

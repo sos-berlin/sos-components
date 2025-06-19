@@ -30,7 +30,7 @@ public abstract class JS7ConverterMain {
         System.out.println("Usage:");
         System.out.println("  Options:");
         System.out.println("    --input=<location of input file or directory>                   | required argument");
-        System.out.println("    --references=<location of file(s) used to resolve dependencies> | ");
+        System.out.println("    --references=<location of file(s) used to resolve dependencies> | optional (not converted)");
         System.out.println("    --output-dir=<location of output directory>                     | default: ./output");
         System.out.println("    --report-dir=<location of report directory>                     | default: ./report");
         System.out.println("    --archive=<location of resulting .zip archive for JS7 import>   | default: ./js7_converted.tar.gz | .zip");
