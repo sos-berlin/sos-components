@@ -51,14 +51,14 @@ public class JocAuditLog {
         this.user = setProperty(user);
         this.request = setProperty(request);
         this.params = "";
-        this.category = category;
+        this.category = setCategoryProperty(category);
     }
     
     public JocAuditLog(String user, String request, String params, CategoryType category) {
         this.user = setProperty(user);
         this.request = setProperty(request);
         this.params = setParamProperty(params);
-        this.category = category;
+        this.category = setCategoryProperty(category);
     }
 
     private String setProperty(String prop) {
@@ -71,6 +71,13 @@ public class JocAuditLog {
     private String setParamProperty(String prop) {
         if (prop == null) {
             return "";
+        }
+        return prop;
+    }
+    
+    private CategoryType setCategoryProperty(CategoryType prop) {
+        if (prop == null) {
+            return CategoryType.UNKNOWN;
         }
         return prop;
     }
@@ -126,12 +133,15 @@ public class JocAuditLog {
                         ticketLink = audit.getTicketLink();
                     }
                 }
-                if (!JocAuditObjectsLog.isEnabled() || auditLogId == 0L) {
-                    AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
-                            request, user, setProperty(params), comment, timeSpent, ticketLink));
-                } else {
-                    AUDIT_LOGGER.info(String.format("REQUEST: %1$s - ID: %7$d - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
-                        request, user, setProperty(params), comment, timeSpent, ticketLink, auditLogId));
+                if (request != null && !request.isBlank()) {
+                    if (!JocAuditObjectsLog.isEnabled() || auditLogId == 0L) {
+                        AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
+                                request, user, setProperty(params), comment, timeSpent, ticketLink));
+                    } else {
+                        AUDIT_LOGGER.info(String.format(
+                                "REQUEST: %1$s - ID: %7$d - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s", request,
+                                user, setProperty(params), comment, timeSpent, ticketLink, auditLogId));
+                    }
                 }
                 truncateParams();
                 
@@ -155,22 +165,24 @@ public class JocAuditLog {
             auditLogToDb.setTimeSpent(audit.getTimeSpent());
         }
         auditLogToDb.setCreated(Date.from(Instant.now()));
-        if (connection == null) {
-            try {
-                connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
-                connection.save(auditLogToDb);
-                return auditLogToDb;
-            } catch (Exception e) {
-                LOGGER.error("", e);
-            } finally {
-                Globals.disconnect(connection);
-            }
-        } else {
-            try {
-                connection.save(auditLogToDb);
-                return auditLogToDb;
-            } catch (Exception e) {
-                LOGGER.error("", e);
+        if (request != null && !request.isBlank()) {
+            if (connection == null) {
+                try {
+                    connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    connection.save(auditLogToDb);
+                    return auditLogToDb;
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                } finally {
+                    Globals.disconnect(connection);
+                }
+            } else {
+                try {
+                    connection.save(auditLogToDb);
+                    return auditLogToDb;
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                }
             }
         }
         auditLogToDb.setId(0L);

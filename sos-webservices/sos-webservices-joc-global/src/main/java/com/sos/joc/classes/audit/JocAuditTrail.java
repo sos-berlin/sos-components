@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -37,7 +38,6 @@ public class JocAuditTrail extends JocAuditLog {
 
     private static final Logger AUDIT_TRAIL_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_TRAIL_LOGGER);
     private static final Logger LOGGER = LoggerFactory.getLogger(JocAuditTrail.class);
-    private static final String EMPTY_STRING = "";
     
     @JsonIgnore
     private boolean isEnabled = false;
@@ -65,11 +65,6 @@ public class JocAuditTrail extends JocAuditLog {
         this.isEnabled = false;
     }
     
-    public JocAuditTrail(String user, String request, CategoryType category) {
-        super(user, request, category);
-        setEnabled();
-    }
-    
     public JocAuditTrail(String user, String request, String params, Optional<String> accessToken, Optional<String> ipAddress, CategoryType category) {
         super(user, request, params, category);
         setEnabled();
@@ -83,14 +78,18 @@ public class JocAuditTrail extends JocAuditLog {
     }
     
     private void setMd5AccessToken(Optional<String> accessToken) {
-        this.md5AccessToken = accessToken.map(t -> {
-            try {
-                return SOSString.hashMD5(t);
-            } catch (Exception e) {
-                LOGGER.error("", e);
-                return "";
-            }
-        }).orElse("");
+        if (isEnabled) {
+            this.md5AccessToken = accessToken.map(t -> {
+                try {
+                    return SOSString.hashMD5(t);
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                    return "";
+                }
+            }).orElse("");
+        } else {
+            this.md5AccessToken = "";
+        }
     }
     
     private void setIpAddress(Optional<String> ipAddress) {
@@ -115,31 +114,41 @@ public class JocAuditTrail extends JocAuditLog {
     }
     
     public void setResponse(String response) {
-        if (isEnabled && !md5AccessToken.isEmpty()) {
+        if (isEnabled) {
             this.response = response;
         }
     }
 
     public void setResponse(byte[] response) {
-        if (response != null && isEnabled && !md5AccessToken.isEmpty()) {
+        if (response != null && isEnabled) {
             setResponse(new String(response, StandardCharsets.UTF_8));
         }
     }
 
-    public void setResponse(Object response) {
-        if (response != null && isEnabled && !md5AccessToken.isEmpty()) {
+    public void setResponse(SOSAuthCurrentAccountAnswer response) {
+        if (response != null && isEnabled) {
             try {
                 setResponse(Globals.objectMapper.writeValueAsString(response).replaceAll("(\"accessToken\")\\s*:\\s*\"[^\"]*\"", "$1:\"\""));
             } catch (JsonProcessingException e) {
-                setResponse(EMPTY_STRING);
+                setResponse("");
+                LOGGER.error("", e);
+            }
+        }
+    }
+    
+    public void setResponse(Object response) {
+        if (response != null && isEnabled) {
+            try {
+                setResponse(Globals.objectMapper.writeValueAsString(response));
+            } catch (JsonProcessingException e) {
+                setResponse("");
                 LOGGER.error("", e);
             }
         }
     }
     
     public void log() {
-        if (isEnabled && !md5AccessToken.isEmpty()) {
-        //if (!md5AccessToken.isEmpty()) {    
+        if (isEnabled) {
             try {
                 //timestamp = Date.from(Instant.now());
                 AUDIT_TRAIL_LOGGER.info(Globals.objectMapper.writeValueAsString(this).replaceFirst("^\\{", ""));

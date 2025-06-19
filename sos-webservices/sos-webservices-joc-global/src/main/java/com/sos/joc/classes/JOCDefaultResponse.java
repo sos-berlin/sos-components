@@ -52,6 +52,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     public static JOCDefaultResponse responseStatus200(Object entity, String mediaType, Map<String, Object> headers, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", mediaType).cacheControl(setNoCaching());
+
         jocAuditTrail.addContentTypeHeader(mediaType);
         if (headers != null) {
             headers.keySet().stream().filter(s -> headers.get(s) != null).forEach(s -> {
@@ -71,8 +72,9 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return responseStatus200(entity, mediaType, null, jocAuditTrail);
     }
     
-    public static JOCDefaultResponse responseStatus200(byte[] entity) { // called by SOSServicePermissionIam
-        return responseStatus200(entity, MediaType.APPLICATION_JSON, new JocAuditTrail());
+    public static JOCDefaultResponse responseStatus200(byte[] entity, JocAuditTrail jocAuditTrail) { // called by ./logout
+        jocAuditTrail.setResponse(entity);
+        return responseStatus200(entity, MediaType.APPLICATION_JSON, jocAuditTrail);
     }
     
     public static JOCDefaultResponse responsePlainStatus200(byte[] entity, String mediaType, JocAuditTrail jocAuditTrail) {
@@ -106,6 +108,19 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
+    public static JOCDefaultResponse responseStatus200(SOSAuthCurrentAccountAnswer entity, JocAuditTrail jocAuditTrail) {
+        // called by SOSServicePermissionIam ("Sonderlocke" to hide accessToken)
+        Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
+                setNoCaching());
+        responseBuilder.entity(entity);
+
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.setResponse(entity);
+        jocAuditTrail.log();
+
+        return new JOCDefaultResponse(responseBuilder.build());
+    }
+    
     public static JOCDefaultResponse responseStatus200WithHeaders(SOSAuthCurrentAccountAnswer entity, long timeout,
             JocAuditTrail jocAuditTrail) {
         // called by SOSServicePermissionIam (./login)
@@ -146,7 +161,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
 
     public static JOCDefaultResponse responseStatusJSError(String message) {
-        return responseStatus420(getErr420(new JocError(message)), new JocAuditTrail()); // TODO
+        return responseStatus420(getErr420(new JocError(message)), new JocAuditTrail()); // called by ./login
     }
 
     public static JOCDefaultResponse responseStatusJSError(SessionNotExistException e, String mediaType, JocAuditTrail jocAuditTrail) {
@@ -199,18 +214,18 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     }
 
-    public static JOCDefaultResponse responseStatusJSError(Throwable e, String mediaType) { // SOSServicePermissionIam
+    private static JOCDefaultResponse responseStatusJSError(Throwable e, String mediaType, JocAuditTrail jocAuditTrail) { // SOSServicePermissionIam
         if (e instanceof JocException) {
-            return responseStatusJSError((JocException) e, mediaType);
+            return responseStatusJSError((JocException) e, mediaType, jocAuditTrail);
         }
         if (e.getCause() != null && e.getCause() instanceof JocException) {
-            return responseStatusJSError((JocException) e.getCause(), mediaType);
+            return responseStatusJSError((JocException) e.getCause(), mediaType, jocAuditTrail);
         }
-        return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType, new JocAuditTrail());
+        return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType, jocAuditTrail);
     }
 
     public static JOCDefaultResponse responseStatusJSError(Throwable e) { // SOSServicePermissionIam
-        return responseStatusJSError(e, MediaType.APPLICATION_JSON);
+        return responseStatusJSError(e, MediaType.APPLICATION_JSON, new JocAuditTrail());
     }
 
     public static JOCDefaultResponse responseStatusJSError(Throwable e, JocError err, String mediaType, JocAuditTrail jocAuditTrail) {
@@ -322,9 +337,9 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 //        return responseStatus419(listOfErrors);
 //    }
 
-    public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) { // SOSServicePermissionIam
-        return responseStatus401(entity, new JocAuditTrail());
-    }
+//    public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) { // SOSServicePermissionIam ./login
+//        return responseStatus401(entity, new JocAuditTrail());
+//    }
     
     public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
@@ -355,9 +370,14 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return new JOCDefaultResponse(responseBuilder.build());
     }
     
-    public static JOCDefaultResponse responseStatus433(byte[] entity) {
+    public static JOCDefaultResponse responseStatus433(byte[] entity, JocAuditTrail jocAuditTrail) {
         Response.ResponseBuilder responseBuilder = Response.status(433).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(setNoCaching());
         responseBuilder.entity(entity);
+        
+        jocAuditTrail.addContentTypeHeader(MediaType.APPLICATION_JSON);
+        jocAuditTrail.setResponse(entity);
+        jocAuditTrail.log();
+        
         return new JOCDefaultResponse(responseBuilder.build());
     }
 

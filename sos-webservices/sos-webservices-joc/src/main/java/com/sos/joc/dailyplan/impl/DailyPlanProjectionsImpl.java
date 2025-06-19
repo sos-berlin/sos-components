@@ -183,7 +183,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                 metaContentOpt.ifPresent(meta -> entity.setMeta(meta));
                 return export(acceptEncoding, entity);
             } else {
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
             }
         } catch (DBMissingDataException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);
@@ -197,7 +197,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
     private JOCDefaultResponse export(String acceptEncoding, ProjectionsCalendarResponse entity) {
 
-        getJocAuditTrail().setResponse(entity);
+        getJocAuditTrail().setResponse(entity); // TODO maybe too large for trail logging
         boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
         StreamingOutput entityStream = new StreamingOutput() {
 

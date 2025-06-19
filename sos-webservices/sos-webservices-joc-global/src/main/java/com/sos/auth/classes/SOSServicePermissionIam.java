@@ -30,9 +30,9 @@ import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
-import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditTrail;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.authentication.DBItemIamAccount;
@@ -59,7 +59,6 @@ import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
@@ -71,7 +70,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
 
 @Path("authentication")
-public class SOSServicePermissionIam {
+public class SOSServicePermissionIam extends JOCResourceImpl {
 
     private static final String ACCESS_TOKEN = "access_token";
     private static final String X_ACCESS_TOKEN = "X-Access-Token";
@@ -88,13 +87,13 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("joc_cockpit_permissions")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postJocCockpitPermissions(@HeaderParam(X_ACCESS_TOKEN) String accessToken) {
 
         MDC.put("context", ThreadCtx);
         SOSWebserviceAuthenticationRecord sosWebserviceAuthenticationRecord = new SOSWebserviceAuthenticationRecord();
         try {
+            initLogging("./authentication/joc_cockpit_permissions", "{}".getBytes(), accessToken, CategoryType.IDENTITY);
             accessToken = getAccessToken(accessToken, EMPTY_STRING);
             sosWebserviceAuthenticationRecord.setAccessToken(accessToken);
 
@@ -102,14 +101,12 @@ public class SOSServicePermissionIam {
 
             if (currentAccount == null) {
                 LOGGER.debug("Account is not valid");
-                return JOCDefaultResponse.responseStatusJSError("Account is not valid");
+                return responseStatusJSError(new JocException(new JocError("Account is not valid")));
             }
-            // TODO JOC-2047 JocAuditTrail
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentAccount
-                    .getSosPermissionJocCockpitControllers()));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(currentAccount.getSosPermissionJocCockpitControllers()));
 
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -117,19 +114,18 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("size")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getSize() {
         MDC.put("context", ThreadCtx);
         try {
-            // TODO JOC-2047 JocAuditTrail
+            initLogging("./authentication/size", "".getBytes(), CategoryType.IDENTITY);
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
-                return JOCDefaultResponse.responseStatus200("-1".getBytes());
+                return responseStatus200("-1".getBytes());
             } else {
-                return JOCDefaultResponse.responseStatus200((Globals.jocWebserviceDataContainer.getCurrentAccountsList().size() + "").getBytes());
+                return responseStatus200((Globals.jocWebserviceDataContainer.getCurrentAccountsList().size() + "").getBytes(), MediaType.TEXT_PLAIN);
             }
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -137,22 +133,22 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("userbyname")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getAccessToken(String account) {
         MDC.put("context", ThreadCtx);
         try {
+            initLogging("./authentication/userbyname", account.getBytes(), CategoryType.IDENTITY);
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
                 SOSAuthCurrentAccountAnswer s = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByName(account);
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+                return responseStatus200(s);
             } else {
                 SOSAuthCurrentAccountAnswer s = new SOSAuthCurrentAccountAnswer();
                 s.setAccessToken("not-valid");
                 s.setAccount(account);
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+                return responseStatus200(s);
             }
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -160,23 +156,23 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("userbytoken")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse userByToken(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
         MDC.put("context", ThreadCtx);
         try {
+            initLogging("./authentication/userbytoken", "{}".getBytes(), xAccessTokenFromHeader, CategoryType.IDENTITY);
             String token = this.getAccessToken(xAccessTokenFromHeader, "");
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
 
                 SOSAuthCurrentAccountAnswer s = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByToken(token);
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+                return responseStatus200(s);
             } else {
                 SOSAuthCurrentAccountAnswer s = new SOSAuthCurrentAccountAnswer();
                 s.setAccessToken("not-valid");
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+                return responseStatus200(s);
             }
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -184,8 +180,7 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("login")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             @HeaderParam("X-ID-TOKEN") String idToken, @HeaderParam("X-SIGNATURE") String signature,
@@ -252,11 +247,11 @@ public class SOSServicePermissionIam {
 
             return login(sosLoginParameters, pwd);
         } catch (JocAuthenticationException e) {
-            return JOCDefaultResponse.responseStatus401(e.getSosAuthCurrentAccountAnswer());
+            return responseStatus401(e.getSosAuthCurrentAccountAnswer());
         } catch (UnsupportedEncodingException e) {
-            return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
+            return responseStatusJSError(new JocException(new JocError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED)));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -265,7 +260,7 @@ public class SOSServicePermissionIam {
     protected JOCDefaultResponse logout(String accessToken) throws JsonProcessingException {
 
         if (accessToken == null || accessToken.isEmpty()) {
-            return JOCDefaultResponse.responseStatusJSError(ACCESS_TOKEN_EXPECTED);
+            return responseStatusJSError(new JocException(new JocError(ACCESS_TOKEN_EXPECTED)));
         }
         SOSAuthCurrentAccount currentAccount = null;
         if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
@@ -274,12 +269,14 @@ public class SOSServicePermissionIam {
 
         String account = "";
         String comment = "";
+        JocAuditTrail jocAuditLog = new JocAuditTrail();
         if (currentAccount != null) {
 
             account = currentAccount.getAccountname();
 
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-            JocAuditLog jocAuditLog = new JocAuditLog(account, "./logout", CategoryType.IDENTITY);
+            jocAuditLog = new JocAuditTrail(account, "./authentication/logout", "", Optional.ofNullable(accessToken), Optional.ofNullable(
+                    currentAccount.getCallerIpAddress()), CategoryType.IDENTITY);
             AuditParams audit = new AuditParams();
             audit.setComment(comment);
             jocAuditLog.logAuditMessage(audit);
@@ -305,21 +302,20 @@ public class SOSServicePermissionIam {
             Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
         }
 
-        return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosAuthCurrentAccountAnswer));
+        return JOCDefaultResponse.responseStatus200(sosAuthCurrentAccountAnswer, jocAuditLog);
 
     }
 
     @POST
     @Path("logout")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse logoutPost(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, EMPTY_STRING);
             return logout(accessToken);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -327,20 +323,19 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("db_refresh")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse dbRefresh() {
         MDC.put("context", ThreadCtx);
         try {
+            initLogging("./authentication/db_refresh", "".getBytes(), CategoryType.IDENTITY);
             if (Globals.sosHibernateFactory != null) {
 
                 Globals.sosHibernateFactory.close();
                 Globals.sosHibernateFactory.build();
             }
-            // TODO JOC-2047 JocAuditTrail
-            return JOCDefaultResponse.responseStatus200("Db connections reconnected".getBytes());
+            return responseStatus200("Db connections reconnected".getBytes(), MediaType.TEXT_PLAIN);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -348,17 +343,18 @@ public class SOSServicePermissionIam {
 
     @GET
     @Path("role")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse hasRole(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("role") String role) {
 
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
+            initLogging("./authentication/role?role=" + role, null, accessToken, CategoryType.IDENTITY);
             SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = hasRole(accessToken, role);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosAuthCurrentAccountAnswer));
+            return responseStatus200(sosAuthCurrentAccountAnswer);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -381,17 +377,18 @@ public class SOSServicePermissionIam {
 
     @GET
     @Path("permission")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse isPermitted(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("permission") String permission) throws SessionNotExistException {
 
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
+            initLogging("./authentication/permission?permission=" + permission, null, accessToken, CategoryType.IDENTITY);
             SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = isPermitted(accessToken, permission);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosAuthCurrentAccountAnswer));
+            return responseStatus200(sosAuthCurrentAccountAnswer);
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
@@ -424,28 +421,22 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("permissions")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getPermissions(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery) throws SessionNotExistException {
 
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = this.getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
+            initLogging("./authentication/permissions", "{}".getBytes(), accessToken, CategoryType.IDENTITY);
             this.getCurrentAccount(accessToken);
             SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions();
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosListOfPermissions.getSosPermissions()));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(sosListOfPermissions.getSosPermissions()));
         } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e);
+            return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
-    }
-
-    private String getAccessToken(String xAccessTokenFromHeader, String accessTokenFromQuery) {
-        if (xAccessTokenFromHeader != null && !xAccessTokenFromHeader.isEmpty()) {
-            accessTokenFromQuery = xAccessTokenFromHeader;
-        }
-        return accessTokenFromQuery;
     }
 
     private String createAccount(SOSAuthCurrentAccount currentAccount, String password, DBItemIamIdentityService dbItemIdentityService)
@@ -1033,7 +1024,7 @@ public class SOSServicePermissionIam {
             }
 
             LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
-            JocAuditTrail jocAuditLog = new JocAuditTrail(currentAccount.getAccountname(), "./login", null, Optional.ofNullable(
+            JocAuditTrail jocAuditLog = new JocAuditTrail(currentAccount.getAccountname(), "./authentication/login", null, Optional.ofNullable(
                     sosAuthCurrentUserAnswer.getAccessToken()), Optional.ofNullable(sosAuthCurrentUserAnswer.getCallerIpAddress()),
                     CategoryType.IDENTITY);
             AuditParams audit = new AuditParams();

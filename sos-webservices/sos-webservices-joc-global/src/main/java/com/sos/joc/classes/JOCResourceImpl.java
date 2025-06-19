@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -18,7 +17,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -52,7 +50,9 @@ import com.sos.joc.model.security.foureyes.RequestBody;
 import com.sos.joc.model.security.foureyes.RequestorState;
 
 import io.vavr.control.Either;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.StreamingOutput;
 
@@ -63,10 +63,13 @@ public class JOCResourceImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
 //    private String accessToken;
     private String headerAccessToken;
-    private JocAuditTrail jocAuditLog;
+    private JocAuditTrail jocAuditLog = new JocAuditTrail();
     
     @HeaderParam("X-Approval-Request-Id")
     private String approvalRequestId;
+    
+    @Context 
+    private HttpServletRequest httpRequest;
     
     private byte[] origBody;
 
@@ -267,9 +270,9 @@ public class JOCResourceImpl {
         return jocAuditLog;
     }
     
-    public void logAuditTrail() {
-        jocAuditLog.log();
-    }
+//    public void logAuditTrail() {
+//        jocAuditLog.log();
+//    }
 
     public DBItemJocAuditLog storeAuditLog(AuditParams audit) {
         checkRequiredComment(audit);
@@ -323,7 +326,7 @@ public class JOCResourceImpl {
     
     public JOCDefaultResponse approvalRequestResponse(String message) {
         if (approvalRequestId == null || !approvalRequestId.trim().matches("\\d+") || approvalRequestId.trim().equals("0")) {
-            return JOCDefaultResponse.responseStatus433(getError433Schema(message));
+            return JOCDefaultResponse.responseStatus433(getError433Schema(message), jocAuditLog);
         } else {
             // already checked in initLooging method
             // Long fEyesId = Long.valueOf(fourEyesId.trim());
@@ -436,13 +439,14 @@ public class JOCResourceImpl {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
         }
-        Optional<String> ipAddress = Optional.ofNullable(jobschedulerUser).map(u -> {
-            try {
-                return u.getSOSAuthCurrentAccount();
-            } catch (Exception e) {
-                return null;
-            }
-        }).map(SOSAuthCurrentAccount::getCallerIpAddress);
+//        Optional<String> ipAddress = Optional.ofNullable(jobschedulerUser).map(u -> {
+//            try {
+//                return u.getSOSAuthCurrentAccount();
+//            } catch (Exception e) {
+//                return null;
+//            }
+//        }).map(SOSAuthCurrentAccount::getCallerIpAddress);
+        Optional<String> ipAddress = Optional.ofNullable(httpRequest).map(HttpServletRequest::getRemoteAddr);
         jocAuditLog = new JocAuditTrail(user, request, bodyStr, Optional.ofNullable(accessToken), ipAddress, category);
 
         if (bodyStr.length() > 4096) {
@@ -670,10 +674,10 @@ public class JOCResourceImpl {
     }
     
     
-    public JOCDefaultResponse responseStatus200(byte[] entity, Map<String, Object> headers) {
-        jocAuditLog.setResponse(entity);
-        return JOCDefaultResponse.responseStatus200(entity, MediaType.APPLICATION_JSON, headers, jocAuditLog);
-    }
+//    public JOCDefaultResponse responseStatus200(byte[] entity, Map<String, Object> headers) {
+//        jocAuditLog.setResponse(entity);
+//        return JOCDefaultResponse.responseStatus200(entity, MediaType.APPLICATION_JSON, headers, jocAuditLog);
+//    }
     
     public JOCDefaultResponse responseStatus200(byte[] entity, String mediaType) {
         /** no response iff
@@ -720,6 +724,10 @@ public class JOCResourceImpl {
     
     public JOCDefaultResponse responseStatus419(List<Err419> listOfErrors) {
         return JOCDefaultResponse.responseStatus419(listOfErrors, jocAuditLog);
+    }
+    
+    public JOCDefaultResponse responseStatus200(SOSAuthCurrentAccountAnswer entity) {
+        return JOCDefaultResponse.responseStatus200(entity, jocAuditLog);
     }
     
     public JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) {
