@@ -37,27 +37,23 @@ public class BaseHTTPClientTest {
             builder = builder.withSSL(getSsl());
             BaseHttpClient client = builder.build();
 
-            // execute a String method - response body is not null
-            ExecuteResult<String> resultWithBody = client.executeGET(uri);
-            int code = resultWithBody.response().statusCode();
-            logger.info("[body=not null]" + resultWithBody.response().body());
-            if (HttpUtils.isServerError(code)) {
-                throw new Exception(BaseHttpClient.getResponseStatus(resultWithBody));
-            }
-            if (HttpUtils.isNotFound(code)) {
-                BaseHttpClient.getResponseStatus(resultWithBody);
-            }
-            // execute a Void method - response body is null
-            ExecuteResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
-            code = result.response().statusCode();
-            logger.info("[body=null]" + result.response().body());
-
+            // Executes a GET request and returns response as String
+            ExecuteResult<String> result = client.executeGET(uri);
+            int code = result.response().statusCode();
+            logger.info("[result]" + result.response().body());
             if (HttpUtils.isServerError(code)) {
                 throw new Exception(BaseHttpClient.getResponseStatus(result));
             }
             if (HttpUtils.isNotFound(code)) {
                 BaseHttpClient.getResponseStatus(result);
             }
+            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
+
+            // Executes a GET request and discards the response body
+            ExecuteResult<Void> resultNoBody = client.executeGETNoResponseBody(uri);
+            code = resultNoBody.response().statusCode();
+            logger.info("[resultNoBody]" + resultNoBody.response().body());
+            logger.info("[resultNoBody]" + BaseHttpClient.getResponseStatus(resultNoBody));
         } catch (Exception e) {
             e.printStackTrace();
         }
