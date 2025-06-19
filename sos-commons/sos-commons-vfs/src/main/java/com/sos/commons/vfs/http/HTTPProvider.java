@@ -142,7 +142,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executeHEADOrGET(uri);
+            ExecuteResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
@@ -175,7 +175,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             URI uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executeDELETE(uri);
+            ExecuteResult<Void> result = client.executeDELETENoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
@@ -229,7 +229,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             int code;
             long sourceSize = -1L;
             if (!client.isChunkedTransfer()) {
-                result = client.executeHEADOrGET(sourceURI);
+                result = client.executeHEADOrGETNoResponseBody(sourceURI);
                 code = result.response().statusCode();
                 if (!HttpUtils.isSuccessful(code)) {
                     return false;
@@ -238,7 +238,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             }
             is = client.getHTTPInputStream(sourceURI);
 
-            result = client.executePUT(targetURI, is, sourceSize, false);
+            result = client.executePUTNoResponseBody(targetURI, is, sourceSize, false);
             code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
@@ -266,7 +266,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             URI uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executeGET(uri);
+            ExecuteResult<Void> result = client.executeGETNoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
@@ -358,13 +358,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
-            ExecuteResult<Void> result = client.executePUT(uri, source, sourceSize, isWebDAV);
+            ExecuteResult<Void> result = client.executePUTNoResponseBody(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
             }
             // PUT not returns file size
-            result = client.executeHEADOrGET(uri);
+            result = client.executeHEADOrGETNoResponseBody(uri);
             code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -389,7 +389,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             URI uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executePUT(uri, content, isWebDAV);
+            ExecuteResult<Void> result = client.executePUTNoResponseBody(uri, content, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
@@ -415,7 +415,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     private void connect(URI uri) throws Exception {
         String notFoundMsg = null;
 
-        ExecuteResult<Void> result = client.executeHEADOrGET(uri);
+        ExecuteResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
         int code = result.response().statusCode();
         if (HttpUtils.isServerError(code)) {
             throw new Exception(BaseHttpClient.getResponseStatus(result));

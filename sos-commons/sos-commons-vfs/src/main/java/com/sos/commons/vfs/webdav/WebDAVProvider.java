@@ -107,7 +107,7 @@ public class WebDAVProvider extends HTTPProvider {
 
             HttpRequest.Builder builder = getClient().createRequestBuilder(sourceURI);
             builder.header("Destination", targetURI.toString());
-            ExecuteResult<Void> result = getClient().executeWithoutResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
+            ExecuteResult<Void> result = getClient().executeNoResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {

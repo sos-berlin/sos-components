@@ -46,7 +46,7 @@ public class WebDAVProviderUtils {
 
     public static void createDirectory(WebDAVProvider provider, URI uri) throws Exception {
         HttpRequest.Builder builder = provider.getClient().createRequestBuilder(uri);
-        ExecuteResult<Void> result = provider.getClient().executeWithoutResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
+        ExecuteResult<Void> result = provider.getClient().executeNoResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
         if (!HttpUtils.isSuccessful(result.response().statusCode())) {
             throw new IOException(BaseHttpClient.getResponseStatus(result));
         }

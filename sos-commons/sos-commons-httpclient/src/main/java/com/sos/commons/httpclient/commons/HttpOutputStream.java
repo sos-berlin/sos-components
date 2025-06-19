@@ -58,7 +58,7 @@ public class HttpOutputStream extends OutputStream {
             }
 
             HttpRequest request = builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
-            ExecuteResult<Void> result = client.executeWithoutResponseBody(request);
+            ExecuteResult<Void> result = client.executeNoResponseBody(request);
             if (!HttpUtils.isSuccessful(result.response().statusCode())) {
                 throw new IOException(BaseHttpClient.getResponseStatus(result));
             }

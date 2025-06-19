@@ -31,17 +31,24 @@ import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.ssl.SslArguments;
 import com.sos.commons.util.ssl.SslContextFactory;
 
+/** Base HTTP client wrapper for Java's HttpClient.<br/>
+ * Provides convenient methods for executing HTTP requests with or without parsing the response body.<br/>
+ * Supports GET, PUT, DELETE, and conditional HEAD fallback.<br/>
+ */
 public class BaseHttpClient implements AutoCloseable {
 
     @SuppressWarnings("unused")
     private final ISOSLogger logger;
+    /** Underlying Java HTTP client instance */
     private final HttpClient client;
-
+    /** Optional headers to be applied to all requests */
     private Map<String, String> headers;
+    /** Cached result of whether HEAD is allowed on the target server */
     private Boolean isHEADMethodAllowed;
     // TODO how to implement not chunked transfer?
     // Set Content-Lenght throws the java.lang.IllegalArgumentException: restricted header name: "Content-Length" Exception...
     // System.setProperty("jdk.httpclient.allowRestrictedHeaders", "false");
+    /** Whether chunked transfer encoding should be used for uploads */
     private boolean chunkedTransfer = true;
 
     private BaseHttpClient(ISOSLogger logger, HttpClient client) {
@@ -59,24 +66,39 @@ public class BaseHttpClient implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        //
+        // No resources to close currently
     }
 
+    /** Creates a new HttpRequest builder with base headers
+     * 
+     * @param uri target URI
+     * @return initialized request builder with URI and headers */
     public HttpRequest.Builder createRequestBuilder(URI uri) {
         HttpRequest.Builder builder = HttpRequest.newBuilder().uri(uri);
         setRequestHeaders(builder);
         return builder;
     }
 
-    public ExecuteResult<Void> executeWithoutResponseBody(HttpRequest request) throws Exception {
-        return new ExecuteResult<Void>(request, client.send(request, HttpResponse.BodyHandlers.discarding()));
+    /** Executes a generic request with a specified body handler */
+    public <T> ExecuteResult<T> execute(HttpRequest request, HttpResponse.BodyHandler<T> bodyHandler) throws Exception {
+        return new ExecuteResult<>(request, client.send(request, bodyHandler));
     }
 
+    /** Executes a request and returns the response body as a String */
     public ExecuteResult<String> executeWithResponseBody(HttpRequest request) throws Exception {
-        return new ExecuteResult<String>(request, client.send(request, HttpResponse.BodyHandlers.ofString()));
+        return execute(request, HttpResponse.BodyHandlers.ofString());
     }
 
-    public ExecuteResult<Void> executeHEADOrGET(URI uri) throws Exception {
+    /** Executes a request and discards the response body<br/>
+     * Useful for HEAD or requests where only status is needed */
+    public ExecuteResult<Void> executeNoResponseBody(HttpRequest request) throws Exception {
+        return execute(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    /** Executes a HEAD request if supported, otherwise falls back to GET<br/>
+     * Only returns status and headers, no response body<br/>
+     */
+    public ExecuteResult<Void> executeHEADOrGETNoResponseBody(URI uri) throws Exception {
         HttpRequest request = null;
         boolean isHEAD = false;
         if (isHEADMethodAllowed == null || isHEADMethodAllowed) {
@@ -85,11 +107,11 @@ public class BaseHttpClient implements AutoCloseable {
         } else {
             request = createGETRequest(uri);
         }
-        ExecuteResult<Void> result = executeWithoutResponseBody(request);
+        ExecuteResult<Void> result = executeNoResponseBody(request);
         if (isHEAD) {
             if (HttpUtils.isMethodNotAllowed(result.response.statusCode())) {
                 isHEADMethodAllowed = false;
-                result = executeWithoutResponseBody(createGETRequest(uri));
+                result = executeNoResponseBody(createGETRequest(uri));
             } else {
                 isHEADMethodAllowed = true;
             }
@@ -97,52 +119,84 @@ public class BaseHttpClient implements AutoCloseable {
         return result;
     }
 
-    public ExecuteResult<Void> executeGET(URI uri) throws Exception {
-        return executeWithoutResponseBody(createGETRequest(uri));
+    /** Executes a GET request and handles the response via provided handler */
+    public <T> ExecuteResult<T> executeGET(URI uri, HttpResponse.BodyHandler<T> handler) throws Exception {
+        return execute(createGETRequest(uri), handler);
     }
 
-    public ExecuteResult<Void> executeDELETE(URI uri) throws Exception {
-        return executeWithoutResponseBody(createRequestBuilder(uri).DELETE().build());
+    /** Executes a GET request and returns response as String */
+    public ExecuteResult<String> executeGET(URI uri) throws Exception {
+        return executeWithResponseBody(createGETRequest(uri));
     }
 
-    public ExecuteResult<Void> executePUT(URI uri, String content) throws Exception {
-        return executePUT(uri, content, false);
+    /** Executes a GET request and discards the response body */
+    public ExecuteResult<Void> executeGETNoResponseBody(URI uri) throws Exception {
+        return executeNoResponseBody(createGETRequest(uri));
     }
 
-    public ExecuteResult<Void> executePUT(URI uri, String content, boolean isWebDAV) throws Exception {
-        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-
-        HttpRequest.Builder builder = createRequestBuilder(uri);
-        builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
-        withWebDAVOverwrite(builder, isWebDAV);
-        if (!chunkedTransfer) {
-            // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
-            builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
-        }
-        return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build());
+    /** Executes a DELETE request and returns the response body with a given handler */
+    public <T> ExecuteResult<T> executeDELETE(URI uri, HttpResponse.BodyHandler<T> handler) throws Exception {
+        return execute(createDELETERequest(uri), handler);
     }
 
-    public ExecuteResult<Void> executePUT(URI uri, InputStream is, long size) throws Exception {
-        return executePUT(uri, is, size, false);
+    /** Executes a DELETE request and returns the response as String */
+    public ExecuteResult<String> executeDELETE(URI uri) throws Exception {
+        return executeWithResponseBody(createDELETERequest(uri));
     }
 
-    public ExecuteResult<Void> executePUT(URI uri, InputStream is, long size, boolean isWebDAV) throws Exception {
-        HttpRequest.Builder builder = createRequestBuilder(uri);
-        builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
-        withWebDAVOverwrite(builder, isWebDAV);
-        if (!chunkedTransfer) {
-            // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
-            builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
-        }
-        return executeWithoutResponseBody(builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build());
+    /** Executes a DELETE request and discards the response body */
+    public ExecuteResult<Void> executeDELETENoResponseBody(URI uri) throws Exception {
+        return executeNoResponseBody(createDELETERequest(uri));
     }
 
+    /** Executes a PUT request with text content and a response body handler */
+    public <T> ExecuteResult<T> executePUT(URI uri, HttpResponse.BodyHandler<T> handler, String content) throws Exception {
+        return execute(createPUTRequest(uri, content, false), handler);
+    }
+
+    /** Executes a PUT request with text content and returns the response as String */
+    public ExecuteResult<String> executePUT(URI uri, String content) throws Exception {
+        return executeWithResponseBody(createPUTRequest(uri, content, false));
+    }
+
+    /** Executes a PUT request with text content and discards the response body */
+    public ExecuteResult<Void> executePUTNoResponseBody(URI uri, String content) throws Exception {
+        return executeNoResponseBody(createPUTRequest(uri, content, false));
+    }
+
+    /** Executes a PUT request with WebDAV overwrite header and discards response body */
+    public ExecuteResult<Void> executePUTNoResponseBody(URI uri, String content, boolean isWebDAV) throws Exception {
+        return executeNoResponseBody(createPUTRequest(uri, content, isWebDAV));
+    }
+
+    /** Executes a PUT request with InputStream content and response handler */
+    public <T> ExecuteResult<T> executePUT(URI uri, HttpResponse.BodyHandler<T> handler, InputStream is, long size) throws Exception {
+        return execute(createPUTInputStreamRequest(uri, is, size, false), handler);
+    }
+
+    /** Executes a PUT request with InputStream content and returns response as String */
+    public ExecuteResult<String> executePUT(URI uri, InputStream is, long size) throws Exception {
+        return executeWithResponseBody(createPUTInputStreamRequest(uri, is, size, false));
+    }
+
+    /** Executes a PUT request with InputStream and discards the response body */
+    public ExecuteResult<Void> executePUTNoResponseBody(URI uri, InputStream is, long size) throws Exception {
+        return executeNoResponseBody(createPUTInputStreamRequest(uri, is, size, false));
+    }
+
+    /** Executes a PUT request with InputStream and WebDAV overwrite header, discarding response */
+    public ExecuteResult<Void> executePUTNoResponseBody(URI uri, InputStream is, long size, boolean isWebDAV) throws Exception {
+        return executeNoResponseBody(createPUTInputStreamRequest(uri, is, size, isWebDAV));
+    }
+
+    /** Adds WebDAV Overwrite header if enabled */
     public static void withWebDAVOverwrite(HttpRequest.Builder builder, boolean withWebDAVOverwrite) {
         if (withWebDAVOverwrite) {
             builder.header(HttpUtils.HEADER_WEBDAV_OVERWRITE, HttpUtils.HEADER_WEBDAV_OVERWRITE_VALUE);
         }
     }
 
+    /** Executes GET request and returns the response InputStream */
     public InputStream getHTTPInputStream(URI uri) throws Exception {
         HttpRequest request = createGETRequest(uri);
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
@@ -157,6 +211,7 @@ public class BaseHttpClient implements AutoCloseable {
         return response.body();
     }
 
+    /** Extracts file size from the response headers or content stream if chunked */
     public long getFileSize(HttpResponse<?> response) throws Exception {
         long size = response.headers().firstValueAsLong(HttpUtils.HEADER_CONTENT_LENGTH).orElse(-1);
         if (size < 0) {// e.g. Transfer-Encoding: chunked
@@ -165,6 +220,7 @@ public class BaseHttpClient implements AutoCloseable {
         return size;
     }
 
+    /** Returns the last modified timestamp from the response header */
     public static long getLastModifiedInMillis(HttpResponse<?> response) {
         if (response == null) {
             return HttpUtils.DEFAULT_LAST_MODIFIED;
@@ -176,6 +232,7 @@ public class BaseHttpClient implements AutoCloseable {
         return HttpUtils.httpDateToMillis(header.get());
     }
 
+    /** Constructs a readable string representation of the response status */
     public static String getResponseStatus(ExecuteResult<?> result) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(result.request().method()).append("]");
@@ -185,6 +242,7 @@ public class BaseHttpClient implements AutoCloseable {
         return sb.toString();
     }
 
+    /** Returns whether chunked transfer is enabled */
     public boolean isChunkedTransfer() {
         return chunkedTransfer;
     }
@@ -195,12 +253,40 @@ public class BaseHttpClient implements AutoCloseable {
         }
     }
 
+    private HttpRequest createHEADRequest(URI uri) {
+        return createRequestBuilder(uri).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
+    }
+
     private HttpRequest createGETRequest(URI uri) {
         return createRequestBuilder(uri).GET().build();
     }
 
-    private HttpRequest createHEADRequest(URI uri) {
-        return createRequestBuilder(uri).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
+    private HttpRequest createDELETERequest(URI uri) {
+        return createRequestBuilder(uri).DELETE().build();
+    }
+
+    private HttpRequest createPUTRequest(URI uri, String content, boolean isWebDAV) {
+        HttpRequest.Builder builder = createRequestBuilder(uri);
+        builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
+        withWebDAVOverwrite(builder, isWebDAV);
+
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+        if (!chunkedTransfer) {
+            // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
+            builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(bytes.length));
+        }
+        return builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
+    }
+
+    private HttpRequest createPUTInputStreamRequest(URI uri, InputStream is, long size, boolean isWebDAV) {
+        HttpRequest.Builder builder = createRequestBuilder(uri);
+        builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
+        withWebDAVOverwrite(builder, isWebDAV);
+        if (!chunkedTransfer) {
+            // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
+            builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
+        }
+        return builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build();
     }
 
     private void setHeaders(Map<String, String> headers) {
@@ -220,6 +306,7 @@ public class BaseHttpClient implements AutoCloseable {
         });
     }
 
+    /** Holds result of an executed request and its response */
     public class ExecuteResult<T> {
 
         private final HttpRequest request;
