@@ -33,12 +33,14 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -115,6 +117,9 @@ public class DailyPlanRunner extends TimerTask {
     private java.util.Calendar startCalendar;
     private Map<String, Long> durations = null;
 
+    private Map<String, Calendar> calculateStartTimesCalendars = new HashMap<String, Calendar>();
+    private Map<String, Calendar> calculateStartTimesNonWorkingCalendars = new HashMap<String, Calendar>();
+
     public DailyPlanRunner(DailyPlanSettings settings) {
         this.settings = settings;
     }
@@ -131,6 +136,7 @@ public class DailyPlanRunner extends TimerTask {
             if (isAutomaticStart || settings.isRunNow()) {
                 LOGGER.info(String.format("[%s][start]%s", settings.getStartMode(), settings.toString()));
 
+                clear();
                 startCalendar = null;
                 try {
                     createPlan = true;
@@ -152,6 +158,8 @@ public class DailyPlanRunner extends TimerTask {
             LOGGER.error(e.toString(), e);
         } finally {
             if (createPlan) {
+                clear();
+
                 try {
                     recreateProjections(settings);
                 } catch (Throwable ex) {
@@ -164,6 +172,11 @@ public class DailyPlanRunner extends TimerTask {
                 LOGGER.info(DailyPlanHelper.getNextStartMsg(settings, startCalendar));
             }
         }
+    }
+
+    private void clear() {
+        calculateStartTimesCalendars.clear();
+        calculateStartTimesNonWorkingCalendars.clear();
     }
 
     private boolean isAutomaticStart() {
@@ -703,6 +716,13 @@ public class DailyPlanRunner extends TimerTask {
         return result;
     }
 
+    private boolean isCalendarPermitted(Calendar calendar) {
+        if (calendar.getPath() == null || SOSCollection.isEmpty(settings.getPermittedFolders())) {
+            return true;
+        }
+        return SOSAuthFolderPermissions.isPermittedForFolder(DailyPlanHelper.getFolderFromPath(calendar.getPath()), settings.getPermittedFolders());
+    }
+
     private List<DBItemDailyPlanSubmission> getSubmissionsForDate(String controllerId, java.util.Calendar calendar) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
@@ -905,8 +925,9 @@ public class DailyPlanRunner extends TimerTask {
             LOGGER.debug(String.format("%sactDate=%s,nextDate=%s", lp, SOSDate.getDateAsString(actDate), SOSDate.getDateAsString(nextDate)));
         }
 
-        Map<String, Calendar> calendars = new HashMap<String, Calendar>();
-        Map<String, Calendar> nonWorkingCalendars = new HashMap<String, Calendar>();
+        // Map<String, Calendar> calendars = new HashMap<String, Calendar>();
+        // Map<String, Calendar> nonWorkingCalendars = new HashMap<String, Calendar>();
+
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
         InventoryDBLayer invDbLayer = new InventoryDBLayer(null);
         String submissionForDate = dailyPlanDate;
@@ -946,7 +967,7 @@ public class DailyPlanRunner extends TimerTask {
                     }
 
                     String calendarsKey = assignedCalendar.getCalendarName();// + "#" + schedule.getPath();
-                    Calendar calendar = calendars.get(calendarsKey);
+                    Calendar calendar = calculateStartTimesCalendars.get(calendarsKey);
                     if (calendar == null) {
                         if (usingEveryDayCalendarWithId != null) {
                             calendar = getEveryDayCalendar(usingEveryDayCalendarWithId, assignedCalendar.getCalendarName());
@@ -961,13 +982,20 @@ public class DailyPlanRunner extends TimerTask {
                                     LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][db]%s", logPrefix, assignedCalendar.getCalendarName(),
                                             SOSString.toString(calendar, true)));
                                 }
+                                if (!fromService && !isCalendarPermitted(calendar)) {
+                                    if (isDebugEnabled) {
+                                        LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s]not permitted", logPrefix, assignedCalendar
+                                                .getCalendarName()));
+                                    }
+                                    continue;
+                                }
                             } catch (DBMissingDataException e) {
                                 LOGGER.warn(String.format("%s[WorkingDaysCalendar=%s][skip]not found", logPrefix, assignedCalendar
                                         .getCalendarName()));
                                 continue;
                             }
                         }
-                        calendars.put(calendarsKey, calendar);
+                        calculateStartTimesCalendars.put(calendarsKey, calendar);
                     } else {
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][cache]%s", logPrefix, assignedCalendar.getCalendarName(), SOSString
@@ -1019,8 +1047,9 @@ public class DailyPlanRunner extends TimerTask {
                                         if (isDebugEnabled) {
                                             LOGGER.debug(String.format("%s[NonWorkingDays][NEXTNONWORKINGDAY]start...", logPrefix));
                                         }
-                                        if (isDayAfterNonWorkingDays(isDebugEnabled, logPrefix, invDbLayer, schedule, nonWorkingCalendars, actDate,
-                                                actDateAsString, prevDateAsStringForNext, nonWorkingDaysForNext, p)) {
+                                        if (isDayAfterNonWorkingDays(isDebugEnabled, logPrefix, invDbLayer, schedule,
+                                                calculateStartTimesNonWorkingCalendars, actDate, actDateAsString, prevDateAsStringForNext,
+                                                nonWorkingDaysForNext, p)) {
                                             // check if this day is allowed in the regular calendar
                                             String firstNonWorkingDay = DailyPlanHelper.getFirstNonWorkingDayFromLastBlock(nonWorkingDaysForNext);
                                             if (isDebugEnabled) {
@@ -1028,7 +1057,7 @@ public class DailyPlanRunner extends TimerTask {
                                                         firstNonWorkingDay));
                                             }
                                             if (firstNonWorkingDay != null) {
-                                                Calendar calendayCopy = calendars.get(calendarsKey);
+                                                Calendar calendayCopy = calculateStartTimesCalendars.get(calendarsKey);
                                                 calendayCopy.setFrom(firstNonWorkingDay);
                                                 calendayCopy.setTo(actDateAsString);
 
@@ -1054,8 +1083,9 @@ public class DailyPlanRunner extends TimerTask {
                                         if (isDebugEnabled) {
                                             LOGGER.debug(String.format("%s[NonWorkingDays][PREVIOUSNONWORKINGDAY]start...", logPrefix));
                                         }
-                                        if (isDayBeforeNonWorkingDays(isDebugEnabled, logPrefix, invDbLayer, schedule, nonWorkingCalendars,
-                                                actDateAsString, nextDateAsStringForPrev, nonWorkingDaysForPrev, p)) {
+                                        if (isDayBeforeNonWorkingDays(isDebugEnabled, logPrefix, invDbLayer, schedule,
+                                                calculateStartTimesNonWorkingCalendars, actDateAsString, nextDateAsStringForPrev,
+                                                nonWorkingDaysForPrev, p)) {
                                             // check if this day is allowed in the regular calendar
                                             String lastNonWorkingDay = DailyPlanHelper.getLastNonWorkingDayFromFirstBlock(nonWorkingDaysForPrev);
                                             if (isDebugEnabled) {
@@ -1063,7 +1093,7 @@ public class DailyPlanRunner extends TimerTask {
                                                         lastNonWorkingDay));
                                             }
                                             if (lastNonWorkingDay != null) {
-                                                Calendar calendayCopy = calendars.get(calendarsKey);
+                                                Calendar calendayCopy = calculateStartTimesCalendars.get(calendarsKey);
                                                 calendayCopy.setFrom(actDateAsString);
                                                 calendayCopy.setTo(lastNonWorkingDay);
 
@@ -1140,8 +1170,9 @@ public class DailyPlanRunner extends TimerTask {
                                             }
                                             break;
                                         case SUPPRESS:
-                                            if (isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule, nonWorkingCalendars, actDateAsString,
-                                                    nextDateAsString, nonWorkingDaysForSuppress, p, frequencyResolverDate)) {
+                                            if (isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule,
+                                                    calculateStartTimesNonWorkingCalendars, actDateAsString, nextDateAsString,
+                                                    nonWorkingDaysForSuppress, p, frequencyResolverDate)) {
                                                 continue st;
                                             } else {
                                                 break;
@@ -1150,8 +1181,8 @@ public class DailyPlanRunner extends TimerTask {
                                         case NEXTNONWORKINGDAY:
                                         case PREVIOUSNONWORKINGDAY:
                                             if (checkNonWorkingDaysNextPrev && isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule,
-                                                    nonWorkingCalendars, actDateAsString, nextDateAsString, nonWorkingDaysForSuppress, p,
-                                                    frequencyResolverDate)) {
+                                                    calculateStartTimesNonWorkingCalendars, actDateAsString, nextDateAsString,
+                                                    nonWorkingDaysForSuppress, p, frequencyResolverDate)) {
                                                 continue st;
                                             } else {
                                                 break;

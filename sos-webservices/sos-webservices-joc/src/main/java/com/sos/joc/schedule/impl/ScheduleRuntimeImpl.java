@@ -1,18 +1,8 @@
 package com.sos.joc.schedule.impl;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -21,21 +11,24 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
-import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.Calendar;
-import com.sos.inventory.model.calendar.Period;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.calendar.FrequencyResolver;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.dailyplan.DailyPlanRunner;
+import com.sos.joc.dailyplan.OrderListSynchronizer;
+import com.sos.joc.dailyplan.common.AbsoluteMainPeriod;
+import com.sos.joc.dailyplan.common.DailyPlanSchedule;
+import com.sos.joc.dailyplan.common.DailyPlanSettings;
+import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.dailyplan.RunTime;
-import com.sos.joc.model.order.ScheduleDatesFilter;
+import com.sos.joc.model.schedule.runtime.ScheduleRunTimeRequest;
+import com.sos.joc.model.schedule.runtime.ScheduleRunTimeResponse;
+import com.sos.joc.model.schedule.runtime.items.DailyPlanDate;
+import com.sos.joc.model.schedule.runtime.items.DailyPlanDates;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
-import com.sos.joc.schedule.commons.DailyPlanRuntimeHelper;
 import com.sos.joc.schedule.resource.IScheduleRuntimeResource;
 import com.sos.schema.JsonValidator;
 
@@ -52,83 +45,52 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validate(filterBytes, ScheduleDatesFilter.class);
-            ScheduleDatesFilter in = Globals.objectMapper.readValue(filterBytes, ScheduleDatesFilter.class);
+            JsonValidator.validate(filterBytes, ScheduleRunTimeRequest.class);
+            ScheduleRunTimeRequest in = Globals.objectMapper.readValue(filterBytes, ScheduleRunTimeRequest.class);
             JocPermissions perms = getJocPermissions(accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, perms.getCalendars().getView() || perms.getDailyPlan().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            RunTime entity = new RunTime();
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            ScheduleRunTimeResponse entity = new ScheduleRunTimeResponse();
+            entity.setDates(new DailyPlanDates());
 
-            if (!SOSCollection.isEmpty(in.getCalendars())) {
-                if (in.getTimeZone() == null || in.getTimeZone().isEmpty()) {
-                    in.setTimeZone(SOSDate.TIMEZONE_UTC);
-                }
-                final ZoneId timezone = ZoneId.of(in.getTimeZone());
+            if (!SOSCollection.isEmpty(in.getCalendars()) && in.getDateFrom() != null && in.getDateTo() != null) {
+                DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(API_CALL);
+                settings.setCalculateAbsoluteMainPeriodsOnly(true);
+                settings.setPermittedFolders(folderPermissions.getListOfFolders());
+                settings.setStartMode(StartupMode.webservice);
 
-                FrequencyResolver fr = new FrequencyResolver();
-                if (in.getDateFrom() == null) {
-                    in.setDateFrom(fr.getToday());
-                }
-                if (in.getDateTo() == null) {
-                    in.setDateTo(fr.getLastDayOfCurrentYear());
-                }
+                final DailyPlanRunner runner = new DailyPlanRunner(settings);
+                List<DailyPlanSchedule> dailyPlanSchedules = List.of(toDailyPlanSchedule(in));
 
-                session = Globals.createSosHibernateStatelessConnection(API_CALL);
-                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-                final List<Calendar> nonWorkingDayCalendars = DailyPlanRuntimeHelper.getNonWorkingDayCalendars(dbLayer, in
-                        .getNonWorkingDayCalendars());
-                List<DBItemInventoryReleasedConfiguration> workingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getCalendars().stream().map(
-                        AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList()));
-                Globals.disconnect(session);
-                session = null;
+                SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo()).stream().forEach(asDailyPlanSingleDate -> {
+                    // SOSDate.getDatesInRange(dateFrom, dateTo).stream().parallel().forEach(asDailyPlanSingleDate -> {
+                    try {
+                        settings.setDailyPlanDate(SOSDate.getDate(asDailyPlanSingleDate));
 
-                SortedSet<Period> periods = new TreeSet<>(Comparator.comparing(p -> p.getSingleStart() == null ? p.getBegin() : p.getSingleStart()));
+                        DBItemDailyPlanSubmission dummySubmission = new DBItemDailyPlanSubmission();
+                        dummySubmission.setId(-1L);
+                        dummySubmission.setSubmissionForDate(settings.getDailyPlanDate());
 
-                if (workingDbCalendars != null && !workingDbCalendars.isEmpty()) {
-                    Map<String, DBItemInventoryReleasedConfiguration> nameContentMap = workingDbCalendars.stream().collect(Collectors.toMap(
-                            DBItemInventoryReleasedConfiguration::getName, Function.identity()));
+                        OrderListSynchronizer synchronizer = runner.calculateStartTimes(settings.getStartMode(), "controllerId", dailyPlanSchedules,
+                                asDailyPlanSingleDate, dummySubmission);
 
-                    for (AssignedCalendars c : in.getCalendars()) {
-                        DBItemInventoryReleasedConfiguration item = nameContentMap.get(c.getCalendarName());
-                        if (item == null) {
-                            continue;
+                        List<AbsoluteMainPeriod> absPeriods = synchronizer.getAbsoluteMainPeriods();
+                        if (absPeriods.size() > 0) {
+                            DailyPlanDate d = new DailyPlanDate();
+                            d.setPeriods(absPeriods.stream().map(p -> p.getPeriod()).collect(Collectors.toList()));
+
+                            entity.getDates().getAdditionalProperties().put(asDailyPlanSingleDate, d);
                         }
-                        if (!folderIsPermitted(item.getFolder(), permittedFolders)) {
-                            continue;
-                        }
-                        Calendar restrictions = new Calendar();
-                        restrictions.setIncludes(c.getIncludes());
-                        // restrictions.setExcludes(c.getExcludes());
-                        Calendar basedOn = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
-                        Set<Period> singleDatesPeriods = ConcurrentHashMap.newKeySet();
-                        SOSDate.getDatesInRange(in.getDateFrom(), in.getDateTo()).stream().parallel().forEach(asDailyPlanSingleDate -> {
-                            try {
-                                List<String> workingDates = new FrequencyResolver().resolveRestrictions(basedOn, restrictions, asDailyPlanSingleDate,
-                                        asDailyPlanSingleDate).getDates();
-
-                                List<String> nonWorkingDates = new ArrayList<>();
-                                Set<String> workingDatesExtendedWithNonWorkingPrevNext = new HashSet<>();
-
-                                DailyPlanRuntimeHelper.applyAdjustmentForNonWorkingDates(c, nonWorkingDayCalendars, asDailyPlanSingleDate,
-                                        workingDates, nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext);
-                                singleDatesPeriods.addAll(workingDates.stream().flatMap(date -> DailyPlanRuntimeHelper.getSingleDatePeriods(date, c
-                                        .getPeriods(), nonWorkingDates, workingDatesExtendedWithNonWorkingPrevNext, timezone)).collect(Collectors
-                                                .toSet()));
-                            } catch (Throwable e) {
-                                LOGGER.info("[" + API_CALL + "][" + asDailyPlanSingleDate + "]" + e, e);
-                            }
-                        });
-                        periods.addAll(singleDatesPeriods);
+                    } catch (Exception e) {
+                        LOGGER.info("[" + asDailyPlanSingleDate + "]" + e, e);
                     }
-                }
-                entity.setPeriods(new ArrayList<>(periods));
+                });
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(entity);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -137,6 +99,14 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private DailyPlanSchedule toDailyPlanSchedule(ScheduleRunTimeRequest in) {
+        Schedule schedule = new Schedule();
+        schedule.setPath(API_CALL + "_tmp");
+        schedule.setCalendars(in.getCalendars());
+        schedule.setNonWorkingDayCalendars(in.getNonWorkingDayCalendars());
+        return new DailyPlanSchedule(schedule);
     }
 
 }

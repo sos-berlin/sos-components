@@ -470,7 +470,8 @@ public class DailyPlanProjections {
                 OrderListSynchronizer synchronizer = runner.calculateStartTimes(settings.getStartMode(), "controllerId", dailyPlanSchedules,
                         asDailyPlanSingleDate, dummySubmission);
 
-                if (synchronizer.getAbsoluteMainPeriods().size() > 0) {
+                List<AbsoluteMainPeriod> absPeriods = synchronizer.getAbsoluteMainPeriods();
+                if (absPeriods.size() > 0) {
                     String[] arr = asDailyPlanSingleDate.split("-");
                     String m = arr[0] + "-" + arr[1];
 
@@ -486,7 +487,7 @@ public class DailyPlanProjections {
                     }
                     di.setPlanned(null);
 
-                    for (AbsoluteMainPeriod ap : synchronizer.getAbsoluteMainPeriods()) {
+                    for (AbsoluteMainPeriod ap : absPeriods) {
                         DatePeriodItem dp = new DatePeriodItem();
                         dp.setSchedule(ap.getSchedulePath());
                         dp.setPeriod(ap.getPeriod());

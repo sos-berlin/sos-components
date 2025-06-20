@@ -144,7 +144,7 @@ public class JsonValidator {
             put("AddOrders", "order/addOrders-schema.json");
             put("ModifyOrders", "order/modifyOrders-schema.json");
 
-            put("ScheduleDatesFilter", "orderManagement/scheduleDatesFilter-schema.json");
+            put("com.sos.joc.model.schedule.runtime.ScheduleRunTimeRequest", "schedule/runtime/schedule-runtime-request-schema.json");
 
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
