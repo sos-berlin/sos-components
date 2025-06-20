@@ -28,6 +28,7 @@ import javax.json.JsonReader;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.apache.http.Header;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
@@ -71,7 +72,9 @@ public class ApiExecutor {
     private static final String WS_API_PREFIX = "/joc/api";
     private static final String ACCESS_TOKEN_HEADER = "X-Access-Token";
     private static final String APPLICATION_JSON = "application/json";
+    private static final String APPLICATION_OCTETSTREAM = "application/octet-stream";
     private static final String CONTENT_TYPE = "Content-Type";
+    private static final String ACCEPT = "Accept";
     private static final String AGENT_CONF_DIR_ENV_PARAM = "JS7_AGENT_CONFIG_DIR";
     private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
     private static final String PRIVATE_CONF_JS7_PARAM_API_SERVER = "js7.api-server";
@@ -128,9 +131,15 @@ public class ApiExecutor {
     private String truststoreType;
     private String keystoreType;
     private Map<String, DetailValue> jobResources;
+    private List<Header> additionalHeaders;
 
     public ApiExecutor(OrderProcessStep<?> step) {
         this.step = step;
+    }
+
+    public ApiExecutor(OrderProcessStep<?> step, List<Header> additionalHeaders) {
+        this.step = step;
+        this.additionalHeaders = additionalHeaders;
     }
 
     public void setJobResources(Map<String, DetailValue> jobResources) {
@@ -163,8 +172,11 @@ public class ApiExecutor {
          * TODO: first check variables from OrderProcessStep if required values are available if available use this configuration if not available use
          * configuration from private.conf
          */
-        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
-        step.getLogger().debug("***ApiExecutor***");
+        boolean isDebugEnabled = false; 
+        if(step != null) {
+            isDebugEnabled = step.getLogger().isDebugEnabled();
+            step.getLogger().debug("***ApiExecutor***");
+        }
         jocUris = getUris();
         String latestError = "";
         // String latestResponse = "";
@@ -173,19 +185,23 @@ public class ApiExecutor {
         Exception latestException = null;
         for (String uri : jocUris) {
             try {
-                if (isDebugEnabled) {
+                if (step != null && isDebugEnabled) {
                     step.getLogger().debug("processing Url - %s", uri);
                 }
                 tryCreateClient(uri);
                 this.jocUri = URI.create(uri);
                 loginUri = jocUri.resolve(WS_API_LOGIN);
-                if (isDebugEnabled) {
+                if (step != null && isDebugEnabled) {
                     step.getLogger().debug("send login to: %s", loginUri.toString());
+                }
+                if(additionalHeaders != null && !additionalHeaders.isEmpty()) {
+                    additionalHeaders.stream().forEach(header -> client.addHeader(header.getName(), header.getValue()));
+                    
                 }
                 String response = client.postRestService(loginUri, null);
                 // latestResponse = response;
                 statusCode = client.statusCode();
-                if (isDebugEnabled) {
+                if (step != null && isDebugEnabled) {
                     step.getLogger().debug("HTTP status code: %s", statusCode);
                 }
                 handleExitCode(client);
@@ -210,7 +226,7 @@ public class ApiExecutor {
                     throw latestException;
                 } else if (statusCode == 200) {
                     // successful login
-                    if (isDebugEnabled) {
+                    if (step != null && isDebugEnabled) {
                         step.getLogger().debug("Connection to URI %s established.", loginUri.toString());
                     }
                     return new ApiResponse(statusCode, getReasonPhrase(), response, client.getResponseHeader(ACCESS_TOKEN_HEADER), null);
@@ -220,7 +236,7 @@ public class ApiExecutor {
                 }
             } catch (SOSConnectionRefusedException e) {
                 latestError = String.format("connection to URI %1$s failed, trying next Uri.", loginUri.toString());
-                if (isDebugEnabled) {
+                if (step != null && isDebugEnabled) {
                     step.getLogger().debug(latestError);
                 }
                 latestException = e;
@@ -231,7 +247,7 @@ public class ApiExecutor {
                 } else {
                     latestError = String.format("%1$s occurred: %2$s", e.getClass(), e.getMessage());
                 }
-                if (isDebugEnabled) {
+                if (step != null && isDebugEnabled) {
                     step.getLogger().debug(latestError);
                 }
 
@@ -239,37 +255,42 @@ public class ApiExecutor {
                 continue;
             }
         }
-        step.getLogger().info("No connection attempt was successful. Check agents private.conf.");
+        if(step != null) {
+            step.getLogger().info("No connection attempt was successful. Check agents private.conf.");
+        }
         throw latestException;
     }
-
+    
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
         if (token == null) {
             throw new SOSBadRequestException("no access token provided. permission denied.");
         } else {
             if (jocUri != null) {
-                boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+                boolean isDebugEnabled = false; 
+                if(step != null) {
+                    isDebugEnabled = step.getLogger().isDebugEnabled();
+                }
                 try {
                     client.addHeader(ACCESS_TOKEN_HEADER, token);
                     client.addHeader(CONTENT_TYPE, APPLICATION_JSON);
-                    if (isDebugEnabled) {
+                    if (step != null && isDebugEnabled) {
                         step.getLogger().debug("REQUEST: %s", apiUrl);
                         step.getLogger().debug("PARAMS: %s", body);
                     }
                     if (!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
                         apiUrl = WS_API_PREFIX + apiUrl;
                     }
-                    if (isDebugEnabled) {
+                    if (step != null && isDebugEnabled) {
                         step.getLogger().debug("resolvedUri: %s", jocUri.resolve(apiUrl).toString());
                     }
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
-                    if (isDebugEnabled) {
+                    if (step != null && isDebugEnabled) {
                         step.getLogger().debug("HTTP status code: %s", client.statusCode());
                     }
                     handleExitCode(client);
                     return new ApiResponse(client.statusCode(), getReasonPhrase(), response, token, null);
                 } catch (SOSException e) {
-                    return new ApiResponse(client.statusCode(), getReasonPhrase(), null, token, e);
+                    return new ApiResponse(client.statusCode(), getReasonPhrase(), (String)null, token, e);
                 }
             } else {
                 throw new SOSConnectionRefusedException("No connection established through previous login api call.");
@@ -281,15 +302,21 @@ public class ApiExecutor {
         if (token != null && jocUri != null) {
             try {
                 client.addHeader(ACCESS_TOKEN_HEADER, token);
-                step.getLogger().debug("send logout");
+                boolean isDebugEnabled = false; 
+                if(step != null) {
+                    isDebugEnabled = step.getLogger().isDebugEnabled();
+                }
+                if (step != null && isDebugEnabled) {
+                    step.getLogger().debug("send logout");
+                }
                 String response = client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
-                if (step.getLogger().isDebugEnabled()) {
+                if (step != null && isDebugEnabled) {
                     step.getLogger().debug("HTTP status code: %s", client.statusCode());
                 }
                 handleExitCode(client);
                 return new ApiResponse(client.statusCode(), getReasonPhrase(), response, token, null);
             } catch (SOSException e) {
-                return new ApiResponse(client.statusCode(), getReasonPhrase(), null, token, e);
+                return new ApiResponse(client.statusCode(), getReasonPhrase(), (String)null, token, e);
             }
         } else {
             throw new SOSBadRequestException("no access token provided. permission denied.");
@@ -448,7 +475,9 @@ public class ApiExecutor {
         } else {
             setBasicAuthorizationIfExists(config);
         }
-        step.getLogger().debug("initiate REST api client");
+        if(step != null) {
+            step.getLogger().debug("initiate REST api client");
+        }
         if (jocUri.toLowerCase().startsWith("https:")) {
             applySSLContextCredentials(client);
         }
@@ -467,7 +496,11 @@ public class ApiExecutor {
     }
     
     private String getValueOfArgument(String key, String _default) {
-        return getValueOfArgument(step.getAllArguments().get(key), _default);
+        if(step != null) {
+            return getValueOfArgument(step.getAllArguments().get(key), _default);
+        } else {
+            return null;
+        }
     }
     
     private String getValueOfArgument(JobArgument<?> arg, String _default) {
@@ -563,17 +596,23 @@ public class ApiExecutor {
         try {
             csFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_FILE);
         } catch (Exception e) {
-            step.getLogger().debug(e.getMessage());
+            if(step != null) {
+                step.getLogger().debug(e.getMessage());
+            }
         }
         try {
             csKeyFile = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE);
         } catch (Exception e) {
-            step.getLogger().debug(e.getMessage());
+            if(step != null) {
+                step.getLogger().debug(e.getMessage());
+            }
         }
         try {
             csPwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD);
         } catch (Exception e) {
-            step.getLogger().debug(e.getMessage());
+            if(step != null) {
+                step.getLogger().debug(e.getMessage());
+            }
         }
         String username = "";
         String pwd = "";
@@ -587,20 +626,26 @@ public class ApiExecutor {
             try {
                 token = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN);
             } catch (ConfigException e) {
-                step.getLogger().debug("no token found in private.conf.");
+                if(step != null) {
+                    step.getLogger().debug("no token found in private.conf.");
+                }
             }
 
             if (token.isEmpty()) {
                 try {
                     username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
                 } catch (ConfigException e) {
-                    step.getLogger().debug("no username found in private.conf.");
+                    if(step != null) {
+                        step.getLogger().debug("no username found in private.conf.");
+                    }
 
                 }
                 try {
                     pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
                 } catch (ConfigException e) {
-                    step.getLogger().debug("no (user-)password found in private.conf.");
+                    if(step != null) {
+                        step.getLogger().debug("no (user-)password found in private.conf.");
+                    }
                 }
 
                 String privateKeyPath = null;
@@ -611,7 +656,9 @@ public class ApiExecutor {
         }
         if (!token.isEmpty() && jobResources != null) {
 
-            LOGGER.debug("get jobresource and variable from token:" + token);
+            if(step != null) {
+                step.getLogger().debug("get jobresource and variable from token:" + token);
+            }
 
             String[] tokenJobResource = token.split(":");
             if (tokenJobResource.length == 2) {
@@ -647,7 +694,10 @@ public class ApiExecutor {
     }
 
     public void readConfig() throws SOSMissingDataException {
-        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+        boolean isDebugEnabled = false;
+        if(step != null) {
+            isDebugEnabled = step.getLogger().isDebugEnabled();
+        }
 
         String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
         if (agentConfDirPath == null) {
@@ -657,7 +707,7 @@ public class ApiExecutor {
             throw new SOSMissingDataException(String.format(
                     "Environment variable %1$s not set. Can´t read credentials from agents private.conf file.", AGENT_CONF_DIR_ENV_PARAM));
         }
-        if (isDebugEnabled) {
+        if (step != null && isDebugEnabled) {
             step.getLogger().debug("agentConfDirPath: %s", agentConfDirPath);
         }
         Path agentConfDir = Paths.get(agentConfDirPath);
@@ -667,11 +717,11 @@ public class ApiExecutor {
         Properties props = new Properties();
         props.setProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR, agentConfDir.toString());
         Path privatFolderPath = agentConfDir.resolve(PRIVATE_FOLDER_NAME);
-        if (isDebugEnabled) {
+        if (step != null && isDebugEnabled) {
             step.getLogger().debug("agents private folder: %s", privatFolderPath.toString());
         }
         Config defaultConfigWithAgentConfDir = ConfigFactory.parseProperties(props).withFallback(defaultConfig).resolve();
-        if (isDebugEnabled) {
+        if (step != null && isDebugEnabled) {
             step.getLogger().debug(PRIVATE_CONF_JS7_PARAM_CONFDIR + " (Config): " + defaultConfigWithAgentConfDir.getString(
                     PRIVATE_CONF_JS7_PARAM_CONFDIR));
         }
@@ -682,7 +732,7 @@ public class ApiExecutor {
                 for (Entry<String, ConfigValue> entry : config.entrySet()) {
                     if (entry.getKey().startsWith("js7")) {
                         if (!DO_NOT_LOG_KEY.contains(entry.getKey())) {
-                            if (isDebugEnabled) {
+                            if (step != null && isDebugEnabled) {
                                 step.getLogger().debug(entry.getKey() + ": " + entry.getValue().toString());
                             }
                         }
@@ -699,11 +749,13 @@ public class ApiExecutor {
         String keystorePath = null;
         try {
             keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH);
-            if (step.getLogger().isDebugEnabled()) {
+            if (step != null && step.getLogger().isDebugEnabled()) {
                 step.getLogger().debug("read Keystore from: %s", config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
             }
         } catch (ConfigException e) {
-            step.getLogger().debug("no keystore file found in private.conf.");
+            if(step != null) {
+                step.getLogger().debug("no keystore file found in private.conf.");
+            }
         }
         String keyPasswd = null;
         try {
@@ -715,13 +767,17 @@ public class ApiExecutor {
         try {
             storePasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD);
         } catch (ConfigException e) {
-            step.getLogger().debug("no keystore store-password found in private.conf.");
+            if(step != null) {
+                step.getLogger().debug("no keystore store-password found in private.conf.");
+            }
         }
         String alias = null;
         try {
             alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS);
         } catch (ConfigException e) {
-            step.getLogger().debug("no (key-)alias found in private.conf.");
+            if(step != null) {
+                step.getLogger().debug("no (key-)alias found in private.conf.");
+            }
         }
         if (keystorePath != null && !keystorePath.isEmpty()) {
             return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd, alias);
@@ -736,12 +792,14 @@ public class ApiExecutor {
             credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY).stream().map(item -> new KeyStoreCredentials(item.getString(
                     PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH), item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD))).filter(
                             Objects::nonNull).collect(Collectors.toList());
-            if (step.getLogger().isDebugEnabled()) {
+            if (step != null && step.getLogger().isDebugEnabled()) {
                 step.getLogger().debug("read Truststore from: %s", config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY).get(0).getString(
                         PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
             }
         } catch (ConfigException e) {
-            step.getLogger().debug("no truststore credentials found in private.conf.");
+            if(step != null) {
+                step.getLogger().debug("no truststore credentials found in private.conf.");
+            }
         }
         if (credentials != null) {
             return credentials;

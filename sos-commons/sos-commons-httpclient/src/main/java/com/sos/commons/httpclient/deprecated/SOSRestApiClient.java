@@ -1,5 +1,6 @@
 package com.sos.commons.httpclient.deprecated;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -7,10 +8,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.ArrayList;
@@ -20,8 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.HostnameVerifier;
@@ -59,6 +65,7 @@ import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
 import com.sos.commons.httpclient.exception.SOSSSLException;
+import com.sos.commons.util.SOSArchiveFormat;
 
 import jakarta.ws.rs.core.StreamingOutput;
 
@@ -229,10 +236,19 @@ public class SOSRestApiClient {
     public Path getFilePathByRestService(URI uri, String prefix, boolean withGzipEncoding) throws SOSException, SocketException {
         return getFilePathResponse(new HttpGet(uri), prefix, withGzipEncoding);
     }
-
+    
     public StreamingOutput getStreamingOutputByRestService(URI uri, boolean withGzipEncoding) throws SOSException, SocketException {
         return getStreamingOutputResponse(new HttpGet(uri), withGzipEncoding);
     }
+
+//    public <B> String postRestService(URI uri, B body) throws SOSException {
+//        HttpPost requestPost = new HttpPost(uri);
+//        HttpEntity entity = getEntity(body);
+//        if (entity != null) {
+//            requestPost.setEntity(entity);
+//        }
+//        return getResponse(requestPost, String.class);
+//    }
 
     public <B> String postRestService(URI uri, B body) throws SOSException {
         HttpPost requestPost = new HttpPost(uri);
@@ -240,7 +256,8 @@ public class SOSRestApiClient {
         if (entity != null) {
             requestPost.setEntity(entity);
         }
-        return getResponse(requestPost, String.class);
+        httpResponse = getResponse(requestPost);
+        return getResponse(httpResponse);
     }
 
     public String printHttpRequestHeaders() {
@@ -410,17 +427,11 @@ public class SOSRestApiClient {
         }
         return entity;
     }
-
-    private <T> T getResponse(HttpUriRequest request, Class<T> clazz) throws SOSException {
-        httpResponse = null;
+    private HttpResponse getResponse(HttpUriRequest request) throws SOSException {
         createHttpClient();
         setHttpRequestHeaders(request);
         try {
-            httpResponse = httpClient.execute(request);
-            return getResponse(clazz);
-        } catch (SOSException e) {
-            closeHttpClient();
-            throw e;
+            return httpClient.execute(request);
         } catch (ClientProtocolException e) {
             closeHttpClient();
             throw new SOSConnectionRefusedException(request, e);
@@ -439,6 +450,19 @@ public class SOSRestApiClient {
         } catch (Exception e) {
             closeHttpClient();
             throw new SOSConnectionRefusedException(request, e);
+        }
+    }
+
+    private <T> T getResponse(HttpUriRequest request, Class<T> clazz) throws SOSException {
+        httpResponse = null;
+        createHttpClient();
+        setHttpRequestHeaders(request);
+        try {
+            httpResponse = getResponse(request);
+            return getResponse(clazz);
+        } catch (SOSException e) {
+            closeHttpClient();
+            throw e;
         }
     }
 
@@ -478,32 +502,35 @@ public class SOSRestApiClient {
         createHttpClient();
         setHttpRequestHeaders(request);
         try {
-            httpResponse = httpClient.execute(request);
+            httpResponse = getResponse(request);
             return getStreamingOutputResponse(withGzipEncoding);
         } catch (SOSException e) {
             closeHttpClient();
             throw e;
-        } catch (ClientProtocolException e) {
-            closeHttpClient();
-            throw new SOSConnectionRefusedException(request, e);
-        } catch (SocketTimeoutException e) {
-            closeHttpClient();
-            throw new SOSNoResponseException(request, e);
-        } catch (HttpHostConnectException e) {
-            closeHttpClient();
-            throw new SOSConnectionRefusedException(request, e);
-        } catch (SocketException e) {
-            closeHttpClient();
-            if ("connection reset".equalsIgnoreCase(e.getMessage())) {
-                throw new SOSConnectionResetException(request, e);
-            }
-            throw new SOSConnectionRefusedException(request, e);
-        } catch (Exception e) {
-            closeHttpClient();
-            throw new SOSConnectionRefusedException(request, e);
         }
     }
 
+    private String getResponse(HttpResponse response) throws SOSNoResponseException {
+        try {
+            setHttpResponseHeaders();
+            String contentType = getResponseHeader("Content-Type");
+            String contentEncoding = getResponseHeader("Content-Encoding");
+            HttpEntity entity = httpResponse.getEntity();
+            if(contentType != null && !contentType.isEmpty()) {
+                if("application/octet-stream".equalsIgnoreCase(contentType) || (contentEncoding != null && contentEncoding.contains("gzip"))) {
+                    return processInputStreamFromResponse(entity);
+                } else {
+                    return EntityUtils.toString(entity, StandardCharsets.UTF_8);
+                }
+            }
+        } catch (Exception e) {
+            closeHttpClient();
+            throw new SOSNoResponseException(e);
+        }
+        return null;
+    }
+
+    
     @SuppressWarnings("unchecked")
     private <T> T getResponse(Class<T> clazz) throws SOSNoResponseException {
         try {
@@ -516,17 +543,80 @@ public class SOSRestApiClient {
                 } else if (clazz.equals(byte[].class)) {
                     s = (T) EntityUtils.toByteArray(entity);
                 } else if (clazz.equals(InputStream.class)) {
-                    s = (T) entity.getContent();
+//                    s = (T) entity.getContent();
+                    s = (T) processInputStreamFromResponse(entity);
                 }
             }
-            if (autoCloseHttpClient) {
-                closeHttpClient();
-            }
+//            if (autoCloseHttpClient) {
+//                closeHttpClient();
+//            }
             return s;
         } catch (Exception e) {
             closeHttpClient();
             throw new SOSNoResponseException(e);
         }
+    }
+    
+    private String processInputStreamFromResponse (HttpEntity entity) throws SOSException {
+        try {
+            String targetPath = headers.get("X-Outfile"); 
+            Path targetFolder = null;
+            if (targetPath != null && !targetPath.isEmpty()) {
+                if(targetPath.contains(".")) {
+                    targetFolder = Paths.get(targetPath).getParent();
+                } else {
+                    targetFolder = Paths.get(targetPath);
+                }
+            }
+            if (entity != null) {
+                InputStream instream = entity.getContent();
+                OutputStream out = null;
+                if (instream != null) {
+                    try {
+                        Files.createDirectories(targetFolder);
+                        String contentDisposition = getResponseHeader("Content-Disposition");
+                        Path path = null;
+                        if(contentDisposition != null) {
+                            String filename = decodeDisposition(contentDisposition);
+                            path = Files.createFile(targetFolder.resolve(filename));
+                            out = Files.newOutputStream(path);
+                            if(getResponseHeader("Content-Encoding") != null) {
+                                instream = new GZIPInputStream(instream);
+                            }
+                        } else {
+                            if(getResponseHeader("Content-Encoding") != null) {
+                                instream = new GZIPInputStream(instream);
+                            }
+                            out = new ByteArrayOutputStream();
+                        }
+                        byte[] buffer = new byte[4096];
+                        int length;
+                        while ((length = instream.read(buffer)) > 0) {
+                            out.write(buffer, 0, length);
+                        }
+                        out.flush();
+                        if(out instanceof ByteArrayOutputStream) {
+                            return ((ByteArrayOutputStream)out).toString(StandardCharsets.UTF_8);
+                        }
+                    } finally {
+                        try {
+                            instream.close();
+                            instream = null;
+                        } catch (Exception e) {
+                        }
+                        try {
+                            if (out != null) {
+                                out.close();
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
+        } catch (UnsupportedOperationException|IOException e) {
+            throw new SOSException(e.getCause());
+        }
+        return null;
     }
 
     private Path getFilePathResponse(String prefix, boolean withGzipEncoding) throws SOSNoResponseException {
@@ -677,4 +767,39 @@ public class SOSRestApiClient {
         this.truststore = truststore;
     }
 
+    public static String decodeDisposition(String disposition) throws UnsupportedEncodingException {
+        String dispositionFilenameValue = disposition.replaceFirst("(?i)^.*filename(?:=\"?([^\"]+)\"?|\\*=([^;,]+)).*$", "$1$2");
+        return decodeFromUriFormat(dispositionFilenameValue);
+    }
+    
+    private static String decodeFromUriFormat(String parameter) throws UnsupportedEncodingException {
+        final Pattern filenamePattern = Pattern.compile("(?<charset>[^']+)'(?<lang>[a-z]{2,8}(-[a-z0-9-]+)?)?'(?<filename>.+)",
+                Pattern.CASE_INSENSITIVE);
+        final Matcher matcher = filenamePattern.matcher(parameter);
+        if (matcher.matches()) {
+            final String filename = matcher.group("filename");
+            final String charset = matcher.group("charset");
+            return URLDecoder.decode(filename.replaceAll("%25", "%"), charset);
+        } else {
+            return parameter;
+        }
+    }
+    
+    private static SOSArchiveFormat getFormatFromBody(String body) {
+        //"format" : "ZIP"
+        final Pattern formatPattern = Pattern.compile("\"format\"\\s*:\\s*\"([^\"]*)\"");
+        final Matcher matcher = formatPattern.matcher(body);
+        if(matcher.find()) {
+            final String format = matcher.group(1);
+            if(format != null) {
+                if(format.equals("ZIP")) {
+                    return SOSArchiveFormat.ZIP;
+                } else {
+                    return SOSArchiveFormat.GZIP;
+                }
+            }
+        }
+        return null;
+    }
+    
 }

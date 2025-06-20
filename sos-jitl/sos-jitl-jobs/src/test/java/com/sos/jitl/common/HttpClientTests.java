@@ -8,8 +8,11 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -21,6 +24,7 @@ import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 import com.typesafe.config.Config;
 
 public class HttpClientTests {
@@ -168,6 +172,46 @@ public class HttpClientTests {
         ApiExecutor ex = new ApiExecutor(null);
         String accessToken = ex.login().getAccessToken();
         ex.logout(accessToken);
+    }
+    
+    @Ignore
+    @Test
+    public void testApiExecutorExport() throws Exception {
+        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
+        System.setProperty("js7.config-directory", privateConfPath.toString());
+        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
+        List<Header> headers = new ArrayList<Header>();
+        Header header = new BasicHeader("X-Outfile", Paths.get(System.getProperty("user.dir")).resolve("target/exported").resolve("export_calendars.zip").toString().replace('\\', '/'));
+        headers.add(header);
+        ApiExecutor ex = new ApiExecutor(null, headers);
+        String accessToken = ex.login().getAccessToken();
+        String requestBody = "{\"useShortPath\": false, \"exportFile\": {\"filename\": \"export_calendars.zip\", \"format\": \"ZIP\"}, \"shallowCopy\": {\"objectTypes\": [\"WORKINGDAYSCALENDAR\",\"NONWORKINGDAYSCALENDAR\"],\"folders\": [\"/Calendars\"],\"recursive\": true, \"onlyValidObjects\": false, \"withoutDrafts\": false, \"withoutDeployed\": false, \"withoutReleased\": false}}";
+        ApiResponse response = ex.post(accessToken, "/inventory/export/folder", requestBody);
+        LOGGER.info("File created!");
+        ex.logout(accessToken);
+    }
+
+    @Ignore
+    @Test
+    public void testApiExecutorOrderLog() throws Exception {
+        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
+        System.setProperty("js7.config-directory", privateConfPath.toString());
+        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
+        ApiExecutor ex = new ApiExecutor(null);
+        String accessToken = ex.login().getAccessToken();
+        String requestBody = "{\"controllerId\":\"controller_270\",\"historyId\":264}";
+        ApiResponse response = ex.post(accessToken, "/order/log", requestBody);
+        LOGGER.info("Order log:\n" + response.getResponseBody());
+        ex.logout(accessToken);
+    }
+
+    @Ignore
+    @Test
+    public void testDecodeDisposition() throws Exception {
+        String example1Disposition = "attachment; filename*=UTF-8''sos-%25232024-10-30%2523T24854243601-root-15286.order.log";
+        String example2Disposition = "attachment; filename*=UTF-8''test-dpl-recursive2.zip";
+        LOGGER.info(SOSRestApiClient.decodeDisposition(example1Disposition));
+        LOGGER.info(SOSRestApiClient.decodeDisposition(example2Disposition));
     }
     
     @Ignore
