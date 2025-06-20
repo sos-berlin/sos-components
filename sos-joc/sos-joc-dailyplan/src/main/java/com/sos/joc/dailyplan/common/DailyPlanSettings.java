@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.model.common.Folder;
 
 public class DailyPlanSettings {
 
@@ -39,6 +41,7 @@ public class DailyPlanSettings {
     // - Period start times: contains the date and time.
     // - For Cyclic Periods : only one Period with an absolute begin and end
     private boolean calculateAbsoluteMainPeriodsOnly = false;
+    private Set<Folder> permittedFolders;
 
     private int daysAheadPlan = 0;
     private int daysAheadSubmit = 0;
@@ -240,6 +243,14 @@ public class DailyPlanSettings {
 
     public List<String> getCaller() {
         return caller;
+    }
+
+    public Set<Folder> getPermittedFolders() {
+        return permittedFolders;
+    }
+
+    public void setPermittedFolders(Set<Folder> val) {
+        permittedFolders = val;
     }
 
     @Override

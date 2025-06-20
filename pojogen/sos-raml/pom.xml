@@ -143,6 +143,7 @@
 								<exclude>agent/*.json</exclude>
 								<exclude>jobTemplate/**/*.json</exclude>
 								<exclude>dailyplan/projections/**/*.json</exclude>
+								<exclude>schedule/runtime/**/*.json</exclude>
 								<exclude>tag/**/*.json</exclude>
 								<exclude>reporting/*.json</exclude>
 								<exclude>joc/properties-schema.json</exclude>
@@ -199,6 +200,7 @@
 								<include>jobTemplate/**/*.json</include>
 								<include>inventory/configurationObject-schema.json</include>
 								<include>dailyplan/projections/**/*.json</include>
+								<exclude>schedule/runtime/**/*.json</exclude>
 								<include>tag/**/*.json</include>
 								<include>reporting/*.json</include>
 								<include>joc/properties-schema.json</include>
