@@ -65,7 +65,6 @@ import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
 import com.sos.commons.httpclient.exception.SOSSSLException;
-import com.sos.commons.util.SOSArchiveFormat;
 
 import jakarta.ws.rs.core.StreamingOutput;
 
@@ -785,21 +784,21 @@ public class SOSRestApiClient {
         }
     }
     
-    private static SOSArchiveFormat getFormatFromBody(String body) {
-        //"format" : "ZIP"
-        final Pattern formatPattern = Pattern.compile("\"format\"\\s*:\\s*\"([^\"]*)\"");
-        final Matcher matcher = formatPattern.matcher(body);
-        if(matcher.find()) {
-            final String format = matcher.group(1);
-            if(format != null) {
-                if(format.equals("ZIP")) {
-                    return SOSArchiveFormat.ZIP;
-                } else {
-                    return SOSArchiveFormat.GZIP;
-                }
-            }
-        }
-        return null;
-    }
+//    private static SOSArchiveFormat getFormatFromBody(String body) {
+//        //"format" : "ZIP"
+//        final Pattern formatPattern = Pattern.compile("\"format\"\\s*:\\s*\"([^\"]*)\"");
+//        final Matcher matcher = formatPattern.matcher(body);
+//        if(matcher.find()) {
+//            final String format = matcher.group(1);
+//            if(format != null) {
+//                if(format.equals("ZIP")) {
+//                    return SOSArchiveFormat.ZIP;
+//                } else {
+//                    return SOSArchiveFormat.GZIP;
+//                }
+//            }
+//        }
+//        return null;
+//    }
     
 }

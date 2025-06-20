@@ -23,6 +23,7 @@ import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.schedule.runtime.ScheduleRunTimeRequest;
 import com.sos.joc.model.schedule.runtime.ScheduleRunTimeResponse;
 import com.sos.joc.model.schedule.runtime.items.DailyPlanDate;
@@ -89,7 +90,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                 });
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
