@@ -858,7 +858,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO @uwe: This update must be removed when dailyplan service receives events for order state changes
                 if (either.isRight()) {
-                    updateDailyPlanAfterCancel(oIds, controllerId);
+                    updateDailyPlanAfterCancel(jOrders, controllerId);
                 }
                 return either;
             });
@@ -976,11 +976,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return currentState.ordersBy(o -> o.id().string().matches(regex)).map(JOrder::id);
     }
 
-    private void updateDailyPlanAfterCancel(Set<OrderId> oIds, String controllerId) {
+    private void updateDailyPlanAfterCancel(Set<JOrder> jOrders, String controllerId) {
         try {
             // only for non-temporary and non-file orders
-            updateDailyPlanAfterCancel(oIds.stream().map(OrderId::string).filter(s -> s.matches(".*#[PC][0-9]+-.*")).collect(Collectors.toSet()),
-                    controllerId);
+            // and only for fresh orders
+            Set<String> dailyPlanOrderIds = jOrders.stream().filter(o -> (o.asScala().state() instanceof Order.Fresh)).map(JOrder::id).map(
+                    OrderId::string).filter(s -> s.matches(".*#[PC][0-9]+-.*")).collect(Collectors.toSet());
+            updateDailyPlanAfterCancel(dailyPlanOrderIds, controllerId);
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }

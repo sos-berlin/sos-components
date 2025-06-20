@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
+import com.sos.joc.model.order.OrderStateText;
 
 public class DBItemDailyPlanWithHistory {
 
@@ -51,20 +52,24 @@ public class DBItemDailyPlanWithHistory {
     }
 
     public DailyPlanOrderStateText getStateText() {
-        DailyPlanOrderStateText state;
-        try {
-            state = DailyPlanOrderStateText.fromValue(getState());
-        } catch (IllegalArgumentException e) {
-            state = null;
-        }
         if (submitted) {
-            if (state != null && state.equals(DailyPlanOrderStateText.FINISHED)) {
+            switch (getStateAsEnum()) {
+            case CANCELLED:
+            case FINISHED:
                 return DailyPlanOrderStateText.FINISHED;
-            } else {
+            default:
                 return DailyPlanOrderStateText.SUBMITTED;
             }
         } else {
             return DailyPlanOrderStateText.PLANNED;
+        }
+    }
+    
+    private OrderStateText getStateAsEnum() {
+        try {
+            return OrderStateText.fromValue(state);
+        } catch (Throwable e) {
+            return OrderStateText.UNKNOWN;
         }
     }
 
