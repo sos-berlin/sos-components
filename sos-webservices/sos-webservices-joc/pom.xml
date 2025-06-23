@@ -1,76 +1,76 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>com.sos-berlin</groupId>
-    <artifactId>sos-webservices</artifactId>
-    <version>2.8.0-SNAPSHOT</version>
-  </parent>
+	<parent>
+		<groupId>com.sos-berlin</groupId>
+		<artifactId>sos-webservices</artifactId>
+		<version>2.8.0-SNAPSHOT</version>
+	</parent>
 
-  <artifactId>sos-webservices-joc</artifactId>
+	<artifactId>sos-webservices-joc</artifactId>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-commons-hibernate</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-webservices-json</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-commons-sign</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-commons-git</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-webservices-joc-global</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-raml</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-joc-event</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-joc-cluster</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-joc-dailyplan</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-yade-commons</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin.js7.engine</groupId>
-      <artifactId>js7-proxy_3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sos-berlin.js7.engine</groupId>
-      <artifactId>js7-data-for-java_3</artifactId>
-    </dependency>
-<!--
+	<dependencies>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-hibernate</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-webservices-json</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-sign</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-git</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-webservices-joc-global</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-raml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-joc-event</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-joc-cluster</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-joc-dailyplan</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-yade-commons</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin.js7.engine</groupId>
+			<artifactId>js7-proxy_3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin.js7.engine</groupId>
+			<artifactId>js7-data-for-java_3</artifactId>
+		</dependency>
+		<!--
 	<dependency>
 	  <groupId>com.sos-berlin.js7.engine</groupId>
 	  <artifactId>js7-base_3</artifactId>
@@ -80,53 +80,58 @@
 	  <artifactId>js7-data_3</artifactId>
 	</dependency>
 -->
-    <!-- 3RD PARTY DEPENDENCIES -->
-<!-- 
+		<!-- 3RD PARTY DEPENDENCIES -->
+		<!-- 
 	<dependency>
 	  <groupId>org.scala-lang.modules</groupId>
 	  <artifactId>scala-java8-compat_3</artifactId>
 	</dependency>
 -->
-    <dependency>
-      <groupId>org.glassfish.jersey.media</groupId>
-      <artifactId>jersey-media-multipart</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.vavr</groupId>
-      <artifactId>vavr</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.github.rjeschke</groupId>
-      <artifactId>txtmark</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mariadb.jdbc</groupId>
-      <artifactId>mariadb-java-client</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j2-impl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-multipart</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.vavr</groupId>
+			<artifactId>vavr</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.rjeschke</groupId>
+			<artifactId>txtmark</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 </project>
