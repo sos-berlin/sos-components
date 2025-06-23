@@ -854,7 +854,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO @uwe: This update must be removed when dailyplan service receives events for order state changes
                 if (either.isRight()) {
-                    updateDailyPlan(oIds, controllerId);
+                    updateDailyPlan(jOrders, controllerId);
                 }
                 return either;
             });
@@ -910,17 +910,19 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return currentState.ordersBy(o -> o.id().string().matches(regex)).map(JOrder::id);
     }
 
-    private void updateDailyPlan(Set<OrderId> oIds, String controllerId) {
+    private void updateDailyPlan(Set<JOrder> jOrders, String controllerId) {
         try {
             // only for non-temporary and non-file orders
-            LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet()));
+            // and only for fresh orders
+            Set<String> dailyPlanOrderIds = jOrders.stream().filter(o -> (o.asScala().state() instanceof Order.Fresh)).map(JOrder::id).map(
+                    OrderId::string).filter(s -> s.matches(".*#[PC][0-9]+-.*")).collect(Collectors.toSet());
+            updateDailyPlanAfterCancel(dailyPlanOrderIds, controllerId);
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }
     }
-
-    private static void updateDailyPlan(Collection<String> orderIds) throws SOSHibernateException {
+    
+    private static void updateDailyPlanAfterCancel(Collection<String> orderIds, String controllerId) throws SOSHibernateException {
         SOSHibernateSession session = null;
         if (!orderIds.isEmpty()) {
             try {
@@ -935,6 +937,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 filter.setSubmitted(false);
                 filter.setSortMode(null);
                 filter.setOrderCriteria(null);
+                filter.setControllerId(controllerId);
 
                 session = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel(updateDailyPlan)");
                 session.setAutoCommit(false);
@@ -951,7 +954,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     String date = item.getDailyPlanDate(settings.getTimeZone(), settings.getPeriodBegin());
                     if (!days.contains(date)) {
                         days.add(date);
-                        EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
+                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, date));
                     }
                 }
 
@@ -960,10 +963,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 throw e;
             } finally {
                 Globals.disconnect(session);
-            }
-        } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[updateDailyPlan]No orderIds to be updated in daily plan");
             }
         }
     }
