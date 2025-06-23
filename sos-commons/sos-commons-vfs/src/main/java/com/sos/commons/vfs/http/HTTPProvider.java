@@ -451,12 +451,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         return createProviderFile(uri.toString(), size, BaseHttpClient.getLastModifiedInMillis(response));
     }
 
-    /** JS7 new - auth_method - not in the XML schema - currently only BASIC supported */
+    /** JS7 new - auth_method - not in the XML schema - currently only NONE,BASIC supported */
     private HttpClientAuthConfig getAuthConfig() {
         if (getArguments().getUser().isEmpty()) {
             getArguments().getAuthMethod().setValue(HttpClientAuthMethod.NONE);
             return null;
         }
+        // BASIC
         return new HttpClientAuthConfig(getArguments().getUser().getValue(), getArguments().getPassword().getValue());
         // switch (getArguments().getAuthMethod().getValue()) {
         // case BASIC:

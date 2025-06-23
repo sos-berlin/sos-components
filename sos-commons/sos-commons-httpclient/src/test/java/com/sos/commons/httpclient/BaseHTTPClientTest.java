@@ -3,10 +3,12 @@ package com.sos.commons.httpclient;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.sos.commons.httpclient.BaseHttpClient.Builder;
 import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
@@ -31,10 +33,10 @@ public class BaseHTTPClientTest {
             Builder builder = BaseHttpClient.withBuilder();
             builder = builder.withLogger(logger);
             builder = builder.withConnectTimeout(Duration.ofSeconds(30));
-            builder = builder.withHeaders(List.of("header-name value"));
             builder = builder.withAuth(getAuthConfig(user, password));
             builder = builder.withProxyConfig(getProxyConfig());
             builder = builder.withSSL(getSsl());
+            builder = builder.withHeaders(List.of("header-name value"));
             BaseHttpClient client = builder.build();
 
             // Executes a GET request and returns response as String
@@ -54,6 +56,109 @@ public class BaseHTTPClientTest {
             code = resultNoBody.response().statusCode();
             logger.info("[resultNoBody]" + resultNoBody.response().body());
             logger.info("[resultNoBody]" + BaseHttpClient.getResponseStatus(resultNoBody));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testJS7Login() {
+        SLF4JLogger logger = new SLF4JLogger();
+        try {
+            String user = "root";
+            String password = "root";
+            URI uri = new URI("http://localhost:4447/joc/api/authentication/login");
+
+            Builder builder = BaseHttpClient.withBuilder();
+            builder = builder.withLogger(logger);
+            builder = builder.withConnectTimeout(Duration.ofSeconds(30));
+            builder = builder.withAuth(getAuthConfig(user, password));
+            builder = builder.withProxyConfig(getProxyConfig());
+            // builder = builder.withHeaders(List.of("Accept application/json", "Content-Type application/json"));
+            // builder = builder.withSSL(getSsl());
+            BaseHttpClient client = builder.build();
+
+            // Executes a GET request and returns response as String
+            ExecuteResult<String> result = client.executePOST(uri);
+            int code = result.response().statusCode();
+            logger.info("[result]" + result.response().body());
+            if (HttpUtils.isServerError(code)) {
+                throw new Exception(BaseHttpClient.getResponseStatus(result));
+            }
+            if (HttpUtils.isNotFound(code)) {
+                BaseHttpClient.getResponseStatus(result);
+            }
+            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testJS7LoginJson() {
+        SLF4JLogger logger = new SLF4JLogger();
+        try {
+            String user = "root";
+            String password = "root";
+            URI uri = new URI("http://localhost:4447/joc/api/authentication/login");
+
+            Builder builder = BaseHttpClient.withBuilder();
+            builder = builder.withLogger(logger);
+            builder = builder.withConnectTimeout(Duration.ofSeconds(30));
+            builder = builder.withAuth(getAuthConfig(user, password));
+            builder = builder.withProxyConfig(getProxyConfig());
+            // builder = builder.withHeaders(List.of("Accept application/json", "Content-Type application/json"));
+            // builder = builder.withSSL(getSsl());
+            BaseHttpClient client = builder.build();
+
+            // Executes a GET request and returns response as String
+
+            ExecuteResult<Map<String, Object>> result = client.executePOSTJson(uri, new TypeReference<>() {
+            });
+            int code = result.response().statusCode();
+            logger.info("[result]" + result.response().body());
+            if (HttpUtils.isServerError(code)) {
+                throw new Exception(BaseHttpClient.getResponseStatus(result));
+            }
+            if (HttpUtils.isNotFound(code)) {
+                BaseHttpClient.getResponseStatus(result);
+            }
+            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testBasicAuth() {
+        SLF4JLogger logger = new SLF4JLogger();
+        try {
+            String user = "yade";
+            String password = "yade";
+            URI uri = new URI("http://localhost:8080/yade/");
+
+            Builder builder = BaseHttpClient.withBuilder();
+            builder = builder.withLogger(logger);
+            builder = builder.withConnectTimeout(Duration.ofSeconds(30));
+            builder = builder.withAuth(getAuthConfig(user, password));
+            builder = builder.withProxyConfig(getProxyConfig());
+            // builder = builder.withSSL(getSsl());
+            BaseHttpClient client = builder.build();
+
+            // Executes a GET request and returns response as String
+            ExecuteResult<String> result = client.executeGET(uri);
+            int code = result.response().statusCode();
+            logger.info("[result]" + result.response().body());
+            if (HttpUtils.isServerError(code)) {
+                throw new Exception(BaseHttpClient.getResponseStatus(result));
+            }
+            if (HttpUtils.isNotFound(code)) {
+                BaseHttpClient.getResponseStatus(result);
+            }
+            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
         } catch (Exception e) {
             e.printStackTrace();
         }

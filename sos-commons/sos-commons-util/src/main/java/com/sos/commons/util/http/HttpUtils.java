@@ -21,6 +21,7 @@ public class HttpUtils {
     public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_TYPE_BINARY = "application/octet-stream";
+    public static final String HEADER_CONTENT_TYPE_JSON = "application/json";
     public static final String HEADER_CONTENT_LENGTH = "Content-Length";
     public static final String HEADER_LAST_MODIFIED = "Last-Modified";
 
