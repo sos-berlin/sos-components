@@ -560,25 +560,24 @@ public class SOSRestApiClient {
     private String processInputStreamFromResponse (HttpEntity entity) throws SOSException {
         try {
             String targetPath = headers.get("X-Outfile"); 
-            Path targetFolder = null;
+            Path target = null;
             if (targetPath != null && !targetPath.isEmpty()) {
-                if(targetPath.contains(".")) {
-                    targetFolder = Paths.get(targetPath).getParent();
-                } else {
-                    targetFolder = Paths.get(targetPath);
-                }
+                target = Paths.get(targetPath).normalize();
             }
             if (entity != null) {
                 InputStream instream = entity.getContent();
                 OutputStream out = null;
                 if (instream != null) {
                     try {
-                        Files.createDirectories(targetFolder);
+                        if(target == null) {
+                            target = Paths.get(System.getProperty("user.dir"));
+                        }
+                        Files.createDirectories(target);
                         String contentDisposition = getResponseHeader("Content-Disposition");
                         Path path = null;
                         if(contentDisposition != null) {
                             String filename = decodeDisposition(contentDisposition);
-                            path = Files.createFile(targetFolder.resolve(filename));
+                            path = Files.createFile(target.resolve(filename));
                             out = Files.newOutputStream(path);
                             if(getResponseHeader("Content-Encoding") != null) {
                                 instream = new GZIPInputStream(instream);
