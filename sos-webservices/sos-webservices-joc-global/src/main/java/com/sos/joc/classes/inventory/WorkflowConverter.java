@@ -1,6 +1,6 @@
 package com.sos.joc.classes.inventory;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -129,7 +129,7 @@ public class WorkflowConverter {
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = invInstruction.cast();
                     if (cn.getSubworkflow() == null || cn.getSubworkflow().getInstructions() == null) {
-                        cn.setSubworkflow(new Instructions(Collections.emptyList())); 
+                        cn.setSubworkflow(new Instructions(new ArrayList<>(1))); 
                     } else {
                         convertInstructions(cn.getSubworkflow().getInstructions());
                     }
