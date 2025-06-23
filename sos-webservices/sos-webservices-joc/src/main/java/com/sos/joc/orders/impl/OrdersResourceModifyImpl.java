@@ -980,7 +980,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             // only for non-temporary and non-file orders
             // and only for fresh orders
-            Set<String> dailyPlanOrderIds = jOrders.stream().filter(o -> (o.asScala().state() instanceof Order.Fresh)).map(JOrder::id).map(
+            Set<String> dailyPlanOrderIds = jOrders.stream().filter(o -> (o.asScala().state() instanceof Order.Fresh$)).map(JOrder::id).map(
                     OrderId::string).filter(s -> s.matches(".*#[PC][0-9]+-.*")).collect(Collectors.toSet());
             updateDailyPlanAfterCancel(dailyPlanOrderIds, controllerId);
         } catch (Exception e) {
