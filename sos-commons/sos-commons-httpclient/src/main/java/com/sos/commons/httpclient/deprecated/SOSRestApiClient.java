@@ -559,18 +559,15 @@ public class SOSRestApiClient {
     private String processInputStreamFromResponse (HttpEntity entity) throws SOSException {
         try {
             String targetPath = headers.get("X-Outfile"); 
-            Path target = null;
+            Path target = Paths.get(System.getProperty("user.dir"));
             if (targetPath != null && !targetPath.isEmpty()) {
-                target = Paths.get(targetPath).normalize();
+                target = target.resolve(targetPath);
             }
             if (entity != null) {
                 InputStream instream = entity.getContent();
                 OutputStream out = null;
                 if (instream != null) {
                     try {
-                        if(target == null) {
-                            target = Paths.get(System.getProperty("user.dir"));
-                        }
                         Files.createDirectories(target);
                         String contentDisposition = getResponseHeader("Content-Disposition");
                         Path path = null;
@@ -612,7 +609,7 @@ public class SOSRestApiClient {
                 }
             }
         } catch (UnsupportedOperationException|IOException e) {
-            throw new SOSException(e.getCause());
+            throw new SOSException(e);
         }
         return null;
     }
