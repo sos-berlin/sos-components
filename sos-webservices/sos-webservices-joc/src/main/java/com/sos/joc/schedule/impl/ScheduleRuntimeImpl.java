@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
+import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -104,7 +105,16 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
     private DailyPlanSchedule toDailyPlanSchedule(ScheduleRunTimeRequest in) {
         Schedule schedule = new Schedule();
         schedule.setPath(API_CALL + "_tmp");
-        schedule.setCalendars(in.getCalendars());
+        if (in.getTimeZone() == null) {
+            // AssignedCalendars with default Etc/Utc time zone
+            schedule.setCalendars(in.getCalendars());
+        } else {
+            // AssignedCalendars overwrite default Etc/Utc time zone
+            schedule.setCalendars(in.getCalendars().stream().map(c -> {
+                c.setTimeZone(in.getTimeZone());
+                return c;
+            }).collect(Collectors.toList()));
+        }
         schedule.setNonWorkingDayCalendars(in.getNonWorkingDayCalendars());
         return new DailyPlanSchedule(schedule);
     }
