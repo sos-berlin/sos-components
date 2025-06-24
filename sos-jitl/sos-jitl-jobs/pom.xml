@@ -65,6 +65,11 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 		</dependency>
+      <dependency>
+          <groupId>net.thisptr</groupId>
+          <artifactId>jackson-jq-cli</artifactId>
+          <version>${jq.version}</version>
+      </dependency>
 
 		<!-- for tests -->
 		<dependency>

@@ -92,6 +92,7 @@
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
     <sshj.version>0.39.0</sshj.version>
     <smbj.version>0.14.0</smbj.version>
+    <jq.version>1.3.0</jq.version>
   </properties>
 
   <build>
@@ -949,6 +950,11 @@
             <artifactId>bcprov-jdk18on</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+          <groupId>net.thisptr</groupId>
+          <artifactId>jackson-jq-cli</artifactId>
+          <version>${jq.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
