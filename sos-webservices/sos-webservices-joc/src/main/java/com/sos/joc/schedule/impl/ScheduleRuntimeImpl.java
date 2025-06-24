@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
-import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
