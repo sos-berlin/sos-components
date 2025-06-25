@@ -576,7 +576,11 @@ public class SOSRestApiClient {
                         Path path = null;
                         if(contentDisposition != null) {
                             String filename = decodeDisposition(contentDisposition);
-                            path = Files.createFile(target.resolve(filename));
+                            Path filePath = target.resolve(filename);
+                            if(Files.exists(filePath)) {
+                                Files.delete(filePath);
+                            }
+                            path = Files.createFile(filePath);
                             out = Files.newOutputStream(path);
                             if(getResponseHeader("Content-Encoding") != null) {
                                 instream = new GZIPInputStream(instream);
