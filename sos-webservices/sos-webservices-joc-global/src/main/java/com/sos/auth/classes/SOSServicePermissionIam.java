@@ -2,6 +2,7 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.KeyStore;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,8 @@ import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
@@ -202,11 +205,11 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
     public JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             byte[] body) {
         
-        if (Globals.sosCockpitProperties == null) {
-            Globals.sosCockpitProperties = new JocCockpitProperties();
-        } else {
-            Globals.sosCockpitProperties.touchLog4JConfiguration();
-        }
+//        if (Globals.sosCockpitProperties == null) {
+//            Globals.sosCockpitProperties = new JocCockpitProperties();
+//        } else {
+//            Globals.sosCockpitProperties.touchLog4JConfiguration();
+//        }
 
         MDC.put("context", ThreadCtx);
 
@@ -214,14 +217,10 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             GetTokenRequest requestBody = Globals.objectMapper.readValue(body, GetTokenRequest.class);
             identityService = identityService.replaceFirst("^OIDC(-JOC)?:", "");
 
-            DBItemJocConfiguration dbItem = getOIDCProviderConf(identityService);
-            Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(), Properties.class);
-            if (properties.getOidc() == null) {
-                throw new JocBadRequestException("Couldn't find settings of the identity service: " + identityService);
-            }
-            OidcProperties provider = properties.getOidc();
-            OpenIdConfiguration conf = new GetOpenIdConfiguration(provider).getJsonObjectFromGet();
-            GetTokenResponse tokenResponse = new GetToken(provider, conf, requestBody).getJsonObjectFromPost();
+            OidcProperties provider =  SOSAuthHelper.getOIDCProperties(identityService);
+            KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
+            OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
+            GetTokenResponse tokenResponse = new GetToken(provider, conf, requestBody, truststore).getJsonObjectFromPost();
 
             // call iam/locker/put; see LockerResourceImpl
             Variables vars = new Variables();
@@ -233,20 +232,13 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             locker.setContent(vars);
             SOSLockerHelper.lockerPut(locker);
 
-            return loginPost(servletRequest, null, null, identityService, tokenResponse.getId_token(), null, getOpenIdConfigurationHeader(conf), null,
-                    null, null, null, null, null, null);
+            return loginPost(servletRequest, null, null, identityService, tokenResponse.getId_token(), null, SOSAuthHelper
+                    .getOpenIdConfigurationHeader(conf), null, null, null, null, null, null, null);
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
             MDC.remove("context");
         }
-    }
-    
-    private String getOpenIdConfigurationHeader(OpenIdConfiguration conf) throws JsonProcessingException {
-        OpenIdConfiguration requestConf = new OpenIdConfiguration();
-        requestConf.setClaims_supported(conf.getClaims_supported());
-        requestConf.setJwks_uri(conf.getJwks_uri());
-        return new String(Base64.getUrlEncoder().encode(Globals.objectMapper.writeValueAsBytes(requestConf)));
     }
     
     private boolean isOidcLoginToGetToken(String identityService, byte[] body) {
@@ -283,7 +275,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         MDC.put("context", ThreadCtx);
         
         if (isOidcLoginToGetToken(identityService, body)) {
-            loginPost(request, identityService, body);
+            return loginPost(request, identityService, body);
         }
         
         String clientCertCN = null;
@@ -330,7 +322,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             if (cnt > 0) {
                 if (!Globals.clusterInitialized) {
                     LOGGER.info("... JOC Cockpit Cluster still not initialized. Login will be proceeded now");
-                }else{
+                } else{
                     LOGGER.info("... JOC Cockpit Cluster initialized. Waiting time: " + (cnt - 1) + " seconds");
                 }
 
@@ -790,33 +782,6 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
         return "";
 
-    }
-    
-    private DBItemJocConfiguration getOIDCProviderConf(String identityService) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("Read OIDC Identity Service");
-            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getCheckIdentityService(identityService, sosHibernateSession);
-            
-            if (!dbItemIamIdentityService.getIdentityServiceName().startsWith("OIDC")) {
-                throw new JocBadRequestException(identityService + "is not an OIDC Identity Service");
-            }
-
-            JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
-            filter.setName(identityService);
-            filter.setConfigurationType("IAM");
-
-            JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            DBItemJocConfiguration item = dbLayer.getJocConfiguration(filter, 0);
-            if (item == null) {
-                throw new JocBadRequestException(String.format("Couldn't find setting of %s identity service '%s'", dbItemIamIdentityService
-                        .getIdentityServiceType(), identityService));
-            }
-            return item;
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
     }
 
     private SOSAuthCurrentAccountAnswer authenticate(SOSAuthCurrentAccount currentAccount, String password) throws Exception {

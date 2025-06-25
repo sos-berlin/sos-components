@@ -1,21 +1,19 @@
 package com.sos.auth.oidc;
 
 import java.net.URI;
+import java.security.KeyStore;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
+import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInvalidResponseDataException;
-import com.sos.joc.model.security.identityservice.OidcIdentityProvider;
 import com.sos.joc.model.security.oidc.OpenIdConfiguration;
 import com.sos.joc.model.security.properties.oidc.OidcProperties;
 
@@ -23,31 +21,22 @@ import jakarta.ws.rs.core.UriBuilder;
 
 public class GetOpenIdConfiguration extends SOSRestApiClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetOpenIdConfiguration.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(GetOpenIdConfiguration.class);
     private static final String API_PATH = "/.well-known/openid-configuration";
     private UriBuilder uriBuilder;
+    private KeyStore truststore; 
     
-    public GetOpenIdConfiguration(OidcProperties provider) {
-        setUriBuilder(provider);
-    }
-    
-    public GetOpenIdConfiguration(OidcIdentityProvider provider) {
-        setUriBuilder(provider);
-    }
-    
-    public GetOpenIdConfiguration(String url) {
-        setUriBuilder(url);
-    }
-    
-    private void setUriBuilder(OidcIdentityProvider provider) {
+    public GetOpenIdConfiguration(OidcProperties provider) throws Exception {
+        setTrustStore(provider);
         setUriBuilder(provider.getIamOidcAuthenticationUrl());
     }
     
-    private void setUriBuilder(OidcProperties provider) {
+    public GetOpenIdConfiguration(OidcProperties provider, KeyStore truststore) throws SOSSSLException {
+        this.truststore = truststore;
         setUriBuilder(provider.getIamOidcAuthenticationUrl());
     }
     
-    private void setUriBuilder(String url) {
+    private void setUriBuilder(String url) throws SOSSSLException {
         if (url == null) {
             throw new JocConfigurationException("The authentication URL of the OIDC provider is undefined.");
         }
@@ -88,11 +77,12 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         }
     }
     
-    private void setProperties(String url) throws ControllerConnectionRefusedException {
+    private void setProperties(String url) throws SOSSSLException {
         setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
-        setSSLContext(SSLContext.getInstance().getSSLContext());
+        //setSSLContext(SSLContext.getInstance().getSSLContext());
+        setSSLContext(null, null, truststore);
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
             throw new JocConfigurationException("Couldn't find required truststore");
         }
@@ -136,5 +126,9 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
             e.addErrorMetaInfo(jocError);
             throw e;
         }
+    }
+    
+    private void setTrustStore(OidcProperties provider) throws Exception {
+        truststore = SOSAuthHelper.getOIDCTrustStore(provider);
     }
 }

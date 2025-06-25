@@ -3,6 +3,9 @@ package com.sos.auth.classes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
@@ -32,11 +35,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
@@ -58,10 +64,13 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.oidc.OpenIdConfiguration;
+import com.sos.joc.model.security.properties.Properties;
 import com.sos.joc.model.security.properties.fido.FidoEmailSettings;
 import com.sos.joc.model.security.properties.fido.FidoProperties;
 import com.sos.joc.model.security.properties.fido.FidoResidentKey;
 import com.sos.joc.model.security.properties.fido.FidoUserverification;
+import com.sos.joc.model.security.properties.oidc.OidcProperties;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -605,6 +614,44 @@ public class SOSAuthHelper {
         }
         return dbItemIamIdentityService;
     }
+    
+    public static DBItemJocConfiguration getOIDCProviderConf(String identityService) throws SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("Read OIDC Identity Service");
+            DBItemIamIdentityService dbItemIamIdentityService = getCheckIdentityService(identityService, sosHibernateSession);
+            
+            if (!dbItemIamIdentityService.getIdentityServiceName().startsWith("OIDC")) {
+                throw new JocBadRequestException(identityService + "is not an OIDC Identity Service");
+            }
+
+            JocConfigurationFilter filter = new JocConfigurationFilter();
+            filter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
+            filter.setName(identityService);
+            filter.setConfigurationType("IAM");
+
+            JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            DBItemJocConfiguration item = dbLayer.getJocConfiguration(filter, 0);
+            if (item == null) {
+                throw new JocBadRequestException(String.format("Couldn't find setting of %s identity service '%s'", dbItemIamIdentityService
+                        .getIdentityServiceType(), identityService));
+            }
+            return item;
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+    
+    public static OidcProperties getOIDCProperties(String identityService) throws JsonMappingException, JsonProcessingException,
+            SOSHibernateException {
+        DBItemJocConfiguration dbItem = getOIDCProviderConf(identityService);
+        Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(), Properties.class);
+        OidcProperties provider = properties.getOidc();
+        if (provider == null) {
+            throw new JocBadRequestException("Couldn't find settings of the identity service: " + identityService);
+        }
+        return provider;
+    }
 
     public static Integer getSecondsFromString(String in) {
 
@@ -655,7 +702,23 @@ public class SOSAuthHelper {
             }
         }
         return false;
-
+    }
+    
+    public static String getOpenIdConfigurationHeader(OpenIdConfiguration conf) throws JsonProcessingException {
+        OpenIdConfiguration requestConf = new OpenIdConfiguration();
+        requestConf.setClaims_supported(conf.getClaims_supported());
+        requestConf.setJwks_uri(conf.getJwks_uri());
+        return new String(Base64.getUrlEncoder().encode(Globals.objectMapper.writeValueAsBytes(requestConf)));
+    }
+    
+    public static KeyStore getOIDCTrustStore(OidcProperties provider) throws Exception {
+        if (provider != null && provider.getIamOidcTruststorePath() != null) {
+            return KeyStoreUtil.readTrustStore(provider.getIamOidcTruststorePath(), KeystoreType.valueOf(provider.getIamOidcTruststoreType()),
+                    provider.getIamOidcTruststorePassword());
+        } else {
+            Path javaTruststore = Paths.get(System.getProperty("java.home")).resolve("lib").resolve("security").resolve("cacerts");
+            return KeyStoreUtil.readTrustStore(javaTruststore, KeystoreType.PKCS12, "changeit");
+        }
     }
 
 }

@@ -1,18 +1,17 @@
 package com.sos.auth.oidc;
 
 import java.net.URI;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
+import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
@@ -28,21 +27,30 @@ import jakarta.ws.rs.core.UriBuilder;
 
 public class GetToken extends SOSRestApiClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetToken.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(GetToken.class);
     private UriBuilder uriBuilder;
     private Map<String, String> body = new HashMap<>();
+    private KeyStore truststore;
     
-    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody) {
+    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody) throws Exception {
+        setTrustStore(props);
         setUriBuilder(props, openIdConfigurationResponse, requestBody);
     }
     
-    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody) {
+    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, KeyStore truststore)
+            throws SOSSSLException {
+        this.truststore = truststore;
+        setUriBuilder(props, openIdConfigurationResponse, requestBody);
+    }
+
+    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody)
+            throws SOSSSLException {
         List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
-        
+
         if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
-            
+
             if (supportedMethods.contains("client_secret_basic")) {
-                
+           
                 String s = props.getIamOidcClientId() + ":" + props.getIamOidcClientSecret();
                 byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
                 addHeader("Authorization", "Basic " + new String(authEncBytes));
@@ -70,7 +78,7 @@ public class GetToken extends SOSRestApiClient {
         body.put("client_secret", props.getIamOidcClientSecret());
     }
 
-    private void setUriBuilder(String url) {
+    private void setUriBuilder(String url) throws SOSSSLException {
         if (url == null) {
             throw new JocConfigurationException("The token endpoint of the OIDC provider is undefined.");
         }
@@ -112,11 +120,12 @@ public class GetToken extends SOSRestApiClient {
         }
     }
     
-    private void setProperties(String url) throws ControllerConnectionRefusedException {
+    private void setProperties(String url) throws SOSSSLException {
         setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
-        setSSLContext(SSLContext.getInstance().getSSLContext());
+        //setSSLContext(SSLContext.getInstance().getSSLContext());
+        setSSLContext(null, null, truststore);
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
             throw new JocConfigurationException("Couldn't find required truststore");
         }
@@ -160,5 +169,9 @@ public class GetToken extends SOSRestApiClient {
             e.addErrorMetaInfo(jocError);
             throw e;
         }
+    }
+    
+    private void setTrustStore(OidcProperties provider) throws Exception {
+        truststore = SOSAuthHelper.getOIDCTrustStore(provider);
     }
 }

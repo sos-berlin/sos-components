@@ -85,7 +85,7 @@ public class SOSOpenIdHandler {
             }
         }
     }
-
+    
     private String getFormResponse(URI requestUri) throws SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
         restApiClient.setConnectionTimeout(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT);
