@@ -558,9 +558,9 @@ public class SOSRestApiClient {
     
     private String processInputStreamFromResponse (HttpEntity entity) throws SOSException {
         try {
-            String targetPath = headers.get("X-Target-Directory"); 
+            String targetPath = headers.get("X-Export-Directory"); 
             if(targetPath == null) {
-                targetPath = headers.get("X-Target-Directory".toLowerCase());
+                targetPath = headers.get("X-Export-Directory".toLowerCase());
             }
             Path target = Paths.get(System.getProperty("user.dir"));
             if (targetPath != null && !targetPath.isEmpty()) {
