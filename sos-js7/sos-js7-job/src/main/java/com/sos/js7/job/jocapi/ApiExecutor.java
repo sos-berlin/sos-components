@@ -287,7 +287,7 @@ public class ApiExecutor {
                     }
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
                     if(response.startsWith("outfile:") && step != null && step.getOutcome() != null) {
-                        step.getOutcome().putVariable("outfile", response.substring("outfile:".length()));
+                        step.getOutcome().putVariable("js7ApiExecutorOutfile", response.substring("outfile:".length()));
                     }
                     if (step != null && isDebugEnabled) {
                         step.getLogger().debug("HTTP status code: %s", client.statusCode());
