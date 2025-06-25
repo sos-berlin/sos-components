@@ -48,7 +48,7 @@ import jakarta.ws.rs.Path;
 public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
     private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
-    private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
+    private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identityclients";
     private static final String API_CALL_IMPORT_ICON = "./iam/import";
     private static final String API_CALL_GET_ICON = "./iam/icon";
 

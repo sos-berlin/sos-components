@@ -2,7 +2,7 @@ package com.sos.joc.exceptions;
 
 import java.util.Date;
 
-public class ControllerNoResponseException extends JocException {
+public class ControllerNoResponseException extends JocInvalidResponseDataException {
     
     private static final long serialVersionUID = 1L;
     private static final String ERROR_CODE = "JOC-401";

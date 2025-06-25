@@ -388,6 +388,8 @@ public class JsonValidator {
 
             put("com.sos.joc.model.security.locker.LockerFilter", "security/locker/lockerFilter-schema.json");
             put("com.sos.joc.model.security.locker.Locker", "security/locker/locker-schema.json");
+            
+            put("com.sos.joc.model.security.oidc.GetTokenRequest", "security/oidc/get-token-request-schema.json");
 
             // Profiles
             put("com.sos.joc.model.profile.Profile", "profile/profile-schema.json");

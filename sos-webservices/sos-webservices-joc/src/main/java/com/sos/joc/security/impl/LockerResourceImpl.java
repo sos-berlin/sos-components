@@ -1,10 +1,18 @@
 package com.sos.joc.security.impl;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSAuthLockerHandler;
 import com.sos.auth.classes.SOSLocker;
+import com.sos.auth.classes.SOSLockerHelper;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -50,7 +58,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
                 locker.getContent().setAdditionalProperties(content);
             }
             sosLocker.removeContent(lockerFilter.getKey());
-            refreshTimer();
+            SOSLockerHelper.refreshTimer();
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -63,21 +71,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             body = initLogging(API_CALL_LOCKER_PUT, body, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, Locker.class);
             Locker locker = Globals.objectMapper.readValue(body, Locker.class);
-            SOSLocker sosLocker = Globals.jocWebserviceDataContainer.getSOSLocker();
-            if (SOSAuthHelper.getCountAccounts() * 3 < sosLocker.getCount()) {
-                throw new JocException(new JocError("No more lockers availabe. Maximum reached"));
-
-            }
-
-            String key = sosLocker.addContent(locker.getContent().getAdditionalProperties());
-            if (Globals.jocWebserviceDataContainer.getSOSLocker().getMaximumSizeReached(locker.getContent().getAdditionalProperties())) {
-                Globals.jocWebserviceDataContainer.getSOSLocker().removeContent(key);
-                throw new JocException(new JocError("Size for content is to big"));
-            }
-            locker.setKey(key);
-            locker.setContent(null);
-            refreshTimer();
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(SOSLockerHelper.lockerPut(locker)));
         } catch (JocException e) {
             return responseStatus434JSError(e);
         } catch (Exception e) {
@@ -85,7 +79,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
         }
 
     }
-
+    
     @Override
     public JOCDefaultResponse postLockerRenew(byte[] body) {
         try {
@@ -94,7 +88,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             JsonValidator.validateFailFast(body, Locker.class);
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().renewContent(lockerFilter.getKey());
-            refreshTimer();
+            SOSLockerHelper.refreshTimer();
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -109,19 +103,11 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             JsonValidator.validateFailFast(body, Locker.class);
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().removeContent(lockerFilter.getKey());
-            refreshTimer();
+            SOSLockerHelper.refreshTimer();
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
-    }
-
-    private void refreshTimer() {
-        if (Globals.jocWebserviceDataContainer.getSosAuthLockerHandler() == null) {
-            Globals.jocWebserviceDataContainer.setSosAuthLockerHandler(new SOSAuthLockerHandler());
-        }
-        Globals.jocWebserviceDataContainer.getSosAuthLockerHandler().start();
-
     }
 
 }

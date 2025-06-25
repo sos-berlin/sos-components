@@ -52,6 +52,7 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.db.security.IamRoleDBLayer;
 import com.sos.joc.db.security.IamRoleFilter;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
@@ -577,29 +578,32 @@ public class SOSAuthHelper {
         return properties;
     }
 
-    public static DBItemIamIdentityService getCheckIdentityService(String identityServiceName) throws Exception {
+    public static DBItemIamIdentityService getCheckIdentityService(String identityServiceName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
-        DBItemIamIdentityService dbItemIamIdentityService = null;
-
-        sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
         try {
-            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIdentityServiceName(identityServiceName);
-            dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
-
-            if (dbItemIamIdentityService == null) {
-                throw new Exception("Identity Service not found: " + identityServiceName);
-            }
-
-            if (dbItemIamIdentityService.getDisabled()) {
-                throw new Exception("Identity Service " + identityServiceName + " is disabled");
-            }
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
+            return getCheckIdentityService(identityServiceName, sosHibernateSession);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-        return dbItemIamIdentityService;
+    }
+    
+    public static DBItemIamIdentityService getCheckIdentityService(String identityServiceName, SOSHibernateSession sosHibernateSession)
+            throws SOSHibernateException {
 
+        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+        IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+        filter.setIdentityServiceName(identityServiceName);
+        DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+        if (dbItemIamIdentityService == null) {
+            throw new JocBadRequestException("Identity Service not found: " + identityServiceName);
+        }
+
+        if (dbItemIamIdentityService.getDisabled()) {
+            throw new JocBadRequestException("Identity Service " + identityServiceName + " is disabled");
+        }
+        return dbItemIamIdentityService;
     }
 
     public static Integer getSecondsFromString(String in) {
