@@ -255,8 +255,15 @@ public class SOSRestApiClient {
         if (entity != null) {
             requestPost.setEntity(entity);
         }
-        httpResponse = getResponse(requestPost);
-        return getResponse(httpResponse);
+        createHttpClient();
+        setHttpRequestHeaders(requestPost);
+        try {
+            httpResponse = getResponse(requestPost);
+            return getResponse(httpResponse);
+        } catch (SOSException e) {
+            closeHttpClient();
+            throw e;
+        }
     }
 
     public String printHttpRequestHeaders() {
@@ -426,9 +433,8 @@ public class SOSRestApiClient {
         }
         return entity;
     }
+    
     private HttpResponse getResponse(HttpUriRequest request) throws SOSException {
-        createHttpClient();
-        setHttpRequestHeaders(request);
         try {
             return httpClient.execute(request);
         } catch (ClientProtocolException e) {
@@ -518,15 +524,13 @@ public class SOSRestApiClient {
             if(contentType != null && !contentType.isEmpty()) {
                 if("application/octet-stream".equalsIgnoreCase(contentType) || (contentEncoding != null && contentEncoding.contains("gzip"))) {
                     return processInputStreamFromResponse(entity);
-                } else {
-                    return EntityUtils.toString(entity, StandardCharsets.UTF_8);
                 }
             }
+            return EntityUtils.toString(entity, StandardCharsets.UTF_8);
         } catch (Exception e) {
             closeHttpClient();
             throw new SOSNoResponseException(e);
         }
-        return null;
     }
 
     
@@ -571,10 +575,10 @@ public class SOSRestApiClient {
                 OutputStream out = null;
                 if (instream != null) {
                     try {
-                        Files.createDirectories(target);
                         String contentDisposition = getResponseHeader("Content-Disposition");
                         Path path = null;
                         if(contentDisposition != null) {
+                            Files.createDirectories(target);
                             String filename = decodeDisposition(contentDisposition);
                             Path filePath = target.resolve(filename);
                             if(Files.exists(filePath)) {
