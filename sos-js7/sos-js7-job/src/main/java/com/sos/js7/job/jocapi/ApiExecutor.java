@@ -286,7 +286,7 @@ public class ApiExecutor {
                         additionalHeaders.stream().forEach(header -> client.addHeader(header.getName().toLowerCase(), header.getValue()));
                     }
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
-                    if(response.startsWith("outfile:")) {
+                    if(response.startsWith("outfile:") && step != null && step.getOutcome() != null) {
                         step.getOutcome().putVariable("outfile", response.substring("outfile:".length()));
                     }
                     if (step != null && isDebugEnabled) {
