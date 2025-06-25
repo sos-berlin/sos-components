@@ -195,7 +195,7 @@ public class ApiExecutor {
                     step.getLogger().debug("send login to: %s", loginUri.toString());
                 }
                 if(additionalHeaders != null && !additionalHeaders.isEmpty()) {
-                    additionalHeaders.stream().forEach(header -> client.addHeader(header.getName(), header.getValue()));
+                    additionalHeaders.stream().forEach(header -> client.addHeader(header.getName().toLowerCase(), header.getValue()));
                     
                 }
                 String response = client.postRestService(loginUri, null);
