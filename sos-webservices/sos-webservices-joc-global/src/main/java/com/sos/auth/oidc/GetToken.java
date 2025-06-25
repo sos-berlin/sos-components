@@ -65,6 +65,7 @@ public class GetToken extends SOSRestApiClient {
     }
     
     private void createBody(OidcProperties props, GetTokenRequest requestBody) {
+        createBody(requestBody);
         body.put("client_id", props.getIamOidcClientId());
         body.put("client_secret", props.getIamOidcClientSecret());
     }
