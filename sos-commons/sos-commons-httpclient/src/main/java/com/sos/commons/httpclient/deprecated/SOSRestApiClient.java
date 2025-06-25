@@ -514,9 +514,11 @@ public class SOSRestApiClient {
             setHttpResponseHeaders();
             String contentType = getResponseHeader("Content-Type");
             String contentEncoding = getResponseHeader("Content-Encoding");
+            String contentDisposition = getResponseHeader("Content-Disposition");
             HttpEntity entity = httpResponse.getEntity();
             if(contentType != null && !contentType.isEmpty()) {
-                if("application/octet-stream".equalsIgnoreCase(contentType) || (contentEncoding != null && contentEncoding.contains("gzip"))) {
+                if((contentEncoding != null && contentDisposition.contains("filename"))
+                        || (contentEncoding != null && contentEncoding.contains("gzip"))) {
                     return processInputStreamFromResponse(entity);
                 } else {
                     return EntityUtils.toString(entity, StandardCharsets.UTF_8);
@@ -525,6 +527,10 @@ public class SOSRestApiClient {
         } catch (Exception e) {
             closeHttpClient();
             throw new SOSNoResponseException(e);
+        } finally {
+            if (autoCloseHttpClient) {
+                closeHttpClient();
+            }
         }
         return null;
     }
@@ -542,13 +548,12 @@ public class SOSRestApiClient {
                 } else if (clazz.equals(byte[].class)) {
                     s = (T) EntityUtils.toByteArray(entity);
                 } else if (clazz.equals(InputStream.class)) {
-//                    s = (T) entity.getContent();
-                    s = (T) processInputStreamFromResponse(entity);
+                    s = (T) entity.getContent();
                 }
             }
-//            if (autoCloseHttpClient) {
-//                closeHttpClient();
-//            }
+            if (autoCloseHttpClient) {
+                closeHttpClient();
+            }
             return s;
         } catch (Exception e) {
             closeHttpClient();
@@ -557,6 +562,7 @@ public class SOSRestApiClient {
     }
     
     private String processInputStreamFromResponse (HttpEntity entity) throws SOSException {
+        Path filePath = null;
         try {
             String targetPath = headers.get("X-Export-Directory"); 
             if(targetPath == null) {
@@ -576,7 +582,7 @@ public class SOSRestApiClient {
                         Path path = null;
                         if(contentDisposition != null) {
                             String filename = decodeDisposition(contentDisposition);
-                            Path filePath = target.resolve(filename);
+                            filePath = target.resolve(filename);
                             if(Files.exists(filePath)) {
                                 Files.delete(filePath);
                             }
@@ -618,7 +624,11 @@ public class SOSRestApiClient {
         } catch (UnsupportedOperationException|IOException e) {
             throw new SOSException(e);
         }
-        return null;
+        if(filePath != null) {
+            return "outfile:" + filePath.toString();
+        } else {
+            return null;
+        }
     }
 
     private Path getFilePathResponse(String prefix, boolean withGzipEncoding) throws SOSNoResponseException {

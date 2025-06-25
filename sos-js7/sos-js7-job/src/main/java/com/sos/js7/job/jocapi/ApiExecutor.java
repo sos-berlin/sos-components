@@ -196,7 +196,6 @@ public class ApiExecutor {
                 }
                 if(additionalHeaders != null && !additionalHeaders.isEmpty()) {
                     additionalHeaders.stream().forEach(header -> client.addHeader(header.getName().toLowerCase(), header.getValue()));
-                    
                 }
                 String response = client.postRestService(loginUri, null);
                 // latestResponse = response;
@@ -283,7 +282,13 @@ public class ApiExecutor {
                     if (step != null && isDebugEnabled) {
                         step.getLogger().debug("resolvedUri: %s", jocUri.resolve(apiUrl).toString());
                     }
+                    if(additionalHeaders != null && !additionalHeaders.isEmpty()) {
+                        additionalHeaders.stream().forEach(header -> client.addHeader(header.getName().toLowerCase(), header.getValue()));
+                    }
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
+                    if(response.startsWith("outfile:")) {
+                        step.getOutcome().putVariable("outfile", response.substring("outfile:".length()));
+                    }
                     if (step != null && isDebugEnabled) {
                         step.getLogger().debug("HTTP status code: %s", client.statusCode());
                     }
