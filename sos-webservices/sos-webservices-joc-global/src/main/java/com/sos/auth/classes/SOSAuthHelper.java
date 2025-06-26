@@ -716,7 +716,7 @@ public class SOSAuthHelper {
         if (provider != null && provider.getIamOidcTruststorePath() != null) {
             Path oidcTruststore = Paths.get(provider.getIamOidcTruststorePath());
             if (Files.exists(oidcTruststore) && Files.isRegularFile(oidcTruststore)) {
-                return KeyStoreUtil.readTrustStore(provider.getIamOidcTruststorePath(), KeystoreType.valueOf(provider.getIamOidcTruststoreType()),
+                return KeyStoreUtil.readTrustStore(provider.getIamOidcTruststorePath(), KeystoreType.fromValue(provider.getIamOidcTruststoreType()),
                         provider.getIamOidcTruststorePassword());
             }
         }

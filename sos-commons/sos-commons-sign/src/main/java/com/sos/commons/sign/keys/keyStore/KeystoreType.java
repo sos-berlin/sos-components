@@ -33,7 +33,7 @@ public enum KeystoreType {
     public static KeystoreType fromValue(String value) {
     	KeystoreType constant = CONSTANTS.get(value);
         if (constant == null) {
-            throw new IllegalArgumentException(value);
+            return PKCS12;
         } else {
             return constant;
         }

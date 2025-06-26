@@ -40,7 +40,7 @@ public class SOSOpenIdWebserviceCredentials {
 
     private String truststorePath = "";
     private String truststorePassword = "";
-    private KeystoreType truststoreType = null;
+    private KeystoreType truststoreType = KeystoreType.PKCS12;
     private Map<String, List<String>> groupRolesMap;
     private List<String> claims;
 
@@ -192,7 +192,7 @@ public class SOSOpenIdWebserviceCredentials {
 
         truststorePath = getProperty(truststorePathGui, truststorePathDefault);
         truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
-        truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
+        truststoreType = KeystoreType.fromValue(getProperty(tTypeGui, truststoreTypeDefault));
 
         if (truststorePath != null && !truststorePath.trim().isEmpty()) {
             Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());
