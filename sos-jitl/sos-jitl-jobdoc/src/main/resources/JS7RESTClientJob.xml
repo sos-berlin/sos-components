@@ -62,19 +62,6 @@
                 </note>
             </param>
       </params>
-	  <params order="1" id="return_parameter">
-         <param xmlns:xi="http://www.w3.org/2001/XInclude"
-                xmlns:xhtml="http://www.w3.org/1999/xhtml"
-                name="return_value"
-                required="false">
-                <note>
-    <title>Status Code of API Request</title>
-    <p>
-        This variable stores the HTTP status code returned by the JOC API request.
-    </p>
-</note>
-            </param>
-		</params>
    </configuration>
    <documentation xmlns:xi="http://www.w3.org/2001/XInclude"
                   xmlns:xhtml="http://www.w3.org/1999/xhtml">

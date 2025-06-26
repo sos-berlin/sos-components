@@ -24,8 +24,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
@@ -97,7 +95,6 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
 
                 response = apiExecutor.post(accessToken, endpoint, bodyStr);
                 int statusCode = response.getStatusCode();
-                step.getOutcome().getVariables().put("return_value", String.valueOf(statusCode));
 
                 if (statusCode < 200 || statusCode >= 300) {
                     logger.error("Request failed with status code: " + statusCode + ". Response: " + response.getResponseBody());
@@ -111,11 +108,14 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
 
                 String targetFilePath = (String) step.getOutcome().getVariables().get("js7ApiExecutorOutfile");
 
-                if (targetFilePath!= null && !targetFilePath.isEmpty() && Files.exists(Paths.get(targetFilePath))) {
-                    logger.info("Export to File: " + targetFilePath);
+                if (targetFilePath!= null && !targetFilePath.isEmpty()) {
+                    File f = new File(targetFilePath);
+                    if (f.exists() && f.isFile()) {
+                        logger.info("Export to File: " + targetFilePath);
+                    }
                 }
 
-                if(response.getResponseBody() != null && !response.getResponseBody().isEmpty()) {
+                if(response.getResponseBody()!=null && !response.getResponseBody().isEmpty()) {
                         JsonNode responseJson;
                         try {
                             responseJson = objectMapper.readTree(response.getResponseBody());
@@ -208,13 +208,16 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                             }
                         }
                         catch (Exception e){
-                        logger.info("Response Body is not in JSON form");
-                        logger.debug("Response Body"+response.getResponseBody());
+                        logger.info("Response Body is not in JSON format");
+                        logger.debug("Response Body : \n"+response.getResponseBody());
                     }
+                }
+                else{
+                    logger.info("Empty Response Body");
                 }
             } catch (SOSConnectionRefusedException | SOSBadRequestException e) {
                 if (response != null) {
-                    step.getOutcome().getVariables().put("return_value", String.valueOf(response.getStatusCode()));
+                    step.getOutcome().setReturnCode(response.getStatusCode());
                     logger.error("Request failed: " + response.getStatusCode() + " Body: " + response.getResponseBody());
                 }
                 throw e;
