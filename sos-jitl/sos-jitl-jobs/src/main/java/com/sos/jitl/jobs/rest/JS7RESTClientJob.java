@@ -24,6 +24,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
@@ -108,11 +110,8 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
 
                 String targetFilePath = (String) step.getOutcome().getVariables().get("js7ApiExecutorOutfile");
 
-                if (targetFilePath!= null && !targetFilePath.isEmpty()) {
-                    File f = new File(targetFilePath);
-                    if (f.exists() && f.isFile()) {
-                        logger.info("Export to File: " + targetFilePath);
-                    }
+                if (targetFilePath!= null && !targetFilePath.isEmpty() && Files.exists(Paths.get(targetFilePath))) {
+                    logger.info("Export to File: " + targetFilePath);
                 }
 
                 if(response.getResponseBody()!=null && !response.getResponseBody().isEmpty()) {
