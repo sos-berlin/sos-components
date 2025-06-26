@@ -569,7 +569,7 @@ public class SOSRestApiClient {
         Path filePath = null;
         try {
             String targetPath = headers.get("X-Export-Directory"); 
-            if(targetPath == null) {
+            if(targetPath == null || targetPath.isEmpty()) {
                 targetPath = headers.get("X-Export-Directory".toLowerCase());
             }
             Path target = Paths.get(System.getProperty("user.dir"));

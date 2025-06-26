@@ -115,7 +115,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                     logger.info("Export to File: " + targetFilePath);
                 }
 
-                if(response.getResponseBody()==null || response.getResponseBody().isEmpty()) {
+                if(response.getResponseBody() != null && !response.getResponseBody().isEmpty()) {
                         JsonNode responseJson;
                         try {
                             responseJson = objectMapper.readTree(response.getResponseBody());
