@@ -523,7 +523,7 @@ public class SOSRestApiClient {
             String contentDisposition = getResponseHeader("Content-Disposition");
             HttpEntity entity = httpResponse.getEntity();
             if(contentType != null && !contentType.isEmpty()) {
-                if((contentEncoding != null && contentDisposition.contains("filename"))
+                if((contentDisposition != null && contentDisposition.contains("filename"))
                         || (contentEncoding != null && contentEncoding.contains("gzip"))) {
                     return processInputStreamFromResponse(entity);
                 }
