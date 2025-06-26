@@ -3,6 +3,7 @@ package com.sos.auth.classes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
@@ -713,12 +714,15 @@ public class SOSAuthHelper {
     
     public static KeyStore getOIDCTrustStore(OidcProperties provider) throws Exception {
         if (provider != null && provider.getIamOidcTruststorePath() != null) {
-            return KeyStoreUtil.readTrustStore(provider.getIamOidcTruststorePath(), KeystoreType.valueOf(provider.getIamOidcTruststoreType()),
-                    provider.getIamOidcTruststorePassword());
-        } else {
-            Path javaTruststore = Paths.get(System.getProperty("java.home")).resolve("lib").resolve("security").resolve("cacerts");
-            return KeyStoreUtil.readTrustStore(javaTruststore, KeystoreType.PKCS12, "changeit");
+            Path oidcTruststore = Paths.get(provider.getIamOidcTruststorePath());
+            if (Files.exists(oidcTruststore) && Files.isRegularFile(oidcTruststore)) {
+                return KeyStoreUtil.readTrustStore(provider.getIamOidcTruststorePath(), KeystoreType.valueOf(provider.getIamOidcTruststoreType()),
+                        provider.getIamOidcTruststorePassword());
+            }
         }
+        // fallback
+        Path javaTruststore = Paths.get(System.getProperty("java.home")).resolve("lib").resolve("security").resolve("cacerts");
+        return KeyStoreUtil.readTrustStore(javaTruststore, KeystoreType.PKCS12, "changeit");
     }
 
 }
