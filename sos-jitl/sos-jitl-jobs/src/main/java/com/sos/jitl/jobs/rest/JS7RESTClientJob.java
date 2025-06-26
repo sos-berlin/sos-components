@@ -111,7 +111,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
 
                 String targetFilePath = (String) step.getOutcome().getVariables().get("js7ApiExecutorOutfile");
 
-                if (targetFilePath!= null && !targetFilePath.isEmpty()) {
+                if (targetFilePath!= null && !targetFilePath.isEmpty() && Files.exists(Paths.get(targetFilePath))) {
                     logger.info("Export to File: " + targetFilePath);
                 }
 
@@ -119,7 +119,6 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                         JsonNode responseJson;
                         try {
                             responseJson = objectMapper.readTree(response.getResponseBody());
-
                             String jqQuery = null;
                             String pI = null;
                             String filePath = null;
