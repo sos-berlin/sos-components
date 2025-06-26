@@ -300,7 +300,7 @@ public class SOSLdapWebserviceCredentials {
     }
 
     public boolean isSSL() {
-        return ldapServerUrl.toLowerCase().startsWith("ldaps://");
+        return getLdapServerUrlNotNull().toLowerCase().startsWith("ldaps://");
     }
 
     public boolean isHostnameVerification() {
