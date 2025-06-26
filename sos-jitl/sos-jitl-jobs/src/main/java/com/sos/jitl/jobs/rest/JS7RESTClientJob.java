@@ -169,7 +169,8 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                                         } else {
                                                             throw new JobArgumentException("Either the output file path or the processing instruction is missing or invalid.");
                                                         }
-                                                        logger.info("Output File Path: " + filePath + " Processing instructions: " + pI);
+                                                        logger.info("Output File Path: " + filePath );
+                                                        logger.info("Processing instruction: " + pI);
 
                                                         // code to send data into file
                                                         File file = new File(filePath);
