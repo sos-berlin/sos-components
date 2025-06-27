@@ -28,17 +28,17 @@ public class AzureBlobSASAuthTokenResolver {
         contextVars.put("api_version", authProvider.getApiVersion());
         contextVars.put("now", FORMATTER.format(Instant.now()));
 
-        // 1. Replace time variables (e.g., ${now+1h})
+        // 1. Replace time variables (e.g., [now+1h])
         sasToken = replaceTimeVariables(sasToken);
 
-        // 2. Replace static variables like ${now}, ${api_version}
+        // 2. Replace static variables like [now], [api_version]
         String tokenResolvedExceptSign = replaceStaticVariables(sasToken, contextVars);
 
         if (authProvider.getLogger().isDebugEnabled()) {
             authProvider.getLogger().debug("[resolveToken][tokenResolvedExceptSign]%s", tokenResolvedExceptSign);
         }
 
-        // 3. If ${sign} is used, calculate the signature
+        // 3. If [sign] is used, calculate the signature
         if (tokenResolvedExceptSign.contains("[sign]")) {
             if (authProvider.hasAccountKey()) {
                 String toSign = extractStringToSign(tokenResolvedExceptSign, authProvider.getAccountName());
@@ -53,7 +53,7 @@ public class AzureBlobSASAuthTokenResolver {
             }
         }
 
-        // 4. Final variable replacement including ${sign}
+        // 4. Final variable replacement including [sign]
         return replaceStaticVariables(tokenResolvedExceptSign, contextVars);
     }
 
