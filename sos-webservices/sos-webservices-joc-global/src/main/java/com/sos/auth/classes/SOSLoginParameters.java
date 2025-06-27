@@ -86,11 +86,11 @@ public class SOSLoginParameters {
     }
 
     public boolean isOIDCLogin() {
-        return (getIdentityService() != null && !getIdentityService().equals("") && getIdToken() != null && !getIdToken().isEmpty());
+        return (getIdentityService() != null && !getIdentityService().isEmpty() && getIdToken() != null && !getIdToken().isEmpty());
     }
 
     public boolean isFIDO2Login() {
-        return (getIdentityService() != null && !getIdentityService().equals("") && getSignature() != null && !getAuthenticatorData().equals(""));
+        return (getIdentityService() != null && !getIdentityService().isEmpty() && getSignature() != null && !getAuthenticatorData().equals(""));
     }
 
     public String getSignature() {

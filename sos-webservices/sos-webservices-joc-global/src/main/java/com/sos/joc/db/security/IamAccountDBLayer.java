@@ -24,7 +24,6 @@ import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.ConfigurationType;

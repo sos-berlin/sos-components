@@ -190,12 +190,12 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
     }
     
-    @POST
-    @Path("login/oidc")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_JSON })
+//    @POST
+//    @Path("login/oidc")
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
-            byte[] body) {
+            String origin, byte[] body) {
         
 //        if (Globals.sosCockpitProperties == null) {
 //            Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -212,7 +212,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             OidcProperties provider =  SOSAuthHelper.getOIDCProperties(identityService);
             KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
             OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
-            GetTokenResponse tokenResponse = new GetToken(provider, conf, requestBody, truststore).getJsonObjectFromPost();
+            GetTokenResponse tokenResponse = new GetToken(provider, conf, requestBody, origin, truststore).getJsonObjectFromPost();
 
             // call iam/locker/put; see LockerResourceImpl
             Variables vars = new Variables();
@@ -223,9 +223,15 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             Locker locker = new Locker();
             locker.setContent(vars);
             SOSLockerHelper.lockerPut(locker);
+            
+            String openIdHeaderValue = SOSAuthHelper.getOpenIdConfigurationHeader(conf);
+            
+//            LOGGER.info("X-IDENTITY-SERVICE:"+ identityService);
+//            LOGGER.info("X-OPENID-CONFIGURATION:"+ openIdHeaderValue);
+//            LOGGER.info("X-ID-TOKEN:" + tokenResponse.getId_token());
 
-            return loginPost(servletRequest, null, null, identityService, tokenResponse.getId_token(), null, SOSAuthHelper
-                    .getOpenIdConfigurationHeader(conf), null, null, null, null, null, null, null);
+            return loginPost(servletRequest, null, null, identityService, tokenResponse.getId_token(), null, openIdHeaderValue, null, null, null,
+                    null, origin, null, null, null);
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -256,7 +262,8 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             @HeaderParam("X-ID-TOKEN") String idToken, @HeaderParam("X-SIGNATURE") String signature,
             @HeaderParam("X-OPENID-CONFIGURATION") String openidConfiguration, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
             @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @HeaderParam("X-CREDENTIAL-ID") String credentialId,
-            @HeaderParam("X-REQUEST-ID") String requestId, @QueryParam("account") String account, @QueryParam("pwd") String pwd, byte[] body) {
+            @HeaderParam("X-REQUEST-ID") String requestId, @HeaderParam("Origin") String origin, @QueryParam("account") String account,
+            @QueryParam("pwd") String pwd, byte[] body) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -267,7 +274,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         MDC.put("context", ThreadCtx);
         
         if (isOidcLoginToGetToken(identityService, body)) {
-            return loginPost(request, identityService, body);
+            return loginPost(request, identityService, origin, body);
         }
         
         String clientCertCN = null;

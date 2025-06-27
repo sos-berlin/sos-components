@@ -11,7 +11,6 @@ import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
@@ -27,23 +26,24 @@ import jakarta.ws.rs.core.UriBuilder;
 
 public class GetToken extends SOSRestApiClient {
 
-    //private static final Logger LOGGER = LoggerFactory.getLogger(GetToken.class);
+//    private static final Logger LOGGER = LoggerFactory.getLogger(GetToken.class);
     private UriBuilder uriBuilder;
     private Map<String, String> body = new HashMap<>();
     private KeyStore truststore;
     
-    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody) throws Exception {
+    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
+            throws Exception {
         setTrustStore(props);
-        setUriBuilder(props, openIdConfigurationResponse, requestBody);
+        setUriBuilder(props, openIdConfigurationResponse, requestBody, origin);
     }
     
-    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, KeyStore truststore)
-            throws SOSSSLException {
+    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin,
+            KeyStore truststore) throws SOSSSLException {
         this.truststore = truststore;
-        setUriBuilder(props, openIdConfigurationResponse, requestBody);
+        setUriBuilder(props, openIdConfigurationResponse, requestBody, origin);
     }
 
-    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody)
+    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
             throws SOSSSLException {
         List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
 
@@ -61,7 +61,7 @@ public class GetToken extends SOSRestApiClient {
                 createBody(props, requestBody);
             }
         }
-        
+        addHeader("Origin", origin);
         setUriBuilder(openIdConfigurationResponse.getToken_endpoint());
     }
     
@@ -106,7 +106,7 @@ public class GetToken extends SOSRestApiClient {
         JocError jocError = new JocError();
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
-            //LOGGER.info(uri.toString());
+//            LOGGER.info("REQUEST-URL:" + uri.toString());
             String response = postRestService(uri, body);
             return getJsonStringFromResponse(response, uri, jocError);
         } catch (JocException e) {
@@ -126,7 +126,7 @@ public class GetToken extends SOSRestApiClient {
         setSocketTimeout(Globals.httpSocketTimeout);
         //setSSLContext(SSLContext.getInstance().getSSLContext());
         setSSLContext(null, null, truststore);
-        if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
+        if (url.startsWith("https:") && truststore == null) {
             throw new JocConfigurationException("Couldn't find required truststore");
         }
     }
@@ -148,7 +148,8 @@ public class GetToken extends SOSRestApiClient {
         if (response == null) {
             response = "";
         }
-        
+//        LOGGER.info("RESPONSE-HEADERS:" + printHttpResponseHeaders());
+//        LOGGER.info("RESPONSE:" + response);
         try {
             switch (httpReplyCode) {
             case 200:

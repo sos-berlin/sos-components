@@ -7,7 +7,6 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
@@ -21,7 +20,7 @@ import jakarta.ws.rs.core.UriBuilder;
 
 public class GetOpenIdConfiguration extends SOSRestApiClient {
 
-    //private static final Logger LOGGER = LoggerFactory.getLogger(GetOpenIdConfiguration.class);
+//    private static final Logger LOGGER = LoggerFactory.getLogger(GetOpenIdConfiguration.class);
     private static final String API_PATH = "/.well-known/openid-configuration";
     private UriBuilder uriBuilder;
     private KeyStore truststore; 
@@ -63,7 +62,7 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         JocError jocError = new JocError();
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
-            //LOGGER.info(uri.toString());
+//            LOGGER.info("REQUEST-URL:" + uri.toString());
             String response = getRestService(uri);
             return getJsonStringFromResponse(response, uri, jocError);
         } catch (JocException e) {
@@ -83,7 +82,7 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         setSocketTimeout(Globals.httpSocketTimeout);
         //setSSLContext(SSLContext.getInstance().getSSLContext());
         setSSLContext(null, null, truststore);
-        if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
+        if (url.startsWith("https:") && truststore == null) {
             throw new JocConfigurationException("Couldn't find required truststore");
         }
     }
@@ -105,7 +104,8 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         if (response == null) {
             response = "";
         }
-        
+//        LOGGER.info("RESPONSE-HEADERS:" + printHttpResponseHeaders());
+//        LOGGER.info("RESPONSE:" + response);
         try {
             switch (httpReplyCode) {
             case 200:

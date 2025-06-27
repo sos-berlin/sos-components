@@ -60,8 +60,8 @@ public class SOSOpenIdHandler {
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private static final String CONTENT_TYPE = "Content-Type";
-    private static final String BEARER = "Bearer";
-    private static final String AUTHORIZATION = "Authorization";
+//    private static final String BEARER = "Bearer";
+//    private static final String AUTHORIZATION = "Authorization";
     private JsonObject jsonHeader;
     private JsonObject jsonPayload;
     private KeyStore truststore = null;
@@ -226,7 +226,7 @@ public class SOSOpenIdHandler {
         }
 
         try {
-            if (expiresIn.equals(0L)) {
+            if (expiresIn == 0L) {
                 Long expiration = Long.valueOf(jsonPayload.getInt(EXPIRATION_FIELD, 0));
                 expiresIn = expiration - Instant.now().getEpochSecond();
             }
@@ -330,7 +330,7 @@ public class SOSOpenIdHandler {
             String header = new String(decoder.decode(accessTokenParts[0]));
             String payload = new String(decoder.decode(accessTokenParts[1]));
 
-            jsonReaderHeader = Json.createReader(new StringReader(header));
+            jsonReaderHeader = Json.createReader(new StringReader(header)); // TODO why? not used
             jsonReaderPayload = Json.createReader(new StringReader(payload));
             jsonHeader = jsonReaderHeader.readObject();
             jsonPayload = jsonReaderPayload.readObject();

@@ -622,14 +622,14 @@ public class SOSAuthHelper {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Read OIDC Identity Service");
             DBItemIamIdentityService dbItemIamIdentityService = getCheckIdentityService(identityService, sosHibernateSession);
             
-            if (!dbItemIamIdentityService.getIdentityServiceName().startsWith("OIDC")) {
-                throw new JocBadRequestException(identityService + "is not an OIDC Identity Service");
+            if (!dbItemIamIdentityService.getIdentityServiceType().contains("OIDC")) {
+                throw new JocBadRequestException(identityService + " is not an OIDC Identity Service");
             }
 
             JocConfigurationFilter filter = new JocConfigurationFilter();
             filter.setObjectType(dbItemIamIdentityService.getIdentityServiceType());
             filter.setName(identityService);
-            filter.setConfigurationType("IAM");
+            filter.setConfigurationType(CONFIGURATION_TYPE_IAM);
 
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(sosHibernateSession);
             DBItemJocConfiguration item = dbLayer.getJocConfiguration(filter, 0);
