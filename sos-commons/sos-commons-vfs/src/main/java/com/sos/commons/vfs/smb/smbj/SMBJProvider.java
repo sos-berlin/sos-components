@@ -32,7 +32,11 @@ import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.commons.util.beans.SOSEnv;
+import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
@@ -403,6 +407,12 @@ public class SMBJProvider extends SMBProvider {
     public void disableReusableResource() {
         super.disableReusableResource();
         reusableResourceEnabled = false;
+    }
+
+    /** Overrides {@link IProvider#executeCommand(String, SOSTimeout, SOSEnv)} */
+    @Override
+    public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
+        return SOSShell.executeCommand(command, timeout, env);
     }
 
     protected ProviderFile createProviderFile(String fullPath, FileIdBothDirectoryInformation info) {

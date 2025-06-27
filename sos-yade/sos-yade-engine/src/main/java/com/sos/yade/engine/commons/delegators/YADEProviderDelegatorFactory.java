@@ -4,6 +4,9 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.ssl.SslArguments;
+import com.sos.commons.vfs.azure.AzureBlobStorageProvider;
+import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderArguments;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
@@ -64,6 +67,18 @@ public class YADEProviderDelegatorFactory {
         AProvider<?> p = null;
         try {
             switch (protocol.getValue()) {
+            case AZURE_BLOB_STORAGE:
+                AzureBlobStorageProviderArguments aa = (AzureBlobStorageProviderArguments) providerArgs;
+                if (aa.getSsl() == null) {
+                    aa.setSsl(new SslArguments());
+                }
+                aa.getSsl().setUntrustedSslVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
+                aa.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
+                p = new AzureBlobStorageProvider(logger, aa);
+                if (isTarget) {
+                    args.getParallelism().setValue(1);
+                }
+                break;
             case FTP:
                 p = new FTPProvider(logger, (FTPProviderArguments) providerArgs);
                 args.getParallelism().setValue(1);

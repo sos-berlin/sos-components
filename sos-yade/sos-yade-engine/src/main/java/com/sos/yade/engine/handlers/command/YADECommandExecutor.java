@@ -303,6 +303,9 @@ public class YADECommandExecutor {
     }
 
     private static void logCommandResult(ISOSLogger logger, String msg, SOSCommandResult result) {
+        if (result == null) {
+            return; // not implemented by the provider
+        }
         boolean successExitCode = result.getExitCode() != null && result.getExitCode().intValue() == 0;
         boolean hasStdOut = !SOSString.isEmpty(result.getStdOut());
         boolean hasStdErr = !SOSString.isEmpty(result.getStdErr());
@@ -338,6 +341,9 @@ public class YADECommandExecutor {
     }
 
     private static void checkCommandResult(String prefix, SOSCommandResult result) throws YADEEngineCommandException {
+        if (result == null) {
+            return;
+        }
         if (result.hasError(THROW_ERROR_ON_STDERR)) {
             String std;
             String stdErr = result.getStdErr().trim();

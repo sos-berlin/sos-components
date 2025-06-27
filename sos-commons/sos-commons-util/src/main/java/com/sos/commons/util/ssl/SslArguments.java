@@ -38,7 +38,7 @@ public class SslArguments extends ASOSArguments {
 
     public String getTrustedSslInfo() {
         if (trustedSsl == null) {
-            return null;
+            return "";
         }
         if (!trustedSsl.isCustomStoresEnabled()) {
             return "Default " + ARG_NAME_TRUSTSTORE_DISPLAY_NAME;

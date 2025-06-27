@@ -7,7 +7,6 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 
 import com.sos.commons.httpclient.BaseHttpClient;
-import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.http.HttpUtils;
 
@@ -58,9 +57,9 @@ public class HttpOutputStream extends OutputStream {
             }
 
             HttpRequest request = builder.PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
-            ExecuteResult<Void> result = client.executeNoResponseBody(request);
+            HttpExecutionResult<Void> result = client.executeNoResponseBody(request);
             if (!HttpUtils.isSuccessful(result.response().statusCode())) {
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
         } catch (Exception e) {
             throw new IOException(e);

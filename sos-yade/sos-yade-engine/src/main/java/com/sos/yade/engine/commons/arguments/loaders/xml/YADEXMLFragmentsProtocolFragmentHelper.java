@@ -8,9 +8,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobStorageClientAuthMethod;
 import com.sos.commons.util.keystore.KeyStoreType;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.util.ssl.SslArguments;
+import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments.TransferMode;
@@ -27,6 +29,47 @@ import com.sos.commons.vfs.webdav.commons.WebDAVSProviderArguments;
 import com.sos.commons.xml.SOSXML;
 
 public class YADEXMLFragmentsProtocolFragmentHelper {
+
+    protected static AzureBlobStorageProviderArguments parseAzureBlobStorage(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
+        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "AzureBlobStorage");
+
+        AzureBlobStorageProviderArguments args = new AzureBlobStorageProviderArguments();
+        args.applyDefaultIfNullQuietly();
+        args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.NONE);
+
+        NodeList nl = fragment.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                // YADE JS7
+                case "CredentialStoreFragmentRef":
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                case "JumpFragmentRef":
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    break;
+                case "AzureBlobStorageConnection":
+                    parseAzureBlobStorageConnection(argsLoader, args, n);
+                    break;
+                case "AzureBlobStorageAuthentication":
+                    parseAzureBlobStorageAuthentication(argsLoader, args, n);
+                    break;
+                case "ProxyForAzure":
+                    parseProxy(argsLoader, args, n);
+                    break;
+                case "HTTPHeaders":
+                    parseHTTPHeaders(argsLoader, args, n);
+                    break;
+                case "SSL": // JS7 - YADE-626
+                    parseSSL(argsLoader, args.getSsl(), n);
+                    break;
+                }
+            }
+        }
+        return args;
+    }
 
     protected static FTPProviderArguments parseFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
         Node fragment = getProtocolFragment(argsLoader, ref, isSource, "FTP");
@@ -381,6 +424,23 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
+    protected static void parseHTTPHeaders(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node headers) throws Exception {
+        NodeList nl = headers.getChildNodes();
+        if (args.getHttpHeaders().getValue() == null) {
+            args.getHttpHeaders().setValue(new ArrayList<>());
+        }
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "HTTPHeader":
+                    args.getHttpHeaders().getValue().add(argsLoader.getValue(n));
+                    break;
+                }
+            }
+        }
+    }
+
     protected static void parseHTTPHeaders(YADEXMLArgumentsLoader argsLoader, HTTPProviderArguments args, Node headers) throws Exception {
         NodeList nl = headers.getChildNodes();
         if (args.getHttpHeaders().getValue() == null) {
@@ -527,6 +587,86 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     break;
                 case "Password":
                     argsLoader.setStringArgumentValue(args.getPassword(), n);
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void parseAzureBlobStorageConnection(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node urlConnection)
+            throws Exception {
+        NodeList nl = urlConnection.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "ServiceEndpoint":
+                    argsLoader.setStringArgumentValue(args.getHost(), n);
+                    break;
+                case "ConnectTimeout":// YADE JS7
+                    argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void parseAzureBlobStorageAuthentication(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args,
+            Node basicAuthentication) throws Exception {
+        NodeList nl = basicAuthentication.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "AccountName":
+                    argsLoader.setStringArgumentValue(args.getUser(), n);
+                    break;
+                case "ContainerName":
+                    argsLoader.setStringArgumentValue(args.getContainerName(), n);
+                    break;
+                case "ApiVersion":
+                    argsLoader.setStringArgumentValue(args.getApiVersion(), n);
+                    break;
+                case "SharedKey":
+                    parseAzureSharedKey(argsLoader, args, n);
+                    break;
+                case "SASToken":
+                    parseAzureSASToken(argsLoader, args, n);
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void parseAzureSharedKey(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node sharedKey)
+            throws Exception {
+        args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.SHARED_KEY);
+        NodeList nl = sharedKey.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "AccountKey":
+                    argsLoader.setStringArgumentValue(args.getAccountKey(), n);
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void parseAzureSASToken(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node sasToken)
+            throws Exception {
+        args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.SAS_TOKEN);
+        NodeList nl = sasToken.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "AccountKey":
+                    argsLoader.setStringArgumentValue(args.getAccountKey(), n);
+                    break;
+                case "Token":
+                    argsLoader.setStringArgumentValue(args.getSASToken(), n);
                     break;
                 }
             }

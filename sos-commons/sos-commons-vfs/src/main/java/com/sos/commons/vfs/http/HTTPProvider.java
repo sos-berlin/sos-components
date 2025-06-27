@@ -17,7 +17,7 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.BaseHttpClient.Builder;
-import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
+import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.commons.HttpOutputStream;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthMethod;
@@ -86,8 +86,6 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
 
         try {
-            getLogger().info(getConnectMsg());
-
             Builder builder = BaseHttpClient.withBuilder();
             builder = builder.withLogger(getLogger());
             builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
@@ -99,10 +97,12 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 logIfHostnameVerificationDisabled(getArguments().getSsl());
             }
             client = builder.build();
-            connect(getArguments().getBaseURI());
 
+            getLogger().info(getConnectMsg());
+            connect(getArguments().getBaseURI());
             getLogger().info(getConnectedMsg());
         } catch (Throwable e) {
+            disconnect();
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
@@ -142,13 +142,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
+            HttpExecutionResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
 
             return true;
@@ -175,13 +175,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             URI uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executeDELETENoResponseBody(uri);
+            HttpExecutionResult<Void> result = client.executeDELETENoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
 
             return true;
@@ -225,7 +225,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             URI sourceURI = new URI(normalizePath(source));
             URI targetURI = new URI(normalizePath(target));
 
-            ExecuteResult<Void> result;
+            HttpExecutionResult<Void> result;
             int code;
             long sourceSize = -1L;
             if (!client.isChunkedTransfer()) {
@@ -244,7 +244,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
 
             deleteIfExists(source);
@@ -266,13 +266,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             URI uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executeGETNoResponseBody(uri);
+            HttpExecutionResult<Void> result = client.executeGETNoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
                 }
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
 
             return createProviderFile(uri, result.response());
@@ -358,16 +358,16 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
-            ExecuteResult<Void> result = client.executePUTNoResponseBody(uri, source, sourceSize, isWebDAV);
+            HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
             // PUT not returns file size
             result = client.executeHEADOrGETNoResponseBody(uri);
             code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
             return client.getFileSize(result.response());
         } catch (Throwable e) {
@@ -389,10 +389,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         try {
             URI uri = new URI(normalizePath(path));
 
-            ExecuteResult<Void> result = client.executePUTNoResponseBody(uri, content, isWebDAV);
+            HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, content, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
         } catch (Throwable e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
@@ -415,13 +415,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     private void connect(URI uri) throws Exception {
         String notFoundMsg = null;
 
-        ExecuteResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
+        HttpExecutionResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
         int code = result.response().statusCode();
         if (HttpUtils.isServerError(code)) {
-            throw new Exception(BaseHttpClient.getResponseStatus(result));
+            throw new Exception(BaseHttpClient.formatExecutionResult(result));
         }
         if (HttpUtils.isNotFound(code)) {
-            notFoundMsg = BaseHttpClient.getResponseStatus(result);
+            notFoundMsg = BaseHttpClient.formatExecutionResult(result);
         }
 
         // Connection successful but baseURI not found - try redefining baseURI

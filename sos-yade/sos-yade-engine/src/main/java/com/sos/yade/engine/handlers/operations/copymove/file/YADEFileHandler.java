@@ -12,6 +12,7 @@ import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.azure.AzureBlobStorageProvider;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.ftp.FTPProvider;
 import com.sos.commons.vfs.http.HTTPProvider;
@@ -126,8 +127,13 @@ public class YADEFileHandler {
                 l: while (attempts < config.getMaxRetries()) {
                     try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
                             useBufferedStreams)) {
-                        targetFile.setSize(((HTTPProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(), sourceStream, sourceFile
-                                .getSize()));
+                        if (targetDelegator.isAzure()) {
+                            targetFile.setSize(((AzureBlobStorageProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(),
+                                    sourceStream, sourceFile.getSize()));
+                        } else {
+                            targetFile.setSize(((HTTPProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(), sourceStream,
+                                    sourceFile.getSize()));
+                        }
                         break l;
                     } catch (Throwable e) {
                         attempts++;

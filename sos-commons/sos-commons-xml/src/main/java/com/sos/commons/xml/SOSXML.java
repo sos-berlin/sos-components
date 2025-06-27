@@ -2,6 +2,7 @@ package com.sos.commons.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -246,6 +247,32 @@ public class SOSXML {
                 removeWhitespaceNodes(child);
             }
         }
+    }
+
+    public static String removeBOMIfExists(String xml) {
+        if (xml == null) {
+            return xml;
+        }
+        if (xml.startsWith("\uFEFF")) {
+            xml = xml.substring(1);
+        }
+        return xml;
+    }
+
+    public static InputStream removeBOMIfExists(InputStream is) throws IOException {
+        if (is == null) {
+            return is;
+        }
+        PushbackInputStream pis = new PushbackInputStream(is, 3);
+        byte[] bom = new byte[3];
+        int read = pis.read(bom, 0, bom.length);
+
+        if (read == 3 && !(bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF)) {
+            pis.unread(bom, 0, read);
+        } else if (read > 0 && read < 3) {
+            pis.unread(bom, 0, read);
+        }
+        return pis;
     }
 
     public class SOSXMLXPath {
