@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -132,6 +133,7 @@ public class ApiExecutor {
     private String keystoreType;
     private Map<String, DetailValue> jobResources;
     private List<Header> additionalHeaders;
+    private Map<String, String> responseHeaders;
 
     public ApiExecutor(OrderProcessStep<?> step) {
         this.step = step;
@@ -198,6 +200,8 @@ public class ApiExecutor {
                     additionalHeaders.stream().forEach(header -> client.addHeader(header.getName().toLowerCase(), header.getValue()));
                 }
                 String response = client.postRestService(loginUri, null);
+                setResponseHeaders(client.getResponseHeaders());
+                
                 // latestResponse = response;
                 statusCode = client.statusCode();
                 if (step != null && isDebugEnabled) {
@@ -286,6 +290,7 @@ public class ApiExecutor {
                         additionalHeaders.stream().forEach(header -> client.addHeader(header.getName().toLowerCase(), header.getValue()));
                     }
                     String response = client.postRestService(jocUri.resolve(apiUrl), body);
+                    setResponseHeaders(client.getResponseHeaders());
                     if(response.startsWith("outfile:") && step != null && step.getOutcome() != null) {
                         step.getLogger().debug("set outcome variable: js7ApiExecutorOutfile=" + response.substring("outfile:".length()));
                         step.getOutcome().putVariable("js7ApiExecutorOutfile", response.substring("outfile:".length()));
@@ -316,6 +321,7 @@ public class ApiExecutor {
                     step.getLogger().debug("send logout");
                 }
                 String response = client.postRestService(jocUri.resolve(WS_API_LOGOUT), null);
+                setResponseHeaders(client.getResponseHeaders());
                 if (step != null && isDebugEnabled) {
                     step.getLogger().debug("HTTP status code: %s", client.statusCode());
                 }
@@ -848,5 +854,18 @@ public class ApiExecutor {
         }
         EncryptedValue encrypted = EncryptedValue.getInstance(propertyName, encryptedValue);
         return Decrypt.decrypt(encrypted, pk);
+    }
+    
+    private void setResponseHeaders(Map<String, String> headers) {
+        if(responseHeaders == null) {
+            responseHeaders = new HashMap<String, String>();
+        } else if (!responseHeaders.isEmpty()) {
+            responseHeaders.clear();
+        }
+        responseHeaders = headers;
+    }
+    
+    public Map<String, String> getResponseHeaders() {
+        return responseHeaders;
     }
 }

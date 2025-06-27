@@ -818,4 +818,8 @@ public class SOSRestApiClient {
 //        return null;
 //    }
     
+    public Map<String, String> getResponseHeaders() {
+        return responseHeaders;
+    }
+
 }
