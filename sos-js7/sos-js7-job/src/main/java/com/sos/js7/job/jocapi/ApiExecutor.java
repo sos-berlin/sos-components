@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -857,12 +856,9 @@ public class ApiExecutor {
     }
     
     private void setResponseHeaders(Map<String, String> headers) {
-        if(responseHeaders == null) {
-            responseHeaders = new HashMap<String, String>();
-        } else if (!responseHeaders.isEmpty()) {
-            responseHeaders.clear();
+        if(headers != null && !headers.isEmpty()) {
+            responseHeaders = headers;
         }
-        responseHeaders = headers;
     }
     
     public Map<String, String> getResponseHeaders() {
