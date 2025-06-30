@@ -191,8 +191,10 @@ public class UnitTestSimpleWSImplHelper {
         JocPermissions p = a.getJocPermissions();
 
         p.getCalendars().setView(true);
+        
         p.getDailyPlan().setView(true);
         p.getDailyPlan().setManage(true);
+        
         p.getFileTransfer().setView(true);
         p.getFileTransfer().setManage(true);
 

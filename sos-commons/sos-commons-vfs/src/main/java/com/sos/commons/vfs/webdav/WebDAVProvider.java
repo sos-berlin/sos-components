@@ -11,7 +11,7 @@ import java.util.Deque;
 import java.util.List;
 
 import com.sos.commons.httpclient.BaseHttpClient;
-import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
+import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.IProvider;
@@ -107,13 +107,13 @@ public class WebDAVProvider extends HTTPProvider {
 
             HttpRequest.Builder builder = getClient().createRequestBuilder(sourceURI);
             builder.header("Destination", targetURI.toString());
-            ExecuteResult<Void> result = getClient().executeNoResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
+            HttpExecutionResult<Void> result = getClient().executeNoResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.getResponseStatus(result));
+                throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
             return true;
         } catch (Throwable e) {

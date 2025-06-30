@@ -4,6 +4,7 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.AProvider;
+import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
@@ -18,6 +19,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final String directoryWithTrailingPathSeparator;
 
     private final boolean isHTTP;
+    private final boolean isAzure;
     private final boolean isWindows;
 
     public AYADEProviderDelegator(AProvider<?> provider, YADESourceTargetArguments args) {
@@ -25,6 +27,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         this.args = args;
         this.label = args.getLabel().getValue();
         this.isHTTP = isHTTPProvider();
+        this.isAzure = isAzureProvider();
         this.isWindows = isWindowsProvider();
         this.directory = getDirectoryPath(args.getDirectory().getValue());
         this.directoryWithTrailingPathSeparator = getDirectoryPathWithTrailingPathSeparator(directory);
@@ -76,6 +79,10 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return isHTTP;
     }
 
+    public boolean isAzure() {
+        return isAzure;
+    }
+
     public boolean isWindows() {
         return isWindows;
     }
@@ -86,6 +93,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     private boolean isHTTPProvider() {
         switch (getArgs().getProvider().getProtocol().getValue()) {
+        case AZURE_BLOB_STORAGE:
         case HTTP:
         case HTTPS:
         case WEBDAV:
@@ -94,6 +102,10 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         default:
             return false;
         }
+    }
+
+    private boolean isAzureProvider() {
+        return Protocol.AZURE_BLOB_STORAGE.equals(getArgs().getProvider().getProtocol().getValue());
     }
 
     // TODO optimize for SFTP + isHTTPProvider/isWindowsProvider
@@ -115,8 +127,11 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         // JumpHost Note: the java nio methods such as 'normalize' or 'absolutePath' cannot be used,
         // because the paths are created based on the current system and not on the JumpHost system on which the JumpHost client is installed */
         // TODO - normalizePath were updated - re-check if if (!isJumpHost()) { is needed
-        if (!isJumpHost() && !isHTTP) {
-            // HTTP/WebDAV returns an absolutely encoded path with the base URI, e.g.: http://<server>:<port>/<dir>
+        // if (!isJumpHost() && !isHTTP) {
+        // HTTP/WebDAV returns an absolutely encoded path with the base URI, e.g.: http://<server>:<port>/<dir>
+        // dir = provider.normalizePath(dir);
+        // }
+        if (!isJumpHost()) {
             dir = provider.normalizePath(dir);
         }
 

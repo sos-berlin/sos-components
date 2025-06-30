@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sos.commons.httpclient.BaseHttpClient.Builder;
-import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
+import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
@@ -40,22 +40,22 @@ public class BaseHTTPClientTest {
             BaseHttpClient client = builder.build();
 
             // Executes a GET request and returns response as String
-            ExecuteResult<String> result = client.executeGET(uri);
+            HttpExecutionResult<String> result = client.executeGET(uri);
             int code = result.response().statusCode();
             logger.info("[result]" + result.response().body());
             if (HttpUtils.isServerError(code)) {
-                throw new Exception(BaseHttpClient.getResponseStatus(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
             if (HttpUtils.isNotFound(code)) {
-                BaseHttpClient.getResponseStatus(result);
+                BaseHttpClient.formatExecutionResult(result);
             }
-            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
+            logger.info("[result]" + BaseHttpClient.formatExecutionResult(result));
 
             // Executes a GET request and discards the response body
-            ExecuteResult<Void> resultNoBody = client.executeGETNoResponseBody(uri);
+            HttpExecutionResult<Void> resultNoBody = client.executeGETNoResponseBody(uri);
             code = resultNoBody.response().statusCode();
             logger.info("[resultNoBody]" + resultNoBody.response().body());
-            logger.info("[resultNoBody]" + BaseHttpClient.getResponseStatus(resultNoBody));
+            logger.info("[resultNoBody]" + BaseHttpClient.formatExecutionResult(resultNoBody));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,16 +80,16 @@ public class BaseHTTPClientTest {
             BaseHttpClient client = builder.build();
 
             // Executes a GET request and returns response as String
-            ExecuteResult<String> result = client.executePOST(uri);
+            HttpExecutionResult<String> result = client.executePOST(uri);
             int code = result.response().statusCode();
             logger.info("[result]" + result.response().body());
             if (HttpUtils.isServerError(code)) {
-                throw new Exception(BaseHttpClient.getResponseStatus(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
             if (HttpUtils.isNotFound(code)) {
-                BaseHttpClient.getResponseStatus(result);
+                BaseHttpClient.formatExecutionResult(result);
             }
-            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
+            logger.info("[result]" + BaseHttpClient.formatExecutionResult(result));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -115,17 +115,17 @@ public class BaseHTTPClientTest {
 
             // Executes a GET request and returns response as String
 
-            ExecuteResult<Map<String, Object>> result = client.executePOSTJson(uri, new TypeReference<>() {
+            HttpExecutionResult<Map<String, Object>> result = client.executePOSTJson(uri, new TypeReference<>() {
             });
             int code = result.response().statusCode();
             logger.info("[result]" + result.response().body());
             if (HttpUtils.isServerError(code)) {
-                throw new Exception(BaseHttpClient.getResponseStatus(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
             if (HttpUtils.isNotFound(code)) {
-                BaseHttpClient.getResponseStatus(result);
+                BaseHttpClient.formatExecutionResult(result);
             }
-            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
+            logger.info("[result]" + BaseHttpClient.formatExecutionResult(result));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -149,16 +149,16 @@ public class BaseHTTPClientTest {
             BaseHttpClient client = builder.build();
 
             // Executes a GET request and returns response as String
-            ExecuteResult<String> result = client.executeGET(uri);
+            HttpExecutionResult<String> result = client.executeGET(uri);
             int code = result.response().statusCode();
             logger.info("[result]" + result.response().body());
             if (HttpUtils.isServerError(code)) {
-                throw new Exception(BaseHttpClient.getResponseStatus(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
             if (HttpUtils.isNotFound(code)) {
-                BaseHttpClient.getResponseStatus(result);
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
-            logger.info("[result]" + BaseHttpClient.getResponseStatus(result));
+            logger.info("[result]" + BaseHttpClient.formatExecutionResult(result));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -192,5 +192,13 @@ public class BaseHTTPClientTest {
         args.getUntrustedSsl().setValue(true);
         args.getUntrustedSslVerifyCertificateHostname().setValue(false);
         return args;
+    }
+
+    public static void resetSystemProperties() {
+        System.setProperty("javax.net.ssl.keyStore", "");
+        System.setProperty("javax.net.ssl.keyStorePassword", "");
+
+        System.setProperty("javax.net.ssl.trustStore", "");
+        System.setProperty("javax.net.ssl.trustStorePassword", "");
     }
 }

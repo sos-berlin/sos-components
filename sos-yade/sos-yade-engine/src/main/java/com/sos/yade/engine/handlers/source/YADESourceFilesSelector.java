@@ -97,10 +97,11 @@ public class YADESourceFilesSelector {
         // if(sourceProvider instanceof HTTPProvider) {
         // throw new SOSYADEEngineSourceFilesSelectorException("a file spec selection is not supported with http(s) protocol");
         // }
+
         try {
             return sourceDelegator.getProvider().selectFiles(selection);
         } catch (Throwable e) {
-            throw new YADEEngineSourceFilesSelectorException(e.getCause() == null ? e : e.getCause());
+            throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause());
         }
     }
 

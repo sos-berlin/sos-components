@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -150,6 +151,16 @@ public class SOSClassUtil {
         try (OutputStream nullOutputStream = OutputStream.nullOutputStream()) {
             return inputStream.transferTo(nullOutputStream);
         }
+    }
+    
+    public static byte[] toByteArray(InputStream input) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[4096]; // 4KB Puffer
+        int nRead;
+        while ((nRead = input.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        return buffer.toByteArray();
     }
 
     /** @param contextClass

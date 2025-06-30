@@ -6,6 +6,7 @@ import org.w3c.dom.NodeList;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
@@ -295,6 +296,9 @@ public class YADEXMLProfileHelper {
         case "LocalTarget":
             providerArgs = parseFragmentRefLocal(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
+        case "AzureBlobStorageFragmentRef":
+            providerArgs = parseFragmentRefAzureBlobStorage(argsLoader, refRef, isSource, sourceTargetArgs);
+            break;
         case "SFTPFragmentRef":
             providerArgs = parseFragmentRefSFTP(argsLoader, refRef, isSource, sourceTargetArgs);
             break;
@@ -360,6 +364,26 @@ public class YADEXMLProfileHelper {
                     break;
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                }
+            }
+        }
+        return args;
+    }
+
+    private static AzureBlobStorageProviderArguments parseFragmentRefAzureBlobStorage(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
+            YADESourceTargetArguments sourceTargetArgs) throws Exception {
+        AzureBlobStorageProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseAzureBlobStorage(argsLoader, ref, isSource);
+        NodeList nl = ref.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                switch (n.getNodeName()) {
+                case "Rename":
+                    parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
+                    break;
+                case "HTTPHeaders":
+                    YADEXMLFragmentsProtocolFragmentHelper.parseHTTPHeaders(argsLoader, args, n);
                     break;
                 }
             }
@@ -522,11 +546,13 @@ public class YADEXMLProfileHelper {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
-                case "WebDAVPostProcessing":
-                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
-                    break;
                 case "Rename":
                     parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
+                    break;
+                case "HTTPHeaders":
+                    YADEXMLFragmentsProtocolFragmentHelper.parseHTTPHeaders(argsLoader, args, n);
+                case "WebDAVPostProcessing":
+                    parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
                     break;
                 }
             }

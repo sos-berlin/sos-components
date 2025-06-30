@@ -74,7 +74,7 @@ public class Yade {
     public enum TransferProtocol {
 
         UNKNOWN(0), LOCAL(1), FTP(2), FTPS(3), SFTP(4), HTTP(5), HTTPS(6), WEBDAV(7), WEBDAVS(8), SMB(9), SSH(100), ZIP(200), MQ(300), SMTP(
-                400), IMAP(500);
+                400), IMAP(500), AZURE_BLOB_STORAGE(70);
 
         private final Integer intValue;
         private final static Map<String, TransferProtocol> CONSTANTS = new HashMap<String, TransferProtocol>();

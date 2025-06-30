@@ -13,7 +13,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import com.sos.commons.httpclient.BaseHttpClient;
-import com.sos.commons.httpclient.BaseHttpClient.ExecuteResult;
+import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -33,22 +33,22 @@ public class WebDAVProviderUtils {
     }
 
     public static boolean exists(BaseHttpClient client, URI uri) throws Exception {
-        ExecuteResult<String> result = client.executeWithResponseBody(createPROPFINDRequest(client, uri, "0"));
+        HttpExecutionResult<String> result = client.executeWithResponseBody(createPROPFINDRequest(client, uri, "0"));
         int code = result.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
             if (HttpUtils.isNotFound(code)) {
                 return false;
             }
-            throw new IOException(BaseHttpClient.getResponseStatus(result));
+            throw new IOException(BaseHttpClient.formatExecutionResult(result));
         }
         return true;
     }
 
     public static void createDirectory(WebDAVProvider provider, URI uri) throws Exception {
         HttpRequest.Builder builder = provider.getClient().createRequestBuilder(uri);
-        ExecuteResult<Void> result = provider.getClient().executeNoResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
+        HttpExecutionResult<Void> result = provider.getClient().executeNoResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
         if (!HttpUtils.isSuccessful(result.response().statusCode())) {
-            throw new IOException(BaseHttpClient.getResponseStatus(result));
+            throw new IOException(BaseHttpClient.formatExecutionResult(result));
         }
         if (provider.getLogger().isDebugEnabled()) {
             provider.getLogger().debug("%s[createDirectory][%s]created", provider.getLogPrefix(), uri);
@@ -62,13 +62,13 @@ public class WebDAVProviderUtils {
 
     public static WebDAVResource getResource(WebDAVProvider provider, URI uri) throws Exception {
         String depth = "0";
-        ExecuteResult<String> result = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), uri, depth));
+        HttpExecutionResult<String> result = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), uri, depth));
         int code = result.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
             if (HttpUtils.isNotFound(code)) {
                 return null;
             }
-            throw new IOException(BaseHttpClient.getResponseStatus(result));
+            throw new IOException(BaseHttpClient.formatExecutionResult(result));
         }
         List<WebDAVResource> resources = parseWebDAVResources(provider, uri, depth, result);
         return resources.isEmpty() ? null : resources.get(0);
@@ -81,14 +81,14 @@ public class WebDAVProviderUtils {
 
         // not use Depth infinity - maybe not supported by the server and possible timeouts to get all levels ...
         String depth = "1";
-        ExecuteResult<String> executeResult = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), directoryURI,
-                depth));
+        HttpExecutionResult<String> executeResult = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(),
+                directoryURI, depth));
         int code = executeResult.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            if (HttpUtils.isNotFound(code)) {
-                return 0;
-            }
-            throw new IOException(BaseHttpClient.getResponseStatus(executeResult));
+            // if (HttpUtils.isNotFound(code)) {
+            // return 0;
+            // }
+            throw new IOException(BaseHttpClient.formatExecutionResult(executeResult));
         }
 
         Set<String> subDirectories = new HashSet<>();
@@ -169,7 +169,7 @@ public class WebDAVProviderUtils {
      * @param result
      * @return
      * @throws Exception */
-    private static List<WebDAVResource> parseWebDAVResources(WebDAVProvider provider, URI uri, String depth, ExecuteResult<String> result)
+    private static List<WebDAVResource> parseWebDAVResources(WebDAVProvider provider, URI uri, String depth, HttpExecutionResult<String> result)
             throws Exception {
         boolean isDebugEnabled = provider.getLogger().isDebugEnabled();
 

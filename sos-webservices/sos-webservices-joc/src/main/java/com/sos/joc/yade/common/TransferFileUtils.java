@@ -33,15 +33,20 @@ public class TransferFileUtils {
         if (!SOSString.isEmpty(item.getTargetPath())) {
             file.setTargetName(SOSPathUtils.getName(item.getTargetPath()));
         }
-        file.setState(getState(item.getState()));
+        file.setState(getState(item.getState(), item.getTargetPath()));
         file.setSurveyDate(item.getModificationDate());
         return file;
     }
 
-    private static FileTransferState getState(Integer val) {
+    private static FileTransferState getState(Integer val, String targetPath) {
         TransferEntryState entryState = null;
         try {
-            entryState = TransferEntryState.fromValue(val);
+            // workaround GETLIST - set 1(UNKNOWN) -> SKIPPED
+            if (SOSString.isEmpty(targetPath) && val != null && TransferEntryState.UNKNOWN.intValue().equals(val)) {
+                entryState = TransferEntryState.SKIPPED;
+            } else {
+                entryState = TransferEntryState.fromValue(val);
+            }
         } catch (Throwable e) {
             entryState = TransferEntryState.UNKNOWN;
         }
