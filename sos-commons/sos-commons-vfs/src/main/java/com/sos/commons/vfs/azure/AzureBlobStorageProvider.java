@@ -401,7 +401,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         }
     }
 
-    // TOTO - currently limitation - InputStream converted to ByteArray ...
+    // TODO - currently limitation - InputStream converted to ByteArray ...
     public long upload(String path, InputStream source, long sourceSize) throws ProviderException {
         validatePrerequisites("upload", path, "path");
         validateArgument("upload", source, "InputStream source");
@@ -526,6 +526,9 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         int code = result.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
             throw new Exception(client.formatExecutionResultForException(result));
+        }
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug("%s[upload]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
         }
         // PUT not returns file size
         HttpExecutionResult<Void> resultExists = client.executeHEADBlob(targetContainerName, targetBlobPath);
