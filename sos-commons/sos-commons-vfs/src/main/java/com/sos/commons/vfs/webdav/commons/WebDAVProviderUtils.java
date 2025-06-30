@@ -85,9 +85,9 @@ public class WebDAVProviderUtils {
                 directoryURI, depth));
         int code = executeResult.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            if (HttpUtils.isNotFound(code)) {
-                return 0;
-            }
+            // if (HttpUtils.isNotFound(code)) {
+            // return 0;
+            // }
             throw new IOException(BaseHttpClient.formatExecutionResult(executeResult));
         }
 

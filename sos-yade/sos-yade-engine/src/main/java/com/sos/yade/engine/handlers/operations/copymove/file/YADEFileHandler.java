@@ -258,7 +258,8 @@ public class YADEFileHandler {
         if (config.getTarget().getAtomic() != null) {
             transferFileName = config.getTarget().getAtomic().getPrefix() + finalFileName + config.getTarget().getAtomic().getSuffix();
         }
-        String targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(logger, config, targetDelegator, sourceFile, fileNameInfo);
+        String targetDirectory = sourceDelegator.getDirectoryMapper().getTargetDirectory(logger, config, sourceDelegator, targetDelegator, sourceFile,
+                fileNameInfo);
         String transferFileFullPath = targetDelegator.appendPath(targetDirectory, transferFileName);
 
         String httpOriginalParentFullPath = null;

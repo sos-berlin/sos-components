@@ -74,7 +74,16 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
     public String normalizePath(String path) {
-        return toPathStyle(path);
+        if (SOSString.isEmpty(path)) {
+            return path;
+        }
+        String containerName = getContainerName(path);
+        String blobPath = getBlobPath(path, containerName);
+        String p = containerName;
+        if (!SOSString.isEmpty(blobPath)) {
+            p = p + getPathSeparator() + blobPath;
+        }
+        return p;
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -167,7 +176,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
         try {
             String containerName = getContainerName(directory);
-            String blobPath = getBlobFilePath(directory);
+            String blobPath = getBlobFilePath(directory, containerName);
 
             List<ProviderFile> result = new ArrayList<>();
             AzureBlobStorageProviderUtils.selectFiles(this, selection, containerName, blobPath, result);
@@ -184,7 +193,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             HttpExecutionResult<Void> result = client.executeHEADBlob(containerName, blobPath);
             result.formatWithResponseBody(true);
@@ -214,7 +223,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             return deleteIfExists(path, containerName, blobPath);
         } catch (Throwable e) {
@@ -253,10 +262,10 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         InputStream is = null;
         try {
             String sourceContainerName = getContainerName(source);
-            String sourceBlobPath = getBlobFilePath(source);
+            String sourceBlobPath = getBlobFilePath(source, sourceContainerName);
 
             String targetContainerName = sourceContainerName;
-            String targetBlobPath = getBlobFilePath(target);
+            String targetBlobPath = getBlobFilePath(target, targetContainerName);
 
             // 1) check if source exists
             HttpExecutionResult<Void> resultSource = client.executeHEADBlob(sourceContainerName, sourceBlobPath);
@@ -293,7 +302,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             return createProviderFile(AzureBlobStorageProviderUtils.getResource(this, containerName, blobPath, false, false));
         } catch (Throwable e) {
@@ -311,7 +320,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             HttpExecutionResult<String> result = client.executeGETBlobContent(containerName, blobPath);
             result.formatWithResponseBody(true);
@@ -336,7 +345,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             HttpExecutionResult<String> result = client.executePUTBlob(containerName, blobPath, content.getBytes(StandardCharsets.UTF_8),
                     HttpUtils.HEADER_CONTENT_TYPE_BINARY);
@@ -366,7 +375,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             return getInputStream(path, containerName, blobPath);
         } catch (Throwable e) {
@@ -384,7 +393,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             return new AzureBlobStorageOutputStream(client, containerName, blobPath);
         } catch (Throwable e) {
@@ -399,7 +408,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
         try {
             String containerName = getContainerName(path);
-            String blobPath = getBlobFilePath(path);
+            String blobPath = getBlobFilePath(path, containerName);
 
             return upload(path, containerName, blobPath, source, sourceSize);
         } catch (Throwable e) {
@@ -454,8 +463,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         return containerName;
     }
 
-    private String getBlobFilePath(String path) {
-        String blobPath = getBlobPath(path);
+    private String getBlobFilePath(String path, String containerName) {
+        String blobPath = getBlobPath(path, containerName);
         if (SOSString.isEmpty(blobPath)) {
             return blobPath;
         }
@@ -466,21 +475,20 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
      * 
      * @param path
      * @return */
-    private String getBlobPath(String path) {
-        String blobPath = normalizePath(path);
+    private String getBlobPath(String path, String containerName) {
+        String blobPath = toPathStyle(path);
         if (SOSString.isEmpty(blobPath)) {
             return "";
         }
-        String containerName = getContainerName(path);
         blobPath = SOSString.trimStart(blobPath, getPathSeparator());
         if (!SOSString.isEmpty(containerName)) {
             if (containerName.equalsIgnoreCase(blobPath)) {
                 return "";
             }
-            // finds the share name in the path and removes it
-            int shareIndex = blobPath.indexOf(containerName + getPathSeparator());
-            if (shareIndex != -1) {
-                blobPath = blobPath.substring(shareIndex + containerName.length() + 1); // +1 for pathSeparator
+            // finds the container name in the path and removes it
+            int containerIndex = blobPath.indexOf(containerName + getPathSeparator());
+            if (containerIndex != -1) {
+                blobPath = blobPath.substring(containerIndex + containerName.length() + 1); // +1 for pathSeparator
             }
         }
         return blobPath;

@@ -46,7 +46,7 @@ public class YADECopyMoveOperationsHandler {
         // 2) Target: map the source to the target directories and try to create all target directories before individual file transfer
         // - all target directories are only evaluated if target replacement is not enabled,
         // -- otherwise the target directories are evaluated/created on every file
-        sourceDelegator.getDirectoryMapper().tryCreateAllTargetDirectoriesBeforeOperation(logger, config, targetDelegator);
+        sourceDelegator.getDirectoryMapper().tryCreateAllTargetDirectoriesBeforeOperation(logger, config, sourceDelegator, targetDelegator);
 
         // 3) Source/Target: Transfer files
         boolean isMoveOperation = config.isMoveOperation();

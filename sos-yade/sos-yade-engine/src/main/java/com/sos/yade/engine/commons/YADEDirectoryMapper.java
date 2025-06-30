@@ -48,8 +48,8 @@ public class YADEDirectoryMapper {
     }
 
     public void tryCreateAllTargetDirectoriesBeforeOperation(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
-            final YADETargetProviderDelegator targetDelegator) throws ProviderException {
-        tryMapSourceTarget(logger, config, targetDelegator);
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) throws ProviderException {
+        tryMapSourceTarget(logger, config, sourceDelegator, targetDelegator);
 
         boolean isDebugEnabled = logger.isDebugEnabled();
         Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
@@ -99,7 +99,7 @@ public class YADEDirectoryMapper {
     // - it may be a sub path, but also a parent/other path...
     // - it cannot be identified here because the substitution may depend on the filename..
     private void tryMapSourceTarget(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
-            final YADETargetProviderDelegator targetDelegator) throws ProviderException {
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) throws ProviderException {
         sourceTarget.clear();
 
         if (logger.isDebugEnabled()) {
@@ -143,7 +143,7 @@ public class YADEDirectoryMapper {
         // Map Source/Target
         for (final String sourceDirectory : sourceFilesDirectories) {
             sourceTarget.put(sourceDirectory, getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(logger, config,
-                    sourceDirectory)));
+                    sourceDelegator, sourceDirectory)));
         }
 
         if (logger.isDebugEnabled()) {
@@ -159,7 +159,8 @@ public class YADEDirectoryMapper {
      * @param config
      * @param sourceDirectory
      * @return */
-    private String getSourceDirectoryForMapping(final ISOSLogger logger, final YADECopyMoveOperationsConfig config, final String sourceDirectory) {
+    private String getSourceDirectoryForMapping(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
+            final YADESourceProviderDelegator sourceDelegator, final String sourceDirectory) {
         String result;
         if (config.getSource().isRecursiveSelection()) {
             if (logger.isDebugEnabled()) {
@@ -181,6 +182,10 @@ public class YADEDirectoryMapper {
                     if (logger.isDebugEnabled()) {
                         logger.debug("    [getSourceDirectoryForMapping][2.2][result]%s", result);
                     }
+                    if (sourceDelegator.isHTTP()) {
+                        // remove %20(space) etc
+                        result = HttpUtils.decodeUriPath(result);
+                    }
                 }
 
             } else {
@@ -199,7 +204,7 @@ public class YADEDirectoryMapper {
                         if (logger.isDebugEnabled()) {
                             logger.debug("    [getSourceDirectoryForMapping][3.1][result]%s", result);
                         }
-                        // remove %20(empty) etc
+                        // remove %20(space) etc
                         result = HttpUtils.decodeUriPath(result);
                     } else {// Windows path: C://Temp, /C://Temp, C:\\Temp
                         result = sourceDirectory.substring(colon + 1);
@@ -300,8 +305,8 @@ public class YADEDirectoryMapper {
     }
 
     public String getTargetDirectory(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
-            final YADETargetProviderDelegator targetDelegator, final YADEProviderFile sourceFile, final YADEFileNameInfo fileNameInfo)
-            throws ProviderException {
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator, final YADEProviderFile sourceFile,
+            final YADEFileNameInfo fileNameInfo) throws ProviderException {
         String targetDirectory;
         if (target == null) {// target replacement is not enabled, ignore fileNameInfo
             targetDirectory = sourceTarget.get(sourceFile.getParentFullPath());
@@ -309,7 +314,7 @@ public class YADEDirectoryMapper {
             if (fileNameInfo.isAbsolutePath()) {
                 targetDirectory = fileNameInfo.getParent();
             } else {
-                targetDirectory = getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(logger, config, sourceFile
+                targetDirectory = getTargetDirectory(logger, targetDelegator, getSourceDirectoryForMapping(logger, config, sourceDelegator, sourceFile
                         .getParentFullPath()));
                 if (!SOSString.isEmpty(fileNameInfo.getParent())) {
                     targetDirectory = targetDelegator.appendPath(targetDirectory, fileNameInfo.getParent());

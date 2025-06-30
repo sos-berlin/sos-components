@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.azure.commons;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobStorageClientAuthMethod;
@@ -109,17 +110,28 @@ public class AzureBlobStorageProviderArguments extends AProviderArguments {
     }
 
     private String getAuthMethodInfo() {
-        if (authMethod.isEmpty()) {
-            return "";
+        List<String> l = new ArrayList<>();
+        if (!authMethod.isEmpty()) {
+            switch (authMethod.getValue()) {
+            case SAS_TOKEN:
+                l.add("SAS Token");
+                break;
+            case SHARED_KEY:
+                l.add("Shared Key");
+                break;
+            case PUBLIC:
+            default:
+                l.add("Public");
+                break;
+            }
         }
-        switch (authMethod.getValue()) {
-        case SAS_TOKEN:
-            return "SAS Token";
-        case SHARED_KEY:
-            return "Shared Key";
-        case PUBLIC:
-        default:
-            return "Public";
+        if (!containerName.isEmpty()) {
+            l.add("ContainerName=" + containerName.getValue());
         }
+        if (!apiVersion.isEmpty()) {
+            l.add("ApiVersion=" + apiVersion.getValue());
+        }
+
+        return String.join(", ", l);
     }
 }
