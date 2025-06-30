@@ -36,7 +36,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
         AzureBlobStorageProviderArguments args = new AzureBlobStorageProviderArguments();
         args.applyDefaultIfNullQuietly();
-        args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.NONE);
+        args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.PUBLIC);
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -602,8 +602,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 case "ServiceEndpoint":
                     argsLoader.setStringArgumentValue(args.getHost(), n);
+                    args.getServiceEndpoint().setValue(args.getHost().getValue());
                     break;
-                case "ConnectTimeout":// YADE JS7
+                case "ConnectTimeout":
                     argsLoader.setStringArgumentValue(args.getConnectTimeout(), n);
                     break;
                 }

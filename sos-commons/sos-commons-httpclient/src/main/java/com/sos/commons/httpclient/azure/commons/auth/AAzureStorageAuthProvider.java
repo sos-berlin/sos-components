@@ -81,4 +81,8 @@ public abstract class AAzureStorageAuthProvider {
     public boolean isSASToken() {
         return AzureBlobStorageClientAuthMethod.SAS_TOKEN.equals(method);
     }
+
+    public boolean isPublic() {
+        return AzureBlobStorageClientAuthMethod.PUBLIC.equals(method);
+    }
 }

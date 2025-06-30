@@ -13,6 +13,7 @@ import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.httpclient.azure.AzureBlobStorageClient;
 import com.sos.commons.httpclient.azure.AzureBlobStorageClient.Builder;
 import com.sos.commons.httpclient.azure.commons.AzureBlobStorageOutputStream;
+import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobPublicAuthProvider;
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobSASAuthProvider;
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobSharedKeyAuthProvider;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
@@ -34,13 +35,22 @@ import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 
+/** TODO:<br />
+ * - upload "large" files<br />
+ * -- The current implementation uses a byte array instead of an input stream because the HttpClein SDK internally sets a chunked transfer header when using the
+ * --- input stream, and this header is not accepted by Azure. The upload fails with an unsupported header exception.<br/>
+ * --- This means that the entire file content is in memory<br/>
+ * - "Public" authentication:<br />
+ * -- downloads with a FilePath selection (the full path is known) work.<br/>
+ * -- using other selections fails with a 404 (Resource Not Found) error in the current test environment. The use of list blobs, etc., may not be allowed<br/>
+ */
 public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProviderArguments> {
 
     private AzureBlobStorageClient client;
     private String containerName;
 
     public AzureBlobStorageProvider(ISOSLogger logger, AzureBlobStorageProviderArguments args) throws ProviderInitializationException {
-        super(logger, args);
+        super(logger, args, args == null ? null : args.getAccountKey(), args == null ? null : args.getSASToken());
         try {
             getArguments().getServiceEndpoint().setValue(getArguments().getHost().getValue());
             setAccessInfo(getArguments().getAccessInfo());
@@ -95,8 +105,9 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             case SHARED_KEY:
                 builder = builder.withAuthProvider(new AzureBlobSharedKeyAuthProvider(getLogger(), accountName, accountKey, apiVersion));
                 break;
-            case NONE:
+            case PUBLIC:
             default:
+                builder = builder.withAuthProvider(new AzureBlobPublicAuthProvider(getLogger(), accountName, accountKey, apiVersion));
                 break;
             }
             logIfHostnameVerificationDisabled(getArguments().getSsl());
@@ -109,7 +120,12 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (!HttpUtils.isForbidden(code)) {// e.g. SAS token: 'srt=co' instead of 'srt=sco' to check service
-                    throw new IOException(client.formatExecutionResultForException(result));
+
+                    if (HttpUtils.isNotFound(code) && client.getAuthProvider().isPublic()) {
+
+                    } else {
+                        throw new IOException(client.formatExecutionResultForException(result));
+                    }
                 }
             }
             if (getLogger().isDebugEnabled()) {

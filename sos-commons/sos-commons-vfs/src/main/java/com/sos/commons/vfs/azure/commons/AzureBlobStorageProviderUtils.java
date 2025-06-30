@@ -33,27 +33,46 @@ public class AzureBlobStorageProviderUtils {
 
     public static AzureBlobStorageResource getResource(AzureBlobStorageProvider provider, String containerName, String blobPath, boolean directory,
             boolean recursive) throws Exception {
-        HttpExecutionResult<String> result = provider.getClient().executeGETBlobInfo(containerName, blobPath, false);
-        result.formatWithResponseBody(true);
-        int code = result.response().statusCode();
-        if (provider.getLogger().isDebugEnabled()) {
-            provider.getLogger().debug("%s[getResource]%s", provider.getLogPrefix(), provider.getClient().formatExecutionResultForException(result));
-        }
-        if (!HttpUtils.isSuccessful(code)) {
-            if (HttpUtils.isNotFound(code)) {
-                return null;
+        if (directory) {
+            HttpExecutionResult<String> result = provider.getClient().executeGETBlobList(containerName, blobPath, false);
+            result.formatWithResponseBody(true);
+            int code = result.response().statusCode();
+            if (provider.getLogger().isDebugEnabled()) {
+                provider.getLogger().debug("%s[getResource][directory]%s", provider.getLogPrefix(), provider.getClient()
+                        .formatExecutionResultForException(result));
             }
-            throw new IOException(provider.getClient().formatExecutionResultForException(result));
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isNotFound(code)) {
+                    return null;
+                }
+                throw new IOException(provider.getClient().formatExecutionResultForException(result));
+            }
+            List<AzureBlobStorageResource> resources = parseAzureBlobResources(provider, containerName, blobPath, result, recursive);
+            return resources.isEmpty() ? null : resources.get(0);
+        } else {
+            HttpExecutionResult<Void> result = provider.getClient().executeHEADBlob(containerName, blobPath);
+            result.formatWithResponseBody(true);
+            int code = result.response().statusCode();
+            if (provider.getLogger().isDebugEnabled()) {
+                provider.getLogger().debug("%s[getResource][file]%s", provider.getLogPrefix(), provider.getClient().formatExecutionResultForException(
+                        result));
+            }
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isNotFound(code)) {
+                    return null;
+                }
+                throw new IOException(provider.getClient().formatExecutionResultForException(result));
+            }
+            return new AzureBlobStorageResource(containerName, blobPath, false, provider.getClient().getFileSize(result.response()),
+                    AzureBlobStorageClient.getLastModifiedInMillis(result.response()));
         }
-        List<AzureBlobStorageResource> resources = parseAzureBlobResources(provider, containerName, blobPath, result, recursive);
-        return resources.isEmpty() ? null : resources.get(0);
     }
 
     private static int list(AzureBlobStorageProvider provider, ProviderFileSelection selection, String containerName, String directoryPath,
             List<ProviderFile> result, int counterAdded) throws Exception {
 
         directoryPath = SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(directoryPath);
-        HttpExecutionResult<String> executeResult = provider.getClient().executeGETBlobInfo(containerName, directoryPath, false);
+        HttpExecutionResult<String> executeResult = provider.getClient().executeGETBlobList(containerName, directoryPath, false);
         executeResult.formatWithResponseBody(true);
         int code = executeResult.response().statusCode();
         if (provider.getLogger().isDebugEnabled()) {
@@ -62,7 +81,7 @@ public class AzureBlobStorageProviderUtils {
         }
         if (!HttpUtils.isSuccessful(code)) {
             if (HttpUtils.isNotFound(code)) {
-                return 0;
+                // return 0;
             }
             throw new IOException(provider.getClient().formatExecutionResultForException(executeResult));
         }

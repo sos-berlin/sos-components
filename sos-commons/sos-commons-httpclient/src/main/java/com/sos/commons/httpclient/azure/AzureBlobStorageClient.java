@@ -120,7 +120,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
      * @param recursive
      * @return
      * @throws Exception */
-    public HttpExecutionResult<String> executeGETBlobInfo(String containerName, String blobPath, boolean recursive) throws Exception {
+    public HttpExecutionResult<String> executeGETBlobList(String containerName, String blobPath, boolean recursive) throws Exception {
         LinkedHashMap<String, String> queryParams = new LinkedHashMap<>();
         queryParams.put("restype", "container");
         queryParams.put("comp", "list");

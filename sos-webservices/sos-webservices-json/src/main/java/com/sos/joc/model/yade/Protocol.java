@@ -8,16 +8,17 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Protocol {
 
-    LOCAL("LOCAL"),
+    UNKNOWN("UNKNOWN"),
+    AZURE_BLOB_STORAGE("AZURE_BLOB_STORAGE"),
     FTP("FTP"),
     FTPS("FTPS"),
-    SFTP("SFTP"),
     HTTP("HTTP"),
     HTTPS("HTTPS"),
-    WEBDAV("WEBDAV"),
-    WEBDAVS("WEBDAVS"),
+    LOCAL("LOCAL"),
+    SFTP("SFTP"),
     SMB("SMB"),
-    UNKNOWN("UNKNOWN");
+    WEBDAV("WEBDAV"),
+    WEBDAVS("WEBDAVS");
     private final String value;
     private final static Map<String, Protocol> CONSTANTS = new HashMap<String, Protocol>();
 

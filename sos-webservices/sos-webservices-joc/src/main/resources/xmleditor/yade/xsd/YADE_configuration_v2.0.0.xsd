@@ -426,11 +426,11 @@
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -440,7 +440,7 @@
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -491,7 +491,7 @@
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -1133,7 +1133,7 @@
 			         <xs:element ref="JumpFragmentRef" minOccurs="0"/>
 				
                 <xs:element ref="AzureBlobStorageConnection"/>
-				        <xs:element ref="AzureBlobStorageAuthentication"/>
+				        <xs:element ref="AzureBlobStorageAuthentication" minOccurs="0"/>
 				        <xs:element ref="ProxyForAzure" minOccurs="0"/>
                 
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
@@ -2101,11 +2101,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -2115,7 +2115,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -2166,7 +2166,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -2375,11 +2375,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -2389,7 +2389,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -2440,7 +2440,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -2586,11 +2586,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -2600,7 +2600,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -2651,7 +2651,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -3295,11 +3295,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -3309,7 +3309,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -3360,7 +3360,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -3437,7 +3437,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>Defines the authentication method used to access Azure Blob Storage.<br/> 
-        Supports either <em>SharedKey</em> (using an account name and key) or <em>SASToken</em> (either a fixed SAS token or dynamically generated from a template).</p>
+        Supports either <em>SharedKey</em> (using an account name and key) or <em>SASToken</em> (either a fully specified SAS token or dynamically generated from a template).</p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -3527,11 +3527,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -3541,7 +3541,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -3592,7 +3592,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -3736,7 +3736,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>Specifies authentication using a Shared Access Signature (SAS).<br/> 
-        Either a <em>FixedToken</em> can be provided directly, or a <em>TokenTemplate</em> can be used to generate tokens dynamically at runtime using the storage <em>AccountName</em> and <em>AccountKey</em>.</p>
+        Either a <em>Full Token</em> can be provided directly, or a <em>Template Token</em> can be used to generate tokens dynamically at runtime using the storage <em>AccountName</em> and <em>AccountKey</em>.</p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -3751,7 +3751,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                default="sv=[api_version]&amp;ss=b&amp;srt=sco&amp;sp=rwdlacx&amp;se=[now+1h]&amp;st=[now-5m]&amp;spr=https&amp;sig=[sign]">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/SASToken/Token">
-				        <Note include="CredentialStore-Fields"/>
+                <Note include="CredentialStore-Fields"/>
 				        <XmlEditor type="password"/>
 			      </xs:appinfo>
          <xs:documentation>
@@ -3770,23 +3770,73 @@ A fragment is referenced via this attribute value by a transfer profile.
                         <b>Full Token</b>
                         <ul>
                            <li>A fully specified SAS token string used as is, without any runtime modifications.</li>
-                           <li>Example: <em>sv=2020-10-02&amp;ss=b&amp;srt=sco&amp;sp=rwdlacx&amp;se=2025-07-01T00:00:00Z&amp;st=2025-06-01T00:00:00Z&amp;spr=https&amp;sig=abcdef1234567890</em>
+                           <li>Example: 
+                        <ul>
+                                 <li>
+                                    <em>sv=2020-10-02&amp;ss=b&amp;srt=sco&amp;sp=rwdlacx&amp;se=2025-07-01T00:00:00Z&amp;st=2025-06-01T00:00:00Z&amp;spr=https&amp;sig=abcdef1234567890</em>
+                                 </li>
+                              </ul>
                            </li>
                         </ul>                
                      </li>
                      <li>
                         <b>Template Token</b>
                         <ul>
-                           <li>A SAS token string containing variables that are dynamically replaced at runtime. The token signature (sig) is generated using the account key.</li>
-                           <li>Example: <em>sv=[api_version]&amp;ss=b&amp;srt=sco&amp;sp=rwdlacx&amp;se=[now+1h]&amp;st=[now-5m]&amp;spr=https&amp;sig=[sign]</em>
+                           <li>A SAS token string containing variables that are dynamically replaced at runtime.
+                        <ul>
+                                 <li>The token signature (sig) is generated using the <em>AccountKey</em>.</li>
+                              </ul>
+                           </li>
+                           <li>Example: 
+                        <ul>
+                                 <li>
+                                    <em>sv=<strong>[api_version]</strong>&amp;ss=b&amp;srt=sco&amp;sp=rwdlacx&amp;se=<strong>[now+1h]</strong>&amp;st=<strong>[now-5m]</strong>&amp;spr=https&amp;sig=<strong>[sign]</strong>
+                                    </em>
+                                 </li>
+                              </ul>
                            </li>
                            <li>
                               <b>Variables</b>
                               <ul>
-                                 <li>[api_version] — Azure Storage API version from <em>ApiVersion</em> configuration setting</li>
-                                 <li>[now] — Current UTC timestamp</li>
-                                 <li>[now+|-&lt;n&gt;m|h|d] — e.g. <em>[now+1h]</em> Current UTC timestamp plus 1 hour</li>
-                                 <li>[sign] — SAS token signature, computed from the string-to-sign using the account key</li>
+                                 <li>
+                                    <em>
+                                       <strong>[api_version]</strong>
+                                    </em> - Azure Storage API version from <em>ApiVersion</em> configuration setting</li>
+                                 <li>
+                                    <em>
+                                       <strong>[now[(+|-)&lt;n&gt;(m|h|d)]]</strong>
+                                    </em> - a dynamic timestamp offset from the current UTC time
+                                <ul>
+                                       <li>Explanation:
+                                        <ul>
+                                             <li>
+                                                <em>now</em> - current UTC timestamp</li>
+                                             <li>
+                                                <em>+</em> or <em>-</em> - optional offset direction</li>
+                                             <li>
+                                                <em>&lt;n&gt;</em> - number of units</li>
+                                             <li>
+                                                <em>m|h|d</em> - unit: minutes (<em>m</em>), hours (<em>h</em>), or days (<em>d</em>)</li>
+                                          </ul>
+                                       </li>
+                                       <li>Examples:
+                                        <ul>
+                                             <li>
+                                                <em>[now]</em> - current UTC timestamp</li>
+                                             <li>
+                                                <em>[now+1h]</em> - now plus 1 hour</li>
+                                             <li>
+                                                <em>[now-5m]</em> -  now minus 5 minutes</li>
+                                             <li>
+                                                <em>[now+2d]</em> - now plus 2 days</li>
+                                          </ul>
+                                       </li>
+                                    </ul>
+                                 </li>
+                                 <li>
+                                    <em>
+                                       <strong>[sign]</strong>
+                                    </em> - SAS token signature, computed from the string-to-sign using the account key</li>
                               </ul>
                            </li>
                         </ul>                
@@ -3794,7 +3844,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </ul>
                </p>
                <p/>
-				           <p>
+                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -3850,11 +3900,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -3864,7 +3914,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -3915,7 +3965,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -3979,7 +4029,7 @@ A fragment is referenced via this attribute value by a transfer profile.
     <xs:element name="AccountKey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/AccountKey">
-				        <Note include="CredentialStore-Fields"/>
+                <Note include="CredentialStore-Fields"/>
 				        <XmlEditor type="password"/>
 			      </xs:appinfo>
          <xs:documentation>
@@ -3994,7 +4044,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>Secret key associated with the Azure Storage account.<br/> 
         Used to authenticate requests by generating signatures for <em>Shared Key</em> or <em>SAS</em> token-based authentication.</p>
                <p/>
-				           <p>
+                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -4050,11 +4100,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -4064,7 +4114,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -4115,7 +4165,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -4668,11 +4718,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -4682,7 +4732,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -4733,7 +4783,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -5011,11 +5061,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -5025,7 +5075,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -5076,7 +5126,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -5487,11 +5537,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p/>
                <p>
                   <strong>
-                     <em>&lt;Hostname&gt;</em>
+                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
                   </strong> element:
             <ul>
                      <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
+                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
                   </ul>
      	         </p>
                <p/>
@@ -5501,7 +5551,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples for fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>
@@ -5552,7 +5602,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Examples without fully specified entry path:
                     <ul>
                            <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname&gt;</em>, <em>&lt;Account&gt;</em>, <em>&lt;Password&gt;</em>, <em>&lt;Passphrase&gt;</em> elements:
+                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
                             <ul>
                                  <li>
                                     <strong>

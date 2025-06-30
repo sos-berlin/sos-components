@@ -46,7 +46,7 @@ public class AzureBlobStorageClientTest {
             AzureBlobStorageClient client = builder.build();
 
             // Executes a LIST(GET) request and returns response as String
-            HttpExecutionResult<String> result = client.executeGETBlobInfo(container, directory + "/", recursive);
+            HttpExecutionResult<String> result = client.executeGETBlobList(container, directory + "/", recursive);
             result.formatWithResponseBody(true);
             int code = result.response().statusCode();
             logger.info("[result]" + BaseHttpClient.formatExecutionResult(result));

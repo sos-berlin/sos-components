@@ -19,15 +19,16 @@ public class AzureBlobStorageProviderArguments extends AProviderArguments {
 
     private SslArguments ssl;
 
-    private SOSArgument<List<String>> httpHeaders = new SOSArgument<>("http_headers", false);
-
     private SOSArgument<String> serviceEndpoint = new SOSArgument<>("service_endpoint", true);
     private SOSArgument<String> containerName = new SOSArgument<>("container_name", false);
     private SOSArgument<String> apiVersion = new SOSArgument<>("api_version", false, "2020-10-02");
 
-    private SOSArgument<AzureBlobStorageClientAuthMethod> authMethod = new SOSArgument<>("auth_method", false, AzureBlobStorageClientAuthMethod.NONE);
+    private SOSArgument<AzureBlobStorageClientAuthMethod> authMethod = new SOSArgument<>("auth_method", false,
+            AzureBlobStorageClientAuthMethod.PUBLIC);
     private SOSArgument<String> accountKey = new SOSArgument<>("account_key", false, DisplayMode.MASKED);
     private SOSArgument<String> sasToken = new SOSArgument<>("sas_token", false, DisplayMode.MASKED);
+
+    private SOSArgument<List<String>> httpHeaders = new SOSArgument<>("http_headers", false);
 
     public AzureBlobStorageProviderArguments() {
         getProtocol().setValue(Protocol.AZURE_BLOB_STORAGE);
@@ -116,9 +117,9 @@ public class AzureBlobStorageProviderArguments extends AProviderArguments {
             return "SAS Token";
         case SHARED_KEY:
             return "Shared Key";
-        case NONE:
+        case PUBLIC:
         default:
-            return "";
+            return "Public";
         }
     }
 }
