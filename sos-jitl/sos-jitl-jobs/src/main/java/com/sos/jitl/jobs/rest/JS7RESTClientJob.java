@@ -38,6 +38,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
         OrderProcessStepLogger logger = step.getLogger();
 
         String requestJson = (String) myArgs.getMyRequest().getValue();
+        logger.info(requestJson);
         if (requestJson != null && !requestJson.isBlank()) {
             JsonNode requestNode;
             try {
@@ -109,20 +110,135 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 logger.info("REST call successful. Status Code: " + statusCode);
 
                 String targetFilePath = (String) step.getOutcome().getVariables().get("js7ApiExecutorOutfile");
-
-                if (targetFilePath!= null && !targetFilePath.isEmpty() && Files.exists(Paths.get(targetFilePath))) {
+                if (targetFilePath != null && !targetFilePath.isEmpty() && Files.exists(Paths.get(targetFilePath))) {
                     logger.info("Export to File: " + targetFilePath);
                 }
 
-                if(response.getResponseBody()!=null && !response.getResponseBody().isEmpty()) {
+                // Extract content-type header (case-insensitive)
+                Map<String, String> resHeaders = apiExecutor.getResponseHeaders();
+                String contentType = null;
+                for (Map.Entry<String, String> entry : resHeaders.entrySet()) {
+                    if ("content-type".equalsIgnoreCase(entry.getKey())) {
+                        contentType = entry.getValue();
+                        break;
+                    }
+                }
+
+                String jqQuery = null;
+                String pI = null;
+                String filePath = null;
+                String returnVarJson =  myArgs.getReturnVariable().getValue();
+                String varName=null;
+                String path= null;
+
+                if(response.getResponseBody() != null && !response.getResponseBody().trim().isEmpty()){
+                    if ("application/json".equalsIgnoreCase(contentType)) {
                         JsonNode responseJson;
-                        try {
-                            responseJson = objectMapper.readTree(response.getResponseBody());
-                            String jqQuery = null;
-                            String pI = null;
-                            String filePath = null;
-                            String returnVarJson = (String) myArgs.getReturnVariable().getValue();
-                            if (returnVarJson != null && !returnVarJson.isBlank()) {
+                        responseJson = objectMapper.readTree(response.getResponseBody());
+                        logger.debug("Response Body: " +objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson) );
+                        if (returnVarJson != null && !returnVarJson.isEmpty()) {
+                            JsonNode returnVars;
+                                try {
+                                    returnVars = objectMapper.readTree(returnVarJson);
+                                } catch (Exception e) {
+                                    throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
+                                }
+
+                            if (returnVars.isArray()) {
+                                for (JsonNode mappingNode : returnVars) {
+                                    varName = mappingNode.has("name") ? mappingNode.get("name").asText() : null;
+                                    path = mappingNode.has("path") ? mappingNode.get("path").asText() : null;
+
+                                    if (varName != null && path != null) {
+                                        String[] parts = path.split("\\|\\|", 2);
+                                        jqQuery = parts[0].trim();
+                                        boolean rawOutput = false;
+                                        filePath = null;
+                                        pI = null;
+
+                                        // Parse the second part: options and/or file path
+                                        if (parts.length > 1) {
+                                            String[] processorParts = parts[1].trim().split("\\s+");
+                                            for (int i = 0; i < processorParts.length; i++) {
+                                                String token = processorParts[i].trim();
+                                                if (token.equals("-r") || token.equals("--raw-output")) {
+                                                    rawOutput = true;
+                                                } else if (token.equals(">") || token.equals(">>")) {
+                                                    if (i + 1 < processorParts.length) {
+                                                        pI = token;
+                                                        filePath = processorParts[i + 1].trim();
+                                                        break;
+                                                    } else {
+                                                        throw new JobArgumentException("Missing file path.");
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Compile and execute jq query
+                                        JsonQuery query = JsonQuery.compile(jqQuery, Versions.JQ_1_7);
+                                        List<JsonNode> out = new ArrayList<>();
+                                        query.apply(rootScope, responseJson, out::add);
+
+                                        if (!out.isEmpty()) {
+
+                                            if (filePath != null) {
+                                                File file = new File(filePath);
+                                                File parent = file.getParentFile();
+                                                if (parent != null && !parent.exists()) {
+                                                    parent.mkdirs();
+                                                }
+
+                                                boolean append = ">>".equals(pI);
+                                                if (!file.exists()) {
+                                                    file.createNewFile();
+                                                }
+
+                                                try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
+                                                    for (JsonNode outputNode : out) {
+                                                        if (rawOutput && outputNode.isTextual()) {
+                                                            writer.write(outputNode.asText());
+                                                        } else {
+                                                            writer.write(objectMapper.writeValueAsString(outputNode));
+                                                        }
+                                                        writer.newLine();
+                                                    }
+                                                }
+
+                                                logger.info("Result written to file successfully.");
+                                                step.getOutcome().getVariables().put(varName, filePath);
+                                                logger.info("Assigned return variable: " + varName + " = " + filePath);
+                                            } else {
+                                                // If NOT writing to file, store result directly
+                                                if (rawOutput && out.size() == 1 && out.get(0).isTextual()) {
+                                                    String raw = out.get(0).asText();
+                                                    step.getOutcome().getVariables().put(varName, raw);
+                                                    logger.info("Assigned return variable: " + varName + " = " + raw);
+                                                } else {
+                                                    JsonNode resultNode = out.size() == 1 ? out.get(0) : objectMapper.valueToTree(out);
+                                                    String resultPretty = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode);
+                                                    step.getOutcome().getVariables().put(varName, resultPretty);
+                                                    logger.info("Assigned return variable: " + varName + " = " + resultPretty);
+                                                }
+                                            }
+                                        } else {
+                                            logger.error("Error in extracting return variable " + varName + " from jq Query " + jqQuery);
+                                            step.getOutcome().setReturnCode(1);
+                                        }
+                                    }
+                                }
+                            } else {
+                                logger.error("return_variable is not a valid JSON array");
+                                step.getOutcome().setReturnCode(1);
+                            }
+
+                        }
+                    }
+                    else{// response is not JSON
+                            logger.info("Response Body is not in JSON format");
+                            logger.debug("Response Body : \n" + response.getResponseBody());
+
+                            if (returnVarJson != null && !returnVarJson.isEmpty()) {
                                 JsonNode returnVars;
                                 try {
                                     returnVars = objectMapper.readTree(returnVarJson);
@@ -132,88 +248,42 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
 
                                 if (returnVars.isArray()) {
                                     for (JsonNode mappingNode : returnVars) {
-                                        String varName = mappingNode.has("name") ? mappingNode.get("name").asText() : null;
-                                        String path = mappingNode.has("path") ? mappingNode.get("path").asText() : null;
-                                        if (varName != null && path != null) {
-                                            try {
-                                                String[] parts = path.split("\\|\\|", 2);
-                                                jqQuery = parts[0].trim();
-
-                                                // Compile the jq expression
-                                                JsonQuery query = JsonQuery.compile(jqQuery, Versions.JQ_1_7);
-                                                // Create a child scope from the shared root scope (ensure rootScope is initialized outside the loop once)
-                                                Scope childScope = Scope.newChildScope(rootScope);
-
-                                                // Run the query
-                                                final List<JsonNode> out = new ArrayList<>();
-                                                query.apply(childScope, responseJson, out::add);
-
-                                                // Decide whether to return a single value or array
-                                                JsonNode resultNode = out.size() == 1 ? out.get(0) : objectMapper.valueToTree(out);
-
-                                                // Set the result in the named variable
-                                                step.getOutcome().getVariables().put(varName, resultNode.toString());
-
-                                                logger.info("Return variable assigned: " + varName + " = " + resultNode.toString());
-
-                                                // sending the response data into the file
-                                                if (parts.length > 1) {
-                                                    if (parts[1].trim().startsWith(">")) {
-
-                                                        // Split the second part (processor + file path) on whitespace
-                                                        String[] processorParts = parts[1].trim().split("\\s+", 2);
-
-                                                        if (processorParts.length > 0 && processorParts[0] != null && !processorParts[0].isEmpty() && (processorParts[0].equals(">>") || processorParts[0].equals(">")) && processorParts.length > 1 && processorParts[1] != null && !processorParts[1].isEmpty()) {
-                                                            pI = processorParts[0];
-                                                            filePath = processorParts[1].trim();
-                                                        } else {
-                                                            throw new JobArgumentException("Either the output file path or the processing instruction is missing or invalid.");
-                                                        }
-                                                        logger.info("Output File Path: " + filePath );
-                                                        logger.info("Processing instruction: " + pI);
-
-                                                        // code to send data into file
-                                                        File file = new File(filePath);
-                                                        File parent = file.getParentFile();
-                                                        if (parent != null && !parent.exists()) {
-                                                            parent.mkdirs();
-                                                        }
-
-                                                        // Determine append mode based on processing instruction
-                                                        boolean append = ">>".equals(pI);
-
-                                                        // Create file if not exists
-                                                        if (!file.exists()) {
-                                                            file.createNewFile();
-                                                        }
-
-                                                        // Write the resultNode to file
-                                                        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
-                                                            writer.write(resultNode.toString());
-                                                            writer.newLine(); // optional
-                                                        }
-
-                                                        logger.info("Result written to file successfully.");
-                                                    } else {
-                                                        throw new JobArgumentException("The processing instruction is missing or invalid.");
-                                                    }
-
-                                                }
-                                            } catch (Exception e) {
-                                                throw new JobException("Error extracting return variable '" + varName + "' from path '" + jqQuery + "': " + e.getMessage(), e);
-                                            }
+                                        String missingVar = mappingNode.has("name") ? mappingNode.get("name").asText() : null;
+                                        if (missingVar != null) {
+                                            logger.error("Could not create return variable: " + missingVar);
+                                            step.getOutcome().setReturnCode(1);
                                         }
                                     }
+                                } else {
+                                    logger.error("return_variable is not a valid JSON array");
+                                    step.getOutcome().setReturnCode(1);
                                 }
                             }
                         }
-                        catch (Exception e){
-                        logger.info("Response Body is not in JSON format");
-                        logger.debug("Response Body : \n"+response.getResponseBody());
-                    }
                 }
                 else{
                     logger.info("Empty Response Body");
+                    if (returnVarJson != null && !returnVarJson.isEmpty()) {
+                        JsonNode returnVars;
+                        try {
+                            returnVars = objectMapper.readTree(returnVarJson);
+                        } catch (Exception e) {
+                            throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
+                        }
+
+                        if (returnVars.isArray()) {
+                            for (JsonNode mappingNode : returnVars) {
+                                String missingVar = mappingNode.has("name") ? mappingNode.get("name").asText() : null;
+                                if (missingVar != null) {
+                                    logger.error("Could not create return variable: " + missingVar);
+                                    step.getOutcome().setReturnCode(1);
+                                }
+                            }
+                        } else {
+                            logger.error("return_variable is not a valid JSON array");
+                            step.getOutcome().setReturnCode(1);
+                        }
+                    }
                 }
             } catch (SOSConnectionRefusedException | SOSBadRequestException e) {
                 if (response != null) {
@@ -221,16 +291,11 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                     logger.error("Request failed: " + response.getStatusCode() + " Body: " + response.getResponseBody());
                 }
                 throw e;
-
             } catch (IOException e) {
                 logger.error("I/O error during REST call: " + e.getMessage(), e);
-                throw new JobException("REST call failed due to network error: " + e.getMessage(), e);
-
-            } catch (Exception e) {
-                logger.error("Unhandled exception: " + e.getMessage(), e);
-                throw e;
-
-            } finally {
+                throw new JobException("REST call failed due to I/O error: " + e.getMessage(), e);
+            }
+            finally {
                 try {
                     if (accessToken != null) {
                         apiExecutor.logout(accessToken);
@@ -255,10 +320,9 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
         }
     }
 
-
     static {
-            rootScope = Scope.newEmptyScope(); // create empty root scope
-            BuiltinFunctionLoader.getInstance().loadFunctions(Versions.JQ_1_7, rootScope); // load jq built-ins
+        rootScope = Scope.newEmptyScope(); // create empty root scope
+        BuiltinFunctionLoader.getInstance().loadFunctions(Versions.JQ_1_7, rootScope); // load jq built-ins
 
         objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
