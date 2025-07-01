@@ -167,15 +167,16 @@ public class ExportUtils {
             }
             if (!filter.getShallowCopy().getWithoutDrafts()) {
                 allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
-                allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).forEach(
-                        item -> {
-                            if(allObjects.containsKey(item.getName())) {
-                                allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
-                            } else {
-                                allObjects.put(item.getName(), new ArrayList<ControllerObject>());
-                                allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
-                            }
-                        });
+                allDraftItems.addAll(getReleasableInventoryConfigurationsWithoutReleasedfromFolders(folderPaths, recursive, dbLayer));
+                if (filter.getShallowCopy().getOnlyValidObjects()) {
+                    allDraftItems = allDraftItems.stream().filter(Objects::nonNull)
+                            .filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum()))
+                            .filter(DBItemInventoryConfiguration::getValid).collect(Collectors.toSet());
+                } else {
+                    allDraftItems = allDraftItems.stream().filter(Objects::nonNull)
+                            .filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).collect(Collectors.toSet());
+                }
+                allDraftItems.stream().map(PublishUtils::getConfigurationObjectFromDBItem).forEach(cfg -> allObjects.add(cfg));
             }
         }
         return allObjects;
