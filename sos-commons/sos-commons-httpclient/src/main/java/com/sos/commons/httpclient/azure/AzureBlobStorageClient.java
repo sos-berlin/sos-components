@@ -68,7 +68,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
     }
 
     public HttpExecutionResult<Void> executeHEADBlob(String containerName, String blobPath) throws Exception {
-        String encodedBlobPath = encodeBlobPath(blobPath);
+        String encodedBlobPath = HttpUtils.normalizeAndEncodeRelativePath(blobPath);
         String path = containerName + "/" + encodedBlobPath;
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
@@ -80,7 +80,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
 
     /** Executes GET request and returns the response InputStream */
     public HttpExecutionResult<InputStream> executeGETBlobInputStream(String containerName, String blobPath) throws Exception {
-        String encodedBlobPath = encodeBlobPath(blobPath);
+        String encodedBlobPath = HttpUtils.normalizeAndEncodeRelativePath(blobPath);
         String path = containerName + "/" + encodedBlobPath;
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
@@ -91,7 +91,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
     }
 
     public HttpExecutionResult<String> executeGETBlobContent(String containerName, String blobPath) throws Exception {
-        String encodedBlobPath = encodeBlobPath(blobPath);
+        String encodedBlobPath = HttpUtils.normalizeAndEncodeRelativePath(blobPath);
         String path = containerName + "/" + encodedBlobPath;
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
@@ -102,7 +102,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
     }
 
     public HttpExecutionResult<String> executeDELETEBlob(String containerName, String blobPath) throws Exception {
-        String encodedBlobPath = encodeBlobPath(blobPath);
+        String encodedBlobPath = HttpUtils.normalizeAndEncodeRelativePath(blobPath);
         String path = containerName + "/" + encodedBlobPath;
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
@@ -167,7 +167,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
     }
 
     public HttpExecutionResult<String> executePUTBlob(String containerName, String blobPath, InputStream is, String contentType) throws Exception {
-        String encodedBlobPath = encodeBlobPath(blobPath);
+        String encodedBlobPath = HttpUtils.normalizeAndEncodeRelativePath(blobPath);
         String path = containerName + "/" + encodedBlobPath;
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
@@ -191,7 +191,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
     }
 
     public HttpExecutionResult<String> executePUTBlob(String containerName, String blobPath, byte[] data, String contentType) throws Exception {
-        String encodedBlobPath = encodeBlobPath(blobPath);
+        String encodedBlobPath = HttpUtils.normalizeAndEncodeRelativePath(blobPath);
         String path = containerName + "/" + encodedBlobPath;
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
@@ -232,16 +232,6 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
 
     public AAzureStorageAuthProvider getAuthProvider() {
         return authProvider;
-    }
-
-    // TODO - not use URLEncoder because blobPath can contains path separator, e.g., testdir/test.txt
-    private String encodeBlobPath(String blobPath) {
-        try {
-            return new URI(null, blobPath, null).normalize().toASCIIString();
-        } catch (URISyntaxException e) {
-            return blobPath;
-        }
-        // return URLEncoder.encode(blobName, StandardCharsets.UTF_8);
     }
 
     public String buildUrl(String path) {

@@ -1,5 +1,6 @@
 package com.sos.commons.httpclient.azure.commons.auth.blob;
 
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -15,6 +16,10 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 /** https://learn.microsoft.com/en-us/rest/api/storageservices/versioning-for-the-azure-storage-services<br/>
  * https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api */
 public class AzureBlobSharedKeyAuthProvider extends AAzureStorageAuthProvider {
+
+    // DateTimeFormatter.RFC_1123_DATE_TIME not used because returns 1width date e.g '1 Jul' instead of '01 Jul'
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.ENGLISH).withZone(
+            ZoneOffset.UTC);
 
     public AzureBlobSharedKeyAuthProvider(ISOSLogger logger, String accountName, String base64AccountKey, String apiVersion) {
         super(logger, AzureBlobStorageClientAuthMethod.SHARED_KEY, accountName, base64AccountKey, apiVersion);
@@ -34,9 +39,12 @@ public class AzureBlobSharedKeyAuthProvider extends AAzureStorageAuthProvider {
         Map<String, String> headers = new LinkedHashMap<>(existingHeaders);
 
         // Add required x-ms headers
-        String xMsDate = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(java.time.ZoneOffset.UTC));
-        headers.put("x-ms-date", xMsDate);
-        headers.put("x-ms-version", getApiVersion());
+        if (!headers.containsKey("x-ms-date")) {
+            headers.put("x-ms-date", FORMATTER.format(ZonedDateTime.now(java.time.ZoneOffset.UTC).minusMinutes(5)));
+        }
+        if (!headers.containsKey("x-ms-version")) {
+            headers.put("x-ms-version", getApiVersion());
+        }
 
         String canonicalizedHeaders = buildCanonicalizedHeaders(headers);
         String stringToSign = buildStringToSign(method, headers, canonicalizedHeaders, canonicalizedEncodedResource, contentLength);

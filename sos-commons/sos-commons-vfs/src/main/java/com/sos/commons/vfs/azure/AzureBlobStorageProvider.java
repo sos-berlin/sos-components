@@ -129,7 +129,6 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (!HttpUtils.isForbidden(code)) {// e.g. SAS token: 'srt=co' instead of 'srt=sco' to check service
-
                     if (HttpUtils.isNotFound(code) && client.getAuthProvider().isPublic()) {
 
                     } else {

@@ -134,21 +134,38 @@ public class HttpUtils {
         return URLDecoder.decode(input, StandardCharsets.UTF_8);
     }
 
-    /** Safely encodes a string for use in a URI path segment using {@link URI}.
+    /** Ensures a safe, normalized, and percent-encoded relative URI path.<br/>
+     * This avoids {@link URLEncoder} and preserves {@code +} characters.<br/>
+     * 
      * <p>
-     * Falls back to the original input if encoding fails.<br/>
-     * This avoids {@link URLEncoder} and preserves {@code +} characters.
+     * The input can be a simple filename ("myfile.txt") or a relative path ("subdir/myfile.txt").
+     * </p>
+     * <p>
+     * If the path contains no slashes and has characters invalid in a URI (e.g. ':', '<', '>'), it attempts to prepend a slash to allow URI construction, then
+     * removes it to return a relative path.
+     * </p>
+     * 
+     * <p>
+     * Falls back to the original input if encoding fails.
      * </p>
      *
-     * @param input the raw path or segment
-     * @return the percent-encoded path string, or the original input if encoding fails */
-    public static String encodeUriPath(String input) {
-        if (input == null)
+     * @param relativePath relative path or file name
+     * @return encoded relative path (without leading slash), or the original input if encoding fails */
+    public static String normalizeAndEncodeRelativePath(String relativePath) {
+        if (relativePath == null) {
             return null;
+        }
         try {
-            return new URI(null, input, null).getRawPath();
+            String uri = new URI(null, relativePath, null).normalize().toASCIIString();
+            // remove leading slash(s) to return a relative path
+            return SOSString.trimStart(uri, "/");
         } catch (URISyntaxException e) {
-            return input;
+            // if relativePath is a single name and contains some invalid characters that should be encoded (e.g.: "myfile:<>.txt"),
+            // adding leading slashes helps to fix the URI
+            if (!relativePath.contains("/")) {
+                return normalizeAndEncodeRelativePath("/" + relativePath);
+            }
+            return relativePath;
         }
     }
 
