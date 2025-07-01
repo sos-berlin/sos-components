@@ -167,13 +167,15 @@ public class ExportUtils {
             }
             if (!filter.getShallowCopy().getWithoutDrafts()) {
                 allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
-                allDraftItems.addAll(getReleasableInventoryConfigurationsWithoutReleasedfromFolders(folderPaths, recursive, dbLayer));
-                Stream<DBItemInventoryConfiguration> allDraftItemsStream = allDraftItems.stream().filter(Objects::nonNull);
-                if (filter.getShallowCopy().getOnlyValidObjects()) {
-                    allDraftItemsStream.filter(DBItemInventoryConfiguration::getValid);
-                }
-                allDraftItemsStream.filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).map(PublishUtils::getConfigurationObjectFromDBItem)
-                        .forEach(cfg -> allObjects.add(cfg));
+                allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).forEach(
+                        item -> {
+                            if(allObjects.containsKey(item.getName())) {
+                                allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
+                            } else {
+                                allObjects.put(item.getName(), new ArrayList<ControllerObject>());
+                                allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
+                            }
+                        });
             }
         }
         return allObjects;
