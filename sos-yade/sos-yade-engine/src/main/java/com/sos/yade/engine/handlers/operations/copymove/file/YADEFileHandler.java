@@ -10,6 +10,7 @@ import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.azure.AzureBlobStorageProvider;
@@ -40,6 +41,8 @@ import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileStr
 /** Single "transfer" file manager */
 public class YADEFileHandler {
 
+    // TODO - Temporary file size limit for uploads to Azure Blob Storage (due to non-streaming implementation)
+    private static final long AZURE_BLOB_STORAGE_MAX_UPLOAD_FILESIZE = 50L * 1024 * 1024;// 50MB
     // SSH (buffer_size=32KB): 4.5GB ~ 1.15 minutes, 1.5 GB ~ 25 seconds
     private static final long LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN = 3221225475L;// 3GB
     private static final long USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN = 10485760L;// 10 MB
@@ -91,6 +94,17 @@ public class YADEFileHandler {
                         YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
                         return;
                     }
+                }
+            }
+
+            // TODO
+            if (targetDelegator.isAzure()) {
+                if (sourceFile.getSize() >= AZURE_BLOB_STORAGE_MAX_UPLOAD_FILESIZE) {
+                    targetFile.setState(TransferEntryState.ABORTED);
+                    String msg = String.format("[%s][%s][%s][upload cancelled]file size %s exceeds temporary %s YADE limit for Azure Blob Storage",
+                            fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(), SOSShell.formatBytes(sourceFile.getSize()),
+                            SOSShell.formatBytes(AZURE_BLOB_STORAGE_MAX_UPLOAD_FILESIZE));
+                    throw new YADEEngineTransferFileException(msg);
                 }
             }
 

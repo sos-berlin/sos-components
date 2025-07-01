@@ -328,6 +328,10 @@ public class YADECopyMoveOperationsHandler {
         } else {
             y.getTarget().setSubState(TransferEntryState.FAILED);
         }
+        if (ex != null) {
+            String msg = ex.getMessage() == null ? ex.toString() : ex.getMessage();
+            logger.warn(msg, ex.getCause());
+        }
     }
 
     private static Throwable getTransferFileException(Throwable ex) {
