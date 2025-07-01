@@ -10,7 +10,9 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -22,6 +24,8 @@ import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.commons.util.SOSDate;
+import com.sos.exception.SOSKeyException;
 
 public class Encrypt {
 
@@ -31,10 +35,12 @@ public class Encrypt {
     private static final String IN = "--in";
     private static final String IN_FILE = "--infile";
     private static final String OUT_FILE = "--outfile";
+    private static final String EXPIRE = "--check-expiration";
 
     private static String certPath;
     private static String filePath;
     private static String outfilePath;
+    private static boolean checkExpiration = false;
 
     private static SecretKey createSecretKey() throws NoSuchAlgorithmException {
         return EncryptionUtils.generateSecretKey(128);
@@ -134,6 +140,19 @@ public class Encrypt {
                         filePath = split[1];
                     } else if (args[i].startsWith(OUT_FILE + "=")) {
                         outfilePath = split[1];
+                    } else if (args[i].startsWith(EXPIRE)) {
+                        checkExpiration = true;
+                    }
+                }
+                if(checkExpiration) {
+                    Date now = Date.from(Instant.now());
+                    // if not (notBefore <= now <= notAfter) 
+                    if(!(!cert.getNotBefore().after(now) && !cert.getNotAfter().before(now))) {
+                        if(cert.getNotAfter().before(now)) {
+                            throw new SOSKeyException("Certificate is expired since: " + SOSDate.getDateAsString(cert.getNotAfter()));
+                        } else if (cert.getNotBefore().after(now)) {
+                            throw new SOSKeyException("Certificate is not valid until: " + SOSDate.getDateAsString(cert.getNotBefore()));
+                        }
                     }
                 }
                 if (certPath == null || (input == null && filePath == null)) {
@@ -189,6 +208,7 @@ public class Encrypt {
         System.out.println();
         System.out.println("  Switches:");
         System.out.printf("  %-29s | %s%n", HELP + " | " + HELP_SHORT, "displays usage. This switch is exclusive without any [Options].");
+        System.out.printf("  %-29s | %s%n", EXPIRE + "validate a certificate’s expiration date before performing cryptographic operations");
         System.out.println();
     }
 
