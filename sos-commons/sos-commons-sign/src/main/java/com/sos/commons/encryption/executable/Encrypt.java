@@ -24,7 +24,6 @@ import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.commons.util.SOSDate;
 import com.sos.exception.SOSKeyException;
 
 public class Encrypt {
@@ -149,9 +148,11 @@ public class Encrypt {
                     // if not (notBefore <= now <= notAfter) 
                     if(!(!cert.getNotBefore().after(now) && !cert.getNotAfter().before(now))) {
                         if(cert.getNotAfter().before(now)) {
-                            throw new SOSKeyException("Certificate is expired since: " + SOSDate.getDateAsString(cert.getNotAfter()));
+                            //throw new SOSKeyException("Certificate is expired since: " + SOSDate.getDateAsString(cert.getNotAfter()));
+                            throw new SOSKeyException("Certificate is expired since: " + cert.getNotAfter());
                         } else if (cert.getNotBefore().after(now)) {
-                            throw new SOSKeyException("Certificate is not valid until: " + SOSDate.getDateAsString(cert.getNotBefore()));
+                            //throw new SOSKeyException("Certificate is not valid until: " + SOSDate.getDateAsString(cert.getNotBefore()));
+                            throw new SOSKeyException("Certificate is not valid until: " + cert.getNotBefore());
                         }
                     }
                 }
