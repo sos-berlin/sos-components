@@ -38,7 +38,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
         OrderProcessStepLogger logger = step.getLogger();
 
         String requestJson = (String) myArgs.getMyRequest().getValue();
-        logger.info(requestJson);
+        logger.info("Request Body : " +requestJson);
         if (requestJson != null && !requestJson.isBlank()) {
             JsonNode requestNode;
             try {
