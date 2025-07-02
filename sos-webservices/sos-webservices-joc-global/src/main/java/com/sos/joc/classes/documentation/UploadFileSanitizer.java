@@ -38,7 +38,7 @@ public class UploadFileSanitizer {
         if (withUploadFileSanitizing) {
             try {
                 String uploadFileSanitizerExecutable = uploadFileSanitizerCommand.replaceFirst("^\"?([^\"]+)\"?", "$1");
-                java.nio.file.Path p = Globals.sosCockpitProperties.resolvePath(uploadFileSanitizerExecutable);
+                Path p = Globals.sosCockpitProperties.resolvePath(uploadFileSanitizerExecutable);
                 if (!Files.exists(p)) {
                     throw new JocConfigurationException("Sanitizer not found: " + uploadFileSanitizerExecutable);
                 }
@@ -102,8 +102,8 @@ public class UploadFileSanitizer {
     
     private byte[] sanitize(String filename, Path sourceFile) throws IOException {
         Path destFile = tmpWorkdir.resolve("sanitizer-dest-" + filename);
-        String command = uploadFileSanitizerCommand.replaceAll("\\$\\{source_file\\}", sourceFile.toString()).replaceAll("\\$\\{destination_file\\}",
-                destFile.toString());
+        String command = uploadFileSanitizerCommand.replaceAll("\\$\\{source_file\\}", sourceFile.toAbsolutePath().toString()).replaceAll(
+                "\\$\\{destination_file\\}", destFile.toAbsolutePath().toString());
         SOSCommandResult result = SOSShell.executeCommand(command, null, null, null, shellWorkdir);
         if (result.hasError()) {
             if (result.hasStdErr()) {
