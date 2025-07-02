@@ -212,7 +212,11 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             vars.setAdditionalProperty("refreshToken", tokenResponse.getRefresh_token());
             vars.setAdditionalProperty("clientId", provider.getIamOidcClientId());
             vars.setAdditionalProperty("clientSecret", provider.getIamOidcClientSecret());
-            vars.setAdditionalProperty("endSessionEndPoint", conf.getEnd_session_endpoint());
+            if (conf.getRevocation_endpoint() != null) {
+                vars.setAdditionalProperty("endSessionEndPoint", conf.getRevocation_endpoint());
+            } else {
+                vars.setAdditionalProperty("endSessionEndPoint", conf.getEnd_session_endpoint());
+            }
             Locker locker = new Locker();
             locker.setContent(vars);
             String lockerKey = SOSLockerHelper.lockerPut(locker).getKey();
