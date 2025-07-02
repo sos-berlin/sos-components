@@ -19,7 +19,7 @@ public class GlobalsTest {
     }
 
     protected static void logout() throws JsonProcessingException {
-        sosServicePermissionIam.logout(sosAuthCurrentAccountAnswer.getAccessToken());
+        sosServicePermissionIam.logout(sosAuthCurrentAccountAnswer.getAccessToken(), null, null);
     }
 
 }
