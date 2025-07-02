@@ -247,7 +247,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                     if (properties.getOidc() != null) {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
                     }
                 }
@@ -265,7 +265,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                     if (properties.getOidc() != null) {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
                     }
                 }
