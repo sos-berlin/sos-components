@@ -35,6 +35,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "timeZone",
     "delay",
     "title",
+    "priority",
     "documentationName",
     "tags"
 })
@@ -57,7 +58,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.7.1";
+    private String version = "1.7.2";
     @JsonProperty("workflowName")
     @JsonAlias({
         "workflowPath"
@@ -105,6 +106,8 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      */
     @JsonProperty("title")
     private String title;
+    @JsonProperty("priority")
+    private Integer priority = 0;
     /**
      * string without < and >
      * <p>
@@ -127,18 +130,19 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
     /**
      * 
      * @param directoryExpr
-     * @param delay
      * @param pattern
      * @param agentName
      * @param timeZone
      * @param workflowName
-     * @param documentationName
      * 
      * @param title
+     * @param priority
      * @param directory
      * @param tags
+     * @param delay
+     * @param documentationName
      */
-    public FileOrderSource(String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName, Set<String> tags) {
+    public FileOrderSource(String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, Integer priority, String documentationName, Set<String> tags) {
         super();
         this.workflowName = workflowName;
         this.agentName = agentName;
@@ -148,6 +152,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
         this.timeZone = timeZone;
         this.delay = delay;
         this.title = title;
+        this.priority = priority;
         this.documentationName = documentationName;
         this.tags = tags;
     }
@@ -313,6 +318,16 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
         this.title = title;
     }
 
+    @JsonProperty("priority")
+    public Integer getPriority() {
+        return priority;
+    }
+
+    @JsonProperty("priority")
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
     /**
      * string without < and >
      * <p>
@@ -347,12 +362,12 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationName", documentationName).append("tags", tags).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("priority", priority).append("documentationName", documentationName).append("tags", tags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(directoryExpr).append(pattern).append(agentName).append(timeZone).append(workflowName).append(tYPE).append(title).append(directory).append(tags).append(delay).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(directoryExpr).append(pattern).append(agentName).append(timeZone).append(workflowName).append(tYPE).append(title).append(priority).append(version).append(directory).append(tags).append(delay).append(documentationName).toHashCode();
     }
 
     @Override
@@ -364,7 +379,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).append(tags, rhs.tags).append(delay, rhs.delay).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(priority, rhs.priority).append(version, rhs.version).append(directory, rhs.directory).append(tags, rhs.tags).append(delay, rhs.delay).append(documentationName, rhs.documentationName).isEquals();
     }
 
 }

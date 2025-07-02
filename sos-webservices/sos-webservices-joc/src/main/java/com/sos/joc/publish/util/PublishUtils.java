@@ -1740,8 +1740,9 @@ public abstract class PublishUtils {
     }
     
     private static JExpression getFileOrderPattern(FileOrderSource fileOrderSource) {
-        return getOrThrowEither(JExpression.parse("{orderId: " + getFileOrderIdPattern(fileOrderSource) + ", planId: "
-                + getFileOrderDailyPlanPlanIdPattern(fileOrderSource) + "}"));
+        String expression = String.format("{orderId: %s, planId: %s, priority: %d}", getFileOrderIdPattern(fileOrderSource),
+                getFileOrderDailyPlanPlanIdPattern(fileOrderSource), fileOrderSource.getPriority());
+        return getOrThrowEither(JExpression.parse(expression));
     }
 
     private static String getFileOrderIdPattern(FileOrderSource fileOrderSource) {

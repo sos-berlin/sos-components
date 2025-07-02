@@ -86,10 +86,11 @@ public class FileOrderSource
      * @param path
      * @param delay
      * @param state
+     * @param priority
      * @param documentationName
      */
-    public FileOrderSource(String path, Date versionDate, SyncState state, Boolean valid, Boolean deployed, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName, Set<String> tags) {
-        super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, documentationName, tags);
+    public FileOrderSource(String path, Date versionDate, SyncState state, Boolean valid, Boolean deployed, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, Integer priority, String documentationName, Set<String> tags) {
+        super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, priority, documentationName, tags);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;

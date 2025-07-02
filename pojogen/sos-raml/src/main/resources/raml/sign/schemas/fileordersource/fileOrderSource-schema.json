@@ -20,7 +20,8 @@
     "agentPath",
     "pattern",
     "orderIdExpression",
-    "delay"
+    "delay",
+    "priority"
   ],
   
   "description": "deploy object with fixed property 'TYPE':'FileWatch'",
@@ -70,6 +71,10 @@
       "format":"utc-millisec",
       "minimum": 1,
       "maximum": 9999
+    },
+    "priority": {
+        "type": "integer",
+        "default": 0  
     }
   },
   "additionalProperties": false

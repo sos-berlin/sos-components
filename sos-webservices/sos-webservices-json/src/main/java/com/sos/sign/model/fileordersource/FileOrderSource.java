@@ -30,7 +30,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "pattern",
     "timeZone",
     "orderIdExpression",
-    "delay"
+    "delay",
+    "priority"
 })
 public class FileOrderSource implements IDeployObject
 {
@@ -104,6 +105,8 @@ public class FileOrderSource implements IDeployObject
     private String orderIdExpression;
     @JsonProperty("delay")
     private Long delay;
+    @JsonProperty("priority")
+    private Integer priority = 0;
 
     /**
      * No args constructor for use in serialization
@@ -123,9 +126,10 @@ public class FileOrderSource implements IDeployObject
      * @param pattern
      * @param timeZone
      * @param tYPE
+     * @param priority
      * @param directory
      */
-    public FileOrderSource(DeployType tYPE, String path, String workflowPath, String agentPath, String directoryExpr, String directory, String pattern, String timeZone, String orderIdExpression, Long delay) {
+    public FileOrderSource(DeployType tYPE, String path, String workflowPath, String agentPath, String directoryExpr, String directory, String pattern, String timeZone, String orderIdExpression, Long delay, Integer priority) {
         super();
         this.tYPE = tYPE;
         this.path = path;
@@ -137,6 +141,7 @@ public class FileOrderSource implements IDeployObject
         this.timeZone = timeZone;
         this.orderIdExpression = orderIdExpression;
         this.delay = delay;
+        this.priority = priority;
     }
 
     /**
@@ -321,14 +326,24 @@ public class FileOrderSource implements IDeployObject
         this.delay = delay;
     }
 
+    @JsonProperty("priority")
+    public Integer getPriority() {
+        return priority;
+    }
+
+    @JsonProperty("priority")
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("workflowPath", workflowPath).append("agentPath", agentPath).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("orderIdExpression", orderIdExpression).append("delay", delay).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("workflowPath", workflowPath).append("agentPath", agentPath).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("orderIdExpression", orderIdExpression).append("delay", delay).append("priority", priority).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(directoryExpr).append(path).append(delay).append(workflowPath).append(orderIdExpression).append(pattern).append(timeZone).append(tYPE).append(directory).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(directoryExpr).append(path).append(delay).append(workflowPath).append(orderIdExpression).append(pattern).append(timeZone).append(tYPE).append(priority).append(directory).toHashCode();
     }
 
     @Override
@@ -340,7 +355,7 @@ public class FileOrderSource implements IDeployObject
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(directoryExpr, rhs.directoryExpr).append(path, rhs.path).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(orderIdExpression, rhs.orderIdExpression).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(directoryExpr, rhs.directoryExpr).append(path, rhs.path).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(orderIdExpression, rhs.orderIdExpression).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(directory, rhs.directory).isEquals();
     }
 
 }

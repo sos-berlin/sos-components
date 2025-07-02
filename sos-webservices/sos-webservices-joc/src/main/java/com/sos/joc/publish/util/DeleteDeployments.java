@@ -269,7 +269,7 @@ public class DeleteDeployments {
             } else {
                 if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
                     JControllerProxy proxy = Proxy.of(controllerId);
-                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(fos -> OrderWatchPath.of(fos)).collect(Collectors.toSet());
+                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(OrderWatchPath::of).collect(Collectors.toSet());
                     for (int second = 0; second < 10; second++) {
                         if (!proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
                             // file order source is deleted
@@ -494,7 +494,7 @@ public class DeleteDeployments {
             } else {
                 if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
                     JControllerProxy proxy = Proxy.of(controllerId);
-                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(fos -> OrderWatchPath.of(fos)).collect(Collectors.toSet());
+                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(OrderWatchPath::of).collect(Collectors.toSet());
                     for (int second = 0; second < 10; second++) {
                         if (!proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
                             // file order source is deleted
