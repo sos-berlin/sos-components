@@ -3,6 +3,9 @@ package com.sos.auth.oidc;
 import java.net.URI;
 import java.security.KeyStore;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
@@ -20,7 +23,7 @@ import jakarta.ws.rs.core.UriBuilder;
 
 public class GetOpenIdConfiguration extends SOSRestApiClient {
 
-//    private static final Logger LOGGER = LoggerFactory.getLogger(GetOpenIdConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetOpenIdConfiguration.class);
     private static final String API_PATH = "/.well-known/openid-configuration";
     private UriBuilder uriBuilder;
     private KeyStore truststore; 
@@ -63,6 +66,7 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
 //            LOGGER.info("REQUEST-URL:" + uri.toString());
+//            LOGGER.info("REQUEST-HEADER:" + printHttpRequestHeaders());
             String response = getRestService(uri);
             return getJsonStringFromResponse(response, uri, jocError);
         } catch (JocException e) {
@@ -80,7 +84,6 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
-        //setSSLContext(SSLContext.getInstance().getSSLContext());
         setSSLContext(null, null, truststore);
         if (url.startsWith("https:") && truststore == null) {
             throw new JocConfigurationException("Couldn't find required truststore");

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.KeyStore;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +25,7 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
+import com.sos.auth.oidc.EndSession;
 import com.sos.auth.oidc.GetOpenIdConfiguration;
 import com.sos.auth.oidc.GetToken;
 import com.sos.auth.openid.SOSOpenIdHandler;
@@ -190,19 +192,9 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
     }
     
-//    @POST
-//    @Path("login/oidc")
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             String origin, byte[] body) {
         
-//        if (Globals.sosCockpitProperties == null) {
-//            Globals.sosCockpitProperties = new JocCockpitProperties();
-//        } else {
-//            Globals.sosCockpitProperties.touchLog4JConfiguration();
-//        }
-
         MDC.put("context", ThreadCtx);
 
         try {
@@ -220,9 +212,10 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             vars.setAdditionalProperty("refreshToken", tokenResponse.getRefresh_token());
             vars.setAdditionalProperty("clientId", provider.getIamOidcClientId());
             vars.setAdditionalProperty("clientSecret", provider.getIamOidcClientSecret());
+            vars.setAdditionalProperty("endSessionEndPoint", conf.getEnd_session_endpoint());
             Locker locker = new Locker();
             locker.setContent(vars);
-            SOSLockerHelper.lockerPut(locker);
+            String lockerKey = SOSLockerHelper.lockerPut(locker).getKey();
             
             String openIdHeaderValue = SOSAuthHelper.getOpenIdConfigurationHeader(conf);
             
@@ -231,7 +224,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
 //            LOGGER.info("X-ID-TOKEN:" + tokenResponse.getId_token());
 
             return loginPost(servletRequest, null, null, identityService, tokenResponse.getId_token(), null, openIdHeaderValue, null, null, null,
-                    null, origin, null, null, null);
+                    null, lockerKey, origin, null, null, null);
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -262,8 +255,8 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             @HeaderParam("X-ID-TOKEN") String idToken, @HeaderParam("X-SIGNATURE") String signature,
             @HeaderParam("X-OPENID-CONFIGURATION") String openidConfiguration, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
             @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @HeaderParam("X-CREDENTIAL-ID") String credentialId,
-            @HeaderParam("X-REQUEST-ID") String requestId, @HeaderParam("Origin") String origin, @QueryParam("account") String account,
-            @QueryParam("pwd") String pwd, byte[] body) {
+            @HeaderParam("X-REQUEST-ID") String requestId, @HeaderParam("X-LOCKER-KEY") String lockerKey, @HeaderParam("Origin") String origin,
+            @QueryParam("account") String account, @QueryParam("pwd") String pwd, byte[] body) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -273,6 +266,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
 
         MDC.put("context", ThreadCtx);
         
+        // JOC-2038
         if (isOidcLoginToGetToken(identityService, body)) {
             return loginPost(request, identityService, origin, body);
         }
@@ -309,6 +303,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             sosLoginParameters.setSignature(signature);
             sosLoginParameters.setCredentialId(credentialId);
             sosLoginParameters.setRequestId(requestId);
+            sosLoginParameters.setLockerKey(lockerKey);
 
             int cnt = 0;
             while (cnt < 15 && !Globals.clusterInitialized) {
@@ -339,7 +334,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
     }
 
-    protected JOCDefaultResponse logout(String accessToken) throws JsonProcessingException {
+    protected JOCDefaultResponse logout(String accessToken, String origin, String referrer) throws JsonProcessingException {
 
         if (accessToken == null || accessToken.isEmpty()) {
             return responseStatusJSError(new JocException(new JocError(ACCESS_TOKEN_EXPECTED)));
@@ -366,9 +361,35 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
                     sosSessionHandler.getTimeout();
                     sosSessionHandler.stop();
+                    
+                    // JOC-2038
+                    SOSLoginParameters loginParams = currentAccount.getSosLoginParameters();
+                    if (loginParams.isOIDCLogin() && loginParams.getLockerKey() != null) {
+                        
+                        Locker locker = SOSLockerHelper.lockerGet(loginParams.getLockerKey());
+                        Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
+                                .orElse(Collections.emptyMap());
+                        String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
+                        if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
+                            // do nothing, is made by GUI
+                        } else {
+                            // call end session at OIDC provider
+                            loginParams.getIdentityService();
+                            OidcProperties provider =  SOSAuthHelper.getOIDCProperties(loginParams.getIdentityService());
+                            KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
+                            OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
+                            endSessionEndPoint = conf.getEnd_session_endpoint();
+                            if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
+                             // do nothing, is made by GUI
+                            } else {
+                                new EndSession(provider, conf, loginParams.getLockerKey(), origin, referrer, truststore).getStringResponse();
+                            }
+                        }
+                    }
                 }
 
             } catch (Exception e) {
+                LOGGER.warn("", e);
             }
         }
         SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(EMPTY_STRING);
@@ -391,11 +412,12 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
     @POST
     @Path("logout")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse logoutPost(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
+    public JOCDefaultResponse logoutPost(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader, @HeaderParam("Origin") String origin,
+            @HeaderParam("Referer") String referrer) {
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, EMPTY_STRING);
-            return logout(accessToken);
+            return logout(accessToken, origin, referrer);
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {

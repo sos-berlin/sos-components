@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
@@ -26,7 +29,7 @@ import jakarta.ws.rs.core.UriBuilder;
 
 public class GetToken extends SOSRestApiClient {
 
-//    private static final Logger LOGGER = LoggerFactory.getLogger(GetToken.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetToken.class);
     private UriBuilder uriBuilder;
     private Map<String, String> body = new HashMap<>();
     private KeyStore truststore;
@@ -45,21 +48,23 @@ public class GetToken extends SOSRestApiClient {
 
     private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
             throws SOSSSLException {
-        List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
-
         if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
 
+            List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
             if (supportedMethods.contains("client_secret_basic")) {
            
                 String s = props.getIamOidcClientId() + ":" + props.getIamOidcClientSecret();
                 byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
                 addHeader("Authorization", "Basic " + new String(authEncBytes));
+//                LOGGER.info("Authorization: Basic " + new String(authEncBytes));
                 
                 createBody(requestBody);
                 
             } else { //if (supportedMethods.contains("client_secret_post")) {
                 createBody(props, requestBody);
             }
+        } else {
+            createBody(props, requestBody);
         }
         addHeader("Origin", origin);
         setUriBuilder(openIdConfigurationResponse.getToken_endpoint());
@@ -75,7 +80,9 @@ public class GetToken extends SOSRestApiClient {
     private void createBody(OidcProperties props, GetTokenRequest requestBody) {
         createBody(requestBody);
         body.put("client_id", props.getIamOidcClientId());
-        body.put("client_secret", props.getIamOidcClientSecret());
+        if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
+            body.put("client_secret", props.getIamOidcClientSecret());
+        }
     }
 
     private void setUriBuilder(String url) throws SOSSSLException {
@@ -107,6 +114,8 @@ public class GetToken extends SOSRestApiClient {
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
 //            LOGGER.info("REQUEST-URL:" + uri.toString());
+//            LOGGER.info("REQUEST-HEADER:" + printHttpRequestHeaders());
+//            LOGGER.info("REQUEST-BODY:" + body.toString());
             String response = postRestService(uri, body);
             return getJsonStringFromResponse(response, uri, jocError);
         } catch (JocException e) {
@@ -124,7 +133,6 @@ public class GetToken extends SOSRestApiClient {
         setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
-        //setSSLContext(SSLContext.getInstance().getSSLContext());
         setSSLContext(null, null, truststore);
         if (url.startsWith("https:") && truststore == null) {
             throw new JocConfigurationException("Couldn't find required truststore");

@@ -19,6 +19,7 @@ public class SOSLoginParameters {
     private String credentialId;
     private String requestId;
     private String openidConfiguration;
+    private String lockerKey;
     private SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials;
 
     public HttpServletRequest getRequest() {
@@ -167,5 +168,13 @@ public class SOSLoginParameters {
 
     public void setSosOpenIdWebserviceCredentials(SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials) {
         this.sosOpenIdWebserviceCredentials = sosOpenIdWebserviceCredentials;
+    }
+
+    public String getLockerKey() {
+        return lockerKey;
+    }
+
+    public void setLockerKey(String lockerKey) {
+        this.lockerKey = lockerKey;
     }
 }

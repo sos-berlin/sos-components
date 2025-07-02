@@ -20,6 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "end_session_endpoint",
     "token_endpoint",
     "token_endpoint_auth_methods_supported",
     "claims_supported",
@@ -27,6 +28,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class OpenIdConfiguration {
 
+    /**
+     * URL for logout request
+     * 
+     */
+    @JsonProperty("end_session_endpoint")
+    @JsonPropertyDescription("URL for logout request")
+    private String end_session_endpoint;
     /**
      * URL for token request
      * 
@@ -57,15 +65,35 @@ public class OpenIdConfiguration {
      * 
      * @param claims_supported
      * @param jwks_uri
+     * @param end_session_endpoint
      * @param token_endpoint_auth_methods_supported
      * @param token_endpoint
      */
-    public OpenIdConfiguration(String token_endpoint, List<String> token_endpoint_auth_methods_supported, List<String> claims_supported, String jwks_uri) {
+    public OpenIdConfiguration(String end_session_endpoint, String token_endpoint, List<String> token_endpoint_auth_methods_supported, List<String> claims_supported, String jwks_uri) {
         super();
+        this.end_session_endpoint = end_session_endpoint;
         this.token_endpoint = token_endpoint;
         this.token_endpoint_auth_methods_supported = token_endpoint_auth_methods_supported;
         this.claims_supported = claims_supported;
         this.jwks_uri = jwks_uri;
+    }
+
+    /**
+     * URL for logout request
+     * 
+     */
+    @JsonProperty("end_session_endpoint")
+    public String getEnd_session_endpoint() {
+        return end_session_endpoint;
+    }
+
+    /**
+     * URL for logout request
+     * 
+     */
+    @JsonProperty("end_session_endpoint")
+    public void setEnd_session_endpoint(String end_session_endpoint) {
+        this.end_session_endpoint = end_session_endpoint;
     }
 
     /**
@@ -126,12 +154,12 @@ public class OpenIdConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("token_endpoint", token_endpoint).append("token_endpoint_auth_methods_supported", token_endpoint_auth_methods_supported).append("claims_supported", claims_supported).append("jwks_uri", jwks_uri).toString();
+        return new ToStringBuilder(this).append("end_session_endpoint", end_session_endpoint).append("token_endpoint", token_endpoint).append("token_endpoint_auth_methods_supported", token_endpoint_auth_methods_supported).append("claims_supported", claims_supported).append("jwks_uri", jwks_uri).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jwks_uri).append(token_endpoint_auth_methods_supported).append(claims_supported).append(token_endpoint).toHashCode();
+        return new HashCodeBuilder().append(jwks_uri).append(end_session_endpoint).append(token_endpoint_auth_methods_supported).append(claims_supported).append(token_endpoint).toHashCode();
     }
 
     @Override
@@ -143,7 +171,7 @@ public class OpenIdConfiguration {
             return false;
         }
         OpenIdConfiguration rhs = ((OpenIdConfiguration) other);
-        return new EqualsBuilder().append(jwks_uri, rhs.jwks_uri).append(token_endpoint_auth_methods_supported, rhs.token_endpoint_auth_methods_supported).append(claims_supported, rhs.claims_supported).append(token_endpoint, rhs.token_endpoint).isEquals();
+        return new EqualsBuilder().append(jwks_uri, rhs.jwks_uri).append(end_session_endpoint, rhs.end_session_endpoint).append(token_endpoint_auth_methods_supported, rhs.token_endpoint_auth_methods_supported).append(claims_supported, rhs.claims_supported).append(token_endpoint, rhs.token_endpoint).isEquals();
     }
 
 }

@@ -1,25 +1,10 @@
 package com.sos.joc.security.impl;
 
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
-import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSAuthLockerHandler;
-import com.sos.auth.classes.SOSLocker;
 import com.sos.auth.classes.SOSLockerHelper;
-import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.locker.Locker;
 import com.sos.joc.model.security.locker.LockerFilter;
@@ -42,24 +27,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             body = initLogging(API_CALL_LOCKER_GET, body, CategoryType.IDENTITY);
             JsonValidator.validateFailFast(body, LockerFilter.class);
             LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
-
-            Locker locker = new Locker();
-            locker.setKey(lockerFilter.getKey());
-
-            SOSLocker sosLocker = Globals.jocWebserviceDataContainer.getSOSLocker();
-
-            if (sosLocker.isEmpty(locker.getKey())) {
-                throw new JocObjectNotExistException("Locker for key " + locker.getKey() + " is empty");
-            }
-
-            Map<String, Object> content = sosLocker.getContent(lockerFilter.getKey());
-            if (content != null) {
-                locker.setContent(new Variables());
-                locker.getContent().setAdditionalProperties(content);
-            }
-            sosLocker.removeContent(lockerFilter.getKey());
-            SOSLockerHelper.refreshTimer();
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(locker));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(SOSLockerHelper.lockerGet(lockerFilter.getKey())));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }

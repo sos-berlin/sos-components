@@ -112,7 +112,8 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
+    public static Event getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user)
+            throws SessionNotExistException {
         return EventServiceFactory.getInstance()._getEvents(controllerId, evtIdIsEmpty, eventId, session, user);
     }
     
@@ -141,7 +142,8 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user) throws SessionNotExistException {
+    private Event _getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user)
+            throws SessionNotExistException {
         Event events = new Event();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
