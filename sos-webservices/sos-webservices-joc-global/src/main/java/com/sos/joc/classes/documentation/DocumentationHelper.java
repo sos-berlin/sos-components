@@ -114,7 +114,7 @@ public class DocumentationHelper {
         return extension.toLowerCase();
     }
 
-    private static Set<DBItemDocumentation> readZipFileContent(InputStream inputStream, String folder) throws IOException,
+    private static Set<DBItemDocumentation> readZipFileContent(InputStream inputStream, String folder, UploadFileSanitizer ufs) throws IOException,
             JocUnsupportedFileTypeException {
         ZipInputStream zipStream = null;
         Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();
@@ -127,20 +127,22 @@ public class DocumentationHelper {
                 }
                 String entryName = entry.getName().replace('\\', '/');
                 FilenameSanitizer.test("filename of an archive entry", entryName);
+                DBItemDocumentation documentation = new DBItemDocumentation();
+                java.nio.file.Path targetFolder = Paths.get(folder);
+                java.nio.file.Path complete = targetFolder.resolve(entryName.replaceFirst("^/", ""));
+                String filename = complete.getFileName().toString();
+                
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
                 int binRead = 0;
                 while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
-                byte[] bytes = outBuffer.toByteArray();
-
-                DBItemDocumentation documentation = new DBItemDocumentation();
-                java.nio.file.Path targetFolder = Paths.get(folder);
-                java.nio.file.Path complete = targetFolder.resolve(entryName.replaceFirst("^/", ""));
+                byte[] bytes = (ufs == null) ? outBuffer.toByteArray() : ufs.sanitize(filename, outBuffer);
+                
                 documentation.setPath(complete.toString().replace('\\', '/'));
                 documentation.setFolder(complete.getParent().toString().replace('\\', '/'));
-                documentation.setName(complete.getFileName().toString());
+                documentation.setName(filename);
                 String fileExtension = getExtensionFromFilename(documentation.getName());
                 boolean isPlainText = isPlainText(bytes);
                 final String guessedMediaType = guessContentTypeFromBytes(bytes, fileExtension, isPlainText);
@@ -197,7 +199,7 @@ public class DocumentationHelper {
     public static void readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException {
-        Set<DBItemDocumentation> docs = readZipFileContent(inputStream, folder);
+        Set<DBItemDocumentation> docs = readZipFileContent(inputStream, folder, (UploadFileSanitizer) null);
         if (docs != null) {
             saveOrUpdate(docs, dbLayer);
             List<DBItemDocumentation> deprecatedDbDocs = dbLayer.getDocumentations(DEPRECATED_DOCS.stream().map(s -> JitlDocumentation.FOLDER + "/"
@@ -213,10 +215,10 @@ public class DocumentationHelper {
         }
     }
 
-    public static Set<String> readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
-            JocConfigurationException, DBOpenSessionException {
-        return saveOrUpdate(readZipFileContent(inputStream, folder), dbLayer, dbAudit);
+    public static Set<String> readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit,
+            UploadFileSanitizer ufs) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException,
+            JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
+        return saveOrUpdate(readZipFileContent(inputStream, folder, ufs), dbLayer, dbAudit);
     }
 
     private static Set<String> saveOrUpdate(Set<DBItemDocumentation> documentations, DocumentationDBLayer dbLayer)
@@ -224,8 +226,7 @@ public class DocumentationHelper {
         return saveOrUpdate(documentations, dbLayer, null);
     }
 
-    private static Set<String> saveOrUpdate(Set<DBItemDocumentation> documentations, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException {
+    private static Set<String> saveOrUpdate(Set<DBItemDocumentation> documentations, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException {
         Set<String> folders = new HashSet<>();
         if (!documentations.isEmpty()) {
             if (dbAudit != null) {

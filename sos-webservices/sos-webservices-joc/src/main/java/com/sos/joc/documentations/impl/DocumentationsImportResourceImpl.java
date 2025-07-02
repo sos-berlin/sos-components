@@ -20,6 +20,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.common.FilenameSanitizer;
 import com.sos.joc.classes.documentation.DocumentationHelper;
+import com.sos.joc.classes.documentation.UploadFileSanitizer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
@@ -102,6 +103,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             JocConfigurationException, DBOpenSessionException, SOSHibernateException, IOException {
 
         FilenameSanitizer.test("file", filename);
+        UploadFileSanitizer ufs = new UploadFileSanitizer(Thread.currentThread().getName());
 
         InputStream stream = null;
         try {
@@ -120,11 +122,11 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             Optional<String> supportedSubType = DocumentationHelper.SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             Optional<String> supportedImageType = DocumentationHelper.SUPPORTED_IMAGETYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             Set<String> folders = new HashSet<>();
-
+            
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                folders = DocumentationHelper.readZipFileContent(stream, filter.getFolder(), dbLayer, dbAudit);
+                folders = DocumentationHelper.readZipFileContent(stream, filter.getFolder(), dbLayer, dbAudit, ufs);
             } else if (supportedImageType.isPresent()) {
-                DocumentationHelper.saveOrUpdate(DocumentationHelper.setDBItemDocumentationImage(IOUtils.toByteArray(stream), filter,
+                DocumentationHelper.saveOrUpdate(DocumentationHelper.setDBItemDocumentationImage(ufs.sanitize(filter.getFile(), stream), filter,
                         supportedImageType.get()), dbLayer, dbAudit);
             } else if (supportedSubType.isPresent()) {
                 if ("xml".equals(supportedSubType.get())) {
@@ -141,10 +143,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                         break;
                     }
                 }
-                DocumentationHelper.saveOrUpdate(DocumentationHelper.setDBItemDocumentation(IOUtils.toByteArray(stream), filter, supportedSubType
-                        .get()), dbLayer, dbAudit);
+                DocumentationHelper.saveOrUpdate(DocumentationHelper.setDBItemDocumentation(ufs.sanitize(filter.getFile(), stream), filter,
+                        supportedSubType.get()), dbLayer, dbAudit);
             } else if ("md".equals(extention) || "markdown".equals(extention)) {
-                byte[] b = IOUtils.toByteArray(stream);
+                byte[] b = ufs.sanitize(filter.getFile(), stream);
                 if (DocumentationHelper.isPlainText(b)) {
                     DocumentationHelper.saveOrUpdate(DocumentationHelper.setDBItemDocumentation(b, filter, "markdown"), dbLayer, dbAudit);
                 } else {
@@ -165,6 +167,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 }
             } catch (Exception e) {
             }
+            ufs.clean();
         }
     }
 
