@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -37,7 +36,7 @@ public class UploadFileSanitizer {
         
         if (withUploadFileSanitizing) {
             try {
-                String uploadFileSanitizerExecutable = uploadFileSanitizerCommand.replaceFirst("^\"?([^\"]+)\"?", "$1");
+                String uploadFileSanitizerExecutable = uploadFileSanitizerCommand.replaceFirst("^(?:\"([^\"]+)\"|([^ ]+)).*$", "$1$2");
                 Path p = Globals.sosCockpitProperties.resolvePath(uploadFileSanitizerExecutable);
                 if (!Files.exists(p)) {
                     throw new JocConfigurationException("Sanitizer not found: " + uploadFileSanitizerExecutable);
@@ -115,12 +114,18 @@ public class UploadFileSanitizer {
         }
         byte[] ret = null;
         if (!Files.exists(destFile)) {
-            ret =  Files.readAllBytes(sourceFile);
+            LOGGER.info(String.format("Upload file sanitizer '%s': exit %d, but destination file is not created -> source file will be used",
+                    filename, result.getExitCode()));
+            ret = Files.readAllBytes(sourceFile);
         }
         ret = Files.readAllBytes(destFile);
         
         Files.deleteIfExists(sourceFile);
         Files.deleteIfExists(destFile);
+        
+        if (ret == null) {
+            throw new JocBadRequestException(String.format("Upload file sanitizer '%s': exit %d, empty result!", filename, result.getExitCode()));
+        }
         
         return ret;
     }
