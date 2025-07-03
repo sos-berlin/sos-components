@@ -65,9 +65,14 @@
                     </xsl:if>
 
                     <!-- Handle FTPSClientSecurity (e.g., SecurityMode) -->
-                    <xsl:if test="FTPSClientSecurity/SecurityMode">
-                        <SecurityMode><xsl:value-of select="FTPSClientSecurity/SecurityMode"/></SecurityMode>
-                    </xsl:if>
+                    <xsl:choose>
+                        <xsl:when test="FTPSClientSecurity/SecurityMode">
+                            <SecurityMode><xsl:value-of select="FTPSClientSecurity/SecurityMode"/></SecurityMode>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <SecurityMode>explicit</SecurityMode>
+                        </xsl:otherwise>
+                    </xsl:choose>
 
                     <!-- Transfer SSL information if it exists in v1 -->
                     <SSL>
@@ -450,6 +455,6 @@
     <!-- TODO MailServer ??? -->    
     
     <!-- Remove deprecated elements from v1 that are no longer part of v2 -->
-    <xsl:template match="FTPSClientSecurity | FTPSProtocol | AcceptUntrustedCertificate | ServerAliveInterval | ServerAliveCountMax | SOCKS4Proxy | SOCKS5Proxy | JumpDirectory | JumpCommand | JumpCommandBeforeFile | JumpCommandAfterFileOnSuccess | JumpCommandBeforeOperation | JumpCommandAfterOperationOnSuccess | JumpCommandAfterOperationOnError | JumpCommandAfterOperationFinal | JumpCommandDelimiter | Logging"/>
+    <xsl:template match="FTPSClientSecurity | FTPSProtocol | AcceptUntrustedCertificate | ServerAliveInterval | ServerAliveCountMax | SOCKS4Proxy | SOCKS5Proxy | JumpDirectory | JumpCommand | JumpCommandBeforeFile | JumpCommandAfterFileOnSuccess | JumpCommandBeforeOperation | JumpCommandAfterOperationOnSuccess | JumpCommandAfterOperationOnError | JumpCommandAfterOperationFinal | JumpCommandDelimiter | Logging | CSExportAttachment | CSStoreType"/>
 
 </xsl:stylesheet>
