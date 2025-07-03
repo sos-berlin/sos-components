@@ -153,8 +153,6 @@ public class Encrypt {
                         } else if (cert.getNotBefore().after(now)) {
                             throw new SOSKeyException("Certificate is not valid until: " + SOSDate.getDateAsString(cert.getNotBefore()));
                         }
-                            throw new SOSKeyException("Certificate is not valid until: " + cert.getNotBefore());
-                        }
                     }
                 }
                 if (certPath == null || (input == null && filePath == null)) {
