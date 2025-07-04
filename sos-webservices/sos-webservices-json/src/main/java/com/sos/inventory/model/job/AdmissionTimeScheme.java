@@ -18,7 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "periods"
+    "periods",
+    "restrictedSchemes"
 })
 public class AdmissionTimeScheme {
 
@@ -29,6 +30,8 @@ public class AdmissionTimeScheme {
      */
     @JsonProperty("periods")
     private List<AdmissionTimePeriod> periods = null;
+    @JsonProperty("restrictedSchemes")
+    private List<AdmissionRestrictedScheme> restrictedSchemes = null;
 
     /**
      * No args constructor for use in serialization
@@ -36,7 +39,7 @@ public class AdmissionTimeScheme {
      */
     public AdmissionTimeScheme() {
     }
-
+    
     /**
      * 
      * @param periods
@@ -44,6 +47,17 @@ public class AdmissionTimeScheme {
     public AdmissionTimeScheme(List<AdmissionTimePeriod> periods) {
         super();
         this.periods = periods;
+    }
+
+    /**
+     * 
+     * @param restrictedSchemes
+     * @param periods
+     */
+    public AdmissionTimeScheme(List<AdmissionTimePeriod> periods, List<AdmissionRestrictedScheme> restrictedSchemes) {
+        super();
+        this.periods = periods;
+        this.restrictedSchemes = restrictedSchemes;
     }
 
     /**
@@ -66,14 +80,24 @@ public class AdmissionTimeScheme {
         this.periods = periods;
     }
 
+    @JsonProperty("restrictedSchemes")
+    public List<AdmissionRestrictedScheme> getRestrictedSchemes() {
+        return restrictedSchemes;
+    }
+
+    @JsonProperty("restrictedSchemes")
+    public void setRestrictedSchemes(List<AdmissionRestrictedScheme> restrictedSchemes) {
+        this.restrictedSchemes = restrictedSchemes;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("periods", periods).toString();
+        return new ToStringBuilder(this).append("periods", periods).append("restrictedSchemes", restrictedSchemes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(periods).toHashCode();
+        return new HashCodeBuilder().append(restrictedSchemes).append(periods).toHashCode();
     }
 
     @Override
@@ -85,7 +109,7 @@ public class AdmissionTimeScheme {
             return false;
         }
         AdmissionTimeScheme rhs = ((AdmissionTimeScheme) other);
-        return new EqualsBuilder().append(periods, rhs.periods).isEquals();
+        return new EqualsBuilder().append(restrictedSchemes, rhs.restrictedSchemes).append(periods, rhs.periods).isEquals();
     }
 
 }
