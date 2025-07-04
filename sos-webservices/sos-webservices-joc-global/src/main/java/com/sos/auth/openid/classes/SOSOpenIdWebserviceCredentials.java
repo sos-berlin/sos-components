@@ -192,7 +192,7 @@ public class SOSOpenIdWebserviceCredentials {
 
         truststorePath = getProperty(truststorePathGui, truststorePathDefault);
         truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
-        truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
+        truststoreType = KeystoreType.fromValue(getProperty(tTypeGui, truststoreTypeDefault));
 
         if (truststorePath != null && !truststorePath.trim().isEmpty()) {
             Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());

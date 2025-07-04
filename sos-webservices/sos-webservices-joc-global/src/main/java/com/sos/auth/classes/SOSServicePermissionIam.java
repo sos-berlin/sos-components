@@ -2,11 +2,14 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.KeyStore;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -21,11 +24,16 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
+import com.sos.auth.oidc.EndSession;
+import com.sos.auth.oidc.GetOpenIdConfiguration;
+import com.sos.auth.oidc.GetToken;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.auth.openid.classes.SOSOpenIdLogin;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -49,7 +57,13 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.locker.Locker;
+import com.sos.joc.model.security.oidc.GetTokenRequest;
+import com.sos.joc.model.security.oidc.GetTokenResponse;
+import com.sos.joc.model.security.oidc.OpenIdConfiguration;
 import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
+import com.sos.joc.model.security.properties.oidc.OidcProperties;
+import com.sos.schema.JsonValidator;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
@@ -81,8 +95,7 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("joc_cockpit_permissions")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postJocCockpitPermissions(@HeaderParam(X_ACCESS_TOKEN) String accessToken) {
 
         MDC.put("context", ThreadCtx);
@@ -110,8 +123,7 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("size")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getSize() {
         MDC.put("context", ThreadCtx);
         try {
@@ -129,8 +141,7 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("userbyname")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getAccessToken(String account) {
         MDC.put("context", ThreadCtx);
         try {
@@ -152,8 +163,7 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("userbytoken")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse userByToken(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
         MDC.put("context", ThreadCtx);
         try {
@@ -173,17 +183,76 @@ public class SOSServicePermissionIam {
             MDC.remove("context");
         }
     }
+    
+    public JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
+            String origin, byte[] body) {
+        
+        MDC.put("context", ThreadCtx);
+
+        try {
+            GetTokenRequest requestBody = Globals.objectMapper.readValue(body, GetTokenRequest.class);
+            identityService = identityService.replaceFirst("^OIDC(-JOC)?:", "");
+
+            OidcProperties provider =  SOSAuthHelper.getOIDCProperties(identityService);
+            KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
+            OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
+            GetTokenResponse tokenResponse = new GetToken(provider, conf, requestBody, origin, truststore).getJsonObjectFromPost();
+
+            // call iam/locker/put; see LockerResourceImpl
+            Variables vars = new Variables();
+            vars.setAdditionalProperty("token", tokenResponse.getAccess_token());
+            vars.setAdditionalProperty("refreshToken", tokenResponse.getRefresh_token());
+            vars.setAdditionalProperty("clientId", provider.getIamOidcClientId());
+            vars.setAdditionalProperty("clientSecret", provider.getIamOidcClientSecret());
+            if (conf.getRevocation_endpoint() != null) {
+                vars.setAdditionalProperty("endSessionEndPoint", conf.getRevocation_endpoint());
+            } else {
+                vars.setAdditionalProperty("endSessionEndPoint", conf.getEnd_session_endpoint());
+            }
+            Locker locker = new Locker();
+            locker.setContent(vars);
+            String lockerKey = SOSLockerHelper.lockerPut(locker).getKey();
+            
+            String openIdHeaderValue = SOSAuthHelper.getOpenIdConfigurationHeader(conf);
+            
+//            LOGGER.info("X-IDENTITY-SERVICE:"+ identityService);
+//            LOGGER.info("X-OPENID-CONFIGURATION:"+ openIdHeaderValue);
+//            LOGGER.info("X-ID-TOKEN:" + tokenResponse.getId_token());
+
+            return loginPost(servletRequest, null, null, identityService, tokenResponse.getId_token(), null, openIdHeaderValue, null, null, null,
+                    null, lockerKey, origin, null, null, null);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } finally {
+            MDC.remove("context");
+        }
+    }
+    
+    private boolean isOidcLoginToGetToken(String identityService, byte[] body) {
+        if (body != null) {
+            try {
+                JsonValidator.validateFailFast(body, GetTokenRequest.class);
+                if (!SOSString.isEmpty(identityService)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                //
+            }
+        }
+        return false;
+    }
 
     @POST
     @Path("login")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             @HeaderParam("X-ID-TOKEN") String idToken, @HeaderParam("X-SIGNATURE") String signature,
             @HeaderParam("X-OPENID-CONFIGURATION") String openidConfiguration, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
             @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @HeaderParam("X-CREDENTIAL-ID") String credentialId,
-            @HeaderParam("X-REQUEST-ID") String requestId, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-REQUEST-ID") String requestId, @HeaderParam("X-LOCKER-KEY") String lockerKey, @HeaderParam("Origin") String origin,
+            @QueryParam("account") String account, @QueryParam("pwd") String pwd, byte[] body) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -192,6 +261,12 @@ public class SOSServicePermissionIam {
         }
 
         MDC.put("context", ThreadCtx);
+        
+        // JOC-2038
+        if (isOidcLoginToGetToken(identityService, body)) {
+            return loginPost(request, identityService, origin, body);
+        }
+        
         String clientCertCN = null;
         try {
             if (request != null) {
@@ -224,6 +299,7 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setSignature(signature);
             sosLoginParameters.setCredentialId(credentialId);
             sosLoginParameters.setRequestId(requestId);
+            sosLoginParameters.setLockerKey(lockerKey);
 
             int cnt = 0;
             while (cnt < 15 && !Globals.clusterInitialized) {
@@ -236,7 +312,7 @@ public class SOSServicePermissionIam {
             if (cnt > 0) {
                 if (!Globals.clusterInitialized) {
                     LOGGER.info("... JOC Cockpit Cluster still not initialized. Login will be proceeded now");
-                }else{
+                } else {
                     LOGGER.info("... JOC Cockpit Cluster initialized. Waiting time: " + (cnt - 1) + " seconds");
                 }
 
@@ -254,7 +330,7 @@ public class SOSServicePermissionIam {
         }
     }
 
-    protected JOCDefaultResponse logout(String accessToken) {
+    protected JOCDefaultResponse logout(String accessToken, String origin, String referrer) {
 
         if (accessToken == null || accessToken.isEmpty()) {
             return JOCDefaultResponse.responseStatusJSError(ACCESS_TOKEN_EXPECTED);
@@ -280,6 +356,31 @@ public class SOSServicePermissionIam {
                     sosSessionHandler.getTimeout();
                     sosSessionHandler.stop();
                 }
+                
+                // JOC-2038
+                SOSLoginParameters loginParams = currentAccount.getSosLoginParameters();
+                if (loginParams.isOIDCLogin() && loginParams.getLockerKey() != null) {
+                    
+                    Locker locker = SOSLockerHelper.lockerGet(loginParams.getLockerKey());
+                    Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
+                            .orElse(Collections.emptyMap());
+                    String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
+                    if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
+                        // do nothing, is made by GUI
+                    } else {
+                        // call end session at OIDC provider
+                        loginParams.getIdentityService();
+                        OidcProperties provider =  SOSAuthHelper.getOIDCProperties(loginParams.getIdentityService());
+                        KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
+                        OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
+                        endSessionEndPoint = conf.getEnd_session_endpoint();
+                        if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
+                         // do nothing, is made by GUI
+                        } else {
+                            new EndSession(provider, conf, loginParams.getLockerKey(), origin, referrer, truststore).getStringResponse();
+                        }
+                    }
+                }
 
             } catch (Exception e) {
             }
@@ -303,13 +404,13 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("logout")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse logoutPost(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse logoutPost(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader, @HeaderParam("Origin") String origin,
+            @HeaderParam("Referer") String referrer) {
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, EMPTY_STRING);
-            return logout(accessToken);
+            return logout(accessToken, origin, referrer);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
         } finally {
@@ -319,8 +420,7 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("db_refresh")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse dbRefresh() {
         MDC.put("context", ThreadCtx);
         try {
@@ -340,7 +440,7 @@ public class SOSServicePermissionIam {
 
     @GET
     @Path("role")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse hasRole(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("role") String role) {
 
@@ -373,7 +473,7 @@ public class SOSServicePermissionIam {
 
     @GET
     @Path("permission")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse isPermitted(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("permission") String permission) throws SessionNotExistException {
 
@@ -416,7 +516,7 @@ public class SOSServicePermissionIam {
 
     @POST
     @Path("permissions")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getPermissions(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
             @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery) throws SessionNotExistException {
 

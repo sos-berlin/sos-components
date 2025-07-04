@@ -26,7 +26,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapSSLSocketFactory.class);
     private String truststorePath;
-    private KeystoreType truststoreType;
+    private KeystoreType truststoreType = KeystoreType.PKCS12;
     private String truststorePass;
 
     private SSLSocketFactory sf;
@@ -147,7 +147,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
             tType = "PKCS12";
             LOGGER.debug("truststore_type set to default: " + tType);
         }
-        truststoreType = KeystoreType.valueOf(tType);
+        truststoreType = KeystoreType.fromValue(tType);
  
     }
 

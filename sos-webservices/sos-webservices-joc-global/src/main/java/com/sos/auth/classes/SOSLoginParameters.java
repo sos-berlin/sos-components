@@ -19,8 +19,9 @@ public class SOSLoginParameters {
     private String credentialId;
     private String requestId;
     private String openidConfiguration;
+    private String lockerKey;
     private SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials;
-
+    
     public HttpServletRequest getRequest() {
         return request;
     }
@@ -86,11 +87,11 @@ public class SOSLoginParameters {
     }
 
     public boolean isOIDCLogin() {
-        return (getIdentityService() != null && !getIdentityService().equals("") && getIdToken() != null && !getIdToken().isEmpty());
+        return (getIdentityService() != null && !getIdentityService().isEmpty() && getIdToken() != null && !getIdToken().isEmpty());
     }
 
     public boolean isFIDO2Login() {
-        return (getIdentityService() != null && !getIdentityService().equals("") && getSignature() != null && !getAuthenticatorData().equals(""));
+        return (getIdentityService() != null && !getIdentityService().isEmpty() && getSignature() != null && !getAuthenticatorData().isEmpty());
     }
 
     public String getSignature() {
@@ -167,5 +168,13 @@ public class SOSLoginParameters {
 
     public void setSosOpenIdWebserviceCredentials(SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials) {
         this.sosOpenIdWebserviceCredentials = sosOpenIdWebserviceCredentials;
+    }
+    
+    public String getLockerKey() {
+        return lockerKey;
+    }
+
+    public void setLockerKey(String lockerKey) {
+        this.lockerKey = lockerKey;
     }
 }

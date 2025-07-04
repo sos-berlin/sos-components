@@ -40,7 +40,7 @@ public class SOSKeycloakWebserviceCredentials {
 
     private String truststorePath = "";
     private String truststorePassword = "";
-    private KeystoreType truststoreType = null;
+    private KeystoreType truststoreType = KeystoreType.PKCS12;
 
     private String adminAccount;
     private String adminPassword;
@@ -186,7 +186,7 @@ public class SOSKeycloakWebserviceCredentials {
                     }
 
                     if (truststoreType == null) {
-                        truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
+                        truststoreType = KeystoreType.fromValue(getProperty(tTypeGui, truststoreTypeDefault));
                     }
                 } else {
 
@@ -199,7 +199,7 @@ public class SOSKeycloakWebserviceCredentials {
                     }
 
                     if (truststoreType == null) {
-                        truststoreType = KeystoreType.valueOf(Globals.sosCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
+                        truststoreType = KeystoreType.fromValue(Globals.sosCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
                     }
                 }
 

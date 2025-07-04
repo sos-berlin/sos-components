@@ -18,7 +18,7 @@ public class GlobalsTest {
     }
 
     protected static void logout() {
-        sosServicePermissionIam.logout(sosAuthCurrentAccountAnswer.getAccessToken());
+        sosServicePermissionIam.logout(sosAuthCurrentAccountAnswer.getAccessToken(), null, null);
     }
 
 }

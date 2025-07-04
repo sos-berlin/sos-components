@@ -48,7 +48,7 @@ import jakarta.ws.rs.Path;
 public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
     private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
-    private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
+    private static final String API_CALL_IDENTITY_CLIENT = "./iam/identityclient";
     private static final String API_CALL_IMPORT_ICON = "./iam/import";
     private static final String API_CALL_GET_ICON = "./iam/icon";
 
@@ -214,12 +214,12 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            initLogging(API_CALL_IDENTITY_CLIENTS, body);
+            initLogging(API_CALL_IDENTITY_CLIENT, body);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
             checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENT);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setDisabled(false);
@@ -250,7 +250,8 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                     if (properties.getOidc() != null) {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
                     }
                 }
             }
@@ -267,7 +268,8 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                     if (properties.getOidc() != null) {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
                     }
                 }
             }
