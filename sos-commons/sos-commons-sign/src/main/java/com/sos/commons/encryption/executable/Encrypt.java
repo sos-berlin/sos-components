@@ -10,6 +10,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
@@ -24,7 +26,6 @@ import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.commons.util.SOSDate;
 import com.sos.exception.SOSKeyException;
 
 public class Encrypt {
@@ -104,6 +105,17 @@ public class Encrypt {
         return output;
     }
 
+    public static String format(Date date) {
+        final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+        if (date == null) {
+            return "";
+        }
+    	DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setLenient(false);
+        return df.format(date);
+    }
+
+    
     public static void main(String[] args) {
         X509Certificate cert = null;
         PublicKey pubKey = null;
@@ -149,9 +161,9 @@ public class Encrypt {
                     // if not (notBefore <= now <= notAfter) 
                     if(!(!cert.getNotBefore().after(now) && !cert.getNotAfter().before(now))) {
                         if(cert.getNotAfter().before(now)) {
-                            throw new SOSKeyException("Certificate is expired since: " + SOSDate.getDateAsString(cert.getNotAfter()));
+                            throw new SOSKeyException("Certificate is expired since: " + format(cert.getNotAfter()));
                         } else if (cert.getNotBefore().after(now)) {
-                            throw new SOSKeyException("Certificate is not valid until: " + SOSDate.getDateAsString(cert.getNotBefore()));
+                            throw new SOSKeyException("Certificate is not valid until: " + format(cert.getNotBefore()));
                         }
                     }
                 }
