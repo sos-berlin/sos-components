@@ -71,7 +71,7 @@ public class ExportUtils {
     
     public static Set<ControllerObject> getFolderControllerObjectsForSigning(ExportFolderFilter filter, String account, DBLayerDeploy dbLayer,
             String commitId) throws SOSHibernateException {
-        Map<String, ControllerObject> allObjects = new HashMap<String, ControllerObject>();
+        Map<String, List<ControllerObject>> allObjects = new HashMap<String, List<ControllerObject>>();
         if (filter != null && filter.getForSigning() != null) {
             Set<DBItemDeploymentHistory> allDeployedItems = new HashSet<DBItemDeploymentHistory>();
             Set<DBItemInventoryConfiguration> allDraftItems = new HashSet<DBItemInventoryConfiguration>();
@@ -83,8 +83,15 @@ public class ExportUtils {
             if(!filter.getForSigning().getWithoutDeployed()) {
                 allDeployedItems.addAll(getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(folderPaths, recursive, controllerId, dbLayer));
                 allDeployedItems.stream().filter(Objects::nonNull).filter(item -> filterTypes.contains(ConfigurationType.fromValue(item.getType())))
-                    .forEach(item -> allObjects.put(item.getName(), getContollerObjectFromDBItem(item, commitId, account, releasedScripts)));
-            }
+                .forEach(item -> {
+                    if(allObjects.containsKey(item.getName())) {
+                        allObjects.get(item.getName()).add(getContollerObjectFromDBItem(item, commitId, account, releasedScripts));
+                    } else {
+                        allObjects.put(item.getName(), new ArrayList<ControllerObject>());
+                        allObjects.get(item.getName()).add(getContollerObjectFromDBItem(item, commitId, account, releasedScripts));
+                    }
+                });
+         }
             if(!filter.getForSigning().getWithoutDrafts()) {
                 allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
                 allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).forEach(
@@ -98,7 +105,7 @@ public class ExportUtils {
                         });
             }
         }
-        return new HashSet<ControllerObject>(allObjects.values());
+        return allObjects.values().stream().flatMap(List::stream).collect(Collectors.toSet());
     }
     
     public static Set<ConfigurationObject> getFolderConfigurationObjectsForShallowCopy(ExportFolderFilter filter, String account,
