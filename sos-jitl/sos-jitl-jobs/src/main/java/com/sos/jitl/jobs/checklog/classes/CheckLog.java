@@ -363,7 +363,7 @@ public class CheckLog {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            CheckLogWebserviceExecuter orderStateWebserviceExecuter = new CheckLogWebserviceExecuter(apiExecutor);
+            CheckLogWebserviceExecuter orderStateWebserviceExecuter = new CheckLogWebserviceExecuter(step.getLogger(), apiExecutor);
             Long taskId = checkJob2LabelAssignment(accessToken, orderStateWebserviceExecuter);
 
             RunningTaskLogFilter runningTaskLogFilter = new RunningTaskLogFilter();

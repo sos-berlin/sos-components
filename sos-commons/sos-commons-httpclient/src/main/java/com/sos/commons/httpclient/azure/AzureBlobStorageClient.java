@@ -62,7 +62,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
 
-        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalizedResource, getHeaders(), 0);
+        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalizedResource, getDefaultHeaders(), 0);
         return executeWithResponseBody(createRequestBuilder(URI.create(url), authHeaders).GET().build());
     }
 
@@ -72,8 +72,8 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
 
-        Map<String, String> authHeaders = authProvider.createAuthHeaders("HEAD", url, canonicalize(containerName, encodedBlobPath, ""), getHeaders(),
-                0);
+        Map<String, String> authHeaders = authProvider.createAuthHeaders("HEAD", url, canonicalize(containerName, encodedBlobPath, ""),
+                getDefaultHeaders(), 0);
         return executeNoResponseBody(createHEADRequest(URI.create(url), authHeaders));
     }
 
@@ -84,8 +84,8 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
 
-        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalize(containerName, encodedBlobPath, ""), getHeaders(),
-                0);
+        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalize(containerName, encodedBlobPath, ""),
+                getDefaultHeaders(), 0);
         return execute(createRequestBuilder(URI.create(url), authHeaders).GET().build(), HttpResponse.BodyHandlers.ofInputStream());
     }
 
@@ -95,8 +95,8 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
 
-        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalize(containerName, encodedBlobPath, ""), getHeaders(),
-                0);
+        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalize(containerName, encodedBlobPath, ""),
+                getDefaultHeaders(), 0);
         return executeWithResponseBody(createRequestBuilder(URI.create(url), authHeaders).GET().build());
     }
 
@@ -107,7 +107,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String url = authProvider.appendToUrl(rawUrl);
 
         Map<String, String> authHeaders = authProvider.createAuthHeaders("DELETE", url, canonicalize(containerName, encodedBlobPath, ""),
-                getHeaders(), 0);
+                getDefaultHeaders(), 0);
         HttpRequest.Builder builder = createRequestBuilder(URI.create(url), authHeaders).DELETE();
         return executeWithResponseBody(builder.build());
     }
@@ -154,7 +154,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String rawUrl = urlBuilder.toString();
         String url = authProvider.appendToUrl(rawUrl);
 
-        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalizedResource, getHeaders(), 0);
+        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalizedResource, getDefaultHeaders(), 0);
         HttpRequest.Builder builder = createRequestBuilder(URI.create(url), authHeaders).GET();
         return executeWithResponseBody(builder.build());
     }
@@ -171,7 +171,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
 
-        Map<String, String> existingHeaders = new HashMap<>(getHeaders());
+        Map<String, String> existingHeaders = new HashMap<>(getDefaultHeaders());
         existingHeaders.put("x-ms-blob-type", "BlockBlob");
 
         // sdk client throws java.lang.IllegalArgumentException: restricted header name: "Content-Length"
@@ -195,7 +195,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
 
-        Map<String, String> existingHeaders = new HashMap<>(getHeaders());
+        Map<String, String> existingHeaders = new HashMap<>(getDefaultHeaders());
         existingHeaders.put("x-ms-blob-type", "BlockBlob");
 
         // sdk client throws java.lang.IllegalArgumentException: restricted header name: "Content-Length"

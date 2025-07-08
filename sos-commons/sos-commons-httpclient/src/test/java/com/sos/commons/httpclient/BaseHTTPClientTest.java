@@ -36,7 +36,7 @@ public class BaseHTTPClientTest {
             builder = builder.withAuth(getAuthConfig(user, password));
             builder = builder.withProxyConfig(getProxyConfig());
             builder = builder.withSSL(getSsl());
-            builder = builder.withHeaders(List.of("header-name value"));
+            builder = builder.withDefaultHeaders(List.of("header-name value"));
             BaseHttpClient client = builder.build();
 
             // Executes a GET request and returns response as String
@@ -97,7 +97,7 @@ public class BaseHTTPClientTest {
 
     @Ignore
     @Test
-    public void testJS7LoginJson() {
+    public void testJS7LoginJsonTypeReference() {
         SLF4JLogger logger = new SLF4JLogger();
         try {
             String user = "root";
@@ -117,6 +117,41 @@ public class BaseHTTPClientTest {
 
             HttpExecutionResult<Map<String, Object>> result = client.executePOSTJson(uri, new TypeReference<>() {
             });
+            int code = result.response().statusCode();
+            logger.info("[result]" + result.response().body());
+            if (HttpUtils.isServerError(code)) {
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
+            }
+            if (HttpUtils.isNotFound(code)) {
+                BaseHttpClient.formatExecutionResult(result);
+            }
+            logger.info("[result]" + BaseHttpClient.formatExecutionResult(result));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testJS7LoginJsonMap() {
+        SLF4JLogger logger = new SLF4JLogger();
+        try {
+            String user = "root";
+            String password = "root";
+            URI uri = new URI("http://localhost:4447/joc/api/authentication/login");
+
+            Builder builder = BaseHttpClient.withBuilder();
+            builder = builder.withLogger(logger);
+            builder = builder.withConnectTimeout(Duration.ofSeconds(30));
+            builder = builder.withAuth(getAuthConfig(user, password));
+            builder = builder.withProxyConfig(getProxyConfig());
+            // builder = builder.withHeaders(List.of("Accept application/json", "Content-Type application/json"));
+            // builder = builder.withSSL(getSsl());
+            BaseHttpClient client = builder.build();
+
+            // Executes a GET request and returns response as String
+
+            HttpExecutionResult<Map<String, Object>> result = client.executePOSTJsonAsMap(uri);
             int code = result.response().statusCode();
             logger.info("[result]" + result.response().body());
             if (HttpUtils.isServerError(code)) {

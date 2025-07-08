@@ -51,7 +51,7 @@ public class ExecuteMonitoring {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(apiExecutor);
+            MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(step.getLogger(), apiExecutor);
             MonitoringControllerStatus monitoringControllerStatus = monitoringWebserviceExecuter.getControllerStatus(accessToken, args
                     .getControllerId());
             MonitoringJocStatus monitoringJocStatus = monitoringWebserviceExecuter.getJS7JOCInstance(accessToken, args.getControllerId());

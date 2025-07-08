@@ -25,6 +25,7 @@ import javax.crypto.NoSuchPaddingException;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.model.controller.ControllerIds;
@@ -42,17 +43,18 @@ public class JobResourceWebserviceExecuter {
 
     private static final String ENC_PREFIX = "enc:";
 
+    private final ISOSLogger logger;
     private final ApiExecutor apiExecutor;
 
-    public JobResourceWebserviceExecuter(ApiExecutor apiExecutor) {
+    public JobResourceWebserviceExecuter(ISOSLogger logger, ApiExecutor apiExecutor) {
+        this.logger = logger;
         this.apiExecutor = apiExecutor;
     }
 
     private ConfigurationObject getInventoryItem(RequestFilter requestFilter, String accessToken) throws Exception {
-        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        boolean isDebugEnablerd = logger.isDebugEnabled();
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug(".. getInventoryItem: path: " + requestFilter.getPath() + " , object type: " + requestFilter
-                    .getObjectType());
+            logger.debug(".. getInventoryItem: path: " + requestFilter.getPath() + " , object type: " + requestFilter.getObjectType());
         }
         String body = JobHelper.OBJECT_MAPPER.writeValueAsString(requestFilter);
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/inventory/read/configuration", body);
@@ -67,8 +69,8 @@ public class JobResourceWebserviceExecuter {
             }
         }
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug(".... request body: %s", body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+            logger.debug(".... request body: %s", body);
+            logger.debug("answer=%s", answer);
         }
         ConfigurationObject configurationObjectReturn = new ConfigurationObject();
         if (answer != null) {
@@ -82,10 +84,9 @@ public class JobResourceWebserviceExecuter {
     }
 
     private ConfigurationObject setInventoryItem(ConfigurationObject configurationObject, String accessToken) throws Exception {
-        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        boolean isDebugEnablerd = logger.isDebugEnabled();
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug(".. setInventoryItem: path: " + configurationObject.getPath() + " , object type: " + configurationObject
-                    .getObjectType());
+            logger.debug(".. setInventoryItem: path: " + configurationObject.getPath() + " , object type: " + configurationObject.getObjectType());
         }
         String body = JobHelper.OBJECT_MAPPER.writeValueAsString(configurationObject);
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/inventory/store", body);
@@ -100,8 +101,8 @@ public class JobResourceWebserviceExecuter {
             }
         }
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug(".... request body: " + body);
-            apiExecutor.getLogger().debug("answer=" + answer);
+            logger.debug(".... request body: " + body);
+            logger.debug("answer=" + answer);
         }
         ConfigurationObject configurationObjectReturn = new ConfigurationObject();
         if (answer != null) {
@@ -111,9 +112,9 @@ public class JobResourceWebserviceExecuter {
     }
 
     private String getSelectedControllerId(String accessToken) throws Exception {
-        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        boolean isDebugEnablerd = logger.isDebugEnabled();
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug(".. getSelectedControllerId: path: ");
+            logger.debug(".. getSelectedControllerId: path: ");
         }
         String body = JobHelper.OBJECT_MAPPER.writeValueAsString("{}");
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/controller/ids", body);
@@ -132,17 +133,17 @@ public class JobResourceWebserviceExecuter {
             controllerIds = JobHelper.OBJECT_MAPPER.readValue(answer, ControllerIds.class);
         }
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug("answer=%s", answer);
+            logger.debug("answer=%s", answer);
         }
         return controllerIds.getSelected();
     }
 
     private void publishDeployableItem(ConfigurationObject configurationObject, SetJobResourceJobArguments args, String accessToken)
             throws Exception {
-        boolean isDebugEnablerd = apiExecutor.getLogger().isDebugEnabled();
+        boolean isDebugEnablerd = logger.isDebugEnabled();
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug(".. publishDeployableItem: path: " + configurationObject.getPath() + " , object type: "
-                    + configurationObject.getObjectType());
+            logger.debug(".. publishDeployableItem: path: " + configurationObject.getPath() + " , object type: " + configurationObject
+                    .getObjectType());
         }
         DeployFilter deployFilter = new DeployFilter();
         deployFilter.setControllerIds(new ArrayList<String>());
@@ -179,8 +180,8 @@ public class JobResourceWebserviceExecuter {
             }
         }
         if (isDebugEnablerd) {
-            apiExecutor.getLogger().debug(".... request body: %s", body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+            logger.debug(".... request body: %s", body);
+            logger.debug("answer=%s", answer);
         }
     }
 

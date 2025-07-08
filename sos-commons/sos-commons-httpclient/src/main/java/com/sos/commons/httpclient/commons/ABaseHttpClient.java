@@ -7,10 +7,12 @@ import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLSession;
 
@@ -37,7 +39,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     /** Underlying Java HTTP client instance */
     private final HttpClient client;
     /** Optional headers to be applied to all requests */
-    private Map<String, String> headers;
+    private Map<String, String> defaultHeaders;
     // Header order does not matter in HTTP, but LinkedHashSet preserves insertion order
     // for consistent debug output instead of random order
     private Set<String> sensitiveHeaders = new LinkedHashSet<>(DEFAULT_SENSITIVE_HEADERS);
@@ -71,7 +73,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
      * @param uri target URI
      * @return initialized request builder with URI and headers */
     public HttpRequest.Builder createRequestBuilder(URI uri) {
-        return createRequestBuilder(uri, headers);
+        return createRequestBuilder(uri, defaultHeaders);
     }
 
     /** Creates a new HttpRequest builder with given headers
@@ -185,91 +187,116 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     /** Executes a POST request without request body and handles the response via provided handler */
     public <T> HttpExecutionResult<T> executePOST(URI uri, HttpResponse.BodyHandler<T> handler) throws Exception {
-        return execute(createPOSTRequest(uri, HttpRequest.BodyPublishers.noBody()), handler);
+        return execute(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.noBody()), handler);
     }
 
     /** Executes a POST request with request body publisher and handles the response via provided handler */
     public <T> HttpExecutionResult<T> executePOST(URI uri, HttpRequest.BodyPublisher bodyPublisher, HttpResponse.BodyHandler<T> handler)
             throws Exception {
-        return execute(createPOSTRequest(uri, bodyPublisher), handler);
+        return execute(createPOSTRequest(uri, defaultHeaders, bodyPublisher), handler);
     }
 
     /** Executes a POST request with request body and handles the response via provided handler */
     public <T> HttpExecutionResult<T> executePOST(URI uri, String requestBody, HttpResponse.BodyHandler<T> handler) throws Exception {
-        return execute(createPOSTRequest(uri, HttpRequest.BodyPublishers.ofString(requestBody)), handler);
+        return execute(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.ofString(requestBody)), handler);
     }
 
     /** Executes a POST request without request body and returns response as String */
     public HttpExecutionResult<String> executePOST(URI uri) throws Exception {
-        return executeWithResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.noBody()));
+        return executeWithResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.noBody()));
+    }
+
+    /** Executes a POST request without request body and returns response as String */
+    public HttpExecutionResult<String> executePOST(URI uri, Map<String, String> headers) throws Exception {
+        return executeWithResponseBody(createPOSTRequest(uri, headers, HttpRequest.BodyPublishers.noBody()));
     }
 
     /** Executes a POST request with request body publisher and returns response as String */
     public HttpExecutionResult<String> executePOST(URI uri, HttpRequest.BodyPublisher bodyPublisher) throws Exception {
-        return executeWithResponseBody(createPOSTRequest(uri, bodyPublisher));
+        return executeWithResponseBody(createPOSTRequest(uri, defaultHeaders, bodyPublisher));
     }
 
     /** Executes a POST request with request body and returns response as String */
     public HttpExecutionResult<String> executePOST(URI uri, String requestBody) throws Exception {
-        return executeWithResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.ofString(requestBody)));
+        return executePOST(uri, defaultHeaders, requestBody);
+    }
+
+    /** Executes a POST request with request body and returns response as String */
+    public HttpExecutionResult<String> executePOST(URI uri, Map<String, String> headers, String requestBody) throws Exception {
+        return executeWithResponseBody(createPOSTRequest(uri, headers, HttpRequest.BodyPublishers.ofString(requestBody)));
     }
 
     /** Executes a POST request with request body publisher and returns response as JsonNode */
     public HttpExecutionResult<JsonNode> executePOSTJson(URI uri, HttpRequest.BodyPublisher bodyPublisher) throws Exception {
-        return executeWithJsonNodeResponseBody(createPOSTRequest(uri, bodyPublisher));
+        return executeWithJsonNodeResponseBody(createPOSTRequest(uri, defaultHeaders, bodyPublisher));
     }
 
     /** Executes a POST request with request body and returns response as JsonNode */
     public HttpExecutionResult<JsonNode> executePOSTJson(URI uri, String requestBody) throws Exception {
-        return executeWithJsonNodeResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.ofString(requestBody)));
+        return executeWithJsonNodeResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.ofString(requestBody)));
     }
 
     /** Executes a POST request without request body and returns response as JsonNode */
     public HttpExecutionResult<JsonNode> executePOSTJson(URI uri) throws Exception {
-        return executeWithJsonNodeResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.noBody()));
+        return executeWithJsonNodeResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.noBody()));
     }
 
     /** Executes a POST request with request body publisher and parses the JSON response body into the specified type */
     public <T> HttpExecutionResult<T> executePOSTJson(URI uri, HttpRequest.BodyPublisher bodyPublisher, Class<T> type) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, bodyPublisher), type);
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, bodyPublisher), type);
     }
 
     /** Executes a POST request with request body and parses the JSON response body into the specified type */
     public <T> HttpExecutionResult<T> executePOSTJson(URI uri, String requestBody, Class<T> type) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.ofString(requestBody)), type);
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.ofString(requestBody)), type);
     }
 
     /** Executes a POST request without request body and parses the JSON response body into the specified type */
     public <T> HttpExecutionResult<T> executePOSTJson(URI uri, Class<T> type) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.noBody()), type);
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.noBody()), type);
     }
 
     /** Executes a POST request with request body publisher and parses the JSON response body into the specified generic type (Map, List etc) */
     public <T> HttpExecutionResult<T> executePOSTJson(URI uri, HttpRequest.BodyPublisher bodyPublisher, TypeReference<T> typeRef) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, bodyPublisher), typeRef);
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, bodyPublisher), typeRef);
     }
 
     /** Executes a POST request with request body and parses the JSON response body into the specified generic type (Map, List etc) */
     public <T> HttpExecutionResult<T> executePOSTJson(URI uri, String requestBody, TypeReference<T> typeRef) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.ofString(requestBody)), typeRef);
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.ofString(requestBody)), typeRef);
     }
 
     /** Executes a POST request without request body and parses the JSON response body into the specified generic type (Map, List etc) */
     public <T> HttpExecutionResult<T> executePOSTJson(URI uri, TypeReference<T> typeRef) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.noBody()), typeRef);
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.noBody()), typeRef);
     }
 
     /** Executes a POST request with request body and parses the JSON response body into the Map String,Object */
     public HttpExecutionResult<Map<String, Object>> executePOSTJsonAsMap(URI uri, String requestBody) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.ofString(requestBody)),
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.ofString(requestBody)),
                 new TypeReference<Map<String, Object>>() {
                 });
     }
 
     /** Executes a POST request without request body and parses the JSON response body into the Map String,Object */
     public HttpExecutionResult<Map<String, Object>> executePOSTJsonAsMap(URI uri) throws Exception {
-        return executeWithJsonResponseBody(createPOSTRequest(uri, HttpRequest.BodyPublishers.noBody()), new TypeReference<Map<String, Object>>() {
+        return executeWithJsonResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.noBody()),
+                new TypeReference<Map<String, Object>>() {
+                });
+    }
+
+    public Map<String, Object> parseJsonToMap(HttpResponse<String> response) throws Exception {
+        verifyJsonResponse(response);
+        return OBJECT_MAPPER.readValue(response.body(), new TypeReference<Map<String, Object>>() {
         });
+    }
+
+    public Object getJsonProperty(HttpResponse<String> response, String propertyName) throws Exception {
+        Map<String, Object> map = parseJsonToMap(response);
+        if (map == null) {
+            return null;
+        }
+        return map.get(propertyName);
     }
 
     /** Executes a DELETE request and returns the response body with a given handler */
@@ -359,7 +386,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     }
 
     /** Returns the last modified timestamp from the response header */
-    public static long getLastModifiedInMillis(HttpResponse<?> response) {
+    public long getLastModifiedInMillis(HttpResponse<?> response) {
         if (response == null) {
             return HttpUtils.DEFAULT_LAST_MODIFIED;
         }
@@ -390,6 +417,77 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return buildExecutionResultSummary(result);
     }
 
+    /** Returns whether chunked transfer is enabled */
+    public boolean isChunkedTransfer() {
+        return chunkedTransfer;
+    }
+
+    public void setSensitiveHeaders(Set<String> val) {
+        this.sensitiveHeaders = new LinkedHashSet<>(val);
+    }
+
+    public void addSensitiveHeader(String val) {
+        this.sensitiveHeaders.add(val);
+    }
+
+    public void addSensitiveHeaders(Set<String> val) {
+        this.sensitiveHeaders.addAll(val);
+    }
+
+    public boolean isSensitiveHeader(String headerName) {
+        return sensitiveHeaders.stream().anyMatch(h -> h.equalsIgnoreCase(headerName));
+    }
+
+    public Map<String, String> getDefaultHeaders() {
+        return defaultHeaders;
+    }
+
+    /** Merges the given request-specific headers with the default headers. If the same key exists in both, the request-specific header takes precedence.
+     *
+     * @param requestHeaders headers specific to this request
+     * @return a new Map containing the merged headers */
+    public Map<String, String> mergeWithDefaultHeaders(Map<String, String> requestHeaders) {
+        Map<String, String> merged = new LinkedHashMap<>(defaultHeaders);
+        merged.putAll(requestHeaders); // requestHeaders overwrite defaults
+        return merged;
+    }
+
+    public Optional<String> getResponseHeader(HttpResponse<?> response, String headerName) {
+        if (response == null) {
+            return null;
+        }
+        return response.headers().firstValue(headerName);
+    }
+
+    /** Converts HTTP headers to a Map<String, String>, using only the first value for each header.
+     *
+     * @param headers The original headers as a Map<String, List<String>>.
+     * @return A simplified Map with only the first value of each header. */
+    public Map<String, String> toSingleValueResponseHeaders(HttpResponse<?> response) {
+        return response.headers().map().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().isEmpty() ? "" : e
+                .getValue().get(0)));
+    }
+
+    /** Converts HTTP headers to a Map<String, String> by joining all values with commas.
+     *
+     * @param headers The original headers as a Map<String, List<String>>.
+     * @return A Map with all values of each header combined into a single comma-separated string. */
+    public Map<String, String> toJoinedValueResponseHeaders(HttpResponse<?> response) {
+        return response.headers().map().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> String.join(", ", e.getValue())));
+    }
+
+    public HttpRequest createHEADRequest(URI uri) {
+        return createHEADRequest(uri, defaultHeaders);
+    }
+
+    public HttpRequest createHEADRequest(URI uri, Map<String, String> headers) {
+        return createRequestBuilder(uri, headers).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
+    }
+
+    public ISOSLogger getLogger() {
+        return logger;
+    }
+
     private static String buildExecutionResultSummary(HttpExecutionResult<?> result) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(result.request().method()).append("]");
@@ -412,45 +510,12 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return sb.toString();
     }
 
-    /** Returns whether chunked transfer is enabled */
-    public boolean isChunkedTransfer() {
-        return chunkedTransfer;
-    }
-
-    public void setSensitiveHeaders(Set<String> val) {
-        this.sensitiveHeaders = new LinkedHashSet<>(val);
-    }
-
-    public void addSensitiveHeader(String val) {
-        this.sensitiveHeaders.add(val);
-    }
-
-    public boolean isSensitiveHeader(String headerName) {
-        return sensitiveHeaders.stream().anyMatch(h -> h.equalsIgnoreCase(headerName));
-    }
-
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
-    public HttpRequest createHEADRequest(URI uri) {
-        return createHEADRequest(uri, headers);
-    }
-
-    public HttpRequest createHEADRequest(URI uri, Map<String, String> headers) {
-        return createRequestBuilder(uri, headers).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
-    }
-
-    public ISOSLogger getLogger() {
-        return logger;
-    }
-
     private HttpRequest createGETRequest(URI uri) {
         return createRequestBuilder(uri).GET().build();
     }
 
-    private HttpRequest createPOSTRequest(URI uri, HttpRequest.BodyPublisher bodyPublisher) {
-        return createRequestBuilder(uri).POST(bodyPublisher == null ? HttpRequest.BodyPublishers.noBody() : bodyPublisher).build();
+    private HttpRequest createPOSTRequest(URI uri, Map<String, String> headers, HttpRequest.BodyPublisher bodyPublisher) {
+        return createRequestBuilder(uri, headers).POST(bodyPublisher == null ? HttpRequest.BodyPublishers.noBody() : bodyPublisher).build();
     }
 
     private HttpRequest createDELETERequest(URI uri) {
@@ -481,8 +546,8 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build();
     }
 
-    protected void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
+    protected void setDefaultHeaders(Map<String, String> headers) {
+        this.defaultHeaders = headers;
     }
 
     private long getFileSizeIfChunkedTransferEncoding(URI uri) throws Exception {
@@ -496,7 +561,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             return;
         }
         headers.forEach((name, value) -> {
-            if (value.isEmpty()) {
+            if (SOSString.isEmpty(value)) {
                 builder.header(name, "");
             } else {
                 builder.header(name, value);

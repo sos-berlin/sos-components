@@ -6,6 +6,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.RunningTaskLogFilter;
@@ -21,9 +22,11 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class CheckLogWebserviceExecuter {
 
+    private final ISOSLogger logger;
     private final ApiExecutor apiExecutor;
 
-    public CheckLogWebserviceExecuter(ApiExecutor apiExecutor) {
+    public CheckLogWebserviceExecuter(ISOSLogger logger, ApiExecutor apiExecutor) {
+        this.logger = logger;
         this.apiExecutor = apiExecutor;
     }
 
@@ -41,9 +44,9 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
 
         Workflow workflow = new Workflow();
@@ -74,8 +77,8 @@ public class CheckLogWebserviceExecuter {
                 if (jsonConfigurationResponseError != null) {
                     String code = jsonConfigurationResponseError.getString("code", "");
                     String message = jsonConfigurationResponseError.getString("message", "");
-                    apiExecutor.getLogger().info("code: %s", code);
-                    apiExecutor.getLogger().info("message: %s", message);
+                    logger.info("code: %s", code);
+                    logger.info("message: %s", message);
                     if (code.equals("JOC-400") && message.startsWith("ControllerObjectNotExistException:")) {
                         throw new com.sos.commons.exception.SOSMissingDataException(apiResponse.getResponseBody());
                     }
@@ -83,9 +86,9 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
 
         OrderV order = new OrderV();
@@ -109,9 +112,9 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
 
         OrderHistoryItemChildren orderHistoryItemChildren = new OrderHistoryItemChildren();
@@ -135,9 +138,9 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
 
         TaskHistory taskHistory = new TaskHistory();
@@ -161,9 +164,9 @@ public class CheckLogWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
         return answer;
 

@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.maintenance.classes;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.joc.model.agent.AgentsV;
 import com.sos.joc.model.agent.DeployAgents;
 import com.sos.joc.model.agent.ReadAgentsV;
@@ -18,14 +19,16 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class MaintenanceWindowExecuter {
 
+    private final ISOSLogger logger;
     private final ApiExecutor apiExecutor;
 
-    public MaintenanceWindowExecuter(ApiExecutor apiExecutor) {
+    public MaintenanceWindowExecuter(ISOSLogger logger, ApiExecutor apiExecutor) {
+        this.logger = logger;
         this.apiExecutor = apiExecutor;
     }
 
     public String getControllerid(String accessToken, String controllerId) throws Exception {
-        boolean isDebugEnabled = apiExecutor.getLogger().isDebugEnabled();
+        boolean isDebugEnabled = logger.isDebugEnabled();
 
         String defControllerId = "";
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/controllers/p", "{}");
@@ -39,7 +42,7 @@ public class MaintenanceWindowExecuter {
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
         if (isDebugEnabled) {
-            apiExecutor.getLogger().debug("answer=%s", answer);
+            logger.debug("answer=%s", answer);
         }
         Controllers controllers = JobHelper.OBJECT_MAPPER.readValue(answer, Controllers.class);
         for (Controller controller : controllers.getControllers()) {
@@ -53,10 +56,10 @@ public class MaintenanceWindowExecuter {
         }
 
         if (!defControllerId.isEmpty()) {
-            apiExecutor.getLogger().debug("ControllerId from Webservice");
+            logger.debug("ControllerId from Webservice");
             return defControllerId;
         } else {
-            apiExecutor.getLogger().debug("ControllerId from Arguments");
+            logger.debug("ControllerId from Arguments");
             return controllerId;
         }
     }
@@ -77,9 +80,9 @@ public class MaintenanceWindowExecuter {
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
 
         return JobHelper.OBJECT_MAPPER.readValue(answer, Components.class);
@@ -101,9 +104,9 @@ public class MaintenanceWindowExecuter {
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
     }
 
@@ -123,9 +126,9 @@ public class MaintenanceWindowExecuter {
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
     }
 
@@ -153,9 +156,9 @@ public class MaintenanceWindowExecuter {
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
     }
 
@@ -183,9 +186,9 @@ public class MaintenanceWindowExecuter {
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
     }
 
@@ -207,9 +210,9 @@ public class MaintenanceWindowExecuter {
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
 
         return JobHelper.OBJECT_MAPPER.readValue(answer, AgentsV.class);

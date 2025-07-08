@@ -78,14 +78,14 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
         return self();
     }
 
-    public B withHeaders(List<String> headers) {
+    public B withDefaultHeaders(List<String> headers) {
         if (headers != null) {
-            setHeaders(headers);
+            setDefaultHeaders(headers);
         }
         return self();
     }
 
-    public B withHeaders(Map<String, String> headers) {
+    public B withDefaultHeaders(Map<String, String> headers) {
         if (headers != null) {
             this.headers.putAll(headers);
         }
@@ -96,7 +96,7 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
         if (SOSString.isEmpty(name)) {
             return self();
         }
-        return withHeaders(Map.of(name, value == null ? "" : value));
+        return withDefaultHeaders(Map.of(name, value == null ? "" : value));
     }
 
     public B withConnectTimeout(Duration connectTimeout) {
@@ -148,7 +148,7 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
                 });
             }
         }
-        client.setHeaders(headers);
+        client.setDefaultHeaders(headers);
         return client;
     }
 
@@ -157,7 +157,7 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
         return (B) this;
     }
 
-    private void setHeaders(List<String> defaultHeaders) {
+    private void setDefaultHeaders(List<String> defaultHeaders) {
         defaultHeaders.stream()
                 // https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
                 // No whitespace is allowed between the header field-name and colon.

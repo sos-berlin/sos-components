@@ -18,8 +18,6 @@ import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Versions;
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -38,7 +36,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
         OrderProcessStepLogger logger = step.getLogger();
 
         String requestJson = (String) myArgs.getMyRequest().getValue();
-        logger.info("Request Body : " +requestJson);
+        logger.info("Request Body : " + requestJson);
         if (requestJson != null && !requestJson.isBlank()) {
             JsonNode requestNode;
             try {
@@ -67,19 +65,19 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 }
             }
 
-            List<Header> headers = new ArrayList<Header>();
+            Map<String, String> headers = new LinkedHashMap<>();
 
             if (requestNode.has("headers") && requestNode.get("headers").isArray()) {
                 for (JsonNode headerNode : requestNode.get("headers")) {
                     if (headerNode.has("key") && headerNode.has("value")) {
                         String key = headerNode.get("key").asText();
-                        String value= headerNode.get("value").asText();
-                        headers.add(new BasicHeader(key, value));
+                        String value = headerNode.get("value").asText();
+                        headers.put(key, value);
                     }
                 }
             }
 
-            ApiExecutor apiExecutor = new ApiExecutor(step,headers);
+            ApiExecutor apiExecutor = new ApiExecutor(step, headers);
             String accessToken = null;
             ApiResponse response = null;
             boolean loginSuccessful = false;
@@ -127,22 +125,22 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 String jqQuery = null;
                 String pI = null;
                 String filePath = null;
-                String returnVarJson =  myArgs.getReturnVariable().getValue();
-                String varName=null;
-                String path= null;
+                String returnVarJson = myArgs.getReturnVariable().getValue();
+                String varName = null;
+                String path = null;
 
-                if(response.getResponseBody() != null && !response.getResponseBody().trim().isEmpty()){
+                if (response.getResponseBody() != null && !response.getResponseBody().trim().isEmpty()) {
                     if ("application/json".equalsIgnoreCase(contentType)) {
                         JsonNode responseJson;
                         responseJson = objectMapper.readTree(response.getResponseBody());
-                        logger.debug("Response Body: " +objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson) );
+                        logger.debug("Response Body: " + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson));
                         if (returnVarJson != null && !returnVarJson.isEmpty()) {
                             JsonNode returnVars;
-                                try {
-                                    returnVars = objectMapper.readTree(returnVarJson);
-                                } catch (Exception e) {
-                                    throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
-                                }
+                            try {
+                                returnVars = objectMapper.readTree(returnVarJson);
+                            } catch (Exception e) {
+                                throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
+                            }
 
                             if (returnVars.isArray()) {
                                 for (JsonNode mappingNode : returnVars) {
@@ -216,7 +214,8 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                                     logger.info("Assigned return variable: " + varName + " = " + raw);
                                                 } else {
                                                     JsonNode resultNode = out.size() == 1 ? out.get(0) : objectMapper.valueToTree(out);
-                                                    String resultPretty = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode);
+                                                    String resultPretty = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+                                                            resultNode);
                                                     step.getOutcome().getVariables().put(varName, resultPretty);
                                                     logger.info("Assigned return variable: " + varName + " = " + resultPretty);
                                                 }
@@ -233,35 +232,33 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                             }
 
                         }
-                    }
-                    else{// response is not JSON
-                            logger.info("Response Body is not in JSON format");
-                            logger.debug("Response Body : \n" + response.getResponseBody());
+                    } else {// response is not JSON
+                        logger.info("Response Body is not in JSON format");
+                        logger.debug("Response Body : \n" + response.getResponseBody());
 
-                            if (returnVarJson != null && !returnVarJson.isEmpty()) {
-                                JsonNode returnVars;
-                                try {
-                                    returnVars = objectMapper.readTree(returnVarJson);
-                                } catch (Exception e) {
-                                    throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
-                                }
+                        if (returnVarJson != null && !returnVarJson.isEmpty()) {
+                            JsonNode returnVars;
+                            try {
+                                returnVars = objectMapper.readTree(returnVarJson);
+                            } catch (Exception e) {
+                                throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
+                            }
 
-                                if (returnVars.isArray()) {
-                                    for (JsonNode mappingNode : returnVars) {
-                                        String missingVar = mappingNode.has("name") ? mappingNode.get("name").asText() : null;
-                                        if (missingVar != null) {
-                                            logger.error("Could not create return variable: " + missingVar);
-                                            step.getOutcome().setReturnCode(1);
-                                        }
+                            if (returnVars.isArray()) {
+                                for (JsonNode mappingNode : returnVars) {
+                                    String missingVar = mappingNode.has("name") ? mappingNode.get("name").asText() : null;
+                                    if (missingVar != null) {
+                                        logger.error("Could not create return variable: " + missingVar);
+                                        step.getOutcome().setReturnCode(1);
                                     }
-                                } else {
-                                    logger.error("return_variable is not a valid JSON array");
-                                    step.getOutcome().setReturnCode(1);
                                 }
+                            } else {
+                                logger.error("return_variable is not a valid JSON array");
+                                step.getOutcome().setReturnCode(1);
                             }
                         }
-                }
-                else{
+                    }
+                } else {
                     logger.info("Empty Response Body");
                     if (returnVarJson != null && !returnVarJson.isEmpty()) {
                         JsonNode returnVars;
@@ -294,8 +291,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
             } catch (IOException e) {
                 logger.error("I/O error during REST call: " + e.getMessage(), e);
                 throw new JobException("REST call failed due to I/O error: " + e.getMessage(), e);
-            }
-            finally {
+            } finally {
                 try {
                     if (accessToken != null) {
                         apiExecutor.logout(accessToken);
@@ -324,10 +320,8 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
         rootScope = Scope.newEmptyScope(); // create empty root scope
         BuiltinFunctionLoader.getInstance().loadFunctions(Versions.JQ_1_7, rootScope); // load jq built-ins
 
-        objectMapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+        objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+                DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(
+                        SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
     }
 }

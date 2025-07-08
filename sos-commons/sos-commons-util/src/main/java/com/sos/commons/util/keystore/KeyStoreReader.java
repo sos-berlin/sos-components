@@ -5,7 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class KeyStoreReader {
@@ -24,13 +27,13 @@ public class KeyStoreReader {
     private Path path;
     private String password;
     /** KeyStore.getInstance: JKS/PKC12... */
-    private String storeType;
+    private KeyStoreType storeType;
 
     private KeyStoreReader() {
         this(null, null, null, null);
     }
 
-    private KeyStoreReader(Type type, Path path, String password, String storeType) {
+    private KeyStoreReader(Type type, Path path, String password, KeyStoreType storeType) {
         this.type = type;
         this.path = path;
         this.password = password;
@@ -51,35 +54,40 @@ public class KeyStoreReader {
         }
         KeyStoreResult result = new KeyStoreReader().new KeyStoreResult();
         if (!args.getKeyStoreFile().isEmpty()) {
-            result.setKeyStoreResult(read(Type.KEYSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args
-                    .getKeyStoreType().getValue().name()));
+            result.setKeyStoreFile(read(Type.KEYSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args
+                    .getKeyStoreType().getValue()));
         }
-        if (!args.getTrustStoreFile().isEmpty()) {
-            result.setTrustStoreResult(read(Type.TRUSTSTORE, args.getTrustStoreFile().getValue(), args.getTrustStorePassword().getValue(), args
-                    .getTrustStoreType().getValue().name()));
+        if (!SOSCollection.isEmpty(args.getTrustStoreFiles().getValue())) {
+            for (KeyStoreFile f : args.getTrustStoreFiles().getValue()) {
+                result.addTrustStoreFile(read(Type.TRUSTSTORE, f.getPath(), f.getPassword(), f.getType()));
+            }
         }
         return result;
     }
 
     public static KeyStore load(Path path, String password, KeyStoreType storeType) throws Exception {
-        return load(path, password, getType(storeType));
-    }
-
-    public static KeyStore load(Path path, String password, String storeType) throws Exception {
         if (path == null) {
             return null;
         }
 
-        String type = getType(storeType);
+        KeyStoreType type = getType(storeType);
         // char[] pass = password == null ? "".toCharArray() : password.toCharArray();
         char[] pass = password == null ? null : password.toCharArray();
         try (InputStream is = Files.newInputStream(path)) {
-            KeyStore ks = KeyStore.getInstance(type);
+            KeyStore ks = KeyStore.getInstance(type.name());
             ks.load(is, pass);
             return ks;
         } catch (Throwable e) {
             throw new Exception(String.format("[%s.load][%s][%s]%s", KeyStoreReader.class.getSimpleName(), storeType, path, e), e);
         }
+    }
+
+    public Path getPath() {
+        return path;
+    }
+
+    public KeyStoreType getStoreType() {
+        return storeType;
     }
 
     @Override
@@ -95,29 +103,16 @@ public class KeyStoreReader {
         return sb.toString();
     }
 
-    private static KeyStoreObject read(Type type, Path path, String password, String storeType) throws Exception {
+    private static KeyStoreFile read(Type type, Path path, String password, KeyStoreType storeType) throws Exception {
         KeyStoreReader reader = new KeyStoreReader(type, path, password, storeType);
         reader.resolvePathAndPassword();
 
-        KeyStoreObject result = new KeyStoreReader().new KeyStoreObject();
-        result.type = reader.storeType;
-        result.keyStore = KeyStoreReader.load(reader.path, reader.password, reader.storeType);
-        result.path = reader.path;
-        result.password = reader.getPassword();
-        return result;
-    }
-
-    public char[] getPassword() {
-        // char[] pass = password == null ? "".toCharArray() : password.toCharArray();
-        return password == null ? null : password.toCharArray();
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public String getStoreType() {
-        return storeType;
+        KeyStoreFile f = new KeyStoreFile();
+        f.setType(reader.storeType);
+        f.setKeyStore(KeyStoreReader.load(reader.path, reader.password, reader.storeType));
+        f.setPath(reader.path);
+        f.setPassword(reader.password);
+        return f;
     }
 
     private void resolvePathAndPassword() {
@@ -137,12 +132,15 @@ public class KeyStoreReader {
         }
     }
 
-    private static String getType(KeyStoreType storeType) {
-        return getType(storeType == null ? null : storeType.name());
-    }
-
-    private static String getType(String storeType) {
-        return storeType == null ? KeyStore.getDefaultType() : storeType;
+    private static KeyStoreType getType(KeyStoreType storeType) {
+        if (storeType != null) {
+            return storeType;
+        }
+        try {
+            return KeyStoreType.fromString(KeyStore.getDefaultType());
+        } catch (Exception e) {
+            return KeyStoreType.JKS;
+        }
     }
 
     private void setPathAndPassword(String pathProperty, String passwordProperty) {
@@ -162,92 +160,48 @@ public class KeyStoreReader {
 
     public class KeyStoreResult {
 
-        private String keyStoreType;
-        private KeyStore keyStore;
-        private Path keyStorePath;
-        private char[] keyStorePassword;
+        private KeyStoreFile keyStoreFile;
+        private List<KeyStoreFile> trustStoreFiles;
 
-        private String trustStoreType;
-        private KeyStore trustStore;
-        private Path trustStorePath;
-        private char[] trustStorePassword;
-
-        public String getKeyStoreType() {
-            return keyStoreType;
+        public KeyStoreFile getKeyStoreFile() {
+            return keyStoreFile;
         }
 
-        public KeyStore getKeyStore() {
-            return keyStore;
-        }
-
-        public Path getKeyStorePath() {
-            return keyStorePath;
-        }
-
-        public char[] getKeyStorePassword() {
-            return keyStorePassword;
-        }
-
-        public String getTrustStoreType() {
-            return trustStoreType;
-        }
-
-        public KeyStore getTrustStore() {
-            return trustStore;
-        }
-
-        public Path getTrustStorePath() {
-            return trustStorePath;
-        }
-
-        public char[] getTrustStorePassword() {
-            return trustStorePassword;
+        public List<KeyStoreFile> getTrustStoreFiles() {
+            return trustStoreFiles;
         }
 
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            if (keyStorePath != null && trustStorePath != null) {
-                if (keyStorePath.equals(trustStorePath)) {
-                    sb.append("keystore/truststore ").append(keyStoreType);
-                    sb.append(" ").append(keyStorePath);
+            if (keyStoreFile != null && !SOSCollection.isEmpty(trustStoreFiles)) {
+                KeyStoreFile trustStoreSingleFile = trustStoreFiles.size() == 1 ? trustStoreFiles.get(0) : null;
+                if (trustStoreSingleFile != null && trustStoreSingleFile.getPath().equals(keyStoreFile.getPath())) {
+                    sb.append("keystore/truststore ").append(keyStoreFile.getType());
+                    sb.append(" ").append(keyStoreFile.getPath());
                 } else {
-                    sb.append("keystore ").append(keyStoreType);
-                    sb.append(" ").append(keyStorePath);
-                    sb.append(",truststore ").append(trustStoreType);
-                    sb.append(" ").append(trustStorePath);
+                    sb.append(KeyStoreFile.toString("keystore", keyStoreFile));
+                    sb.append(", ");
+                    sb.append(KeyStoreFile.toString("truststore", trustStoreFiles));
                 }
-            } else if (keyStorePath != null) {
-                sb.append("keystore ").append(keyStoreType);
-                sb.append(" ").append(keyStorePath);
-            } else if (trustStorePath != null) {
-                sb.append("truststore ").append(trustStoreType);
-                sb.append(" ").append(trustStorePath);
+            } else if (keyStoreFile != null) {
+                sb.append(KeyStoreFile.toString("keystore", keyStoreFile));
+            } else if (!SOSCollection.isEmpty(trustStoreFiles)) {
+                sb.append(KeyStoreFile.toString("truststore", trustStoreFiles));
             }
             return sb.toString();
         }
 
-        private void setKeyStoreResult(KeyStoreObject ks) {
-            keyStoreType = ks.type;
-            keyStorePath = ks.path;
-            keyStorePassword = ks.password;
-            keyStore = ks.keyStore;
+        private void setKeyStoreFile(KeyStoreFile f) {
+            keyStoreFile = f;
         }
 
-        private void setTrustStoreResult(KeyStoreObject ks) {
-            trustStoreType = ks.type;
-            trustStorePath = ks.path;
-            trustStorePassword = ks.password;
-            trustStore = ks.keyStore;
+        private void addTrustStoreFile(KeyStoreFile f) {
+            if (trustStoreFiles == null) {
+                trustStoreFiles = new ArrayList<>();
+            }
+            trustStoreFiles.add(f);
         }
-    }
-
-    private class KeyStoreObject {
-
-        private String type;
-        private KeyStore keyStore;
-        private Path path;
-        private char[] password;
     }
 
 }

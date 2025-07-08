@@ -252,6 +252,10 @@ public class HttpUtils {
         return code >= 500;
     }
 
+    public static boolean isUnauthorized(int code) {
+        return code == 401;
+    }
+
     public static boolean isForbidden(int code) {
         return code == 403;
     }

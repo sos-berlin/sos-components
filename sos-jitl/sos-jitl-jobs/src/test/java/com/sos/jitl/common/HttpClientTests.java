@@ -8,11 +8,10 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -92,7 +91,7 @@ public class HttpClientTests {
         }
     }
 
-    @Ignore 
+    @Ignore
     @Test
     public void testHttpClient() {
         KeyStore keyStore = null;
@@ -104,7 +103,7 @@ public class HttpClientTests {
             // restApiClient.setAutoCloseHttpClient(true);
             restApiClient.setSSLContext(keyStore, "".toCharArray(), truststore);
             String response = restApiClient.postRestService(URI.create("http://localhost:4444/joc/api/security/login"), null);
-            
+
             String accessToken = restApiClient.getResponseHeader("X-Access-Token");
             LOGGER.info(accessToken);
             assertNotNull(response);
@@ -148,21 +147,20 @@ public class HttpClientTests {
         System.setProperty("js7.config-directory", privateConfPath.toString());
         System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
         ApiExecutor ex = new ApiExecutor(null);
-        ex.readConfig();
-        Config config = ex.getConfig();
+        Config config = ex.readConfig();
         List<String> urls = config.getConfig("js7.api-server").getStringList("url");
         for (String uri : urls) {
-                URI jocUri;
-                try {
-                    jocUri = URI.create(uri);
-                    System.out.println(jocUri);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            URI jocUri;
+            try {
+                jocUri = URI.create(uri);
+                System.out.println(jocUri);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         assertNotNull(config);
     }
-    
+
     @Ignore
     @Test
     public void testApiExecutorLogin() throws Exception {
@@ -173,20 +171,22 @@ public class HttpClientTests {
         String accessToken = ex.login().getAccessToken();
         ex.logout(accessToken);
     }
-    
+
     @Ignore
     @Test
     public void testApiExecutorExport() throws Exception {
         Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
         System.setProperty("js7.config-directory", privateConfPath.toString());
         System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
-        List<Header> headers = new ArrayList<Header>();
-        Header header = new BasicHeader("X-Outfile", Paths.get(System.getProperty("user.dir")).resolve("target/exported").resolve("export_calendars.zip").toString().replace('\\', '/'));
-        headers.add(header);
+        Map<String, String> headers = new LinkedHashMap<>();
+        headers.put("X-Outfile", Paths.get(System.getProperty("user.dir")).resolve("target/exported").resolve("export_calendars.zip").toString()
+                .replace('\\', '/'));
         ApiExecutor ex = new ApiExecutor(null, headers);
         String accessToken = ex.login().getAccessToken();
-        String requestBody = "{\"useShortPath\": false, \"exportFile\": {\"filename\": \"export_calendars.zip\", \"format\": \"ZIP\"}, \"shallowCopy\": {\"objectTypes\": [\"WORKINGDAYSCALENDAR\",\"NONWORKINGDAYSCALENDAR\"],\"folders\": [\"/Calendars\"],\"recursive\": true, \"onlyValidObjects\": false, \"withoutDrafts\": false, \"withoutDeployed\": false, \"withoutReleased\": false}}";
-        ApiResponse response = ex.post(accessToken, "/inventory/export/folder", requestBody);
+        // String requestBody = "{\"useShortPath\": false, \"exportFile\": {\"filename\": \"export_calendars.zip\", \"format\": \"ZIP\"}, \"shallowCopy\":
+        // {\"objectTypes\": [\"WORKINGDAYSCALENDAR\",\"NONWORKINGDAYSCALENDAR\"],\"folders\": [\"/Calendars\"],\"recursive\": true, \"onlyValidObjects\":
+        // false, \"withoutDrafts\": false, \"withoutDeployed\": false, \"withoutReleased\": false}}";
+        // ApiResponse response = ex.post(accessToken, "/inventory/export/folder", requestBody);
         LOGGER.info("File created!");
         ex.logout(accessToken);
     }
@@ -213,7 +213,7 @@ public class HttpClientTests {
         LOGGER.info(SOSRestApiClient.decodeDisposition(example1Disposition));
         LOGGER.info(SOSRestApiClient.decodeDisposition(example2Disposition));
     }
-    
+
     @Ignore
     @Test
     public void readAgentConfigFolder() {

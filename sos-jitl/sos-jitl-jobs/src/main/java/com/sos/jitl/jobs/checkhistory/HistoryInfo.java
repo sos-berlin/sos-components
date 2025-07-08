@@ -42,7 +42,7 @@ public class HistoryInfo {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(apiExecutor);
+            HistoryWebserviceExecuter historyWebserviceExecuter = new HistoryWebserviceExecuter(step.getLogger(), apiExecutor);
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setJob(args.getJob());
             historyFilter.setWorkflow(args.getWorkflow());

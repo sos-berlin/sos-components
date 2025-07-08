@@ -44,7 +44,7 @@ public class CheckLicense {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
             CheckLicenseWebserviceExecuter checkLicenceWebserviceExecuter = new CheckLicenseWebserviceExecuter(apiExecutor);
-            Js7LicenseInfo js7LicenseInfo = checkLicenceWebserviceExecuter.getLicence(accessToken);
+            Js7LicenseInfo js7LicenseInfo = checkLicenceWebserviceExecuter.getLicence(step.getLogger(), accessToken);
             log(".. Check License for validity period of " + args.getValidityDays().shortValue() + " days");
             log(".. Licence tpye: " + js7LicenseInfo.getType());
 

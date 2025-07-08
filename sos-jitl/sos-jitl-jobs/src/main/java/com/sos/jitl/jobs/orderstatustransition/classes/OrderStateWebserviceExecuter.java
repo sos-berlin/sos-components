@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.orderstatustransition.classes;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrdersFilterV;
@@ -9,9 +10,11 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class OrderStateWebserviceExecuter {
 
+    private final ISOSLogger logger;
     private final ApiExecutor apiExecutor;
 
-    public OrderStateWebserviceExecuter(ApiExecutor apiExecutor) {
+    public OrderStateWebserviceExecuter(ISOSLogger logger, ApiExecutor apiExecutor) {
+        this.logger = logger;
         this.apiExecutor = apiExecutor;
     }
 
@@ -31,9 +34,9 @@ public class OrderStateWebserviceExecuter {
 
         }
 
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
 
         OrdersV orderHistory = new OrdersV();
@@ -61,12 +64,12 @@ public class OrderStateWebserviceExecuter {
                 }
 
             }
-            if (apiExecutor.getLogger().isDebugEnabled()) {
-                apiExecutor.getLogger().debug(body);
-                apiExecutor.getLogger().debug("answer=%s", answer);
+            if (logger.isDebugEnabled()) {
+                logger.debug(body);
+                logger.debug("answer=%s", answer);
             }
         } else {
-            apiExecutor.getLogger().info("Nothing to do. No orders found");
+            logger.info("Nothing to do. No orders found");
         }
     }
 
@@ -85,12 +88,12 @@ public class OrderStateWebserviceExecuter {
                 }
 
             }
-            if (apiExecutor.getLogger().isDebugEnabled()) {
-                apiExecutor.getLogger().debug(body);
-                apiExecutor.getLogger().debug("answer=%s", answer);
+            if (logger.isDebugEnabled()) {
+                logger.debug(body);
+                logger.debug("answer=%s", answer);
             }
         } else {
-            apiExecutor.getLogger().info("Nothing to do. No orders found");
+            logger.info("Nothing to do. No orders found");
         }
 
     }
@@ -110,12 +113,12 @@ public class OrderStateWebserviceExecuter {
                 }
 
             }
-            if (apiExecutor.getLogger().isDebugEnabled()) {
-                apiExecutor.getLogger().debug(body);
-                apiExecutor.getLogger().debug("answer=%s", answer);
+            if (logger.isDebugEnabled()) {
+                logger.debug(body);
+                logger.debug("answer=%s", answer);
             }
         } else {
-            apiExecutor.getLogger().info("Nothing to do. No orders found");
+            logger.info("Nothing to do. No orders found");
         }
 
     }
@@ -135,12 +138,12 @@ public class OrderStateWebserviceExecuter {
                 }
 
             }
-            if (apiExecutor.getLogger().isDebugEnabled()) {
-                apiExecutor.getLogger().debug(body);
-                apiExecutor.getLogger().debug("answer=" + answer);
+            if (logger.isDebugEnabled()) {
+                logger.debug(body);
+                logger.debug("answer=" + answer);
             }
         } else {
-            apiExecutor.getLogger().info("Nothing to do. No orders found");
+            logger.info("Nothing to do. No orders found");
         }
 
     }

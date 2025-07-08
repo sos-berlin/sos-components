@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.runreports.classes;
 import java.util.List;
 import java.util.Set;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.Reports;
@@ -14,9 +15,11 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class RunReportsWebserviceExecuter {
 
+    private final ISOSLogger logger;
     private final ApiExecutor apiExecutor;
 
-    public RunReportsWebserviceExecuter(ApiExecutor apiExecutor) {
+    public RunReportsWebserviceExecuter(ISOSLogger logger, ApiExecutor apiExecutor) {
+        this.logger = logger;
         this.apiExecutor = apiExecutor;
     }
 
@@ -36,8 +39,8 @@ public class RunReportsWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug("answer=%s", answer);
         }
     }
 
@@ -57,8 +60,8 @@ public class RunReportsWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug("answer=%s", answer);
         }
 
         Reports reports = new Reports();

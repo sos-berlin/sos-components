@@ -36,7 +36,7 @@ public class SetJobResource {
             requestFilter.setObjectType(ConfigurationType.JOBRESOURCE);
             requestFilter.setControllerId(args.getControllerId());
 
-            JobResourceWebserviceExecuter jobResourceWebserviceExecuter = new JobResourceWebserviceExecuter(apiExecutor);
+            JobResourceWebserviceExecuter jobResourceWebserviceExecuter = new JobResourceWebserviceExecuter(step.getLogger(), apiExecutor);
             jobResourceWebserviceExecuter.handleJobResource(requestFilter, args, accessToken);
 
         } catch (Exception e) {

@@ -5,7 +5,9 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -13,9 +15,14 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedTrustManager;
+import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
 import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.keystore.AliasForcingKeyManager;
+import com.sos.commons.util.keystore.CombinedX509TrustManager;
+import com.sos.commons.util.keystore.KeyStoreFile;
 import com.sos.commons.util.keystore.KeyStoreReader;
 import com.sos.commons.util.keystore.KeyStoreReader.KeyStoreResult;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -73,8 +80,7 @@ public class SslContextFactory {
                     logger.debug("[SslContextFactory][KeyStoreResult]%s", result);
                 }
                 try {
-                    sslContext.init(getKeyManagers(result.getKeyStore(), result.getKeyStorePassword()), getTrustManagers(result.getTrustStore()),
-                            new SecureRandom());
+                    sslContext.init(getKeyManagers(result.getKeyStoreFile()), getTrustManagers(result.getTrustStoreFiles()), new SecureRandom());
                 } catch (Exception e) {
                     throw new Exception("[" + result.toString() + "][KeyManagerFactory.getDefaultAlgorithm()=" + KeyManagerFactory
                             .getDefaultAlgorithm() + "]" + e, e);
@@ -101,10 +107,22 @@ public class SslContextFactory {
                 .equalsIgnoreCase(DEFAULT_PROTOCOL) && !s.equalsIgnoreCase("SSL")).toArray(String[]::new);
     }
 
-    private static KeyManager[] getKeyManagers(final KeyStore keystore, final char[] keyPassword) throws Exception {
-        final KeyManagerFactory f = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        f.init(keystore, keyPassword);
-        return f.getKeyManagers();
+    private static KeyManager[] getKeyManagers(final KeyStoreFile f) throws Exception {
+        final KeyManagerFactory factory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        factory.init(f.getKeyStore(), f.getKeyPasswordChars());
+        KeyManager[] managers = factory.getKeyManagers();
+
+        if (SOSCollection.isEmpty(f.getAliases())) {
+            return managers;
+        }
+
+        for (int i = 0; i < managers.length; i++) {
+            if (managers[i] instanceof X509KeyManager) {
+                managers[i] = new AliasForcingKeyManager((X509KeyManager) managers[i], f.getAliases());
+            }
+        }
+
+        return managers;
     }
 
     private static TrustManager[] getDefaultJVMTrustManagers() throws Exception {
@@ -114,10 +132,21 @@ public class SslContextFactory {
         return factory.getTrustManagers();
     }
 
-    private static TrustManager[] getTrustManagers(final KeyStore truststore) throws NoSuchAlgorithmException, KeyStoreException {
-        final TrustManagerFactory f = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        f.init(truststore);
-        return f.getTrustManagers();
+    private static TrustManager[] getTrustManagers(final List<KeyStoreFile> files) throws NoSuchAlgorithmException, KeyStoreException {
+        List<X509TrustManager> trustManagers = new ArrayList<>();
+        for (KeyStoreFile f : files) {
+            TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            factory.init(f.getKeyStore());
+            for (TrustManager tm : factory.getTrustManagers()) {
+                if (tm instanceof X509TrustManager) {
+                    trustManagers.add((X509TrustManager) tm);
+                }
+            }
+        }
+        if (trustManagers.isEmpty()) {
+            throw new KeyStoreException("No X509TrustManagers could be initialized from the provided trustStore entries.");
+        }
+        return new TrustManager[] { new CombinedX509TrustManager(trustManagers) };
     }
 
     /** Accepts all certificates - not includes disabling hostname verification

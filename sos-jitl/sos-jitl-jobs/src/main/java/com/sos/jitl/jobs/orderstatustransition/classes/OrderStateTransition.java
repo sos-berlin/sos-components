@@ -60,7 +60,7 @@ public class OrderStateTransition {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
 
-            OrderStateWebserviceExecuter orderStateWebserviceExecuter = new OrderStateWebserviceExecuter(apiExecutor);
+            OrderStateWebserviceExecuter orderStateWebserviceExecuter = new OrderStateWebserviceExecuter(step.getLogger(), apiExecutor);
 
             for (String state : args.getStates()) {
                 if (args.getWorkflowSearchPattern() != null && args.getWorkflowSearchPattern().size() > 0) {

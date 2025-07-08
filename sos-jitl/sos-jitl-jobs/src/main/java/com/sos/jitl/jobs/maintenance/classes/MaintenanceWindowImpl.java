@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.maintenance.classes;
 
+import java.time.Duration;
 import java.util.Map;
 
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments;
@@ -35,17 +36,12 @@ public class MaintenanceWindowImpl {
         ApiResponse apiResponse = null;
         try {
             if (args.getState() != null) {
-                apiResponse = apiExecutor.login();
-
-                if (apiExecutor.getClient() != null) {
-                    apiExecutor.getClient().setConnectionTimeout(10000);
-                }
-
+                apiResponse = apiExecutor.login(Duration.ofSeconds(10));
                 if (apiResponse.getStatusCode() == 200) {
                     accessToken = apiResponse.getAccessToken();
                 }
 
-                MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(apiExecutor);
+                MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(step.getLogger(), apiExecutor);
 
                 String controllerId = maintenanceWindowExecuter.getControllerid(accessToken, args.getControllerId());
                 if (controllerId == null || controllerId.isEmpty()) {

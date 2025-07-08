@@ -63,8 +63,8 @@ public class AzureBlobStorageProviderUtils {
                 }
                 throw new IOException(provider.getClient().formatExecutionResultForException(result));
             }
-            return new AzureBlobStorageResource(containerName, blobPath, false, provider.getClient().getFileSize(result.response()),
-                    AzureBlobStorageClient.getLastModifiedInMillis(result.response()));
+            return new AzureBlobStorageResource(containerName, blobPath, false, provider.getClient().getFileSize(result.response()), provider
+                    .getClient().getLastModifiedInMillis(result.response()));
         }
     }
 

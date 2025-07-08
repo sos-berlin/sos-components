@@ -89,7 +89,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             Builder builder = BaseHttpClient.withBuilder();
             builder = builder.withLogger(getLogger());
             builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
-            builder = builder.withHeaders(getArguments().getHttpHeaders().getValue());
+            builder = builder.withDefaultHeaders(getArguments().getHttpHeaders().getValue());
             builder = builder.withAuth(getAuthConfig());
             builder = builder.withProxyConfig(getProxyConfig());
             if (isSecureConnectionEnabled()) {
@@ -448,7 +448,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         if (size < 0) {
             return null;
         }
-        return createProviderFile(uri.toString(), size, BaseHttpClient.getLastModifiedInMillis(response));
+        return createProviderFile(uri.toString(), size, client.getLastModifiedInMillis(response));
     }
 
     /** JS7 new - auth_method - not in the XML schema - currently only NONE,BASIC supported */

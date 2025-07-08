@@ -97,7 +97,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             Builder builder = AzureBlobStorageClient.withBuilder();
             builder = builder.withLogger(getLogger());
             builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
-            builder = builder.withHeaders(getArguments().getHttpHeaders().getValue());
+            builder = builder.withDefaultHeaders(getArguments().getHttpHeaders().getValue());
             builder = builder.withProxyConfig(getProxyConfig());
             builder = builder.withSSL(getArguments().getSsl());
 

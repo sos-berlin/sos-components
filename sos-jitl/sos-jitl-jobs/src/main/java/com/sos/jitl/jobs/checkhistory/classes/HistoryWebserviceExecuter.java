@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.job.TaskHistoryItem;
@@ -12,9 +13,11 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class HistoryWebserviceExecuter {
 
+    private final ISOSLogger logger;
     private final ApiExecutor apiExecutor;
 
-    public HistoryWebserviceExecuter(ApiExecutor apiExecutor) {
+    public HistoryWebserviceExecuter(ISOSLogger logger, ApiExecutor apiExecutor) {
+        this.logger = logger;
         this.apiExecutor = apiExecutor;
     }
 
@@ -33,9 +36,9 @@ public class HistoryWebserviceExecuter {
             }
 
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
         OrderHistory orderHistory = new OrderHistory();
         orderHistory = JobHelper.OBJECT_MAPPER.readValue(answer, OrderHistory.class);
@@ -65,9 +68,9 @@ public class HistoryWebserviceExecuter {
                 throw new Exception(apiResponse.getResponseBody());
             }
         }
-        if (apiExecutor.getLogger().isDebugEnabled()) {
-            apiExecutor.getLogger().debug(body);
-            apiExecutor.getLogger().debug("answer=%s", answer);
+        if (logger.isDebugEnabled()) {
+            logger.debug(body);
+            logger.debug("answer=%s", answer);
         }
         TaskHistory taskHistory = new TaskHistory();
         taskHistory = JobHelper.OBJECT_MAPPER.readValue(answer, TaskHistory.class);

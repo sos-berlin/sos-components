@@ -37,7 +37,7 @@ public class RunReportImpl {
         try {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
-            RunReportsWebserviceExecuter runReportsWebserviceExecuter = new RunReportsWebserviceExecuter(apiExecutor);
+            RunReportsWebserviceExecuter runReportsWebserviceExecuter = new RunReportsWebserviceExecuter(step.getLogger(), apiExecutor);
             Set<String> reportPaths = new HashSet<String>();
             if (isDebugEnabled && args.getReportPaths() != null && args.getReportPaths().getValue() != null) {
                 for (String report : args.getReportPaths().getValue()) {
