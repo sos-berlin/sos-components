@@ -70,14 +70,15 @@ public class ApiExecutorTest {
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put("X-Outfile", Paths.get(System.getProperty("user.dir")).resolve("target/exported").resolve("export_calendars.zip").toString()
                 .replace('\\', '/'));
-        ApiExecutor ex = new ApiExecutor(null, headers);
-        String accessToken = ex.login().getAccessToken();
-        // String requestBody = "{\"useShortPath\": false, \"exportFile\": {\"filename\": \"export_calendars.zip\", \"format\": \"ZIP\"}, \"shallowCopy\":
-        // {\"objectTypes\": [\"WORKINGDAYSCALENDAR\",\"NONWORKINGDAYSCALENDAR\"],\"folders\": [\"/Calendars\"],\"recursive\": true, \"onlyValidObjects\":
-        // false, \"withoutDrafts\": false, \"withoutDeployed\": false, \"withoutReleased\": false}}";
-        // ApiResponse response = ex.post(accessToken, "/inventory/export/folder", requestBody);
-        LOGGER.info("File created!");
-        ex.logout(accessToken);
+        try (ApiExecutor ex = new ApiExecutor(null, headers)) {
+            String accessToken = ex.login().getAccessToken();
+            // String requestBody = "{\"useShortPath\": false, \"exportFile\": {\"filename\": \"export_calendars.zip\", \"format\": \"ZIP\"}, \"shallowCopy\":
+            // {\"objectTypes\": [\"WORKINGDAYSCALENDAR\",\"NONWORKINGDAYSCALENDAR\"],\"folders\": [\"/Calendars\"],\"recursive\": true, \"onlyValidObjects\":
+            // false, \"withoutDrafts\": false, \"withoutDeployed\": false, \"withoutReleased\": false}}";
+            // ApiResponse response = ex.post(accessToken, "/inventory/export/folder", requestBody);
+            LOGGER.info("File created!");
+            ex.logout(accessToken);
+        }
     }
 
     @Ignore
@@ -85,12 +86,13 @@ public class ApiExecutorTest {
     public void deprecatedTestApiExecutorOrderLog() throws Exception {
         setAgentProperties();
 
-        ApiExecutor ex = new ApiExecutor(null);
-        String accessToken = ex.login().getAccessToken();
-        String requestBody = "{\"controllerId\":\"controller_270\",\"historyId\":264}";
-        ApiResponse response = ex.post(accessToken, "/order/log", requestBody);
-        LOGGER.info("Order log:\n" + response.getResponseBody());
-        ex.logout(accessToken);
+        try (ApiExecutor ex = new ApiExecutor(null)) {
+            String accessToken = ex.login().getAccessToken();
+            String requestBody = "{\"controllerId\":\"controller_270\",\"historyId\":264}";
+            ApiResponse response = ex.post(accessToken, "/order/log", requestBody);
+            LOGGER.info("Order log:\n" + response.getResponseBody());
+            ex.logout(accessToken);
+        }
     }
 
     private static void setAgentProperties() {

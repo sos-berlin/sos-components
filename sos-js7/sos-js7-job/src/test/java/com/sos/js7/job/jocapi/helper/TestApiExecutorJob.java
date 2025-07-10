@@ -9,18 +9,19 @@ public class TestApiExecutorJob extends Job<TestApiExecutorJobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<TestApiExecutorJobArguments> step) throws Exception {
-        ApiExecutor executor = new ApiExecutor(step);
-        ApiResponse apiResponse = null;
-        try {
-            apiResponse = executor.login();
-            apiResponse = executor.post(apiResponse.getAccessToken(), step.getDeclaredArguments().getApiURL().getValue(), step.getDeclaredArguments()
-                    .getBody().getValue());
+        try (ApiExecutor executor = new ApiExecutor(step)) {
+            ApiResponse apiResponse = null;
+            try {
+                apiResponse = executor.login();
+                apiResponse = executor.post(apiResponse.getAccessToken(), step.getDeclaredArguments().getApiURL().getValue(), step
+                        .getDeclaredArguments().getBody().getValue());
 
-            step.getLogger().info("[TestApiExecutorJob][post][responseBody]%s", apiResponse.getResponseBody());
+                step.getLogger().info("[TestApiExecutorJob][post][responseBody]%s", apiResponse.getResponseBody());
 
-        } finally {
-            if (apiResponse != null) {
-                executor.logout(apiResponse.getAccessToken());
+            } finally {
+                if (apiResponse != null) {
+                    executor.logout(apiResponse.getAccessToken());
+                }
             }
         }
     }

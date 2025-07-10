@@ -65,7 +65,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 
-public class ApiExecutor {
+public class ApiExecutor implements AutoCloseable {
 
     private static final String X_ID_TOKEN = "X-ID-TOKEN";
 
@@ -282,30 +282,10 @@ public class ApiExecutor {
         }
     }
 
+    @Override
     public void close() {
         SOSClassUtil.closeQuietly(client);
         client = null;
-    }
-
-    private List<String> getUris() throws SOSMissingDataException {
-        List<String> uris = new ArrayList<String>();
-        String apiServers = getDecrytedValueOfArgument(JOB_ARGUMENT_APISERVER_URL);
-        if (apiServers != null) {
-            String[] apiServersSplitted = apiServers.split(JOB_ARGUMENT_DELIMITER_REGEX);
-            uris = Arrays.asList(apiServersSplitted).stream().peek(String::trim).toList();
-        } else {
-            if (config == null) {
-                readConfig();
-            }
-            uris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
-        }
-        // Collections.sort(uris);
-        return uris;
-
-    }
-
-    public List<String> getJocUris() {
-        return jocUris;
     }
 
     public Map<String, String> getResponseHeaders() {
@@ -315,14 +295,14 @@ public class ApiExecutor {
     private SslArguments getSslArguments() throws KeyManagementException, SOSMissingDataException, NoSuchAlgorithmException, FileNotFoundException {
         SslArguments args = new SslArguments();
 
-        // TrustStore(s)
+        // TrustStore(s): 0->n
         List<KeyStoreFile> trustStoreFiles = getTrustStoreFilesFromOrder();
         if (trustStoreFiles == null) {
             trustStoreFiles = getTrustStoreFilesFromConfig(config);
         }
         args.getTrustedSsl().setTrustStoreFiles(trustStoreFiles);
 
-        // KeyStore(s)
+        // KeyStore: 0->1
         KeyStoreFile keyStoreFile = getKeyStoreFileFromOrder();
         if (keyStoreFile == null) {
             keyStoreFile = getKeyStoreFileFromConfig(config);
@@ -495,6 +475,23 @@ public class ApiExecutor {
         return new HttpClientAuthConfig(username, password);
     }
 
+    private List<String> getUris() throws SOSMissingDataException {
+        List<String> uris = new ArrayList<String>();
+        String apiServers = getDecrytedValueOfArgument(JOB_ARGUMENT_APISERVER_URL);
+        if (apiServers != null) {
+            String[] apiServersSplitted = apiServers.split(JOB_ARGUMENT_DELIMITER_REGEX);
+            uris = Arrays.asList(apiServersSplitted).stream().peek(String::trim).toList();
+        } else {
+            if (config == null) {
+                readConfig();
+            }
+            uris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
+        }
+        // Collections.sort(uris);
+        return uris;
+
+    }
+
     private String readPostResponseBody(HttpExecutionResult<InputStream> result) throws Exception {
         String responseBody = null;
         String contentEncoding = client.getResponseHeader(result.response(), HttpUtils.HEADER_CONTENT_ENCODING).orElse("identity").toLowerCase(
@@ -554,7 +551,7 @@ public class ApiExecutor {
         }
     }
 
-    public static String decodeDisposition(String disposition) throws UnsupportedEncodingException {
+    private static String decodeDisposition(String disposition) throws UnsupportedEncodingException {
         String dispositionFilenameValue = disposition.replaceFirst("(?i)^.*filename(?:=\"?([^\"]+)\"?|\\*=([^;,]+)).*$", "$1$2");
         return decodeFromUriFormat(dispositionFilenameValue);
     }
@@ -636,7 +633,7 @@ public class ApiExecutor {
         return in;
     }
 
-    public Config readConfig() throws SOSMissingDataException {
+    private Config readConfig() throws SOSMissingDataException {
         boolean isDebugEnabled = step.getLogger().isDebugEnabled();
 
         String agentConfDirPath = System.getenv(AGENT_CONF_DIR_ENV_PARAM);
