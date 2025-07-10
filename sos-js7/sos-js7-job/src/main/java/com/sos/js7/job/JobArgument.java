@@ -46,7 +46,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         STRING, BOOLEAN, INTEGER, LONG, BIGDECIMAL, ENUM, URI, CHARSET, PATH, FILE, OBJECT, LIST_VALUE_SINGLTON_MAP
     }
 
-    // TODO: currently only ALL in use
+    /** TODO: currently only ALL in use (ALL, ORDER_PREPARATION) */
     public enum Scope {
         ALL, ORDER_PREPARATION;
     }
@@ -59,38 +59,56 @@ public class JobArgument<T> extends SOSArgument<T> {
     private ArgumentFlatType argumentFlatType;
     private Scope scope;
 
+    /** Constructs a JobArgument with the specified name.<br/>
+     * Sets required to false, default value to null, display mode to UNMASKED, no name aliases */
     public JobArgument(String name) {
         this(name, false, null, DisplayMode.UNMASKED, null, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name and required flag.<br/>
+     * Sets default value to null, display mode to UNMASKED, no name aliases */
     public JobArgument(String name, boolean required) {
         this(name, required, null, DisplayMode.UNMASKED, null, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name, required flag, and name aliases.<br/>
+     * Sets default value to null, display mode to UNMASKED. */
     public JobArgument(String name, boolean required, List<String> nameAliases) {
         this(name, required, null, DisplayMode.UNMASKED, nameAliases, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name, required flag, and default value.<br/>
+     * Sets display mode to UNMASKED, no name aliases. */
     public JobArgument(String name, boolean required, T defaultValue) {
         this(name, required, defaultValue, DisplayMode.UNMASKED, null, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name, required flag, default value, and name aliases.<br/>
+     * Sets display mode to UNMASKED. */
     public JobArgument(String name, boolean required, T defaultValue, List<String> nameAliases) {
         this(name, required, defaultValue, DisplayMode.UNMASKED, nameAliases, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name, required flag, and display mode.<br/>
+     * Sets default value to null, no name aliases. */
     public JobArgument(String name, boolean required, DisplayMode displayMode) {
         this(name, required, null, displayMode, null, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name, required flag, display mode, and name aliases.<br/>
+     * Sets default value to null. */
     public JobArgument(String name, boolean required, DisplayMode displayMode, List<String> nameAliases) {
         this(name, required, null, displayMode, nameAliases, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name, required flag, default value, and display mode.<br/>
+     * Sets no name aliases. */
     public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode) {
         this(name, required, defaultValue, displayMode, null, Scope.ALL);
     }
 
+    /** Constructs a JobArgument with the specified name, required flag, default value, display mode, and name aliases.<br/>
+     */
     public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases) {
         this(name, required, defaultValue, displayMode, nameAliases, Scope.ALL);
     }
@@ -103,6 +121,196 @@ public class JobArgument<T> extends SOSArgument<T> {
         this.nameAliases = nameAliases;
     }
 
+    /** Checks if the argument is a single (non-collection) object.
+     *
+     * @return true if the argument type is FLAT (i.e., not a collection), false otherwise. */
+    public boolean isFlat() {
+        return ArgumentType.FLAT.equals(argumentType);
+    }
+
+    /** Checks if the argument is a map type.
+     *
+     * @return true if the argument type is MAP, false otherwise. */
+    public boolean isMap() {
+        // return clazzType != null && SOSReflection.isMap(clazzType);
+        return ArgumentType.MAP.equals(argumentType);
+    }
+
+    /** Checks if the argument is a list type.
+     *
+     * @return true if the argument type is LIST, false otherwise. */
+    public boolean isList() {
+        // return clazzType != null && SOSReflection.isList(clazzType);
+        return ArgumentType.LIST.equals(argumentType);
+    }
+
+    /** Checks if the argument is a set type.
+     *
+     * @return true if the argument type is SET, false otherwise. */
+    public boolean isSet() {
+        // return clazzType != null && SOSReflection.isSet(clazzType);
+        return ArgumentType.SET.equals(argumentType);
+    }
+
+    /** Checks if the argument is a collection type (either LIST or SET).
+     *
+     * @return true if the argument type is LIST or SET, false otherwise. */
+    public boolean isCollection() {
+        // return clazzType != null && SOSReflection.isCollection(clazzType);
+        return isList() || isSet();
+    }
+
+    /** Converts the given string into the appropriate value type and assigns it to this argument.
+     * <p>
+     * For flat (non-collection) arguments, this method uses {@code convertFlatValue()} to transform<br/>
+     * the string (e.g., a file path string into a Path object), and then sets it as the value.
+     * 
+     * @param val the string representation of the value to apply
+     * @throws Exception if the conversion fails */
+    @SuppressWarnings("unchecked")
+    public void applyValue(String val) throws Exception {
+        super.setValue((T) convertFlatValue(this, val));
+    }
+
+    /** Creates a new {@link JobArgumentValueIterator} for iterating over the value of this argument.
+     * <p>
+     * This is especially useful when the argument's value type is unknown at runtime<br/>
+     * (e.g., it could be a List, Map, or a flat single value).<br/>
+     * The iterator abstracts the logic for handling different value types uniformly.<br/>
+     * See example: {@link com.sos.js7.job.resolver.StandardBase64Resolver}
+     *
+     * @return a new {@code JobArgumentValueIterator} instance */
+    public JobArgumentValueIterator newValueIterator() {
+        return newValueIterator(null);
+    }
+
+    /** Creates a new {@link JobArgumentValueIterator} for iterating over the value of this argument, optionally filtering by a specified prefix.
+     * <p>
+     * This is especially useful when the argument's value type is unknown at runtime<br/>
+     * (e.g., it could be a List, Map, or a flat single value).<br/>
+     * The iterator abstracts the logic for handling different value types uniformly.<br/>
+     * See example: {@link com.sos.js7.job.resolver.StandardBase64Resolver}
+     *
+     * @return a new {@code JobArgumentValueIterator} instance */
+    public JobArgumentValueIterator newValueIterator(String prefix) {
+        return new JobArgumentValueIterator(this, prefix);
+    }
+
+    /** Returns the {@link ValueSource} that indicates where the value of this argument originates from.
+     * <p>
+     * The value source can represent various contexts such as job arguments, order variables,<br/>
+     * job resources, or dynamically computed outcomes.
+     *
+     * @return the value source associated with this argument */
+    public ValueSource getValueSource() {
+        return valueSource;
+    }
+
+    /** Returns the declaration type of this argument.
+     * <p>
+     * The type indicates whether the argument was explicitly declared (e.g., in job configuration)<br/>
+     * or implicitly created during runtime (e.g., passed dynamically without declaration).
+     *
+     * @return the {@link Type} of the argument (DECLARED or UNDECLARED) */
+    public Type getType() {
+        return type;
+    }
+
+    /** Returns the structural type of this argument.
+     * <p>
+     * An argument can be a single value ({@code FLAT}) or a collection such as a {@code LIST}, {@code SET}, or {@code MAP}.
+     *
+     * @return the {@link ArgumentType} of this argument */
+    public ArgumentType getArgumentType() {
+        return argumentType;
+    }
+
+    /** Returns the specific flat data type of this argument.
+     * <p>
+     * This only applies when the argument is of type {@link ArgumentType#FLAT},<br/>
+     * and it indicates the concrete data type the flat value should be interpreted as (e.g., STRING, BOOLEAN, PATH, etc.).
+     *
+     * @return the {@link ArgumentFlatType} of this argument */
+    public ArgumentFlatType getArgumentFlatType() {
+        return argumentFlatType;
+    }
+
+    /** Records the iterator current value that was not accepted because it could not be converted to the expected type.
+     * <p>
+     * For example, if the expected type is {@code URI} but the given value is the string {@code "xyz"},<br/>
+     * which cannot be converted to a valid {@code URI}, this method stores the rejected value <br/>
+     * along with the exception explaining the failure.<br/>
+     * See example: {@link com.sos.js7.job.examples.resolver.ExampleAbsolutePathResolver}
+     * 
+     * @param value the value that could not be converted
+     * @param exception the exception thrown during the conversion attempt */
+    public void setNotAcceptedValue(JobArgumentValueIterator iterator, Throwable exception) {
+        setNotAcceptedValue(iterator.current(), exception);
+    }
+
+    /** Records a value that was not accepted because it could not be converted to the expected type.
+     * <p>
+     * For example, if the expected type is {@code URI} but the given value is the string {@code "xyz"},<br/>
+     * which cannot be converted to a valid {@code URI}, this method stores the rejected value <br/>
+     * along with the exception explaining the failure.
+     *
+     * @param value the value that could not be converted
+     * @param exception the exception thrown during the conversion attempt */
+    public void setNotAcceptedValue(Object value, Throwable exception) {
+        if (notAcceptedValue == null) {
+            notAcceptedValue = new NotAcceptedValue(value, exception);
+        } else {
+            notAcceptedValue.getValues().add(value);
+        }
+    }
+
+    /** TODO: currently only ALL in use. See {@link Scope} */
+    @SuppressWarnings("unused")
+    private Scope getScope() {
+        return scope;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(getName());
+        sb.append("[");
+        sb.append("value=").append(getDisplayValue());
+        if (valueSource != null && valueSource.getType() != null) {
+            sb.append(" source=").append(valueSource.getType().name());
+            if (valueSource.getSource() != null) {
+                sb.append("(").append(valueSource.getSource()).append(")");
+            }
+        }
+        if (isRequired()) {
+            sb.append(" required=true");
+        }
+        sb.append(" modified=").append(isDirty());
+        if (argumentType != null) {
+            sb.append(" argumentType=").append(argumentType);
+        }
+        if (argumentFlatType != null) {
+            sb.append(" argumentFlatType=").append(argumentFlatType);
+        }
+        if (getClazzType() != null) {
+            sb.append(" ").append(getClazzType().getTypeName());
+        }
+        // if (scope != null) {
+        // sb.append(" scope=").append(scope.name());
+        // }
+        if (getPayload() != null) {
+            sb.append(" class=").append(SOSArgumentHelper.getClassName(getPayload().toString()));
+        }
+        if (notAcceptedValue != null) {
+            sb.append("(value=").append(notAcceptedValue.getDisplayValue()).append(" ignored");
+            if (notAcceptedValue.exception != null) {
+                sb.append("(").append(notAcceptedValue.exception.toString()).append(")");
+            }
+            sb.append(")");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
     protected static <T> JobArgument<T> toUndeclaredExecuteJobArgument(String name, Object value) {
         JobArgument<T> arg = new JobArgument<>(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
         arg.applyValue(value);
@@ -113,11 +321,8 @@ public class JobArgument<T> extends SOSArgument<T> {
         return toUndeclaredExecuteJobArgument(this);
     }
 
-    private JobArgument<T> toUndeclaredExecuteJobArgument(JobArgument<T> arg) {
-        arg.type = Type.UNDECLARED;
-        arg.valueSource = new ValueSource(ValueSourceType.EXECUTE_JOB);
-        arg.scope = Scope.ALL;
-        return arg;
+    protected List<String> getNameAliases() {
+        return nameAliases;
     }
 
     /* internal usage - undeclared Arguments */
@@ -178,49 +383,12 @@ public class JobArgument<T> extends SOSArgument<T> {
         return getValue().toString().startsWith(prefix);
     }
 
-    public boolean isFlat() {
-        return ArgumentType.FLAT.equals(argumentType);
-    }
-
-    public boolean isMap() {
-        // return clazzType != null && SOSReflection.isMap(clazzType);
-        return ArgumentType.MAP.equals(argumentType);
-    }
-
-    public boolean isList() {
-        // return clazzType != null && SOSReflection.isList(clazzType);
-        return ArgumentType.LIST.equals(argumentType);
-    }
-
-    public boolean isSet() {
-        // return clazzType != null && SOSReflection.isSet(clazzType);
-        return ArgumentType.SET.equals(argumentType);
-    }
-
-    public boolean isCollection() {
-        // return clazzType != null && SOSReflection.isCollection(clazzType);
-        return isList() || isSet();
-    }
-
-    @SuppressWarnings("unchecked")
-    public void applyValue(String val) throws Exception {
-        super.setValue((T) convertFlatValue(this, val));
-    }
-
     protected boolean isScopeAll() {
         return scope != null && scope.equals(Scope.ALL);
     }
 
     protected boolean isScopeOrderPreparation() {
         return scope != null && scope.equals(Scope.ORDER_PREPARATION);
-    }
-
-    public JobArgumentValueIterator newValueIterator() {
-        return newValueIterator(null);
-    }
-
-    public JobArgumentValueIterator newValueIterator(String prefix) {
-        return new JobArgumentValueIterator(this, prefix);
     }
 
     protected void setArgumentType() throws Exception {
@@ -234,6 +402,67 @@ public class JobArgument<T> extends SOSArgument<T> {
         if (argumentFlatType == null) {
             argumentFlatType = ArgumentFlatType.OBJECT;
         }
+    }
+
+    protected NotAcceptedValue getNotAcceptedValue() {
+        return notAcceptedValue;
+    }
+
+    protected void resetNotAcceptedValue() {
+        notAcceptedValue = null;
+    }
+
+    protected static <V> Object convertFlatValue(JobArgument<V> arg, Object value) throws Exception {
+        if (value == null) {
+            return (V) null;
+        }
+        switch (arg.getArgumentFlatType()) {
+        case STRING:
+            return value.toString();
+        case BOOLEAN:
+            return Boolean.valueOf(value.toString());
+        case INTEGER:
+            return Integer.valueOf(value.toString());
+        case LONG:
+            return Long.valueOf(value.toString());
+        case BIGDECIMAL:
+            return new BigDecimal(value.toString());
+        case PATH:
+            return Paths.get(value.toString());
+        case FILE:
+            return new File(value.toString());
+        case URI:
+            return URI.create(value.toString());
+        case CHARSET:
+            return Charset.forName(value.toString());
+        case ENUM:
+            try {
+                java.lang.reflect.Type t = arg.isFlat() ? arg.getClazzType() : arg.getSubType(arg.getClazzType(), 0);
+                Object v = SOSReflection.enumIgnoreCaseValueOf(t.getTypeName(), value.toString());
+                if (v == null) {
+                    arg.setNotAcceptedValue(value, null);
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return arg.getDefaultValue();
+                } else {
+                    return v;
+                }
+            } catch (ClassNotFoundException e) {
+                arg.setNotAcceptedValue(value, e);
+                arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                return arg.getDefaultValue();
+            }
+        case LIST_VALUE_SINGLTON_MAP:
+        case OBJECT:
+            break;
+        }
+        return value;
+    }
+
+    private JobArgument<T> toUndeclaredExecuteJobArgument(JobArgument<T> arg) {
+        arg.type = Type.UNDECLARED;
+        arg.valueSource = new ValueSource(ValueSourceType.EXECUTE_JOB);
+        arg.scope = Scope.ALL;
+        return arg;
     }
 
     private void setArgumentType(java.lang.reflect.Type clazzType) throws Exception {
@@ -284,52 +513,6 @@ public class JobArgument<T> extends SOSArgument<T> {
         }
     }
 
-    protected static <V> Object convertFlatValue(JobArgument<V> arg, Object value) throws Exception {
-        if (value == null) {
-            return (V) null;
-        }
-        switch (arg.getArgumentFlatType()) {
-        case STRING:
-            return value.toString();
-        case BOOLEAN:
-            return Boolean.valueOf(value.toString());
-        case INTEGER:
-            return Integer.valueOf(value.toString());
-        case LONG:
-            return Long.valueOf(value.toString());
-        case BIGDECIMAL:
-            return new BigDecimal(value.toString());
-        case PATH:
-            return Paths.get(value.toString());
-        case FILE:
-            return new File(value.toString());
-        case URI:
-            return URI.create(value.toString());
-        case CHARSET:
-            return Charset.forName(value.toString());
-        case ENUM:
-            try {
-                java.lang.reflect.Type t = arg.isFlat() ? arg.getClazzType() : arg.getSubType(arg.getClazzType(), 0);
-                Object v = SOSReflection.enumIgnoreCaseValueOf(t.getTypeName(), value.toString());
-                if (v == null) {
-                    arg.setNotAcceptedValue(value, null);
-                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
-                    return arg.getDefaultValue();
-                } else {
-                    return v;
-                }
-            } catch (ClassNotFoundException e) {
-                arg.setNotAcceptedValue(value, e);
-                arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
-                return arg.getDefaultValue();
-            }
-        case LIST_VALUE_SINGLTON_MAP:
-        case OBJECT:
-            break;
-        }
-        return value;
-    }
-
     private static java.lang.reflect.Type getArgumentFieldType(Field field) {
         if (field == null) {
             return null;
@@ -354,91 +537,6 @@ public class JobArgument<T> extends SOSArgument<T> {
         } else {
             return Object.class;
         }
-    }
-
-    public ValueSource getValueSource() {
-        return valueSource;
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public Scope getScope() {
-        return scope;
-    }
-
-    protected List<String> getNameAliases() {
-        return nameAliases;
-    }
-
-    public ArgumentType getArgumentType() {
-        return argumentType;
-    }
-
-    public ArgumentFlatType getArgumentFlatType() {
-        return argumentFlatType;
-    }
-
-    public void setNotAcceptedValue(JobArgumentValueIterator iterator, Throwable exception) {
-        setNotAcceptedValue(iterator.current(), exception);
-    }
-
-    public void setNotAcceptedValue(Object value, Throwable exception) {
-        if (notAcceptedValue == null) {
-            notAcceptedValue = new NotAcceptedValue(value, exception);
-        } else {
-            notAcceptedValue.getValues().add(value);
-        }
-    }
-
-    protected NotAcceptedValue getNotAcceptedValue() {
-        return notAcceptedValue;
-    }
-
-    protected void resetNotAcceptedValue() {
-        notAcceptedValue = null;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(getName());
-        sb.append("[");
-        sb.append("value=").append(getDisplayValue());
-        if (valueSource != null && valueSource.getType() != null) {
-            sb.append(" source=").append(valueSource.getType().name());
-            if (valueSource.getSource() != null) {
-                sb.append("(").append(valueSource.getSource()).append(")");
-            }
-        }
-        if (isRequired()) {
-            sb.append(" required=true");
-        }
-        sb.append(" modified=").append(isDirty());
-        if (argumentType != null) {
-            sb.append(" argumentType=").append(argumentType);
-        }
-        if (argumentFlatType != null) {
-            sb.append(" argumentFlatType=").append(argumentFlatType);
-        }
-        if (getClazzType() != null) {
-            sb.append(" ").append(getClazzType().getTypeName());
-        }
-        // if (scope != null) {
-        // sb.append(" scope=").append(scope.name());
-        // }
-        if (getPayload() != null) {
-            sb.append(" class=").append(SOSArgumentHelper.getClassName(getPayload().toString()));
-        }
-        if (notAcceptedValue != null) {
-            sb.append("(value=").append(notAcceptedValue.getDisplayValue()).append(" ignored");
-            if (notAcceptedValue.exception != null) {
-                sb.append("(").append(notAcceptedValue.exception.toString()).append(")");
-            }
-            sb.append(")");
-        }
-        sb.append("]");
-        return sb.toString();
     }
 
     protected class NotAcceptedValue {
