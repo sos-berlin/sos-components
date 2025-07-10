@@ -1,12 +1,19 @@
 package com.sos.js7.job.jocapi;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -15,13 +22,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.commons.encryption.EncryptionUtils;
@@ -225,8 +237,10 @@ public class ApiExecutor {
                     Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE,
                             HttpUtils.HEADER_CONTENT_TYPE_JSON);
 
-                    HttpExecutionResult<String> result = client.executePOST(jocUri.resolve(apiUrl), client.mergeWithDefaultHeaders(requestHeaders),
-                            body);
+                    HttpExecutionResult<InputStream> result = client.executePOST(jocUri.resolve(apiUrl), client.mergeWithDefaultHeaders(
+                            requestHeaders), body, HttpResponse.BodyHandlers.ofInputStream());
+
+                    String responseBody = readPostResponseBody(result);
                     // result.formatWithResponseBody(true);
                     if (step.getLogger().isDebugEnabled()) {
                         step.getLogger().debug("[post]" + BaseHttpClient.formatExecutionResult(result));
@@ -234,12 +248,11 @@ public class ApiExecutor {
                     int code = result.response().statusCode();
                     setResponseHeaders(result.response());
 
-                    String responseBody = result.response().body();
-                    if (responseBody.startsWith("outfile:") && step != null && step.getOutcome() != null) {
+                    if (responseBody.startsWith("outfile:")) {
                         step.getLogger().debug("set outcome variable: js7ApiExecutorOutfile=" + responseBody.substring("outfile:".length()));
                         step.getOutcome().putVariable("js7ApiExecutorOutfile", responseBody.substring("outfile:".length()));
                     }
-                    return new ApiResponse(code, HttpUtils.getReasonPhrase(code), result.response().body(), token, null);
+                    return new ApiResponse(code, HttpUtils.getReasonPhrase(code), responseBody, token, null);
                 } catch (Exception e) {
                     return new ApiResponse(-1, e.getClass().getSimpleName(), (String) null, token, e);
                 }
@@ -480,6 +493,83 @@ public class ApiExecutor {
         }
         // BASIC
         return new HttpClientAuthConfig(username, password);
+    }
+
+    private String readPostResponseBody(HttpExecutionResult<InputStream> result) throws Exception {
+        String responseBody = null;
+        String contentEncoding = client.getResponseHeader(result.response(), HttpUtils.HEADER_CONTENT_ENCODING).orElse("identity").toLowerCase(
+                Locale.ROOT);
+        Path responseBodyFile = getResponseBodyFile(result);
+        try (InputStream in = decodeInputStream(result.response().body(), contentEncoding); OutputStream out = responseBodyFile == null
+                ? new ByteArrayOutputStream() : Files.newOutputStream(responseBodyFile, StandardOpenOption.CREATE,
+                        StandardOpenOption.TRUNCATE_EXISTING);) {
+            byte[] buffer = new byte[4_096];
+            int length;
+            while ((length = in.read(buffer)) > 0) {
+                out.write(buffer, 0, length);
+            }
+            out.flush();
+
+            if (responseBodyFile == null) {
+                responseBody = ((ByteArrayOutputStream) out).toString(client.extractCharsetFromResponseContentType(result.response()));
+            } else {
+                responseBody = "outfile:" + responseBodyFile.toString();
+            }
+        }
+        return responseBody;
+    }
+
+    private Path getResponseBodyFile(HttpExecutionResult<InputStream> result) throws Exception {
+        String contentDisposition = client.getResponseHeader(result.response(), HttpUtils.HEADER_CONTENT_DISPOSITION).orElse(null);
+        if (contentDisposition == null || !contentDisposition.contains("filename")) {
+            return null;
+        }
+
+        Optional<String> targetPath = client.getRequestHeader(result.request(), "X-Export-Directory");
+        if (!targetPath.isPresent()) {
+            targetPath = client.getRequestHeader(result.request(), "X-Export-Directory".toLowerCase());
+        }
+        Path target = Paths.get(System.getProperty("user.dir"));
+        if (targetPath.isPresent()) {
+            target = target.resolve(targetPath.get());
+        }
+        Files.createDirectories(target);
+        String filename = decodeDisposition(contentDisposition);
+        return target.resolve(filename);
+    }
+
+    // Supports gzip, deflate, identity
+    private static InputStream decodeInputStream(InputStream in, String encoding) throws IOException {
+        switch (encoding) {
+        case "gzip":
+            return new GZIPInputStream(in);
+        case "deflate":
+            return new InflaterInputStream(in);
+        case "identity":
+        case "":
+        default:
+            return in;
+        // default: TODO check if better to throw
+        // throw new UnsupportedEncodingException("Unsupported Content-Encoding: " + encoding);
+        }
+    }
+
+    public static String decodeDisposition(String disposition) throws UnsupportedEncodingException {
+        String dispositionFilenameValue = disposition.replaceFirst("(?i)^.*filename(?:=\"?([^\"]+)\"?|\\*=([^;,]+)).*$", "$1$2");
+        return decodeFromUriFormat(dispositionFilenameValue);
+    }
+
+    private static String decodeFromUriFormat(String parameter) throws UnsupportedEncodingException {
+        final Pattern filenamePattern = Pattern.compile("(?<charset>[^']+)'(?<lang>[a-z]{2,8}(-[a-z0-9-]+)?)?'(?<filename>.+)",
+                Pattern.CASE_INSENSITIVE);
+        final Matcher matcher = filenamePattern.matcher(parameter);
+        if (matcher.matches()) {
+            final String filename = matcher.group("filename");
+            final String charset = matcher.group("charset");
+            return URLDecoder.decode(filename.replaceAll("%25", "%"), charset);
+        } else {
+            return parameter;
+        }
     }
 
     private String getDecrytedValueOfArgument(String key) {
@@ -736,7 +826,7 @@ public class ApiExecutor {
         if (response == null) {
             return;
         }
-        responseHeaders = client.toSingleValueResponseHeaders(response);
+        responseHeaders = client.toJoinedValueResponseHeaders(response);
     }
 
 }

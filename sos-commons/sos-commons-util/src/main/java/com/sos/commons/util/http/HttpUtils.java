@@ -19,6 +19,8 @@ import com.sos.commons.util.SOSString;
 public class HttpUtils {
 
     public static final String HEADER_AUTHORIZATION = "Authorization";
+    public static final String HEADER_CONTENT_ENCODING = "Content-Encoding";
+    public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_TYPE_BINARY = "application/octet-stream";
     public static final String HEADER_CONTENT_TYPE_JSON = "application/json";

@@ -6,9 +6,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -199,6 +201,12 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     /** Executes a POST request with request body and handles the response via provided handler */
     public <T> HttpExecutionResult<T> executePOST(URI uri, String requestBody, HttpResponse.BodyHandler<T> handler) throws Exception {
         return execute(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.ofString(requestBody)), handler);
+    }
+
+    /** Executes a POST request with request body and handles the response via provided handler */
+    public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, String requestBody, HttpResponse.BodyHandler<T> handler)
+            throws Exception {
+        return execute(createPOSTRequest(uri, headers, HttpRequest.BodyPublishers.ofString(requestBody)), handler);
     }
 
     /** Executes a POST request without request body and returns response as String */
@@ -452,11 +460,36 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return merged;
     }
 
+    public Optional<String> getRequestHeader(HttpRequest request, String headerName) {
+        if (request == null) {
+            Optional.empty();
+        }
+        return request.headers().firstValue(headerName);
+    }
+
     public Optional<String> getResponseHeader(HttpResponse<?> response, String headerName) {
         if (response == null) {
-            return null;
+            return Optional.empty();
         }
         return response.headers().firstValue(headerName);
+    }
+
+    public Charset extractCharsetFromResponseContentType(HttpResponse<?> response) {
+        String contentType = getResponseHeader(response, HttpUtils.HEADER_CONTENT_TYPE).orElse(null);
+        if (contentType != null) {
+            String[] parts = contentType.split(";");
+            for (String part : parts) {
+                part = part.trim();
+                if (part.toLowerCase(Locale.ROOT).startsWith("charset=")) {
+                    String cs = part.substring(8).trim();
+                    try {
+                        return Charset.forName(cs);
+                    } catch (Exception ex) {
+                    }
+                }
+            }
+        }
+        return StandardCharsets.UTF_8;
     }
 
     /** Converts HTTP headers to a Map<String, String>, using only the first value for each header.

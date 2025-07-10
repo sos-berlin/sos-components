@@ -13,8 +13,11 @@ public class TestApiExecutorJob extends Job<TestApiExecutorJobArguments> {
         ApiResponse apiResponse = null;
         try {
             apiResponse = executor.login();
-            executor.post(apiResponse.getAccessToken(), step.getDeclaredArguments().getApiURL().getValue(), step.getDeclaredArguments().getBody()
-                    .getValue());
+            apiResponse = executor.post(apiResponse.getAccessToken(), step.getDeclaredArguments().getApiURL().getValue(), step.getDeclaredArguments()
+                    .getBody().getValue());
+
+            step.getLogger().info("[TestApiExecutorJob][post][responseBody]%s", apiResponse.getResponseBody());
+
         } finally {
             if (apiResponse != null) {
                 executor.logout(apiResponse.getAccessToken());

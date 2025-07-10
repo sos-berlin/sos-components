@@ -44,6 +44,26 @@ public class ApiExecutorTest {
 
     @Ignore
     @Test
+    public void testInventorySearch() throws Exception {
+        setAgentProperties();
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("api_url", "/inventory/search");
+        args.put("body", SOSPath.readFile(Path.of("src/test/resources/jocapi/inventory_search.json")));
+
+        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob());
+        // optional settings
+        h.getStepConfig().setControllerId("js7");
+        h.getStepConfig().setOrderId("test_order");
+        h.getStepConfig().setJobName("test_job");
+
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
+    }
+
+    @Ignore
+    @Test
     public void deprecatedTestApiExecutorExport() throws Exception {
         setAgentProperties();
 
