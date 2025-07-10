@@ -661,6 +661,7 @@ public class ApiExecutor {
         String alias = getDecrytedValueOfArgument(JOB_ARGUMENT_KEYSTORE_ALIAS, "");
 
         KeyStoreFile f = new KeyStoreFile();
+        f.setPath(SOSPath.toAbsolutePath(path));
         if (!Files.exists(f.getPath())) {
             step.getLogger().warn("[order][KeyStore][%s]not found", f.getPath());
             return null;
@@ -684,6 +685,7 @@ public class ApiExecutor {
             if (SOSString.isEmpty(keystorePath)) {
                 return null;
             }
+            f.setPath(SOSPath.toAbsolutePath(keystorePath));
             if (!Files.exists(f.getPath())) {
                 step.getLogger().warn("[config][KeyStore][%s]not found", f.getPath());
                 return null;

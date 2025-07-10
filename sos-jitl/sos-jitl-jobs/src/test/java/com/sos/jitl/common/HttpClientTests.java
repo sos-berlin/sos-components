@@ -3,28 +3,19 @@ package com.sos.jitl.common;
 import static org.junit.Assert.assertNotNull;
 
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
-import com.sos.js7.job.jocapi.ApiExecutor;
-import com.sos.js7.job.jocapi.ApiResponse;
-import com.typesafe.config.Config;
 
 public class HttpClientTests {
 
@@ -138,71 +129,6 @@ public class HttpClientTests {
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
-    }
-
-    @Ignore
-    @Test
-    public void readPrivateConf() throws SOSMissingDataException {
-        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
-        System.setProperty("js7.config-directory", privateConfPath.toString());
-        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
-        ApiExecutor ex = new ApiExecutor(null);
-        Config config = ex.readConfig();
-        List<String> urls = config.getConfig("js7.api-server").getStringList("url");
-        for (String uri : urls) {
-            URI jocUri;
-            try {
-                jocUri = URI.create(uri);
-                System.out.println(jocUri);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        assertNotNull(config);
-    }
-
-    @Ignore
-    @Test
-    public void testApiExecutorLogin() throws Exception {
-        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
-        System.setProperty("js7.config-directory", privateConfPath.toString());
-        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
-        ApiExecutor ex = new ApiExecutor(null);
-        String accessToken = ex.login().getAccessToken();
-        ex.logout(accessToken);
-    }
-
-    @Ignore
-    @Test
-    public void testApiExecutorExport() throws Exception {
-        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
-        System.setProperty("js7.config-directory", privateConfPath.toString());
-        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
-        Map<String, String> headers = new LinkedHashMap<>();
-        headers.put("X-Outfile", Paths.get(System.getProperty("user.dir")).resolve("target/exported").resolve("export_calendars.zip").toString()
-                .replace('\\', '/'));
-        ApiExecutor ex = new ApiExecutor(null, headers);
-        String accessToken = ex.login().getAccessToken();
-        // String requestBody = "{\"useShortPath\": false, \"exportFile\": {\"filename\": \"export_calendars.zip\", \"format\": \"ZIP\"}, \"shallowCopy\":
-        // {\"objectTypes\": [\"WORKINGDAYSCALENDAR\",\"NONWORKINGDAYSCALENDAR\"],\"folders\": [\"/Calendars\"],\"recursive\": true, \"onlyValidObjects\":
-        // false, \"withoutDrafts\": false, \"withoutDeployed\": false, \"withoutReleased\": false}}";
-        // ApiResponse response = ex.post(accessToken, "/inventory/export/folder", requestBody);
-        LOGGER.info("File created!");
-        ex.logout(accessToken);
-    }
-
-    @Ignore
-    @Test
-    public void testApiExecutorOrderLog() throws Exception {
-        Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
-        System.setProperty("js7.config-directory", privateConfPath.toString());
-        System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
-        ApiExecutor ex = new ApiExecutor(null);
-        String accessToken = ex.login().getAccessToken();
-        String requestBody = "{\"controllerId\":\"controller_270\",\"historyId\":264}";
-        ApiResponse response = ex.post(accessToken, "/order/log", requestBody);
-        LOGGER.info("Order log:\n" + response.getResponseBody());
-        ex.logout(accessToken);
     }
 
     @Ignore

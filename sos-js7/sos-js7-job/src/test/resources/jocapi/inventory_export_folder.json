@@ -1,0 +1,32 @@
+{
+	"useShortPath": false,
+	"exportFile": {
+		"filename": "test.zip",
+		"format": "ZIP"
+	},
+	"startFolder": "/jitl-jobs",
+	"shallowCopy": {
+		"objectTypes": [
+			"WORKFLOW",
+			"FILEORDERSOURCE",
+			"JOBRESOURCE",
+			"NOTICEBOARD",
+			"LOCK",
+			"REPORT",
+			"INCLUDESCRIPT",
+			"SCHEDULE",
+			"WORKINGDAYSCALENDAR",
+			"NONWORKINGDAYSCALENDAR",
+			"JOBTEMPLATE"
+		],
+		"folders": [
+			"/jitl-jobs",
+			"/jitl-jobs/file"
+		],
+		"recursive": false,
+		"onlyValidObjects": false,
+		"withoutDrafts": false,
+		"withoutDeployed": false,
+		"withoutReleased": false
+	}
+}
