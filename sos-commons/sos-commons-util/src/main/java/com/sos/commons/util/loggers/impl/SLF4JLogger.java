@@ -9,8 +9,7 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 /** slf4j-based implementation for applications that can be used in JS7 jobs (job logger) or standalone (slf4j API). */
 public class SLF4JLogger implements ISOSLogger {
 
-    private static final String FQCN = SLF4JLogger.class.getName();
-
+    private final String fqcn;
     private final Logger logger;
     private final LocationAwareLogger locationAwareLogger;
 
@@ -18,10 +17,15 @@ public class SLF4JLogger implements ISOSLogger {
     private final boolean isTraceEnabled;
 
     public SLF4JLogger() {
-        this(LoggerFactory.getLogger(SLF4JLogger.class));
+        this(LoggerFactory.getLogger(SLF4JLogger.class), SLF4JLogger.class);
     }
 
-    public SLF4JLogger(Logger logger) {
+    public SLF4JLogger(Class<?> fqcnClazz) {
+        this(LoggerFactory.getLogger(SLF4JLogger.class), fqcnClazz);
+    }
+
+    public SLF4JLogger(Logger logger, Class<?> fqcnClazz) {
+        this.fqcn = fqcnClazz.getName();
         this.logger = logger;
         this.isDebugEnabled = logger.isDebugEnabled();
         this.isTraceEnabled = logger.isTraceEnabled();
@@ -126,7 +130,7 @@ public class SLF4JLogger implements ISOSLogger {
 
     private void log(int level, String msg, Object[] args, Throwable t) {
         if (locationAwareLogger != null) {
-            locationAwareLogger.log(null, FQCN, level, format(msg, args), null, t);
+            locationAwareLogger.log(null, fqcn, level, format(msg, args), null, t);
         } else {
             switch (level) {
             case LocationAwareLogger.TRACE_INT:

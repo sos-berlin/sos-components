@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.js7.job.JobArguments.LogLevel;
 
 import js7.launcher.forjava.internal.BlockingInternalJob;
@@ -13,17 +14,18 @@ import js7.launcher.forjava.internal.BlockingInternalJob;
 public class OrderProcessStepLogger implements ISOSLogger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderProcessStepLogger.class);
-
     private final BlockingInternalJob.Step internalStep;
 
+    private ISOSLogger unitTestLogger;
     private boolean isDebugEnabled;
     private boolean isTraceEnabled;
 
     protected OrderProcessStepLogger(BlockingInternalJob.Step internalStep) {
         this.internalStep = internalStep;
         if (this.internalStep == null) {// UnitTest
-            isTraceEnabled = LOGGER.isTraceEnabled();
-            isDebugEnabled = LOGGER.isDebugEnabled();
+            unitTestLogger = new SLF4JLogger(OrderProcessStepLogger.class);
+            isTraceEnabled = unitTestLogger.isTraceEnabled();
+            isDebugEnabled = unitTestLogger.isDebugEnabled();
         }
     }
 
@@ -39,7 +41,7 @@ public class OrderProcessStepLogger implements ISOSLogger {
     public void info(final Object msg) {
         String m = getMessage(LogLevel.INFO, msg);
         if (internalStep == null) {
-            LOGGER.info(m);
+            unitTestLogger.info(m);
             return;
         }
         internalStep.out().println(m);
@@ -61,7 +63,7 @@ public class OrderProcessStepLogger implements ISOSLogger {
         }
         String m = getMessage(LogLevel.DEBUG, msg);
         if (internalStep == null) {
-            LOGGER.debug(m);
+            unitTestLogger.debug(m);
             return;
         }
         internalStep.out().println(m);
@@ -86,7 +88,7 @@ public class OrderProcessStepLogger implements ISOSLogger {
         }
         String m = getMessage(LogLevel.TRACE, msg);
         if (internalStep == null) {
-            LOGGER.trace(m);
+            unitTestLogger.trace(m);
             return;
         }
         internalStep.out().println(m);
@@ -108,7 +110,7 @@ public class OrderProcessStepLogger implements ISOSLogger {
     public void warn(final Object msg) {
         String m = getMessage(LogLevel.WARN, msg);
         if (internalStep == null) {
-            LOGGER.warn(m);
+            unitTestLogger.warn(m);
             return;
         }
         internalStep.out().println(m);
@@ -140,7 +142,7 @@ public class OrderProcessStepLogger implements ISOSLogger {
     public void error(final Object msg) {
         String m = getMessage(LogLevel.ERROR, msg);
         if (internalStep == null) {
-            LOGGER.error(m);
+            unitTestLogger.error(m);
             return;
         }
         internalStep.err().println(m);
