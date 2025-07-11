@@ -4,7 +4,7 @@
 		"filename": "test.zip",
 		"format": "ZIP"
 	},
-	"startFolder": "/jitl-jobs",
+	"startFolder": "/2025/JavaJob/JS7RESTClientJob",
 	"shallowCopy": {
 		"objectTypes": [
 			"WORKFLOW",
@@ -20,8 +20,7 @@
 			"JOBTEMPLATE"
 		],
 		"folders": [
-			"/jitl-jobs",
-			"/jitl-jobs/file"
+			"/2025/JavaJob/JS7RESTClientJob"
 		],
 		"recursive": false,
 		"onlyValidObjects": false,

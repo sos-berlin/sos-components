@@ -44,6 +44,46 @@ public class ApiExecutorTest {
 
     @Ignore
     @Test
+    public void testOrderLog() throws Exception {
+        setAgentProperties();
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("api_url", "/order/log");
+        args.put("body", SOSPath.readFile(Path.of("src/test/resources/jocapi/order_log.json")));
+
+        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob());
+        // optional settings
+        h.getStepConfig().setControllerId("js7");
+        h.getStepConfig().setOrderId("test_order");
+        h.getStepConfig().setJobName("test_job");
+
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
+    }
+
+    @Ignore
+    @Test
+    public void testTaskLog() throws Exception {
+        setAgentProperties();
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("api_url", "/task/log");
+        args.put("body", SOSPath.readFile(Path.of("src/test/resources/jocapi/task_log.json")));
+
+        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob());
+        // optional settings
+        h.getStepConfig().setControllerId("js7");
+        h.getStepConfig().setOrderId("test_order");
+        h.getStepConfig().setJobName("test_job");
+
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
+    }
+
+    @Ignore
+    @Test
     public void testInventorySearch() throws Exception {
         setAgentProperties();
 
