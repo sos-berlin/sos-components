@@ -52,6 +52,7 @@ public class KeyStoreReader {
         if (args == null || !args.isCustomStoresEnabled()) {
             return null;
         }
+
         KeyStoreResult result = new KeyStoreReader().new KeyStoreResult();
         if (!args.getKeyStoreFile().isEmpty()) {
             result.setKeyStoreFile(read(Type.KEYSTORE, args.getKeyStoreFile().getValue(), args.getKeyStorePassword().getValue(), args
@@ -177,8 +178,7 @@ public class KeyStoreReader {
             if (keyStoreFile != null && !SOSCollection.isEmpty(trustStoreFiles)) {
                 KeyStoreFile trustStoreSingleFile = trustStoreFiles.size() == 1 ? trustStoreFiles.get(0) : null;
                 if (trustStoreSingleFile != null && trustStoreSingleFile.getPath().equals(keyStoreFile.getPath())) {
-                    sb.append("keystore/truststore ").append(keyStoreFile.getType());
-                    sb.append(" ").append(keyStoreFile.getPath());
+                    sb.append("keystore/truststore ").append(keyStoreFile);
                 } else {
                     sb.append(KeyStoreFile.toString("keystore", keyStoreFile));
                     sb.append(", ");

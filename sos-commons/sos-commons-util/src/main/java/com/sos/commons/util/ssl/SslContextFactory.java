@@ -2,7 +2,6 @@ package com.sos.commons.util.ssl;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -108,6 +107,10 @@ public class SslContextFactory {
     }
 
     private static KeyManager[] getKeyManagers(final KeyStoreFile f) throws Exception {
+        if (f == null) {
+            return null;
+        }
+
         final KeyManagerFactory factory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         factory.init(f.getKeyStore(), f.getKeyPasswordChars());
         KeyManager[] managers = factory.getKeyManagers();
@@ -132,7 +135,11 @@ public class SslContextFactory {
         return factory.getTrustManagers();
     }
 
-    private static TrustManager[] getTrustManagers(final List<KeyStoreFile> files) throws NoSuchAlgorithmException, KeyStoreException {
+    private static TrustManager[] getTrustManagers(final List<KeyStoreFile> files) throws Exception {
+        if (SOSCollection.isEmpty(files)) {
+            return getDefaultJVMTrustManagers();
+        }
+
         List<X509TrustManager> trustManagers = new ArrayList<>();
         for (KeyStoreFile f : files) {
             TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());

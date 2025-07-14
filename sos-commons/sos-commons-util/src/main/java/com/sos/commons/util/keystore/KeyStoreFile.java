@@ -5,13 +5,15 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.commons.util.SOSCollection;
+
 public class KeyStoreFile {
 
     private KeyStoreType type;
     private Path path;
     private String password;
 
-    // KeyStore
+    // KeyStore entry
     private String keyPassword;
     private List<String> aliases;
 
@@ -59,7 +61,7 @@ public class KeyStoreFile {
     }
 
     public char[] getKeyPasswordChars() {
-        return keyPassword == null ? null : keyPassword.toCharArray();
+        return keyPassword == null ? getPasswordChars() : keyPassword.toCharArray();
     }
 
     public void setKeyPassword(String val) {
@@ -74,8 +76,24 @@ public class KeyStoreFile {
         aliases = val;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(type).append(" ").append(path);
+        if (password != null) {
+            sb.append("  password=********");
+        }
+        if (!SOSCollection.isEmpty(aliases)) {
+            sb.append("  aliases=" + aliases);
+        }
+        if (keyPassword != null) {
+            sb.append("  keyPassword=********");
+        }
+        return sb.toString();
+    }
+
     public static String toString(String prefix, KeyStoreFile f) {
-        return prefix + " " + f.getType() + " " + f.getPath();
+        return prefix + " " + f.toString();
     }
 
     public static String toString(String prefix, List<KeyStoreFile> lf) {
