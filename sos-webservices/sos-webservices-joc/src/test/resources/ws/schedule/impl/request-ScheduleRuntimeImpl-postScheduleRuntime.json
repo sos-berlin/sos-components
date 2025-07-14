@@ -1,20 +1,20 @@
 {
-	"dateFrom": "2025-06-25",
-	"dateTo": "2025-06-25",
+	"dateFrom": "2026-03-28",
+	"dateTo": "2026-03-30",
 	"calendars": [
 		{
 			"calendarName": "AnyDays",
 			"periods": [
 				{
-					"singleStart": "11:00:00",
+					"singleStart": "02:00:00",
 					"whenHoliday": "SUPPRESS"
 				},
-				 {
-                    "begin": "10:00:00",
-                    "end": "16:00:00",
-                    "repeat": "02:00:00",
-                    "whenHoliday": "SUPPRESS"
-                }
+				{
+					"begin": "02:00:00",
+					"end": "08:00:00",
+					"repeat": "02:00:00",
+					"whenHoliday": "SUPPRESS"
+				}
 			]
 		}
 	],

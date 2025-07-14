@@ -63,8 +63,8 @@ public class PeriodResolver {
         return getStartTimes(frequencyResolverDate, dailyPlanDate, timeZone, false);
     }
 
-    
-    public Map<Long, Period> getStartTimes(String frequencyResolverDate, String dailyPlanDate, String timeZone, boolean includeLate) throws ParseException {
+    public Map<Long, Period> getStartTimes(String frequencyResolverDate, String dailyPlanDate, String timeZone, boolean includeLate)
+            throws ParseException {
         Map<Long, Period> startTimes = new LinkedHashMap<>();
 
         if (frequencyResolverDates.contains(frequencyResolverDate)) {
@@ -87,7 +87,7 @@ public class PeriodResolver {
                 // frequencyResolverDate, SOSDate.tryGetDateTimeAsString(scheduledFor.get())));
                 // }
                 startTimes.put(result.startUTC.getTime(), periodEntry.getValue());
-            } else if(!result.isInDailyPlanPeriod && includeLate) {
+            } else if (!result.isInDailyPlanPeriod && includeLate) {
                 // else for recreation of late orders
                 startTimes.put(result.startUTC.getTime(), periodEntry.getValue());
             }
@@ -107,7 +107,8 @@ public class PeriodResolver {
         Date periodStartUTC = Date.from(JobSchedulerDate.getScheduledForInUTC(periodDateTime, timeZone).get());
         Date periodEndUTC = SOSDate.add(periodStartUTC, 1, ChronoUnit.DAYS);
         // Start DateTime
-        Date startUTC = SOSDate.tryGetDateTime(startDateTime, TimeZone.getTimeZone(timeZone));
+        // Date startUTC = SOSDate.tryGetDateTime(startDateTime, TimeZone.getTimeZone(timeZone));
+        Date startUTC = Date.from(JobSchedulerDate.getScheduledForInUTC(startDateTime, timeZone).get());
         // NOW
         Date nowUTC = JobSchedulerDate.nowInUtc();
 
