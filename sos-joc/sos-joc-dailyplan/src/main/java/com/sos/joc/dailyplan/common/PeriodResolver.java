@@ -3,6 +3,9 @@ package com.sos.joc.dailyplan.common;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
@@ -103,15 +106,17 @@ public class PeriodResolver {
         }
 
         // DailyPlan DAY Period: START/END
-        String periodDateTime = dailyPlanDate + " " + settings.getPeriodBegin();
-        Date periodStartUTC = Date.from(JobSchedulerDate.getScheduledForInUTC(periodDateTime, timeZone).get());
-        Date periodEndUTC = SOSDate.add(periodStartUTC, 1, ChronoUnit.DAYS);
+        ZonedDateTime periodStart = ZonedDateTime.of(LocalDate.parse(dailyPlanDate), LocalTime.parse(settings.getPeriodBegin()), ZoneId.of(timeZone));
+        ZonedDateTime periodEnd = periodStart.plusDays(1);
+
+        Date periodStartUTC = Date.from(periodStart.toInstant());
+        Date periodEndUTC = Date.from(periodEnd.toInstant());
+
         // Start DateTime
         // Date startUTC = SOSDate.tryGetDateTime(startDateTime, TimeZone.getTimeZone(timeZone));
         Date startUTC = Date.from(JobSchedulerDate.getScheduledForInUTC(startDateTime, timeZone).get());
         // NOW
         Date nowUTC = JobSchedulerDate.nowInUtc();
-
         // Check
         boolean isInDailyPlanPeriod = startUTC.after(nowUTC) && startUTC.getTime() >= periodStartUTC.getTime() && startUTC.before(periodEndUTC);
         if (LOGGER.isDebugEnabled()) {
