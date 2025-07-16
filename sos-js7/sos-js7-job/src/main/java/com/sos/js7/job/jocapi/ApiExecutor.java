@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,6 +46,7 @@ import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.BaseHttpClient.Builder;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
+import com.sos.commons.httpclient.commons.mulitpart.HttpFormData;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -75,6 +77,8 @@ public class ApiExecutor implements AutoCloseable {
     private static final String WS_API_PREFIX = "/joc/api";
 
     private static final String ACCESS_TOKEN_HEADER = "X-Access-Token";
+    private static final String SOS_EXPORT_DIR_HEADER = "X-Export-Directory";
+    private static final String SOS_IMPORT_FILEPATH_HEADER = "X-Import-File";
 
     private static final String AGENT_CONF_DIR_ENV_PARAM = "JS7_AGENT_CONFIG_DIR";
     private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
@@ -126,17 +130,26 @@ public class ApiExecutor implements AutoCloseable {
     private URI jocUri;
     private List<String> jocUris;
     private Config config;
-
+    
     private Map<String, DetailValue> jobResources;
     private Map<String, String> additionalHeaders;
+    
     private Map<String, String> responseHeaders;
-
+    
     public ApiExecutor(OrderProcessStep<?> step) {
         this.step = step;
     }
-
+    
     public ApiExecutor(OrderProcessStep<?> step, Map<String, String> additionalHeaders) {
         this(step);
+        this.additionalHeaders = additionalHeaders;
+    }
+    
+    public Map<String, String> getAdditionalHeaders() {
+        return additionalHeaders;
+    }
+    
+    public void setAdditionalHeaders(Map<String, String> additionalHeaders) {
         this.additionalHeaders = additionalHeaders;
     }
 
@@ -150,12 +163,12 @@ public class ApiExecutor implements AutoCloseable {
 
     public ApiResponse login(Duration connectTimeout) throws Exception {
         /*
-         * TODO: first check variables from OrderProcessStep if required values are available if available use this configuration if not available use
-         * configuration from private.conf
+         * TODO: first check variables from OrderProcessStep if required values are available 
+         *    if available use this configuration 
+         *    if not available use configuration from private.conf
          */
         boolean isDebugEnabled = step.getLogger().isDebugEnabled();
         step.getLogger().debug("***ApiExecutor***");
-
         jocUris = getUris();
         String latestError = "";
         // String latestResponse = "";
@@ -166,7 +179,6 @@ public class ApiExecutor implements AutoCloseable {
                 createClient(uri, connectTimeout);
                 this.jocUri = URI.create(uri);
                 loginUri = jocUri.resolve(WS_API_LOGIN);
-
                 HttpExecutionResult<String> result = client.executePOST(loginUri);
                 // result.formatWithResponseBody(true);
                 if (isDebugEnabled) {
@@ -207,7 +219,6 @@ public class ApiExecutor implements AutoCloseable {
                 if (isDebugEnabled) {
                     step.getLogger().debug(latestError);
                 }
-
                 latestException = e;
                 continue;
             }
@@ -217,6 +228,16 @@ public class ApiExecutor implements AutoCloseable {
     }
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
+        Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
+        return post(token, apiUrl, HttpRequest.BodyPublishers.ofString(body), requestHeaders);
+    }
+
+    public ApiResponse post(String token, String apiUrl, HttpFormData formData) throws SOSConnectionRefusedException, SOSBadRequestException {
+        Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
+        return post(token, apiUrl, HttpRequest.BodyPublishers.ofByteArrays(formData), requestHeaders);
+    }
+    
+    private ApiResponse post(String token, String apiUrl, HttpRequest.BodyPublisher publisher, Map<String, String> requestHeaders) throws SOSConnectionRefusedException, SOSBadRequestException {
         if (token == null) {
             throw new SOSBadRequestException("no access token provided. permission denied.");
         } else {
@@ -225,7 +246,7 @@ public class ApiExecutor implements AutoCloseable {
                 try {
                     if (isDebugEnabled) {
                         step.getLogger().debug("REQUEST: %s", apiUrl);
-                        step.getLogger().debug("PARAMS: %s", body);
+                        step.getLogger().debug("PARAMS:\n%s", publisher.toString());
                     }
                     if (!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
                         apiUrl = WS_API_PREFIX + apiUrl;
@@ -233,13 +254,11 @@ public class ApiExecutor implements AutoCloseable {
                     if (isDebugEnabled) {
                         step.getLogger().debug("resolvedUri: %s", jocUri.resolve(apiUrl).toString());
                     }
-
-                    Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE,
-                            HttpUtils.HEADER_CONTENT_TYPE_JSON);
-
-                    HttpExecutionResult<InputStream> result = client.executePOST(jocUri.resolve(apiUrl), client.mergeWithDefaultHeaders(
-                            requestHeaders), body, HttpResponse.BodyHandlers.ofInputStream());
-
+                    HttpExecutionResult<InputStream> result = client.executePOST(
+                            jocUri.resolve(apiUrl), 
+                            client.mergeWithDefaultHeaders(requestHeaders),
+                            publisher, 
+                            HttpResponse.BodyHandlers.ofInputStream());
                     String responseBody = readPostResponseBody(result);
                     // result.formatWithResponseBody(true);
                     if (step.getLogger().isDebugEnabled()) {
@@ -487,26 +506,24 @@ public class ApiExecutor implements AutoCloseable {
             }
             uris = config.getConfig(PRIVATE_CONF_JS7_PARAM_API_SERVER).getStringList(PRIVATE_CONF_JS7_PARAM_URL);
         }
-        // Collections.sort(uris);
         return uris;
 
     }
 
     private String readPostResponseBody(HttpExecutionResult<InputStream> result) throws Exception {
         String responseBody = null;
-        String contentEncoding = client.getResponseHeader(result.response(), HttpUtils.HEADER_CONTENT_ENCODING).orElse("identity").toLowerCase(
-                Locale.ROOT);
+        String contentEncoding = client.getResponseHeader(result.response(), 
+                HttpUtils.HEADER_CONTENT_ENCODING).orElse("identity").toLowerCase(Locale.ROOT);
         Path responseBodyFile = getResponseBodyFile(result);
-        try (InputStream in = decodeInputStream(result.response().body(), contentEncoding); OutputStream out = responseBodyFile == null
-                ? new ByteArrayOutputStream() : Files.newOutputStream(responseBodyFile, StandardOpenOption.CREATE,
-                        StandardOpenOption.TRUNCATE_EXISTING);) {
+        try (InputStream in = decodeInputStream(result.response().body(), contentEncoding); 
+                OutputStream out = responseBodyFile == null ? new ByteArrayOutputStream() : 
+                    Files.newOutputStream(responseBodyFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);) {
             byte[] buffer = new byte[4_096];
             int length;
             while ((length = in.read(buffer)) > 0) {
                 out.write(buffer, 0, length);
             }
             out.flush();
-
             if (responseBodyFile == null) {
                 responseBody = ((ByteArrayOutputStream) out).toString(client.extractCharsetFromResponseContentType(result.response()));
             } else {
@@ -521,10 +538,9 @@ public class ApiExecutor implements AutoCloseable {
         if (contentDisposition == null || !contentDisposition.contains("filename")) {
             return null;
         }
-
-        Optional<String> targetPath = client.getRequestHeader(result.request(), "X-Export-Directory");
+        Optional<String> targetPath = client.getRequestHeader(result.request(), SOS_EXPORT_DIR_HEADER);
         if (!targetPath.isPresent()) {
-            targetPath = client.getRequestHeader(result.request(), "X-Export-Directory".toLowerCase());
+            targetPath = client.getRequestHeader(result.request(), SOS_EXPORT_DIR_HEADER.toLowerCase());
         }
         Path target = Paths.get(System.getProperty("user.dir"));
         if (targetPath.isPresent()) {
@@ -590,7 +606,8 @@ public class ApiExecutor implements AutoCloseable {
     }
 
     private String getValueOfArgument(JobArgument<?> arg, String _default) {
-        return Optional.ofNullable(arg).map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse(_default);
+        return Optional.ofNullable(arg).map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString)
+                .orElse(_default);
     }
 
     private String getPrivateKeyPath() {

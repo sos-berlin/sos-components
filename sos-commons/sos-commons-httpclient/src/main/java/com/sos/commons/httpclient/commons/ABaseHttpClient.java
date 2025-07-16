@@ -209,6 +209,12 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return execute(createPOSTRequest(uri, headers, HttpRequest.BodyPublishers.ofString(requestBody)), handler);
     }
 
+    /** Executes a POST request with a BodyPublisher and handles the response via provided handler */
+    public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, HttpRequest.BodyPublisher requestBody, HttpResponse.BodyHandler<T> handler)
+            throws Exception {
+        return execute(createPOSTRequest(uri, headers, requestBody), handler);
+    }
+
     /** Executes a POST request without request body and returns response as String */
     public HttpExecutionResult<String> executePOST(URI uri) throws Exception {
         return executeWithResponseBody(createPOSTRequest(uri, defaultHeaders, HttpRequest.BodyPublishers.noBody()));

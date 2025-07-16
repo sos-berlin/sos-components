@@ -3,7 +3,6 @@ package com.sos.js7.job.jocapi;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Ignore;
@@ -11,10 +10,14 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
 import com.sos.js7.job.UnitTestJobHelper;
 import com.sos.js7.job.jocapi.helper.TestApiExecutorJob;
 import com.sos.js7.job.jocapi.helper.TestApiExecutorJobArguments;
+import com.sos.js7.job.jocapi.helper.TestApiExecutorUploadJob;
+import com.sos.js7.job.jocapi.helper.TestApiExecutorUploadJobArguments;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -104,35 +107,30 @@ public class ApiExecutorTest {
 
     @Ignore
     @Test
-    public void deprecatedTestApiExecutorExport() throws Exception {
+    public void testUploadMulitpartFormdata() throws Exception {
         setAgentProperties();
-
-        Map<String, String> headers = new LinkedHashMap<>();
-        headers.put("X-Outfile", Paths.get(System.getProperty("user.dir")).resolve("target/exported").resolve("export_calendars.zip").toString()
-                .replace('\\', '/'));
-        try (ApiExecutor ex = new ApiExecutor(null, headers)) {
-            String accessToken = ex.login().getAccessToken();
-            // String requestBody = "{\"useShortPath\": false, \"exportFile\": {\"filename\": \"export_calendars.zip\", \"format\": \"ZIP\"}, \"shallowCopy\":
-            // {\"objectTypes\": [\"WORKINGDAYSCALENDAR\",\"NONWORKINGDAYSCALENDAR\"],\"folders\": [\"/Calendars\"],\"recursive\": true, \"onlyValidObjects\":
-            // false, \"withoutDrafts\": false, \"withoutDeployed\": false, \"withoutReleased\": false}}";
-            // ApiResponse response = ex.post(accessToken, "/inventory/export/folder", requestBody);
-            LOGGER.info("File created!");
-            ex.logout(accessToken);
-        }
+        Path path = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources/jocapi/test.zip");
+//        Path path = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources/jocapi/test.tar.gz");
+        
+        Map<String, Object> args = new HashMap<>();
+        args.put("api_url", "/inventory/import");
+        args.put("format", "ZIP");
+//        args.put("format", "TAR_GZ");
+        args.put("overwrite", true);
+        args.put("file", path);
+        
+        UnitTestJobHelper<TestApiExecutorUploadJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorUploadJob());
+        
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
     }
 
-    @Ignore
-    @Test
-    public void deprecatedTestApiExecutorOrderLog() throws Exception {
-        setAgentProperties();
-
-        try (ApiExecutor ex = new ApiExecutor(null)) {
-            String accessToken = ex.login().getAccessToken();
-            String requestBody = "{\"controllerId\":\"controller_270\",\"historyId\":264}";
-            ApiResponse response = ex.post(accessToken, "/order/log", requestBody);
-            LOGGER.info("Order log:\n" + response.getResponseBody());
-            ex.logout(accessToken);
+    private HttpClientAuthConfig getAuthConfig(String user, String password) {
+        if (SOSString.isEmpty(user)) {
+            return null;
         }
+        return new HttpClientAuthConfig(user, password);
     }
 
     private static void setAgentProperties() {
