@@ -33,45 +33,84 @@ public class SOSDate {
     public static final String DATETIME_FORMAT_WITH_ZONE_OFFSET = new String(DATE_FORMAT + "'T'" + TIME_FORMAT + "Z");// 2022-04-07T16:37:35+0200
 
     public static final String TIMEZONE_UTC = "Etc/UTC";
-    private static final boolean LENIENT = false;
+    /** if true, throws ParseException on invalid input: e.g.<br/>
+     * - 2024-02-31 or<br/>
+     * - 2026-03-29 02:00:00 in Europe/Berlin, because this local datetime does not exist due to DST transition.<br/>
+     * if false, the parser attempts to correct the input:<br/>
+     * - for invalid calendar dates (e.g. 2024-02-31), the date is normalized according to ISO chronology (e.g. shifted to 2024-03-02).<br/>
+     * - for non-existent local times due to DST transitions (e.g. 2026-03-29 02:00:00 in Europe/Berlin), the datetime is shifted forward to the next valid time
+     * (e.g. 2026-03-29 03:00:00). */
+    public static final boolean DEFAULT_STRICT_PARSING = false;
 
     // returns Date from String
     public static Date getDate(String date) throws SOSInvalidDataException {
-        return getDate(date, null);
+        return getDate(date, null, DEFAULT_STRICT_PARSING);
+    }
+
+    public static Date getDate(String date, boolean strictParsing) throws SOSInvalidDataException {
+        return getDate(date, null, strictParsing);
     }
 
     public static Date getDate(String date, TimeZone timeZone) throws SOSInvalidDataException {
-        return parse(date, DATE_FORMAT, timeZone);
+        return getDate(date, timeZone, DEFAULT_STRICT_PARSING);
+    }
+
+    public static Date getDate(String date, TimeZone timeZone, boolean strictParsing) throws SOSInvalidDataException {
+        return parse(date, DATE_FORMAT, timeZone, strictParsing);
     }
 
     public static Date getDateTime(String date) throws SOSInvalidDataException {
-        return getDateTime(date, null);
+        return getDateTime(date, null, DEFAULT_STRICT_PARSING);
+    }
+
+    public static Date getDateTime(String date, boolean strictParsing) throws SOSInvalidDataException {
+        return getDateTime(date, null, strictParsing);
     }
 
     public static Date getDateTime(String date, TimeZone timeZone) throws SOSInvalidDataException {
-        return parse(date, DATETIME_FORMAT, timeZone);
+        return getDateTime(date, timeZone, DEFAULT_STRICT_PARSING);
+    }
+
+    public static Date getDateTime(String date, TimeZone timeZone, boolean strictParsing) throws SOSInvalidDataException {
+        return parse(date, DATETIME_FORMAT, timeZone, strictParsing);
     }
 
     public static Date tryGetDateTime(String date, TimeZone timeZone) {
         try {
-            return parse(date, DATETIME_FORMAT, timeZone);
+            return parse(date, DATETIME_FORMAT, timeZone, DEFAULT_STRICT_PARSING);
         } catch (SOSInvalidDataException e) {
             return null;
         }
     }
 
     public static Date parse(String date, String format) throws SOSInvalidDataException {
-        return parse(date, format, null);
+        return parse(date, format, null, DEFAULT_STRICT_PARSING);
     }
 
-    public static Date parse(String date, String format, TimeZone timeZone) throws SOSInvalidDataException {
+    public static Date parse(String date, String format, boolean strict) throws SOSInvalidDataException {
+        return parse(date, format, null, strict);
+    }
+
+    /** @param date
+     * @param format
+     * @param timeZone
+     * @param strict if true, throws ParseException on invalid input: e.g.<br/>
+     *            - 2024-02-31 or<br/>
+     *            - 2026-03-29 02:00:00 in Europe/Berlin, because this local datetime does not exist due to DST transition.<br/>
+     *            if false, the parser attempts to correct the input:<br/>
+     *            - for invalid calendar dates (e.g. 2024-02-31), the date is normalized according to ISO chronology (e.g. shifted to 2024-03-02).<br/>
+     *            - for non-existent local times due to DST transitions (e.g. 2026-03-29 02:00:00 in Europe/Berlin), the datetime is shifted forward to the next
+     *            valid time (e.g. 2026-03-29 03:00:00).
+     * @return
+     * @throws SOSInvalidDataException */
+    public static Date parse(String date, String format, TimeZone timeZone, boolean strict) throws SOSInvalidDataException {
         if (date == null) {
             return null;
         }
         DateFormat df;
         try {
             df = new SimpleDateFormat(format == null ? DATETIME_FORMAT : format);
-            df.setLenient(LENIENT);
+            df.setLenient(!strict);
             if (timeZone != null) {
                 df.setTimeZone(timeZone);
             }
@@ -261,7 +300,7 @@ public class SOSDate {
         DateFormat df;
         try {
             df = new SimpleDateFormat(format == null ? DATETIME_FORMAT : format);
-            df.setLenient(LENIENT);
+            // df.setLenient - has no effect if format
             if (timeZone != null) {
                 df.setTimeZone(timeZone);
             }
@@ -545,28 +584,6 @@ public class SOSDate {
             return toSeconds - fromSeconds;
         } else {
             return endOfDay - fromSeconds + toSeconds;
-        }
-    }
-
-    public static void main(String[] args) {
-        try {
-            Date d = new Date();
-            System.out.println(SOSDate.getWeek(d));
-            System.out.println(SOSDate.getMonth(d));
-            System.out.println(SOSDate.getYear(d));
-            System.out.println(SOSDate.format(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("PST")));
-            System.out.println(SOSDate.format(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("Europe/Berlin")));
-            System.out.println(SOSDate.getDurationOfSeconds(0));
-            System.out.println(SOSDate.getDurationOfSeconds(60));
-            System.out.println(SOSDate.getDurationOfSeconds(100_000));
-            System.out.println(SOSDate.add(new Date(), 3, ChronoUnit.DAYS));
-            System.out.println(SOSDate.add(new Date(), -3, ChronoUnit.DAYS));
-
-            List<String> times = Arrays.asList("00:02", "04:01", "04:30", "05:00", "05:02", "23:00", "23:01");
-            System.out.println(SOSDate.getFilteredTimesInRange("05:00", "23:00", times));
-            System.out.println(SOSDate.getFilteredTimesInRange("05:00", "04:01", times));
-        } catch (Exception e) {
-            System.err.println("..error: " + e.toString());
         }
     }
 
