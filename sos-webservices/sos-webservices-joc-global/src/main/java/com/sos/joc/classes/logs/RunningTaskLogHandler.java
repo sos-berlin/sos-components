@@ -12,7 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -20,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
+import com.sos.commons.util.SOSDate;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.event.EventBus;
@@ -31,10 +35,17 @@ public class RunningTaskLogHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningTaskLogHandler.class);
 
-    private static final long RUNNING_LOG_SLEEP_TIMEOUT = 1; // seconds
-    private static final int RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE = 64 * 1024;
-    private static final int RUNNING_LOG_READ_GZIP_BUFFER_SIZE = 4 * 1024;
-    private static final int RUNNING_LOG_MAX_ITERATIONS = 1_000_000;
+    private static final Duration RUNNING_LOG_MAX_THREAD_LIFETIME = Duration.ofMinutes(10L);
+    private static final String RUNNING_LOG_THREAD_PREFIX = "running-task-log-";
+    private final static String RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER = ";;;";
+    private static final AtomicInteger runningLogThreadCounter = new AtomicInteger(1);
+
+    // Wait interval between rereading the history file if the history file does not return a new position (no new data).
+    private static final long RUNNING_LOG_WAIT_INTERVAL_IF_NO_NEW_CONTENT_IN_SECONDS = 2;
+    private static final long RUNNING_LOG_WAIT_INTERVAL_LOG_STEP = 30; // log first wait and all 30(wait log step)*2(wait interval) seconds
+
+    private static final int RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE = 64 * 1_024;
+    private static final int RUNNING_LOG_READ_GZIP_BUFFER_SIZE = 4 * 1_024;
 
     // 1 running log thread per sessionIdentifier
     private static final ConcurrentHashMap<String, Thread> runningLogThreads = new ConcurrentHashMap<>();
@@ -120,7 +131,7 @@ public class RunningTaskLogHandler {
     protected InputStream getInputStream() {
         if (!forDownload) {
             RunningTaskLogs.getInstance().unsubscribe(content.getSessionIdentifier(), content.getHistoryId());
-            removeRunningLogThreadIfExists(true);
+            removePreviousThreadIfExists(true);
 
             if (content.isComplete() && content.getUnCompressedLength() > content.getMaxLogSize()) {
                 return content.getTooBigMessageInputStream("");
@@ -171,7 +182,7 @@ public class RunningTaskLogHandler {
     // DONE - if the same taskId is opened in two/multiple users sessions - the logs from other sessions are added to log because of HistoryOrderTaskLog
     // DONE - sendEvent - open/close running log multiple times for task log
     private void runningTaskLogMonitor(final long startPosition) {
-        final String logPrefix = "[runningTaskLogMonitor][" + content.getHistoryId() + "]";
+        final String logPrefix = "[runningTaskLogMonitor][historyId=" + content.getHistoryId() + "]";
         if (content.isComplete()) {
             if (isDebugEnabled) {
                 LOGGER.debug(logPrefix + "[skip][completed=true]startPosition=" + startPosition);
@@ -183,46 +194,64 @@ public class RunningTaskLogHandler {
             LOGGER.debug(logPrefix + "startPosition=" + startPosition);
         }
 
-        // boolean sleepAlways = false; // to remove - sleep only if no new content provided(bytesRead == -1) all after each iteration...
         Thread workerThread = new Thread(() -> {
-
-            // AsynchronousFileChannel for read - do not block the log file as it will be deleted by the history service
             boolean isInterupped = false;
-            String threadName = null;
+            String thread = null;
             if (isDebugEnabled) {
-                threadName = Thread.currentThread().getName();
+                thread = "thread=" + Thread.currentThread().getName();
             }
             long position = startPosition;
+            // AsynchronousFileChannel for read - do not block the log file as it will be deleted by the history service
             try (AsynchronousFileChannel fileChannel = AsynchronousFileChannel.open(taskLogFile, StandardOpenOption.READ)) {
                 ByteBuffer buffer = ByteBuffer.allocate(RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE);
-                int currentIteration = 0;
+                Instant start = Instant.now();
+                Instant deadline = start.plus(RUNNING_LOG_MAX_THREAD_LIFETIME);
+                long waitCounter = 0;
                 r: while (!content.isComplete()) {
+                    buffer.clear();
 
-                    if (isDebugEnabled) {
-                        LOGGER.debug(logPrefix + "[" + threadName + "][currentIteration=" + currentIteration + "][before]position=" + position);
-                    }
+                    Instant now = Instant.now();
 
-                    currentIteration++;
                     // to avoid endless loop
-                    if (currentIteration > RUNNING_LOG_MAX_ITERATIONS) {
+                    if (!continueRunningLogMonitor(logPrefix, thread, position, start, deadline, now)) {
                         break r;
                     }
 
-                    buffer.clear();
                     int bytesRead = fileChannel.read(buffer, position).get();
-                    if (bytesRead == -1) {// wait 1 second if no new content
-                        if (!continueRunningLogMonitorAfterSleep(taskLogFile)) {
-                            if (isDebugEnabled) {
-                                LOGGER.debug(logPrefix + "[" + threadName + "][continueRunningLogMonitorAfterSleep][break]position=" + position);
+                    if (bytesRead == -1) {// wait n seconds if no new content
+                        buffer.clear();
+                        waitCounter++;
+
+                        if (isDebugEnabled) {
+                            int logFirstWaits = 2;
+                            boolean logNextWaits = waitCounter % RUNNING_LOG_WAIT_INTERVAL_LOG_STEP == 0;
+                            if (waitCounter <= logFirstWaits || logNextWaits) {
+                                Duration elapsed = Duration.between(start, now);
+                                String waitAdd = "";
+                                if (waitCounter == logFirstWaits || logNextWaits) {
+                                    waitAdd = " (the next possible 'wait' log entry comes after " + (RUNNING_LOG_WAIT_INTERVAL_LOG_STEP
+                                            - logFirstWaits) + " repetitions)";
+                                }
+                                LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position
+                                        + "][waitCounter=" + waitCounter + waitAdd + "]wait " + RUNNING_LOG_WAIT_INTERVAL_IF_NO_NEW_CONTENT_IN_SECONDS
+                                        + "s, because no new content...");
                             }
+                        }
+
+                        if (!continueRunningLogMonitorAfterSleep(logPrefix, thread, position, taskLogFile)) {
                             break r;
                         }
                     } else {
+                        waitCounter = 0;
+                        long oldPosition = position;
                         position += bytesRead;
 
                         if (isDebugEnabled) {
-                            LOGGER.debug(logPrefix + "[" + threadName + "][currentIteration=" + currentIteration + "][after]position=" + position);
+                            Duration elapsed = Duration.between(start, now);
+                            LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][old position=" + oldPosition
+                                    + "]position=" + position);
                         }
+                        oldPosition = 0;
 
                         content.setUnCompressedLength(position);
                         if (content.getUnCompressedLength() > content.getMaxLogSize()) {
@@ -247,7 +276,7 @@ public class RunningTaskLogHandler {
                             String logContent = new String(bytes, Charsets.UTF_8);
                             try {
                                 if (isDebugEnabled) {
-                                    LOGGER.debug(logPrefix + "[" + threadName + "][EVENT][OrderStdoutWritten]position=" + position);
+                                    LOGGER.debug(logPrefix + "[" + thread + "][post EVENT][OrderStdoutWritten]position=" + position);
                                 }
 
                                 EventBus.getInstance().post(new HistoryOrderTaskLog(EventType.OrderStdoutWritten.value(), content.getOrderId(),
@@ -268,15 +297,16 @@ public class RunningTaskLogHandler {
             } catch (Throwable e) {
                 LOGGER.info(logPrefix + e.toString(), e);
             } finally {
+                // content.setComplete(true);
                 if (isInterupped) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(logPrefix + "[" + threadName + "][FINALLY][INTERRUPTED]position=" + position);
+                        LOGGER.debug(logPrefix + "[" + thread + "][FINALLY][INTERRUPTED]position=" + position);
                     }
                     position = 0;
                 } else {
                     if (Files.exists(taskLogFile)) {
                         if (isDebugEnabled) {
-                            LOGGER.debug(logPrefix + "[" + threadName + "][FINALLY][FILE_EXISTS]position=" + position);
+                            LOGGER.debug(logPrefix + "[" + thread + "][FINALLY][FILE_EXISTS]position=" + position);
                         }
                         position = 0;
                     } else {
@@ -284,7 +314,7 @@ public class RunningTaskLogHandler {
                         try {
                             byte[] compressedLog = content.getLogFromDb(false, Long.valueOf(position));
                             if (isDebugEnabled) {
-                                LOGGER.debug(logPrefix + "[" + threadName + "][FINALLY][DB][isLogReadedFromDb=" + content.isLogReadedFromDb()
+                                LOGGER.debug(logPrefix + "[" + thread + "][FINALLY][DB][isLogReadedFromDb=" + content.isLogReadedFromDb()
                                         + "]position=" + position);
                             }
                             if (compressedLog == null) {
@@ -300,7 +330,7 @@ public class RunningTaskLogHandler {
                                 logContent = decompressAfterPosition(compressedLog, position);
                             }
                             if (isDebugEnabled) {
-                                LOGGER.debug(logPrefix + "[" + threadName + "][FINALLY][DB][position=" + position + "]" + (logContent == null ? "null"
+                                LOGGER.debug(logPrefix + "[" + thread + "][FINALLY][DB][position=" + position + "]" + (logContent == null ? "null"
                                         : logContent.length() + " characters"));
                             }
                             try {
@@ -315,21 +345,164 @@ public class RunningTaskLogHandler {
                             LOGGER.info(logPrefix + "[decompressAfterPosition]" + e.toString(), e);
                         } finally {
                             if (isDebugEnabled) {
-                                LOGGER.debug(logPrefix + "[" + threadName + "][FINALLY]PROCESSED");
+                                LOGGER.debug(logPrefix + "[" + thread + "][FINALLY]PROCESSED");
                             }
                         }
                     }
                 }
             }
-        });
+            unsubscribe(content.isComplete());
+            if (isDebugEnabled) {
+                LOGGER.debug(logPrefix + "[" + thread + "][FINALLY][Thread]end");
+            }
+        }, RUNNING_LOG_THREAD_PREFIX + runningLogThreadCounter.getAndIncrement());
         if (Files.exists(taskLogFile) && !content.isComplete()) {
+            if (isDebugEnabled) {
+                LOGGER.debug(logPrefix + "[START]Thread/Subscribe session");
+            }
             putRunningLogThread(workerThread);
             RunningTaskLogs.getInstance().subscribe(content.getSessionIdentifier(), content.getHistoryId());
             workerThread.start();
         } else {
-            close();
-            RunningTaskLogs.getInstance().unsubscribe(content.getSessionIdentifier(), content.getHistoryId());
-            removeRunningLogThreadIfExists(false);
+            if (isDebugEnabled) {
+                LOGGER.debug(logPrefix + "[skip]already processed");
+            }
+            unsubscribe(true);
+            removePreviousThreadIfExists(false);
+        }
+    }
+
+    private boolean continueRunningLogMonitor(String logPrefix, String thread, long position, Instant start, Instant deadline, Instant now) {
+        try {
+            if (!RunningTaskLogs.jocSessionExists(content.getSessionIdentifier(), content.getHistoryId())) {
+                if (LOGGER.isDebugEnabled()) {
+                    Duration elapsed = Duration.between(start, now);
+                    LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position
+                            + "][break]the calling session no longer exists");
+                }
+                return false;
+            }
+        } catch (Exception e) {// not really needed but ...
+            if (LOGGER.isDebugEnabled()) {
+                Duration elapsed = Duration.between(start, now);
+                LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position
+                        + "][check calling session][exception]" + e);
+            }
+        }
+
+        if (now.isAfter(deadline)) {
+            if (LOGGER.isDebugEnabled()) {
+                Duration elapsed = Duration.between(start, now);
+                LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position
+                        + "][break]deadline reached");
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean continueRunningLogMonitorAfterSleep(String logPrefix, String thread, long position, Path logFile) {
+        if (!Files.exists(logFile)) {
+            if (isDebugEnabled) {
+                LOGGER.debug(logPrefix + "[" + thread + "][continueRunningLogMonitorAfterSleep][position=" + position
+                        + "][break][before wait]history file does not exist");
+            }
+            return false;
+        }
+        try {
+            waitFor(RUNNING_LOG_WAIT_INTERVAL_IF_NO_NEW_CONTENT_IN_SECONDS);
+            if (!Files.exists(logFile)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(logPrefix + "[" + thread + "][continueRunningLogMonitorAfterSleep][position=" + position
+                            + "][break][after wait]history file does not exist");
+                }
+                return false;
+            }
+        } catch (InterruptedException e) {
+            try {
+                Thread.currentThread().interrupt();
+            } catch (Throwable ex) {
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug(logPrefix + "[" + thread + "][continueRunningLogMonitorAfterSleep][position=" + position + "][break]thread interrupted");
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private void unsubscribe(boolean complete) {
+        content.setComplete(complete);
+        synchronized (lockObject) {
+            lockObject.notifyAll();
+        }
+        RunningTaskLogs.getInstance().unsubscribe(content.getSessionIdentifier(), content.getHistoryId());
+    }
+
+    private void removePreviousThreadIfExists(boolean withInterrupt) {
+        try {
+            Thread previousWorkerThread = runningLogThreads.remove(getThreadIdentifier());
+            if (withInterrupt && previousWorkerThread != null) {
+                if (isDebugEnabled) {
+                    LOGGER.debug("[removePreviousThreadIfExists][reread][historyId=" + content.getHistoryId() + "][previous thread="
+                            + previousWorkerThread.getName() + "]interrupt previous thread...");
+                }
+                previousWorkerThread.interrupt();
+                try {
+                    previousWorkerThread.join();
+                    if (isDebugEnabled) {
+                        LOGGER.debug("[removePreviousThreadIfExists][historyId=" + content.getHistoryId() + "][previous thread="
+                                + previousWorkerThread.getName() + "]previous thread was closed");
+                    }
+                } catch (InterruptedException e) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug("[removePreviousThreadIfExists][historyId=" + content.getHistoryId() + "][previous thread="
+                                + previousWorkerThread.getName() + "]InterruptedException");
+                    }
+                    // Thread.currentThread().interrupt();
+                }
+            }
+        } catch (Throwable e) {
+        } finally {
+            if (isDebugEnabled) {
+                int size = runningLogThreads.size();
+                if (size == 0) {
+                    LOGGER.debug("[removePreviousThreadIfExists][historyId=" + content.getHistoryId() + "]runningLogThreads=" + size);
+
+                } else {
+                    LOGGER.debug("[removePreviousThreadIfExists][historyId=" + content.getHistoryId() + "][runningLogThreads=" + size + "]:");
+                    runningLogThreads.entrySet().forEach(e -> {
+                        try {
+                            LOGGER.debug("   historyId=" + getHistoryIdFromThreadIdentifier(e.getKey()) + ", thread=" + e.getValue().getName());
+                        } catch (Exception ex) {
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    private void putRunningLogThread(Thread workerThread) {
+        try {
+            Thread previousWorkerThread = runningLogThreads.put(getThreadIdentifier(), workerThread);
+            if (previousWorkerThread != null) {
+                if (isDebugEnabled) {
+                    LOGGER.debug("[putRunningLogThread][historyId=" + content.getHistoryId() + "][previous thread=" + previousWorkerThread.getName()
+                            + "]interrupt previous thread...");
+                }
+                previousWorkerThread.interrupt();
+                try {
+                    previousWorkerThread.join();
+                    if (isDebugEnabled) {
+                        LOGGER.debug("[putRunningLogThread][historyId=" + content.getHistoryId() + "][previous thread=" + previousWorkerThread
+                                .getName() + "]previous thread was closed");
+                    }
+                } catch (InterruptedException e) {
+                    // Thread.currentThread().interrupt();
+                }
+            }
+        } catch (Throwable e) {
         }
     }
 
@@ -356,93 +529,21 @@ public class RunningTaskLogHandler {
                 return r == null || r.length == 0 ? null : new String(r, StandardCharsets.UTF_8);
             }
         } catch (Throwable e) {
-            LOGGER.info("[decompressAfterPosition][" + content.getHistoryId() + "][position=" + startPosition + "]" + e.toString(), e);
+            LOGGER.info("[decompressAfterPosition][historyId=" + content.getHistoryId() + "][position=" + startPosition + "]" + e.toString(), e);
             return null;
         }
     }
 
-    private boolean continueRunningLogMonitorAfterSleep(Path logFile) {
-        if (!Files.exists(logFile)) {
-            return false;
-        }
-        try {
-            waitFor(RUNNING_LOG_SLEEP_TIMEOUT);
-            if (!Files.exists(logFile)) {
-                return false;
-            }
-        } catch (InterruptedException e) {
-            try {
-                Thread.currentThread().interrupt();
-            } catch (Throwable ex) {
-            }
-            return false;
-        }
-        return true;
-    }
-
-    private void close() {
-        content.setComplete(true);
-        synchronized (lockObject) {
-            lockObject.notifyAll();
-        }
-    }
-
-    private void removeRunningLogThreadIfExists(boolean withInterrupt) {
-        try {
-            Thread previousWorkerThread = runningLogThreads.remove(getThreadIdentifier());
-            if (withInterrupt && previousWorkerThread != null) {
-                if (isDebugEnabled) {
-                    LOGGER.debug("[removeRunningLogThreadIfExists][" + content.getHistoryId() + "][" + previousWorkerThread.getName()
-                            + "]interrupt previous thread...");
-                }
-                previousWorkerThread.interrupt();
-                try {
-                    previousWorkerThread.join();
-                    if (isDebugEnabled) {
-                        LOGGER.debug("[removeRunningLogThreadIfExists][" + content.getHistoryId() + "][" + previousWorkerThread.getName()
-                                + "]previous thread was closed");
-                    }
-                } catch (InterruptedException e) {
-                    if (isDebugEnabled) {
-                        LOGGER.debug("[removeRunningLogThreadIfExists][" + content.getHistoryId() + "][" + previousWorkerThread.getName()
-                                + "]InterruptedException");
-                    }
-                    // Thread.currentThread().interrupt();
-                }
-            }
-        } catch (Throwable e) {
-        } finally {
-            if (isDebugEnabled) {
-                LOGGER.debug("[removeRunningLogThreadIfExists][" + content.getHistoryId() + "]runningLogThreads=" + runningLogThreads.size());
-            }
-        }
-    }
-
-    private void putRunningLogThread(Thread workerThread) {
-        try {
-            Thread previousWorkerThread = runningLogThreads.put(getThreadIdentifier(), workerThread);
-            if (previousWorkerThread != null) {
-                if (isDebugEnabled) {
-                    LOGGER.debug("[putRunningLogThread][" + content.getHistoryId() + "][" + previousWorkerThread.getName()
-                            + "]interrupt previous thread...");
-                }
-                previousWorkerThread.interrupt();
-                try {
-                    previousWorkerThread.join();
-                    if (isDebugEnabled) {
-                        LOGGER.debug("[putRunningLogThread][" + content.getHistoryId() + "][" + previousWorkerThread.getName()
-                                + "]previous thread was closed");
-                    }
-                } catch (InterruptedException e) {
-                    // Thread.currentThread().interrupt();
-                }
-            }
-        } catch (Throwable e) {
-        }
-    }
-
     private String getThreadIdentifier() {
-        return content.getSessionIdentifier() + "_" + content.getHistoryId();
+        return content.getSessionIdentifier() + RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER + content.getHistoryId();
+    }
+
+    private String getHistoryIdFromThreadIdentifier(String threadIdentifier) {
+        if (threadIdentifier == null) {
+            return null;
+        }
+        String[] arr = threadIdentifier.split(RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER);
+        return arr.length > 1 ? arr[1] : null;
     }
 
     private void waitFor(long seconds) throws InterruptedException {
