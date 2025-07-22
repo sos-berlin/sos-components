@@ -229,12 +229,12 @@ public class ApiExecutor implements AutoCloseable {
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
         Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
-        return post(token, apiUrl, HttpRequest.BodyPublishers.ofString(body), requestHeaders);
+        return post(token, apiUrl, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body), requestHeaders);
     }
 
     public ApiResponse post(String token, String apiUrl, HttpFormData formData) throws SOSConnectionRefusedException, SOSBadRequestException {
         Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
-        return post(token, apiUrl, HttpRequest.BodyPublishers.ofByteArrays(formData), requestHeaders);
+        return post(token, apiUrl, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData), requestHeaders);
     }
     
     private ApiResponse post(String token, String apiUrl, HttpRequest.BodyPublisher publisher, Map<String, String> requestHeaders) throws SOSConnectionRefusedException, SOSBadRequestException {
