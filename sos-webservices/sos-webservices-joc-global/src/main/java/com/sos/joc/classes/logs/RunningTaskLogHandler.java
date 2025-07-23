@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +15,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -37,7 +41,6 @@ public class RunningTaskLogHandler {
 
     private static final Duration RUNNING_LOG_MAX_THREAD_LIFETIME = Duration.ofMinutes(10L);
     private static final String RUNNING_LOG_THREAD_PREFIX = "running-task-log-";
-    private final static String RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER = ";;;";
     private static final AtomicInteger runningLogThreadCounter = new AtomicInteger(1);
 
     // Wait interval between rereading the history file if the history file does not return a new position (no new data).
@@ -46,9 +49,6 @@ public class RunningTaskLogHandler {
 
     private static final int RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE = 64 * 1_024;
     private static final int RUNNING_LOG_READ_GZIP_BUFFER_SIZE = 4 * 1_024;
-
-    // 1 running log thread per sessionIdentifier
-    private static final ConcurrentHashMap<String, Thread> runningLogThreads = new ConcurrentHashMap<>();
 
     private final Object lockObject = new Object();
 
@@ -442,7 +442,9 @@ public class RunningTaskLogHandler {
 
     private void removePreviousThreadIfExists(boolean withInterrupt) {
         try {
-            Thread previousWorkerThread = runningLogThreads.remove(getThreadIdentifier());
+            WeakReference<Thread> previousWorkerThreadRef = RunningTaskLogs.getRunningLogThreadsCache().remove(RunningTaskLogs.getThreadIdentifier(
+                    content));
+            Thread previousWorkerThread = previousWorkerThreadRef != null ? previousWorkerThreadRef.get() : null;
             if (withInterrupt && previousWorkerThread != null) {
                 if (isDebugEnabled) {
                     LOGGER.debug("[removePreviousThreadIfExists][reread][historyId=" + content.getHistoryId() + "][previous thread="
@@ -465,44 +467,104 @@ public class RunningTaskLogHandler {
             }
         } catch (Throwable e) {
         } finally {
-            if (isDebugEnabled) {
-                int size = runningLogThreads.size();
+            logRunningLogThreadsCache();
+        }
+    }
+
+    private void logRunningLogThreadsCache() {
+        if (isDebugEnabled) {
+            try {
+                int size = RunningTaskLogs.getRunningLogThreadsCache().size();
                 if (size == 0) {
-                    LOGGER.debug("[removePreviousThreadIfExists][historyId=" + content.getHistoryId() + "]runningLogThreads=" + size);
+                    LOGGER.debug("[logRunningLogThreadsCache][runningLogThreadsCache]total=" + size);
 
                 } else {
-                    LOGGER.debug("[removePreviousThreadIfExists][historyId=" + content.getHistoryId() + "][runningLogThreads=" + size + "]:");
-                    runningLogThreads.entrySet().forEach(e -> {
+                    // Map<HistoryId, List<Thread>>
+                    Map<String, List<Thread>> groupedByHistoryId = new LinkedHashMap<>();
+                    size = 0; // recalculate size
+                    for (Map.Entry<String, WeakReference<Thread>> entry : RunningTaskLogs.getRunningLogThreadsCache().entrySet()) {
                         try {
-                            LOGGER.debug("   historyId=" + getHistoryIdFromThreadIdentifier(e.getKey()) + ", thread=" + e.getValue().getName());
+                            size++;
+                            String historyId = RunningTaskLogs.getHistoryIdFromThreadIdentifier(entry.getKey());
+                            Thread thread = entry.getValue().get();
+                            groupedByHistoryId.computeIfAbsent(historyId, k -> new ArrayList<>()).add(thread);
                         } catch (Exception ex) {
+                            // ignore
                         }
-                    });
+                    }
+                    LOGGER.debug("[logRunningLogThreadsCache][runningLogThreadsCache]total=" + size + ":");
+                    for (Map.Entry<String, List<Thread>> entry : groupedByHistoryId.entrySet()) {
+                        String historyId = entry.getKey();
+                        List<Thread> threads = entry.getValue();
+
+                        long total = threads.size();
+                        int countAlive = 0;
+                        int countDead = 0;
+                        int countNull = 0;
+                        StringBuilder threadInfo = new StringBuilder();
+                        for (Thread t : threads) {
+                            if (t != null) {
+                                threadInfo.append(t.getName()).append("(");
+                                if (t.isAlive()) {
+                                    threadInfo.append("alive");
+                                    countAlive++;
+                                } else {
+                                    threadInfo.append("dead");
+                                    countDead++;
+                                }
+                                threadInfo.append("), ");
+                            } else {
+                                countNull++;
+                            }
+                        }
+
+                        if (threadInfo.length() > 2) {
+                            threadInfo.setLength(threadInfo.length() - 2); // remove trailing comma
+                        }
+
+                        LOGGER.debug("   [historyId=" + historyId + "][referenced threads size=" + total + "(alive=" + countAlive + ", dead="
+                                + countDead + ", null(GC)=" + countNull + ")]referenced threads(alive, dead)=" + threadInfo);
+                    }
                 }
+            } catch (Exception e) {
+
             }
         }
     }
 
     private void putRunningLogThread(Thread workerThread) {
         try {
-            Thread previousWorkerThread = runningLogThreads.put(getThreadIdentifier(), workerThread);
+            WeakReference<Thread> previousWorkerThreadRef = RunningTaskLogs.getRunningLogThreadsCache().put(RunningTaskLogs.getThreadIdentifier(
+                    content), new WeakReference<>(workerThread));
+            Thread previousWorkerThread = previousWorkerThreadRef != null ? previousWorkerThreadRef.get() : null;
+
             if (previousWorkerThread != null) {
-                if (isDebugEnabled) {
-                    LOGGER.debug("[putRunningLogThread][historyId=" + content.getHistoryId() + "][previous thread=" + previousWorkerThread.getName()
-                            + "]interrupt previous thread...");
-                }
-                previousWorkerThread.interrupt();
-                try {
-                    previousWorkerThread.join();
+                if (previousWorkerThread.isAlive()) {
                     if (isDebugEnabled) {
                         LOGGER.debug("[putRunningLogThread][historyId=" + content.getHistoryId() + "][previous thread=" + previousWorkerThread
-                                .getName() + "]previous thread was closed");
+                                .getName() + "]interrupt previous thread...");
                     }
-                } catch (InterruptedException e) {
-                    // Thread.currentThread().interrupt();
+                    previousWorkerThread.interrupt();
+                    try {
+                        previousWorkerThread.join();
+                        if (isDebugEnabled) {
+                            LOGGER.debug("[putRunningLogThread][historyId=" + content.getHistoryId() + "][previous thread=" + previousWorkerThread
+                                    .getName() + "]previous thread was closed");
+                        }
+                    } catch (InterruptedException e) {
+                        // Thread.currentThread().interrupt();
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug("[putRunningLogThread][historyId=" + content.getHistoryId() + "][previous thread=" + previousWorkerThread
+                                .getName() + "]was already terminated");
+                    }
                 }
             }
         } catch (Throwable e) {
+            if (isDebugEnabled) {
+                LOGGER.debug("[putRunningLogThread][historyId=" + content.getHistoryId() + "][Unexpected error]" + e);
+            }
         }
     }
 
@@ -532,18 +594,6 @@ public class RunningTaskLogHandler {
             LOGGER.info("[decompressAfterPosition][historyId=" + content.getHistoryId() + "][position=" + startPosition + "]" + e.toString(), e);
             return null;
         }
-    }
-
-    private String getThreadIdentifier() {
-        return content.getSessionIdentifier() + RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER + content.getHistoryId();
-    }
-
-    private String getHistoryIdFromThreadIdentifier(String threadIdentifier) {
-        if (threadIdentifier == null) {
-            return null;
-        }
-        String[] arr = threadIdentifier.split(RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER);
-        return arr.length > 1 ? arr[1] : null;
     }
 
     private void waitFor(long seconds) throws InterruptedException {
