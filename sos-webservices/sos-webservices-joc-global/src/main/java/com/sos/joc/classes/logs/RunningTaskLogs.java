@@ -1,7 +1,9 @@
 package com.sos.joc.classes.logs;
 
+import java.lang.ref.WeakReference;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -40,7 +42,12 @@ public class RunningTaskLogs {
 
     private static RunningTaskLogs runningTaskLogs;
 
-    // key-><taskId>_<sessionIdentifir>
+    // 1 running log thread per <histroryId(taskId)>_<sessionIdentifir>
+    // WeakReference - the object(Thread) can be garbage collected immediately if no strong reference to it exists
+    private final static String RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER = ";;;";
+    private static final ConcurrentHashMap<String, WeakReference<Thread>> runningLogThreadsCache = new ConcurrentHashMap<>();
+
+    // key-><histroryId(taskId)>_<sessionIdentifir>
     private volatile Map<String, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Map<String, Set<Long>> completeLogs = new ConcurrentHashMap<>();
     private volatile Map<String, Set<Long>> registeredHistoryIds = new ConcurrentHashMap<>();
@@ -62,13 +69,15 @@ public class RunningTaskLogs {
     private RunningTaskLogs() {
         EventBus.getInstance().register(this);
 
-        new Timer().scheduleAtFixedRate(new TimerTask() {
+        // isDaemon=true to ensure the JVM can exit immediately without waiting for this timer thread
+        new Timer("Timer-CleanupRunningTaskLogs", true).scheduleAtFixedRate(new TimerTask() {
 
             @Override
             public void run() {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("[RunningTaskLogs][cleanup][before]events=" + events.size() + ",completeLogs=" + completeLogs.size()
-                            + ",lastLogAPICalls=" + lastLogAPICalls.size());
+                boolean isDebugEnabled = LOGGER.isDebugEnabled();
+                if (isDebugEnabled) {
+                    LOGGER.debug("[RunningTaskLogs][cleanup][before]events=" + events.size() + ", completeLogs=" + completeLogs.size()
+                            + ", lastLogAPICalls=" + lastLogAPICalls.size() + ", runningLogThreadsCache=" + runningLogThreadsCache.size());
                 }
                 Long eventId = Instant.now().toEpochMilli() - CLEANUP_PERIOD;
                 Set<String> toDelete = new HashSet<>();
@@ -93,9 +102,12 @@ public class RunningTaskLogs {
                         iter.remove();
                     }
                 }
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("[RunningTaskLogs][cleanup][after]events=" + events.size() + ",completeLogs=" + completeLogs.size()
-                            + ",lastLogAPICalls=" + lastLogAPICalls.size());
+
+                cleanupRunningLogThreadsCache(isDebugEnabled);
+
+                if (isDebugEnabled) {
+                    LOGGER.debug("[RunningTaskLogs][cleanup][after]events=" + events.size() + ", completeLogs=" + completeLogs.size()
+                            + ", lastLogAPICalls=" + lastLogAPICalls.size() + ", runningLogThreadsCache=" + runningLogThreadsCache.size());
                 }
             }
 
@@ -264,6 +276,22 @@ public class RunningTaskLogs {
         }
     }
 
+    public static ConcurrentHashMap<String, WeakReference<Thread>> getRunningLogThreadsCache() {
+        return runningLogThreadsCache;
+    }
+
+    public static String getThreadIdentifier(LogTaskContent content) {
+        return content.getSessionIdentifier() + RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER + content.getHistoryId();
+    }
+
+    public static String getHistoryIdFromThreadIdentifier(String threadIdentifier) {
+        if (threadIdentifier == null) {
+            return null;
+        }
+        String[] arr = threadIdentifier.split(RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER);
+        return arr.length > 1 ? arr[1] : null;
+    }
+
     private synchronized void addEvent(String sessionIdentifier, RunningTaskLog event) {
         // LOGGER.debug("try to add log event for taskId '" + event.getTaskId() + "'" );
         String eventKey = getEventKey(sessionIdentifier, event.getTaskId());
@@ -305,6 +333,57 @@ public class RunningTaskLogs {
                 LOGGER.debug("[cleanupCheckIfIsRegistered][" + historyIdAndSessionIdentifier + "][exception]" + e);
             }
             return false;
+        }
+    }
+
+    private static void cleanupRunningLogThreadsCache(boolean isDebugEnabled) {
+        Map<String, Integer> nullCounts = new HashMap<>();
+        Map<String, Integer> aliveCounts = new HashMap<>();
+        Map<String, Integer> deadCounts = new HashMap<>();
+
+        runningLogThreadsCache.entrySet().removeIf(entry -> {
+            String historyId = isDebugEnabled ? getHistoryIdFromThreadIdentifier(entry.getKey()) : null;
+            Thread t = entry.getValue().get();
+            if (t == null) {
+                if (isDebugEnabled) {
+                    nullCounts.merge(historyId, 1, Integer::sum);
+                }
+                return true;
+            } else {
+                try {
+                    if (t.isAlive()) {
+                        if (isDebugEnabled) {
+                            aliveCounts.merge(historyId, 1, Integer::sum);
+                        }
+                    } else {
+                        if (isDebugEnabled) {
+                            deadCounts.merge(historyId, 1, Integer::sum);
+                        }
+                        return true;
+                    }
+                }
+                // if t suddenly became null, simply remove it by returning true
+                catch (NullPointerException e) {
+                    nullCounts.merge(historyId, 1, Integer::sum);
+                    return true;
+                }
+            }
+            return false;
+        });
+        if (isDebugEnabled) {
+            Set<String> allHistoryIds = new HashSet<>();
+            allHistoryIds.addAll(nullCounts.keySet());
+            allHistoryIds.addAll(aliveCounts.keySet());
+            allHistoryIds.addAll(deadCounts.keySet());
+
+            for (String historyId : allHistoryIds) {
+                int nulls = nullCounts.getOrDefault(historyId, 0);
+                int alive = aliveCounts.getOrDefault(historyId, 0);
+                int dead = deadCounts.getOrDefault(historyId, 0);
+                int removed = nulls + dead;
+                LOGGER.debug("[RunningTaskLogs][cleanup][runningLogThreadsCache][historyId=" + historyId + "][removed(dead+null(GS))=" + removed
+                        + "][details]alive=" + alive + ", dead=" + dead + ", null(GC)=" + nulls);
+            }
         }
     }
 
