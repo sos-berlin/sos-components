@@ -272,9 +272,18 @@ public class JobArgument<T> extends SOSArgument<T> {
 
     @Override
     public String toString() {
+        return toString(false);
+    }
+
+    public String toString(boolean displayIfUnknown) {
         StringBuilder sb = new StringBuilder(getName());
         sb.append("[");
-        sb.append("value=").append(getDisplayValue());
+        sb.append("value=");
+        if (displayIfUnknown) {
+            sb.append(getDisplayValueIgnoreUnknown());
+        } else {
+            sb.append(getDisplayValue());
+        }
         if (valueSource != null && valueSource.getType() != null) {
             sb.append(" source=").append(valueSource.getType().name());
             if (valueSource.getSource() != null) {

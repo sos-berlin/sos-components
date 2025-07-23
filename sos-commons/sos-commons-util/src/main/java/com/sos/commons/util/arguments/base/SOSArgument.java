@@ -115,6 +115,10 @@ public class SOSArgument<T> {
         return SOSArgumentHelper.getDisplayValue(value, displayMode);
     }
 
+    public String getDisplayValueIgnoreUnknown() {
+        return SOSArgumentHelper.getDisplayValueIgnoreUnknown(value, displayMode);
+    }
+
     public boolean isDirty() {
         if (dirty == null) {
             setIsDirty();

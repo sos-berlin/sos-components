@@ -25,11 +25,26 @@ public class SOSArgumentHelper {
         case NONE:
             return DisplayMode.NONE.getValue();
         case UNMASKED:
-            return truncatingIfNeeded(value.toString());
+            return formatValue(value.toString());
         case MASKED:
             return DisplayMode.MASKED.getValue();
         default:
             return DisplayMode.UNKNOWN.getValue();
+        }
+    }
+
+    public static String getDisplayValueIgnoreUnknown(Object value, DisplayMode mode) {
+        if (value == null) {
+            return null;
+        }
+        switch (mode) {
+        case NONE:
+            return DisplayMode.NONE.getValue();
+        case MASKED:
+            return DisplayMode.MASKED.getValue();
+        case UNMASKED:
+        default:
+            return formatValue(value.toString());
         }
     }
 
@@ -98,11 +113,14 @@ public class SOSArgumentHelper {
         return String.join(listValueDelimiter, arg.getValue());
     }
 
-    private static String truncatingIfNeeded(final String val) {
+    private static String formatValue(final String val) {
         if (val == null) {
             return val;
         }
         String v = val;
+        // 1) replace new lines
+        v = SOSString.replaceNewLines(v, " ");
+        // 2) truncate if needed
         if (v.length() > DISPLAY_VALUE_MAX_LENGTH) {
             v = v.substring(0, DISPLAY_VALUE_USED_LENGTH) + DISPLAY_VALUE_TRUNCATING_SUFFIX;
         }

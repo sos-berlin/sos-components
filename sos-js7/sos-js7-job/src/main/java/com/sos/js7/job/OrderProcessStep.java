@@ -315,6 +315,9 @@ public class OrderProcessStep<A extends JobArguments> {
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
         }
+        if (logger.isDebugEnabled()) {
+            return SOSArgumentHelper.getDisplayValueIgnoreUnknown(ar.getValue(), ar.getDisplayMode());
+        }
         return ar.getDisplayValue();
     }
 
@@ -322,6 +325,9 @@ public class OrderProcessStep<A extends JobArguments> {
         JobArgument<?> ar = allArguments.get(name);
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
+        }
+        if (logger.isDebugEnabled()) {
+            return SOSArgumentHelper.getDisplayValueIgnoreUnknown(originalValue, ar.getDisplayMode());
         }
         return SOSArgumentHelper.getDisplayValue(originalValue, ar.getDisplayMode());
     }
@@ -955,7 +961,7 @@ public class OrderProcessStep<A extends JobArguments> {
         if (orderPreparation != null && orderPreparation.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSourceType.ORDER_PREPARATION.getHeader()));
             orderPreparation.stream().forEach(a -> {
-                logger.log(logLevel, "    " + a.toString());
+                logger.log(logLevel, "    " + a.toString(logger.isDebugEnabled()));
             });
         }
 
@@ -964,7 +970,7 @@ public class OrderProcessStep<A extends JobArguments> {
         if (orderOrNode != null && orderOrNode.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSourceType.ORDER_OR_NODE.getHeader()));
             orderOrNode.stream().forEach(a -> {
-                logger.log(logLevel, "    " + a.toString());
+                logger.log(logLevel, "    " + a.toString(logger.isDebugEnabled()));
             });
         }
         if (internalStep != null) {
@@ -1109,7 +1115,7 @@ public class OrderProcessStep<A extends JobArguments> {
         }
         logger.log(logLevel, String.format(" All %s:", ValueSourceType.JAVA.getHeader()));
         allArguments.entrySet().stream().forEach(a -> {
-            logger.log(logLevel, "    " + a.getValue().toString());
+            logger.log(logLevel, "    " + a.getValue().toString(logger.isDebugEnabled()));
         });
     }
 
