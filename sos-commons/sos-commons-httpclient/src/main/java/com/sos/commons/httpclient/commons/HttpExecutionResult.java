@@ -3,7 +3,13 @@ package com.sos.commons.httpclient.commons;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-/** Holds result of an executed request and its response */
+/** Holds the result of an executed HTTP request and its response.
+ *
+ * <p>
+ * This class represents the outcome of a synchronous HTTP call, including the original request data, the received response,<br/>
+ * and any additional metadata (e.g., status, duration, errors).
+ *
+ * @param <T> the type of the response body */
 public class HttpExecutionResult<T> {
 
     private final HttpRequest request;
@@ -14,9 +20,25 @@ public class HttpExecutionResult<T> {
     // as : https://myaccount.blob.core.windows.net/***
     private boolean formatWithMaskRequestURIQueryParams = false;
 
-    protected HttpExecutionResult(HttpRequest request, HttpResponse<T> response) {
+    /** Synchronous constructor used to capture the request and its response.
+     *
+     * <p>
+     * Since the call is synchronous:<br/>
+     * - The request object is already fully built and available before sending.<br/>
+     * -- The client logs the request headers before sending the request.<br/>
+     * - The response (and its headers) is available immediately after the request is sent and completed.
+     * 
+     * The response headers are logged via {@code debugHeaders()} after receiving the response.
+     *
+     * @param client the HTTP client executing the request
+     * @param request the HTTP request sent
+     * @param response the HTTP response received */
+    protected HttpExecutionResult(ABaseHttpClient client, HttpRequest request, HttpResponse<T> response) {
         this.request = request;
         this.response = response;
+        if (response != null) {
+            client.debugHeaders("HttpResponse headers", response.headers());
+        }
     }
 
     public HttpRequest request() {

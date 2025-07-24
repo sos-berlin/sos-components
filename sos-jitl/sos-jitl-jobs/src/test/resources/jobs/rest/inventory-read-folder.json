@@ -1,0 +1,7 @@
+{
+	"endpoint": "/inventory/read/folder",
+	"method": "POST",
+	"body": {
+		"path": "/"
+	}
+}

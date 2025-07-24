@@ -139,12 +139,12 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
         }
 
         T client = createInstance(logger, httpClientBuilder.build());
-        if (logger.isDebugEnabled()) {
+        if (logger.isTraceEnabled()) {
             if (headers.size() > 0) {
-                logger.debug("Headers:");
+                logger.trace("Builder default request headers:");
                 headers.entrySet().forEach(e -> {
-                    String val = client.isSensitiveHeader(e.getKey()) ? "***" : e.getValue();
-                    logger.debug("    name=" + e.getKey() + ", value=" + val);
+                    String val = client.isSensitiveHeader(e.getKey()) ? "********" : e.getValue();
+                    logger.trace("    name=" + e.getKey() + ", value=" + val);
                 });
             }
         }

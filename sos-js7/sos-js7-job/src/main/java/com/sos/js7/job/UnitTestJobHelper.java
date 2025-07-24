@@ -31,7 +31,9 @@ public class UnitTestJobHelper<A extends JobArguments> {
     public UnitTestJobHelper(Job<A> job) {
         this.job = job;
         this.stepConfig = new UnitTestStepConfig();
-        setModifiableEnvironment();
+        LOGGER.info("[Note]use 'Run Configurations -> Environment' to set environment variables if needed");
+        
+        // setModifiableEnvironment();
     }
 
     public void onStart(Map<String, Object> args) throws Exception {
@@ -152,7 +154,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         return declared;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "unused" })
     private void setModifiableEnvironment() {
         try {
             Class<?> pe = Class.forName("java.lang.ProcessEnvironment");
@@ -194,7 +196,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         private String workflowPosition;
 
         public String getControllerId() {
-            return controllerId;
+            return controllerId == null ? "test-controller" : controllerId;
         }
 
         public void setControllerId(String val) {
@@ -202,7 +204,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
 
         public String getOrderId() {
-            return orderId;
+            return orderId == null ? "test-order" : orderId;
         }
 
         public void setOrderId(String val) {
@@ -210,7 +212,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
 
         public String getAgentId() {
-            return agentId;
+            return agentId == null ? "test-agent" : agentId;
         }
 
         public void setAgentId(String val) {
@@ -226,7 +228,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
 
         public String getJobName() {
-            return jobName;
+            return jobName == null ? "test-job" : jobName;
         }
 
         public void setJobName(String val) {
@@ -234,7 +236,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
 
         public String getWorkflowPath() {
-            return workflowPath;
+            return workflowPath == null ? "/" + getWorkflowName() : workflowPath;
         }
 
         public void setWorkflowPath(String val) {
@@ -242,7 +244,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
 
         public String getWorkflowName() {
-            return workflowName;
+            return workflowName == null ? "test-workflow" : workflowName;
         }
 
         public void setWorkflowName(String val) {
@@ -250,7 +252,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
 
         public String getWorkflowVersionId() {
-            return workflowVersionId;
+            return workflowVersionId == null ? "test-versionId-123" : workflowVersionId;
         }
 
         public void setWorkflowVersionId(String val) {
@@ -258,7 +260,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
 
         public String getWorkflowPosition() {
-            return workflowPosition;
+            return workflowPosition == null ? "0" : workflowPosition;
         }
 
         public void setWorkflowPosition(String val) {

@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -88,9 +90,18 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return builder;
     }
 
-    /** Executes a generic request with a specified body handler */
+    /** Executes a generic request with a specified body handler
+     * 
+     * <p>
+     * Since the call is synchronous:<br/>
+     * - The request object is already fully built and available before sending.<br/>
+     * -- The client logs the request headers before sending the request.<br/>
+     * - The response (and its headers) is available immediately after the request is sent and completed.
+     * 
+     * The response headers are logged by {@link HttpExecutionResult} after receiving the response. **/
     public <T> HttpExecutionResult<T> execute(HttpRequest request, HttpResponse.BodyHandler<T> bodyHandler) throws Exception {
-        return new HttpExecutionResult<>(request, client.send(request, bodyHandler));
+        debugHeaders("HttpRequest headers", request.headers());
+        return new HttpExecutionResult<>(this, request, client.send(request, bodyHandler));
     }
 
     /** Executes a request and returns the response body as a String */
@@ -210,8 +221,8 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     }
 
     /** Executes a POST request with a BodyPublisher and handles the response via provided handler */
-    public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, HttpRequest.BodyPublisher requestBody, HttpResponse.BodyHandler<T> handler)
-            throws Exception {
+    public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, HttpRequest.BodyPublisher requestBody,
+            HttpResponse.BodyHandler<T> handler) throws Exception {
         return execute(createPOSTRequest(uri, headers, requestBody), handler);
     }
 
@@ -381,7 +392,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         int code = response.statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            HttpExecutionResult<?> result = new HttpExecutionResult<>(request, response);
+            HttpExecutionResult<?> result = new HttpExecutionResult<>(this, request, response);
             if (HttpUtils.isNotFound(code)) {
                 throw new SOSNoSuchFileException(uri.toString(), new Exception(formatExecutionResult(result)));
             }
@@ -527,6 +538,30 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return logger;
     }
 
+    /** Prints request/response headers for debugging.<br/>
+     *
+     * Note:<br/>
+     * - HttpRequest: header names keep original casing (as set by the developer).<br/>
+     * - HttpResponse: header names are always in lowercase (normalized by HttpClient).<br/>
+     * -- This is because HTTP header names are case-insensitive by spec (RFC 7230), and Java normalizes them for consistent lookup. */
+    protected void debugHeaders(String title, HttpHeaders httpHeaders) {
+        if (!logger.isDebugEnabled() || httpHeaders == null) {
+            return;
+        }
+        Map<String, List<String>> headers = httpHeaders.map();
+        if (!SOSCollection.isEmpty(headers)) {
+            logger.debug(title + ":");
+            headers.entrySet().forEach(e -> {
+                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? "********" : String.join(", ", e.getValue());
+                logger.debug("    name=" + e.getKey() + ", value=" + val);
+            });
+        }
+    }
+
+    protected void setDefaultHeaders(Map<String, String> headers) {
+        this.defaultHeaders = headers;
+    }
+
     private static String buildExecutionResultSummary(HttpExecutionResult<?> result) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(result.request().method()).append("]");
@@ -583,10 +618,6 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
         }
         return builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build();
-    }
-
-    protected void setDefaultHeaders(Map<String, String> headers) {
-        this.defaultHeaders = headers;
     }
 
     private long getFileSizeIfChunkedTransferEncoding(URI uri) throws Exception {
@@ -661,17 +692,18 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     }
 
     private HttpExecutionResult<JsonNode> wrapHttpExecutionResultJsonNode(HttpExecutionResult<String> original) throws Exception {
-        return new HttpExecutionResult<>(original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readTree(original.response().body())));
+        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readTree(original.response()
+                .body())));
     }
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, Class<T> type) throws Exception {
-        return new HttpExecutionResult<>(original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(),
-                type)));
+        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response()
+                .body(), type)));
     }
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, TypeReference<T> typeRef) throws Exception {
-        return new HttpExecutionResult<>(original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(),
-                typeRef)));
+        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response()
+                .body(), typeRef)));
     }
 
 }
