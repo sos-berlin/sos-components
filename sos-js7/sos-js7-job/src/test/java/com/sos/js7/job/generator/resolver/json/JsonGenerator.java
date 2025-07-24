@@ -1,4 +1,4 @@
-package com.sos.js7.job.generator.json;
+package com.sos.js7.job.generator.resolver.json;
 
 import java.io.FileWriter;
 import java.io.IOException;
