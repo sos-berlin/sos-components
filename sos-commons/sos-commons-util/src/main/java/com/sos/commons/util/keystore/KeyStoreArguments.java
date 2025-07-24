@@ -2,9 +2,12 @@ package com.sos.commons.util.keystore;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
@@ -12,6 +15,8 @@ import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 public class KeyStoreArguments extends ASOSArguments {
 
     public static final String CLASS_KEY = "KEY_STORE";
+
+    private static final String ALIASES_DELIMITER = ";";
 
     // Java KeyStore
     private SOSArgument<KeyStoreType> keyStoreType = new SOSArgument<>("keystore_type", false, KeyStoreType.JKS);
@@ -25,21 +30,21 @@ public class KeyStoreArguments extends ASOSArguments {
     private SOSArgument<Path> trustStoreFile = new SOSArgument<>("truststore_file", false);
     private SOSArgument<String> trustStorePassword = new SOSArgument<>("truststore_password", false, DisplayMode.MASKED);
 
-    // internal usage - sets KeyStoreFile
-    private SOSArgument<KeyStoreFile> keyStoreFileObject = new SOSArgument<>(null, false);
+    // internal usage - sets KeyStoreContainer - can be based on a Path or directly contain a KeyStore
+    private SOSArgument<KeyStoreContainer> keyStoreContainer = new SOSArgument<>(null, false);
     // internal usage - support multiple TrustStores
-    private SOSArgument<List<KeyStoreFile>> trustStoreFiles = new SOSArgument<>(null, false);
+    private SOSArgument<List<KeyStoreContainer>> trustStoreContainers = new SOSArgument<>(null, false);
 
     public boolean isCustomStoresEnabled() {
         return isCustomTrustStoreEnabled() || isCustomKeyStoreEnabled();
     }
 
     public boolean isCustomTrustStoreEnabled() {
-        return !trustStoreFile.isEmpty() || !trustStoreFiles.isEmpty();
+        return !trustStoreFile.isEmpty() || !trustStoreContainers.isEmpty();
     }
 
     public boolean isCustomKeyStoreEnabled() {
-        return !keyStoreFile.isEmpty() || !keyStoreFileObject.isEmpty();
+        return !keyStoreFile.isEmpty() || !keyStoreContainer.isEmpty();
     }
 
     public SOSArgument<KeyStoreType> getKeyStoreType() {
@@ -62,9 +67,18 @@ public class KeyStoreArguments extends ASOSArguments {
         return keyStoreKeyPassword;
     }
 
-    public void setKeyStoreFile(KeyStoreFile f) {
-        keyStoreFileObject.setValue(f);
-        mapToSingleKeyStoreProperties(keyStoreFileObject.getValue());
+    public void setKeyStoreContainer(KeyStoreContainer c) {
+        keyStoreContainer.setValue(c);
+        mapContainerToSingleKeyStoreFileArgument(keyStoreContainer.getValue());
+    }
+
+    public SOSArgument<KeyStoreContainer> getKeyStoreContainer() {
+        if (isCustomKeyStoreEnabled()) {
+            if (keyStoreContainer.getValue() == null) {
+                keyStoreContainer.setValue(mapSingleKeyStoreFileArgumentToContainer());
+            }
+        }
+        return keyStoreContainer;
     }
 
     public SOSArgument<KeyStoreType> getTrustStoreType() {
@@ -79,60 +93,83 @@ public class KeyStoreArguments extends ASOSArguments {
         return trustStorePassword;
     }
 
-    public void setTrustStoreFiles(List<KeyStoreFile> val) {
-        trustStoreFiles.setValue(val);
+    public void setTrustStoreContainers(List<KeyStoreContainer> val) {
+        trustStoreContainers.setValue(val);
     }
 
-    public SOSArgument<List<KeyStoreFile>> getTrustStoreFiles() {
+    public SOSArgument<List<KeyStoreContainer>> getTrustStoreContainers() {
         if (isCustomTrustStoreEnabled()) {
-            if (trustStoreFiles.getValue() == null) {
-                KeyStoreFile f = mapSingleTrustStoreProperties();
-                if (f != null) {
-                    trustStoreFiles.setValue(new ArrayList<>());
-                    trustStoreFiles.getValue().add(f);
+            if (trustStoreContainers.getValue() == null) {
+                KeyStoreContainer c = mapSingleTrustStoreFileArgumentToContainer();
+                if (c != null) {
+                    trustStoreContainers.setValue(new ArrayList<>());
+                    trustStoreContainers.getValue().add(c);
                 }
             }
         }
-        return trustStoreFiles;
+        return trustStoreContainers;
     }
 
-    public void addTrustStoreFile(KeyStoreFile f) {
-        if (f == null || f.getPath() == null) {
+    public void addTrustStoreContainer(KeyStoreContainer c) {
+        if (c == null) {
             return;
         }
-        if (getTrustStoreFiles().getValue() == null) {
-            trustStoreFiles.setValue(new ArrayList<>());
+        if (getTrustStoreContainers().getValue() == null) {
+            trustStoreContainers.setValue(new ArrayList<>());
         }
 
-        boolean exists = trustStoreFiles.getValue().stream().anyMatch(e -> f.getPath().equals(e.getPath()));
-        if (!exists) {
-            trustStoreFiles.getValue().add(f);
+        if (c.getPath() == null) {
+            if (c.getKeyStore() == null) {
+                return;
+            }
+            trustStoreContainers.getValue().add(c);
+        } else {
+            boolean exists = trustStoreContainers.getValue().stream().anyMatch(e -> c.getPath().equals(e.getPath()));
+            if (!exists) {
+                trustStoreContainers.getValue().add(c);
+            }
         }
     }
 
-    private void mapToSingleKeyStoreProperties(KeyStoreFile f) {
-        if (f == null) {
+    private void mapContainerToSingleKeyStoreFileArgument(KeyStoreContainer c) {
+        if (c == null || c.getPath() == null) {
             keyStoreFile.setValue(null);
             return;
         }
 
-        keyStoreFile.setValue(f.getPath());
-        keyStoreType.setValue(f.getType());
-        keyStorePassword.setValue(f.getPassword());
-        keyStoreKeyPassword.setValue(f.getKeyPassword());
-        keyStoreAlias.setValue(SOSCollection.isEmpty(f.getAliases()) ? null : String.join(";", f.getAliases()));
+        keyStoreFile.setValue(c.getPath());
+        keyStoreType.setValue(c.getType());
+        keyStorePassword.setValue(c.getPassword());
+        keyStoreKeyPassword.setValue(c.getKeyPassword());
+        keyStoreAlias.setValue(SOSCollection.isEmpty(c.getAliases()) ? null : String.join(ALIASES_DELIMITER, c.getAliases()));
     }
 
-    private KeyStoreFile mapSingleTrustStoreProperties() {
+    private KeyStoreContainer mapSingleKeyStoreFileArgumentToContainer() {
+        if (keyStoreFile.isEmpty()) {
+            return null;
+        }
+
+        KeyStoreContainer c = new KeyStoreContainer(keyStoreType.getValue(), keyStoreFile.getValue());
+        c.setPassword(keyStorePassword.getValue());
+        c.setAliases(aliasesToList(keyStoreAlias.getValue()));
+        return c;
+    }
+
+    private List<String> aliasesToList(String input) {
+        if (SOSString.isEmpty(input)) {
+            return null;
+        }
+        return Arrays.stream(input.split(ALIASES_DELIMITER)).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+    }
+
+    private KeyStoreContainer mapSingleTrustStoreFileArgumentToContainer() {
         if (trustStoreFile.isEmpty()) {
             return null;
         }
 
-        KeyStoreFile f = new KeyStoreFile();
-        f.setType(trustStoreType.getValue());
-        f.setPath(trustStoreFile.getValue());
-        f.setPassword(trustStorePassword.getValue());
-        return f;
+        KeyStoreContainer c = new KeyStoreContainer(trustStoreType.getValue(), trustStoreFile.getValue());
+        c.setPassword(trustStorePassword.getValue());
+        return c;
     }
 
     @Override

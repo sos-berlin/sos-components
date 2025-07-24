@@ -7,7 +7,7 @@ import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.keystore.KeyStoreArguments;
-import com.sos.commons.util.keystore.KeyStoreFile;
+import com.sos.commons.util.keystore.KeyStoreContainer;
 
 /** Named SslArguments (not SSLArguments) to follow modern Java naming conventions,<br/>
  * where acronyms use only the first letter capitalized (e.g., HttpClient, XmlParser). */
@@ -50,8 +50,8 @@ public class SslArguments extends ASOSArguments {
         if (!trustedSsl.getKeyStoreFile().isEmpty()) {
             l.add(ARG_NAME_KEYSTORE_DISPLAY_NAME + " " + trustedSsl.getKeyStoreType().getValue() + " " + trustedSsl.getKeyStoreFile().getValue());
         }
-        if (!SOSCollection.isEmpty(trustedSsl.getTrustStoreFiles().getValue())) {
-            l.add(KeyStoreFile.toString(ARG_NAME_TRUSTSTORE_DISPLAY_NAME, trustedSsl.getTrustStoreFiles().getValue()));
+        if (!SOSCollection.isEmpty(trustedSsl.getTrustStoreContainers().getValue())) {
+            l.add(KeyStoreContainer.toString(ARG_NAME_TRUSTSTORE_DISPLAY_NAME, trustedSsl.getTrustStoreContainers().getValue()));
         }
         return String.join(", ", l);
     }

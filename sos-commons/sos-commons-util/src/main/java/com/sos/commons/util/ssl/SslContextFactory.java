@@ -21,7 +21,7 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.keystore.AliasForcingKeyManager;
 import com.sos.commons.util.keystore.CombinedX509TrustManager;
-import com.sos.commons.util.keystore.KeyStoreFile;
+import com.sos.commons.util.keystore.KeyStoreContainer;
 import com.sos.commons.util.keystore.KeyStoreReader;
 import com.sos.commons.util.keystore.KeyStoreReader.KeyStoreResult;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -79,7 +79,8 @@ public class SslContextFactory {
                     logger.debug("[SslContextFactory][KeyStoreResult]%s", result);
                 }
                 try {
-                    sslContext.init(getKeyManagers(result.getKeyStoreFile()), getTrustManagers(result.getTrustStoreFiles()), new SecureRandom());
+                    sslContext.init(getKeyManagers(result.getKeyStoreContainer()), getTrustManagers(result.getTrustStoreContainers()),
+                            new SecureRandom());
                 } catch (Exception e) {
                     throw new Exception("[" + result.toString() + "][KeyManagerFactory.getDefaultAlgorithm()=" + KeyManagerFactory
                             .getDefaultAlgorithm() + "]" + e, e);
@@ -106,22 +107,22 @@ public class SslContextFactory {
                 .equalsIgnoreCase(DEFAULT_PROTOCOL) && !s.equalsIgnoreCase("SSL")).toArray(String[]::new);
     }
 
-    private static KeyManager[] getKeyManagers(final KeyStoreFile f) throws Exception {
-        if (f == null) {
+    private static KeyManager[] getKeyManagers(final KeyStoreContainer c) throws Exception {
+        if (c == null) {
             return null;
         }
 
         final KeyManagerFactory factory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        factory.init(f.getKeyStore(), f.getKeyPasswordChars());
+        factory.init(c.getKeyStore(), c.getKeyPasswordChars());
         KeyManager[] managers = factory.getKeyManagers();
 
-        if (SOSCollection.isEmpty(f.getAliases())) {
+        if (SOSCollection.isEmpty(c.getAliases())) {
             return managers;
         }
 
         for (int i = 0; i < managers.length; i++) {
             if (managers[i] instanceof X509KeyManager) {
-                managers[i] = new AliasForcingKeyManager((X509KeyManager) managers[i], f.getAliases());
+                managers[i] = new AliasForcingKeyManager((X509KeyManager) managers[i], c.getAliases());
             }
         }
 
@@ -135,15 +136,15 @@ public class SslContextFactory {
         return factory.getTrustManagers();
     }
 
-    private static TrustManager[] getTrustManagers(final List<KeyStoreFile> files) throws Exception {
-        if (SOSCollection.isEmpty(files)) {
+    private static TrustManager[] getTrustManagers(final List<KeyStoreContainer> containers) throws Exception {
+        if (SOSCollection.isEmpty(containers)) {
             return getDefaultJVMTrustManagers();
         }
 
         List<X509TrustManager> trustManagers = new ArrayList<>();
-        for (KeyStoreFile f : files) {
+        for (KeyStoreContainer c : containers) {
             TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            factory.init(f.getKeyStore());
+            factory.init(c.getKeyStore());
             for (TrustManager tm : factory.getTrustManagers()) {
                 if (tm instanceof X509TrustManager) {
                     trustManagers.add((X509TrustManager) tm);

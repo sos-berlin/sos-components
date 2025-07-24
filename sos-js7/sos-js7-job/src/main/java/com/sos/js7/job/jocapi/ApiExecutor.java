@@ -54,7 +54,7 @@ import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.keystore.KeyStoreFile;
+import com.sos.commons.util.keystore.KeyStoreContainer;
 import com.sos.commons.util.keystore.KeyStoreType;
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.ssl.SslArguments;
@@ -130,25 +130,25 @@ public class ApiExecutor implements AutoCloseable {
     private URI jocUri;
     private List<String> jocUris;
     private Config config;
-    
+
     private Map<String, DetailValue> jobResources;
     private Map<String, String> additionalHeaders;
-    
+
     private Map<String, String> responseHeaders;
-    
+
     public ApiExecutor(OrderProcessStep<?> step) {
         this.step = step;
     }
-    
+
     public ApiExecutor(OrderProcessStep<?> step, Map<String, String> additionalHeaders) {
         this(step);
         this.additionalHeaders = additionalHeaders;
     }
-    
+
     public Map<String, String> getAdditionalHeaders() {
         return additionalHeaders;
     }
-    
+
     public void setAdditionalHeaders(Map<String, String> additionalHeaders) {
         this.additionalHeaders = additionalHeaders;
     }
@@ -163,9 +163,8 @@ public class ApiExecutor implements AutoCloseable {
 
     public ApiResponse login(Duration connectTimeout) throws Exception {
         /*
-         * TODO: first check variables from OrderProcessStep if required values are available 
-         *    if available use this configuration 
-         *    if not available use configuration from private.conf
+         * TODO: first check variables from OrderProcessStep if required values are available if available use this configuration if not available use
+         * configuration from private.conf
          */
         boolean isDebugEnabled = step.getLogger().isDebugEnabled();
         step.getLogger().debug("***ApiExecutor***");
@@ -234,10 +233,12 @@ public class ApiExecutor implements AutoCloseable {
 
     public ApiResponse post(String token, String apiUrl, HttpFormData formData) throws SOSConnectionRefusedException, SOSBadRequestException {
         Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
-        return post(token, apiUrl, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData), requestHeaders);
+        return post(token, apiUrl, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData),
+                requestHeaders);
     }
-    
-    private ApiResponse post(String token, String apiUrl, HttpRequest.BodyPublisher publisher, Map<String, String> requestHeaders) throws SOSConnectionRefusedException, SOSBadRequestException {
+
+    private ApiResponse post(String token, String apiUrl, HttpRequest.BodyPublisher publisher, Map<String, String> requestHeaders)
+            throws SOSConnectionRefusedException, SOSBadRequestException {
         if (token == null) {
             throw new SOSBadRequestException("no access token provided. permission denied.");
         } else {
@@ -254,11 +255,8 @@ public class ApiExecutor implements AutoCloseable {
                     if (isDebugEnabled) {
                         step.getLogger().debug("resolvedUri: %s", jocUri.resolve(apiUrl).toString());
                     }
-                    HttpExecutionResult<InputStream> result = client.executePOST(
-                            jocUri.resolve(apiUrl), 
-                            client.mergeWithDefaultHeaders(requestHeaders),
-                            publisher, 
-                            HttpResponse.BodyHandlers.ofInputStream());
+                    HttpExecutionResult<InputStream> result = client.executePOST(jocUri.resolve(apiUrl), client.mergeWithDefaultHeaders(
+                            requestHeaders), publisher, HttpResponse.BodyHandlers.ofInputStream());
                     String responseBody = readPostResponseBody(result);
                     // result.formatWithResponseBody(true);
                     if (step.getLogger().isDebugEnabled()) {
@@ -315,18 +313,18 @@ public class ApiExecutor implements AutoCloseable {
         SslArguments args = new SslArguments();
 
         // TrustStore(s): 0->n
-        List<KeyStoreFile> trustStoreFiles = getTrustStoreFilesFromOrder();
-        if (trustStoreFiles == null) {
-            trustStoreFiles = getTrustStoreFilesFromConfig(config);
+        List<KeyStoreContainer> trustStoreContainers = getTrustStoreContainersFromOrder();
+        if (trustStoreContainers == null) {
+            trustStoreContainers = getTrustStoreContainersFromConfig(config);
         }
-        args.getTrustedSsl().setTrustStoreFiles(trustStoreFiles);
+        args.getTrustedSsl().setTrustStoreContainers(trustStoreContainers);
 
         // KeyStore: 0->1
-        KeyStoreFile keyStoreFile = getKeyStoreFileFromOrder();
-        if (keyStoreFile == null) {
-            keyStoreFile = getKeyStoreFileFromConfig(config);
+        KeyStoreContainer keyStoreContainer = getKeyStoreContainerFromOrder();
+        if (keyStoreContainer == null) {
+            keyStoreContainer = getKeyStoreContainerFromConfig(config);
         }
-        args.getTrustedSsl().setKeyStoreFile(keyStoreFile);
+        args.getTrustedSsl().setKeyStoreContainer(keyStoreContainer);
         return args;
     }
 
@@ -512,12 +510,12 @@ public class ApiExecutor implements AutoCloseable {
 
     private String readPostResponseBody(HttpExecutionResult<InputStream> result) throws Exception {
         String responseBody = null;
-        String contentEncoding = client.getResponseHeader(result.response(), 
-                HttpUtils.HEADER_CONTENT_ENCODING).orElse("identity").toLowerCase(Locale.ROOT);
+        String contentEncoding = client.getResponseHeader(result.response(), HttpUtils.HEADER_CONTENT_ENCODING).orElse("identity").toLowerCase(
+                Locale.ROOT);
         Path responseBodyFile = getResponseBodyFile(result);
-        try (InputStream in = decodeInputStream(result.response().body(), contentEncoding); 
-                OutputStream out = responseBodyFile == null ? new ByteArrayOutputStream() : 
-                    Files.newOutputStream(responseBodyFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);) {
+        try (InputStream in = decodeInputStream(result.response().body(), contentEncoding); OutputStream out = responseBodyFile == null
+                ? new ByteArrayOutputStream() : Files.newOutputStream(responseBodyFile, StandardOpenOption.CREATE,
+                        StandardOpenOption.TRUNCATE_EXISTING);) {
             byte[] buffer = new byte[4_096];
             int length;
             while ((length = in.read(buffer)) > 0) {
@@ -606,8 +604,7 @@ public class ApiExecutor implements AutoCloseable {
     }
 
     private String getValueOfArgument(JobArgument<?> arg, String _default) {
-        return Optional.ofNullable(arg).map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString)
-                .orElse(_default);
+        return Optional.ofNullable(arg).map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse(_default);
     }
 
     private String getPrivateKeyPath() {
@@ -700,7 +697,7 @@ public class ApiExecutor implements AutoCloseable {
         return config;
     }
 
-    private List<KeyStoreFile> getTrustStoreFilesFromOrder() {
+    private List<KeyStoreContainer> getTrustStoreContainersFromOrder() {
         String trustStores = getDecrytedValueOfArgument(JOB_ARGUMENT_TRUSTSTORE_FILE);
         if (SOSString.isEmpty(trustStores)) {
             return null;
@@ -713,20 +710,17 @@ public class ApiExecutor implements AutoCloseable {
             if (SOSString.isEmpty(path)) {
                 return null;
             }
-            KeyStoreFile f = new KeyStoreFile();
-            f.setPath(SOSPath.toAbsolutePath(path));
-            if (!Files.exists(f.getPath())) {
-                step.getLogger().warn("[order][TrustStore][%s]not found", f.getPath());
+            KeyStoreContainer c = new KeyStoreContainer(KeyStoreType.PKCS12, SOSPath.toAbsolutePath(path));
+            if (!Files.exists(c.getPath())) {
+                step.getLogger().warn("[order][TrustStore][%s]not found", c.getPath());
                 return null;
             }
-
-            f.setType(KeyStoreType.PKCS12);
-            f.setPassword(pass);
-            return f;
+            c.setPassword(pass);
+            return c;
         }).filter(Objects::nonNull).toList();
     }
 
-    private List<KeyStoreFile> getTrustStoreFilesFromConfig(Config config) {
+    private List<KeyStoreContainer> getTrustStoreContainersFromConfig(Config config) {
         try {
             if (step.getLogger().isDebugEnabled()) {
                 step.getLogger().debug("read Truststore from: %s", config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_ARRAY).get(0).getString(
@@ -738,16 +732,13 @@ public class ApiExecutor implements AutoCloseable {
                     return null;
                 }
 
-                KeyStoreFile f = new KeyStoreFile();
-                f.setPath(SOSPath.toAbsolutePath(path));
-                if (!Files.exists(f.getPath())) {
-                    step.getLogger().warn("[config][TrustStore][%s]not found", f.getPath());
+                KeyStoreContainer c = new KeyStoreContainer(KeyStoreType.PKCS12, SOSPath.toAbsolutePath(path));
+                if (!Files.exists(c.getPath())) {
+                    step.getLogger().warn("[config][TrustStore][%s]not found", c.getPath());
                     return null;
                 }
-
-                f.setType(KeyStoreType.PKCS12);
-                f.setPassword(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD));
-                return f;
+                c.setPassword(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_STOREPWD));
+                return c;
             }).filter(Objects::nonNull).collect(Collectors.toList());
         } catch (ConfigException e) {
             step.getLogger().debug("[config]no truststore credentials found in private.conf.");
@@ -756,7 +747,7 @@ public class ApiExecutor implements AutoCloseable {
 
     }
 
-    private KeyStoreFile getKeyStoreFileFromOrder() {
+    private KeyStoreContainer getKeyStoreContainerFromOrder() {
         String path = getDecrytedValueOfArgument(JOB_ARGUMENT_KEYSTORE_FILE);
         if (SOSString.isEmpty(path)) {
             return null;
@@ -764,23 +755,19 @@ public class ApiExecutor implements AutoCloseable {
 
         String alias = getDecrytedValueOfArgument(JOB_ARGUMENT_KEYSTORE_ALIAS, "");
 
-        KeyStoreFile f = new KeyStoreFile();
-        f.setPath(SOSPath.toAbsolutePath(path));
-        if (!Files.exists(f.getPath())) {
-            step.getLogger().warn("[order][KeyStore][%s]not found", f.getPath());
+        KeyStoreContainer c = new KeyStoreContainer(KeyStoreType.PKCS12, SOSPath.toAbsolutePath(path));
+        if (!Files.exists(c.getPath())) {
+            step.getLogger().warn("[order][KeyStore][%s]not found", c.getPath());
             return null;
         }
-        f.setType(KeyStoreType.PKCS12);
-        f.setPassword(getDecrytedValueOfArgument(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD, ""));
-        f.setKeyPassword(getDecrytedValueOfArgument(JOB_ARGUMENT_KEYSTORE_KEY_PASSWD, ""));
-        f.setAliases(SOSString.isEmpty(alias) ? null : List.of(alias));
-        return f;
+        c.setPassword(getDecrytedValueOfArgument(JOB_ARGUMENT_KEYSTORE_STORE_PASSWD, ""));
+        c.setKeyPassword(getDecrytedValueOfArgument(JOB_ARGUMENT_KEYSTORE_KEY_PASSWD, ""));
+        c.setAliases(SOSString.isEmpty(alias) ? null : List.of(alias));
+        return c;
     }
 
-    private KeyStoreFile getKeyStoreFileFromConfig(Config config) {
-        KeyStoreFile f = new KeyStoreFile();
-        f.setType(KeyStoreType.PKCS12);
-
+    private KeyStoreContainer getKeyStoreContainerFromConfig(Config config) {
+        Path path = null;
         try {
             String keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH);
             if (step.getLogger().isDebugEnabled()) {
@@ -789,9 +776,9 @@ public class ApiExecutor implements AutoCloseable {
             if (SOSString.isEmpty(keystorePath)) {
                 return null;
             }
-            f.setPath(SOSPath.toAbsolutePath(keystorePath));
-            if (!Files.exists(f.getPath())) {
-                step.getLogger().warn("[config][KeyStore][%s]not found", f.getPath());
+            path = SOSPath.toAbsolutePath(keystorePath);
+            if (!Files.exists(path)) {
+                step.getLogger().warn("[config][KeyStore][%s]not found", path);
                 return null;
             }
         } catch (ConfigException e) {
@@ -799,26 +786,28 @@ public class ApiExecutor implements AutoCloseable {
             return null;
         }
 
+        KeyStoreContainer c = new KeyStoreContainer(KeyStoreType.PKCS12, path);
+
         try {
-            f.setPassword(config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD));
+            c.setPassword(config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD));
         } catch (ConfigException e) {
             step.getLogger().debug("[config]no keystore store-password found in private.conf.");
         }
 
         try {
-            f.setKeyPassword(config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD));
+            c.setKeyPassword(config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD));
         } catch (ConfigException e) {
             step.getLogger().debug("[config]no keystore key-password found in private.conf.");
         }
 
         try {
             String alias = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS);
-            f.setAliases(SOSString.isEmpty(alias) ? null : List.of(alias));
+            c.setAliases(SOSString.isEmpty(alias) ? null : List.of(alias));
         } catch (ConfigException e) {
             step.getLogger().debug("[config]no (key-)alias found in private.conf.");
         }
 
-        return f;
+        return c;
     }
 
     private String decryptValue(String encryptedValue, String propertyName, String privateKeyPath) throws SOSKeyException, SOSMissingDataException,
