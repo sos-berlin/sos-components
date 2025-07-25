@@ -36,8 +36,8 @@ public class HttpExecutionResult<T> {
     protected HttpExecutionResult(ABaseHttpClient client, HttpRequest request, HttpResponse<T> response) {
         this.request = request;
         this.response = response;
-        if (response != null) {
-            client.debugHeaders("HttpResponse headers", response.headers());
+        if (this.response != null) {
+            client.debugHeaders("HttpResponse headers", this.response.headers());
         }
     }
 

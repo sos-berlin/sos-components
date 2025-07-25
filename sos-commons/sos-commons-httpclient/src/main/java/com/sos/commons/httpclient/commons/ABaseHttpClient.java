@@ -26,6 +26,7 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
@@ -38,7 +39,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     private static final Set<String> DEFAULT_SENSITIVE_HEADERS = Set.of("Authorization", "Proxy-Authorization", "Cookie", "Set-Cookie", "X-Api-Key",
             "X-Auth-Token", "Authentication-Token", "Session-Id");
 
-    private static final String MASKED_STRING = "********";
+    private static final String MASKED_STRING = SOSArgument.DisplayMode.MASKED.getValue();
     private final ISOSLogger logger;
     /** Underlying Java HTTP client instance */
     private final HttpClient client;
@@ -552,14 +553,25 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         if (!SOSCollection.isEmpty(headers)) {
             logger.debug(title + ":");
             headers.entrySet().forEach(e -> {
-                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? "********" : String.join(", ", e.getValue());
-                logger.debug("    name=" + e.getKey() + ", value=" + val);
+                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? SOSArgument.DisplayMode.MASKED.getValue() : String.join(", ",
+                        e.getValue());
+                logger.debug("    name=" + e.getKey() + " value=" + val);
             });
         }
     }
 
     protected void setDefaultHeaders(Map<String, String> headers) {
         this.defaultHeaders = headers;
+
+        if (logger.isTraceEnabled()) {
+            if (this.defaultHeaders.size() > 0) {
+                logger.trace("Default HttpRequest headers(all requests):");
+                this.defaultHeaders.entrySet().forEach(e -> {
+                    String val = isSensitiveHeader(e.getKey()) ? SOSArgument.DisplayMode.MASKED.getValue() : e.getValue();
+                    logger.trace("    name=" + e.getKey() + " value=" + val);
+                });
+            }
+        }
     }
 
     private static String buildExecutionResultSummary(HttpExecutionResult<?> result) {
