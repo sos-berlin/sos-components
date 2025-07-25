@@ -8,17 +8,20 @@ import java.util.Collections;
 import java.util.List;
 
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.arguments.base.SOSArgument;
 
 public class KeyStoreContainer {
 
     private KeyStoreType type;
 
+    /** One of the following should be used: path or keyStore (see constructor comments) */
     private Path path;
     private KeyStore keyStore;
 
+    /** KeyStore password */
     private String password;
 
-    // KeyStore entry
+    /** KeyStore entry */
     private String keyPassword;
     private List<String> aliases;
 
@@ -103,13 +106,13 @@ public class KeyStoreContainer {
             sb.append(" ").append(path);
         }
         if (password != null) {
-            sb.append("  password=********");
+            sb.append("  password=" + SOSArgument.DisplayMode.MASKED.getValue());
         }
         if (!SOSCollection.isEmpty(aliases)) {
             sb.append("  aliases=" + aliases);
         }
         if (keyPassword != null) {
-            sb.append("  keyPassword=********");
+            sb.append("  keyPassword=" + SOSArgument.DisplayMode.MASKED.getValue());
         }
         return sb.toString();
     }

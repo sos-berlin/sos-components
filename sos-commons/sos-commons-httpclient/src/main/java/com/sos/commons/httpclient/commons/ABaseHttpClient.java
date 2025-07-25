@@ -26,6 +26,7 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
@@ -38,7 +39,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     private static final Set<String> DEFAULT_SENSITIVE_HEADERS = Set.of("Authorization", "Proxy-Authorization", "Cookie", "Set-Cookie", "X-Api-Key",
             "X-Auth-Token", "Authentication-Token", "Session-Id");
 
-    private static final String MASKED_STRING = "********";
+    private static final String MASKED_VALUE = SOSArgument.DisplayMode.MASKED.getValue();
     private final ISOSLogger logger;
     /** Underlying Java HTTP client instance */
     private final HttpClient client;
@@ -101,7 +102,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
      * The response headers are logged by {@link HttpExecutionResult} after receiving the response. **/
     public <T> HttpExecutionResult<T> execute(HttpRequest request, HttpResponse.BodyHandler<T> bodyHandler) throws Exception {
         debugHeaders("HttpRequest headers", request.headers());
-        return new HttpExecutionResult<>(this, request, client.send(request, bodyHandler));
+        return new HttpExecutionResult<>(this, client.send(request, bodyHandler));
     }
 
     /** Executes a request and returns the response body as a String */
@@ -392,7 +393,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         int code = response.statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            HttpExecutionResult<?> result = new HttpExecutionResult<>(this, request, response);
+            HttpExecutionResult<?> result = new HttpExecutionResult<>(this, response);
             if (HttpUtils.isNotFound(code)) {
                 throw new SOSNoSuchFileException(uri.toString(), new Exception(formatExecutionResult(result)));
             }
@@ -434,7 +435,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             base += uri.getPath();
         }
         base = base.endsWith("/") ? base : base + "/";
-        return base + MASKED_STRING;
+        return base + MASKED_VALUE;
     }
 
     /** Constructs a readable string representation of the response status */
@@ -552,14 +553,24 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         if (!SOSCollection.isEmpty(headers)) {
             logger.debug(title + ":");
             headers.entrySet().forEach(e -> {
-                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? "********" : String.join(", ", e.getValue());
-                logger.debug("    name=" + e.getKey() + ", value=" + val);
+                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? MASKED_VALUE : String.join(", ", e.getValue());
+                logger.debug("    name=" + e.getKey() + " value=" + val);
             });
         }
     }
 
     protected void setDefaultHeaders(Map<String, String> headers) {
         this.defaultHeaders = headers;
+
+        if (logger.isTraceEnabled()) {
+            if (this.defaultHeaders.size() > 0) {
+                logger.trace("Default HttpRequest headers(all requests):");
+                this.defaultHeaders.entrySet().forEach(e -> {
+                    String val = isSensitiveHeader(e.getKey()) ? MASKED_VALUE : e.getValue();
+                    logger.trace("    name=" + e.getKey() + " value=" + val);
+                });
+            }
+        }
     }
 
     private static String buildExecutionResultSummary(HttpExecutionResult<?> result) {
@@ -692,18 +703,15 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     }
 
     private HttpExecutionResult<JsonNode> wrapHttpExecutionResultJsonNode(HttpExecutionResult<String> original) throws Exception {
-        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readTree(original.response()
-                .body())));
+        return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readTree(original.response().body())));
     }
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, Class<T> type) throws Exception {
-        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response()
-                .body(), type)));
+        return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(), type)));
     }
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, TypeReference<T> typeRef) throws Exception {
-        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response()
-                .body(), typeRef)));
+        return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(), typeRef)));
     }
 
 }

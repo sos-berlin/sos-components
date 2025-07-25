@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.js7.job.exception.JobArgumentException;
@@ -31,8 +32,10 @@ public class UnitTestJobHelper<A extends JobArguments> {
     public UnitTestJobHelper(Job<A> job) {
         this.job = job;
         this.stepConfig = new UnitTestStepConfig();
+
+        System.setProperty(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, SOSPath.toAbsoluteNormalizedPath("src/test/resources").toString());
         LOGGER.info("[Note]use 'Run Configurations -> Environment' to set environment variables if needed");
-        
+
         // setModifiableEnvironment();
     }
 
