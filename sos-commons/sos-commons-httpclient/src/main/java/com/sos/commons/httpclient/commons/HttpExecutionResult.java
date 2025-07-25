@@ -12,7 +12,6 @@ import java.net.http.HttpResponse;
  * @param <T> the type of the response body */
 public class HttpExecutionResult<T> {
 
-    private final HttpRequest request;
     private final HttpResponse<T> response;
 
     private boolean formatWithResponseBody = false;
@@ -33,8 +32,7 @@ public class HttpExecutionResult<T> {
      * @param client the HTTP client executing the request
      * @param request the HTTP request sent
      * @param response the HTTP response received */
-    protected HttpExecutionResult(ABaseHttpClient client, HttpRequest request, HttpResponse<T> response) {
-        this.request = request;
+    protected HttpExecutionResult(ABaseHttpClient client, HttpResponse<T> response) {
         this.response = response;
         if (this.response != null) {
             client.debugHeaders("HttpResponse headers", this.response.headers());
@@ -42,7 +40,7 @@ public class HttpExecutionResult<T> {
     }
 
     public HttpRequest request() {
-        return request;
+        return response == null ? null : response.request();
     }
 
     public HttpResponse<T> response() {

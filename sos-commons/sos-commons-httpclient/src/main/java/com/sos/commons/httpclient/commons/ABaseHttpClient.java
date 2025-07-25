@@ -102,7 +102,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
      * The response headers are logged by {@link HttpExecutionResult} after receiving the response. **/
     public <T> HttpExecutionResult<T> execute(HttpRequest request, HttpResponse.BodyHandler<T> bodyHandler) throws Exception {
         debugHeaders("HttpRequest headers", request.headers());
-        return new HttpExecutionResult<>(this, request, client.send(request, bodyHandler));
+        return new HttpExecutionResult<>(this, client.send(request, bodyHandler));
     }
 
     /** Executes a request and returns the response body as a String */
@@ -393,7 +393,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         int code = response.statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            HttpExecutionResult<?> result = new HttpExecutionResult<>(this, request, response);
+            HttpExecutionResult<?> result = new HttpExecutionResult<>(this, response);
             if (HttpUtils.isNotFound(code)) {
                 throw new SOSNoSuchFileException(uri.toString(), new Exception(formatExecutionResult(result)));
             }
@@ -703,18 +703,15 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     }
 
     private HttpExecutionResult<JsonNode> wrapHttpExecutionResultJsonNode(HttpExecutionResult<String> original) throws Exception {
-        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readTree(original.response()
-                .body())));
+        return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readTree(original.response().body())));
     }
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, Class<T> type) throws Exception {
-        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response()
-                .body(), type)));
+        return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(), type)));
     }
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, TypeReference<T> typeRef) throws Exception {
-        return new HttpExecutionResult<>(this, original.request(), wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response()
-                .body(), typeRef)));
+        return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(), typeRef)));
     }
 
 }
