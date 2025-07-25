@@ -539,12 +539,25 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return logger;
     }
 
-    /** Prints request/response headers for debugging.<br/>
-     *
-     * Note:<br/>
-     * - HttpRequest: header names keep original casing (as set by the developer).<br/>
-     * - HttpResponse: header names are always in lowercase (normalized by HttpClient).<br/>
-     * -- This is because HTTP header names are case-insensitive by spec (RFC 7230), and Java normalizes them for consistent lookup. */
+    /** Prints request/response headers for debugging.
+     * <p>
+     * Notes on Java SDK HttpClient behavior:
+     * <ul>
+     * <li><strong>HttpRequest:</strong> Header names retain their original casing (as set by the developer).</li>
+     * <li><strong>HttpResponse:</strong> Header names are always in lowercase (normalized by the Java SDK).
+     * <ul>
+     * <li>This is because HTTP header names are case-insensitive by spec (RFC 7230), and the Java SDK normalizes response headers for consistent lookup.</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * <p>
+     * Notes on this BaseHttpClient implementation:
+     * <ul>
+     * <li><strong>HttpRequest:</strong> Header names are converted to lowercase – see {@link #setRequestHeaders(java.net.http.HttpRequest.Builder, Map)} – to
+     * ensure consistent casing with response headers.</li>
+     * <li><strong>HttpResponse:</strong> Header names are kept as provided by the Java SDK (always lowercase).</li>
+     * </ul>
+     */
     protected void debugHeaders(String title, HttpHeaders httpHeaders) {
         if (!logger.isDebugEnabled() || httpHeaders == null) {
             return;
@@ -559,7 +572,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         }
     }
 
-    protected void setDefaultHeaders(Map<String, String> headers) {
+    protected void setDefaultRequestHeaders(Map<String, String> headers) {
         this.defaultHeaders = headers;
 
         if (logger.isTraceEnabled()) {
@@ -571,6 +584,23 @@ public abstract class ABaseHttpClient implements AutoCloseable {
                 });
             }
         }
+    }
+
+    /** Sets HTTP request headers, normalizing all header names to lowercase.
+     * <p>
+     * see {{@link #debugHeaders(String, HttpHeaders)} description */
+    private void setRequestHeaders(HttpRequest.Builder builder, Map<String, String> headers) {
+        if (headers == null) {
+            return;
+        }
+        headers.forEach((name, value) -> {
+            String nameNormalized = toLowerCase(name);
+            if (SOSString.isEmpty(value)) {
+                builder.header(nameNormalized, "");
+            } else {
+                builder.header(nameNormalized, value);
+            }
+        });
     }
 
     private static String buildExecutionResultSummary(HttpExecutionResult<?> result) {
@@ -637,19 +667,6 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         }
     }
 
-    private void setRequestHeaders(HttpRequest.Builder builder, Map<String, String> headers) {
-        if (headers == null) {
-            return;
-        }
-        headers.forEach((name, value) -> {
-            if (SOSString.isEmpty(value)) {
-                builder.header(name, "");
-            } else {
-                builder.header(name, value);
-            }
-        });
-    }
-
     private void verifyJsonResponse(HttpResponse<String> response) throws Exception {
         String contentType = response.headers().firstValue(HttpUtils.HEADER_CONTENT_TYPE).orElse("");
         if (!contentType.contains(HttpUtils.HEADER_CONTENT_TYPE_JSON)) {
@@ -712,6 +729,13 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, TypeReference<T> typeRef) throws Exception {
         return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(), typeRef)));
+    }
+
+    private String toLowerCase(String val) {
+        if (val == null) {
+            return null;
+        }
+        return val.toLowerCase(Locale.ROOT);
     }
 
 }

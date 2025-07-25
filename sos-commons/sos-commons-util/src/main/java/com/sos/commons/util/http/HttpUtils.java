@@ -18,16 +18,17 @@ import com.sos.commons.util.SOSString;
 
 public class HttpUtils {
 
-    public static final String HEADER_AUTHORIZATION = "Authorization";
-    public static final String HEADER_CONTENT_ENCODING = "Content-Encoding";
-    public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
-    public static final String HEADER_CONTENT_TYPE = "Content-Type";
+    /** HTTP header names are case-insensitive by spec (RFC 7230) */
+    public static final String HEADER_AUTHORIZATION = "authorization";
+    public static final String HEADER_CONTENT_ENCODING = "content-encoding";
+    public static final String HEADER_CONTENT_DISPOSITION = "content-disposition";
+    public static final String HEADER_CONTENT_TYPE = "content-type";
     public static final String HEADER_CONTENT_TYPE_BINARY = "application/octet-stream";
     public static final String HEADER_CONTENT_TYPE_JSON = "application/json";
-    public static final String HEADER_CONTENT_LENGTH = "Content-Length";
-    public static final String HEADER_LAST_MODIFIED = "Last-Modified";
+    public static final String HEADER_CONTENT_LENGTH = "content-length";
+    public static final String HEADER_LAST_MODIFIED = "last-modified";
 
-    public static final String HEADER_WEBDAV_OVERWRITE = "Overwrite";
+    public static final String HEADER_WEBDAV_OVERWRITE = "overwrite";
     public static final String HEADER_WEBDAV_OVERWRITE_VALUE = "T";
 
     public static final long DEFAULT_LAST_MODIFIED = -1L;

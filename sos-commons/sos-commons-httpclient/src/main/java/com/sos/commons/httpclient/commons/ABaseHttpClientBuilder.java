@@ -139,7 +139,7 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
         }
 
         T client = createInstance(logger, httpClientBuilder.build());
-        client.setDefaultHeaders(headers);
+        client.setDefaultRequestHeaders(headers);
         return client;
     }
 
