@@ -39,7 +39,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     private static final Set<String> DEFAULT_SENSITIVE_HEADERS = Set.of("Authorization", "Proxy-Authorization", "Cookie", "Set-Cookie", "X-Api-Key",
             "X-Auth-Token", "Authentication-Token", "Session-Id");
 
-    private static final String MASKED_STRING = SOSArgument.DisplayMode.MASKED.getValue();
+    private static final String MASKED_VALUE = SOSArgument.DisplayMode.MASKED.getValue();
     private final ISOSLogger logger;
     /** Underlying Java HTTP client instance */
     private final HttpClient client;
@@ -435,7 +435,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             base += uri.getPath();
         }
         base = base.endsWith("/") ? base : base + "/";
-        return base + MASKED_STRING;
+        return base + MASKED_VALUE;
     }
 
     /** Constructs a readable string representation of the response status */
@@ -553,8 +553,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         if (!SOSCollection.isEmpty(headers)) {
             logger.debug(title + ":");
             headers.entrySet().forEach(e -> {
-                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? SOSArgument.DisplayMode.MASKED.getValue() : String.join(", ",
-                        e.getValue());
+                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? MASKED_VALUE : String.join(", ", e.getValue());
                 logger.debug("    name=" + e.getKey() + " value=" + val);
             });
         }
@@ -567,7 +566,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             if (this.defaultHeaders.size() > 0) {
                 logger.trace("Default HttpRequest headers(all requests):");
                 this.defaultHeaders.entrySet().forEach(e -> {
-                    String val = isSensitiveHeader(e.getKey()) ? SOSArgument.DisplayMode.MASKED.getValue() : e.getValue();
+                    String val = isSensitiveHeader(e.getKey()) ? MASKED_VALUE : e.getValue();
                     logger.trace("    name=" + e.getKey() + " value=" + val);
                 });
             }
