@@ -7,6 +7,8 @@ public class ReturnVariableMapping {
     private String name;
     @JsonProperty("path")
     private String path;
+    @JsonProperty("header")
+    private String header;
 
     public String getName() {
         return this.name;
@@ -23,4 +25,13 @@ public class ReturnVariableMapping {
     public void setPath(String path) {
         this.path = path;
     }
+
+    public String getHeader() {
+        return this.header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
+    }
+
 }
