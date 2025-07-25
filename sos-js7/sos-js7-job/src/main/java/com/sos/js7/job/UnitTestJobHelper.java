@@ -29,13 +29,48 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
     private Map<String, String> environment;
 
+    /** Constructor that defaults to:
+     * <ol>
+     * <li>Setting the Agent Config Directory system property</li>
+     * <li>Resetting SSL system properties</li>
+     * </ol>
+     * <p>
+     * 1) <strong>Setting Agent Config Directory:</strong><br>
+     * Sets the system property {@code JS7_AGENT_CONFIG_DIR} to {@code src/test/resources}, so that test jobs can reliably locate configuration files during
+     * execution.
+     * <p>
+     * 2) <strong>Resetting SSL system properties:</strong><br>
+     * In some environments (e.g., Eclipse), the JVM may be started with preconfigured SSL settings such as {@code javax.net.ssl.keyStore} or {@code trustStore}
+     * for accessing Maven repositories.<br/>
+     * These can interfere with test behavior.<br/>
+     * This constructor resets those properties to ensure a clean and predictable test environment. */
     public UnitTestJobHelper(Job<A> job) {
+        this(job, true);
+    }
+
+    /** Constructor that:
+     * <ol>
+     * <li>Sets the Agent Config Directory system property</li>
+     * <li>Optionally resets SSL system properties</li>
+     * </ol>
+     * <p>
+     * 1) <strong>Setting Agent Config Directory:</strong><br>
+     * Sets the system property {@code JS7_AGENT_CONFIG_DIR} to {@code src/test/resources}, so that test jobs can reliably locate configuration files during
+     * execution.
+     * <p>
+     * 2) <strong>Resetting SSL system properties:</strong><br>
+     * If {@code resetSslSystemProperties} is {@code true}, clears system properties such as {@code javax.net.ssl.keyStore} and {@code trustStore}.<br/>
+     * This prevents inherited SSL config (e.g., from IDEs or build tools) from affecting test execution. */
+    public UnitTestJobHelper(Job<A> job, boolean resetSslSystemProperties) {
         this.job = job;
         this.stepConfig = new UnitTestStepConfig();
 
-        System.setProperty(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, SOSPath.toAbsoluteNormalizedPath("src/test/resources").toString());
-        LOGGER.info("[Note]use 'Run Configurations -> Environment' to set environment variables if needed");
+        if (resetSslSystemProperties) {
+            resetSslSystemProperties();
+        }
 
+        System.setProperty(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, SOSPath.toAbsoluteNormalizedPath("src/test/resources").toString());
+        LOGGER.info("[Note Eclipse IDE]use 'Run Configurations -> Environment' to set environment variables if needed");
         // setModifiableEnvironment();
     }
 
@@ -86,6 +121,14 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
     public UnitTestStepConfig getStepConfig() {
         return stepConfig;
+    }
+
+    private static void resetSslSystemProperties() {
+        System.setProperty("javax.net.ssl.keyStore", "");
+        System.setProperty("javax.net.ssl.keyStorePassword", "");
+
+        System.setProperty("javax.net.ssl.trustStore", "");
+        System.setProperty("javax.net.ssl.trustStorePassword", "");
     }
 
     private OrderProcessStep<A> newOrderProcessStep(Map<String, Object> args) throws Exception {

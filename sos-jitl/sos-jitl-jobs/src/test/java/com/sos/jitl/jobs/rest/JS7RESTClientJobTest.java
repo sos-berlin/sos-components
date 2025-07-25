@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
-import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
@@ -22,7 +21,9 @@ public class JS7RESTClientJobTest {
     @Ignore
     @Test
     public void test1() throws Exception {
-        System.setProperty(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, "src/test/resources");
+        // The system property 'JS7_AGENT_CONFIG_DIR' is set by default by UnitTestJobHelper to 'src/test/resources'.
+        // Redefine here if a different path is required for this test:
+        // System.setProperty(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, "custom/path");
 
         Map<String, Object> args = new HashMap<>();
         args.put("js7.api-server.url", "http://localhost:4447");

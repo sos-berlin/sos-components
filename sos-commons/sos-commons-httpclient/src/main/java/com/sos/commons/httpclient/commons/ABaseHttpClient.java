@@ -554,7 +554,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             logger.debug(title + ":");
             headers.entrySet().forEach(e -> {
                 String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? MASKED_VALUE : String.join(", ", e.getValue());
-                logger.debug("    name=" + e.getKey() + " value=" + val);
+                logger.debug(String.format("    name=%-20s value=%s", e.getKey(), val));
             });
         }
     }
@@ -567,7 +567,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
                 logger.trace("Default HttpRequest headers(all requests):");
                 this.defaultHeaders.entrySet().forEach(e -> {
                     String val = isSensitiveHeader(e.getKey()) ? MASKED_VALUE : e.getValue();
-                    logger.trace("    name=" + e.getKey() + " value=" + val);
+                    logger.trace(String.format("    name=%-20s value=%s", e.getKey(), val));
                 });
             }
         }
