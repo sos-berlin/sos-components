@@ -31,6 +31,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
     public UnitTestJobHelper(Job<A> job) {
         this.job = job;
         this.stepConfig = new UnitTestStepConfig();
+        
+        System.setProperty(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, "src/test/resources");
         LOGGER.info("[Note]use 'Run Configurations -> Environment' to set environment variables if needed");
         
         // setModifiableEnvironment();
