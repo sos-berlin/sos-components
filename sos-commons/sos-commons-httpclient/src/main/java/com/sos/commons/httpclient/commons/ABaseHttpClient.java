@@ -73,6 +73,14 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         // No resources to close currently
     }
 
+    public String getServerInfo(HttpResponse<?> response) {
+        if (response == null) {
+            return null;
+        }
+        Optional<String> info = getResponseHeader(response, HttpUtils.HEADER_SERVER);
+        return info.isPresent() ? "Server " + info.get() : null;
+    }
+
     /** Creates a new HttpRequest builder with base headers
      * 
      * @param uri target URI

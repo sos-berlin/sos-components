@@ -140,7 +140,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                 getLogger().debug("%s[connected]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
             }
 
-            getLogger().info(getConnectedMsg());
+            getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
         } catch (Throwable e) {
             disconnect();
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);

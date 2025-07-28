@@ -27,6 +27,7 @@ public class HttpUtils {
     public static final String HEADER_COOKIE = "cookie";
     public static final String HEADER_SET_COOKIE = "set-cookie";
 
+    public static final String HEADER_SERVER = "server";
     public static final String HEADER_RANGE = "range";
     public static final String HEADER_DATE = "date";
     public static final String HEADER_IF_MODIFIED_SINCE = "if-modified-since";
