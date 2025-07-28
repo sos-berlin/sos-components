@@ -99,8 +99,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             client = builder.build();
 
             getLogger().info(getConnectMsg());
-            connect(getArguments().getBaseURI());
-            getLogger().info(getConnectedMsg());
+            HttpExecutionResult<Void> result = connect(getArguments().getBaseURI());
+            getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
         } catch (Throwable e) {
             disconnect();
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
@@ -412,7 +412,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) || Protocol.WEBDAVS.equals(getArguments().getProtocol().getValue());
     }
 
-    private void connect(URI uri) throws Exception {
+    private HttpExecutionResult<Void> connect(URI uri) throws Exception {
         String notFoundMsg = null;
 
         HttpExecutionResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
@@ -441,6 +441,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             setAccessInfo(getArguments().getAccessInfo());
             connect(getArguments().getBaseURI());
         }
+        return result;
     }
 
     private ProviderFile createProviderFile(URI uri, HttpResponse<?> response) throws Exception {
