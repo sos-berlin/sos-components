@@ -1740,8 +1740,8 @@ public abstract class PublishUtils {
     }
     
     private static JExpression getFileOrderPattern(FileOrderSource fileOrderSource) {
-        String expression = String.format("{orderId: %s, planId: %s, priority: %d}", getFileOrderIdPattern(fileOrderSource),
-                getFileOrderDailyPlanPlanIdPattern(fileOrderSource), fileOrderSource.getPriority());
+        String expression = String.format("{orderId: %s, planId: %s, priority: %s}", getFileOrderIdPattern(fileOrderSource),
+                getFileOrderDailyPlanPlanIdPattern(fileOrderSource), getFileOrderPriority(fileOrderSource.getPriority()));
         return getOrThrowEither(JExpression.parse(expression));
     }
 
@@ -1764,6 +1764,10 @@ public abstract class PublishUtils {
         }
         fileOrderSource.setTimeZone(null);
         return String.format(planIdPattern, PlanSchemas.DailyPlanPlanSchemaId,  timeZone);
+    }
+    
+    private static String getFileOrderPriority(Integer prio) {
+        return prio < 0 ? Math.abs(prio)  + " * -1": prio.toString();
     }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,
