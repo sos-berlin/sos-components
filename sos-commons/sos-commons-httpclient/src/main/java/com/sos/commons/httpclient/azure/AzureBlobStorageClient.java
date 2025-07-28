@@ -25,6 +25,8 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 
 public class AzureBlobStorageClient extends ABaseHttpClient {
 
+    public static final String HEADER_X_MS_BLOB_TYPE = "x-ms-blob-type";
+
     private final String serviceEndpoint;
     private final AAzureStorageAuthProvider authProvider;
     private final boolean maskQueryParams;
@@ -159,7 +161,8 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         return executeWithResponseBody(builder.build());
     }
 
-    public HttpExecutionResult<String> executePUTBlobInputStream(String containerName, String blobName, InputStream is, String contentType)
+    @SuppressWarnings("unused")
+    private HttpExecutionResult<String> executePUTBlobInputStream(String containerName, String blobName, InputStream is, String contentType)
             throws Exception {
         AzureBlobStorageUploader uploader = new AzureBlobStorageUploader(this);
         return uploader.upload(containerName, blobName, is, contentType);
@@ -172,7 +175,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String url = authProvider.appendToUrl(rawUrl);
 
         Map<String, String> existingHeaders = new HashMap<>(getDefaultHeaders());
-        existingHeaders.put("x-ms-blob-type", "BlockBlob");
+        existingHeaders.put(HEADER_X_MS_BLOB_TYPE, "BlockBlob");
 
         // sdk client throws java.lang.IllegalArgumentException: restricted header name: "Content-Length"
         // existingHeaders.put(HttpUtils.HEADER_CONTENT_LENGTH, getContentLengthHeaderValue(SOSClassUtil.countBytes(is)));
@@ -196,7 +199,7 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String url = authProvider.appendToUrl(rawUrl);
 
         Map<String, String> existingHeaders = new HashMap<>(getDefaultHeaders());
-        existingHeaders.put("x-ms-blob-type", "BlockBlob");
+        existingHeaders.put(HEADER_X_MS_BLOB_TYPE, "BlockBlob");
 
         // sdk client throws java.lang.IllegalArgumentException: restricted header name: "Content-Length"
         // existingHeaders.put(HttpUtils.HEADER_CONTENT_LENGTH, getContentLengthHeaderValue(data.length));

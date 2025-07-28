@@ -10,8 +10,10 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -20,13 +22,28 @@ public class HttpUtils {
 
     /** HTTP header names are case-insensitive by spec (RFC 7230) */
     public static final String HEADER_AUTHORIZATION = "authorization";
+    public static final String HEADER_PROXY_AUTHORIZATION = "proxy-authorization";
+
+    public static final String HEADER_COOKIE = "cookie";
+    public static final String HEADER_SET_COOKIE = "set-cookie";
+
+    public static final String HEADER_RANGE = "range";
+    public static final String HEADER_DATE = "date";
+    public static final String HEADER_IF_MODIFIED_SINCE = "if-modified-since";
+    public static final String HEADER_IF_UNMODIFIED_SINCE = "if-unmodified-since";
+    public static final String HEADER_IF_MATCH = "if-match";
+    public static final String HEADER_IF_NONE_MATCH = "if-none-match";
+
     public static final String HEADER_CONTENT_ENCODING = "content-encoding";
+    public static final String HEADER_CONTENT_LANGUAGE = "content-language";
     public static final String HEADER_CONTENT_DISPOSITION = "content-disposition";
+    public static final String HEADER_CONTENT_LENGTH = "content-length";
     public static final String HEADER_CONTENT_TYPE = "content-type";
+    public static final String HEADER_CONTENT_MD5 = "content-md5";
+    public static final String HEADER_LAST_MODIFIED = "last-modified";
+
     public static final String HEADER_CONTENT_TYPE_BINARY = "application/octet-stream";
     public static final String HEADER_CONTENT_TYPE_JSON = "application/json";
-    public static final String HEADER_CONTENT_LENGTH = "content-length";
-    public static final String HEADER_LAST_MODIFIED = "last-modified";
 
     public static final String HEADER_WEBDAV_OVERWRITE = "overwrite";
     public static final String HEADER_WEBDAV_OVERWRITE_VALUE = "T";
@@ -39,11 +56,11 @@ public class HttpUtils {
     // Locale.US - because of the weekdays in English (e.g. Tue)
     private static final List<DateTimeFormatter> HTTP_DATE_FORMATTERS = List.of(
             // RFC 1123
-            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).withZone(ZoneOffset.UTC),
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH).withZone(ZoneOffset.UTC),
             // RFC 1036
-            DateTimeFormatter.ofPattern("EEE, dd-MMM-yy HH:mm:ss zzz", Locale.US).withZone(ZoneOffset.UTC),
+            DateTimeFormatter.ofPattern("EEE, dd-MMM-yy HH:mm:ss zzz", Locale.ENGLISH).withZone(ZoneOffset.UTC),
             // asctime
-            DateTimeFormatter.ofPattern("EEE MMM d HH:mm:ss yyyy", Locale.US).withZone(ZoneOffset.UTC));
+            DateTimeFormatter.ofPattern("EEE MMM d HH:mm:ss yyyy", Locale.ENGLISH).withZone(ZoneOffset.UTC));
 
     public static String getAccessInfo(URI baseURI, String username) {
         if (baseURI == null) {
@@ -236,6 +253,45 @@ public class HttpUtils {
             }
         }
         return DEFAULT_LAST_MODIFIED;
+    }
+
+    /** Converts the input string to lowercase using Locale.ROOT to ensure consistent, locale-independent behavior.<br/>
+     * This is especially important when processing technical identifiers like HTTP header names.
+     *
+     * Without specifying Locale.ROOT, the result of toLowerCase() can vary depending on the system's default locale.<br/>
+     * For example, in the Turkish locale,<br/>
+     * "Content-ID".toLowerCase() would produce "content-ıd" (with a dotless 'ı') instead of the expected "content-id".<br/>
+     *
+     * This can lead to subtle and hard-to-find bugs when comparing or looking up headers in a case-insensitive context, such as when normalizing HTTP headers.
+     *
+     * @param val the input string
+     * @return the lowercase version of the input, or null if the input is null */
+    public static String normalizeHeaderName(String val) {
+        if (val == null) {
+            return null;
+        }
+        return val.toLowerCase(Locale.ROOT);
+    }
+
+    /** Returns a new LinkedHashMap with all header names normalized to lowercase, using Locale.ROOT to ensure locale-independent behavior.
+     *
+     * Useful for case-insensitive HTTP header lookups.
+     *
+     * If multiple keys in the original map differ only by case, the last one wins.
+     *
+     * @param headers the original headers map
+     * @return a new map with all keys in lowercase */
+    public static Map<String, String> normalizeHeaderKeys(Map<String, String> headers) {
+        Map<String, String> normalized = new LinkedHashMap<>();
+        if (headers == null) {
+            return normalized;
+        }
+
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            String key = normalizeHeaderName(entry.getKey());
+            normalized.put(key, entry.getValue());
+        }
+        return normalized;
     }
 
     /** This check is sufficient if the client follows redirects.<br />

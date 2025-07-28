@@ -36,8 +36,8 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
  */
 public abstract class ABaseHttpClient implements AutoCloseable {
 
-    private static final Set<String> DEFAULT_SENSITIVE_HEADERS = Set.of("Authorization", "Proxy-Authorization", "Cookie", "Set-Cookie", "X-Api-Key",
-            "X-Auth-Token", "Authentication-Token", "Session-Id");
+    private static final Set<String> DEFAULT_SENSITIVE_HEADERS = Set.of(HttpUtils.HEADER_AUTHORIZATION, HttpUtils.HEADER_PROXY_AUTHORIZATION,
+            HttpUtils.HEADER_COOKIE, HttpUtils.HEADER_SET_COOKIE, "x-api-key", "x-auth-token", "authentication-token", "session-id");
 
     private static final String MASKED_VALUE = SOSArgument.DisplayMode.MASKED.getValue();
     private final ISOSLogger logger;
@@ -594,7 +594,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             return;
         }
         headers.forEach((name, value) -> {
-            String nameNormalized = toLowerCase(name);
+            String nameNormalized = HttpUtils.normalizeHeaderName(name);
             if (SOSString.isEmpty(value)) {
                 builder.header(nameNormalized, "");
             } else {
@@ -729,13 +729,6 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     private <T> HttpExecutionResult<T> wrapHttpExecutionResultJson(HttpExecutionResult<String> original, TypeReference<T> typeRef) throws Exception {
         return new HttpExecutionResult<>(this, wrapResponse(original.response(), OBJECT_MAPPER.readValue(original.response().body(), typeRef)));
-    }
-
-    private String toLowerCase(String val) {
-        if (val == null) {
-            return null;
-        }
-        return val.toLowerCase(Locale.ROOT);
     }
 
 }

@@ -66,7 +66,7 @@ public class AzureBlobStorageUploader {
         String url = client.getAuthProvider().appendToUrl(rawUrl);
 
         Map<String, String> existingHeaders = new HashMap<>(client.getDefaultHeaders());
-        existingHeaders.put("x-ms-blob-type", "BlockBlob");
+        existingHeaders.put(AzureBlobStorageClient.HEADER_X_MS_BLOB_TYPE, "BlockBlob");
 
         Map<String, String> authHeaders = client.getAuthProvider().createAuthHeaders("PUT", url, canonicalizedResource, existingHeaders,
                 blockData.length);
