@@ -91,6 +91,8 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             if (response != null) {
                 return response;
             }
+            
+            storeAuditLog(in.getAuditLog(), in.getControllerId());
 
             // log to service log file
             JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());

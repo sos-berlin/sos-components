@@ -4,6 +4,7 @@ package com.sos.joc.model.dailyplan.submissions;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -18,7 +19,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "filter"
+    "filter",
+    "auditLog"
 })
 public class SubmissionsDeleteRequest {
 
@@ -40,6 +42,14 @@ public class SubmissionsDeleteRequest {
      */
     @JsonProperty("filter")
     private SubmissionsDeleteRequestFilter filter;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * controllerId
@@ -89,14 +99,36 @@ public class SubmissionsDeleteRequest {
         this.filter = filter;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("filter", filter).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("filter", filter).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(filter).toHashCode();
+        return new HashCodeBuilder().append(filter).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -108,7 +140,7 @@ public class SubmissionsDeleteRequest {
             return false;
         }
         SubmissionsDeleteRequest rhs = ((SubmissionsDeleteRequest) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(filter, rhs.filter).isEquals();
+        return new EqualsBuilder().append(filter, rhs.filter).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }
