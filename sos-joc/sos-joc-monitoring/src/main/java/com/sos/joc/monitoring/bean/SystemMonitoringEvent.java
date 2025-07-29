@@ -69,6 +69,7 @@ public class SystemMonitoringEvent {
         source = SOURCE_LOG_NOTIFICATION; //evt.getSource();
         category = SystemNotificationCategory.fromValue(evt.getProduct());
         caller = loggerName;
+        key = SOSString.hashMD5(message);
     }
     
     private String getMessage(NotificationLogEvent evt) {
@@ -84,7 +85,7 @@ public class SystemMonitoringEvent {
     private String getMessage(SystemNotificationLogEvent evt) {
         String hostMessagePrefix = evt.getHost() == null ? "" : evt.getHost() + ": ";
         if (evt.getMessage() != null) {
-            return hostMessagePrefix+ evt.getMessage();
+            return hostMessagePrefix + evt.getMessage();
         }
         if (evt.getStacktrace() != null) {
             return hostMessagePrefix + evt.getStacktrace().split("\r?\n", 2)[0];
@@ -144,7 +145,9 @@ public class SystemMonitoringEvent {
     }
 
     private void setKey() {
-        key = (source + "_" + type).toLowerCase();
+        if (key == null) {
+            key = (source + "_" + type).toLowerCase();
+        }
     }
 
     private void setForceNotify() {
